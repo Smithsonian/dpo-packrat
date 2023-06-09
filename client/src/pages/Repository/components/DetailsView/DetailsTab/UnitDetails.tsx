@@ -4,7 +4,7 @@
  *
  * This component renders details tab for Unit specific details used in DetailsTab component.
  */
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { /*InputField,*/ Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -14,6 +14,7 @@ import { eSystemObjectType } from '@dpo-packrat/common';
 import { DebounceInput } from 'react-debounce-input';
 import clsx from 'clsx';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
+import LabelTooltipText from '../../../../../components/controls/LabelTooltipText';
 
 function UnitDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
@@ -42,7 +43,11 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                     <TableBody>
                         <TableRow className={classes.tableRow}>
                             <TableCell className={classes.tableCell}>
-                                <Typography className={classes.labelText}>Abbreviation</Typography>
+                                {/* <Typography className={classes.labelText}>Abbreviation</Typography> */}
+                                <LabelTooltipText
+                                    label="Abbreviation"
+                                    labelTooltipTxt="This is the subtitle of this media asset."
+                                />
                             </TableCell>
                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
                                 <DebounceInput
@@ -60,7 +65,11 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                         </TableRow>
                         <TableRow className={classes.tableRow}>
                             <TableCell className={classes.tableCell}>
-                                <Typography className={classes.labelText}>ARKPrefix</Typography>
+                                {/* <Typography className={classes.labelText}>ARKPrefix</Typography> */}
+                                <LabelTooltipText
+                                    label="ARKPrefx"
+                                    labelTooltipTxt="This is the subtitle of this media asset."
+                                />
                             </TableCell>
                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
                                 <DebounceInput

@@ -16,6 +16,7 @@ import { useDetailTabStore } from '../../../../../store';
 import clsx from 'clsx';
 import { DebounceInput } from 'react-debounce-input';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
+import LabelTooltipText from '../../../../../components/controls/LabelTooltipText';
 
 function SubjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
@@ -104,7 +105,11 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                 <React.Fragment>
                                     <TableRow>
                                         <TableCell className={classes.tableCell}>
-                                            <Typography className={classes.labelText}>Subtitle</Typography>
+                                            {/* <Typography className={classes.labelText}>Subtitle</Typography> */}
+                                            <LabelTooltipText
+                                                label="Subtitle"
+                                                labelTooltipTxt="This is the subtitle of this media asset."
+                                            />
                                         </TableCell>
                                         <TableCell className={classes.tableCell}>
                                             <DebounceInput
@@ -128,7 +133,11 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                     </TableRow>
                                     <TableRow>
                                         <TableCell className={classes.tableCell}>
-                                            <Typography className={classes.labelText}>Entire Subject</Typography>
+                                            {/* <Typography className={classes.labelText}>Entire Subject</Typography> */}
+                                            <LabelTooltipText
+                                                label="Entire Subject"
+                                                labelTooltipTxt="This is the assigned subject of the media asset"
+                                            />
                                         </TableCell>
                                         <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
                                             <Checkbox

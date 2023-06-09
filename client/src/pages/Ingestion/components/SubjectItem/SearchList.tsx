@@ -82,7 +82,7 @@ function SearchList(props: SearchListProps): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
 
     return (
-        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px' labelTooltip='This is gitgthe entity that the digital asset(s) is based on and where it will be saved to.'>
+        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px' labelTooltip='This is the entity that the digital asset(s) is based on and where it will be saved to.'>
           {/* <Tooltip title="Lorem ipsum dolor sit amet" placement="bottom">
             <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} />
           </Tooltip> */}
