@@ -313,12 +313,14 @@ function useIngest(): UseIngest {
             };
             console.log('** IngestDataInput',input);
 
+            //This responsible for initiating sending data to the server.
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
                 variables: { input },
                 refetchQueries: ['getUploadedAssetVersion']
             });
 
+            //Throws an error if the inges Data was successful or not.  Throws a toast.
             const { data } = ingestDataMutation;
             if (data) {
                 const { ingestData } = data;

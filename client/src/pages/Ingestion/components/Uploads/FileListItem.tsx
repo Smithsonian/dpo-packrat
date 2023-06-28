@@ -21,6 +21,7 @@ import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { eIngestionMode } from '../../../../constants';
 import { UploadReferences } from '../../../../store';
+import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
     container: {
@@ -194,7 +195,12 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         onSelect
     } = props;
     const classes = useStyles(props);
-    const upload = () => onUpload(id);
+    const upload = () => {
+        onUpload(id);
+        toast.info('Do not leave this page! Upload in Progress.'); 
+    
+    }
+
     const remove = () => {
         const isUpdate = references?.idAsset;
         const isAttachment = references?.idSOAttachment;
@@ -211,8 +217,9 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
     const select = () => (complete ? onSelect(id, !selected) : null);
     let options: React.ReactNode = null;
-
+    
     if (!complete) {
+        {/*Uploaded Items State*/}
         options = (
             <React.Fragment>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={22} color={green[500]} />}
