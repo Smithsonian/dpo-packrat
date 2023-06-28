@@ -340,6 +340,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pendingUpdates: updatedUpdates });
         }
     },
+
+    //This is the uploading for the Processed Files
     startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
@@ -392,7 +394,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (status === UploadStatus.Complete) {
                     const uploadEvent: UploadCompleteEvent = { id };
                     UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
-
+                    
+                    //This message occurs when the upload is successfully transferred for processing.
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
                     console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, error = ${error}`);
