@@ -46,7 +46,7 @@ function SubjectList(props: SubjectListProps): React.ReactElement {
     const [addSubject, removeSubject] = useSubjectStore(state => [state.addSubject, state.removeSubject]);
     const classes = useStyles();
 
-    const header: string[] = ['ARK / ID', 'UNIT', 'NAME'];
+    const header: string[] = ['ARK / ID', 'UNIT', 'NAME', 'COLLECTION'];
 
     const getSubjectList = ({ id, arkId, unit, name, collectionId }: StateSubject, index: number) => (
         <SubjectListItem
