@@ -61,5 +61,5 @@ export interface ICollection {
     transformArkIntoUrl(arkId: string): string;
     getArkNameMappingAuthority(): string;
     getArkNameAssigningAuthority(): string;
-    checkEdanIdentifier(edan: string) : string | null;
+    checkEdanIdentifier(edan: string): string | null;
 }

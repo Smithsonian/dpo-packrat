@@ -394,7 +394,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (status === UploadStatus.Complete) {
                     const uploadEvent: UploadCompleteEvent = { id };
                     UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
-                    
                     //This message occurs when the upload is successfully transferred for processing.
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
