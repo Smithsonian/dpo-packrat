@@ -44,7 +44,7 @@ type SearchListProps = {
 };
 
 function SearchList(props: SearchListProps): React.ReactElement {
-    const { EdanOnly} = props;
+    const { EdanOnly } = props;
     const classes = useStyles();
     const [query, setQuery] = useState('');
     const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument, { fetchPolicy: 'no-cache' });
@@ -82,10 +82,13 @@ function SearchList(props: SearchListProps): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
 
     return (
-        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px' labelTooltip='This is the entity that the digital asset(s) is based on and where it will be saved to.'>
-          {/* <Tooltip title="Lorem ipsum dolor sit amet" placement="bottom">
-            <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} />
-          </Tooltip> */}
+        <FieldType
+            required={false}
+            label='Search for Subject'
+            marginTop={2}
+            padding='10px'
+            labelTooltip='This is the entity that the digital asset(s) is based on and where it will be saved to.'
+        >
             <Box className={classes.container}>
                 <label htmlFor='searchSubjectFilter' style={{ display: 'none' }}>Search Subject</label>
                 <TextField

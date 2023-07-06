@@ -15,8 +15,6 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
 
     const results: DBAPI.SubjectUnitIdentifier[] = [];
     const resultSet: Set<string> = new Set<string>();
-    console.log(`db: ${JSON.stringify(resultsDB)}`);
-    console.log(`collection: ${JSON.stringify(resultsCOL)}`);
 
 
     if (resultsDB) {

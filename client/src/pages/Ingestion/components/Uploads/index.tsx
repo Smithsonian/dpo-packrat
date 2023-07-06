@@ -286,18 +286,17 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
 
     return (
         <React.Fragment>
-          
-                <UploadFilesPicker />
-                <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
-                <SidebarBottomNavigator
-                    leftLabel='Discard'
-                    rightLabel='Ingest'
-                    leftLoading={discardingFiles}
-                    rightLoading={gettingAssetDetails}
-                    onClickLeft={onDiscard}
-                    onClickRight={onIngest}
-                    uploadVersion
-                />
+            <UploadFilesPicker />
+            <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
+            <SidebarBottomNavigator
+                leftLabel='Discard'
+                rightLabel='Ingest'
+                leftLoading={discardingFiles}
+                rightLoading={gettingAssetDetails}
+                onClickLeft={onDiscard}
+                onClickRight={onIngest}
+                uploadVersion
+            />
         </React.Fragment>
     );
 }

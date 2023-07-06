@@ -197,9 +197,8 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const classes = useStyles(props);
     const upload = () => {
         onUpload(id);
-        toast.info('Do not leave this page! Upload in Progress.'); 
-    
-    }
+        toast.info('Do not leave this page! Upload in Progress.');
+    };
 
     const remove = () => {
         const isUpdate = references?.idAsset;
@@ -217,7 +216,6 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
     const select = () => (complete ? onSelect(id, !selected) : null);
     let options: React.ReactNode = null;
-    
     if (!complete) {
         {/*Uploaded Items State*/}
         options = (

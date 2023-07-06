@@ -65,15 +65,14 @@ function FieldType(props: FieldTypeProps): React.ReactElement {
 
     if (labelTooltip) {
         const tooltipContent = (
-        <>
-            <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
-                {label}
-                <Tooltip title={labelTooltip}>
-                    <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer', verticalAlign:'middle', padding:'20px 5px' }} />
-                </Tooltip>
-            </Typography>
-        </>
-        
+            <>
+                <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
+                    {label}
+                    <Tooltip title={labelTooltip}>
+                        <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer', verticalAlign: 'middle', padding: '20px 5px' }} />
+                    </Tooltip>
+                </Typography>
+            </>
         );
         content = tooltipContent;
     }

@@ -107,8 +107,8 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                         <TableCell className={classes.tableCell}>
                                             {/* <Typography className={classes.labelText}>Subtitle</Typography> */}
                                             <LabelTooltipText
-                                                label="Subtitle"
-                                                labelTooltipTxt="This is the subtitle of this media asset."
+                                                label='Subtitle'
+                                                labelTooltipTxt='This is the subtitle of this media asset.'
                                             />
                                         </TableCell>
                                         <TableCell className={classes.tableCell}>
@@ -135,8 +135,8 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                         <TableCell className={classes.tableCell}>
                                             {/* <Typography className={classes.labelText}>Entire Subject</Typography> */}
                                             <LabelTooltipText
-                                                label="Entire Subject"
-                                                labelTooltipTxt="This is the assigned subject of the media asset"
+                                                label='Entire Subject'
+                                                labelTooltipTxt='This is the assigned subject of the media asset'
                                             />
                                         </TableCell>
                                         <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
@@ -162,9 +162,9 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                             <TableCell className={classes.tableCell}>
                                                 {/* <Typography className={classes.labelText}>Latitude</Typography> */}
                                                 <LabelTooltipText
-                                                label="Lattitude"
-                                                labelTooltipTxt="This is the Lattitude of the Subject."
-                                            />
+                                                    label='Lattitude'
+                                                    labelTooltipTxt='This is the Lattitude of the Subject.'
+                                                />
                                             </TableCell>
                                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
                                                 <DebounceInput
@@ -184,8 +184,8 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                             <TableCell className={classes.tableCell}>
                                                 {/* <Typography className={classes.labelText}>Longitude</Typography> */}
                                                 <LabelTooltipText
-                                                    label="Longitude"
-                                                    labelTooltipTxt="This is the Longitude of the Subject."
+                                                    label='Longitude'
+                                                    labelTooltipTxt='This is the Longitude of the Subject.'
                                                 />
                                             </TableCell>
                                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
@@ -206,8 +206,8 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                                             <TableCell className={classes.tableCell}>
                                                 {/* <Typography className={classes.labelText}>Altitude</Typography> */}
                                                 <LabelTooltipText
-                                                    label="Altitude"
-                                                    labelTooltipTxt="This is the altitude of the subject."
+                                                    label='Altitude'
+                                                    labelTooltipTxt='This is the altitude of the subject.'
                                                 />
                                             </TableCell>
                                             <TableCell className={clsx(classes.tableCell, classes.valueText)}>
@@ -260,8 +260,8 @@ export function RotationOriginInput(props: RotationOriginInputProps): React.Reac
             <TableCell style={{ border: 'none', padding: '1px 10px' }}>
                 {/* <Typography style={{ fontSize: '0.8rem' }}>Rotation Origin</Typography> */}
                 <LabelTooltipText
-                    label="Rotation Origin"
-                    labelTooltipTxt="This is the Rotation Origin of the subject."
+                    label='Rotation Origin'
+                    labelTooltipTxt='This is the Rotation Origin of the subject.'
                 />
             </TableCell>
             <TableCell style={{ border: 'none', padding: '1px 10px' }}>
@@ -350,8 +350,8 @@ export function RotationQuaternionInput(props: RotationQuaternionInputProps): Re
             <TableCell style={{ border: 'none', padding: '1px 10px' }}>
                 {/* <Typography style={{ fontSize: '0.8rem' }}>Rotation Quaternion</Typography> */}
                 <LabelTooltipText
-                    label="Rotation Quaternion"
-                    labelTooltipTxt="This is the Rotation Quaternion of the subject."
+                    label='Rotation Quaternion'
+                    labelTooltipTxt='This is the Rotation Quaternion of the subject.'
                 />
             </TableCell>
             <TableCell style={{ border: 'none', padding: '1px 10px' }}>
