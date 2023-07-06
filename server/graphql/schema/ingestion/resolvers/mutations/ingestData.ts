@@ -289,8 +289,8 @@ class IngestDataWorker extends ResolverBase {
 
     private async validateIdentifier(identifier: IngestIdentifierInput): Promise<IdentifierResults> {
 
-        const regexArk : RegExp = new RegExp("ark:\/65665\/[0-9a-zA-Z-]*([^@!%$&#*+=.,\"\'\^]+$)");
-        const regexEdan : RegExp = new RegExp("edanmdm\:[a-z]*[a-z|A-Z|0-9_.]*([^@!%$&#*=+\"\']+$)");
+        const regexArk: RegExp = new RegExp('ark:\\/65665\\/[0-9a-zA-Z-]*([^@!%$&#*+=.,\\"\'\\^]+$)');
+        const regexEdan: RegExp = new RegExp('edanmdm\\:[a-z]*[a-z|A-Z|0-9_.]*([^@!%$&#*=+\\"\']+$)');
 
         // ARK
         const vocabularyARK: DBAPI.Vocabulary | undefined = await this.getVocabularyARK();
@@ -301,44 +301,37 @@ class IngestDataWorker extends ResolverBase {
 
         if (identifier.identifierType == vocabularyARK.idVocabulary) {
             const arkId: string | null = this.getICollection().extractArkFromUrl(identifier.identifier);
-            
             // Uncomment to Console Test in Terminal
             // console.log({ regexTestValue: regexArk.test(arkId ?? ""), arkValue: arkId })
 
             if  (!arkId)
                 return { success: false, error: `Invalid Ark ID: ${identifier.identifier}` };
-            
             if (regexArk.test(arkId))
-                identifierValue = arkId;   
+                identifierValue = arkId;
             else
-                return {success: false, error: `Incorrect Ark Record ID Syntax.  Please review documentation.`}   
-        } 
+                return { success: false, error: 'Incorrect Ark Record ID Syntax.  Please review documentation.' };
+        }
 
         //  EDAN
         const vocabularyEdan: DBAPI.Vocabulary | undefined = await this.getVocabularyEdanRecordID();
-        if (!vocabularyEdan) 
-            return {success: false, error: `Unable to compute EDAN Vocabulary ID.`}
-        
+        if (!vocabularyEdan)
+            return { success: false, error: 'Unable to compute EDAN Vocabulary ID.' };
         if (identifier.identifierType == vocabularyEdan.idVocabulary) {
-            const edanId: string | null = this.getICollection().checkEdanIdentifier(identifier.identifier); 
+            const edanId: string | null = this.getICollection().checkEdanIdentifier(identifier.identifier);
 
             //Uncomment to Console Test in Terminal
             //console.log({ regexTestValue: regexEdan.test(edanId ?? ""), edanValue: edanId })
 
             if  (!edanId)
                 return { success: false, error: `Invalid EDAN Record ID: ${identifier.identifier}}` };
-             
             if (regexEdan.test(edanId))
                 identifierValue = edanId;
             else
-                return {success: false, error: `Incorrect EDAN Record ID Syntax.  Please review documentation.`}
-                
-        } 
-            
+                return { success: false, error: 'Incorrect EDAN Record ID Syntax.  Please review documentation.' };
+        }
         if(identifier.identifierType !== vocabularyARK.idVocabulary || identifier.identifierType !== vocabularyEdan.idVocabulary)
             identifierValue = identifier.identifier;
-        
-        return {success: true, identifierValue}
+        return { success: true, identifierValue };
     }
 
     private async handleIdentifiers(SOBased: DBAPI.SystemObjectBased, systemCreated: boolean,

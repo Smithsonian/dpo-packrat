@@ -299,7 +299,7 @@ export class EdanCollection implements COL.ICollection {
     }
 
     // EDAN Identifier
-    checkEdanIdentifier(edan: string) : string | null {
+    checkEdanIdentifier(edan: string): string | null {
         const edanPosition: number = edan.indexOf('edanmdm:');
         return (edanPosition > -1) ? edan : null;
     }

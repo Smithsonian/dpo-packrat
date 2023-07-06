@@ -105,7 +105,7 @@ function Metadata(): React.ReactElement {
                         }
                     }
                 });
-            //  detects the asset type for breadcrumb
+                //  detects the asset type for breadcrumb
                 if (metadata.idSOAttachment && metadata.idAsset) {
                     switch (objectType) {
                         case eSystemObjectType.eCaptureData: {
@@ -165,7 +165,7 @@ function Metadata(): React.ReactElement {
     const onNext = async (): Promise<void> => {
         const updateMode: boolean = !!(metadata.file.idAsset);
         setFieldErrors(getFieldErrors(metadata));
-// Add the validation to check if the value in fields exist and is a string
+        // Add the validation to check if the value in fields exist and is a string
         if (assetType.photogrammetry) {
             const hasError: boolean = updateMode
                 ? validateFields(metadata.photogrammetry, photogrammetryFieldsSchemaUpdate)
@@ -193,7 +193,7 @@ function Metadata(): React.ReactElement {
                 : validateFields(metadata.other, otherFieldsSchema);
             if (hasError) return;
         }
-        //  This may be the code that initiates the completion of the Ingestion process. 
+        //  This may be the code that initiates the completion of the Ingestion process.
         if (isLast) {
             setDisableNavigation(true);
             setIngestionLoading(true);

@@ -1,7 +1,7 @@
-import React from 'react'; 
+import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Typography, TypographyProps, Tooltip, PropTypes } from "@material-ui/core";
-import { HelpOutline } from "@material-ui/icons";
+import { Typography, TypographyProps, Tooltip, PropTypes } from '@material-ui/core';
+import { HelpOutline } from '@material-ui/icons';
 
 const useStyles = makeStyles(({ spacing }) => ({
     container: {
@@ -35,8 +35,8 @@ interface LabelTooltipTextProps {
     align?: PropTypes.Alignment;
 }
 
-function LabelTooltipText(props: LabelTooltipTextProps): React.ReactElement { 
-    const { label, labelTooltipTxt, labelProps, renderLabel, align = 'left', } = props
+function LabelTooltipText(props: LabelTooltipTextProps): React.ReactElement {
+    const { label, labelTooltipTxt, labelProps, renderLabel, align = 'left', } = props;
     const classes = useStyles(props);
 
     let content: React.ReactNode = (
@@ -53,7 +53,7 @@ function LabelTooltipText(props: LabelTooltipTextProps): React.ReactElement {
                 <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
                     {label}
                     <Tooltip title={labelTooltipTxt}>
-                        <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer', verticalAlign:'middle', padding:'20px 5px' }} />
+                        <HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer', verticalAlign: 'middle', padding: '20px 5px' }} />
                     </Tooltip>
                 </Typography>
             </>
@@ -65,7 +65,7 @@ function LabelTooltipText(props: LabelTooltipTextProps): React.ReactElement {
         content = null;
     }
 
-    return <div> {content} </div>
+    return <div> {content} </div>;
 }
 
 export default LabelTooltipText;
