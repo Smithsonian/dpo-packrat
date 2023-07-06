@@ -58,7 +58,8 @@ export interface ICollection {
     /** Pass in a null shoulder to use the system shoulder */
     generateArk(shoulder: string | null, prependNameAuthority: boolean, isMedia: boolean): string;
     extractArkFromUrl(url: string): string | null;
-    transformArkIntoUrl(arkId: string): string
+    transformArkIntoUrl(arkId: string): string;
     getArkNameMappingAuthority(): string;
     getArkNameAssigningAuthority(): string;
+    checkEdanIdentifier(edan: string): string | null;
 }

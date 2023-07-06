@@ -325,6 +325,7 @@ function Model(props: ModelProps): React.ReactElement {
                 )}
 
                 <Box mb={2} width='52vw'>
+                    {/*ASSET IDENTIFIERS FORM STARTS HERE*/}
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}
                         identifiers={model.identifiers}
@@ -383,6 +384,8 @@ function Model(props: ModelProps): React.ReactElement {
                             </Box>
                         </>
                     )}
+
+                    {/* METADATA FORMS AREA*/}
                     <Box className={classes.modelDetailsContainer}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
@@ -405,6 +408,8 @@ function Model(props: ModelProps): React.ReactElement {
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
+
+                                                    {/* Grabs the dropdown options for SELECT */}
                                                     {getEntries(eVocabularySetID.eModelCreationMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
                                             </TableCell>

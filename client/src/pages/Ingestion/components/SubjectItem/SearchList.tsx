@@ -15,6 +15,8 @@ import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
 import { toast } from 'react-toastify';
 import { actionOnKeyPress } from '../../../../utils/shared';
+// import { HelpOutline } from '@material-ui/icons';
+// import Tooltip from "@material-ui/core/Tooltip";
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -38,7 +40,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 }));
 
 type SearchListProps = {
-    EdanOnly?: boolean
+    EdanOnly?: boolean;
 };
 
 function SearchList(props: SearchListProps): React.ReactElement {
@@ -80,7 +82,13 @@ function SearchList(props: SearchListProps): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
 
     return (
-        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px'>
+        <FieldType
+            required={false}
+            label='Search for Subject'
+            marginTop={2}
+            padding='10px'
+            labelTooltip='This is the entity that the digital asset(s) is based on and where it will be saved to.'
+        >
             <Box className={classes.container}>
                 <label htmlFor='searchSubjectFilter' style={{ display: 'none' }}>Search Subject</label>
                 <TextField

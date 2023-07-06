@@ -197,6 +197,7 @@ function FilterDate(props: FilterDateProps): React.ReactElement {
     const { label } = props;
     const classes = useStyles();
     // eslint-disable-next-line prefer-const
+    // workflow.tsx (state handle)
     let [dateFrom, dateTo, updateFilterValue] = useWorkflowStore(state => [state.dateFrom, state.dateTo, state.updateFilterValue]);
 
     const onDate = (name: string, date: string | null | undefined) => {
