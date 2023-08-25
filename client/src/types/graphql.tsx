@@ -706,6 +706,8 @@ export type GetItemsForSubjectResult = {
   Item: Array<Item>;
 };
 
+// todo: insert GetJobResourceResult typedef
+
 export type GetLicenseInput = {
   idLicense: Scalars['Int'];
 };
@@ -1333,6 +1335,8 @@ export type JobRun = {
   idJob: Scalars['Int'];
   idJobRun: Scalars['Int'];
 };
+
+// todo: insert JobResource typedef
 
 export type License = {
   __typename?: 'License';
@@ -3231,6 +3235,8 @@ export const DiscardUploadedAssetVersionsDocument = gql`
 }
     `;
 export type DiscardUploadedAssetVersionsMutationFn = Apollo.MutationFunction<DiscardUploadedAssetVersionsMutation, DiscardUploadedAssetVersionsMutationVariables>;
+
+// todo: insert GetJobResourceQuery
 
 /**
  * __useDiscardUploadedAssetVersionsMutation__
@@ -6694,3 +6700,83 @@ export function useGetWorkflowListLazyQuery(baseOptions?: Apollo.LazyQueryHookOp
 export type GetWorkflowListQueryHookResult = ReturnType<typeof useGetWorkflowListQuery>;
 export type GetWorkflowListLazyQueryHookResult = ReturnType<typeof useGetWorkflowListLazyQuery>;
 export type GetWorkflowListQueryResult = Apollo.QueryResult<GetWorkflowListQuery, GetWorkflowListQueryVariables>;
+
+// #region Job Resources
+/**
+ * __useGetJobResourcesQuery__
+ *
+ * To run a query within a React component, call `useGetJobResourceQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetJobResourceQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetJobResourceQuery({
+ *   variables: {},
+ * });
+ */
+export type GetJobResourceListQuery = { 
+  __typename?: 'Query', 
+  getJobResourceList: { 
+    __typename?: 'GetJobResourceListResult', 
+    resources: Array<{ 
+      __typename?: 'JobResource',
+      type:string,
+      name: string,
+      address: string,
+      port:number,
+      canInspect:boolean,
+      canSceneGen:boolean,
+      canPhotogrammetry: boolean,
+      canBigFile: boolean,  
+    }>
+  }
+};
+export type JobResource = {
+  __typename?: 'JobResource';
+  type: Scalars['String'];
+  name: Scalars['String'];
+  address: Scalars['String'];
+  port: Scalars['Int'];
+  canInspect: Scalars['Boolean'];
+  canSceneGen: Scalars['Boolean'];
+  canPhotogrammetry: Scalars['Boolean'];
+  canBigFile: Scalars['Boolean'];
+}
+export type GetJobResourceListInput = {
+  search: Scalars['String'];
+};
+export type GetJobResourceListResult = {
+  __typename?: 'GetJobResourceListResult';
+  resources: Array<JobResource>;
+};
+export type GetJobResourceListQueryVariables = Exact<{ 
+  input: GetJobResourceListInput;
+}>;
+
+export function useGetJobResourceListQuery(baseOptions: Apollo.QueryHookOptions<GetJobResourceListQuery,GetJobResourceListQueryVariables>) {
+  const options = {...defaultOptions, ...baseOptions}
+  return Apollo.useQuery<GetJobResourceListQuery,GetJobResourceListQueryVariables>(GetJobResourceList, options);
+}
+export type GetJobResourceListQueryHookResult = ReturnType<typeof useGetJobResourceListQuery>;
+export type GetJobResourceListQueryResult = Apollo.QueryResult<GetJobResourceListQuery,GetJobResourceListQueryVariables>;
+// todo: add other properties
+export const GetJobResourceList = gql`
+    query getJobResourceList($input: GetJobResourceListInput!) {
+      getJobResourceList(input: $input) {
+        resources {
+          name
+          type
+          address
+          port
+          canInspect
+          canSceneGen
+          canPhotogrammetry
+          canBigFile
+        }
+      }
+    }
+    `;
+
+// #endregion
