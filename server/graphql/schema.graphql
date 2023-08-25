@@ -2178,3 +2178,4 @@ type WorkflowStepSystemObjectXref {
   idWorkflowStep: Int!
   idWorkflowStepSystemObjectXref: Int!
 }
+

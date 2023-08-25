@@ -2705,3 +2705,27 @@ export type WorkflowStepSystemObjectXref = {
   idWorkflowStep: Scalars['Int'];
   idWorkflowStepSystemObjectXref: Scalars['Int'];
 };
+
+//#region JobResource
+export type JobResource = {
+  __typename?: 'JobResource';
+  type: Scalars['String'];
+  name: Scalars['String'];
+  address: Scalars['String'];
+  port: Scalars['Int'];
+  canInspect: Scalars['Boolean'];
+  canSceneGen: Scalars['Boolean'];
+  canPhotogrammetry: Scalars['Boolean'];
+  canBigFile: Scalars['Boolean'];
+}
+export type GetJobResourceListInput = {
+  search?: InputMaybe<Scalars['String']>;
+};
+export type GetJobResourceListResult = {
+  __typename?: 'GetJobResourceListResult';
+  resources: Array<JobResource>;
+};
+export type QueryGetJobResourceListArgs = {
+  input: GetJobResourceListInput;
+};
+//#endregion

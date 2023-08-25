@@ -15,7 +15,7 @@ import {
     CreateLicenseDocument,
     UpdateLicenseMutation,
     CreateLicenseMutation,
-    GetLicenseListDocument
+    GetLicenseListDocument,
 } from '../../../types/graphql';
 import { CoordinateValues } from '../components/Subject/SubjectForm';
 import { FetchResult } from '@apollo/client';

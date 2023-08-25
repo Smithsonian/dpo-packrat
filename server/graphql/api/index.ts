@@ -108,7 +108,9 @@ import {
     GetProjectListResult,
     GetProjectListInput,
     GetIngestionItemsInput,
-    GetIngestionItemsResult
+    GetIngestionItemsResult,
+    GetJobResourceListInput,
+    GetJobResourceListResult,
 } from '../../types/graphql';
 
 // Queries
@@ -152,6 +154,7 @@ import getAllUsers from './queries/user/getAllUsers';
 import getUnitsFromNameSearch from './queries/unit/getUnitsFromNameSearch';
 import getProjectList from './queries/systemobject/getProjectList';
 import getIngestionItems from './queries/unit/getIngestionItems';
+import getJobResourceList from '../schema/workflow/resolvers/queries/getJobResourceList';
 
 // Mutations
 import createUser from './mutations/user/createUser';
@@ -223,7 +226,8 @@ const allQueries = {
     updateUser,
     getUnitsFromNameSearch,
     getProjectList,
-    getIngestionItems
+    getIngestionItems,
+    getJobResourceList,
 };
 
 type GraphQLRequest = {
@@ -761,6 +765,16 @@ class GraphQLApi {
 
     async getIngestionItems(input: GetIngestionItemsInput, context?: Context): Promise<GetIngestionItemsResult> {
         const operationName = 'getIngestionItems';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async getJobResourceList(input: GetJobResourceListInput, context?: Context): Promise<GetJobResourceListResult> {
+        const operationName = 'getJobResourceList';
         const variables = { input };
         return this.graphqlRequest({
             operationName,

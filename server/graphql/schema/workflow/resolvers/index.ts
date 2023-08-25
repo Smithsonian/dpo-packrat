@@ -8,11 +8,13 @@ import WorkflowStep from './types/WorkflowStep';
 import WorkflowStepSystemObjectXref from './types/WorkflowStepSystemObjectXref';
 import getWorkflow from './queries/getWorkflow';
 import getWorkflowList from './queries/getWorkflowList';
+// import getJobResourceList from './queries/getJobResourceList';
 
 const resolvers = {
     Query: {
         getWorkflow,
-        getWorkflowList
+        getWorkflowList,
+        // getJobResourceList,
     },
     Job,
     JobRun,
