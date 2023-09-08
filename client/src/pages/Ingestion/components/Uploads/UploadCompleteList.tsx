@@ -26,18 +26,19 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         //marginBottom: '50px'
     },
     list: {
-        display: 'flex',
+        //display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minHeight: '12vh',
+        //minHeight: '12vh',
         //height: '30vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         width: '100%',
-        ...scrollBarProperties(true, false, palette.text.disabled)
+        ...scrollBarProperties(true, false, palette.text.disabled),
+        borderBottom: '1px solid #000'
     },
     listDetail: {
-        textAlign: 'center',
+        textAlign: 'left',
         color: palette.grey[500],
         fontStyle: 'italic',
         marginTop: '2%'
@@ -106,7 +107,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
         content = (
             <React.Fragment>
                 {!completed.length && (
-                    <Typography className={classes.listDetail} variant='body1' style={{ borderBottom: '1px border #000' }} >
+                    <Typography className={classes.listDetail} variant='body1' >
                         No files available.
                     </Typography>
                 )}
