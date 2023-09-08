@@ -127,8 +127,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         position: 'absolute',
         height: '100%',
         width: ({ progress }: FileListItemProps) => `${progress}%`,
-        backgroundColor: ({ complete, failed }: FileListItemProps) =>
-            failed ? fade(palette.error.light, 0.3) : complete ? fade(Colors.upload.success, 0.4) : palette.secondary.light,
+        // backgroundColor: ({ complete, failed }: FileListItemProps) =>
+        //     failed ? fade(palette.error.light, 0.3) : complete ? fade(Colors.upload.success, 0.4) : palette.secondary.light,
         zIndex: 5,
         top: 0,
         left: 0,

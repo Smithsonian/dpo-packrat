@@ -15,13 +15,13 @@ import LoadingButton from '../controls/LoadingButton';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     uploadContainer: {
-        //display: 'flex',
+        display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '10px',
+        padding: '10px 0',
         //background: palette.background.paper
-        background: 'rgb(236, 245, 253)'
+        //background: 'rgb(236, 245, 253)'
     },
     container: {
         //display: 'flex',
@@ -67,7 +67,7 @@ interface SidebarBottomNavigatorProps {
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
     const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep, disableNavigation } = props;
-    const classes = useStyles();
+        const classes = useStyles();
     // console.log(`SidebarBottomNavigator ${JSON.stringify(props)}, onClickRight ${onClickRight ? 'defined' : 'NOT defined'}`);
 
     let leftButton = (

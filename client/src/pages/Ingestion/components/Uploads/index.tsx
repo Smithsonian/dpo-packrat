@@ -21,6 +21,7 @@ import UploadFilesPicker from './UploadList';
 import useIngest from '../../hooks/useIngest';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import { Helmet } from 'react-helmet';
+import ProcessingList from '../Uploads/ProcessingList';
 
 const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles({
     container: {
@@ -287,16 +288,21 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
     return (
         <React.Fragment>
             <UploadFilesPicker />
-            <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
-            <SidebarBottomNavigator
-                leftLabel='Discard'
-                rightLabel='Ingest'
-                leftLoading={discardingFiles}
-                rightLoading={gettingAssetDetails}
-                onClickLeft={onDiscard}
-                onClickRight={onIngest}
-                uploadVersion
-            />
+            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                <ProcessingList />
+                <div style={{ flexBasis: '50%' }}>
+                    <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
+                    <SidebarBottomNavigator
+                        leftLabel='Discard'
+                        rightLabel='Ingest'
+                        leftLoading={discardingFiles}
+                        rightLoading={gettingAssetDetails}
+                        onClickLeft={onDiscard}
+                        onClickRight={onIngest}
+                        uploadVersion
+                    />
+                </div>
+            </div>
         </React.Fragment>
     );
 }

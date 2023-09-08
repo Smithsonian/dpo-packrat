@@ -40,7 +40,7 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         textAlign: 'center',
         color: palette.grey[500],
         fontStyle: 'italic',
-        marginTop: '8%'
+        marginTop: '2%'
     }
 }));
 
@@ -106,7 +106,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
         content = (
             <React.Fragment>
                 {!completed.length && (
-                    <Typography className={classes.listDetail} variant='body1'>
+                    <Typography className={classes.listDetail} variant='body1' style={{ borderBottom: '1px border #000' }} >
                         No files available.
                     </Typography>
                 )}
@@ -116,20 +116,22 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
     }
 
     return (
-        <Box className={classes.container}>
-            <FieldType
-                required
-                align='left'
-                label='3. Select for Ingestion'
-                labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
-                width={'calc(100% - 20px)'}
-                padding='10px'
-            >
+        <>
+            <Box className={classes.container}>
+                <FieldType
+                    required
+                    align='left'
+                    label='3. Select for Ingestion'
+                    labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
+                    labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'none' } }}
+                    //width={'calc(100% - 20px)'}
+                    //padding='10px'
+                >
+                </FieldType>
                 <UploadListHeader />
                 <Box className={classes.list}>{content}</Box>
-            </FieldType>
-        </Box>
+            </Box>
+        </>
     );
 }
 
