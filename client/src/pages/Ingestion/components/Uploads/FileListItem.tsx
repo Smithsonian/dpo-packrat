@@ -33,14 +33,16 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         borderRadius: 5,
         width: '100%',
         zIndex: 10,
-        [breakpoints.down('lg')]: {
-            marginTop: 5
-        },
+        // [breakpoints.down('lg')]: {
+        //     marginTop: 5
+        // },
     },
     item: {
         display: 'flex',
-        width: '100%',
+        width: '97%',
         zIndex: 'inherit',
+        border: '1px solid #91B6ED',
+        padding: '0.5em',
         cursor: ({ complete }: FileListItemProps) => (complete ? 'pointer' : 'default')
     },
     details: {

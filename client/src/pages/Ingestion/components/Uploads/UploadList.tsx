@@ -26,18 +26,25 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         flexDirection: 'column',
         //marginTop: 20,
         //marginBottom: 40,
-        border: `1px dashed ${palette.primary.main}`
+        //border: `1px dashed ${palette.primary.main}`
+        padding: '0',
     },
     list: {
         display: 'flex',
-        flexDirection: 'column',
+        //flexDirection: 'column',
         alignItems: 'center',
-        minHeight: '16vh',
-        height: '25vh',
+        //minHeight: '16vh',
+        //height: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
-        width: '100%',
-        ...scrollBarProperties(true, false, palette.text.disabled)
+        border: '2px dashed #58AFFF',
+        padding: '.5em',
+        margin: '1em 0',
+        //width: 'calc(100% - 20px)',
+        ...scrollBarProperties(true, false, palette.text.disabled),
+        '&:hover': {
+            backgroundColor: '##fffead'
+        },
     },
     listDetail: {
         textAlign: 'center',
@@ -46,7 +53,8 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         marginTop: '8%'
     },
     icon: {
-        color: palette.primary.main
+        color: palette.primary.main,
+        paddingRight: '1em'
     },
     button: {
         width: 120,
@@ -59,14 +67,14 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         outline: '2px hidden #8DABC4'
     },
     title: {
-        margin: '1% 0px',
+        //margin: '1% 0px',
         fontSize: '.8em',
     },
     subtitle: {
-        margin: '1% 0px',
+        //margin: '1% 0px',
         fontSize: '.8em',
         color: '#878585',
-        marginBottom: '2.5em'
+        //marginBottom: '2.5em'
     }
 }));
 
@@ -86,23 +94,25 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 <FieldType
                     required
                     align='left'
-                    label='Upload Files.'
-                    labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
-                    width={'calc(100% - 20px)'}
-                    padding='10px'
+                    label='1. Upload Files.'
+                    labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'none' } }}
+                    //width={'calc(100% - 20px)'}
+                    //padding='10px'
                 >
-                    <UploadListHeader />
                     <Box className={classes.list}>
-                        <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
-                        <BsCloudUpload className={classes.icon} size='50px' />
-                        <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
+                        <BsCloudUpload className={classes.icon} size='75px' />
+                        {/* <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
                             Browse files
-                        </Button>
-                        <Typography className={classes.title}>Drag and drop files here or choose file.</Typography>
+                        </Button> */}
+                        <div>
+                            <Typography className='classes.title'>Drag and drop files here or <span onClick={open} style={{ color: '#2C6EEF', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer' }}>choose</span> file.</Typography>
+                            <Typography className='classes.subtitle'>Supported Formats:  Model Type: obj, ply, stl, x3d, wrl, dae, or fbx*. Textures: jpg, png, tif, tga, bmp</Typography>
+                        </div>
                     </Box>
                 </FieldType>
             </Box>
-            <Typography className={classes.subtitle}>Supported Formats: <br /> Model Type: obj, ply, stl, x3d, wrl, dae, or fbx*.<br /> Textures: jpg, png, tif, tga, bmp</Typography>
+            <UploadListHeader />
+            <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
         </div>
     );
 }

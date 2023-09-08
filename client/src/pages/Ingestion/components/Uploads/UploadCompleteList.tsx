@@ -120,7 +120,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
             <FieldType
                 required
                 align='left'
-                label='Select file(s) in the droplist below to ingest.'
+                label='3. Select for Ingestion'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
                 labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
                 width={'calc(100% - 20px)'}

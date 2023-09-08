@@ -4,21 +4,22 @@
  * This component wraps content and highlights it as required field or not.
  */
 import { Box, BoxProps, PropTypes, Typography, TypographyProps, Tooltip, Grid, GridSize } from '@material-ui/core';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Progress from './Progress';
 import { HelpOutline } from '@material-ui/icons';
 // import { HelpOutline } from '@material-ui/icons';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+const useStyles = makeStyles(({ spacing }) => ({
     container: {
         display: 'flex',
-        padding: ({ padding }: FieldTypeProps) => padding ? padding : '0px 10px',
+        //padding: ({ padding }: FieldTypeProps) => padding ? padding : '0px 10px',
         //borderRadius: 5,
         //border: `1px dashed #0086ff`,
         width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
-        backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
+        // backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
+        backgroundColor: 'none'
     },
     label: {
         color: 'auto'

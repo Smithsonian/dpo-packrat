@@ -12,12 +12,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         display: 'flex',
         alignItems: 'center',
         height: 50,
-        width: '100%',
-        borderRadius: 5,
-        background: palette.background.paper,
-        [breakpoints.down('lg')]: {
-            height: 35
-        }
+        //width: 'calc(100% - 15px)',
+        //borderRadius: 5,
+        background: 'rgb(236, 245,253)',
+        // [breakpoints.down('lg')]: {
+        //     height: 35
+        // }
     },
     fileDetails: {
         display: 'flex',
