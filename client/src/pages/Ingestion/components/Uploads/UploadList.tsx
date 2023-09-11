@@ -6,7 +6,7 @@
  *
  * This component renders upload list for pending files only.
  */
-import { Box, Typography, Button } from '@material-ui/core';
+import { Box, Typography, /*Button*/ } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Dropzone from 'react-dropzone';
@@ -46,12 +46,6 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
             backgroundColor: '##fffead'
         },
     },
-    listDetail: {
-        textAlign: 'center',
-        color: palette.grey[500],
-        fontStyle: 'italic',
-        marginTop: '8%'
-    },
     icon: {
         color: palette.primary.main,
         paddingRight: '1em'
@@ -75,6 +69,12 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         fontSize: '.8em',
         color: '#878585',
         //marginBottom: '2.5em'
+    },
+    listDetail: {
+        textAlign: 'left',
+        color: palette.grey[500],
+        fontStyle: 'italic',
+        marginTop: '2%'
     }
 }));
 
@@ -86,7 +86,7 @@ type UploadListProps = {
 function UploadList(props: UploadListProps): React.ReactElement {
     const classes = useUploadListStyles();
     const { pending } = useUploadStore();
-    const { loading, open } = props;
+    const { /*loading,*/ open } = props;
 
     return (
         <div>
@@ -112,6 +112,11 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 </FieldType>
             </Box>
             <UploadListHeader />
+            {!pending.length && (
+                <Typography className={classes.listDetail} variant='body1' >
+                    No files available.
+                </Typography>
+            )}
             <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
         </div>
     );

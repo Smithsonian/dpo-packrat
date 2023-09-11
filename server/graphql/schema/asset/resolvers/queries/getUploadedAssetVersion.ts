@@ -11,16 +11,24 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     const { idUser } = user;
 
-    // fetch asset versions that have "false" for ingested and are not retired for this user.
-    // Note that there may be some asset versions with "null" for ingested, which we are ignoring --
-    // these have been uploaded but are still being processed in a post-upload workflow
+    const AssetVersionProcessing: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, null, false);
+    console.log(`\t>>> Asset Version Processing: ${JSON.stringify(AssetVersionProcessing)}`);
+
     const AssetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, false, false);
+    console.log(`\t>>> Asset Version: ${JSON.stringify(AssetVersion)}`);
     if (!AssetVersion) {
         LOG.error(`getUploadedAssetVersion failed on AssetVersion.fetchFromUserByIngested(${idUser}, false, false)`, LOG.LS.eGQL);
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
-    if (AssetVersion.length == 0)
+    if (AssetVersion.length == 0 && AssetVersionProcessing?.length == 0)
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
+
+    // TEMP: grab null objects and add them to the list
+    // const AssetVersionProcessing: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, null, false);
+    if(AssetVersionProcessing && AssetVersionProcessing.length>0) {
+        AssetVersion.unshift(...AssetVersionProcessing);
+        LOG.info(`getUploadAssetVersion adding ${AssetVersionProcessing.length} assets still processing`,LOG.LS.eGQL);
+    }
 
     // compute map of idAsset -> idAssetVersion for asset versions
     const assetMap: Map<number, number> = new Map<number, number>();
@@ -34,6 +42,30 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         LOG.error(`getUploadedAssetVersion failed on Asset.computeVersionCountMap(${JSON.stringify(idAssets)})`, LOG.LS.eGQL);
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
+    // fetch asset versions that have "false" for ingested and are not retired for this user.
+    // Note that there may be some asset versions with "null" for ingested, which we are ignoring --
+    // these have been uploaded but are still being processed in a post-upload workflow
+    // const AssetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, false, false);
+    // console.log(`Asset Version: ${AssetVersion}`);
+    // if (!AssetVersion) {
+    //     LOG.error(`getUploadedAssetVersion failed on AssetVersion.fetchFromUserByIngested(${idUser}, false, false)`, LOG.LS.eGQL);
+    //     return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
+    // }
+    // if (AssetVersion.length == 0)
+    //     return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
+
+    // // compute map of idAsset -> idAssetVersion for asset versions
+    // const assetMap: Map<number, number> = new Map<number, number>();
+    // for (const assetVersion of AssetVersion)
+    //     assetMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
+
+    // // compute asset version counts for each asset
+    // const idAssets: number[] = [ ...assetMap.keys() ];
+    // const versionCountMap: Map<number, number> | null = await DBAPI.Asset.computeVersionCountMap(idAssets);
+    // if (!versionCountMap) {
+    //     LOG.error(`getUploadedAssetVersion failed on Asset.computeVersionCountMap(${JSON.stringify(idAssets)})`, LOG.LS.eGQL);
+    //     return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
+    // }
 
     // let caller know which asset versions are updates -- those with version counts > 1
     const idAssetVersionsUpdated: number[] = [];

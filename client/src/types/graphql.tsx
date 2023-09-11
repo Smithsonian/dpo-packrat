@@ -4520,6 +4520,7 @@ export const GetUploadedAssetVersionDocument = gql`
       StorageSize
       FileName
       DateCreated
+      Ingested
       Asset {
         idAsset
         VAssetType {

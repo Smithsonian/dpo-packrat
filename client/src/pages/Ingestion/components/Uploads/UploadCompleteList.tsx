@@ -61,7 +61,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-
+            console.log(`getUploadedAssetVersion: ${JSON.stringify(getUploadedAssetVersion)}`);
             const fileIds: string[] = completed.map(({ id }) => id);
             const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
             // console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);

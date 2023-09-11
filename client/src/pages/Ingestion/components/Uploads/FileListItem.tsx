@@ -17,7 +17,7 @@ import { MdFileUpload } from 'react-icons/md';
 import { Progress } from '../../../../components';
 import { FileId, VocabularyOption } from '../../../../store';
 import { palette } from '../../../../theme';
-import Colors from '../../../../theme/colors';
+//import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { eIngestionMode } from '../../../../constants';
 import { UploadReferences } from '../../../../store';

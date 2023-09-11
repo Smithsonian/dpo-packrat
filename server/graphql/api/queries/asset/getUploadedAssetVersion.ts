@@ -8,6 +8,7 @@ const getUploadedAssetVersion = gql`
                 StorageSize
                 FileName
                 DateCreated
+                Ingested
                 Asset {
                     idAsset
                     VAssetType {
