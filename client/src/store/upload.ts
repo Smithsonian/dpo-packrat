@@ -4,6 +4,8 @@
  *
  * This store manages state for file uploads used in Ingestion flow.
  */
+import { useQuery } from '@apollo/client';
+import { useState, useEffect } from 'react';
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import path from 'path';
@@ -17,6 +19,7 @@ import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
 import { eIngestionMode, ROUTES } from '../constants';
+import { GetUploadedAssetVersionDocument } from '../../../client/src/types/graphql';
 
 export type FileId = string;
 
@@ -233,9 +236,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     }
                 });
 
+                
                 set({ pending: updatedPending });
-            }
 
+            }
             startUploadTransfer(file, options?.references);
         }
     },
@@ -340,8 +344,13 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pendingUpdates: updatedUpdates });
         }
     },
-
+    // getAssetVersion: async() => {
+    //     console.log('Getting Asset Version...');
+    //     const result = await resolveAfter2Seconds();
+    //     console.log(`Get Asset Version: ${result}`);
+    // },
     //This is the uploading for the Processed Files
+
     startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
@@ -350,6 +359,17 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 const { loaded, total } = event;
                 const progress = Math.floor((loaded / total) * 100);
                 const updateProgress = !(progress % 1);
+                /* call getUploadedAssetVersion here */
+                //const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+                function assetVersionResult() {
+                    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+                }
+                async function getAssetVersion () {
+                    console.log('Getting Asset Version...');
+                    const result = await assetVersionResult();
+                    console.log(`Get Asset Version: ${result}`);
+                }
+                getAssetVersion();
 
                 if (updateProgress) {
                     const progressEvent: UploadProgressEvent = {
@@ -483,6 +503,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         set({ completed: updatedCompleted });
     },
     onProgressEvent: (eventData: UploadProgressEvent, options?: UploadOptions): void => {
+        //const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
         const { pending, pendingAttachments, pendingUpdates } = get();
         const { id, progress } = eventData;
 
@@ -519,6 +540,9 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
             });
             set({ pending: updatedPendingProgress });
+            //const { getUploadedAssetVersion } = data;
+            //const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
+            //console.log(`getUploadedAssetVersion in Processing: ${JSON.stringify(getUploadedAssetVersion)}`);
         }
     },
     onSetCancelledEvent: (eventData: UploadSetCancelEvent, options?: UploadOptions): void => {

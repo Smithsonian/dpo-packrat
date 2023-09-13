@@ -58,6 +58,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
     const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
 
     useEffect(() => {
+        //COMPLETE
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
