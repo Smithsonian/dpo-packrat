@@ -455,7 +455,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 const progress = Math.floor((loaded / total) * 100);
                 const updateProgress = !(progress % 1);
 
-                setInterval(function() {
+                const intervalID = setInterval(function() {
                     // Make the GraphQL request using the Fetch API
                     fetch(endpoint, options)
                         .then((response) => response.json()) // Parse the response as JSON
@@ -476,7 +476,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                         UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
                     }
                     console.log(options);
-                }, 5000);
+                }, 1000);
+
+                // if (progress === 100) {
+                //     clearInterval(intervalID);
+                // }
 
             };
 
