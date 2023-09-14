@@ -45,7 +45,6 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     }
 }));
 
-
 interface UploadListCompleteProps {
     setUpdatedAssetVersionMetadata: (metadata: any) => void;
 }
@@ -62,10 +61,10 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            console.log(`getUploadedAssetVersion: ${JSON.stringify(getUploadedAssetVersion)}`);
+            console.log(`COMPLETED getUploadedAssetVersion data: ${JSON.stringify(data)}`);
             const fileIds: string[] = completed.map(({ id }) => id);
             const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
-            // console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
+            console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
 
             if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated)
                 setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet });

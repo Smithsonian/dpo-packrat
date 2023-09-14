@@ -123,6 +123,9 @@ export class HttpServer {
     private static idRequestMiddleware2(req: Request, _res, next): void {
         const user = req['user'];
         const idUser = user ? user['idUser'] : undefined;
+
+        console.log(req.body);
+
         ASL.run(new LocalStore(true, idUser), () => {
             if (!req.originalUrl.startsWith('/graphql'))
                 LOG.info(req.originalUrl, LOG.LS.eHTTP);
@@ -132,6 +135,9 @@ export class HttpServer {
 
     private static graphqlLoggingMiddleware(req: Request, _res, next): void {
         const query: string | null = computeGQLQuery(req);
+
+        console.log(`\t>>> ${query} ${JSON.stringify(req.body.variables)}`, LOG.LS.eGQL);
+
         if (query && query !== '__schema') // silence __schema logging, issued by GraphQL playground
             LOG.info(`${query} ${JSON.stringify(req.body.variables)}`, LOG.LS.eGQL);
         return next();

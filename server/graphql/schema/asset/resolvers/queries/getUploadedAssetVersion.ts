@@ -12,10 +12,10 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
     const { idUser } = user;
 
     const AssetVersionProcessing: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, null, false);
-    console.log(`\t>>> Asset Version Processing: ${JSON.stringify(AssetVersionProcessing)}`);
+    //console.log(`\t>>> Asset Version Processing: ${JSON.stringify(AssetVersionProcessing)}`);
 
     const AssetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, false, false);
-    console.log(`\t>>> Asset Version: ${JSON.stringify(AssetVersion)}`);
+    //console.log(`\t>>> Asset Version: ${JSON.stringify(AssetVersion)}`);
     if (!AssetVersion) {
         LOG.error(`getUploadedAssetVersion failed on AssetVersion.fetchFromUserByIngested(${idUser}, false, false)`, LOG.LS.eGQL);
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };

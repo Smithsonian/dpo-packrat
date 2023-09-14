@@ -67,7 +67,7 @@ interface SidebarBottomNavigatorProps {
 
 function SidebarBottomNavigator(props: SidebarBottomNavigatorProps): React.ReactElement {
     const { leftLabel, onClickLeft, leftRoute, leftLoading, rightLabel, onClickRight, rightRoute, rightLoading, uploadVersion, invalidMetadataStep, disableNavigation } = props;
-        const classes = useStyles();
+    const classes = useStyles();
     // console.log(`SidebarBottomNavigator ${JSON.stringify(props)}, onClickRight ${onClickRight ? 'defined' : 'NOT defined'}`);
 
     let leftButton = (
