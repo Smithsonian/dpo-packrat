@@ -218,6 +218,8 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
     const select = () => (complete ? onSelect(id, !selected) : null);
     let options: React.ReactNode = null;
+    //console.log('redraw');
+
     if (!complete) {
         {/*Uploaded Items State*/}
         options = (

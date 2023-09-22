@@ -61,15 +61,19 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
         if (!loading && !error) {
             const { getUploadedAssetVersion } = data;
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            console.log(`COMPLETED getUploadedAssetVersion data: ${JSON.stringify(data)}`);
+            console.log(JSON.stringify(AssetVersion));
+            console.log(AssetVersion);
+            console.log(`\t>>> STATUS: COMPLETED Asset Version (check if it is an array): ${Array.isArray(JSON.stringify(getUploadedAssetVersion))}`);
+            //console.log(`\t>>> COMPLETED ID Asset Versions Updated: ${JSON.stringify(idAssetVersionsUpdated)}`);
+            //console.log(`\t>>> COMPLETED Updated Asset Version Metadata: ${JSON.stringify(UpdatedAssetVersionMetadata )}`);
             const fileIds: string[] = completed.map(({ id }) => id);
             const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
-            console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
+            //console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
 
-            if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated)
+            if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated) {
                 setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet });
+            }
             const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
-
             if (!sortedAssetVersion)
                 return;
 
@@ -78,6 +82,9 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                 if (updatedMetadata.idAssetVersion)
                     UpdatedAssetVersionMetadataMap.set(updatedMetadata.idAssetVersion, updatedMetadata);
             }
+            UpdatedAssetVersionMetadataMap.forEach((value: any, key: any) => {
+                console.log(key, value);
+            });
 
             const completedFiles = sortedAssetVersion.map(assetVersion => {
                 const { idAssetVersion } = assetVersion;

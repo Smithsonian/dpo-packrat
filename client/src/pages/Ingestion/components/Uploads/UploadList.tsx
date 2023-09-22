@@ -95,9 +95,9 @@ function UploadList(props: UploadListProps): React.ReactElement {
     useEffect(() => {
         //COMPLETE
         if (!loading && !error) {
-            const { getUploadedAssetVersion } = data;
+            //const { getUploadedAssetVersion } = data;
             //const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            console.log(`PENDING getUploadedAssetVersion data: ${JSON.stringify(getUploadedAssetVersion)}`);
+            //console.log(`PENDING getUploadedAssetVersion data: ${JSON.stringify(getUploadedAssetVersion)}`);
         }
     }, [data, loading, error]);
 

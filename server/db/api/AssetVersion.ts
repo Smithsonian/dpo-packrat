@@ -377,15 +377,33 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                     await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator, Ingested } }), AssetVersion);
             else {
-                const assetVersions: AssetVersionBase[] | null = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
+
+                // HACK: Ingested SQL statement wasn't handling null condition since '= NULL' is invalid
+                //       add second hardcoded condition because dynamic changing of value with ? operator
+                //       or building a literal and feeding it in would result in invalid parameterization by Prisma.
+                let assetVersions: AssetVersionBase[] | null;
+                if(Ingested!=null) {
+                    assetVersions = // DBC.CopyArray<AssetVersionBase, AssetVersion>(
                     await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
                     SELECT AV.*
                     FROM AssetVersion AS AV
                     JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
                     JOIN Asset AS A ON (AV.idAsset = A.idAsset)
                     WHERE AV.idUserCreator = ${idUserCreator}
-                      AND AV.Ingested = ${Ingested}
-                      AND SO.Retired = ${Retired}`; //, AssetVersion);
+                    AND AV.Ingested = ${Ingested}
+                    AND SO.Retired = ${Retired}`; //, AssetVersion);
+                } else {
+                    assetVersions =
+                    await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                    SELECT AV.*
+                    FROM AssetVersion AS AV
+                    JOIN SystemObject AS SO ON (AV.idAssetVersion = SO.idAssetVersion)
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.idUserCreator = ${idUserCreator}
+                    AND AV.Ingested IS NULL
+                    AND SO.Retired = ${Retired}`;
+                }
+
                 /* istanbul ignore if */
                 if (!assetVersions)
                     return null;

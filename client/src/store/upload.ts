@@ -4,10 +4,7 @@
  *
  * This store manages state for file uploads used in Ingestion flow.
  */
-//import { useQuery } from '@apollo/client';
-//import { useState, useEffect } from 'react';
 import create, { SetState, GetState } from 'zustand';
-//import { gql } from '@apollo/client';
 import lodash from 'lodash';
 import path from 'path';
 import { toast } from 'react-toastify';
@@ -20,7 +17,7 @@ import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
 import { eIngestionMode, ROUTES } from '../constants';
-//import { GetUploadedAssetVersionDocument } from '../../../client/src/types/graphql';
+// import { GetUploadedAssetVersionDocument } from '../types/graphql';
 
 export type FileId = string;
 
@@ -87,6 +84,119 @@ type UploadStore = {
     reset: () => void;
     resetSpecialPending: (uploadType: eIngestionMode) => void;
     refetch?: (variables?) => Promise<any>;
+};
+
+const queryAssetVersionDocuments = async (origin: string) => {
+    // Define your GraphQL query as a string
+    const query = `query getUploadedAssetVersion {
+        getUploadedAssetVersion {
+          AssetVersion {
+            idAssetVersion
+            StorageSize
+            FileName
+            DateCreated
+            Ingested
+            Asset {
+              idAsset
+              VAssetType {
+                idVocabulary
+                Term
+              }
+            }
+            idSOAttachment
+            SOAttachmentObjectType
+          }
+          idAssetVersionsUpdated
+          UpdatedAssetVersionMetadata {
+            idAssetVersion
+            UpdatedObjectName
+            Item {
+              Name
+            }
+            CaptureDataPhoto {
+              name
+              dateCaptured
+              datasetType
+              description
+              cameraSettingUniform
+              datasetFieldId
+              itemPositionType
+              itemPositionFieldId
+              itemArrangementFieldId
+              focusType
+              lightsourceType
+              backgroundRemovalMethod
+              clusterType
+              clusterGeometryFieldId
+              folders {
+                name
+                variantType
+              }
+            }
+            Model {
+              name
+              creationMethod
+              modality
+              purpose
+              units
+              dateCreated
+              modelFileType
+            }
+            Scene {
+              name
+              approvedForPublication
+              posedAndQCd
+              referenceModels {
+                idSystemObject
+                name
+                usage
+                quality
+                fileSize
+                resolution
+                boundingBoxP1X
+                boundingBoxP1Y
+                boundingBoxP1Z
+                boundingBoxP2X
+                boundingBoxP2Y
+                boundingBoxP2Z
+              }
+            }
+          }
+        }
+      }
+          `;
+
+    // Define the GraphQL endpoint
+    const endpoint = 'http://localhost:4000/graphql';
+
+    // Create an options object for the Fetch API
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 'operationName': 'getUploadedAssetVersion','variables': {},query })
+    };
+
+    // console.log('\t>>> ============================');
+    // console.log('\t'+JSON.stringify(options));
+    // console.log('\t>>> ============================');
+
+    // Make the GraphQL request using the Fetch API
+    fetch(endpoint, options)
+        .then((response) => response.json()) // Parse the response as JSON
+        .then((data) => {
+            // Handle the data returned from the GraphQL server
+            console.log('\t>>>>>>>>>> GraphQL: '+origin);
+            console.log(data);
+        })
+        .catch((error) => {
+            // Handle any errors that occurred during the fetch
+            console.log('\t>>>>>>>>>> GraphQL: '+origin);
+            console.error(error);
+        });
+
+    return;
 };
 
 export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
@@ -238,8 +348,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 });
 
                 set({ pending: updatedPending });
-
             }
+
             startUploadTransfer(file, options?.references);
         }
     },
@@ -344,144 +454,25 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pendingUpdates: updatedUpdates });
         }
     },
-    // getAssetVersion: async() => {
-    //     console.log('Getting Asset Version...');
-    //     const result = await resolveAfter2Seconds();
-    //     console.log(`Get Asset Version: ${result}`);
-    // },
-    //This is the uploading for the Processed Files
-
     startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
-
-        // Define the GraphQL endpoint (replace with your server's URL)
-        const endpoint = 'http://localhost:4000/graphql';
-        const query = `
-        query getUploadedAssetVersion {
-            getUploadedAssetVersion {
-                AssetVersion {
-                idAssetVersion
-                StorageSize
-                FileName
-                DateCreated
-                Ingested
-                Asset {
-                    idAsset
-                    VAssetType {
-                    idVocabulary
-                    Term
-                    }
-                }
-                idSOAttachment
-                SOAttachmentObjectType
-                }
-                idAssetVersionsUpdated
-                UpdatedAssetVersionMetadata {
-                idAssetVersion
-                UpdatedObjectName
-                Item {
-                    Name
-                }
-                CaptureDataPhoto {
-                    name
-                    dateCaptured
-                    datasetType
-                    description
-                    cameraSettingUniform
-                    datasetFieldId
-                    itemPositionType
-                    itemPositionFieldId
-                    itemArrangementFieldId
-                    focusType
-                    lightsourceType
-                    backgroundRemovalMethod
-                    clusterType
-                    clusterGeometryFieldId
-                    folders {
-                    name
-                    variantType
-                    }
-                }
-                Model {
-                    name
-                    creationMethod
-                    modality
-                    purpose
-                    units
-                    dateCreated
-                    modelFileType
-                }
-                Scene {
-                    name
-                    approvedForPublication
-                    posedAndQCd
-                    referenceModels {
-                    idSystemObject
-                    name
-                    usage
-                    quality
-                    fileSize
-                    resolution
-                    boundingBoxP1X
-                    boundingBoxP1Y
-                    boundingBoxP1Z
-                    boundingBoxP2X
-                    boundingBoxP2Y
-                    boundingBoxP2Z
-                    }
-                }
-            }
-        }
-    }
-    `;
-
-        const body = {
-            operationName: 'getUploadedAssetVersion',
-            variables: {},
-            query    };
-
-        // Create an options object for the Fetch API
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body), // Send the query as a JSON string
-        };
         try {
             const onProgress = (event: ProgressEvent) => {
                 const { loaded, total } = event;
                 const progress = Math.floor((loaded / total) * 100);
                 const updateProgress = !(progress % 1);
 
-                const intervalID = setInterval(function() {
-                    // Make the GraphQL request using the Fetch API
-                    fetch(endpoint, options)
-                        .then((response) => response.json()) // Parse the response as JSON
-                        .then((data) => {
-                        // Handle the data returned from the GraphQL server
-                        //ADD CODE HERE: to add only the asset version of the data. (or confirm if 'Ingested' is there) to simplify output (optional).
-                            console.log(data);
-                        })
-                        .catch((error) => {
-                        // Handle any errors that occurred during the fetch
-                            console.error(error);
-                        });
-                    if (updateProgress) {
-                        const progressEvent: UploadProgressEvent = {
-                            id,
-                            progress
-                        };
-                        UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
-                    }
-                    console.log(options);
-                }, 1000);
+                if (updateProgress) {
+                    const progressEvent: UploadProgressEvent = {
+                        id,
+                        progress
+                    };
+                    UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
+                }
 
-                // if (progress === 100) {
-                //     clearInterval(intervalID);
-                // }
-
+                // HACK: keep calling while uploading
+                queryAssetVersionDocuments('startUploadTransfer.onProgress()');
             };
 
             const onCancel = (cancel: () => void) => {
@@ -518,7 +509,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (status === UploadStatus.Complete) {
                     const uploadEvent: UploadCompleteEvent = { id };
                     UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
-                    //This message occurs when the upload is successfully transferred for processing.
+
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
                     console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, error = ${error}`);
@@ -607,7 +598,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         set({ completed: updatedCompleted });
     },
     onProgressEvent: (eventData: UploadProgressEvent, options?: UploadOptions): void => {
-        //const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
         const { pending, pendingAttachments, pendingUpdates } = get();
         const { id, progress } = eventData;
 
@@ -644,9 +634,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
             });
             set({ pending: updatedPendingProgress });
-            //const { getUploadedAssetVersion } = data;
-            //const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            //console.log(`getUploadedAssetVersion in Processing: ${JSON.stringify(getUploadedAssetVersion)}`);
         }
     },
     onSetCancelledEvent: (eventData: UploadSetCancelEvent, options?: UploadOptions): void => {

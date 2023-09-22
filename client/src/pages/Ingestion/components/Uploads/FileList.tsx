@@ -33,7 +33,7 @@ function FileList(props: FileListProps): React.ReactElement {
     const { selectFile } = useUploadStore();
     const { getEntries } = useVocabularyStore();
     const { files, uploadPendingList, references, idSystemObject } = props;
-    const { startUpload, retryUpload, retrySpecialUpload, cancelUpload, cancelSpecialUpload, removeUpload, removeSpecialPending, changeAssetType } = useUploadStore();
+    const { startUpload, retryUpload, retrySpecialUpload, cancelUpload, cancelSpecialUpload, removeUpload, removeSpecialPending, changeAssetType, getRequest } = useUploadStore();
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
     const onUpload = (id: FileId): void => {
@@ -41,6 +41,8 @@ function FileList(props: FileListProps): React.ReactElement {
             startUpload(id, { idSystemObject, references });
         else
             startUpload(id);
+
+        getRequest();
     };
 
     const onRetry = (id: FileId): void => retryUpload(id);
