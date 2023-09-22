@@ -124,7 +124,7 @@ export class HttpServer {
         const user = req['user'];
         const idUser = user ? user['idUser'] : undefined;
 
-        console.log(req.body);
+        //console.log(req.body);
 
         ASL.run(new LocalStore(true, idUser), () => {
             if (!req.originalUrl.startsWith('/graphql'))

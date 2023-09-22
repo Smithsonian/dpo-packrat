@@ -1,0 +1,169 @@
+yarn run v1.22.19
+$ nodemon --watch . --watch ../common --ignore var/ --ignore build/ --ignore coverage/ --ignore node_modules/ --ignore tests/ --exec yarn node -r ts-node/register --max-old-space-size=14336 index.ts -e ts,js,json,graphql
+[33m[nodemon] 2.0.20[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.* ..\common\**\*[39m
+[33m[nodemon] watching extensions: ts,js,json,graphql[39m
+[32m[nodemon] starting `yarn node -r ts-node/register --max-old-space-size=14336 index.ts`[39m
+2023-09-22 11:54:59.824 [ --- ] U--- SYS info: **************************
+2023-09-22 11:54:59.826 [ --- ] U--- SYS info: Writing logs to C:\Users\njohnson\Packrat\dpo-packrat\server\var\logs
+2023-09-22 11:55:19.184 [ --- ] U--- SYS info: **************************
+2023-09-22 11:55:19.184 [ --- ] U--- SYS info: Writing logs to C:\Users\njohnson\Packrat\dpo-packrat\server\var\logs
+2023-09-22 11:55:19.247 [ --- ] U--- SYS info: **************************
+2023-09-22 11:55:19.247 [ --- ] U--- SYS info: Packrat Server Initialized
+2023-09-22 11:55:19.398 [ --- ] U--- WDV info: WebDAVServer.constructor
+2023-09-22 11:55:19.402 [ --- ] U--- EVE info: EventEngine.constructor, wiring default consumers
+2023-09-22 11:55:19.403 [ --- ] U--- EVE info: EventEngine.createConsumer eDB
+2023-09-22 11:55:19.403 [ --- ] U--- EVE info: EventEngine.registerConsumer eDB
+2023-09-22 11:55:19.403 [ --- ] U--- EVE info: EventEngine.createConsumer eAuth
+2023-09-22 11:55:19.404 [ --- ] U--- EVE info: EventEngine.registerConsumer eAuth
+2023-09-22 11:55:19.404 [ --- ] U--- EVE info: EventEngine.createConsumer ePublish
+2023-09-22 11:55:19.404 [ --- ] U--- EVE info: EventEngine.registerConsumer ePublish
+2023-09-22 11:55:19.404 [ --- ] U--- EVE info: EventEngine.createConsumer eHTTP
+2023-09-22 11:55:19.405 [ --- ] U--- EVE info: EventEngine.registerConsumer eHTTP
+2023-09-22 11:55:19.405 [ --- ] U--- AUD info: AuditEventGenerator.setEventEngine called
+2023-09-22 11:55:19.406 [ --- ] U--- SYS info: Server is running on port 4000
+2023-09-22 11:55:31.358 [00001] U--- CON info: console.log: 	>>> getCurrentUser {}, 8
+	>>> getCurrentUser {} 8
+2023-09-22 11:55:31.359 [00001] U--- GQL info: getCurrentUser {}
+2023-09-22 11:55:31.886 [00002] U--- CON info: console.log: 	>>> getVocabularyEntries(input: $input) {"input":{"eVocabSetIDs":[15,1,2,3,4,5,6,7,19,8,9,10,11,12,14,0,20,21,22,23,24,25,26,27,28,17]}}, 8
+	>>> getVocabularyEntries(input: $input) {"input":{"eVocabSetIDs":[15,1,2,3,4,5,6,7,19,8,9,10,11,12,14,0,20,21,22,23,24,25,26,27,28,17]}} 8
+2023-09-22 11:55:31.888 [00002] U--- GQL info: getVocabularyEntries(input: $input) {"input":{"eVocabSetIDs":[15,1,2,3,4,5,6,7,19,8,9,10,11,12,14,0,20,21,22,23,24,25,26,27,28,17]}}
+2023-09-22 11:55:31.897 [00002] U--- CCH info: CACHE VocabularyCache.flushInternalWorker() start
+2023-09-22 11:55:32.955 [00002] U--- CCH info: CACHE VocabularyCache.flushInternalWorker() done
+2023-09-22 11:55:33.029 [00003] U--- CON info: console.log: 	>>> getLicenseList(input: $input) {"input":{"search":""}}, 8
+	>>> getLicenseList(input: $input) {"input":{"search":""}} 8
+2023-09-22 11:55:33.029 [00003] U--- GQL info: getLicenseList(input: $input) {"input":{"search":""}}
+2023-09-22 11:55:33.055 [00004] U--- CON info: console.log: 	>>> getAllUsers(input: $input) {"input":{"active":"eAll","search":""}}, 8
+	>>> getAllUsers(input: $input) {"input":{"active":"eAll","search":""}} 8
+2023-09-22 11:55:33.056 [00004] U--- GQL info: getAllUsers(input: $input) {"input":{"active":"eAll","search":""}}
+2023-09-22 11:55:35.244 [00005] U--- HTP info: /auth/login
+2023-09-22 11:55:35.247 [00005] U--- ATH info: LocalAuth.verifyUser successful login for maslowskiec@si.edu
+2023-09-22 11:55:35.254 [00005] U005 ATH info: AuthFactory.verifyUser maslowskiec@si.edu successfully authenticated
+2023-09-22 11:55:35.255 [00005] U005 EVE info: EventEngine.createProducer
+2023-09-22 11:55:35.258 [00005] U005 EVE info: EventConsumerAuth.eventWorker Login idUser 5 succeeded
+2023-09-22 11:55:35.276 [00006] U005 CON info: console.log: 	>>> getCurrentUser {}, 8
+	>>> getCurrentUser {} 8
+2023-09-22 11:55:35.276 [00006] U005 GQL info: getCurrentUser {}
+2023-09-22 11:55:35.399 [00007] U005 CON info: console.log: 	>>> getUploadedAssetVersion {}, 8
+	>>> getUploadedAssetVersion {} 8
+2023-09-22 11:55:35.400 [00007] U005 GQL info: getUploadedAssetVersion {}
+2023-09-22 11:55:35.406 [00007] U005 CON info: console.log: {"user":{"idUser":5,"Name":"Eric Maslowski","EmailAddress":"maslowskiec@si.edu","SecurityID":"","Active":true,"DateActivated":"2023-02-15T13:48:48.000Z","DateDisabled":null,"WorkflowNotificationTime":null,"EmailSettings":null,"ActiveOrig":true},"isAuthenticated":true}
+{
+  user: User {
+    idUser: 5,
+    Name: 'Eric Maslowski',
+    EmailAddress: 'maslowskiec@si.edu',
+    SecurityID: '',
+    Active: true,
+    DateActivated: 2023-02-15T13:48:48.000Z,
+    DateDisabled: null,
+    WorkflowNotificationTime: null,
+    EmailSettings: null,
+    ActiveOrig: true
+  },
+  isAuthenticated: true
+}
+2023-09-22 11:55:35.424 [00007] U005 CON info: console.log: 	>>> AssetVersion: [{"idAssetVersion":532,"idAsset":532,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:47:08.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"012e6ae060a19d5873047003\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false},{"idAssetVersion":533,"idAsset":533,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:51:39.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"dcbf76819242e8c73b52403c\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false}]
+	>>> AssetVersion: [{"idAssetVersion":532,"idAsset":532,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:47:08.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"012e6ae060a19d5873047003\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false},{"idAssetVersion":533,"idAsset":533,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:51:39.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"dcbf76819242e8c73b52403c\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false}]
+2023-09-22 11:55:57.055 [00008] U005 HTP info: /auth/logout
+2023-09-22 11:55:57.058 [00008] U005 SYS error: AuthRouter.get logout
+2023-09-22 11:55:58.762 [00009] U--- HTP info: /auth/login
+2023-09-22 11:55:58.762 [00009] U--- ATH info: LocalAuth.verifyUser successful login for maslowskiec@si.edu
+2023-09-22 11:55:58.767 [00009] U005 ATH info: AuthFactory.verifyUser maslowskiec@si.edu successfully authenticated
+2023-09-22 11:55:58.770 [00009] U005 EVE info: EventConsumerAuth.eventWorker Login idUser 5 succeeded
+2023-09-22 11:55:58.782 [00010] U005 CON info: console.log: 	>>> getCurrentUser {}, 8
+	>>> getCurrentUser {} 8
+2023-09-22 11:55:58.784 [00010] U005 GQL info: getCurrentUser {}
+2023-09-22 11:56:11.643 [00011] U005 CON info: console.log: 	>>> null undefined, 8
+	>>> null undefined 8
+2023-09-22 11:56:11.667 [00011] U005 GQL info: <b>Upload starting</b>: ADD master-model.zip
+2023-09-22 11:56:11.668 [00011] U005 STR info: LocalStorage.initialize using var/Storage/Repository and var/Storage/Staging
+2023-09-22 11:56:11.668 [00011] U005 STR info: OCFL Storage initialization: Repo Root    = var/Storage/Repository
+2023-09-22 11:56:11.669 [00011] U005 STR info: OCFL Storage initialization: Staging Root = var/Storage/Staging
+2023-09-22 11:56:11.670 [00011] U005 EVE info: EventConsumerHTTP.eventWorker eHTTPUpload {"idObject":0,"eObjectType":10} by idUser 5
+2023-09-22 11:56:11.677 [00011] U005 STR info: LocalStorage.writeStream master-model.zip
+2023-09-22 11:56:11.752 [00012] U--- CON info: console.log: 	>>> getUploadedAssetVersion {}, 8
+	>>> getUploadedAssetVersion {} 8
+2023-09-22 11:56:11.753 [00012] U--- GQL info: getUploadedAssetVersion {}
+2023-09-22 11:56:11.772 [00012] U--- CON info: console.log: {"isAuthenticated":false}
+{ user: undefined, isAuthenticated: false }
+2023-09-22 11:56:11.773 [00012] U--- GQL error: getUploadedAssetVersion failed. no user provided in the context
+2023-09-22 11:56:11.858 [00013] U--- CON info: console.log: 	>>> getUploadedAssetVersion {}, 8
+	>>> getUploadedAssetVersion {} 8
+2023-09-22 11:56:11.858 [00013] U--- GQL info: getUploadedAssetVersion {}
+2023-09-22 11:56:11.859 [00013] U--- CON info: console.log: {"isAuthenticated":false}
+{ user: undefined, isAuthenticated: false }
+2023-09-22 11:56:11.860 [00013] U--- GQL error: getUploadedAssetVersion failed. no user provided in the context
+2023-09-22 11:56:12.079 [00011] U005 CCH info: CACHE UserCache.flushInternalWorker() start
+2023-09-22 11:56:12.087 [00011] U005 CCH info: CACHE UserCache.flushInternalWorker() done
+2023-09-22 11:56:12.088 [00011] U005 STR info: AssetStorageAdapter.commitNewAssetVersion idAsset 0: b32565218481ca995ba02370\master-model.zip
+2023-09-22 11:56:12.089 [00011] U005 STR info: LocalStorage.commitWriteStream b32565218481ca995ba02370\master-model.zip
+2023-09-22 11:56:12.215 [00011] U005 CCH info: CACHE SystemObjectCache.flushInternalWorker() start
+2023-09-22 11:56:12.240 [00011] U005 WF  info: WorkflowEngine.create workflow [0] eWorkflowTypeUpload: {"eWorkflowType":133,"idSystemObject":[5201],"idUserInitiator":5}
+2023-09-22 11:56:12.304 [00011] U005 WF  info: Upload validating files
+2023-09-22 11:56:12.326 [00011] U005 STR info: AssetStorageAdapter.readAsset idAsset 534, idAssetVersion 534
+2023-09-22 11:56:12.327 [00011] U005 STR info: LocalStorage.readStream b32565218481ca995ba02370\master-model.zip
+2023-09-22 11:56:12.479 [00011] U005 CCH info: CACHE SystemObjectCache.flushInternalWorker() done
+2023-09-22 11:56:12.637 [00011] U005 WF  info: Upload validation of master-model.zip
+2023-09-22 11:56:12.638 [00011] U005 WF  info: WorkflowUtil.computeModelMetrics (master-model.zip, idModel undefined, idSystemObjectModel undefined, idSystemObjectAssetVersion 5201)
+2023-09-22 11:56:12.641 [00011] U005 WF  info: WorkflowEngine.create workflow [1] eWorkflowTypeCookJob: {"eWorkflowType":131,"idSystemObject":[5201],"idUserInitiator":5,"parameters":{"eCookJob":127,"cookJobParameters":{"sourceMeshFile":"master-model.zip"}}}
+2023-09-22 11:56:12.709 [00011] U005 JOB info: JobEngine.create [1]: job 504: si-packrat-inspect: 504
+2023-09-22 11:56:12.721 [00011] U005 JOB info: JobPackrat [si-packrat-inspect: 504] Created
+2023-09-22 11:56:12.723 [00011] U005 WF  info: WorkflowEngine.created workflow [2]: {"eWorkflowType":131,"idSystemObject":[5201],"idUserInitiator":5,"parameters":{"eCookJob":127,"cookJobParameters":{"sourceMeshFile":"master-model.zip"}}}
+2023-09-22 11:56:12.734 [00011] U005 WF  info: WorkflowEngine.jobUpdated: 504
+2023-09-22 11:56:12.736 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] starting job; semaphore count 25
+2023-09-22 11:56:12.743 [00011] U005 STR info: AssetStorageAdapter.readAsset idAsset 534, idAssetVersion 534
+2023-09-22 11:56:12.744 [00011] U005 STR info: LocalStorage.readStream b32565218481ca995ba02370\master-model.zip
+2023-09-22 11:56:12.755 [00011] U005 WF  info: WorkflowJob.update {"eCookJob":127,"cookJobParameters":{"sourceMeshFile":"master-model.zip"}}: 504 eCreated -> eCreated
+2023-09-22 11:56:13.009 [00011] U005 JOB info: JobCookSIPackratInspect.testForZipOrStream creating stream override for zip file entry f1991_46.mtl
+2023-09-22 11:56:13.009 [00011] U005 JOB info: JobCookSIPackratInspect.testForZipOrStream creating stream override for zip file entry f1991_46.obj
+2023-09-22 11:56:13.025 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] creating job: http://si-3dcook02.us.sinet.si.edu:8000/job body {"id":"bc24dfb9-694a-4faa-ad0b-34266bd6d680","name":"si-packrat-inspect: 504","clientId":"5b258c8e-108c-4990-a088-17ffd6e22852","recipeId":"bb602690-76c9-11eb-9439-0242ac130002","parameters":{"sourceMeshFile":"f1991_46.obj"},"priority":"normal","submission":"2023-09-22T15:56:13.025Z"}
+2023-09-22 11:56:13.090 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV at http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.mtl; semaphore count 10
+2023-09-22 11:56:13.117 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV at http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.mtl: transmitted 229 bytes
+2023-09-22 11:56:13.169 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV polling http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.mtl [1/100]: 229 received vs 229 transmitted
+2023-09-22 11:56:13.170 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV at http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.mtl: success
+2023-09-22 11:56:13.170 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV at http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.obj; semaphore count 10
+2023-09-22 11:56:16.759 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV at http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.obj: transmitted 9500796 bytes
+2023-09-22 11:56:16.884 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV polling http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.obj [1/100]: 9500796 received vs 9500796 transmitted
+2023-09-22 11:56:16.884 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] JobCook.stageFiles staging via WebDAV at http://si-3dcook02.us.sinet.si.edu:8000/bc24dfb9-694a-4faa-ad0b-34266bd6d680/f1991_46.obj: success
+2023-09-22 11:56:16.884 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] running job: http://si-3dcook02.us.sinet.si.edu:8000/clients/5b258c8e-108c-4990-a088-17ffd6e22852/jobs/bc24dfb9-694a-4faa-ad0b-34266bd6d680/run
+2023-09-22 11:56:16.912 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] running
+2023-09-22 11:56:16.944 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] polling [1], state: running: http://si-3dcook02.us.sinet.si.edu:8000/clients/5b258c8e-108c-4990-a088-17ffd6e22852/jobs/bc24dfb9-694a-4faa-ad0b-34266bd6d680/report
+2023-09-22 11:56:16.945 [00011] U005 JOB info: JobPackrat [si-packrat-inspect: 504] Starting
+2023-09-22 11:56:16.961 [00011] U005 WF  info: WorkflowEngine.jobUpdated: 504
+2023-09-22 11:56:16.984 [00011] U005 WF  info: WorkflowJob.update {"eCookJob":127,"cookJobParameters":{"sourceMeshFile":"f1991_46.obj"}}: 504 eRunning -> eRunning
+2023-09-22 11:56:22.015 [00011] U005 JOB info: JobCook [si-packrat-inspect: 504] polling [2], state: done: http://si-3dcook02.us.sinet.si.edu:8000/clients/5b258c8e-108c-4990-a088-17ffd6e22852/jobs/bc24dfb9-694a-4faa-ad0b-34266bd6d680/report
+2023-09-22 11:56:22.016 [00011] U005 JOB info: JobPackrat [si-packrat-inspect: 504] Success
+2023-09-22 11:56:22.045 [00011] U005 WF  info: WorkflowEngine.jobUpdated: 504
+2023-09-22 11:56:22.085 [00011] U005 WF  info: WorkflowJob.update releasing 1 waiter(s) {"eCookJob":127,"cookJobParameters":{"sourceMeshFile":"f1991_46.obj"}}: 504 eDone -> eDone
+2023-09-22 11:56:22.086 [00011] U005 WF  info: WorkflowEngine.jobUpdated completed workflow [1]: 504
+2023-09-22 11:56:22.087 [00011] U005 WF  info: Upload validated master-model.zip
+2023-09-22 11:56:22.088 [00011] U005 JOB info: JobEngine.jobCompleted [0]: job 504: si-packrat-inspect: 504
+2023-09-22 11:56:22.095 [00011] U005 WF  info: WorkflowEngine.created workflow [1]: {"eWorkflowType":133,"idSystemObject":[5201],"idUserInitiator":5}
+2023-09-22 11:56:22.156 [00014] U005 CON info: console.log: 	>>> getUploadedAssetVersion {}, 8
+	>>> getUploadedAssetVersion {} 8
+2023-09-22 11:56:22.156 [00014] U005 GQL info: getUploadedAssetVersion {}
+2023-09-22 11:56:22.158 [00014] U005 CON info: console.log: {"user":{"idUser":5,"Name":"Eric Maslowski","EmailAddress":"maslowskiec@si.edu","SecurityID":"","Active":true,"DateActivated":"2023-02-15T13:48:48.000Z","DateDisabled":null,"WorkflowNotificationTime":null,"EmailSettings":null,"ActiveOrig":true},"isAuthenticated":true}
+{
+  user: User {
+    idUser: 5,
+    Name: 'Eric Maslowski',
+    EmailAddress: 'maslowskiec@si.edu',
+    SecurityID: '',
+    Active: true,
+    DateActivated: 2023-02-15T13:48:48.000Z,
+    DateDisabled: null,
+    WorkflowNotificationTime: null,
+    EmailSettings: null,
+    ActiveOrig: true
+  },
+  isAuthenticated: true
+}
+2023-09-22 11:56:22.174 [00014] U005 CON info: console.log: 	>>> AssetVersion: [{"idAssetVersion":532,"idAsset":532,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:47:08.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"012e6ae060a19d5873047003\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false},{"idAssetVersion":533,"idAsset":533,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:51:39.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"dcbf76819242e8c73b52403c\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false},{"idAssetVersion":534,"idAsset":534,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:56:12.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"b32565218481ca995ba02370\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false}]
+	>>> AssetVersion: [{"idAssetVersion":532,"idAsset":532,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:47:08.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"012e6ae060a19d5873047003\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false},{"idAssetVersion":533,"idAsset":533,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:51:39.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"dcbf76819242e8c73b52403c\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false},{"idAssetVersion":534,"idAsset":534,"Version":0,"FileName":"master-model.zip","idUserCreator":5,"DateCreated":"2023-09-22T15:56:12.000Z","StorageHash":"aea7a01c0480e2608b1f1055eea8a64f24548205f682cdc664ae917855ebea50071bef461daa2826ec4ca7121a21e846fa2b00e9deda33c597849b5377f45529","StorageSize":19171450,"StorageKeyStaging":"b32565218481ca995ba02370\\master-model.zip","Ingested":false,"BulkIngest":false,"idSOAttachment":null,"FilePath":"","Comment":"Uploaded new asset master-model.zip","IngestedOrig":false}]
+2023-09-22 11:56:42.270 [00011] U005 NAV info: NavigationFactory.objectIndexer indexing 2 objects
+2023-09-22 11:56:42.303 [00011] U005 NAV info: IndexSolr reindex job scheduled
+2023-09-22 11:56:43.745 [00011] U005 NAV info: IndexSolr.indexObject(5201) succeeded, updating 2 documents
+2023-09-22 11:56:46.294 [00011] U005 NAV info: IndexSolr.indexObject(5200) succeeded, updating 1 documents
+Terminate batch job (Y/N)? Terminate batch job (Y/N)? 

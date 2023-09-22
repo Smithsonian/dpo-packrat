@@ -8,6 +8,7 @@ import * as H from '../../../../../utils/helpers';
 export default async function getUploadedAssetVersion(_: Parent, __: unknown, context: Context): Promise<GetUploadedAssetVersionResult> {
 ​
     const { user } = context;
+    console.log(context);
     if (!user) {
         LOG.error('getUploadedAssetVersion failed. no user provided in the context',LOG.LS.eGQL);
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
