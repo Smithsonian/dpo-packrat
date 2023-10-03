@@ -4,9 +4,9 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
-​
+
 export default async function getUploadedAssetVersion(_: Parent, __: unknown, context: Context): Promise<GetUploadedAssetVersionResult> {
-​
+
     const { user } = context;
     console.log(context);
     if (!user) {
@@ -14,14 +14,14 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
     const { idUser } = user;
-​
+
     // fetch asset versions that have "false" for ingested and are not retired for this user.
     const AssetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, false, false);
     if (!AssetVersion) {
         LOG.error(`getUploadedAssetVersion failed on AssetVersion.fetchFromUserByIngested(${idUser}, false, false)`, LOG.LS.eGQL);
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
-​
+
     // checking for those with Ingested set to 'null' since the client uses this to filter the results
     // for different lists. these have been uploaded but are still being processed in a post-upload workflow
     const AssetVersionProcessing: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, null, false);
@@ -33,18 +33,18 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         LOG.info(`getUploadedAssetVersion appending ${AssetVersionProcessing.length} assets that are processing.`,LOG.LS.eGQL);
         AssetVersion.push(...AssetVersionProcessing);
     }
-​
+
     console.log('\t>>> AssetVersion: '+JSON.stringify(AssetVersion));
-​
+
     // early out if we don't have anything meaningful
     if (AssetVersion.length == 0)
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
-​
+
     // compute map of idAsset -> idAssetVersion for asset versions
     const assetMap: Map<number, number> = new Map<number, number>();
     for (const assetVersion of AssetVersion)
         assetMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
-​
+
     // compute asset version counts for each asset
     const idAssets: number[] = [ ...assetMap.keys() ];
     const versionCountMap: Map<number, number> | null = await DBAPI.Asset.computeVersionCountMap(idAssets);
@@ -52,7 +52,7 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         LOG.error(`getUploadedAssetVersion failed on Asset.computeVersionCountMap(${JSON.stringify(idAssets)})`, LOG.LS.eGQL);
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
-​
+
     // let caller know which asset versions are updates -- those with version counts > 1
     const idAssetVersionsUpdated: number[] = [];
     const UpdatedAssetVersionMetadata: UpdatedAssetVersionMetadata[] = [];
@@ -66,18 +66,18 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
                 continue;
             }
             idAssetVersionsUpdated.push(idAssetVersion);
-​
+
             // for each updated asset version, fetch and populate ingestion metadata
             const updateMetadata: UpdatedAssetVersionMetadata | null = await computeUpdatedVersionMetadata(idAssetVersion, idAsset);
             if (updateMetadata)
                 UpdatedAssetVersionMetadata.push(updateMetadata);
         }
     }
-​
+
     // LOG.info(`getUploadedAssetVersion returning AssetVersion=${JSON.stringify(AssetVersion, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
     return { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata };
 }
-​
+
 async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: number): Promise<UpdatedAssetVersionMetadata | null> {
     const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
     if (!asset) {
@@ -91,7 +91,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
         LOG.error(`getUploadedAssetVersion failed to retrieve system object info from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
         return null;
     }
-​
+
     // How do we compute the name of a generic system object?
     // UpdatedObjectName: String!
     const UpdatedObjectName: string = await CACHE.SystemObjectCache.getObjectNameByID(asset.idSystemObject) ?? 'UNKNOWN';
@@ -102,8 +102,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
             Item = OG.item[0];
     } else
         LOG.error(`getUploadedAssetVersion failed to retrieve object graph for asset owner ${asset.idSystemObject}`, LOG.LS.eGQL);
-​
-​
+
     let CaptureDataPhoto: UpdatePhotogrammetryMetadata | undefined = undefined;
     let Model: UpdateModelMetadata | undefined = undefined;
     let Scene: UpdateSceneMetadata | undefined = undefined;
@@ -116,7 +115,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
                 for (const [name, variantType] of folderVariantMap)
                     folders.push({ name, variantType });
             }
-​
+
             const CDP: DBAPI.CaptureDataPhoto = CDPs[0];
             CaptureDataPhoto = {
                 name: SOP.CaptureData.Name,
@@ -156,7 +155,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
             posedAndQCd: SOP.Scene.PosedAndQCd
         };
     }
-​
+
     return {
         idAssetVersion,
         UpdatedObjectName,

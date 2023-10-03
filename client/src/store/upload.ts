@@ -57,6 +57,7 @@ export type IngestionFile = {
 
 type UploadStore = {
     completed: IngestionFile[];
+    filesTransferring: IngestionFile[];
     pending: IngestionFile[];
     pendingUpdates: Map<number, IngestionFile>;
     pendingAttachments: Map<number, IngestionFile>;
@@ -65,6 +66,7 @@ type UploadStore = {
     loadPending: (acceptedFiles: File[]) => void;
     loadSpecialPending: (acceptedFiles: File[], references: UploadReferences, idSO: number) => void;
     loadCompleted: (completed: IngestionFile[], refetch) => void;
+    getFilesTransferring: ( filesTransferring: IngestionFile[] ) => void;
     selectFile: (id: FileId, selected: boolean) => void;
     startUpload: (id: FileId, options?: UploadOptions) => void;
     cancelUpload: (id: FileId) => void;
@@ -168,40 +170,50 @@ const queryAssetVersionDocuments = async (origin: string) => {
 
     // Define the GraphQL endpoint
     const endpoint = 'http://localhost:4000/graphql';
-
     // Create an options object for the Fetch API
-    const options = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 'operationName': 'getUploadedAssetVersion','variables': {},query })
-    };
+    // const option: RequestInit = {
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({ 'operationName': 'getUploadedAssetVersion','variables': {},query }),
+    //     credentials: 'include',
+    // };
 
     // console.log('\t>>> ============================');
     // console.log('\t'+JSON.stringify(options));
     // console.log('\t>>> ============================');
 
     // Make the GraphQL request using the Fetch API
-    fetch(endpoint, options)
-        .then((response) => response.json()) // Parse the response as JSON
-        .then((data) => {
-            // Handle the data returned from the GraphQL server
-            console.log('\t>>>>>>>>>> GraphQL: '+origin);
-            console.log(data);
+    setTimeout(function () {
+        fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 'operationName': 'getUploadedAssetVersion','variables': {},query }),
+            credentials: 'include',
         })
-        .catch((error) => {
-            // Handle any errors that occurred during the fetch
-            console.log('\t>>>>>>>>>> GraphQL: '+origin);
-            console.error(error);
-        });
+            .then((response) => response.json()) // Parse the response as JSON
+            .then((data) => {
+                // Handle the data returned from the GraphQL server
+                console.log('\t>>>>>>>>>> GraphQL: '+origin);
+                console.log(data);
+            })
+            .catch((error) => {
+                // Handle any errors that occurred during the fetch
+                console.log('\t>>>>>>>>>> GraphQL: '+origin);
+                console.error(error);
+            });
 
-    return;
+        return;
+    }, 900);
 };
 
 export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, get: GetState<UploadStore>) => ({
     completed: [],
     pending: [],
+    filesTransferring: [],
     pendingUpdates: new Map(),
     pendingAttachments: new Map(),
     loading: true,
@@ -308,6 +320,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     },
     loadCompleted: (completed: IngestionFile[], refetch): void => {
         set({ completed, loading: false, refetch });
+    },
+    getFilesTransferring: (filesTransferring: IngestionFile[] ) => {
+        set({ filesTransferring });
+
     },
     selectFile: (id: FileId, selected: boolean) => {
         const { completed } = get();
@@ -457,6 +473,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
+
         try {
             const onProgress = (event: ProgressEvent) => {
                 const { loaded, total } = event;
@@ -472,7 +489,9 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
 
                 // HACK: keep calling while uploading
-                queryAssetVersionDocuments('startUploadTransfer.onProgress()');
+                if(progress >= 100) {
+                    queryAssetVersionDocuments('startUploadTransfer.onProgress()');
+                }
             };
 
             const onCancel = (cancel: () => void) => {

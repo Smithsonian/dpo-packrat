@@ -63,7 +63,6 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
             console.log(JSON.stringify(AssetVersion));
             console.log(AssetVersion);
-            console.log(`\t>>> STATUS: COMPLETED Asset Version (check if it is an array): ${Array.isArray(JSON.stringify(getUploadedAssetVersion))}`);
             //console.log(`\t>>> COMPLETED ID Asset Versions Updated: ${JSON.stringify(idAssetVersionsUpdated)}`);
             //console.log(`\t>>> COMPLETED Updated Asset Version Metadata: ${JSON.stringify(UpdatedAssetVersionMetadata )}`);
             const fileIds: string[] = completed.map(({ id }) => id);
