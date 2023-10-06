@@ -47,6 +47,9 @@ type ComputeSceneInfoResult = {
 export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
+    // HACK: temporarily bypass download generation while development on it wraps up.
+    private tmpSkipGenDownloads: boolean = true;
+
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (!workflowParams.eWorkflowType) {
             LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
@@ -264,7 +267,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 return null;
         }
 
-
         const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file systemobject from ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
@@ -313,56 +315,59 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         } else
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
 
-        // does this ingested model have a scene child?  If so, initiate WorkflowJob for cook si-generate-downloads
-        const SODerived: DBAPI.SystemObject[] | null = CMIR.idSystemObjectModel ? await DBAPI.SystemObject.fetchDerivedFromXref(CMIR.idSystemObjectModel) : null;
-        if (!SODerived)
-            return workflows.length > 0 ? workflows : null;
+        // HACK: skip generate downloads while other issues are resolved with it
+        if(this.tmpSkipGenDownloads===true) {
+            // does this ingested model have a scene child?  If so, initiate WorkflowJob for cook si-generate-downloads
+            const SODerived: DBAPI.SystemObject[] | null = CMIR.idSystemObjectModel ? await DBAPI.SystemObject.fetchDerivedFromXref(CMIR.idSystemObjectModel) : null;
+            if (!SODerived)
+                return workflows.length > 0 ? workflows : null;
 
-        for (const SO of SODerived) {
-            if (SO.idScene) {
-                // locate the scene file asset attached to this system object
-                const sceneAssetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(SO.idSystemObject);
-                if (!sceneAssetVersions) {
-                    LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to fetch scene's assets from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eWF);
-                    continue;
-                }
-
-                let sceneAssetVersion: DBAPI.AssetVersion | null = null;
-                for (const AV of sceneAssetVersions) {
-                    if (AV.FileName.toLowerCase().endsWith('.svx.json')) {
-                        sceneAssetVersion = AV;
-                        break;
+            for (const SO of SODerived) {
+                if (SO.idScene) {
+                    // locate the scene file asset attached to this system object
+                    const sceneAssetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(SO.idSystemObject);
+                    if (!sceneAssetVersions) {
+                        LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to fetch scene's assets from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                        continue;
                     }
+
+                    let sceneAssetVersion: DBAPI.AssetVersion | null = null;
+                    for (const AV of sceneAssetVersions) {
+                        if (AV.FileName.toLowerCase().endsWith('.svx.json')) {
+                            sceneAssetVersion = AV;
+                            break;
+                        }
+                    }
+
+                    if (!sceneAssetVersion) {
+                        LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to find scene .svx.json's asset version from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                        continue;
+                    }
+
+                    const idSystemObjectClone: number[] = L.clone(idSystemObject);
+                    const SOSceneAsset: DBAPI.SystemObject | null = sceneAssetVersion ? await sceneAssetVersion.fetchSystemObject() : null;
+                    if (SOSceneAsset)
+                        idSystemObjectClone.push(SOSceneAsset.idSystemObject);
+
+                    const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
+                        new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
+                            new COOK.JobCookSIGenerateDownloadsParameters(SO.idScene, CMIR.idModel, CMIR.assetVersionGeometry.FileName,
+                                sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, modelBaseName));
+
+                    const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
+                        eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+                        idSystemObject: idSystemObjectClone,
+                        idProject: workflowParams.idProject,
+                        idUserInitiator: workflowParams.idUserInitiator,
+                        parameters: jobParamSIGenerateDownloads,
+                    };
+
+                    const wfSIGenerateDownloads: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
+                    if (wfSIGenerateDownloads)
+                        workflows.push(wfSIGenerateDownloads);
+                    else
+                        LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
                 }
-
-                if (!sceneAssetVersion) {
-                    LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to find scene .svx.json's asset version from ${JSON.stringify(SO, H.Helpers.saferStringify)}`, LOG.LS.eWF);
-                    continue;
-                }
-
-                const idSystemObjectClone: number[] = L.clone(idSystemObject);
-                const SOSceneAsset: DBAPI.SystemObject | null = sceneAssetVersion ? await sceneAssetVersion.fetchSystemObject() : null;
-                if (SOSceneAsset)
-                    idSystemObjectClone.push(SOSceneAsset.idSystemObject);
-
-                const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
-                    new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
-                        new COOK.JobCookSIGenerateDownloadsParameters(SO.idScene, CMIR.idModel, CMIR.assetVersionGeometry.FileName,
-                            sceneAssetVersion.FileName, CMIR.assetVersionDiffuse?.FileName, CMIR.assetVersionMTL?.FileName, modelBaseName));
-
-                const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
-                    eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
-                    idSystemObject: idSystemObjectClone,
-                    idProject: workflowParams.idProject,
-                    idUserInitiator: workflowParams.idUserInitiator,
-                    parameters: jobParamSIGenerateDownloads,
-                };
-
-                const wfSIGenerateDownloads: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
-                if (wfSIGenerateDownloads)
-                    workflows.push(wfSIGenerateDownloads);
-                else
-                    LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
             }
         }
 
@@ -402,25 +407,28 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (SOMTL)
             idSystemObject.push(SOMTL.idSystemObject);
 
-        // initiate WorkflowJob for cook si-generate-download
-        const { modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
-        const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
-            new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
-                new COOK.JobCookSIGenerateDownloadsParameters(CSIR.idScene, CSIR.idModel, CSIR.assetVersionGeometry.FileName,
-                    CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, modelBaseName));
+        // HACK: skip generate downloads while other issues are resolved with it
+        if(this.tmpSkipGenDownloads===true) {
+            // initiate WorkflowJob for cook si-generate-download
+            const { modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
+            const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
+                new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
+                    new COOK.JobCookSIGenerateDownloadsParameters(CSIR.idScene, CSIR.idModel, CSIR.assetVersionGeometry.FileName,
+                        CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, modelBaseName));
 
-        const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
-            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
-            idSystemObject,
-            idProject: workflowParams.idProject,
-            idUserInitiator: workflowParams.idUserInitiator,
-            parameters: jobParamSIGenerateDownloads,
-        };
+            const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
+                eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+                idSystemObject,
+                idProject: workflowParams.idProject,
+                idUserInitiator: workflowParams.idUserInitiator,
+                parameters: jobParamSIGenerateDownloads,
+            };
 
-        const workflow: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
-        if (workflow)
-            return [workflow];
-        LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
+            const workflow: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
+            if (workflow)
+                return [workflow];
+            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
+        }
         return null;
     }
 
