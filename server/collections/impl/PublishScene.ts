@@ -297,7 +297,7 @@ export class PublishScene {
         LicenseOld: DBAPI.License | undefined, LicenseNew: DBAPI.License | undefined): Promise<SceneUpdateResult> {
         // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
         const oldDownloadState: boolean = oldPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseOld?.RestrictLevel);
-        const newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
+        let newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
 
         if (oldDownloadState === newDownloadState)
             return PublishScene.sendResult(true);
@@ -308,7 +308,9 @@ export class PublishScene {
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
             if (!workflowEngine)
                 return PublishScene.sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
-            workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: idUser }); // don't await
+
+            // HACK: temporarily skip generate downloads while development on that wraps up
+            // workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: idUser }); // don't await
             return { success: true, downloadsGenerated: true, downloadsRemoved: false };
         } else { // Remove downloads
             LOG.info(`PublishScene.handleSceneUpdates removing downloads for scene ${idScene}`, LOG.LS.eGQL);
