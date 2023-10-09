@@ -303,7 +303,7 @@ export class PublishScene {
             return PublishScene.sendResult(true);
 
         if (newDownloadState) {
-            LOG.info(`PublishScene.handleSceneUpdates generating downloads for scene ${idScene}`, LOG.LS.eGQL);
+            LOG.info(`PublishScene.handleSceneUpdates generating downloads for scene ${idScene} (skipping)`, LOG.LS.eGQL);
             // Generate downloads
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
             if (!workflowEngine)

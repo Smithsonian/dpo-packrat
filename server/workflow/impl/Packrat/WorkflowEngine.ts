@@ -316,7 +316,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
 
         // HACK: skip generate downloads while other issues are resolved with it
-        if(this.tmpSkipGenDownloads===true) {
+        if(this.tmpSkipGenDownloads===false) {
             // does this ingested model have a scene child?  If so, initiate WorkflowJob for cook si-generate-downloads
             const SODerived: DBAPI.SystemObject[] | null = CMIR.idSystemObjectModel ? await DBAPI.SystemObject.fetchDerivedFromXref(CMIR.idSystemObjectModel) : null;
             if (!SODerived)
@@ -369,7 +369,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
                 }
             }
-        }
+        } else
+            LOG.info('WorkflowEngine.eventIngestionUploadAssetVersion skipping generating downloads',LOG.LS.eWF);
 
         return workflows.length > 0 ? workflows : null;
     }
@@ -408,7 +409,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idSystemObject.push(SOMTL.idSystemObject);
 
         // HACK: skip generate downloads while other issues are resolved with it
-        if(this.tmpSkipGenDownloads===true) {
+        if(this.tmpSkipGenDownloads===false) {
             // initiate WorkflowJob for cook si-generate-download
             const { modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
             const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
@@ -428,7 +429,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             if (workflow)
                 return [workflow];
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
-        }
+        } else
+            LOG.info('WorkflowEngine.eventIngestionUploadAssetVersion skipping generating downloads',LOG.LS.eWF);
+
         return null;
     }
 
