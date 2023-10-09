@@ -292,12 +292,12 @@ export class PublishScene {
         return DownloadMSXMap;
     }
 
-    static async handleSceneUpdates(idScene: number, idSystemObject: number, idUser: number | undefined,
+    static async handleSceneUpdates(idScene: number, idSystemObject: number, _idUser: number | undefined,
         oldPosedAndQCd: boolean, newPosedAndQCd: boolean,
         LicenseOld: DBAPI.License | undefined, LicenseNew: DBAPI.License | undefined): Promise<SceneUpdateResult> {
         // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
         const oldDownloadState: boolean = oldPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseOld?.RestrictLevel);
-        let newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
+        const newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
 
         if (oldDownloadState === newDownloadState)
             return PublishScene.sendResult(true);
