@@ -6,7 +6,7 @@ if (!process.env.PACKRAT_EDAN_AUTH_KEY)
 if (!process.env.PACKRAT_EDAN_SERVER)
     process.env.PACKRAT_EDAN_SERVER = 'https://edan.si.edu/';
 if (!process.env.PACKRAT_EDAN_3D_API)
-    process.env.PACKRAT_EDAN_3D_API = 'http://dev.3d.api.si.edu/';
+    process.env.PACKRAT_EDAN_3D_API = 'http://console.si.edu/apis/3d-api-dev/';
 if (!process.env.PACKRAT_EDAN_APPID)
     process.env.PACKRAT_EDAN_APPID = 'OCIO3D';
 if (!process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT)
