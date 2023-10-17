@@ -288,7 +288,7 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
     return (
         <React.Fragment>
             <UploadFilesPicker />
-            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '1em' /*flexWrap: 'wrap'*/ }}>
                 <ProcessingList />
                 <div style={{ flexBasis: '50%' }}>
                     <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />

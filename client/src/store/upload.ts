@@ -57,7 +57,6 @@ export type IngestionFile = {
 
 type UploadStore = {
     completed: IngestionFile[];
-    filesTransferring: IngestionFile[];
     pending: IngestionFile[];
     pendingUpdates: Map<number, IngestionFile>;
     pendingAttachments: Map<number, IngestionFile>;
@@ -66,7 +65,6 @@ type UploadStore = {
     loadPending: (acceptedFiles: File[]) => void;
     loadSpecialPending: (acceptedFiles: File[], references: UploadReferences, idSO: number) => void;
     loadCompleted: (completed: IngestionFile[], refetch) => void;
-    getFilesTransferring: ( filesTransferring: IngestionFile[] ) => void;
     selectFile: (id: FileId, selected: boolean) => void;
     startUpload: (id: FileId, options?: UploadOptions) => void;
     cancelUpload: (id: FileId) => void;
@@ -321,10 +319,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     loadCompleted: (completed: IngestionFile[], refetch): void => {
         set({ completed, loading: false, refetch });
     },
-    getFilesTransferring: (filesTransferring: IngestionFile[] ) => {
-        set({ filesTransferring });
-
-    },
     selectFile: (id: FileId, selected: boolean) => {
         const { completed } = get();
         const updatedCompleted = lodash.forEach(completed, file => {
@@ -492,6 +486,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if(progress >= 100) {
                     queryAssetVersionDocuments('startUploadTransfer.onProgress()');
                 }
+
             };
 
             const onCancel = (cancel: () => void) => {
@@ -528,7 +523,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (status === UploadStatus.Complete) {
                     const uploadEvent: UploadCompleteEvent = { id };
                     UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
-
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
                     console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, error = ${error}`);
@@ -653,6 +647,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
             });
             set({ pending: updatedPendingProgress });
+            console.log(`FILES TRANSFERRING DURING PROCESSING: ${JSON.stringify(pending)}`);
         }
     },
     onSetCancelledEvent: (eventData: UploadSetCancelEvent, options?: UploadOptions): void => {

@@ -13,6 +13,7 @@ import { eIngestionMode } from '../../../../constants';
 
 interface FileListProps {
     files: IngestionFile[];
+    showOnly: FileUploadStatus;
     uploadPendingList?: boolean;
     references?: UploadReferences;
     uploadType?: eIngestionMode;
@@ -32,7 +33,7 @@ export function AnimatedComponent({ children }: { children: React.ReactNode }): 
 function FileList(props: FileListProps): React.ReactElement {
     const { selectFile } = useUploadStore();
     const { getEntries } = useVocabularyStore();
-    const { files, uploadPendingList, references, idSystemObject } = props;
+    const { files, showOnly, uploadPendingList, references, idSystemObject } = props;
     const { startUpload, retryUpload, retrySpecialUpload, cancelUpload, cancelSpecialUpload, removeUpload, removeSpecialPending, changeAssetType } = useUploadStore();
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
@@ -58,51 +59,64 @@ function FileList(props: FileListProps): React.ReactElement {
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
     const getFileList = ({ id, name, size, status, selected, progress, type, idAsset, idSOAttachment, updateContext }: IngestionFile, index: number) => {
-        const uploading = (status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING);
+        const uploading = status === FileUploadStatus.UPLOADING;
+        const transferring = status === FileUploadStatus.PROCESSING;
         const complete = status === FileUploadStatus.COMPLETE;
         const failed = status === FileUploadStatus.FAILED;
         const cancelled = status === FileUploadStatus.CANCELLED;
 
         const typeOptions: VocabularyOption[] = getEntries(eVocabularySetID.eAssetAssetType);
+        console.log(`SHOWONLY STATUS: ${showOnly}`);
+        console.log(`STATUS: ${status}`);
 
-        return (
-            <AnimatedComponent key={index}>
-                <FileListItem
-                    id={id}
-                    name={name}
-                    size={size}
-                    type={type}
-                    updateContext={updateContext}
-                    typeOptions={typeOptions}
-                    selected={selected}
-                    uploading={uploading}
-                    complete={complete}
-                    failed={failed}
-                    cancelled={cancelled}
-                    progress={progress}
-                    status={status}
-                    onChangeType={onChangeType}
-                    onSelect={onSelect}
-                    onCancel={onCancel}
-                    onCancelSpecial={onCancelSpecial}
-                    onUpload={onUpload}
-                    onRetry={onRetry}
-                    onRetrySpecial={onRetrySpecial}
-                    onRemove={onRemove}
-                    onRemoveSpecial={onRemoveSpecial}
-                    idAsset={idAsset}
-                    idSOAttachment={idSOAttachment}
-                    references={references}
-                    uploadPendingList={uploadPendingList}
-                    idSystemObject={idSystemObject}
-                />
-            </AnimatedComponent>
-        );
+        let doRender = false;
+        if(showOnly == FileUploadStatus.UPLOADING && status==FileUploadStatus.READY)
+            doRender = true;
+        else if (showOnly == status)
+            doRender = true;
+
+        if(doRender) {
+            return (
+                <AnimatedComponent key={index}>
+                    <FileListItem
+                        id={id}
+                        name={name}
+                        size={size}
+                        type={type}
+                        updateContext={updateContext}
+                        typeOptions={typeOptions}
+                        selected={selected}
+                        uploading={uploading}
+                        transferring={transferring}
+                        complete={complete}
+                        failed={failed}
+                        cancelled={cancelled}
+                        progress={progress}
+                        status={status}
+                        onChangeType={onChangeType}
+                        onSelect={onSelect}
+                        onCancel={onCancel}
+                        onCancelSpecial={onCancelSpecial}
+                        onUpload={onUpload}
+                        onRetry={onRetry}
+                        onRetrySpecial={onRetrySpecial}
+                        onRemove={onRemove}
+                        onRemoveSpecial={onRemoveSpecial}
+                        idAsset={idAsset}
+                        idSOAttachment={idSOAttachment}
+                        references={references}
+                        uploadPendingList={uploadPendingList}
+                        idSystemObject={idSystemObject}
+                    />
+                </AnimatedComponent>
+            );
+        }  else { return null; }
+
     };
 
     return (
         <React.Fragment>
-            {files.map(getFileList)}
+            {files.slice(0).reverse().map(getFileList)}
         </React.Fragment>
     );
 }

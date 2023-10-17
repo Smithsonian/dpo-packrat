@@ -9,7 +9,7 @@ import { useQuery } from '@apollo/client';
 import { Box, Typography } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { FieldType } from '../../../../components';
-import { parseAssetVersionToState, useUploadStore } from '../../../../store';
+import { parseAssetVersionToState, useUploadStore, FileUploadStatus } from '../../../../store';
 import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 import FileList from './FileList';
 import { makeStyles } from '@material-ui/core/styles';
@@ -117,7 +117,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                         No files available.
                     </Typography>
                 )}
-                <FileList files={completed} />
+                <FileList files={completed} showOnly={FileUploadStatus.COMPLETE} />
             </React.Fragment>
         );
     }

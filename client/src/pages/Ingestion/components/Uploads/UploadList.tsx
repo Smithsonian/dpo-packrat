@@ -12,7 +12,7 @@ import { Box, Typography, /*Button*/ } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
-import { useUploadStore } from '../../../../store';
+import { useUploadStore, FileUploadStatus } from '../../../../store';
 import { Colors } from '../../../../theme';
 import { FieldType } from '../../../../components';
 import { scrollBarProperties } from '../../../../utils/shared';
@@ -130,7 +130,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
                     No files available.
                 </Typography>
             )}
-            <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
+            <FileList files={pending} showOnly={FileUploadStatus.UPLOADING} uploadPendingList uploadType={eIngestionMode.eIngest} />
         </div>
     );
 }

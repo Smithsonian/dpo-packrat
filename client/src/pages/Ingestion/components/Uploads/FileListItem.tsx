@@ -9,6 +9,7 @@
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
 import { green, grey, red, yellow } from '@material-ui/core/colors';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import { motion } from 'framer-motion';
 import React from 'react';
 import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
@@ -84,7 +85,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '0px 10px'
+        padding: '0px 10px',
+        width: '100%'
     },
     sizeText: {
         fontWeight: 400,
@@ -145,6 +147,7 @@ interface FileListItemProps {
     selected: boolean;
     typeOptions: VocabularyOption[];
     uploading: boolean;
+    transferring: boolean;
     complete: boolean;
     progress: number;
     failed: boolean;
@@ -338,6 +341,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     </Box>
                 </Box>
                 <Box className={classes.size}>
+                    <LinearProgress />
                     <Typography className={classes.sizeText} variant='caption'>
                         {formatBytes(size)}
                     </Typography>

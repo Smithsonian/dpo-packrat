@@ -5,8 +5,8 @@
  *
  * This component renders upload list for completed files only.
  */
-import React, { useEffect } from 'react';
-import { useQuery } from '@apollo/client';
+import React, { /* useEffect */ } from 'react';
+//import { useQuery } from '@apollo/client';
 import { useUploadStore } from '../../../../store';
 import { FieldType } from '../../../../components';
 import FileList from './FileList';
@@ -14,9 +14,10 @@ import { makeStyles } from '@material-ui/core/styles';
 import { scrollBarProperties } from '../../../../utils/shared';
 import { Colors } from '../../../../theme';
 import { Box, Typography } from '@material-ui/core';
+import { FileUploadStatus } from '../../../../store';
 //import { eIngestionMode } from '../../../../constants';
-import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
-import lodash from 'lodash';
+//import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
+//import lodash from 'lodash';
 
 const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     container: {
@@ -37,38 +38,43 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         ...scrollBarProperties(true, false, palette.text.disabled)
     },
     listDetail: {
-        textAlign: 'center',
+        //textAlign: 'center',
         color: palette.grey[500],
         fontStyle: 'italic',
-        marginTop: '8%'
+        //marginTop: '8%'
+        borderBottom: '1px solid #000'
     }
 }));
 
 function ProcessingList(): React.ReactElement {
     const classes = useStyles();
-    const { filesTransferring, getFilesTransferring } = useUploadStore();
-    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
 
-    useEffect(() => {
-        if (!loading && !error) {
-            const { getUploadedAssetVersion } = data;
-            const { AssetVersion } = getUploadedAssetVersion;
-            const fileIds: string[] = filesTransferring.map(({ id }) => id);
-            const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
-            if (!sortedAssetVersion)
-                return;
+    //const { filesTransferring, getFilesTransferring } = useUploadStore();
+    const { pending } = useUploadStore();
+    console.log(pending);
+    //const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
 
-            const transferredFiles = sortedAssetVersion.map(assetVersion => {
-                const { idAssetVersion } = assetVersion;
-                const id = String(idAssetVersion);
+    // useEffect(() => {
+    //     if (loading) {
+    //         const { getUploadedAssetVersion } = data;
+    //         const { AssetVersion } = getUploadedAssetVersion;
+    //         const fileIds: string[] = filesTransferring.map(({ id }) => id);
 
-                if (fileIds.includes(id))
-                    return filesTransferring.find(file => file.id === id) || assetVersion;
-            });
+    //         const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
+    //         if (!sortedAssetVersion)
+    //             return;
 
-            getFilesTransferring( transferredFiles );
-        }
-    }, [data, loading, error, refetch]);
+    //         const transferredFiles = sortedAssetVersion.map(assetVersion => {
+    //             const { idAssetVersion } = assetVersion;
+    //             const id = String(idAssetVersion);
+
+    //             if (fileIds.includes(id))
+    //                 return filesTransferring.find(file => file.id === id) || assetVersion;
+    //         });
+
+    //         getFilesTransferring( transferredFiles );
+    //     }
+    // }, [data, loading, error, refetch]);
 
     let content: React.ReactNode = (
         <Typography className={classes.listDetail} variant='body1'>
@@ -76,19 +82,24 @@ function ProcessingList(): React.ReactElement {
         </Typography>
     );
 
-    if(!loading) {
-        content = (
-            <React.Fragment>
-                {!filesTransferring.length && (
-                    <Typography className={classes.listDetail} variant='body1' >
-                        No files available.
-                    </Typography>
-                )}
-                <FileList files={filesTransferring} />
-            </React.Fragment>
-        );
+    //console.log(filesTransferring);
 
-    }
+    //if(loading) {
+    content = (
+        <React.Fragment>
+            {!pending.length && (
+                <Typography className={classes.listDetail} variant='body1' >
+                    No files available.
+                </Typography>
+            )}
+            {/*
+                const filesTransferring = pending.filter(file => file.status === 'PROCESSING');
+            */}
+            <FileList files={pending} showOnly={FileUploadStatus.PROCESSING} />
+        </React.Fragment>
+    );
+
+    //}
 
     return (
         <>

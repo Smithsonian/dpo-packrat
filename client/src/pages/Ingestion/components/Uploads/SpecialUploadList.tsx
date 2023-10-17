@@ -15,7 +15,7 @@ import { FieldType } from '../../../../components';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { eIngestionMode, HOME_ROUTES, resolveSubRoute, INGESTION_ROUTE } from '../../../../constants';
-import { UploadReferences, IngestionFile, useUploadStore } from '../../../../store';
+import { UploadReferences, IngestionFile, useUploadStore, FileUploadStatus } from '../../../../store';
 import CloseIcon from '@material-ui/icons/Close';
 import KeepAlive from 'react-activation';
 import { UploadCompleteEvent, UploadEvents, UploadEventType, UploadFailedEvent, UploadProgressEvent, UploadSetCancelEvent } from '../../../../utils/events';
@@ -61,7 +61,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
             >
                 <UploadListHeader />
                 <Box className={classes.list}>
-                    <FileList files={files} uploadPendingList references={references} uploadType={uploadType} idSystemObject={idSO} />
+                    <FileList files={files} uploadPendingList references={references} uploadType={uploadType} showOnly={FileUploadStatus.UPLOADING} idSystemObject={idSO} />
                     <Typography className={classes.title}>Drag and drop file here or click the button</Typography>
                     <BsCloudUpload className={classes.icon} size='50px' />
                     <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={!!file} disableElevation>
