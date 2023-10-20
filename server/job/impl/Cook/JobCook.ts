@@ -556,4 +556,6 @@ export abstract class JobCook<T> extends JobPackrat {
             LOG.info(error, LOG.LS.eJOB);
         return res;
     }
+
+    // TODO: add helper that wraps CookResource
 }
