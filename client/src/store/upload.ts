@@ -65,6 +65,7 @@ type UploadStore = {
     loadPending: (acceptedFiles: File[]) => void;
     loadSpecialPending: (acceptedFiles: File[], references: UploadReferences, idSO: number) => void;
     loadCompleted: (completed: IngestionFile[], refetch) => void;
+    loadProcessingFiles: (pending: IngestionFile[], refetch) => void;
     selectFile: (id: FileId, selected: boolean) => void;
     startUpload: (id: FileId, options?: UploadOptions) => void;
     cancelUpload: (id: FileId) => void;
@@ -219,6 +220,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     loadPending: (acceptedFiles: File[]) => {
         const { pending } = get();
 
+        console.log(`ACCEPTED FILES: ${JSON.stringify(acceptedFiles)}`);
+
         if (acceptedFiles.length) {
             const ingestionFiles: IngestionFile[] = [];
             acceptedFiles.forEach((file: File): void => {
@@ -318,6 +321,12 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     },
     loadCompleted: (completed: IngestionFile[], refetch): void => {
         set({ completed, loading: false, refetch });
+        console.log('Timer end!');
+        console.timeEnd('test');
+        console.log(`COMPLETED: ${JSON.stringify(completed)}`);
+    },
+    loadProcessingFiles: (pending: IngestionFile[], refetch): void => {
+        set({ pending, loading: false, refetch });
     },
     selectFile: (id: FileId, selected: boolean) => {
         const { completed } = get();
@@ -358,6 +367,9 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 });
 
                 set({ pending: updatedPending });
+                console.log('Timer start!');
+                console.time('test');
+                console.log(`UPLOADING: ${JSON.stringify(pending)}`);
             }
 
             startUploadTransfer(file, options?.references);
@@ -647,7 +659,9 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
             });
             set({ pending: updatedPendingProgress });
-            console.log(`FILES TRANSFERRING DURING PROCESSING: ${JSON.stringify(pending)}`);
+            if(pending.find(pending => pending.status === FileUploadStatus.PROCESSING)) {
+                console.log(`PROCESSING: ${JSON.stringify(pending)}`);
+            }
         }
     },
     onSetCancelledEvent: (eventData: UploadSetCancelEvent, options?: UploadOptions): void => {

@@ -5,9 +5,9 @@
  *
  * This component renders upload list for completed files only.
  */
-import React, { /* useEffect */ } from 'react';
-//import { useQuery } from '@apollo/client';
-import { useUploadStore } from '../../../../store';
+import React, { useEffect } from 'react';
+import { useQuery } from '@apollo/client';
+import { parseAssetVersionToState, useUploadStore,  } from '../../../../store';
 import { FieldType } from '../../../../components';
 import FileList from './FileList';
 import { makeStyles } from '@material-ui/core/styles';
@@ -16,8 +16,8 @@ import { Colors } from '../../../../theme';
 import { Box, Typography } from '@material-ui/core';
 import { FileUploadStatus } from '../../../../store';
 //import { eIngestionMode } from '../../../../constants';
-//import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
-//import lodash from 'lodash';
+import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
+import lodash from 'lodash';
 
 const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     container: {
@@ -46,35 +46,67 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
     }
 }));
 
-function ProcessingList(): React.ReactElement {
+interface ProcessingListProps {
+    setUpdatedAssetVersionMetadata: (metadata: any) => void;
+}
+
+function ProcessingList(props: ProcessingListProps): React.ReactElement {
+    const { setUpdatedAssetVersionMetadata } = props;
     const classes = useStyles();
 
-    //const { filesTransferring, getFilesTransferring } = useUploadStore();
-    const { pending } = useUploadStore();
-    console.log(pending);
-    //const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+    const { pending, loadProcessingFiles } = useUploadStore();
+    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+    //console.log('Box 2 in use.');
 
-    // useEffect(() => {
-    //     if (loading) {
-    //         const { getUploadedAssetVersion } = data;
-    //         const { AssetVersion } = getUploadedAssetVersion;
-    //         const fileIds: string[] = filesTransferring.map(({ id }) => id);
+    useEffect(() => {
+        //PROCESSING
+        if (data !== undefined) {
+            const { getUploadedAssetVersion } = data;
+            console.log('Processing List useQuery activated.');
+            console.log(`Data: ${JSON.stringify(data)}`);
+            const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
+            //console.log(`Processing: ${JSON.stringify(AssetVersion)}`);
+            //console.log(AssetVersion);
+            //console.log(`\t>>> COMPLETED ID Asset Versions Updated: ${JSON.stringify(idAssetVersionsUpdated)}`);
+            //console.log(`\t>>> COMPLETED Updated Asset Version Metadata: ${JSON.stringify(UpdatedAssetVersionMetadata )}`);
+            const fileIds: string[] = pending.map(({ id }) => id);
+            const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
+            //console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
 
-    //         const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
-    //         if (!sortedAssetVersion)
-    //             return;
+            if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated) {
+                setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet });
+            }
+            const sortedAssetVersion = lodash.orderBy(AssetVersion, ['DateCreated'], ['desc']);
+            if (!sortedAssetVersion)
+                return;
 
-    //         const transferredFiles = sortedAssetVersion.map(assetVersion => {
-    //             const { idAssetVersion } = assetVersion;
-    //             const id = String(idAssetVersion);
+            const UpdatedAssetVersionMetadataMap: Map<number, any> = new Map<number, any>();
+            for (const updatedMetadata of UpdatedAssetVersionMetadata) {
+                if (updatedMetadata.idAssetVersion)
+                    UpdatedAssetVersionMetadataMap.set(updatedMetadata.idAssetVersion, updatedMetadata);
+            }
+            UpdatedAssetVersionMetadataMap.forEach((value: any, key: any) => {
+                console.log(key, value);
+            });
 
-    //             if (fileIds.includes(id))
-    //                 return filesTransferring.find(file => file.id === id) || assetVersion;
-    //         });
+            const processingFiles = sortedAssetVersion.map(assetVersion => {
+                const { idAssetVersion } = assetVersion;
+                const id = String(idAssetVersion);
+                const updatedMetadata = UpdatedAssetVersionMetadataMap.get(idAssetVersion);
+                const updateMediaGroup: string | undefined = updatedMetadata && updatedMetadata.Item ? ` for Media Group ${updatedMetadata.Item.Name}` : undefined;
+                const updateContext: string | undefined = updatedMetadata ? `(Updating ${updatedMetadata.UpdatedObjectName}${updateMediaGroup})` : undefined;
 
-    //         getFilesTransferring( transferredFiles );
-    //     }
-    // }, [data, loading, error, refetch]);
+                if (fileIds.includes(id))
+                    return pending.find(file => file.id === id) || assetVersion;
+
+                const idAsset = idAssetVersionsUpdatedSet.has(idAssetVersion) ? assetVersion.Asset.idAsset : null;
+                return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset, updateContext);
+            });
+
+            loadProcessingFiles(processingFiles, refetch);
+        }
+    }, [data, loading, error]);
+
 
     let content: React.ReactNode = (
         <Typography className={classes.listDetail} variant='body1'>
@@ -82,7 +114,6 @@ function ProcessingList(): React.ReactElement {
         </Typography>
     );
 
-    //console.log(filesTransferring);
 
     //if(loading) {
     content = (
@@ -92,9 +123,6 @@ function ProcessingList(): React.ReactElement {
                     No files available.
                 </Typography>
             )}
-            {/*
-                const filesTransferring = pending.filter(file => file.status === 'PROCESSING');
-            */}
             <FileList files={pending} showOnly={FileUploadStatus.PROCESSING} />
         </React.Fragment>
     );

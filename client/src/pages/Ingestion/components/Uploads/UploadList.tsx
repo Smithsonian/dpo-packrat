@@ -6,8 +6,7 @@
  *
  * This component renders upload list for pending files only.
  */
-import { useQuery } from '@apollo/client';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, Typography, /*Button*/ } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import Dropzone from 'react-dropzone';
@@ -19,7 +18,6 @@ import { scrollBarProperties } from '../../../../utils/shared';
 import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { eIngestionMode } from '../../../../constants';
-import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
 
 export const useUploadListStyles = makeStyles(({ palette, typography, spacing }) => ({
     container: {
@@ -89,17 +87,6 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const classes = useUploadListStyles();
     const { pending } = useUploadStore();
     const { /*loading,*/ open } = props;
-
-    const { data, loading, error } = useQuery(GetUploadedAssetVersionDocument);
-
-    useEffect(() => {
-        //COMPLETE
-        if (!loading && !error) {
-            //const { getUploadedAssetVersion } = data;
-            //const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            //console.log(`PENDING getUploadedAssetVersion data: ${JSON.stringify(getUploadedAssetVersion)}`);
-        }
-    }, [data, loading, error]);
 
     return (
         <div>

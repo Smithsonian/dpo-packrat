@@ -147,7 +147,6 @@ interface FileListItemProps {
     selected: boolean;
     typeOptions: VocabularyOption[];
     uploading: boolean;
-    transferring: boolean;
     complete: boolean;
     progress: number;
     failed: boolean;

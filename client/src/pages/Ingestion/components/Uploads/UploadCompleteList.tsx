@@ -59,10 +59,11 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
     useEffect(() => {
         //COMPLETE
         if (!loading && !error) {
+            console.log('Complete List useQuery activated.');
             const { getUploadedAssetVersion } = data;
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            console.log(JSON.stringify(AssetVersion));
-            console.log(AssetVersion);
+            //console.log(`COMPLETED: ${JSON.stringify(AssetVersion)}`);
+            //console.log(AssetVersion);
             //console.log(`\t>>> COMPLETED ID Asset Versions Updated: ${JSON.stringify(idAssetVersionsUpdated)}`);
             //console.log(`\t>>> COMPLETED Updated Asset Version Metadata: ${JSON.stringify(UpdatedAssetVersionMetadata )}`);
             const fileIds: string[] = completed.map(({ id }) => id);

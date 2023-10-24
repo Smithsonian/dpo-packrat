@@ -38,10 +38,13 @@ function FileList(props: FileListProps): React.ReactElement {
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
     const onUpload = (id: FileId): void => {
-        if (references && idSystemObject)
+        if (references && idSystemObject) {
             startUpload(id, { idSystemObject, references });
-        else
+        } else {
             startUpload(id);
+        }
+
+
     };
 
     const onRetry = (id: FileId): void => retryUpload(id);
@@ -59,20 +62,19 @@ function FileList(props: FileListProps): React.ReactElement {
     const onSelect = (id: FileId, selected: boolean): void => selectFile(id, selected);
 
     const getFileList = ({ id, name, size, status, selected, progress, type, idAsset, idSOAttachment, updateContext }: IngestionFile, index: number) => {
-        const uploading = status === FileUploadStatus.UPLOADING;
-        const transferring = status === FileUploadStatus.PROCESSING;
+        const uploading = (status === FileUploadStatus.UPLOADING || status === FileUploadStatus.PROCESSING);
         const complete = status === FileUploadStatus.COMPLETE;
         const failed = status === FileUploadStatus.FAILED;
         const cancelled = status === FileUploadStatus.CANCELLED;
 
         const typeOptions: VocabularyOption[] = getEntries(eVocabularySetID.eAssetAssetType);
-        console.log(`SHOWONLY STATUS: ${showOnly}`);
+        //console.log(`SHOWONLY STATUS: ${showOnly}`);
         console.log(`STATUS: ${status}`);
 
         let doRender = false;
-        if(showOnly == FileUploadStatus.UPLOADING && status==FileUploadStatus.READY)
+        if(showOnly === FileUploadStatus.UPLOADING && status === FileUploadStatus.READY)
             doRender = true;
-        else if (showOnly == status)
+        else if (showOnly === status)
             doRender = true;
 
         if(doRender) {
@@ -87,7 +89,6 @@ function FileList(props: FileListProps): React.ReactElement {
                         typeOptions={typeOptions}
                         selected={selected}
                         uploading={uploading}
-                        transferring={transferring}
                         complete={complete}
                         failed={failed}
                         cancelled={cancelled}
