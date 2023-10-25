@@ -76,6 +76,7 @@
     "husky": "8.0.1",
     "image-size": "1.0.2",
     "json-bigint-patch": "0.0.8",
+    "jsonfile": "6.1.0",
     "jszip": "3.10.1",
     "ldapjs": "2.3.3",
     "lodash": "4.17.21",

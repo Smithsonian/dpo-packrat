@@ -49,8 +49,7 @@ const getAssetVersionDetailsTest = (utils: TestSuiteUtils): void => {
                             const getContentsInput: GetAssetVersionsDetailsInput = {
                                 idAssetVersions: [assetVersion.idAssetVersion]
                             };
-                            console.log('getContentsInput', JSON.stringify(getContentsInput));
-                            console.log('User', JSON.stringify(User));
+
                             const { valid, Details } = await graphQLApi.getAssetVersionsDetails(getContentsInput, { user: User, isAuthenticated: true });
                             expect(valid).toBeTruthy();
                             expect(Details.length).toBeGreaterThan(0);

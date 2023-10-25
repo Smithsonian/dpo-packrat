@@ -35,8 +35,10 @@ export async function getCookResource(req: Request, res: Response): Promise<void
     if(cookResource.success===false) {
         LOG.error(`getCookResource cannot find the best fit resource. (${cookResource.error})`, LOG.LS.eHTTP);
 
-        cookResource.error = `Could not find a suitable resource for a ${job} job. ${cookResource.error}`;
-        res.status(204).send(JSON.stringify(cookResource));
+        // figure out the appropriate return code and send our response
+        const statusCode: number = (cookResource.error?.includes('Invalid parameter')===true)?400:200;
+        cookResource.error = `Could not find a suitable resource for a '${job}' job. ${cookResource.error}`;
+        res.status(statusCode).send(JSON.stringify(cookResource));
         return;
     }
 

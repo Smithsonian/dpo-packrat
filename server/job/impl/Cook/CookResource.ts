@@ -36,6 +36,8 @@ export type CookResourceResult = {
     resources: CookResourceInfo[],
 };
 
+const supportedJobTypes: string[] = ['inspect','scene_generation','generate_downloads','photogrammetry'];
+
 const getCookResourceStatus = async (address: string, port: number): Promise<CookResourceState> => {
     // example: http://si-3dcook02.us.sinet.si.edu:8000/machine
     const endpoint = address+':'+port+'/machine';
@@ -43,7 +45,8 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
     try {
         LOG.info(`getCookResources getting status for resource: ${endpoint}.`,LOG.LS.eSYS);
 
-        const response: AxiosResponse | null = await axios.get(endpoint);
+        // make our query to the resource and timeout after 5 seconds to minimize delays
+        const response: AxiosResponse | null = await axios.get(endpoint, { timeout: 5000 });
         if (!response || response.status<200 || response.status>299) {
             return {
                 success: false,
@@ -90,28 +93,26 @@ const verifyCookResourceCapability = (job: string, resource: DBAPI.CookResource)
         }
     }
 };
-const createResult = (dbResource: DBAPI.CookResource, resourceState: CookResourceState): CookResourceResult => {
+const createResource = (dbResource: DBAPI.CookResource, resourceState: CookResourceState): CookResourceInfo => {
     return {
-        success: true,
-        resources: [{
-            name: dbResource.Name,
-            address: dbResource.Address,
-            port: dbResource.Port,
-            machine_type: dbResource.MachineType,
-            stats: {
-                jobsWaiting: resourceState.jobsWaiting,
-                jobsRunning: resourceState.jobsRunning,
-            },
-            support: {
-                inspect: dbResource.Inspection,
-                scene_generation: dbResource.SceneGeneration,
-                generate_downloads: dbResource.GenerateDownloads,
-                photogrammetry: dbResource.Photogrammetry,
-                large_files: dbResource.LargeFiles,
-            },
-        }],
+        name: dbResource.Name,
+        address: dbResource.Address,
+        port: dbResource.Port,
+        machine_type: dbResource.MachineType,
+        stats: {
+            jobsWaiting: resourceState.jobsWaiting,
+            jobsRunning: resourceState.jobsRunning,
+        },
+        support: {
+            inspect: dbResource.Inspection,
+            scene_generation: dbResource.SceneGeneration,
+            generate_downloads: dbResource.GenerateDownloads,
+            photogrammetry: dbResource.Photogrammetry,
+            large_files: dbResource.LargeFiles,
+        },
     };
 };
+
 const createResultError = (message: string, dbResource?: DBAPI.CookResource | undefined, resourceState?: CookResourceState | undefined): CookResourceResult => {
 
     const result: CookResourceResult = {
@@ -144,9 +145,36 @@ const createResultError = (message: string, dbResource?: DBAPI.CookResource | un
     return result;
 };
 
+export const getJobTypeFromCookJobName = (cookJobName: string): string | undefined => {
+    // first by extracting from the name, and then finding best match
+    const parts: string[] = cookJobName.split(':');
+    if(parts.length<=1) {
+        LOG.error(`getJobTypeFromCookJobName encountered unexpected input format. (${cookJobName})`,LOG.LS.eSYS);
+        return;
+    }
+
+    switch(parts[0]) {
+        case 'inspect-mesh':
+        case 'si-packrat-inspect': return 'inspect';
+
+        case 'si-vogager-scene':
+        case 'si-voyager-scene': return 'scene_generation';
+
+        case 'si-generate-downloads': return 'generate_downloads';
+
+        default:{
+            LOG.error(`getJobTypeFromCookJobName encountered unsupported input format. (${parts[0]})`,LOG.LS.eSYS);
+            return;
+        }
+    }
+};
 export class CookResource {
 
-    static async getCookResource(job: string, source?: string): Promise<CookResourceResult> {
+    static async getCookResource(job: string, source?: string, includeAll: boolean = false): Promise<CookResourceResult> {
+
+        // verify job type
+        if(supportedJobTypes.includes(job)===false)
+            return createResultError(`Invalid parameter. Unsupported job type: ${job}.`);
 
         // grab all resources from DB
         const cookResources: DBAPI.CookResource[] | null = await DBAPI.CookResource.fetchAll();
@@ -164,7 +192,7 @@ export class CookResource {
             // make sure the resource supports the job type
             const supportWeight: number = verifyCookResourceCapability(job,cookResources[i]);
             if(supportWeight <= 0) {
-                LOG.info(`getCookResources skipping resource: ${cookResources[i].Name}. (address: ${cookResources[i].Address} | reason: does not support job type)`,LOG.LS.eSYS);
+                LOG.info(`getCookResources skipping resource: ${cookResources[i].Name}. (address: ${cookResources[i].Address} | reason: unsupported job type)`,LOG.LS.eSYS);
                 continue;
             }
 
@@ -206,20 +234,38 @@ export class CookResource {
             return a.jobsRunning - b.jobsRunning;
         });
 
-        // find best match by looking at # jobs waiting
-        const bestFit: DBAPI.CookResource | undefined = cookResources.find(item => item.Address === cookResourceResults[0].address);
-        if(!bestFit) {
-            LOG.error('getCookResource cannot find a matching resource in original array.', LOG.LS.eSYS);
+        // our result
+        const result: CookResourceResult = {
+            success: true,
+            resources: [],
+        };
+
+        // cycle through all gathered resources building our returned list
+        for(let i=0; i<cookResourceResults.length; i++) {
+
+            // find match of resource asnd its results
+            const resource: DBAPI.CookResource | undefined = cookResources.find(item => item.Address === cookResourceResults[i].address);
+            if(!resource) {
+                LOG.info(`getCookResource cannot find a matching resource in original array. skipping (${cookResourceResults[i].address})`, LOG.LS.eSYS);
+                continue;
+            }
+
+            // store in our array
+            result.resources.push(createResource(resource,cookResourceResults[i]));
+
+            // break after one
+            if(includeAll === false)
+                break;
+        }
+
+        // if we didn't find any then we need to fail
+        if(result.resources.length===0) {
+            LOG.error('getCookResource cannot find any suitable resources',LOG.LS.eSYS);
             return createResultError(`Could not find a matching resource. notify Packrat support. (${cookResources.length} resources checked)`);
         }
 
-        // return full info on resource
-        const result: CookResourceResult = createResult(bestFit, cookResourceResults[0]);
-        LOG.info(`getCookResources matched '${result.resources[0].name}', a ${result.resources[0].machine_type}, for the job. (waiting: ${result.resources[0].stats.jobsWaiting} | running: ${result.resources[0].stats.jobsRunning}).`,LOG.LS.eSYS);
+        // status messgae
+        LOG.info(`getCookResources matched ${result.resources.length} resources. The best fit is '${result.resources[0].name}', a ${result.resources[0].machine_type}, for the job. (waiting: ${result.resources[0].stats.jobsWaiting} | running: ${result.resources[0].stats.jobsRunning}).`,LOG.LS.eSYS);
         return result;
     }
 }
-
-// TODO:
-// 2. update where inspection is called to use this
-// 3. if works, do same for scene generation

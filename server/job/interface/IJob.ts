@@ -5,6 +5,7 @@ import * as H from '../../utils/helpers';
 export interface IJob {
     name(): string;
     configuration(): any;
+    initialize(): any;
 
     executeJob(fireDate: Date): Promise<H.IOResults>;
     cancelJob(): Promise<H.IOResults>;
