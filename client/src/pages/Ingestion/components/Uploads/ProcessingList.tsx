@@ -63,15 +63,13 @@ function ProcessingList(props: ProcessingListProps): React.ReactElement {
         if (data !== undefined) {
             const { getUploadedAssetVersion } = data;
             console.log('Processing List useQuery activated.');
-            console.log(`Data: ${JSON.stringify(data)}`);
+            //console.log(`Data: ${JSON.stringify(data)}`);
             const { AssetVersion, idAssetVersionsUpdated, UpdatedAssetVersionMetadata } = getUploadedAssetVersion;
-            //console.log(`Processing: ${JSON.stringify(AssetVersion)}`);
-            //console.log(AssetVersion);
+
             //console.log(`\t>>> COMPLETED ID Asset Versions Updated: ${JSON.stringify(idAssetVersionsUpdated)}`);
             //console.log(`\t>>> COMPLETED Updated Asset Version Metadata: ${JSON.stringify(UpdatedAssetVersionMetadata )}`);
             const fileIds: string[] = pending.map(({ id }) => id);
             const idAssetVersionsUpdatedSet = new Set(idAssetVersionsUpdated);
-            //console.log(`UploadCompleteList useEffect UpdatedAssetVersionMetadata=${JSON.stringify(UpdatedAssetVersionMetadata)}; idAssetVersionsUpdated=${JSON.stringify(idAssetVersionsUpdated)}`);
 
             if (UpdatedAssetVersionMetadata && idAssetVersionsUpdated) {
                 setUpdatedAssetVersionMetadata({ UpdatedAssetVersionMetadata, idAssetVersionsUpdatedSet });
@@ -89,17 +87,26 @@ function ProcessingList(props: ProcessingListProps): React.ReactElement {
                 console.log(key, value);
             });
 
+            // const onlyIngestedNullFiles = sortedAssetVersion.filter((file) => file.Ingested === false);
+            // console.log(`Only Ingested Null Files: ${JSON.stringify(onlyIngestedNullFiles)}`);
+
             const processingFiles = sortedAssetVersion.map(assetVersion => {
+                //console.log(`Ingested: ${assetVersion.Ingested}`);
+                // Reference the Ingested property here and use it as a filter somewhere.
                 const { idAssetVersion } = assetVersion;
                 const id = String(idAssetVersion);
                 const updatedMetadata = UpdatedAssetVersionMetadataMap.get(idAssetVersion);
                 const updateMediaGroup: string | undefined = updatedMetadata && updatedMetadata.Item ? ` for Media Group ${updatedMetadata.Item.Name}` : undefined;
                 const updateContext: string | undefined = updatedMetadata ? `(Updating ${updatedMetadata.UpdatedObjectName}${updateMediaGroup})` : undefined;
 
-                if (fileIds.includes(id))
+                //console.log(`fileIds: ${JSON.stringify(fileIds)}`);
+
+                if (fileIds.includes(id)) {
                     return pending.find(file => file.id === id) || assetVersion;
+                }
 
                 const idAsset = idAssetVersionsUpdatedSet.has(idAssetVersion) ? assetVersion.Asset.idAsset : null;
+
                 return parseAssetVersionToState(assetVersion, assetVersion.Asset.VAssetType, idAsset, updateContext);
             });
 
@@ -113,7 +120,6 @@ function ProcessingList(props: ProcessingListProps): React.ReactElement {
             Fetching available files...
         </Typography>
     );
-
 
     //if(loading) {
     content = (

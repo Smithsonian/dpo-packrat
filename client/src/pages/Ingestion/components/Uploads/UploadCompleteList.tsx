@@ -86,7 +86,10 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                 console.log(key, value);
             });
 
-            const completedFiles = sortedAssetVersion.map(assetVersion => {
+            const ingestedFalseFiles = sortedAssetVersion.filter((file) => file.Ingested === false);
+            console.log(`Only Ingested False Files: ${JSON.stringify(ingestedFalseFiles)}`);
+
+            const completedFiles = ingestedFalseFiles.map(assetVersion => {
                 const { idAssetVersion } = assetVersion;
                 const id = String(idAssetVersion);
                 const updatedMetadata = UpdatedAssetVersionMetadataMap.get(idAssetVersion);
