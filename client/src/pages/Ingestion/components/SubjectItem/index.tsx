@@ -39,8 +39,8 @@ const useStyles = makeStyles(({ palette }) => ({
     filesLabel: {
         color: palette.primary.dark,
         marginRight: 20,
-        fontWeight: 'bold',
-        fontSize: '1em',
+        fontWeight: 500,
+        fontSize: '1.5em',
     },
 
     fileChip: {

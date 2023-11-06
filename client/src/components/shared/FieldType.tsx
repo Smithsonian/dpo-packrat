@@ -22,7 +22,11 @@ const useStyles = makeStyles(({ spacing }) => ({
         backgroundColor: 'none'
     },
     label: {
-        color: 'auto'
+        //color: 'auto',
+        fontSize: '1em',
+        fontWeight: 500,
+        margin: '1% 0px',
+        color: 'rgb(0,0,0)'
     },
     loading: {
         position: 'absolute',

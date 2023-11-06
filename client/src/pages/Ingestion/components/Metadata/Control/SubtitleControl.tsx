@@ -20,10 +20,11 @@ const useStyles = makeStyles(({ palette, typography }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: ({ hasPrimaryTheme, hasError }: { hasPrimaryTheme: boolean, hasError: boolean }) => hasError ? '#e57373' : hasPrimaryTheme ? palette.primary.light : palette.secondary.light,
-        width: 'fit-content',
+        //backgroundColor: ({ hasPrimaryTheme, hasError }: { hasPrimaryTheme: boolean, hasError: boolean }) => hasError ? '#e57373' : hasPrimaryTheme ? palette.primary.light : palette.secondary.light,
+        //width: 'fit-content',
         minWidth: 300,
-        borderRadius: 5
+        borderRadius: 5,
+        padding: '10px 0'
     },
     selected: {
         cursor: 'pointer',
@@ -34,7 +35,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         maxHeight: 22
     },
     labelCell: {
-        width: 30
+        width: '1.5em'
     },
     optionContainer: {
         display: 'flex',
@@ -68,7 +69,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             return (
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name:</Typography>
+                        <Typography className={classes.text}>Media Group Name:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
@@ -177,15 +178,20 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
     };
 
     return (
-        <Box className={classes.container}>
-            <TableContainer>
-                <Table>
-                    <TableBody>
-                        {renderSubtitleOptions(subtitles)}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </Box>
+        <>
+            <Box>
+                <Typography style={{ fontWeight: 500 }}>Media Group</Typography>
+            </Box>
+            <Box className={classes.container}>
+                <TableContainer>
+                    <Table>
+                        <TableBody>
+                            {renderSubtitleOptions(subtitles)}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </Box>
+        </>
     );
 }
 

@@ -27,13 +27,13 @@ import { getNullableSelectEntries } from '../../../../../utils/controls';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     captureMethodTableContainer: {
-        backgroundColor: palette.primary.light,
+        //backgroundColor: palette.primary.light,
         padding: '4px 0px 10px 0px',
         width: 'fit-content',
         height: 'fit-content'
     },
     fieldTableContainer: {
-        backgroundColor: 'rgb(255, 252, 209)',
+        //backgroundColor: 'rgb(255, 252, 209)',
         borderRadius: '5px',
         width: 'fit-content',
         height: 'fit-content',

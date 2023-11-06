@@ -24,6 +24,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         alignItems: 'center',
         paddingBottom: 10
     },
+    fieldTitle: {
+        fontSize: '1em',
+        fontWeight: 500,
+        margin: '1% 0px',
+        color: 'rgb(0,0,0)'
+    },
     searchField: {
         display: 'flex',
         flex: 1,

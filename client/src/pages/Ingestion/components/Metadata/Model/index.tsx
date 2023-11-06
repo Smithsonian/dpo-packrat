@@ -34,41 +34,42 @@ const useStyles = makeStyles(({ palette }) => ({
         marginTop: 20
     },
     notRequiredFields: {
-        display: 'flex',
-        flexDirection: 'column',
+        //display: 'flex',
+        //flexDirection: 'column',
+        flex: 1.5,
         borderRadius: 5,
         backgroundColor: palette.secondary.light,
-        width: 'fit-content',
-        height: 'fit-content',
+        //width: 'fit-content',
+        //height: 'fit-content',
         padding: '5px',
         outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     dataEntry: {
-        display: 'flex',
+        //display: 'flex',
         flexDirection: 'column',
-        width: 'fit-content',
-        height: 'fit-content',
-        backgroundColor: palette.secondary.light,
-        borderRadius: 5,
-        outline: '1px solid rgba(141, 171, 196, 0.4)'
+        //width: 'fit-content',
+        //height: 'fit-content',
+        //backgroundColor: palette.secondary.light,
+        //borderRadius: 5,
+        //outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     modelDetailsAndSubtitleContainer: {
         borderRadius: 5,
         padding: 10,
-        backgroundColor: palette.primary.light,
-        width: 'fit-content',
-        display: 'flex',
+        //backgroundColor: palette.primary.light,
+        //width: 'fit-content',
+        //display: 'flex',
         flexDirection: 'column'
     },
     modelDetailsContainer: {
-        display: 'flex',
-        flexDirection: 'row',
+        //display: 'flex',
+        //flexDirection: 'row',
         borderRadius: 5,
-        backgroundColor: palette.primary.light,
+        //backgroundColor: palette.primary.light,
         width: '100%',
         columnGap: 10,
         rowGap: 10,
-        flexWrap: 'wrap'
+        //flexWrap: 'wrap'
     },
     caption: {
         flex: '1 1 0%',
@@ -81,7 +82,7 @@ const useStyles = makeStyles(({ palette }) => ({
     readOnlyRowsContainer: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: palette.secondary.light,
+        //backgroundColor: palette.secondary.light,
         width: '200px'
     },
 }));
@@ -363,142 +364,157 @@ function Model(props: ModelProps): React.ReactElement {
                     </React.Fragment>
                 )}
                 <Box className={classes.modelDetailsAndSubtitleContainer}>
-                    {!idAsset && (
-                        <>
-                            <Box style={{ marginBottom: 10 }}>
-                                <SubtitleControl
-                                    subtitles={model.subtitles}
-                                    objectName={model.name}
-                                    onSelectSubtitle={onSelectSubtitle}
-                                    onUpdateCustomSubtitle={onUpdateCustomSubtitle}
-                                    hasPrimaryTheme={false}
-                                    hasError={fieldErrors?.model.subtitles ?? false}
-                                />
-                            </Box>
-                            <Box style={{ marginBottom: 10 }}>
-                                <SceneGenerateWorkflowControl
-                                    selected={model.skipSceneGenerate}
-                                    disabled={sceneGenerateDisabled}
-                                    setCheckboxField={setSceneGenerate}
-                                />
-                            </Box>
-                        </>
-                    )}
-
                     {/* METADATA FORMS AREA*/}
-                    <Box className={classes.modelDetailsContainer}>
-                        <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                            <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
-                                <Table className={tableClasses.table}>
-                                    <TableBody>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} dateHeight='22px' />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.creationMethod || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <Select
-                                                    value={model.creationMethod}
-                                                    name='creationMethod'
-                                                    onChange={setIdField}
-                                                    disableUnderline
-                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
-                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                                >
-
-                                                    {/* Grabs the dropdown options for SELECT */}
-                                                    {getEntries(eVocabularySetID.eModelCreationMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modality || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <Select
-                                                    value={model.modality}
-                                                    name='modality'
-                                                    onChange={setIdField}
-                                                    disableUnderline
-                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
-                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                                >
-                                                    {getEntries(eVocabularySetID.eModelModality).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.units || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <Select
-                                                    value={model.units}
-                                                    name='units'
-                                                    onChange={setIdField}
-                                                    disableUnderline
-                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
-                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                                >
-                                                    {getEntries(eVocabularySetID.eModelUnits).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.purpose || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <Select
-                                                    value={model.purpose}
-                                                    name='purpose'
-                                                    onChange={setIdField}
-                                                    disableUnderline
-                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
-                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                                >
-                                                    {getEntries(eVocabularySetID.eModelPurpose).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modelFileType || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <Select
-                                                    value={model.modelFileType}
-                                                    name='modelFileType'
-                                                    onChange={setIdField}
-                                                    disableUnderline
-                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
-                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                                >
-                                                    {getEntries(eVocabularySetID.eModelFileType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                    {!idAsset && (
+                        <Box style={{ marginBottom: 10 }}>
+                            <SubtitleControl
+                                subtitles={model.subtitles}
+                                objectName={model.name}
+                                onSelectSubtitle={onSelectSubtitle}
+                                onUpdateCustomSubtitle={onUpdateCustomSubtitle}
+                                hasPrimaryTheme={false}
+                                hasError={fieldErrors?.model.subtitles ?? false}
+                            />
                         </Box>
+                    )}
+                    <Box className={classes.modelDetailsContainer}>
+                        <Box style={{ display: 'flex' }}>
+                            <Box style={{ flex: 2 }}>
+                                <Box display='flex' flexDirection='column' className={classes.dataEntry}>
+                                    <Typography style={{ fontWeight: 500 }}>Asset Details</Typography>
+                                    <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ /*backgroundColor: 'rgb(255, 252, 209', */  paddingTop: '10px' }}>
+                                        <Table className={tableClasses.table}>
+                                            <TableBody>
+                                                <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
+                                                    <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
+                                                    <TableCell className={tableClasses.tableCell}>
+                                                        <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} dateHeight='22px' />
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.creationMethod || false)}>
+                                                    <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method</Typography></TableCell>
+                                                    <TableCell className={tableClasses.tableCell}>
+                                                        <Select
+                                                            value={model.creationMethod}
+                                                            name='creationMethod'
+                                                            onChange={setIdField}
+                                                            disableUnderline
+                                                            className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                        >
 
-                        <Box className={classes.notRequiredFields}>
-                            <Box className={classes.caption}>
-                                <Typography variant='caption'>Model</Typography>
+                                                            {/* Grabs the dropdown options for SELECT */}
+                                                            {getEntries(eVocabularySetID.eModelCreationMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                        </Select>
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modality || false)}>
+                                                    <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality</Typography></TableCell>
+                                                    <TableCell className={tableClasses.tableCell}>
+                                                        <Select
+                                                            value={model.modality}
+                                                            name='modality'
+                                                            onChange={setIdField}
+                                                            disableUnderline
+                                                            className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                        >
+                                                            {getEntries(eVocabularySetID.eModelModality).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                        </Select>
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.units || false)}>
+                                                    <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units</Typography></TableCell>
+                                                    <TableCell className={tableClasses.tableCell}>
+                                                        <Select
+                                                            value={model.units}
+                                                            name='units'
+                                                            onChange={setIdField}
+                                                            disableUnderline
+                                                            className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                        >
+                                                            {getEntries(eVocabularySetID.eModelUnits).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                        </Select>
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.purpose || false)}>
+                                                    <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose</Typography></TableCell>
+                                                    <TableCell className={tableClasses.tableCell}>
+                                                        <Select
+                                                            value={model.purpose}
+                                                            name='purpose'
+                                                            onChange={setIdField}
+                                                            disableUnderline
+                                                            className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                        >
+                                                            {getEntries(eVocabularySetID.eModelPurpose).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                        </Select>
+                                                    </TableCell>
+                                                </TableRow>
+                                                <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modelFileType || false)}>
+                                                    <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
+                                                    <TableCell className={tableClasses.tableCell}>
+                                                        <Select
+                                                            value={model.modelFileType}
+                                                            name='modelFileType'
+                                                            onChange={setIdField}
+                                                            disableUnderline
+                                                            className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                        >
+                                                            {getEntries(eVocabularySetID.eModelFileType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                        </Select>
+                                                    </TableCell>
+                                                </TableRow>
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                </Box>
+
+                                {!idAsset && (
+                                    <Box style={{ marginBottom: 10 }}>
+                                        <SceneGenerateWorkflowControl
+                                            selected={model.skipSceneGenerate}
+                                            disabled={sceneGenerateDisabled}
+                                            setCheckboxField={setSceneGenerate}
+                                        />
+                                    </Box>
+                                )}
                             </Box>
-                            <Box className={classes.readOnlyRowsContainer}>
-                                <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                            <Box style={{ flex: 2 }}>
+                                Summary Box
                                 <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                 <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                 <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                 <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             </Box>
                         </Box>
-                        <ObjectMeshTable modelObjects={modelObjects} />
+                        <Box style={{ display: 'flex' }}>
+                            <Box style={{ flex: 3 }}>
+                                <ObjectMeshTable modelObjects={modelObjects} />
+                            </Box>
+                            <Box className={classes.notRequiredFields}>
+                                <Box className={classes.caption}>
+                                    <Typography variant='caption'>Model</Typography>
+                                </Box>
+                                <Box className={classes.readOnlyRowsContainer}>
+                                    <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                </Box>
+                            </Box>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
