@@ -145,13 +145,14 @@ export abstract class JobCook<T> extends JobPackrat {
         for(let i=0; i<cookResources.resources.length; i++) {
             const endpoint = `${cookResources.resources[i].address}:${cookResources.resources[i].port}/`;
             this._configuration.cookServerURLs.push(endpoint);
+            // LOG.info(COOKRES.getResourceInfoString(cookResources.resources[i],job),LOG.LS.eJOB);
         }
         this._configuration.cookServerURLIndex = 0;
 
         // add to our report so we know what resource was chosen
         // TODO: debug mode outputting all considered resources and the one chosen
         const bestFit: COOKRES.CookResourceInfo = cookResources.resources[this._configuration.cookServerURLIndex];
-        const reportMsg: string = `Matched ${cookResources.resources.length} Cook resources. The best fit is '${bestFit.name}', a ${bestFit.machine_type}, for the job. (weight: ${bestFit.support[job]??-1} | waiting: ${bestFit.stats.jobsWaiting} | running: ${bestFit.stats.jobsRunning}).`;
+        const reportMsg: string = `Matched ${cookResources.resources.length} Cook resources. The best fit is ${COOKRES.getResourceInfoString(bestFit,job)}`;
         this.appendToReportAndLog(reportMsg,false);
 
         // return success

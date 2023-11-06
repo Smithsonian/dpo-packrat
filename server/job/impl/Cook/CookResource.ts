@@ -168,7 +168,16 @@ export const getJobTypeFromCookJobName = (cookJobName: string): string | undefin
         }
     }
 };
+
+// utility function for formatting a cook resource into a descriptive string.
+export const getResourceInfoString = (resource: CookResourceInfo, job: string | null = null): string => {
+    const weight: number = job ? resource.support[job] : -1;
+    return `'${resource.name}', a ${resource.machine_type}, for the job. (weight: ${weight} | waiting: ${resource.stats.jobsWaiting} | running: ${resource.stats.jobsRunning}).`;
+};
+
 export class CookResource {
+
+    // TODO: improved combined weighting of different fields vs. current sequential approach
 
     static async getCookResource(job: string, source?: string, includeAll: boolean = false): Promise<CookResourceResult> {
 
@@ -243,7 +252,7 @@ export class CookResource {
         // cycle through all gathered resources building our returned list
         for(let i=0; i<cookResourceResults.length; i++) {
 
-            // find match of resource asnd its results
+            // find match of resource and its results
             const resource: DBAPI.CookResource | undefined = cookResources.find(item => item.Address === cookResourceResults[i].address);
             if(!resource) {
                 LOG.info(`getCookResource cannot find a matching resource in original array. skipping (${cookResourceResults[i].address})`, LOG.LS.eSYS);
@@ -265,7 +274,7 @@ export class CookResource {
         }
 
         // status messgae
-        LOG.info(`getCookResources matched ${result.resources.length} resources. The best fit is '${result.resources[0].name}', a ${result.resources[0].machine_type}, for the job. (waiting: ${result.resources[0].stats.jobsWaiting} | running: ${result.resources[0].stats.jobsRunning}).`,LOG.LS.eSYS);
+        LOG.info(`getCookResources matched ${result.resources.length} resources. The best fit is ${getResourceInfoString(result.resources[0])}`,LOG.LS.eSYS);
         return result;
     }
 }
