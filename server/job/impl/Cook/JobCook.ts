@@ -82,6 +82,9 @@ class JobCookPostBody<T> {
 }
 
 export abstract class JobCook<T> extends JobPackrat {
+
+    // TODO: additional error reporting out to generated report
+
     private _configuration: JobCookConfiguration;
     protected _idAssetVersions: number[] | null;
     private _completionMutexes: MutexInterface[] = [];
@@ -91,8 +94,6 @@ export abstract class JobCook<T> extends JobPackrat {
     private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _cookJobSempaphore = new Semaphore(CookSimultaneousJobs);
-    // private static _cookServerURLs: string[] = [];
-    // private static _cookServerURLIndex: number = 0;
     private static _cookServerFailureNotificationDate: Date | null = null;
     private static _cookServerFailureNotificationList: Set<string> = new Set<string>();
     private static _cookConnectFailures: number = 0;
@@ -104,7 +105,6 @@ export abstract class JobCook<T> extends JobPackrat {
         recipeId: string, jobId: string | null, idAssetVersions: number[] | null,
         report: REP.IReport | null, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, dbJobRun, report);
-        // JobCook.initialize();
         this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId, dbJobRun, null);
         this._idAssetVersions = idAssetVersions;
 
@@ -112,20 +112,14 @@ export abstract class JobCook<T> extends JobPackrat {
     }
 
     async initialize(): Promise<H.IOResults> {
-        // if (JobCook._cookServerURLs.length === 0) {
-        //     JobCook._cookServerURLs = Config.job.cookServerUrls;
-        //     JobCook._cookServerURLIndex = 0;
-        // }
-
         if(this._initialized===true)
             return { success: true };
 
         // convert recipe to job type
-        const job: string | undefined = COOKRES.getJobTypeFromCookJobName(this._configuration.jobName); //'inspect';
+        const job: string | undefined = COOKRES.getJobTypeFromCookJobName(this._configuration.jobName);
         if(!job) {
             const error = `getCookResource cannot determine Cook job type. (${this._configuration.jobName})`;
             this.appendToReportAndLog(error, true);
-            // LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
         }
 
@@ -136,7 +130,6 @@ export abstract class JobCook<T> extends JobPackrat {
         if(cookResources.success===false || cookResources.resources.length<=0) {
             const error = `getCookResource cannot find the best fit resource. (${cookResources.error})`;
             this.appendToReportAndLog(error,true);
-            // LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
         }
 
@@ -161,7 +154,6 @@ export abstract class JobCook<T> extends JobPackrat {
     }
 
     CookServerURL(): string {
-        // return JobCook._cookServerURLs[JobCook._cookServerURLIndex];
         // if we don't have a server yet, throw error
         if(this._initialized === false) {
             LOG.error(`JobCook:${this.name} is not initialized. providing default Cook server endpoint (${this._configuration.cookServerURLs[0]}).`,LOG.LS.eJOB);
@@ -361,7 +353,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await H.Helpers.sleep(CookRetryDelay);
         }
 
-        LOG.info(`JobCook [${this.name()}] cancelled`, LOG.LS.eJOB);
+        this.appendToReportAndLog(`JobCook [${this.name()}] cancelled`,false);
         return { success: true };
     }
     // #endregion
@@ -461,7 +453,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         const webdavClient: WebDAVClient = createClient(this.CookServerURL(), {
                             authType: AuthType.None,
-                            maxBodyLength: 100 * 1024 * 1024 * 1024,
+                            maxBodyLength: 100 * 1024 * 1024 * 1024, // 100Gb
                             withCredentials: false
                         });
                         const webdavWSOpts: CreateWriteStreamOptions = {
