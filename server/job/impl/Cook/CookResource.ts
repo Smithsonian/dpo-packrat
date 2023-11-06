@@ -12,7 +12,7 @@ type CookResourceState = {
     jobsRunning?: number,
 };
 
-type CookResourceInfo = {
+export type CookResourceInfo = {
     name: string,
     address: string,
     port: number,

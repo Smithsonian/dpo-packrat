@@ -124,7 +124,8 @@ export abstract class JobCook<T> extends JobPackrat {
         const job: string | undefined = COOKRES.getJobTypeFromCookJobName(this._configuration.jobName); //'inspect';
         if(!job) {
             const error = `getCookResource cannot determine Cook job type. (${this._configuration.jobName})`;
-            LOG.error(error, LOG.LS.eJOB);
+            this.appendToReportAndLog(error, true);
+            // LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
         }
 
@@ -134,7 +135,8 @@ export abstract class JobCook<T> extends JobPackrat {
         // if we're empty, bail
         if(cookResources.success===false || cookResources.resources.length<=0) {
             const error = `getCookResource cannot find the best fit resource. (${cookResources.error})`;
-            LOG.error(error, LOG.LS.eJOB);
+            this.appendToReportAndLog(error,true);
+            // LOG.error(error, LOG.LS.eJOB);
             return { success: false, error };
         }
 
@@ -145,6 +147,12 @@ export abstract class JobCook<T> extends JobPackrat {
             this._configuration.cookServerURLs.push(endpoint);
         }
         this._configuration.cookServerURLIndex = 0;
+
+        // add to our report so we know what resource was chosen
+        // TODO: debug mode outputting all considered resources and the one chosen
+        const bestFit: COOKRES.CookResourceInfo = cookResources.resources[this._configuration.cookServerURLIndex];
+        const reportMsg: string = `Matched ${cookResources.resources.length} Cook resources. The best fit is '${bestFit.name}', a ${bestFit.machine_type}, for the job. (weight: ${bestFit.support[job]??-1} | waiting: ${bestFit.stats.jobsWaiting} | running: ${bestFit.stats.jobsRunning}).`;
+        this.appendToReportAndLog(reportMsg,false);
 
         // return success
         this._initialized = true;
