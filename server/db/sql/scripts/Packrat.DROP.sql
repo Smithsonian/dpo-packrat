@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS `CaptureDataFile`;
 DROP TABLE IF EXISTS `CaptureDataGroup`;
 DROP TABLE IF EXISTS `CaptureDataGroupCaptureDataXref`;
 DROP TABLE IF EXISTS `CaptureDataPhoto`;
+DROP TABLE IF EXISTS `CookResources`;
 DROP TABLE IF EXISTS `GeoLocation`;
 DROP TABLE IF EXISTS `Identifier`;
 DROP TABLE IF EXISTS `IntermediaryFile`;

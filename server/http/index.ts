@@ -13,6 +13,7 @@ import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
+import { getCookResource } from './routes/resources';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -86,6 +87,8 @@ export class HttpServer {
         this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
+
+        this.app.get('/resources/cook', getCookResource);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {

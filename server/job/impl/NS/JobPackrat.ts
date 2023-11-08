@@ -21,6 +21,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected _nsJob: NS.Job | null = null;
     protected _report: REP.IReport | null = null;
     protected _results: JobIOResults = { success: false,  error: 'Not Started' };
+    protected _initialized: boolean = false;
 
     constructor(jobEngine: JOB.IJobEngine, dbJobRun: DBAPI.JobRun, report: REP.IReport | null) {
         this._jobEngine = jobEngine;
@@ -32,8 +33,20 @@ export abstract class JobPackrat implements JOB.IJob {
     name(): string          { throw new Error('JobPackrat.name() called but is only implemented in derived classes'); }
     configuration(): any    { throw new Error('JobPackrat.configuration() called but is only implemented in derived classes'); }
     waitForCompletion(timeout: number): Promise<H.IOResults> { timeout; throw new Error('JobPackrat.waitForCompletion() called but is only implemented in derived classes'); }
+    async initialize(): Promise<H.IOResults> { throw new Error('JobPackrat.initialize() called but is only implemented in derived classes'); }
 
     async executeJob(fireDate: Date): Promise<H.IOResults> {
+
+        // if we're not initialized, try to. On failure bail
+        if(this._initialized===false) {
+            const initResults: H.IOResults = await this.initialize();
+            if(initResults.success===false) {
+                await this.recordFailure(null, initResults.error);
+                return initResults;
+            }
+        }
+
+        // start our worker. on failure keep trying for JOB_RETRY_COUNT times.
         for (let attempt: number = 0; attempt < JOB_RETRY_COUNT; attempt++) {
             await this.recordCreated();
             this._results = await this.startJobWorker(fireDate);

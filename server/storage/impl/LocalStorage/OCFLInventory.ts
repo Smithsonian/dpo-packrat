@@ -254,10 +254,17 @@ export class OCFLInventoryVersions {
 
     getHashForFilename(version: string, fileName: string): string {
         const inventoryVersion: OCFLInventoryVersion | null = this.getInventoryVersion(version);
+
         /* istanbul ignore if */
-        if (!inventoryVersion || !inventoryVersion.state)
+        if (!inventoryVersion || !inventoryVersion.state) {
+            LOG.info(`OCFLInventory.getHashForFilename could not get inventory version or state. (${fileName}:${version})`,LOG.LS.eSTR);
             return '';
-        return inventoryVersion.state.getHashForFilename(fileName);
+        }
+
+        const result: string = inventoryVersion.state.getHashForFilename(fileName);
+        if(result.length<=0)
+            LOG.info(`OCFLInventory.getHashForFilename could not get hash for filename. (${fileName}:${version})`,LOG.LS.eSTR);
+        return result;
     }
 
     private getInventoryVersion(version: string): OCFLInventoryVersion | null {
@@ -341,11 +348,13 @@ export class OCFLInventory implements OCFLInventoryType {
 
     /** version == -1 -> most recent version */
     getContentPathAndHash(fileName: string, version: number = -1): OCFLPathAndHash {
+
         if (version == -1)
             return this.manifest.getLatestContentPathAndHash(fileName);
 
         const versionString: string = OCFLObject.versionFolderName(version);
         const hash: string = this.versions.getHashForFilename(versionString, fileName);
+
         if (hash)
             return {
                 path: path.join(OCFLObject.versionContentPartialPath(version), fileName),
