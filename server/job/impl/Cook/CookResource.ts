@@ -8,6 +8,7 @@ type CookResourceState = {
     address: string,
     weight?: number,
     error?: string,
+    jobsCreated?: number,
     jobsWaiting?: number,
     jobsRunning?: number,
 };
@@ -18,6 +19,7 @@ export type CookResourceInfo = {
     port: number,
     machine_type: string,
     stats: {
+        jobsCreated: number | undefined,
         jobsWaiting: number | undefined,
         jobsRunning: number | undefined,
     },
@@ -59,6 +61,7 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
             success: true,
             address,
             weight: -1,
+            jobsCreated: data.jobs.created,
             jobsWaiting: data.jobs.waiting,
             jobsRunning: data.jobs.running,
         };
@@ -100,6 +103,7 @@ const createResource = (dbResource: DBAPI.CookResource, resourceState: CookResou
         port: dbResource.Port,
         machine_type: dbResource.MachineType,
         stats: {
+            jobsCreated: resourceState.jobsCreated,
             jobsWaiting: resourceState.jobsWaiting,
             jobsRunning: resourceState.jobsRunning,
         },
@@ -129,6 +133,7 @@ const createResultError = (message: string, dbResource?: DBAPI.CookResource | un
             port: dbResource.Port,
             machine_type: dbResource.MachineType,
             stats: {
+                jobsCreated: resourceState?.jobsCreated,
                 jobsWaiting: resourceState?.jobsWaiting,
                 jobsRunning: resourceState?.jobsRunning,
             },
@@ -172,7 +177,7 @@ export const getJobTypeFromCookJobName = (cookJobName: string): string | undefin
 // utility function for formatting a cook resource into a descriptive string.
 export const getResourceInfoString = (resource: CookResourceInfo, job: string | null = null): string => {
     const weight: number = job ? resource.support[job] : -1;
-    return `'${resource.name}', a ${resource.machine_type}, for the job. (weight: ${weight} | waiting: ${resource.stats.jobsWaiting} | running: ${resource.stats.jobsRunning}).`;
+    return `'${resource.name}', a ${resource.machine_type}, for the job. (weight: ${weight} | created: ${resource.stats.jobsCreated} | waiting: ${resource.stats.jobsWaiting} | running: ${resource.stats.jobsRunning}).`;
 };
 
 export class CookResource {
@@ -224,7 +229,10 @@ export class CookResource {
 
         // sort list based on capabilities
         cookResourceResults.sort((a, b) => {
-            if(a.weight == undefined || b.weight == undefined || a.jobsWaiting == undefined || b.jobsWaiting == undefined || a.jobsRunning == undefined || b.jobsRunning == undefined) {
+            if(a.weight == undefined || b.weight == undefined ||
+               a.jobsWaiting == undefined || b.jobsWaiting == undefined ||
+               a.jobsRunning == undefined || b.jobsRunning == undefined ||
+               a.jobsCreated == undefined || b.jobsCreated == undefined) {
                 LOG.error(`getCookResources cannot sort resources. resources have undefined properties. (A: ${JSON.stringify(a)} | B: ${JSON.stringify(b)})`,LOG.LS.eSYS);
                 return 0;
             }
@@ -235,8 +243,10 @@ export class CookResource {
             }
 
             // If weight is the same, sort by jobsWaiting in ascending order
-            if (a.jobsWaiting !== b.jobsWaiting) {
-                return a.jobsWaiting - b.jobsWaiting;
+            const pendingA: number = a.jobsWaiting + a.jobsCreated;
+            const pendingB: number = b.jobsWaiting + b.jobsCreated;
+            if (pendingA !== pendingB) {
+                return pendingA - pendingB;
             }
 
             // If both weight and jobsWaiting are the same, sort by jobsRunning in ascending order
