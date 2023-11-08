@@ -93,7 +93,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                 const materialNames: string[] = [];
                 return (
                     <React.Fragment key={modelObject.idModelObject}>
-                        <Box style={{ display: 'flex' }}>
+                        <Box style={{ display: 'flex', gap: '10px' }}>
                             {modelObject.ModelMaterials.map((materialType, index) => {
                                 materialNames.push(materialType.Name);
                                 return (

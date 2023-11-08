@@ -23,8 +23,8 @@ const useStyles = makeStyles(({ spacing }) => ({
     },
     label: {
         //color: 'auto',
-        fontSize: '1em',
-        fontWeight: 500,
+        fontSize: '0.875em',
+        //fontWeight: 500,
         margin: '1% 0px',
         color: 'rgb(0,0,0)'
     },

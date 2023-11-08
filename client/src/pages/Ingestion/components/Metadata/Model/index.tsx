@@ -9,6 +9,10 @@
  */
 import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
+import Accordion from '@material-ui/core/Accordion';
+import AccordionSummary from '@material-ui/core/AccordionSummary';
+import AccordionDetails from '@material-ui/core/AccordionDetails';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
@@ -42,7 +46,8 @@ const useStyles = makeStyles(({ palette }) => ({
         //width: 'fit-content',
         //height: 'fit-content',
         padding: '5px',
-        outline: '1px solid rgba(141, 171, 196, 0.4)'
+        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        marginLeft: '10px'
     },
     dataEntry: {
         //display: 'flex',
@@ -52,6 +57,7 @@ const useStyles = makeStyles(({ palette }) => ({
         //backgroundColor: palette.secondary.light,
         //borderRadius: 5,
         //outline: '1px solid rgba(141, 171, 196, 0.4)'
+        borderRight: '1px solid #000'
     },
     modelDetailsAndSubtitleContainer: {
         borderRadius: 5,
@@ -83,7 +89,7 @@ const useStyles = makeStyles(({ palette }) => ({
         display: 'flex',
         flexDirection: 'column',
         //backgroundColor: palette.secondary.light,
-        width: '200px'
+        //width: '200px'
     },
 }));
 
@@ -358,23 +364,28 @@ function Model(props: ModelProps): React.ReactElement {
                                 relationshipLanguage='Children'
                             />
                         </Box>
-                        <Box mb={2}>
-                            <AssetFilesTable files={assetFiles} />
-                        </Box>
                     </React.Fragment>
                 )}
                 <Box className={classes.modelDetailsAndSubtitleContainer}>
                     {/* METADATA FORMS AREA*/}
+                    <Typography style={{ fontSize: '25px', marginBottom: '25px', fontWeight: 500 }}>Metadata Info</Typography>
                     {!idAsset && (
-                        <Box style={{ marginBottom: 10 }}>
-                            <SubtitleControl
-                                subtitles={model.subtitles}
-                                objectName={model.name}
-                                onSelectSubtitle={onSelectSubtitle}
-                                onUpdateCustomSubtitle={onUpdateCustomSubtitle}
-                                hasPrimaryTheme={false}
-                                hasError={fieldErrors?.model.subtitles ?? false}
-                            />
+                        <Box style={{ display: 'flex' }}>
+                            <Box style={{ flex: 2 }}>
+                                <SubtitleControl
+                                    subtitles={model.subtitles}
+                                    objectName={model.name}
+                                    onSelectSubtitle={onSelectSubtitle}
+                                    onUpdateCustomSubtitle={onUpdateCustomSubtitle}
+                                    hasPrimaryTheme={false}
+                                    hasError={fieldErrors?.model.subtitles ?? false}
+                                />
+                            </Box>
+                            <Box mb={0} style={{ flex: 2 }}>
+                                <Box style={{ margin: '0 auto', width: '50%' }}>
+                                    <AssetFilesTable files={assetFiles} />
+                                </Box>
+                            </Box>
                         </Box>
                     )}
                     <Box className={classes.modelDetailsContainer}>
@@ -484,37 +495,48 @@ function Model(props: ModelProps): React.ReactElement {
                                 )}
                             </Box>
                             <Box style={{ flex: 2 }}>
-                                Summary Box
-                                <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                            </Box>
-                        </Box>
-                        <Box style={{ display: 'flex' }}>
-                            <Box style={{ flex: 3 }}>
-                                <ObjectMeshTable modelObjects={modelObjects} />
-                            </Box>
-                            <Box className={classes.notRequiredFields}>
-                                <Box className={classes.caption}>
-                                    <Typography variant='caption'>Model</Typography>
-                                </Box>
-                                <Box className={classes.readOnlyRowsContainer}>
-                                    <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                <Box style={{  margin: '0 auto', width: '50%', background: '#ecf5fd', padding: '25px' }}>
+                                    <Typography style={{ fontWeight: 500, fontSize: '0.875em' }}>Asset Summary</Typography>
                                     <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                     <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                     <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                     <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' containerStyle={readOnlyContainerProps} />
-                                    <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                 </Box>
                             </Box>
                         </Box>
+                        <Accordion style={{ marginTop: '30px' }}>
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
+                                aria-controls='panel1a-content'
+                                id='panel1a-header'
+                            >
+                                <Typography style={{ fontWeight: '500' }}>View All Details</Typography>
+                            </AccordionSummary>
+                            <AccordionDetails style={{ display: 'flex', marginTop: '20px' }}>
+                                <Box style={{ flex: 3 }}>
+                                    <ObjectMeshTable modelObjects={modelObjects} />
+                                </Box>
+                                <Box className={classes.notRequiredFields}>
+                                    <Box className={classes.caption}>
+                                        <Typography variant='caption'>Model</Typography>
+                                    </Box>
+                                    <Box className={classes.readOnlyRowsContainer}>
+                                        <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Triangle Count' value={ingestionModel?.CountTriangles} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Animation Count' value={ingestionModel?.CountAnimations} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Camera Count' value={ingestionModel?.CountCameras} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Light Count' value={ingestionModel?.CountLights} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Mesh Count' value={ingestionModel?.CountMeshes} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Linked Texture Count' value={ingestionModel?.CountLinkedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='File Encoding' value={ingestionModel?.FileEncoding} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                        <ReadOnlyRow label='Draco Compressed' value={ingestionModel?.IsDracoCompressed ? 'true' : 'false'} paddingString='0px' containerStyle={readOnlyContainerProps} />
+                                    </Box>
+                                </Box>
+                            </AccordionDetails>
+                        </Accordion>
                     </Box>
                 </Box>
             </Box>
