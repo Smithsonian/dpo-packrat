@@ -8,6 +8,7 @@ import * as REP from '../../../report/interface';
 import { Config } from '../../../config';
 import * as H from '../../../utils/helpers';
 import { Email } from '../../../utils/email';
+import * as COOKRES from '../../../job/impl/Cook/CookResource';
 
 import { v4 as uuidv4 } from 'uuid';
 import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
@@ -36,12 +37,16 @@ class JobCookConfiguration {
     jobName: string;
     recipeId: string;
     jobId: string;
+    cookServerURLs: string[];
+    cookServerURLIndex: number;
 
-    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null, dbJobRun: DBAPI.JobRun) {
+    constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null, dbJobRun: DBAPI.JobRun, serverURL: string[] | null) {
         this.clientId = clientId;
         this.jobName = `${jobName}: ${dbJobRun.idJobRun}`;
         this.recipeId = recipeId;
         this.jobId = jobId || uuidv4(); // create a new JobID if we haven't provided one
+        this.cookServerURLs = serverURL || Config.job.cookServerUrls; // assign our environment defined URL as default
+        this.cookServerURLIndex = 0;
     }
 }
 
@@ -77,6 +82,9 @@ class JobCookPostBody<T> {
 }
 
 export abstract class JobCook<T> extends JobPackrat {
+
+    // TODO: additional error reporting out to generated report
+
     private _configuration: JobCookConfiguration;
     protected _idAssetVersions: number[] | null;
     private _completionMutexes: MutexInterface[] = [];
@@ -86,8 +94,6 @@ export abstract class JobCook<T> extends JobPackrat {
     private static _stagingSempaphoreWrite = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _stagingSempaphoreRead = new Semaphore(CookWebDAVSimultaneousTransfers);
     private static _cookJobSempaphore = new Semaphore(CookSimultaneousJobs);
-    private static _cookServerURLs: string[] = [];
-    private static _cookServerURLIndex: number = 0;
     private static _cookServerFailureNotificationDate: Date | null = null;
     private static _cookServerFailureNotificationList: Set<string> = new Set<string>();
     private static _cookConnectFailures: number = 0;
@@ -99,20 +105,64 @@ export abstract class JobCook<T> extends JobPackrat {
         recipeId: string, jobId: string | null, idAssetVersions: number[] | null,
         report: REP.IReport | null, dbJobRun: DBAPI.JobRun) {
         super(jobEngine, dbJobRun, report);
-        JobCook.initialize();
-        this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId, dbJobRun);
+        this._configuration = new JobCookConfiguration(clientId, jobName, recipeId, jobId, dbJobRun, null);
         this._idAssetVersions = idAssetVersions;
+
+        // NOTE: any JobCook implementations MUST call initialize() before createWorker.
     }
 
-    static initialize() {
-        if (JobCook._cookServerURLs.length === 0) {
-            JobCook._cookServerURLs = Config.job.cookServerUrls;
-            JobCook._cookServerURLIndex = 0;
+    async initialize(): Promise<H.IOResults> {
+        if(this._initialized===true)
+            return { success: true };
+
+        // convert recipe to job type
+        const job: string | undefined = COOKRES.getJobTypeFromCookJobName(this._configuration.jobName);
+        if(!job) {
+            const error = `getCookResource cannot determine Cook job type. (${this._configuration.jobName})`;
+            this.appendToReportAndLog(error, true);
+            return { success: false, error };
         }
+
+        // cycle filter list of resources based on supported features
+        const cookResources: COOKRES.CookResourceResult = await COOKRES.CookResource.getCookResource(job,this._configuration.jobId,true);
+
+        // if we're empty, bail
+        if(cookResources.success===false || cookResources.resources.length<=0) {
+            const error = `getCookResource cannot find the best fit resource. (${cookResources.error})`;
+            this.appendToReportAndLog(error,true);
+            return { success: false, error };
+        }
+
+        // rebuild list of resources
+        this._configuration.cookServerURLs = [];
+        for(let i=0; i<cookResources.resources.length; i++) {
+            const endpoint = `${cookResources.resources[i].address}:${cookResources.resources[i].port}/`;
+            this._configuration.cookServerURLs.push(endpoint);
+            // LOG.info(COOKRES.getResourceInfoString(cookResources.resources[i],job),LOG.LS.eJOB);
+        }
+        this._configuration.cookServerURLIndex = 0;
+
+        // add to our report so we know what resource was chosen
+        // TODO: debug mode outputting all considered resources and the one chosen
+        const bestFit: COOKRES.CookResourceInfo = cookResources.resources[this._configuration.cookServerURLIndex];
+        const reportMsg: string = `Matched ${cookResources.resources.length} Cook resources. The best fit is ${COOKRES.getResourceInfoString(bestFit,job)}`;
+        this.appendToReportAndLog(reportMsg,false);
+
+        // return success
+        this._initialized = true;
+        return { success: true };
     }
 
-    static CookServerURL(): string {
-        return JobCook._cookServerURLs[JobCook._cookServerURLIndex];
+    CookServerURL(): string {
+        // if we don't have a server yet, throw error
+        if(this._initialized === false) {
+            LOG.error(`JobCook:${this.name} is not initialized. providing default Cook server endpoint (${this._configuration.cookServerURLs[0]}).`,LOG.LS.eJOB);
+            return this._configuration.cookServerURLs[0];
+        }
+
+        // return whatever resource we're currently on
+        // LOG.info(`JobCook.CookServerURL returning ${this._configuration.cookServerURLs[this._configuration.cookServerURLIndex]} as best fit out of ${this._configuration.cookServerURLs.length} available resources.`,LOG.LS.eJOB);
+        return this._configuration.cookServerURLs[this._configuration.cookServerURLIndex];
     }
 
     // #region IJob interface
@@ -212,7 +262,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
         try {
             // Create job via POST to /job
-            let requestUrl: string = JobCook.CookServerURL() + 'job';
+            let requestUrl: string = this.CookServerURL() + 'job';
             const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
 
             while (true) {
@@ -248,7 +298,7 @@ export abstract class JobCook<T> extends JobPackrat {
             // Initiate job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/run
             requestCount = 0;
             res = { success: false, allowRetry: true };
-            requestUrl = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
+            requestUrl = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
             while (true) {
                 try {
                     LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
@@ -284,7 +334,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // Cancel job via PATCH to /clients/<CLIENTID>/jobs/<JOBID>/cancel
         let requestCount: number = 0;
         let res: H.IOResults = { success: false };
-        const requestUrl: string = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
+        const requestUrl: string = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
         LOG.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`, LOG.LS.eJOB);
         while (true) {
             try {
@@ -303,7 +353,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await H.Helpers.sleep(CookRetryDelay);
         }
 
-        LOG.info(`JobCook [${this.name()}] cancelled`, LOG.LS.eJOB);
+        this.appendToReportAndLog(`JobCook [${this.name()}] cancelled`,false);
         return { success: true };
     }
     // #endregion
@@ -313,7 +363,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // LOG.info(`JobCook [${this.name()}] polling [${pollNumber}]`, LOG.LS.eJOB);
         // poll server for status update
         // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
-        const requestUrl: string = JobCook.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
+        const requestUrl: string = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
         try {
             const axiosResponse = await axios.get(requestUrl);
             if (axiosResponse.status !== 200) {
@@ -345,11 +395,14 @@ export abstract class JobCook<T> extends JobPackrat {
     protected async fetchFile(fileName: string): Promise<STORE.ReadStreamResult> {
         const res: STORE.ReadStreamResult = await JobCook._stagingSempaphoreRead.runExclusive(async (value) => {
             try {
+                // grab our endpoint
+                const cookEndpoint: string = this.CookServerURL();
+
                 // transmit file to Cook work folder via WebDAV
                 const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                LOG.info(`JobCook [${this.name()}] JobCook.fetchFile via WebDAV from ${JobCook.CookServerURL()}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+                LOG.info(`JobCook [${this.name()}] JobCook.fetchFile via WebDAV from ${cookEndpoint}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
-                const webdavClient: WebDAVClient = createClient(JobCook.CookServerURL(), {
+                const webdavClient: WebDAVClient = createClient(cookEndpoint, {
                     authType: AuthType.None,
                     maxBodyLength: 10 * 1024 * 1024 * 1024,
                     withCredentials: false
@@ -361,7 +414,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 RS.on('error', error => { LOG.error(`JobCook [${this.name()}] JobCook.fetchFile stream error`, LOG.LS.eJOB, error); });
                 return { readStream: RS, fileName, storageHash: null, success: true };
             } catch (error) {
-                LOG.error('JobCook [${this.name()}] JobCook.fetchFile', LOG.LS.eJOB, error);
+                LOG.error(`JobCook [${this.name()}] JobCook.fetchFile`, LOG.LS.eJOB, error);
                 return { readStream: null, fileName, storageHash: null, success: false, error: JSON.stringify(error) };
             }
         });
@@ -380,7 +433,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     // in this case, the override stream is for the model geometry file
                     let RSRs: STORE.ReadStreamResult[] | undefined = this._streamOverrideMap.get(idAssetVersion);
                     if (!RSRs) {
-                        // LOG.info(`JobCook [${this.name()}] JobCook.stageFiles found no stream override for idAssetVersion ${idAssetVersion} among ${this._streamOverrideMap.size} overrides`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles found no stream override for idAssetVersion ${idAssetVersion} among ${this._streamOverrideMap.size} overrides`, LOG.LS.eJOB);
                         RSRs = [];
                         RSRs.push(await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion));
                     }
@@ -396,11 +449,11 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         // transmit file to Cook work folder via WebDAV
                         const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${this.CookServerURL()}${destination.substring(1)}; semaphore count ${value}`, LOG.LS.eJOB);
 
-                        const webdavClient: WebDAVClient = createClient(JobCook.CookServerURL(), {
+                        const webdavClient: WebDAVClient = createClient(this.CookServerURL(), {
                             authType: AuthType.None,
-                            maxBodyLength: 100 * 1024 * 1024 * 1024,
+                            maxBodyLength: 100 * 1024 * 1024 * 1024, // 100Gb
                             withCredentials: false
                         });
                         const webdavWSOpts: CreateWriteStreamOptions = {
@@ -430,7 +483,7 @@ export abstract class JobCook<T> extends JobPackrat {
                             return { success: false, error };
                         }
 
-                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: transmitted ${res.size} bytes`, LOG.LS.eJOB);
+                        LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${this.CookServerURL()}${destination.substring(1)}: transmitted ${res.size} bytes`, LOG.LS.eJOB);
 
                         // use WebDAV client's stat to detect when file is fully staged and available on the server
                         // poll for filesize of remote file.  Continue polling:
@@ -439,7 +492,7 @@ export abstract class JobCook<T> extends JobPackrat {
                         // - pause CookRetryDelay ms between stat polls
                         let stagingSuccess: boolean = false;
                         for (let statCount: number = 0; statCount < CookWebDAVStatRetryCount; statCount++) {
-                            const pollingLocation: string = `${JobCook.CookServerURL()}${destination.substring(1)} [${statCount + 1}/${CookWebDAVStatRetryCount}]`;
+                            const pollingLocation: string = `${this.CookServerURL()}${destination.substring(1)} [${statCount + 1}/${CookWebDAVStatRetryCount}]`;
                             try {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
@@ -460,10 +513,10 @@ export abstract class JobCook<T> extends JobPackrat {
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
                         if (stagingSuccess) {
-                            LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: success`, LOG.LS.eJOB);
+                            LOG.info(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${this.CookServerURL()}${destination.substring(1)}: success`, LOG.LS.eJOB);
                         } else {
                             error = `Unable to verify existence of staged file ${fileName}`;
-                            LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${JobCook.CookServerURL()}${destination.substring(1)}: ${error}`, LOG.LS.eJOB);
+                            LOG.error(`JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV at ${this.CookServerURL()}${destination.substring(1)}: ${error}`, LOG.LS.eJOB);
                             success = false;
                             break;
                         }
@@ -482,10 +535,10 @@ export abstract class JobCook<T> extends JobPackrat {
 
     private async handleCookConnectionFailure(): Promise<void> {
         // inform IT-OPS email alias and attempt to switch to "next" Cook server, if any
-        const cookServerURL: string = JobCook._cookServerURLs[JobCook._cookServerURLIndex];
-        if (++JobCook._cookServerURLIndex >= JobCook._cookServerURLs.length)
-            JobCook._cookServerURLIndex = 0;
-        LOG.info(`JobCook.handleCookConnectionFailure switching from ${cookServerURL} to ${JobCook._cookServerURLs[JobCook._cookServerURLIndex]}`, LOG.LS.eJOB);
+        const cookServerURL: string = this._configuration.cookServerURLs[this._configuration.cookServerURLIndex];
+        if (++this._configuration.cookServerURLIndex >= this._configuration.cookServerURLs.length)
+            this._configuration.cookServerURLIndex = 0;
+        LOG.info(`JobCook.handleCookConnectionFailure switching from ${cookServerURL} to ${this._configuration.cookServerURLs[this._configuration.cookServerURLIndex]}`, LOG.LS.eJOB);
 
         // only notify once about a specific server
         if (JobCook._cookServerFailureNotificationList.has(cookServerURL))

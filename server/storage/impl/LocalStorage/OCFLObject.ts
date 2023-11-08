@@ -567,12 +567,19 @@ export class OCFLObject {
 
     /** version == -1 -> most recent version */
     fileLocationAndHash(fileName: string, version: number): OCFLPathAndHash | null {
+
         /* istanbul ignore next */
-        if (!this._ocflInventory)
+        if (!this._ocflInventory) {
+            LOG.error(`OCFLInventory.fileLocationAndHash does not have OCFL inventory (${fileName}:${version})`,LOG.LS.eSTR);
             return null;
+        }
+
         const pathAndHash: OCFLPathAndHash = this._ocflInventory.getContentPathAndHash(fileName, version);
-        if (!pathAndHash.hash && !pathAndHash.path)
+        if (!pathAndHash.hash && !pathAndHash.path) {
+            LOG.error(`OCFLInventory.fileLocationAndHash cannot get path (${pathAndHash.path}) or hash (${pathAndHash.hash})`,LOG.LS.eSTR);
             return null;
+        }
+
         pathAndHash.path = path.join(this._objectRoot, pathAndHash.path);   // prepend object root to content path
         return pathAndHash;
     }

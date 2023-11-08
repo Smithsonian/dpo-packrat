@@ -920,3 +920,16 @@ model WorkflowStepSystemObjectXref {
   @@index([idSystemObject, Input], map: "WorkflowStepSystemObjectXref_idSystemObject_Input")
   @@index([idWorkflowStep, Input], map: "WorkflowStepSystemObjectXref_idWorkflowStep_Input")
 }
+
+model CookResource {
+  idCookResource    Int    @id @default(autoincrement())
+  Name              String @mariasql.VarChar(256)
+  Address           String @mariasql.VarChar(256)
+  Port              Int
+  Inspection        Int
+  SceneGeneration   Int
+  GenerateDownloads Int
+  Photogrammetry    Int
+  LargeFiles        Int
+  MachineType       String @mariasql.VarChar(256)
+}
