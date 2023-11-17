@@ -8,16 +8,16 @@ import { makeStyles } from '@material-ui/core/styles';
 import { ReadOnlyRow, IndentedReadOnlyRow } from '../../../../../components';
 import { toFixed } from '../../../../../constants/helperfunctions';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(() => ({
     materialFields: {
         //display: 'flex',
         flex: 2,
         flexDirection: 'column',
-        borderRadius: 5,
-        backgroundColor: palette.secondary.light,
+        //borderRadius: 5,
+        //backgroundColor: 'red',
         //width: 'fit-content',
         //height: 'fit-content',
-        padding: '5px',
+        padding: '15px',
         outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     caption: {
@@ -52,11 +52,11 @@ const useStyles = makeStyles(({ palette }) => ({
         //display: 'flex',
         //flexDirection: 'column',
         flex: 2,
-        borderRadius: 5,
-        backgroundColor: palette.secondary.light,
+        //borderRadius: 5,
+        //backgroundColor: palette.secondary.light,
         //width: 'fit-content',
         //height: 'fit-content',
-        padding: '5px',
+        padding: '15px',
         outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
 }));
@@ -85,6 +85,8 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
         height: 26,
         alignItems: 'center',
         columnGap: 10,
+        fontWeight: 'bold',
+        marginBottom: '10px'
     };
 
     return (
@@ -99,9 +101,9 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                 return (
                                     <Box className={classes.materialFields} key={materialType.Name + `.${index}`}>
                                         <Box className={classes.caption}>
-                                            <Typography variant='caption'>Material &apos;{materialType.Name}&apos;</Typography>
+                                            <Typography variant='caption' style={{ fontSize: '0.875em', fontWeight: '500' }}>Material &apos;{materialType.Name}&apos;</Typography>
                                         </Box>
-                                        <Box className={classes.unindentedFields} style={{ width: 200 }}>
+                                        <Box className={classes.unindentedFields}>
                                             {materialType.ModelMaterialChannel.map((channel, index) => {
                                                 return (
                                                     <Box className={classes.unindentedFields} key={channel.Value + `.${index}`}>
@@ -121,7 +123,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
 
                             <Box className={classes.notRequiredFields}>
                                 <Box className={classes.caption}>
-                                    <Typography variant='caption'>Mesh</Typography>
+                                    <Typography variant='caption' style={{ fontSize: '0.875em', fontWeight: '500' }}>Mesh</Typography>
                                 </Box>
                                 <ReadOnlyRow
                                     label='Materials'

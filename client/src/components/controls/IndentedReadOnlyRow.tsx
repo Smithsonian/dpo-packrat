@@ -4,20 +4,20 @@
  * This component is a replacement for ReadOnlyRow to allow indentation of the labels
  */
 import { Box, BoxProps, PropTypes, Typography, TypographyProps } from '@material-ui/core';
-import { fade, makeStyles } from '@material-ui/core/styles';
+import { /*fade,*/ makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Progress from '../shared/Progress';
 
-const useStyles = makeStyles(({ palette, spacing }) => ({
+const useStyles = makeStyles(({ /*palette,*/ spacing }) => ({
     container: {
         display: 'grid',
         alignItems: 'center',
         gridTemplateColumns: ({ indentation }: IndentedReadOnlyRowProps) => indentation ? `${15*indentation}px 20% 15px 1fr` : '15px 20% 15px 1fr',
         padding: ({ padding }: IndentedReadOnlyRowProps) => padding ? padding : '0px 10px',
-        borderRadius: 5,
         width: ({ width }: IndentedReadOnlyRowProps) => width || '100%',
         marginTop: ({ marginTop }: IndentedReadOnlyRowProps) => spacing(marginTop || 0),
-        backgroundColor: ({ required, error }: IndentedReadOnlyRowProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
+        //backgroundColor: ({ required, error }: IndentedReadOnlyRowProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
+        backgroundColor: 'rgb(236, 245, 253)'
     },
     label: {
         color: 'auto',

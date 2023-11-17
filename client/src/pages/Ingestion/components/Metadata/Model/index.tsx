@@ -33,7 +33,7 @@ import clsx from 'clsx';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
 
-const useStyles = makeStyles(({ palette }) => ({
+const useStyles = makeStyles(() => ({
     container: {
         marginTop: 20
     },
@@ -41,11 +41,11 @@ const useStyles = makeStyles(({ palette }) => ({
         //display: 'flex',
         //flexDirection: 'column',
         flex: 1.5,
-        borderRadius: 5,
-        backgroundColor: palette.secondary.light,
+        //borderRadius: 5,
+        //backgroundColor: palette.secondary.light,
         //width: 'fit-content',
         //height: 'fit-content',
-        padding: '5px',
+        padding: '15px',
         outline: '1px solid rgba(141, 171, 196, 0.4)',
         marginLeft: '10px'
     },
@@ -57,7 +57,7 @@ const useStyles = makeStyles(({ palette }) => ({
         //backgroundColor: palette.secondary.light,
         //borderRadius: 5,
         //outline: '1px solid rgba(141, 171, 196, 0.4)'
-        borderRight: '1px solid #000'
+        borderRight: '1px solid #e0e7ee'
     },
     modelDetailsAndSubtitleContainer: {
         borderRadius: 5,
@@ -70,7 +70,7 @@ const useStyles = makeStyles(({ palette }) => ({
     modelDetailsContainer: {
         //display: 'flex',
         //flexDirection: 'row',
-        borderRadius: 5,
+        //borderRadius: 5,
         //backgroundColor: palette.primary.light,
         width: '100%',
         columnGap: 10,
@@ -319,7 +319,8 @@ function Model(props: ModelProps): React.ReactElement {
 
     const readOnlyContainerProps: React.CSSProperties = {
         height: 26,
-        alignItems: 'center'
+        alignItems: 'center',
+        marginBottom: '10px'
     };
 
     return (
@@ -366,6 +367,11 @@ function Model(props: ModelProps): React.ReactElement {
                         </Box>
                     </React.Fragment>
                 )}
+
+                <Box style={{ marginTop: '35px' }}>
+                    <AssetFilesTable files={assetFiles} />
+                </Box>
+
                 <Box className={classes.modelDetailsAndSubtitleContainer}>
                     {/* METADATA FORMS AREA*/}
                     <Typography style={{ fontSize: '25px', marginBottom: '25px', fontWeight: 500 }}>Metadata Info</Typography>
@@ -382,9 +388,6 @@ function Model(props: ModelProps): React.ReactElement {
                                 />
                             </Box>
                             <Box mb={0} style={{ flex: 2 }}>
-                                <Box style={{ margin: '0 auto', width: '50%' }}>
-                                    <AssetFilesTable files={assetFiles} />
-                                </Box>
                             </Box>
                         </Box>
                     )}
@@ -392,7 +395,7 @@ function Model(props: ModelProps): React.ReactElement {
                         <Box style={{ display: 'flex' }}>
                             <Box style={{ flex: 2 }}>
                                 <Box display='flex' flexDirection='column' className={classes.dataEntry}>
-                                    <Typography style={{ fontWeight: 500 }}>Asset Details</Typography>
+                                    <Typography style={{ fontSize: '0.875em', fontWeight: 500 }}>Asset Details</Typography>
                                     <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ /*backgroundColor: 'rgb(255, 252, 209', */  paddingTop: '10px' }}>
                                         <Table className={tableClasses.table}>
                                             <TableBody>
@@ -496,7 +499,7 @@ function Model(props: ModelProps): React.ReactElement {
                             </Box>
                             <Box style={{ flex: 2 }}>
                                 <Box style={{  margin: '0 auto', width: '50%', background: '#ecf5fd', padding: '25px' }}>
-                                    <Typography style={{ fontWeight: 500, fontSize: '0.875em' }}>Asset Summary</Typography>
+                                    <Typography style={{ fontWeight: 500, fontSize: '0.875em', marginBottom: '10px' }}>Asset Summary</Typography>
                                     <ReadOnlyRow label='Face Count' value={ingestionModel?.CountFaces} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                     <ReadOnlyRow label='Material Count' value={ingestionModel?.CountMaterials} paddingString='0px' containerStyle={readOnlyContainerProps} />
                                     <ReadOnlyRow label='Embedded Texture Count' value={ingestionModel?.CountEmbeddedTextures} paddingString='0px' containerStyle={readOnlyContainerProps} />
@@ -518,7 +521,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 </Box>
                                 <Box className={classes.notRequiredFields}>
                                     <Box className={classes.caption}>
-                                        <Typography variant='caption'>Model</Typography>
+                                        <Typography variant='caption' style={{ fontSize: '0.875em', fontWeight: '500' }}>Model</Typography>
                                     </Box>
                                     <Box className={classes.readOnlyRowsContainer}>
                                         <ReadOnlyRow label='Vertex Count' value={ingestionModel?.CountVertices} paddingString='0px' containerStyle={readOnlyContainerProps} />

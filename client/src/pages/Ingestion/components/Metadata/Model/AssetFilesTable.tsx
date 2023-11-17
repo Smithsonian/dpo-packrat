@@ -14,7 +14,7 @@ const useStyles = makeStyles(() => ({
     },
     headerRow: {
         borderBottom: '2px solid #D8E5EE',
-        backgroundColor: 'rgb(255, 255, 224)'
+        backgroundColor: 'rgb(236 245 253)'
     },
     tableRow: {
     },
@@ -45,17 +45,29 @@ function AssetFilesTable({ files }): React.ReactElement {
             <Table className={classes.table}>
                 <TableHead>
                     <TableRow className={classes.headerRow}>
-                        <TableCell className={clsx(classes.assetNameCol, classes.tableCell)}>
-                            <Typography variant='caption'>Asset Name</Typography>
+                        <TableCell className={clsx(classes.assetTypeCol, classes.tableCell)}>
+                            <Typography variant='caption' style={{ fontWeight: 'bold' }}>Project</Typography>
                         </TableCell>
                         <TableCell className={clsx(classes.assetTypeCol, classes.tableCell)}>
-                            <Typography variant='caption'>Asset Type</Typography>
+                            <Typography variant='caption' style={{ fontWeight: 'bold' }}>Media Group</Typography>
+                        </TableCell>
+                        <TableCell className={clsx(classes.assetTypeCol, classes.tableCell)}>
+                            <Typography variant='caption' style={{ fontWeight: 'bold' }}>File Name</Typography>
+                        </TableCell>
+                        <TableCell className={clsx(classes.assetNameCol, classes.tableCell)}>
+                            <Typography variant='caption' style={{ fontWeight: 'bold' }}>Asset Name</Typography>
+                        </TableCell>
+                        <TableCell className={clsx(classes.assetTypeCol, classes.tableCell)}>
+                            <Typography variant='caption' style={{ fontWeight: 'bold' }}>Asset Type</Typography>
                         </TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {files.map((row, ind) => (
-                        <TableRow className={ind % 2 !== 0 ? clsx(classes.tableRow, classes.oddTableRow) : clsx(classes.tableRow, classes.evenTableRow)} key={ind}>
+                        <TableRow /*className={ind % 2 !== 0 ? clsx(classes.tableRow, classes.oddTableRow) : clsx(classes.tableRow, classes.evenTableRow)}*/ key={ind}>
+                            <TableCell className={classes.tableCell}></TableCell>
+                            <TableCell className={classes.tableCell}></TableCell>
+                            <TableCell className={classes.tableCell}></TableCell>
                             <TableCell className={classes.tableCell}>
                                 <Box component='div' overflow='visible' minWidth='10px'>
                                     <Typography variant='caption'>{row.assetName}</Typography>
