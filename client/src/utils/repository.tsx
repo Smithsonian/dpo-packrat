@@ -341,7 +341,10 @@ export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undef
         case eVoyagerStoryMode.eAuthor: dlPath='webdav'; break;
         case eVoyagerStoryMode.eExpert: dlPath='webdav'; break;
     }
-    return `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+    const uri: string = `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+    console.log(`>>> getRootSceneDownload:\n${uri}\n${encodeURIComponent(uri)}`);
+    console.log(`>>> path: ${path}`);
+    return uri; //encodeURIComponent(uri);
 }
 
 export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemObject: number,
@@ -349,9 +352,11 @@ export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemO
 
     const mode: string = getModeForVoyager(eMode);
     const root: string = getRootSceneDownloadUrlForVoyager(serverEndPoint, idSystemObject, path, eMode);
-    return `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
+    const uri: string = `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
+    console.log(`>>> getVoyagerStoryURL:\n${uri}\n${encodeURIComponent(uri)}\n\n${encodeURIComponent(encodeURIComponent(uri))}`);
+    console.log(`>>> path: ${path}`);
+    return uri; //encodeURIComponent(uri);
 }
-
 
 // prettier-ignore
 export function getTreeViewStyleHeight(isExpanded: boolean, isModal: boolean, breakpoint: Breakpoint): string {
