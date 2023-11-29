@@ -44,7 +44,9 @@ class LDAPAuth implements IAuth {
             return { success: true };
 
         // Step 1: Create a ldap client using server address
-        this._client = LDAP.createClient({ url: this._ldapConfig.server });
+        this._client = LDAP.createClient({
+            url: this._ldapConfig.server,
+            tlsOptions: { rejectUnauthorized: true } });
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
         this._client.on('error', error => {
@@ -65,11 +67,13 @@ class LDAPAuth implements IAuth {
     private async bindService(): Promise<VerifyUserResult> {
         if (!this._client)
             return { success: false, error: 'LDAPClient is null' };
-        let ldapBind: string = this._ldapConfig.CN;
+
+        let ldapBind: string = this._ldapConfig.CN; // username
         if (ldapBind)
-            ldapBind += `,${this._ldapConfig.OU}`;
+            ldapBind += `,${this._ldapConfig.OU}`; // access vectors
         if (ldapBind)
-            ldapBind += `,${this._ldapConfig.DC}`;
+            ldapBind += `,${this._ldapConfig.DC}`; // domain control
+
         const client: LDAP.Client = this._client;
         const password: string = this._ldapConfig.password;
         return new Promise<VerifyUserResult>(function(resolve) {
