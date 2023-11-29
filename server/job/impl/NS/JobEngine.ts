@@ -186,7 +186,6 @@ export class JobEngine implements JOB.IJobEngine {
                 break;
             case COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene:
                 expectedJob = 'Cook si-voyager-scene';
-                console.log(`>>> JobEngine: \n${JSON.stringify(parameters)}`);
                 if (parameters instanceof COOK.JobCookSIVoyagerSceneParameters) // confirm that parameters is of type JobCookSIVoyagerSceneParameters
                     job = new COOK.JobCookSIVoyagerScene(this, idAssetVersions, report, parameters, dbJobRun);
                 break;

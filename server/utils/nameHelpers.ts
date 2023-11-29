@@ -49,7 +49,7 @@ export class NameHelpers {
 
     static sanitizeFileName(fileName: string): string {
         return sanitize(fileName.replace(/[\s,]/g, '_').replace(/[^a-zA-Z0-9\-_.]/g, '-'));
-        // legacy: fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
+        //legacy: return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
     }
 
     static computeBaseTitle(name: string, subtitle: string | undefined | null): string {

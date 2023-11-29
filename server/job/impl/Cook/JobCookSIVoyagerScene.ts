@@ -192,8 +192,6 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         } else
             this.parameterHelper = null;
         this.parameters = parameters;
-
-        console.log(`>>> scene generation: \n${JSON.stringify(this.parameters)}\n${JSON.stringify(this.parameterHelper)}`);
     }
 
     async cleanupJob(): Promise<H.IOResults> {

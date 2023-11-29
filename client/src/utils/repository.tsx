@@ -342,8 +342,8 @@ export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undef
         case eVoyagerStoryMode.eExpert: dlPath='webdav'; break;
     }
     const uri: string = `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
-    console.log(`>>> getRootSceneDownload:\n${uri}\n${encodeURIComponent(uri)}`);
-    console.log(`>>> path: ${path}`);
+    console.log(`>>> getVoyagerStoryURL (document: ${document} | dlPath: ${dlPath} | uri: ${uri} | path: ${path})`);
+    console.log(`>>> encoded:\n${encodeURIComponent(uri)}}`);
     return uri; //encodeURIComponent(uri);
 }
 
@@ -353,8 +353,8 @@ export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemO
     const mode: string = getModeForVoyager(eMode);
     const root: string = getRootSceneDownloadUrlForVoyager(serverEndPoint, idSystemObject, path, eMode);
     const uri: string = `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
-    console.log(`>>> getVoyagerStoryURL:\n${uri}\n${encodeURIComponent(uri)}\n\n${encodeURIComponent(encodeURIComponent(uri))}`);
-    console.log(`>>> path: ${path}`);
+    console.log(`>>> getVoyagerStoryURL (document: ${document} | root: ${root} | uri: ${uri} | path: ${path})`);
+    console.log(`>>> encoded:\n${encodeURIComponent(uri)}}`);
     return uri; //encodeURIComponent(uri);
 }
 

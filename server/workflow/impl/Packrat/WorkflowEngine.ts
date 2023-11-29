@@ -296,7 +296,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
                             new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
                             CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
-                    console.log(`>>> WorkflowEngine: ${JSON.stringify(jobParamSIVoyagerScene)}`);
+
                     const wfParamSIVoyagerScene: WF.WorkflowParameters = {
                         eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
                         idSystemObject,
