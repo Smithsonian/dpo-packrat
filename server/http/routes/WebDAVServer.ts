@@ -206,7 +206,6 @@ class WebDAVFileSystem extends webdav.FileSystem {
     }
 
     private getResource(pathS: string): FileSystemResource | undefined {
-        console.log(`>>> WebDAVServer.getResource: ${pathS}`);
         let resource: FileSystemResource | undefined = this.resources.get(pathS);
         if (resource && resource.type === webdav.ResourceType.File) {
             const age: number = new Date().getTime() - resource.cacheDate.getTime();
