@@ -46,7 +46,7 @@ class LDAPAuth implements IAuth {
             return { success: true };
 
         LOG.info(`Connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        //console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')}`);
+        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')} | sys: ${fs.existsSync('/etc/ldaps/ldaps.cer')}`);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
@@ -57,10 +57,10 @@ class LDAPAuth implements IAuth {
         // Windows desktops have a trusted US domain cert already installed because it is joined to the US domain
         // Linux does not because it's not part of the US domain so we have to point to a certificate
         //
-        // if we're in production environment on Linux (the server) add our certificate
+        // if we're in production environment on Linux (the server) add our certificate path
         // note: path is relative to the container NOT system
         if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux')
-            clientConfig.tlsOptions.ca = [ fs.readFileSync('/app/conf/ldaps/ldaps.cer') ];
+            clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
 
         // Step 1: Create a ldap client using our config
         this._client = LDAP.createClient(clientConfig);

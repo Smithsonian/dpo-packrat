@@ -49,6 +49,7 @@ export interface LDAPConfig {
     CN: string;
     OU: string;
     DC: string;
+    CA: string;
 }
 
 export type ConfigType = {
@@ -135,6 +136,7 @@ export const Config: ConfigType = {
             CN: process.env.PACKRAT_LDAP_CN ? process.env.PACKRAT_LDAP_CN : 'CN=PackratAuthUser',
             OU: process.env.PACKRAT_LDAP_OU ? process.env.PACKRAT_LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
             DC: process.env.PACKRAT_LDAP_DC ? process.env.PACKRAT_LDAP_DC : 'DC=US,DC=SINET,DC=SI,DC=EDU',
+            CA: process.env.PACKRAT_LDAP_CA ? process.env.PACKRAT_LDAP_CA : '/etc/ldaps/ldaps.cer',
         },
     },
     collection: {
