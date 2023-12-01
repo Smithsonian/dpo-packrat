@@ -20,6 +20,11 @@ export enum EVENT_TYPE {
     INPROCESS = 'in-process'
 }
 
+export enum ENVIRONMENT_TYPE {
+    PRODUCTION = 'production',
+    DEVELOPMENT = 'development',
+}
+
 export enum JOB_TYPE {
     NODE_SCHEDULE = 'node-schedule'
 }
@@ -73,6 +78,9 @@ export type ConfigType = {
     event: {
         type: EVENT_TYPE;
     },
+    environment: {
+        type: ENVIRONMENT_TYPE;
+    },
     http: {
         clientUrl: string;
         serverUrl: string;
@@ -104,7 +112,7 @@ export type ConfigType = {
     },
     workflow: {
         type: WORKFLOW_TYPE;
-    },
+    }
 };
 
 const oneDay            = 24 * 60 * 60;
@@ -122,7 +130,7 @@ export const Config: ConfigType = {
             checkPeriod: oneDay                                                                                                 // prune expired entries every 24 hours
         },
         ldap: {
-            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldap://160.111.103.197:389',
+            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldaps://ldaps.si.edu:636', //'ldap://160.111.103.197:389',
             password: process.env.PACKRAT_LDAP_PASSWORD ? process.env.PACKRAT_LDAP_PASSWORD : '',
             CN: process.env.PACKRAT_LDAP_CN ? process.env.PACKRAT_LDAP_CN : 'CN=PackratAuthUser',
             OU: process.env.PACKRAT_LDAP_OU ? process.env.PACKRAT_LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
@@ -144,6 +152,9 @@ export const Config: ConfigType = {
     },
     event: {
         type: EVENT_TYPE.INPROCESS,
+    },
+    environment: {
+        type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,
     },
     http: {
         clientUrl: process.env.PACKRAT_CLIENT_ENDPOINT ? process.env.PACKRAT_CLIENT_ENDPOINT : 'https://packrat.si.edu:8443',

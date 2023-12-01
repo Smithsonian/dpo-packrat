@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IAuth, VerifyUserResult } from '../interface';
-import { Config, LDAPConfig } from '../../config';
+import { Config, ENVIRONMENT_TYPE, LDAPConfig } from '../../config';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
+import os from 'os';
+import fs from 'fs';
 
 type UserSearchResult = {
     success: boolean;
@@ -43,10 +45,25 @@ class LDAPAuth implements IAuth {
         if (this._client)
             return { success: true };
 
-        // Step 1: Create a ldap client using server address
-        this._client = LDAP.createClient({
+        LOG.info(`Connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
+        //console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')}`);
+
+        // setup our client configuration for TLS/LDAPS
+        const clientConfig: any = {
             url: this._ldapConfig.server,
-            tlsOptions: { rejectUnauthorized: true } });
+            tlsOptions:  { rejectUnauthorized: true, } // set to false for self-signed certificates (development only)
+        };
+
+        // Windows desktops have a trusted US domain cert already installed because it is joined to the US domain
+        // Linux does not because it's not part of the US domain so we have to point to a certificate
+        //
+        // if we're in production environment on Linux (the server) add our certificate
+        // note: path is relative to the container NOT system
+        if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux')
+            clientConfig.tlsOptions.ca = [ fs.readFileSync('/app/conf/ldaps/ldaps.cer') ];
+
+        // Step 1: Create a ldap client using our config
+        this._client = LDAP.createClient(clientConfig);
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
         this._client.on('error', error => {
