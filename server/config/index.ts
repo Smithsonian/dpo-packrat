@@ -131,7 +131,7 @@ export const Config: ConfigType = {
             checkPeriod: oneDay                                                                                                 // prune expired entries every 24 hours
         },
         ldap: {
-            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldaps://ldaps.si.edu:636', //'ldap://160.111.103.197:389',
+            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldaps://ldaps.si.edu:636',
             password: process.env.PACKRAT_LDAP_PASSWORD ? process.env.PACKRAT_LDAP_PASSWORD : '',
             CN: process.env.PACKRAT_LDAP_CN ? process.env.PACKRAT_LDAP_CN : 'CN=PackratAuthUser',
             OU: process.env.PACKRAT_LDAP_OU ? process.env.PACKRAT_LDAP_OU : 'OU=Service Accounts,OU=Enterprise',

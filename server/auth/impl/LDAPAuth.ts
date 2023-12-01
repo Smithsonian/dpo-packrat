@@ -46,7 +46,7 @@ class LDAPAuth implements IAuth {
             return { success: true };
 
         LOG.info(`Connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')} | sys: ${fs.existsSync('/etc/ldaps/ldaps.cer')}`);
+        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')} | sys: ${fs.existsSync('/etc/ldaps/ldaps.cer')} | ca: ${this._ldapConfig.CA}`);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
