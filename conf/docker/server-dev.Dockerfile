@@ -1,4 +1,5 @@
 FROM node:18.9.0-alpine AS server
+
 # Add a work directory, copy package.json for caching, copy app files
 WORKDIR /app
 ADD package.json .
@@ -12,6 +13,12 @@ RUN apk update
 RUN apk add perl
 RUN apk add git
 RUN apk add bash
+RUN apk add --no-cache ca-certificates && update-ca-certificates
+
+# copy our certificate to the right spot and update
+# the 1st path corresponds to the PACKRAT_LDAP_CA environment variable. make sure they match.
+COPY ./conf/ldaps/ldaps.cer /usr/local/share/ca-certificates/ldaps.cer
+RUN update-ca-certificates
 
 # Install dependencies and build development
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common

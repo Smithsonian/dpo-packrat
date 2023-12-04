@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IAuth, VerifyUserResult } from '../interface';
-import { Config, ENVIRONMENT_TYPE, LDAPConfig } from '../../config';
+import { Config, /*ENVIRONMENT_TYPE,*/ LDAPConfig } from '../../config';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
 import os from 'os';
-import fs from 'fs';
+// import fs from 'fs';
 
 type UserSearchResult = {
     success: boolean;
@@ -46,7 +46,7 @@ class LDAPAuth implements IAuth {
             return { success: true };
 
         LOG.info(`Connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')} | sys: ${fs.existsSync('/etc/ldaps/ldaps.cer')} | ca: ${this._ldapConfig.CA}`);
+        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type}`); // | cert: ${fs.existsSync('/app/conf/ldaps/ldaps.cer')} | sys: ${fs.existsSync('/etc/ldaps/ldaps.cer')} | ca: ${this._ldapConfig.CA}`);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
@@ -59,8 +59,8 @@ class LDAPAuth implements IAuth {
         //
         // if we're in production environment on Linux (the server) add our certificate path
         // note: path is relative to the container NOT system
-        if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux')
-            clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
+        // if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux')
+        //     clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
 
         // Step 1: Create a ldap client using our config
         this._client = LDAP.createClient(clientConfig);
