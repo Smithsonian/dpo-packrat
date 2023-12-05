@@ -110,6 +110,8 @@ services:
 
 networks:
     default:
+        driver: bridge
+        enable_ipv6: false
         ipam:
             config:
                 - subnet: 192.168.4.0/24
