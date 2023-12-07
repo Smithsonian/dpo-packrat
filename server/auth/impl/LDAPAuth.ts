@@ -46,7 +46,7 @@ class LDAPAuth implements IAuth {
             return { success: true };
 
         LOG.info(`Connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA}`);
+        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert: ${fs.existsSync(this._ldapConfig.CA)}`);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
@@ -59,8 +59,10 @@ class LDAPAuth implements IAuth {
         //
         // if we're in production environment on Linux (the server) add our certificate path
         // note: path is relative to the container NOT system
-        if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux')
+        if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
             clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
+        else
+            LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
 
         // Step 1: Create a ldap client using our config
         this._client = LDAP.createClient(clientConfig);
