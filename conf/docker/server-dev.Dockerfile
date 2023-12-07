@@ -17,8 +17,9 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates
 
 # copy our certificate to the right spot and update
 # the 1st path corresponds to the PACKRAT_LDAP_CA environment variable. make sure they match.
-COPY ./conf/ldaps/ldaps.cer /usr/local/share/ca-certificates/ldaps.cer
-RUN update-ca-certificates
+#COPY ./conf/ldaps/ldaps.cer /usr/local/share/ca-certificates/ldaps.cer // timesout
+#COPY /etc/ssl/certs/ldaps.si.edu.cert /etc/ssl/certs/ldaps.si.edu.cert // todo
+#RUN update-ca-certificates
 
 # Install dependencies and build development
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && ln -s /app/common /app/node_modules/@dpo-packrat/common
