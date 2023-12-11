@@ -95,7 +95,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                                 variant='contained'
                                 color='primary'
                                 disableElevation
-                                href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)}
+                                href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, encodeURIComponent(documentLink), pathLink, eVoyagerStoryMode.eEdit)}
                                 target='_blank'
                                 rel='noopener noreferrer'
                             >

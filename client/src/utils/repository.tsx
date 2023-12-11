@@ -351,8 +351,8 @@ export function getVoyagerStoryUrl(serverEndPoint: string | undefined, idSystemO
 
     const mode: string = getModeForVoyager(eMode);
     const root: string = getRootSceneDownloadUrlForVoyager(serverEndPoint, idSystemObject, path, eMode);
-    const uri: string = `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${encodeURIComponent(document)}`;
-    // console.log(`>>> getVoyagerStoryURL (document: ${document} | root: ${root} | uri: ${uri} | path: ${path})`);
+    const uri: string = `/repository/voyager/${idSystemObject}?mode=${mode}&root=${root}&document=${document}`;
+    console.log(`>>> getVoyagerStoryURL (document: ${document} | root: ${root} | uri: ${uri} | path: ${path})`);
     return uri;
 }
 
