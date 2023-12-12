@@ -56,7 +56,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 return;
 
             const { data: { getVoyagerParams: { path, document, idSystemObjectScene } } } = await getVoyagerParams(idSystemObject);
-            // console.log(`getVoyagerParams path: ${path}, document: ${document}, idSystemObjectScene ${idSystemObjectScene}`);
+            // console.log(`getVoyagerParams (path: ${path}, document: ${document}, idSystemObjectScene ${idSystemObjectScene})`);
 
             if (document) {
                 const root: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObjectScene, path, eMode);
@@ -95,7 +95,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                                 variant='contained'
                                 color='primary'
                                 disableElevation
-                                href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, documentLink, pathLink, eVoyagerStoryMode.eEdit)}
+                                href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, encodeURIComponent(documentLink), pathLink, eVoyagerStoryMode.eEdit)}
                                 target='_blank'
                                 rel='noopener noreferrer'
                             >
