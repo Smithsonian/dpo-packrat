@@ -5,6 +5,10 @@ import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
 
 export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitleArgs, _context: Context): Promise<GetIngestTitleResult> {
+
+    // The ingest title is tied to the MediaGroup's (item) name and is pulled from EDAN
+    // when first ingesting. Here we build our title and sanitize it as needed.
+
     const { item, sourceObjects } = args.input;
     if (item) {
         let itemDB: DBAPI.Item | null = null;

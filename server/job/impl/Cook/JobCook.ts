@@ -268,7 +268,7 @@ export abstract class JobCook<T> extends JobPackrat {
             while (true) {
                 try {
                     LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} body ${JSON.stringify(jobCookPostBody, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-                    const axiosResponse: AxiosResponse<any> | null = await axios.post(requestUrl, jobCookPostBody);
+                    const axiosResponse: AxiosResponse<any> | null = await axios.post(encodeURI(requestUrl), jobCookPostBody);
 
                     if (axiosResponse?.status === 201)
                         break; // success, continue
@@ -302,7 +302,7 @@ export abstract class JobCook<T> extends JobPackrat {
             while (true) {
                 try {
                     LOG.info(`JobCook [${this.name()}] running job: ${requestUrl}`, LOG.LS.eJOB);
-                    const axiosResponse = await axios.patch(requestUrl);
+                    const axiosResponse = await axios.patch(encodeURI(requestUrl));
                     if (axiosResponse.status === 202)
                         break; // success, continue
                     res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
@@ -338,7 +338,7 @@ export abstract class JobCook<T> extends JobPackrat {
         LOG.info(`JobCook [${this.name()}] cancelling job: ${requestUrl}`, LOG.LS.eJOB);
         while (true) {
             try {
-                const axiosResponse = await axios.patch(requestUrl);
+                const axiosResponse = await axios.patch(encodeURI(requestUrl));
                 if (axiosResponse.status !== 200)
                     res = { success: false, error: `JobCook [${this.name()}] patch ${requestUrl} failed: ${JSON.stringify(axiosResponse)}` };
             } catch (error) {
@@ -365,7 +365,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // Get job report via GET to /clients/<CLIENTID>/jobs/<JOBID>/report
         const requestUrl: string = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
         try {
-            const axiosResponse = await axios.get(requestUrl);
+            const axiosResponse = await axios.get(encodeURI(requestUrl));
             if (axiosResponse.status !== 200) {
                 // only log errors after first attempt, as job creation may not be complete on Cook server
                 const error: string = JSON.stringify(axiosResponse);

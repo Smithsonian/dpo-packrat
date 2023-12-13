@@ -42,7 +42,7 @@ function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
         <voyager-story
             id='Voyager-Story'
             root={root}
-            document={document}
+            document={encodeURIComponent(document)}
             mode={mode}
             style={{ width: width || '300px', height: height || '300px', display: 'block', position: 'relative' }}
         />
