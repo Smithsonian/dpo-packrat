@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosResponse } from 'axios';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
@@ -67,8 +68,8 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
         };
         return result;
 
-    } catch (error) {
-        return { success: false, error: JSON.stringify(error), address, };
+    } catch (error: any) {
+        return { success: false, error: (error.message)?error.message:JSON.stringify(error), address, };
     }
 };
 const verifyCookResourceCapability = (job: string, resource: DBAPI.CookResource): number => {
