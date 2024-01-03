@@ -30,7 +30,7 @@ export class ZipStream implements IZip {
 
             const P = new Promise<Buffer>((resolve, reject) => {
                 this._inputStream!.on('data', (chunk: Buffer) => chunks.push(chunk)); /* istanbul ignore next */    // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                this._inputStream!.on('error', () => reject());                                           // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                this._inputStream!.on('error', (error) => reject(error));                                           // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 this._inputStream!.on('end', () => resolve(Buffer.concat(chunks)));                                 // eslint-disable-line @typescript-eslint/no-non-null-assertion
             });
 
