@@ -15,17 +15,17 @@ export class CSVParser {
                     return header;
                 };
 
-                fileStream.on('error', () => reject());
+                fileStream.on('error', (error) => reject(error));
 
                 const stream = fileStream.pipe(csv({ mapHeaders }));
                 const rows: T[] = [];
 
                 stream.on('data', (data: T) => rows.push(data));
-                stream.on('error', () => reject());
+                stream.on('error', (error) => reject(error));
                 stream.on('end', () => resolve(rows));
             } catch (error) /* istanbul ignore next */ {
                 LOG.error('CSVParser.parse', LOG.LS.eSYS, error);
-                reject();
+                reject(error);
             }
         });
     }

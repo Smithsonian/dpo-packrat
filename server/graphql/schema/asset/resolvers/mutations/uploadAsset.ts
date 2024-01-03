@@ -104,18 +104,19 @@ class UploadAssetWorker extends ResolverBase {
             const stream = fileStream.pipe(writeStream);
 
             return new Promise(resolve => {
-                fileStream.on('error', () => {
-                    stream.emit('error');
+                fileStream.on('error', (error) => {
+                    LOG.error('uploadAsset', LOG.LS.eGQL, error);
+                    stream.emit('error', error);
                 });
 
                 stream.on('finish', async () => {
                     resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
                 });
 
-                stream.on('error', async () => {
-                    await this.appendToWFReport('uploadAsset Upload failed', true, true);
+                stream.on('error', async (error) => {
+                    await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
-                    resolve({ status: UploadStatus.Failed, error: 'Upload failed' });
+                    resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
                 });
 
                 // stream.on('close', async () => { });
