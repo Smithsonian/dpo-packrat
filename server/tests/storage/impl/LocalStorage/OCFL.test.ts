@@ -339,7 +339,7 @@ async function createRandomFile(directoryName: string, fileName: string, fileSiz
 
             stream.end();
             stream.on('finish', () => { resolve(fullPath); });
-            stream.on('error', reject);
+            stream.on('error', (error) => { reject(error); });
         } catch (error) {
             LOG.error('OCFL.test.ts createRandomFile() error', LOG.LS.eTEST, error);
             reject(error);

@@ -1232,11 +1232,11 @@ export class AssetStorageAdapter {
             if (AFOSR.stream) { // ingested content
                 reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
                     ? new BagitReader({ zipFileName: null, zipStream: AFOSR.stream, directory: null, validate: true, validateContent: false })
-                    : new ZipStream(AFOSR.stream, isZipFilename); // use isZipFilename to determine if errors should be logged
+                    : new ZipStream(AFOSR.stream);
             } else if (AFOSR.fileName) { // non-ingested content is staged locally
                 reader = (isBulkIngest)
                     ? new BagitReader({ zipFileName: AFOSR.fileName, zipStream: null, directory: null, validate: true, validateContent: false })
-                    : new ZipFile(AFOSR.fileName, isZipFilename); // use isZipFilename to determine if errors should be logged
+                    : new ZipFile(AFOSR.fileName);
             } else
                 return { success: false, error: 'AssetStorageAdapter.crackAsset unable to determine filename or stream', zip: null, asset: null, isBagit: false };
 
