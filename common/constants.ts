@@ -178,6 +178,7 @@ export enum eVocabularyID {
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
     eWorkflowEventIngestionIngestObject,
+    eWorkflowEventCreateScene,
     eEdan3DResourceAttributeUnitsmm,
     eEdan3DResourceAttributeUnitscm,
     eEdan3DResourceAttributeUnitsm,

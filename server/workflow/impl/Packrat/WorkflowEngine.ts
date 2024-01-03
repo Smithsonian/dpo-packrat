@@ -123,7 +123,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         switch (eWorkflowEvent) {
-            case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
+            case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject:
+                return this.eventIngestionIngestObject(workflowParams);
+
+                // case COMMON.eVocabularyID.eWorkflowEventCreateScene:
+                //     return this.eventCreateScene(workflowParams);
+
             default:
                 LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
                 return null;
@@ -150,6 +155,81 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
     }
+
+    // private async eventCreateScene(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
+
+    //     // make sure we have the parameters we need
+    //     if(!workflowParams || !workflowParams.parameters || !workflowParams.parameters.idModel) {
+    //         LOG.error(`WorkflowEngine.eventCreateScene missing parameters (${workflowParams})`, LOG.LS.eWF);
+    //         return null;
+    //     }
+    //     const idModel = workflowParams.parameters.idModel;
+
+    //     // TODO: depending on if we received a model or scene id determines how we go about generating the scene
+    //     // ...
+
+    //     // TODO: get our model's idSystemObject from the db
+    //     const idSystemObjectModel: number = -1;
+
+    //     // get basic properties of the model/geoemtry from idModel
+    //     const CMIR: ComputeModelInfoResult = await this.computeModelInfo(idModel, idSystemObjectModel);
+    //     if (CMIR.assetVersionGeometry === undefined) {
+    //         LOG.error(`WorkflowEngine.createScene unable to get model information from ${CMIR.idModel}`, LOG.LS.eWF);
+    //         return null;
+    //     }
+
+    //     // get our geometry system object id
+    //     const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
+    //     if (!SOGeometry) {
+    //         LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file systemobject from ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+    //         return null;
+    //     }
+    //     const idSystemObject: number[] = [SOGeometry.idSystemObject];
+
+    //     // TODO: check if we already have a workflow/job generating a scene for this model
+    //     // ...
+
+    //     // figure out our base names
+    //     const workflows: WF.IWorkflow[] = [];
+    //     const { sceneBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(idModel, CMIR.assetVersionGeometry.FileName);
+
+    //     // initiate WorkflowJob for cook si-voyager-scene
+    //     if (CMIR.units !== undefined) {
+    //         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(idModel);
+    //         if (parameterHelper) {
+    //             if (workflowParams.parameters.skipSceneGenerate) {
+    //                 LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene per user instruction idSO ${workflowParams.idSystemObject}`, LOG.LS.eWF);
+    //             } else {
+    //                 const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
+    //                     new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+    //                         new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
+    //                            CMIR.assetVersionGeometry?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
+
+    //                 const wfParamSIVoyagerScene: WF.WorkflowParameters = {
+    //                     eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+    //                     idSystemObject,
+    //                     idProject: workflowParams.idProject,
+    //                     idUserInitiator: workflowParams.idUserInitiator,
+    //                     parameters: jobParamSIVoyagerScene,
+    //                 };
+
+    //                 // create our workflow given above parameters, and push onto the queue
+    //                 const wfSIVoyagerScene: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
+    //                 if (wfSIVoyagerScene)
+    //                     workflows.push(wfSIVoyagerScene);
+    //                 else
+    //                     LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+    //             }
+    //         } else
+    //             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute parameter info needed by Cook si-voyager-scene workflow from model: ${idModel}`, LOG.LS.eWF);
+    //     } else
+    //         LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+
+    //     // HACK: skip generate downloads while other issues are resolved with it
+    //     // ...
+
+    //     return workflows.length > 0 ? workflows : null;
+    // }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);

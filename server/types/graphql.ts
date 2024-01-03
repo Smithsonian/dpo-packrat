@@ -840,6 +840,10 @@ export type GetSceneResult = {
   Scene?: Maybe<Scene>;
 };
 
+export type CreateSceneInput = {
+  idSystemObject: Scalars['Int']; // set to SO of a master model or an existing scene
+};
+
 export type GetSourceObjectIdentiferInput = {
   idSystemObjects: Array<Scalars['Int']>;
 };

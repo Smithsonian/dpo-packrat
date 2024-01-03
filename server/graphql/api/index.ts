@@ -55,6 +55,7 @@ import {
     CreateVocabularyInput,
     CreateVocabularyResult,
     CreateVocabularySetInput,
+    CreateSceneInput,
     UploadAssetInput,
     UploadAssetResult,
     GetUploadedAssetVersionResult,
@@ -160,6 +161,7 @@ import createCaptureDataPhoto from './mutations/capturedata/createCaptureDataPho
 import createUnit from './mutations/unit/createUnit';
 import createProject from './mutations/unit/createProject';
 import createSubject from './mutations/unit/createSubject';
+import createScene from './mutations/scene/createScene';
 import createVocabulary from './mutations/vocabulary/createVocabulary';
 import createVocabularySet from './mutations/vocabulary/createVocabularySet';
 import uploadAsset from './mutations/asset/uploadAsset';
@@ -194,6 +196,7 @@ const allQueries = {
     createUnit,
     createProject,
     createSubject,
+    createScene,
     createVocabulary,
     createVocabularySet,
     uploadAsset,
@@ -381,6 +384,16 @@ class GraphQLApi {
 
     async getScene(input: GetSceneInput, context?: Context): Promise<GetSceneResult> {
         const operationName = 'getScene';
+        const variables = { input };
+        return this.graphqlRequest({
+            operationName,
+            variables,
+            context
+        });
+    }
+
+    async createScene(input: CreateSceneInput, context?: Context): Promise<boolean> {
+        const operationName = 'createScene';
         const variables = { input };
         return this.graphqlRequest({
             operationName,
