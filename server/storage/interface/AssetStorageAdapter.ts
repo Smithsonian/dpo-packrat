@@ -993,8 +993,8 @@ export class AssetStorageAdapter {
 
         const wsRes: STORE.WriteStreamResult = await storage.writeStream(ISI.FileName);
         if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
+            LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
             return { success: false, error };
         }
 
@@ -1007,11 +1007,18 @@ export class AssetStorageAdapter {
             ISI.readStream = fs.createReadStream(ISI.localFilePath);
         }
 
+        // make sure both streams are valid
+        if(ISI.readStream.readable===false || wsRes.writeStream.writable===false) {
+            const error: string = `individual streams are not valid. (read: ${ISI.readStream.readable} | write: ${wsRes.writeStream.writable})`;
+            LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
         try {
             const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
             if (!wrRes.success) {
-                const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `unable to write to stream: ${wrRes.error}`;
+                LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
                 return { success: false, error };
             }
         } finally {
