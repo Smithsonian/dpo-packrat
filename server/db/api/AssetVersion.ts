@@ -369,6 +369,10 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     }
 
     /** Pass in a value for Retired if you need to seek only asset versions that have or have not been retired */
+    /*  Ingested:
+            null  = uploaded, not processed (after bytes transfered)
+            false = uploaded, processed (after transferred and inspected)
+            true  = uploaded, processed, ingested (once ingested in the system) */
     static async fetchFromUserByIngested(idUserCreator: number, Ingested: boolean | null, Retired: boolean | null = null): Promise<AssetVersion[] | null> {
         if (!idUserCreator)
             return null;
