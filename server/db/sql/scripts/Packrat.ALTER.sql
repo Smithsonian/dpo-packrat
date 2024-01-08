@@ -484,3 +484,25 @@ UPDATE Unit SET ARKPrefix = 'uj5' WHERE Abbreviation = 'OCIO';
 ALTER TABLE ModelSceneXref MODIFY COLUMN `NAME` varchar(512) DEFAULT NULL;
 
 -- 2022-11-11 Deployed to Staging and Production
+
+-- 2023-10-19 Add CookResources table and default data (Eric)
+CREATE TABLE IF NOT EXISTS `CookResource` (
+    `idCookResource` int(11) NOT NULL AUTO_INCREMENT,
+	  `Name` varchar(256) NOT NULL,
+    `Address`  varchar(256) NOT NULL,
+    `Port` int(11) NOT NULL,
+    `Inspection` int(11) NOT NULL,
+    `SceneGeneration` int(11) NOT NULL,
+    `GenerateDownloads` int(11) NOT NULL,
+    `Photogrammetry` int(11) NOT NULL,
+    `LargeFiles` int(11) NOT NULL,
+    `MachineType` varchar(256) NOT NULL,
+    PRIMARY KEY (`idCookResource`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('Cook Server: 1', 'http://si-3dcook01.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'server');
+INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('Cook Server: 2', 'http://si-3dcook02.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'server');
+INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: Digitization', 'http://ocio-73qycx3.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'workstation');
+INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: #9', 'http://ocio-3ddigisi-9.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'workstation');
+
+------

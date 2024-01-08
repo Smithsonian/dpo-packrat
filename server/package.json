@@ -49,8 +49,8 @@
   },
   "dependencies": {
     "@dpo-packrat/common": "0.9.12",
-    "@gltf-transform/core": "2.4.6",
-    "@gltf-transform/extensions": "2.4.6",
+    "@gltf-transform/core": "2.5.1",
+    "@gltf-transform/extensions": "2.5.1",
     "@graphql-tools/load-files": "6.6.1",
     "@graphql-tools/merge": "8.3.6",
     "@graphql-tools/schema": "9.0.4",
@@ -76,6 +76,7 @@
     "husky": "8.0.1",
     "image-size": "1.0.2",
     "json-bigint-patch": "0.0.8",
+    "jsonfile": "6.1.0",
     "jszip": "3.10.1",
     "ldapjs": "2.3.3",
     "lodash": "4.17.21",

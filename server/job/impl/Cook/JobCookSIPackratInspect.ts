@@ -75,16 +75,16 @@ export class JobCookStatistics {
         JCStat.numVertices = maybe<number>(statistics?.numVertices);
         JCStat.numTexCoordChannels = maybe<number>(statistics?.numTexCoordChannels);
         JCStat.numColorChannels = maybe<number>(statistics?.numColorChannels);
-        JCStat.hasNormals = maybe<boolean>(statistics?.hasNormals);
-        JCStat.hasVertexNormals = maybe<boolean>(statistics?.hasVertexNormals);
-        JCStat.hasVertexColors = maybe<boolean>(statistics?.hasVertexColors);
-        JCStat.hasTexCoords = maybe<boolean>(statistics?.hasTexCoords);
-        JCStat.hasBones = maybe<boolean>(statistics?.hasBones);
-        JCStat.hasTangents = maybe<boolean>(statistics?.hasTangents);
-        JCStat.isTwoManifoldUnbounded = maybe<boolean>(statistics?.isTwoManifoldUnbounded);
-        JCStat.isTwoManifoldBounded = maybe<boolean>(statistics?.isTwoManifoldBounded);
-        JCStat.selfIntersecting = maybe<boolean>(statistics?.selfIntersecting);
-        JCStat.isWatertight = maybe<boolean>(statistics?.isWatertight);
+        JCStat.hasNormals = H.Helpers.safeBoolean(statistics?.hasNormals);
+        JCStat.hasVertexNormals = H.Helpers.safeBoolean(statistics?.hasVertexNormals);
+        JCStat.hasVertexColors = H.Helpers.safeBoolean(statistics?.hasVertexColors);
+        JCStat.hasTexCoords = H.Helpers.safeBoolean(statistics?.hasTexCoords);
+        JCStat.hasBones = H.Helpers.safeBoolean(statistics?.hasBones);
+        JCStat.hasTangents = H.Helpers.safeBoolean(statistics?.hasTangents);
+        JCStat.isTwoManifoldUnbounded = H.Helpers.safeBoolean(statistics?.isTwoManifoldUnbounded);
+        JCStat.isTwoManifoldBounded = H.Helpers.safeBoolean(statistics?.isTwoManifoldBounded);
+        JCStat.selfIntersecting = H.Helpers.safeBoolean(statistics?.selfIntersecting);
+        JCStat.isWatertight = H.Helpers.safeBoolean(statistics?.isWatertight);
         JCStat.materialIndex = maybe<number[]>(statistics?.materialIndex);
         return JCStat;
     }
@@ -593,6 +593,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         let vFileType: DBAPI.Vocabulary | undefined = undefined;
         if (fileName)
             vFileType = await CACHE.VocabularyCache.mapModelFileByExtension(fileName);
+
         // LOG.info(`JobCookPackratInspect createModel ${fileName} -> ${JSON.stringify(vFileType)}`, LOG.LS.eJOB);
         return new DBAPI.Model({
             Name: fileName || '',
@@ -614,7 +615,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             CountEmbeddedTextures: modelStats ? maybe<number>(modelStats?.numEmbeddedTextures) : null,
             CountLinkedTextures: modelStats ? maybe<number>(modelStats?.numLinkedTextures) : null,
             FileEncoding: modelStats ? maybe<string>(modelStats?.fileEncoding) : null,
-            IsDracoCompressed: modelStats ? maybe<boolean>(modelStats?.isDracoCompressed) : null,
+            IsDracoCompressed: modelStats ? H.Helpers.safeBoolean(modelStats?.isDracoCompressed) : null,
             AutomationTag: null,
             CountTriangles: modelStats ? maybe<number>(modelStats?.numTriangles) : null,
             idModel
@@ -825,7 +826,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}: ${res.error}`, LOG.LS.eJOB);
                 return null;
             }
-            return new ZipFile(tempFile.path, true);
+            return new ZipFile(tempFile.path);
         } catch (err) {
             LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
             return null;

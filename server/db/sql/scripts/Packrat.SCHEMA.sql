@@ -167,6 +167,20 @@ CREATE TABLE IF NOT EXISTS `CaptureDataPhoto` (
   PRIMARY KEY (`idCaptureDataPhoto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `CookResource` (
+    `idCookResource` int(11) NOT NULL AUTO_INCREMENT,
+	  `Name` varchar(256) NOT NULL,
+    `Address`  varchar(256) NOT NULL,
+    `Port` int(11) NOT NULL,
+    `Inspection` int(11) NOT NULL,
+    `SceneGeneration` int(11) NOT NULL,
+    `GenerateDownloads` int(11) NOT NULL,
+    `Photogrammetry` int(11) NOT NULL,
+    `LargeFiles` int(11) NOT NULL,
+    `MachineType` varchar(256) NOT NULL,
+    PRIMARY KEY (`idCookResource`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 CREATE TABLE IF NOT EXISTS `GeoLocation` (
   `idGeoLocation` int(11) NOT NULL AUTO_INCREMENT,
   `Latitude` double DEFAULT NULL,
@@ -626,6 +640,7 @@ CREATE TABLE IF NOT EXISTS `WorkflowReport` (
   `idWorkflow` int(11) NOT NULL,
   `MimeType` varchar(256) NOT NULL,
   `Data` longtext NOT NULL,
+  `Name` varchar(512) NOT NULL,
   PRIMARY KEY (`idWorkflowReport`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

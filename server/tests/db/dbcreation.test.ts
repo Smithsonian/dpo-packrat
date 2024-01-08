@@ -1695,7 +1695,8 @@ describe('DB Creation Test Suite', () => {
                 idWorkflow: workflow.idWorkflow,
                 MimeType: 'test/mimetype',
                 Data: 'WorkflowReport test',
-                idWorkflowReport: 0
+                idWorkflowReport: 0,
+                Name: 'test_report'
             });
         expect(workflowReport).toBeTruthy();
     });
@@ -4274,7 +4275,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.LicenseEnumToString', async () => {
-        expect(COMMON.LicenseEnumToString(-1)).toEqual('Restricted, Not Publishable');
+        expect(COMMON.LicenseEnumToString(4)).toEqual('Restricted, Not Publishable'); // testing int input, -1 not compiling
         expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadCC0)).toEqual('CC0, Publishable w/ Downloads');
         expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewDownloadRestriction)).toEqual('SI ToU, Publishable w/ Downloads');
         expect(COMMON.LicenseEnumToString(COMMON.eLicense.eViewOnly)).toEqual('SI ToU, Publishable Only');
@@ -4282,7 +4283,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     });
 
     test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
-        expect(COMMON.PublishedStateEnumToString(-1)).toEqual('Not Published');
+        expect(COMMON.PublishedStateEnumToString(0)).toEqual('Not Published'); // testing int input. -1 not compiling since enums are 0+
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished)).toEqual('Not Published');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('API Only');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Published');
@@ -4970,7 +4971,7 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: convertWorkflowJobRunStatusEnumToString', async () => {
-        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(-1)).toEqual('Uninitialized');
+        expect(DBAPI.convertWorkflowJobRunStatusEnumToString(0)).toEqual('Uninitialized'); // testing int input. -1 not compiling
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eUnitialized)).toEqual('Uninitialized');
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eCreated)).toEqual('Created');
         expect(DBAPI.convertWorkflowJobRunStatusEnumToString(COMMON.eWorkflowJobRunStatus.eRunning)).toEqual('Running');
@@ -5598,6 +5599,16 @@ describe('DB Fetch Special Test Suite', () => {
         let sceneFetch: DBAPI.Scene[] | null = null;
         if (model) {
             sceneFetch = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
+            if (sceneFetch)
+                expect(sceneFetch.length).toEqual(0);
+        }
+        expect(sceneFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: Scene.fetchParentScenes', async () => {
+        let sceneFetch: DBAPI.Scene[] | null = null;
+        if (model) {
+            sceneFetch = await DBAPI.Scene.fetchParentScenes(model.idModel);
             if (sceneFetch)
                 expect(sceneFetch.length).toEqual(0);
         }
@@ -7935,6 +7946,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Scene.fetchByUUID('')).toBeNull();
         expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
         expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchParentScenes(0)).toBeNull();
         expect(await DBAPI.Sentinel.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();

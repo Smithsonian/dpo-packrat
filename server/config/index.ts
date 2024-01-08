@@ -132,8 +132,9 @@ export const Config: ConfigType = {
     collection: {
         type: COLLECTION_TYPE.EDAN,
         edan: {
+            // defaulting to development environment for EDAN if environment variables not set for safety.
             server: process.env.PACKRAT_EDAN_SERVER ? process.env.PACKRAT_EDAN_SERVER : /* istanbul ignore next */ 'https://edan.si.edu/',
-            api3d: process.env.PACKRAT_EDAN_3D_API ? process.env.PACKRAT_EDAN_3D_API : /* istanbul ignore next */ 'https://3d-api.si.edu/',
+            api3d: process.env.PACKRAT_EDAN_3D_API ? process.env.PACKRAT_EDAN_3D_API : /* istanbul ignore next */ 'https://console.si.edu/apis/3d-api-dev/',
             appId: process.env.PACKRAT_EDAN_APPID ? process.env.PACKRAT_EDAN_APPID : /* istanbul ignore next */ 'OCIO3D',
             authKey: process.env.PACKRAT_EDAN_AUTH_KEY ? process.env.PACKRAT_EDAN_AUTH_KEY : /* istanbul ignore next */  '',
             upsertContentRoot: process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT ? process.env.PACKRAT_EDAN_UPSERT_RESOURCE_ROOT : 'nfs:///si-3ddigi-staging/upload/',

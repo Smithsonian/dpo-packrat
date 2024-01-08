@@ -985,6 +985,17 @@ export type GetVocabularyResult = {
   Vocabulary?: Maybe<Vocabulary>;
 };
 
+export type GetVoyagerParamsInput = {
+  idSystemObject: Scalars['Int'];
+};
+
+export type GetVoyagerParamsResult = {
+  __typename?: 'GetVoyagerParamsResult';
+  document?: Maybe<Scalars['String']>;
+  idSystemObjectScene?: Maybe<Scalars['Int']>;
+  path?: Maybe<Scalars['String']>;
+};
+
 export type GetWorkflowInput = {
   idWorkflow: Scalars['Int'];
 };
@@ -1841,6 +1852,7 @@ export type Query = {
   getVersionsForAsset: GetVersionsForAssetResult;
   getVocabulary: GetVocabularyResult;
   getVocabularyEntries: GetVocabularyEntriesResult;
+  getVoyagerParams: GetVoyagerParamsResult;
   getWorkflow: GetWorkflowResult;
   getWorkflowList: GetWorkflowListResult;
   searchIngestionSubjects: SearchIngestionSubjectsResult;
@@ -2039,6 +2051,11 @@ export type QueryGetVocabularyArgs = {
 
 export type QueryGetVocabularyEntriesArgs = {
   input: GetVocabularyEntriesInput;
+};
+
+
+export type QueryGetVoyagerParamsArgs = {
+  input: GetVoyagerParamsInput;
 };
 
 
