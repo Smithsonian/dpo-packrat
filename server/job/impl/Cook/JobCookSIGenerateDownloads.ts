@@ -1313,24 +1313,24 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile;
     }
 
-    private async getModelDetailsFromVoyagerScene(svxFile): Promise<DBAPI.ModelSceneXref[] | null> {
-        // Retrieve svx.json data
-        const RSR: STORE.ReadStreamResult = await this.fetchFile(svxFile);
-        if (!RSR.success || !RSR.readStream) {
-            this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to fetch stream for scene file ${svxFile}: ${RSR.error}`);
-            return null;
-        }
+    // private async getModelDetailsFromVoyagerScene(svxFile): Promise<DBAPI.ModelSceneXref[] | null> {
+    //     // Retrieve svx.json data
+    //     const RSR: STORE.ReadStreamResult = await this.fetchFile(svxFile);
+    //     if (!RSR.success || !RSR.readStream) {
+    //         this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to fetch stream for scene file ${svxFile}: ${RSR.error}`);
+    //         return null;
+    //     }
 
-        // Parse Scene
-        const svx: SvxReader = new SvxReader();
-        const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
-        if (!res.success || !svx.SvxExtraction) {
-            this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to parse scene file ${svxFile}: ${res.error}`);
-            return null;
-        }
+    //     // Parse Scene
+    //     const svx: SvxReader = new SvxReader();
+    //     const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
+    //     if (!res.success || !svx.SvxExtraction) {
+    //         this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to parse scene file ${svxFile}: ${res.error}`);
+    //         return null;
+    //     }
 
-        // return result
-        return svx.SvxExtraction.modelDetails;
-    }
+    //     // return result
+    //     return svx.SvxExtraction.modelDetails;
+    // }
     // #endregion
 }
