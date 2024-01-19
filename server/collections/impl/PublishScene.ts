@@ -303,14 +303,14 @@ export class PublishScene {
             return PublishScene.sendResult(true);
 
         if (newDownloadState) {
-            LOG.info(`PublishScene.handleSceneUpdates generating downloads for scene ${idScene} (skipping)`, LOG.LS.eGQL);
+            LOG.info(`PublishScene.handleSceneUpdates generating downloads for scene ${idScene}`, LOG.LS.eGQL);
             // Generate downloads
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
             if (!workflowEngine)
                 return PublishScene.sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
 
-            // HACK: temporarily skip generate downloads while development on that wraps up
-            // workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: idUser }); // don't await
+            // trigger the workflow/recipe
+            workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: _idUser }); // don't await
             return { success: true, downloadsGenerated: true, downloadsRemoved: false };
         } else { // Remove downloads
             LOG.info(`PublishScene.handleSceneUpdates removing downloads for scene ${idScene}`, LOG.LS.eGQL);
