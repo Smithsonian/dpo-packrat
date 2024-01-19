@@ -281,9 +281,13 @@ export class PublishScene {
             return null;
         }
 
+        // LOG.info(`>>> computeDownloadMSXMap (${idScene}): ${H.Helpers.JSONStringify(MSXs)}`,LOG.LS.eDEBUG);
         const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> = new Map<number, DBAPI.ModelSceneXref>();
         for (const MSX of MSXs) {
-            if (MSX.Usage && MSX.Usage.startsWith('Download')) {
+            // HACK: Packrat is misusing the Usage property returned by Cook for Voyager scene generation. Some
+            // assets like draco and USDZ downloads are used by the viewer & as a download. temporarily adding
+            // their Usage types until a file's 'downloadable' property is detached from 'Usage'. (#DPO3DPKRT-777)
+            if (MSX.Usage && (MSX.Usage.startsWith('Download') || MSX.Usage.startsWith('App3D') || MSX.Usage.startsWith('iOSApp3D'))) {
                 const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ eObjectType: COMMON.eSystemObjectType.eModel, idObject: MSX.idModel });
                 if (SOI)
                     DownloadMSXMap.set(SOI.idSystemObject, MSX);
@@ -343,6 +347,7 @@ export class PublishScene {
     }
 
     private async collectAssets(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {
+        // LOG.info(`>>> collectAssets.DownloadMSXMap: ${H.Helpers.JSONStringify(this.DownloadMSXMap)}`,LOG.LS.eDEBUG);
         if (!this.DownloadMSXMap)
             return false;
         this.assetVersions = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject);
@@ -416,6 +421,8 @@ export class PublishScene {
                 }
             }
         }
+
+        // LOG.info(`>>> collectAssets.SAC: ${H.Helpers.JSONStringify(this.SacList)}`,LOG.LS.eDEBUG);
         return true;
     }
 
@@ -487,6 +494,7 @@ export class PublishScene {
         this.resourcesHotFolder = path.join(Config.collection.edan.resourcesHotFolder, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
         for (const SAC of this.SacList.values()) {
+            // LOG.info(`>>> stageDownloads.SAC: ${H.Helpers.JSONStringify(SAC)}`,LOG.LS.eDEBUG);
             if (!SAC.model && !SAC.metadataSet) // SAC is not a attachment, skip it
                 continue;
 
