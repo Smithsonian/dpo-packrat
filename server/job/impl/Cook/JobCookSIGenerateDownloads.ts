@@ -863,16 +863,16 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     public static computeModelPropertiesFromDownloadType(downloadType: string): { usage: string|undefined, quality: string|undefined, uvResolution: number|undefined } {
 
-        // HACK: caution if return types from Cook change
+        // NOTE: caution if return types from Cook change
         switch(downloadType) {
 
             case 'objZipFull':
-                return { usage: 'Download', quality: 'Highest', uvResolution: 0 };
+                return { usage: 'Download:'+downloadType, quality: 'Highest', uvResolution: 0 };
 
             case 'objZipLow':
             case 'gltfZipLow':
             case 'webAssetGlbLowUncompressed':
-                return { usage: 'Download', quality: 'Low', uvResolution: 4096 };
+                return { usage: 'Download:'+downloadType, quality: 'Low', uvResolution: 4096 };
 
             // refers to: <baseName>-100k-2048_std_draco.glb
             case 'webAssetGlbARCompressed':

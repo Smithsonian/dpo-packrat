@@ -287,7 +287,7 @@ export class PublishScene {
             // HACK: Packrat is misusing the Usage property returned by Cook for Voyager scene generation. Some
             // assets like draco and USDZ downloads are used by the viewer & as a download. temporarily adding
             // their Usage types until a file's 'downloadable' property is detached from 'Usage'. (#DPO3DPKRT-777)
-            if (MSX.Usage && (MSX.Usage.startsWith('Download') || MSX.Usage.startsWith('App3D') || MSX.Usage.startsWith('iOSApp3D'))) {
+            if (MSX.Usage && (MSX.Usage.startsWith('Download:') || MSX.Usage.startsWith('App3D') || MSX.Usage.startsWith('iOSApp3D'))) {
                 const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ eObjectType: COMMON.eSystemObjectType.eModel, idObject: MSX.idModel });
                 if (SOI)
                     DownloadMSXMap.set(SOI.idSystemObject, MSX);
@@ -700,7 +700,8 @@ export class PublishScene {
                 case '.usdz':   FILE_TYPE = 'usdz'; break;
             }
 
-            switch (SAC.modelSceneXref.Usage?.replace('Download ', '').toLowerCase()) {
+            // handle download types
+            switch (SAC.modelSceneXref.Usage?.replace('Download:', '').toLowerCase()) {
                 case undefined:
                 case 'webassetglblowuncompressed':  category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; break;
                 case 'webassetglbarcompressed':     category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
