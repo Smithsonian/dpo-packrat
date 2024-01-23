@@ -433,7 +433,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 // TODO: more robust support with alt type
                 // const stat = await webdavClient.stat(destination);
                 // const fileSize = (stat as FileStat).size;
-                // console.log(`>>>> fetchFile file size: ${fileSize} | ${destination}`);
+                // LOG.info(`>>>> fetchFile file size: ${fileSize} | ${destination}`,LOG.LS.eDEBUG);
                 // if(fileSize <= 0)
                 //     throw new Error(`destination file doesn't exist or is empty. (${fileSize} bytes | ${destination})`);
 
