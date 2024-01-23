@@ -172,6 +172,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     /** fetches scenes which are children of the specified idModelParent */
     static async fetchChildrenScenes(idModelParent: number): Promise<Scene[] | null> {
+        // LOG.info(`>>>> idModelParent: ${idModelParent}`,LOG.LS.eDEBUG);
         if (!idModelParent)
             return null;
         try {

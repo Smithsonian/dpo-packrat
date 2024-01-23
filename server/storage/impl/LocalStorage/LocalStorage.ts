@@ -228,7 +228,10 @@ export class LocalStorage implements STORE.IStorage {
             };
         }
 
+        // figure out our path on disk for the staging file, and make sure it exists
         const pathOnDisk: string = (inputStream) ? '' : path.join(this.ocflRoot.computeLocationStagingRoot(), storageKeyStaged);
+
+        // if we have data then update the OCFL object
         const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, inputStream, fileName, metadata, opInfo); // moves staged file, or streams file, if present
 
         if (!PSAR.success)

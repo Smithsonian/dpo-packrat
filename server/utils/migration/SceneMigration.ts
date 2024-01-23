@@ -766,7 +766,7 @@ export class SceneMigration {
         this.log('createModel', 'Starting');
         const Name: string = resourceInfo.filename ?? '';
         const Units: DBAPI.Vocabulary | undefined = resourceInfo.UNITS ? await PublishScene.mapEdanUnitsToPackratVocabulary(resourceInfo.UNITS) : undefined;
-        const AutomationTag: string = JobCookSIGenerateDownloads.computeModelAutomationTag(downloadType);
+        const AutomationTag: string = JobCookSIGenerateDownloads.computeModelAutomationTagFromDownloadType(downloadType);
 
         const idVPurpose: number | null = SceneMigration.vocabDownload?.idVocabulary ?? null;
         const idVUnits: number | null = Units?.idVocabulary ?? this.modelSource?.idVUnits ?? null;
