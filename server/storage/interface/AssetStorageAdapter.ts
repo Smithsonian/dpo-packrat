@@ -536,7 +536,9 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
+        // ingest the scene and detect changes for additional events/logic
         const { transformUpdated } = await AssetStorageAdapter.detectAndHandleSceneIngest(IAR);
+        // transformUpdated = false; // HACK: setting transform update to 'false' to always accept incoming scene as truth
 
         // prepare to wire together ingestion workflow step with output asset versions (in systemObjectSet)
         const LS: LocalStore | undefined = await ASL.getStore();
@@ -676,7 +678,6 @@ export class AssetStorageAdapter {
                 if (MSXSource) {
                     LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
                     const { transformUpdated: transformUpdatedLocal, updated } = MSXSource.updateIfNeeded(MSX);
-
                     if (updated) {
                         if (!await MSXSource.update()) {
                             LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
@@ -993,8 +994,8 @@ export class AssetStorageAdapter {
 
         const wsRes: STORE.WriteStreamResult = await storage.writeStream(ISI.FileName);
         if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
+            LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
             return { success: false, error };
         }
 
@@ -1007,11 +1008,18 @@ export class AssetStorageAdapter {
             ISI.readStream = fs.createReadStream(ISI.localFilePath);
         }
 
+        // make sure both streams are valid
+        if(ISI.readStream.readable===false || wsRes.writeStream.writable===false) {
+            const error: string = `individual streams are not valid. (read: ${ISI.readStream.readable} | write: ${wsRes.writeStream.writable})`;
+            LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
+            return { success: false, error };
+        }
+
         try {
             const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
             if (!wrRes.success) {
-                const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to write to stream: ${wrRes.error}`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `unable to write to stream: ${wrRes.error}`;
+                LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
                 return { success: false, error };
             }
         } finally {
@@ -1026,6 +1034,7 @@ export class AssetStorageAdapter {
             return { success: false, error };
         }
 
+        // if we don't have an existing asset passed in commit a new one, otherwise commit a new version
         if (!ISI.asset) {
             comRes = await STORE.AssetStorageAdapter.commitNewAsset({
                 storageKey: wsRes.storageKey,

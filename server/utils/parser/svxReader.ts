@@ -325,6 +325,10 @@ export class SvxReader {
             if (!buffer)
                 return { success: false, error: 'Unable to read stream' };
             const json: string = buffer.toString();
+
+            LOG.info(`SvxReader.loadFromStream read ${buffer.length} bytes.`,LOG.LS.eSYS);
+            // LOG.info(`SvxReader.loadFromStream read json ${json}`,LOG.LS.eSYS);
+
             return this.loadFromJSON(json);
         } catch (err) /* istanbul ignore next */ {
             LOG.error('SvxReader.loadFromStream', LOG.LS.eSYS, err);
