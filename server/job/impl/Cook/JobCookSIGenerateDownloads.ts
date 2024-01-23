@@ -173,196 +173,6 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         }
     }
 
-    // #region create
-    // private async createSystemObjects(): Promise<H.IOResults> {
-    //     const sceneSource: DBAPI.Scene | null = this.idScene ? await DBAPI.Scene.fetch(this.idScene) : null;
-    //     if (!sceneSource)
-    //         return this.logError(`createSystemObjects unable to compute source scene from id ${this.idScene}`);
-
-    //     const sceneSystemObject: DBAPI.SystemObject | null = await sceneSource.fetchSystemObject();
-    //     if (!sceneSystemObject)
-    //         return this.logError(`createSystemObjects unable to fetch scene system object from ${JSON.stringify(sceneSource, H.Helpers.saferStringify)}`);
-
-    //     const modelSource: DBAPI.Model | null = this.idModel ? await DBAPI.Model.fetch(this.idModel) : null;
-    //     if (!modelSource)
-    //         return this.logError(`createSystemObjects unable to compute source model from id ${this.idModel}`);
-
-    //     const MSXSources: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelAndScene(modelSource.idModel, sceneSource.idScene);
-    //     if (!MSXSources)
-    //         return this.logError(`createSystemObjects unable to compute ModelSceneXrefs from idModel ${this.idModel}, idScene ${this.idScene}`);
-
-    //     const vModelGeometryFile: DBAPI.Vocabulary | undefined = await this.computeVocabModelGeometryFile();
-    //     if (!vModelGeometryFile)
-    //         return this.logError('createSystemObjects unable to calculate vocabulary needed to ingest generated downloads');
-
-    //     // Retrieve generated files
-    //     let downloadMap: Map<string, string> = new Map<string, string>(); // map from download type -> download filename
-    //     try {
-    //         downloadMap = await JobCookSIGenerateDownloadsOutput.extractDownloads(JSON.parse(this._dbJobRun.Output || ''));
-    //     } catch (err) {
-    //         const error: string = 'JobCookSIGenerateDownloadsOutput.extractDownloads failed';
-    //         LOG.error('JobCookSIGenerateDownloadsOutput.extractDownloads failed', LOG.LS.eJOB, err);
-    //         return { success: false, error };
-    //     }
-    //     LOG.info(`JobCookSIGenerateDownloads extracted download files ${JSON.stringify(downloadMap, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-
-    //     // record updated asset -> asset version, for use in rolling a new SystemObjectVersion for the scene
-    //     const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
-    //     const LS: LocalStore = await ASL.getOrCreateStore();
-    //     const idUserCreator: number = LS?.idUser ?? 0;
-
-    //     for (const [downloadType, downloadFile] of downloadMap) {
-    //         LOG.info(`JobCookSIGenerateDownloads processing download ${downloadFile} of type ${downloadType}`, LOG.LS.eJOB);
-    //         const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
-    //         if (!RSR.success || !RSR.readStream)
-    //             return this.logError(`createSystemObjects unable to fetch stream for generated download ${downloadFile}: ${RSR.error}`);
-
-    //         // look for existing model, a child object of modelSource, with the matching downloadType
-    //         let model: DBAPI.Model | null = await this.findMatchingModelFromModel(modelSource, downloadType);
-    //         let modelSO: DBAPI.SystemObject | null = null;
-    //         let Asset: DBAPI.Asset | null = null;
-
-    //         if (model) {
-    //             // if we already have a model, look for the asset that we are likely updating:
-    //             modelSO = await model.fetchSystemObject();
-    //             if (modelSO) {
-    //                 const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(modelSO.idSystemObject);
-    //                 if (modelAssets) {
-    //                     for (const modelAsset of modelAssets) {
-    //                         if (modelAsset.FileName === downloadFile) {
-    //                             Asset = modelAsset;
-    //                             break;
-    //                         }
-    //                     }
-    //                 } else
-    //                     LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch assets for model systemobject ${JSON.stringify(modelSO, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-    //             } else
-    //                 LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch system object for ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-    //         } else {
-    //             // create Model (for each download generated)
-    //             model = await this.createModel(downloadFile, downloadType, modelSource);
-    //             if (!await model.create())
-    //                 return this.logError(`createSystemObjects unable to create model ${JSON.stringify(model, H.Helpers.saferStringify)}`);
-
-    //             // link each model as derived from both the scene and the master model
-    //             const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneSource, model);
-    //             if (!SOX1)
-    //                 return this.logError(`createSystemObjects unable to wire Scene ${JSON.stringify(sceneSource, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`);
-
-    //             const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
-    //             if (!SOX2)
-    //                 return this.logError(`createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together`);
-    //         }
-
-    //         // ingest model assets, and associate them with the correct model
-    //         const ISI: STORE.IngestStreamOrFileInput = {
-    //             readStream: RSR.readStream,
-    //             localFilePath: null,
-    //             asset: Asset,
-    //             FileName: downloadFile,
-    //             FilePath: '',
-    //             idAssetGroup: 0,
-    //             idVAssetType: vModelGeometryFile.idVocabulary,
-    //             allowZipCracking: false,
-    //             idUserCreator,
-    //             SOBased: model,
-    //             Comment: 'Created by Cook si-generate-downloads',
-    //             doNotUpdateParentVersion: true // we create a new system object version below
-    //         };
-
-    //         LOG.info(`JobCookSIGenerateDownloads.createSystemObjects ingesting ${downloadFile}`, LOG.LS.eJOB);
-    //         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
-    //         if (!IAR.success) {
-    //             await this.appendToReportAndLog(`${this.name()} unable to ingest generated download model ${downloadFile}: ${IAR.error}`, true);
-    //             continue;
-    //             // return { success: false, error: ISR.error };
-    //         }
-    //         if (IAR.assetVersions && IAR.assetVersions.length > 1)
-    //             LOG.error(`JobCookSIGenerateDownloads.createSystemObjects created multiple asset versions, unexpectedly, ingesting ${downloadFile}`, LOG.LS.eJOB);
-
-    //         let idSystemObjectModel: number | null = modelSO ? modelSO.idSystemObject : null;
-    //         if (!idSystemObjectModel) {
-    //             const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
-    //             idSystemObjectModel = SOI ? SOI.idSystemObject : null;
-    //         }
-    //         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-    //         const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel, eHrefMode.ePrependClientURL) : '';
-    //         const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
-    //         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-    //         const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-    //         await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
-
-    //         if (assetVersion)
-    //             assetVersionOverrideMap.set(assetVersion.idAsset, assetVersion.idAssetVersion);
-
-    //         // create/update ModelSceneXref for each download generated ... do after ingest so that we have the storage size available
-    //         const FileSize: bigint | null = assetVersion ? assetVersion.StorageSize : null;
-    //         const MSXSource: DBAPI.ModelSceneXref | null = MSXSources.length > 0 ? MSXSources[0] : null;
-
-    //         const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(model.idModel, sceneSource.idScene, model.Name);
-    //         let MSX: DBAPI.ModelSceneXref | null = (MSXs && MSXs.length > 0) ? MSXs[0] : null;
-    //         let MSXResult: boolean = false;
-    //         if (MSX) {
-    //             MSX.FileSize = FileSize;
-    //             MSXResult = await MSX.update();
-    //         } else {
-    //             MSX = new DBAPI.ModelSceneXref({
-    //                 idModelSceneXref: 0,
-    //                 idModel: model.idModel,
-    //                 idScene: sceneSource.idScene,
-    //                 Name: model.Name,
-    //                 Usage: `Download ${downloadType}`,
-    //                 Quality: null,
-    //                 FileSize,
-    //                 UVResolution: null,
-    //                 BoundingBoxP1X: MSXSource?.BoundingBoxP1X ?? null,
-    //                 BoundingBoxP1Y: MSXSource?.BoundingBoxP1Y ?? null,
-    //                 BoundingBoxP1Z: MSXSource?.BoundingBoxP1Z ?? null,
-    //                 BoundingBoxP2X: MSXSource?.BoundingBoxP2X ?? null,
-    //                 BoundingBoxP2Y: MSXSource?.BoundingBoxP2Y ?? null,
-    //                 BoundingBoxP2Z: MSXSource?.BoundingBoxP2Z ?? null,
-    //                 TS0: MSXSource?.TS0 ?? null,
-    //                 TS1: MSXSource?.TS1 ?? null,
-    //                 TS2: MSXSource?.TS2 ?? null,
-    //                 R0: MSXSource?.R0 ?? null,
-    //                 R1: MSXSource?.R1 ?? null,
-    //                 R2: MSXSource?.R2 ?? null,
-    //                 R3: MSXSource?.R3 ?? null,
-    //                 S0: MSXSource?.S0 ?? null,
-    //                 S1: MSXSource?.S1 ?? null,
-    //                 S2: MSXSource?.S2 ?? null,
-    //             });
-    //             MSXResult = await MSX.create();
-    //         }
-
-    //         if (!MSXResult)
-    //             return this.logError(`createSystemObjects unable to create/update ModelSceneXref ${JSON.stringify(MSX, H.Helpers.saferStringify)}`);
-
-    //         // run si-packrat-inspect on this model
-    //         if (idSystemObjectModel) {
-    //             const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, idSystemObjectModel, undefined, undefined,
-    //                 undefined, undefined /* FIXME */, idUserCreator);
-    //             if (results.success)
-    //                 this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${model.Name}`);
-    //             else if (results.error)
-    //                 this.logError(results.error);
-    //         }
-    //     }
-
-    //     // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
-    //     const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null,
-    //         'Created by Cook si-generate-downloads', assetVersionOverrideMap);
-    //     if (!SOV)
-    //         return this.logError(`createSystemObjects unable to clone SystemObjectVersion for ${JSON.stringify(sceneSystemObject, H.Helpers.saferStringify)}`);
-
-    //     // Add scene asset metadata for attachments
-    //     // LOG.info('JobCookSIGenerateDownloads.createSystemObjects calling PublishScene.extractSceneMetadata', LOG.LS.eJOB);
-    //     const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(sceneSystemObject.idSystemObject, LS?.idUser ?? null);
-    //     if (!metadataResult.success)
-    //         LOG.error(`JobCookSIGenerateDownloads.createSystemObjects unable to persist scene attachment metadata: ${metadataResult.error}`, LOG.LS.eJOB);
-
-    //     return { success: true };
-    // }
     private async createSystemObjects(): Promise<H.IOResults> {
 
         // grab our Packrat Scene from the database. idScene is a parameter passed in when creating this object
@@ -528,17 +338,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 LOG.info(`JobCookSIGenerateDownloads skipping generated download model (${model.fileName}). assuming not referenced by scene (idScene:${sceneSource.idScene}).`,LOG.LS.eJOB);
         }
 
-        LOG.info('========================================== process scene ==================================================',LOG.LS.eDEBUG);
         // process the scene file, ingesting it
         const result = await this.processSceneFile(modelSource, svxSceneFile, idUserCreator);
         if(result.success===false)
             await this.appendToReportAndLog(`JobCookSIGenerateDownloads failed to process svx scene (${result.error})`);
         else
             await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful processing of svx scene: ${svxSceneFile.fileName}`);
-
-        LOG.info('========================================== cleanup ==================================================',LOG.LS.eDEBUG);
-        LOG.info(`>>> modelFiles: ${H.Helpers.JSONStringify(modelFiles)}`,LOG.LS.eDEBUG);
-        LOG.info(`>>> sceneFile: ${H.Helpers.JSONStringify(svxSceneFile)}`,LOG.LS.eDEBUG);
 
         // link the models and assets to this Packrat Scene
         // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
@@ -550,13 +355,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // Add scene asset metadata for attachments
         // LOG.info('JobCookSIGenerateDownloads.createSystemObjects calling PublishScene.extractSceneMetadata', LOG.LS.eJOB);
         const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(sceneSystemObject.idSystemObject, LS?.idUser ?? null);
-        LOG.info(`>>> scene asset metadata: ${H.Helpers.JSONStringify(metadataResult)}`,LOG.LS.eDEBUG);
         if (!metadataResult.success)
             return this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to persist scene attachment metadata: ${metadataResult.error}`);
 
+        await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful generation of downloads: ${svxSceneFile.fileName}`);
         return { success: true };
     }
-    // #endregion
 
     protected async getParameters(): Promise<JobCookSIGenerateDownloadsParameters> {
         const params: JobCookSIGenerateDownloadsParameters = { ...this.parameters };
@@ -607,25 +411,6 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             default:
                 return '';
         }
-
-        // const extension = path.slice((Math.max(0, path.lastIndexOf('.')) || Infinity) + 1);
-
-        // LOG.info(`>>> extract: ${path} | ${extension}`);
-        // if(extension.length <= 0 || extension === '') { return ''; }
-        // if(this.validFileExtensions.includes(extension)==false) { return ''; }
-
-        // switch(extension){
-        //     case 'zip':
-        //     case 'usdz':
-        //     case 'glb':
-        //     case 'fbx':
-        //     case 'ply':
-        //     case 'obj': { return 'model'; }
-
-        //     case 'vxs': { return 'scene'; }
-
-        //     default: { return ''; }
-        // }
     }
 
     private logError(errorMessage: string): H.IOResults {
@@ -751,7 +536,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             idSystemObjectModel = SOI ? SOI.idSystemObject : null;
         }
 
-        // ...
+        // build out our report details and add
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
         const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel, eHrefMode.ePrependClientURL) : '';
         const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
@@ -769,7 +554,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // get our ModelSceneXref from the model id, scene id, and objects name in the DB
         const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(model.idModel, sceneSource.idScene, model.Name);
-        LOG.info(`>>> processingModelFile current file (${model.Name}) ModelSceneXrefs: ${H.Helpers.JSONStringify(MSXs)}`,LOG.LS.eDEBUG);
+        // LOG.info(`>>> processingModelFile current file (${model.Name}) ModelSceneXrefs: ${H.Helpers.JSONStringify(MSXs)}`,LOG.LS.eDEBUG);
 
         // if we didn't get one then we create one. otherwise we use the first one
         let MSX: DBAPI.ModelSceneXref | null = (MSXs && MSXs.length > 0) ? MSXs[0] : null;
@@ -995,8 +780,6 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
         }
 
-        LOG.info(`>>> matching scenes: ${H.Helpers.JSONStringify(scenes)}`,LOG.LS.eDEBUG);
-
         // if we have multiple valid scenes, bail
         if(scenes.length>1)
             return this.logError(`multiple valid scenes found (${scenes.length}). cannot find asset to update (idScene: ${fileItem.fileName})`);
@@ -1006,29 +789,23 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         let createScene: boolean = (scenes.length !== 1);
         if (!createScene && scenes.length > 0 && svxData.modelDetails) {
 
-            // LOG.info(`>>> modelDetails: ${H.Helpers.JSONStringify(svx.SvxExtraction.modelDetails)}`);
-
             for (const MSX of svxData.modelDetails) {
-                LOG.info(`>>> finding model match for: ${MSX.Name}`,LOG.LS.eDEBUG);
                 if (MSX.Name) {
-                    LOG.info(`>>> MSX: ${H.Helpers.JSONStringify(MSX)}`,LOG.LS.eDEBUG);
+
                     // look for existing models, children of our scene, that match this model's purpose
                     const model: DBAPI.Model | null = await this.findMatchingModelFromScene(scenes[0], MSX.computeModelAutomationTag());
-                    // LOG.info(`>>> matching model from scene: ${H.Helpers.JSONStringify(model)}`);
+
                     if (!model || (model.Name !== MSX.Name)) {
-                        LOG.info(`>>> no model match: ${model?.Name} <> ${MSX.Name}`,LOG.LS.eDEBUG);
                         createScene = true;
                         break;
-                    } else {
-                        LOG.info(`>>> found match for: ${MSX.Name}`,LOG.LS.eDEBUG);
-                    }
-                } else { LOG.error(`>>> no MSX: ${H.Helpers.JSONStringify(MSX)}`,LOG.LS.eDEBUG); }
+                    }  // else, found a match for the model
+                } // else, no MSX found so likely a download
             }
         }
 
         const scene: DBAPI.Scene = createScene ? svxData.extractScene() : scenes[0];
-        LOG.info(`createScene: ${createScene}`,LOG.LS.eDEBUG);
-        LOG.info(`scene: ${H.Helpers.JSONStringify(scene)}`,LOG.LS.eDEBUG);
+        // LOG.info(`createScene: ${createScene}`,LOG.LS.eDEBUG);
+        // LOG.info(`scene: ${H.Helpers.JSONStringify(scene)}`,LOG.LS.eDEBUG);
 
         let asset: DBAPI.Asset | null = null;
         if (createScene) {
@@ -1108,125 +885,25 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
         await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
 
-        // // const SOV: DBAPI.SystemObjectVersion | null | undefined = IAR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
-        // // LOG.info(`JobCookSIGenerateDownloads.processSceneFile[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+        //#region legacy
+        // previous version handled all models while working with the scene. Order of operations prevents this from working
+        // in this context. However, the below code may be necessary for additional linking of processed models. Testing didn't
+        // expose a need for this, but keep temporarily until more models are run through.
+        //
+        // const SOV: DBAPI.SystemObjectVersion | null | undefined = IAR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
+        // LOG.info(`JobCookSIGenerateDownloads.processSceneFile[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
 
-        // // Now extract (just) the models; per Jamie Cope 5/3/2021, each model has all textures embedded
-        // // How do we create the Model objects here? We can ingest the assets, as above, but we need to connect them to the right objects
-        // if (svx.SvxExtraction.modelDetails) {
-        //     for (const MSX of svx.SvxExtraction.modelDetails) {
-        //         if (MSX.Name) {
-        //             // look for existing models, children of our scene, that match this model's purpose
-        //             const model: DBAPI.Model | null = await this.findMatchingModelFromScene(scene, MSX.computeModelAutomationTag());
-        //             let asset: DBAPI.Asset | null = null;
-
-        //             if (model) {
-        //                 // if we already have a model, look for the asset that we are likely updating:
-        //                 const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
-        //                 if (modelSO) {
-        //                     const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(modelSO.idSystemObject);
-        //                     if (modelAssets) {
-        //                         for (const modelAsset of modelAssets) {
-        //                             switch (await modelAsset.assetType()) {
-        //                                 case COMMON.eVocabularyID.eAssetAssetTypeModel:
-        //                                 case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
-        //                                     asset = modelAsset;
-        //                                     break;
-        //                             }
-
-        //                             if (asset)
-        //                                 break; // found the model
-        //                         }
-        //                     } else
-        //                         LOG.error(`JobCookSIGenerateDownloads.processSceneFile unable to fetch assets for model systemobject ${JSON.stringify(modelSO, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-        //                 } else
-        //                     LOG.error(`JobCookSIGenerateDownloads.processSceneFile unable to fetch system object for ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-        //             } else { // create model and related records
-
-        //                 LOG.info(`>>> ERROR: shouldn't be here because all models should already be ingested: ${H.Helpers.JSONStringify(modelSource)}`);
-        //                 continue;
-
-        //                 // model = await this.transformModelSceneXrefIntoModel(MSX, modelSource);
-        //                 // if (!await model.create())
-        //                 //     return this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to create Model from referenced model ${MSX.Name}: database error`);
-
-        //                 // // wire ModelSource to Model
-        //                 // const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
-        //                 // if (!SOX1)
-        //                 //     return this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}: database error`);
-
-        //                 // // Create ModelSceneXref for new model and parent scene
-        //                 // /* istanbul ignore else */
-        //                 // if (!MSX.idModelSceneXref) { // should always be true
-        //                 //     MSX.idModel = model.idModel;
-        //                 //     MSX.idScene = scene.idScene;
-        //                 //     LOG.info(`>>> MSX creation: ${H.Helpers.JSONStringify(MSX)}`);
-        //                 //     if (!await MSX.create())
-        //                 //         return this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`);
-        //                 // } else
-        //                 //     LOG.error(`JobCookSIGenerateDownloads.processSceneFile unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`, LOG.LS.eJOB);
-
-        //                 // const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
-        //                 // if (!SOX2)
-        //                 //     return this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together: database error`);
-        //             }
-
-        //             // const RSRModel: STORE.ReadStreamResult = await this.fetchFile(MSX.Name);
-        //             // if (!RSRModel.success || !RSRModel.readStream)
-        //             //     return this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to fetch stream for model file ${MSX.Name}: ${RSRModel.error}`);
-
-        //             // const FileName: string = path.basename(MSX.Name);
-        //             // const FilePath: string = path.dirname(MSX.Name);
-        //             // const ISIModel: STORE.IngestStreamOrFileInput = {
-        //             //     readStream: RSRModel.readStream,
-        //             //     localFilePath: null,
-        //             //     asset,
-        //             //     FileName,
-        //             //     FilePath,
-        //             //     idAssetGroup: 0,
-        //             //     idVAssetType: vModel.idVocabulary,
-        //             //     allowZipCracking: false,
-        //             //     idUserCreator,
-        //             //     SOBased: model,
-        //             //     Comment: 'Created by Cook si-generate-downloads',
-        //             //     doNotUpdateParentVersion: true // if needed, we update the existing system object version below
-        //             // };
-        //             // IAR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
-        //             // if (!IAR.success)
-        //             //     return this.logError(`JobCookSIGenerateDownloads.processSceneFile unable to ingest model file ${MSX.Name}: ${IAR.error}`);
-        //             // if (IAR.assetVersions && IAR.assetVersions.length > 1)
-        //             //     LOG.error(`JobCookSIGenerateDownloads.processSceneFile created multiple asset versions, unexpectedly, ingesting ${MSX.Name}`, LOG.LS.eJOB);
-
-        //             // const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
-        //             // const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        //             // const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        //             // const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
-        //             // const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        //             // const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-        //             // await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
-
-        //             // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
-        //             // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
-        //             // are owned by the ingested models). Note that if we *updated* models, we will be update the original models'
-        //             // SystemObjectVersionAssetVersionXref with records pointing to the new model asset versions
-        //             // if (SOV && assetVersion) {
-        //             //     const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref | null =
-        //             //         await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, assetVersion.idAsset, assetVersion.idAssetVersion);
-        //             //     if (!SOVAVX)
-        //             //         LOG.error(`JobCookSIGenerateDownloads.processSceneFile unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-        //             // }
-
-        //             // run si-packrat-inspect on this model
-        //             // const results: H.IOResults = await WorkflowUtil.computeModelMetrics(FileName, model.idModel, undefined, undefined, undefined,
-        //             //     undefined, undefined /* FIXME */, idUserCreator);
-        //             // if (results.success)
-        //             //     await this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${FileName}`);
-        //             // else if (results.error)
-        //             //     this.logError(results.error);
-        //         } else
-        //             LOG.error(`JobCookSIGenerateDownloads.processSceneFile skipping unnamed model ${JSON.stringify(MSX)}`, LOG.LS.eJOB);
-        //     }
+        // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
+        // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
+        // are owned by the ingested models). Note that if we *updated* models, we will be update the original models'
+        // SystemObjectVersionAssetVersionXref with records pointing to the new model asset versions
+        // if (SOV && assetVersion) {
+        //     const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref | null =
+        //         await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, assetVersion.idAsset, assetVersion.idAssetVersion);
+        //     if (!SOVAVX)
+        //         LOG.error(`JobCookSIGenerateDownloads.processSceneFile unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
         // }
+        //#endregion
 
         return { success: true };
     }
@@ -1276,13 +953,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     }
 
     private async findMatchingModelFromScene(sceneSource: DBAPI.Scene, automationTag: string): Promise<DBAPI.Model | null> {
-        LOG.info(`>>>> matching model from scene: ${sceneSource.idScene} | ${automationTag}`,LOG.LS.eDEBUG);
+        // LOG.info(`>>>> matching model from scene: ${sceneSource.idScene} | ${automationTag}`,LOG.LS.eDEBUG);
         const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, sceneSource.idScene, automationTag);
 
-        // if(!matches || matches.length <= 0)
-        //     LOG.info(`>>>> no matches found: ${sceneSource.idScene} | ${automationTag}`);
-
-        // LOG.info(`>>>> findMatchingModelFromScene: ${H.Helpers.JSONStringify(matches)}`);
         return matches && matches.length > 0 ? matches[0] : null;
     }
 
