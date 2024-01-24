@@ -56,7 +56,11 @@ export class JobCookSIGenerateDownloadsParameters {
         this.units = units ? units : undefined;
         this.metaDataFile = metaDataFile ? metaDataFile : undefined;
         this.parameterHelper = parameterHelper ? parameterHelper : undefined;
+        this.units = units ? units : undefined;
+        this.metaDataFile = metaDataFile ? metaDataFile : undefined;
+        this.parameterHelper = parameterHelper ? parameterHelper : undefined;
     }
+
 
     idScene: number | undefined;
     idModel: number | undefined;
@@ -176,6 +180,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private async createSystemObjects(): Promise<H.IOResults> {
 
         // grab our Packrat Scene from the database. idScene is a parameter passed in when creating this object
+
+        // grab our Packrat Scene from the database. idScene is a parameter passed in when creating this object
         const sceneSource: DBAPI.Scene | null = this.idScene ? await DBAPI.Scene.fetch(this.idScene) : null;
         if (!sceneSource)
             return this.logError(`createSystemObjects unable to compute source scene from id ${this.idScene}`);
@@ -218,7 +224,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // cycle through retrieved downloads, processing them
         LOG.info(`JobCookSIGenerateDownloads processing ${downloadMap.size} generated downloads (idScene:${sceneSource.idScene})`,LOG.LS.eJOB);
+        // cycle through retrieved downloads, processing them
+        LOG.info(`JobCookSIGenerateDownloads processing ${downloadMap.size} generated downloads (idScene:${sceneSource.idScene})`,LOG.LS.eJOB);
         for (const [downloadType, downloadFile] of downloadMap) {
+
+            // fetch the file from WebDav shared space with Cook
+            // TODO: just check if file exists vs. actually opening stream
 
             // fetch the file from WebDav shared space with Cook
             // TODO: just check if file exists vs. actually opening stream

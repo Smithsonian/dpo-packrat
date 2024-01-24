@@ -447,7 +447,7 @@ export class PublishScene {
             }
         }
 
-        LOG.info(`>>> PublishScene.collectAssets.SAC: ${H.Helpers.JSONStringify(this.SacList)}`,LOG.LS.eDEBUG);
+        // LOG.info(`>>> collectAssets.SAC: ${H.Helpers.JSONStringify(this.SacList)}`,LOG.LS.eDEBUG);
         return true;
     }
 
@@ -732,7 +732,6 @@ export class PublishScene {
             }
 
             // handle download types
-            LOG.info(`PublishScene.extractResource ${H.Helpers.JSONStringify(SAC.modelSceneXref)}`, LOG.LS.eDEBUG);
             switch (SAC.modelSceneXref.Usage?.replace('Download:', '').toLowerCase()) {
                 case undefined:
                 case 'webassetglblowuncompressed':  category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; break;
