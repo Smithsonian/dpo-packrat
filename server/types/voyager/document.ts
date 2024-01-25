@@ -1,11 +1,10 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 1/27/2023. It was then modified,
+ * This was imported from Voyager's source/client/schema on 1/24/2024. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
-
 /**
  * 3D Foundation Project
  * Copyright 2019 Smithsonian Institution
