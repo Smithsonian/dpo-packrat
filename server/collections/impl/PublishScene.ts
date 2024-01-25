@@ -76,6 +76,7 @@ export class PublishScene {
             if (resource)
                 resourceMap.set(SAC, resource);
         }
+        // LOG.info(`>>> PublishScene.computeResourceMap (scene: ${this.sceneFile} | ${H.Helpers.JSONStringify(resourceMap)})`,LOG.LS.eDEBUG);
         return resourceMap;
     }
 
@@ -86,12 +87,16 @@ export class PublishScene {
                 return false;
         }
 
-        if (!this.scene || !this.subject)
+        if (!this.scene || !this.subject) {
+            LOG.info(`PublishScene.publish cannot publish. no scene/subject. (scene: ${this.scene?.Name} | subject: ${this.subject?.Name})`,LOG.LS.eCOLL);
             return false;
+        }
 
         // stage scene
-        if (!await this.stageSceneFiles() || !this.sharedName)
+        if (!await this.stageSceneFiles() || !this.sharedName) {
+            LOG.error(`PublishScene.publish cannot stage files. (scene: ${this.scene?.Name} | sharedName: ${this.sharedName})`,LOG.LS.eCOLL);
             return false;
+        }
 
         // create EDAN 3D Package
         let edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
@@ -356,10 +361,13 @@ export class PublishScene {
             return false;
         }
 
+        LOG.info(`PublishScene.collectAssets downloadMSXMap ${H.Helpers.JSONStringify(this.DownloadMSXMap)}`, LOG.LS.eDEBUG);
+
         // first pass through assets: detect and record the scene file (first file to match *.svx.json); lookup supporting information
         // prepare to extract and discard the path to this file, so that the scene zip is "rooted" at the svx.json
         let stageRes: H.IOResults = { success: true };
         for (const assetVersion of this.assetVersions) {
+            // grab our system object for this asset version
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
             LOG.info(`PublishScene.collectAssets considering assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)} asset=${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
             if (!asset) {
@@ -368,6 +376,9 @@ export class PublishScene {
             }
 
             // determine if assetVersion is an attachment by examining metadata
+            // NOTE: isAttachment metadata is set in computeResourceMap to label an asset as a 'resource' (i.e. downloadable)
+            // however, usdz/draco files have dual use and are resources, but also connected to a voyager scene. below is a special
+            // case for this situation until downloadable is decoupled from Usage.
             let isAttachment: boolean = false;
             const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
             if (!SOAssetVersion) {
@@ -383,20 +394,34 @@ export class PublishScene {
                     }
                 }
             } else
-                LOG.error(`PublishScene.collectAssets unable to compute metadata for ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                LOG.error(`PublishScene.collectAssets unable to compute metadata for ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eCOLL);
 
+            // if we have our asset and a system object (always the case?) then we see if this asset is in the download/resource
+            // map...
             if (asset.idSystemObject) {
                 const modelSceneXref: DBAPI.ModelSceneXref | undefined = this.DownloadMSXMap.get(asset.idSystemObject ?? 0);
-                if (!modelSceneXref)
+                if (!modelSceneXref) {
+                    // LOG.info(`>>> PublishScene.collectAssets adding to list, no MSX (${asset.FileName}|${isAttachment}|${H.Helpers.JSONStringify(metadataSet)}`, LOG.LS.eDEBUG);
                     this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, metadataSet: isAttachment ? metadataSet : undefined });
-                else {
+                } else {
                     const model: DBAPI.Model | null = await DBAPI.Model.fetch(modelSceneXref.idModel);
                     if (!model) {
-                        LOG.error(`PublishScene.collectAssets unable to load model from xref ${JSON.stringify(modelSceneXref, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                        LOG.error(`PublishScene.collectAssets unable to load model from xref ${H.Helpers.JSONStringify(modelSceneXref)}`, LOG.LS.eCOLL);
                         return false;
                     }
+                    // LOG.info(`>>> PublishScene.collectAssets adding to list with MSX (${asset.FileName}|${isAttachment}|${H.Helpers.JSONStringify(modelSceneXref)}`, LOG.LS.eDEBUG);
                     this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, model, modelSceneXref, metadataSet: isAttachment ? metadataSet : undefined });
+
+                    // HACK: special case for handling dual-use assets (draco/usdz), which will be added as downloads/attachments by default.
+                    // whe check if we're dealing with that asset and add like other scene referenced assets. (i.e. we omit the MSX and metadataSet)
+                    if(modelSceneXref.Usage === 'App3D' || modelSceneXref.Usage === 'iOSApp3D') {
+                        LOG.info(`>>> PublishScene.collectAssets adding draco/usdz assets again (${asset.FileName})`,LOG.LS.eDEBUG);
+                        this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, metadataSet: undefined });
+                    }
                 }
+
+            } else {
+                LOG.info(`PublishScene.collectAssets not adding. no idSystemObject ${H.Helpers.JSONStringify(asset)}|${H.Helpers.JSONStringify(metadataSet)}`, LOG.LS.eDEBUG);
             }
 
             if (!this.sceneFile && assetVersion.FileName.toLowerCase().endsWith('.svx.json')) {
@@ -427,9 +452,15 @@ export class PublishScene {
     }
 
     private async stageSceneFiles(): Promise<boolean> {
-        if (this.SacList.length <= 0 || !this.scene)
+        if (this.SacList.length <= 0 || !this.scene) {
+            LOG.error(`PublishScene.stageSceneFiles casnnot stage files for scene (${this.sceneFile}). No scene or assets list (${this.scene}|${this.SacList.length})`,LOG.LS.eCOLL);
             return false;
+        }
         let stageRes: H.IOResults = { success: true };
+
+        // log what will be included
+        const assets: string[] = this.SacList.map(SAC => { return `${SAC.asset.FileName}(${SAC.assetVersion.Version})`; });
+        LOG.info(`PublishScene.stageSceneFiles collecting assets for scene (${this.sceneFile}): ${assets.join(',')}`,LOG.LS.eCOLL);
 
         // second pass: zip up appropriate assets; prepare to copy downloads
         const zip: ZIP.ZipStream = new ZIP.ZipStream();
@@ -704,11 +735,16 @@ export class PublishScene {
             switch (SAC.modelSceneXref.Usage?.replace('Download:', '').toLowerCase()) {
                 case undefined:
                 case 'webassetglblowuncompressed':  category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; break;
-                case 'webassetglbarcompressed':     category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
-                case 'usdz':                        category = 'iOS AR model';      MODEL_FILE_TYPE = 'usdz'; break;
                 case 'objzipfull':                  category = 'Full resolution';   MODEL_FILE_TYPE = 'obj'; break;
                 case 'objziplow':                   category = 'Low resolution';    MODEL_FILE_TYPE = 'obj'; break;
                 case 'gltfziplow':                  category = 'Low resolution';    MODEL_FILE_TYPE = 'gltf'; break;
+
+                // HACK: special case to account for USDZ/Draco models which have dual purpose 'usage'
+                // and requires specific Usage to work. fix when decoupling 'downloadable' property.
+                case 'usdz':
+                case 'iosapp3d':                    category = 'iOS AR model';      MODEL_FILE_TYPE = 'usdz'; break;
+                case 'webassetglbarcompressed':
+                case 'app3d':                       category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
             }
         }
 
@@ -739,6 +775,8 @@ export class PublishScene {
                 LOG.error(`PublishScene.updatePublishedState unable to update published state for ${JSON.stringify(this.systemObjectVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
                 return false;
             }
+        } else {
+            LOG.info(`PublishScene.updatePublishedState skipping.... ${H.Helpers.JSONStringify(ePublishedStateIntended)}`, LOG.LS.eDEBUG);
         }
 
         return true;
