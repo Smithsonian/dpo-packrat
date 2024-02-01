@@ -203,6 +203,7 @@ export class AssetStorageAdapter {
         const commitWriteStreamInput: STORE.CommitWriteStreamInput = { storageKey, storageHash };
 
         LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
+        // LOG.info(`AssetStorageAdapter.commitNewAssetVersion write stream. (${H.Helpers.JSONStringify(commitWriteStreamInput)})`, LOG.LS.eDEBUG);
 
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
@@ -213,7 +214,7 @@ export class AssetStorageAdapter {
 
         const resStorage: STORE.CommitWriteStreamResult = await storage.commitWriteStream(commitWriteStreamInput);
         if (!resStorage.success) {
-            LOG.error(resStorage.error, LOG.LS.eSTR);
+            LOG.error(`AssetStorageAdapter.commitNewAssetVersion cannot commit write stream: ${resStorage.error}. (${H.Helpers.JSONStringify(commitWriteStreamInput)})`, LOG.LS.eSTR);
             return { assets: null, assetVersions: null, success: false, error: resStorage.error };
         }
 
@@ -1058,7 +1059,8 @@ export class AssetStorageAdapter {
             });
 
         if (!comRes || !comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes ? comRes.error : ''}`;
+            // LOG.info(`AssetStorageAdapter.ingestStreamOrFile commit asset: ${comRes ? comRes.error : ''}. (ISI: ${H.Helpers.JSONStringify(ISI)} | Result: ${H.Helpers.JSONStringify(comRes)})`,LOG.LS.eDEBUG);
+            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes ? comRes.error : ''}. (ISI: ${H.Helpers.JSONStringify(ISI)} | Result: ${H.Helpers.JSONStringify(comRes)})`;
             LOG.error(error, LOG.LS.eSTR);
             return { success: false, error };
         }

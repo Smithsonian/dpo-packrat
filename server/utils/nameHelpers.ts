@@ -52,10 +52,15 @@ export class NameHelpers {
         //basic_clean: return sanitize(fileName.replace(/[\s,]/g, '_').replace(/[^a-zA-Z0-9\-_.]/g, '-'));
         //legacy: return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
 
-        return fileName.replace(/[\s,]/g, '_')  // replace spaces and commas
+        const result = fileName.replace(/[\s,]/g, '_')  // replace spaces and commas
             .replace(/[^\x00-\x7F]/g, '')       // remove non-ascii characters
             .replace(/['`]/g, '')               // remove all apostrophes and single quotes
-            .replace(/[^a-zA-Z0-9\-_.]/g, '-'); // replace special characters except for certain ones
+            .replace(/\./g, '-')                // replace periods with hyphens
+            .replace(/[^a-zA-Z0-9\-_]/g, '-')   // remove everything except letters, digits, hyphens, and underscores
+            .replace(/\W$/, '');                // remove the last character if it's not alphanumeric or an underscore (cleanup)
+        LOG.info(`nameHelpers.sanitizeFileNmae (${fileName} -> ${result})`,LOG.LS.eDEBUG);
+
+        return result;
     }
     /* eslint-enable no-control-regex */
 
