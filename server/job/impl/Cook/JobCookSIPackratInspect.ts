@@ -240,7 +240,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             for (const modelMaterialChannel of this.modelConstellation.ModelMaterialChannels) {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
                 if (!mappedModelMaterialId) {
-                    const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map`;
+                    const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map (idModel: ${idModel})`;
                     LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -250,7 +250,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (modelMaterialChannel.idModelMaterialUVMap) {
                     mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
                     if (!mappedModelMaterialUVMapId) {
-                        const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map`;
+                        const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map (idModel: ${idModel})`;
                         LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                         // return { success: false, error };
                         continue;
@@ -270,7 +270,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             for (const modelObjectModelMaterialXref of this.modelConstellation.ModelObjectModelMaterialXref) {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
                 if (!mappedModelMaterialId) {
-                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map`;
+                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map (idModel: ${idModel})`;
                     LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -278,7 +278,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
-                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map`;
+                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map (idModel: ${idModel})`;
                     LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
                     // return { success: false, error };
                     continue;
@@ -826,7 +826,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}: ${res.error}`, LOG.LS.eJOB);
                 return null;
             }
-            return new ZipFile(tempFile.path, true);
+            return new ZipFile(tempFile.path);
         } catch (err) {
             LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
             return null;

@@ -116,7 +116,7 @@ export class WorkflowUpload implements WF.IWorkflow {
                 // it's not a model (e.g. Capture Data)
                 // use ZipFile so we don't need to load it all into memory
                 const filePath: string = Config.storage.rootStaging+'/'+assetVersion.StorageKeyStaging;
-                const ZS: ZipFile = new ZipFile(filePath,true);
+                const ZS: ZipFile = new ZipFile(filePath);
                 const zipRes: H.IOResults = await ZS.load();
                 if (!zipRes.success)
                     return this.handleError(`WorkflowUpload.validateFiles unable to unzip asset version ${RSR.fileName}: ${zipRes.error}`);

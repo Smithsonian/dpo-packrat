@@ -171,6 +171,9 @@ export class EdanCollection implements COL.ICollection {
     }
 
     async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
+
+        LOG.info(`EdanCollection.publish (idSystemObject: ${idSystemObject}`,LOG.LS.eDEBUG);
+
         switch (ePublishState) {
             case COMMON.ePublishedState.eNotPublished:
             case COMMON.ePublishedState.eAPIOnly:

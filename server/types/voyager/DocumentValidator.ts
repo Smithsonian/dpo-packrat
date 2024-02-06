@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/brace-style */
 /**
  * 3D Foundation Project
  * Copyright 2019 Smithsonian Institution
@@ -16,13 +15,13 @@
  * limitations under the License.
  */
 
-import ajv from 'ajv';
+import AjvCore from 'ajv';
 
-import * as documentSchema from './json/document.schema.json';
-import * as commonSchema from './json/common.schema.json';
-import * as metaSchema from './json/meta.schema.json';
-import * as modelSchema from './json/model.schema.json';
-import * as setupSchema from './json/setup.schema.json';
+import documentSchema from './json/document.schema.json';
+import commonSchema from './json/common.schema.json';
+import metaSchema from './json/meta.schema.json';
+import modelSchema from './json/model.schema.json';
+import setupSchema from './json/setup.schema.json';
 
 import { IDocument } from './document';
 
@@ -31,14 +30,12 @@ import * as H from '../../utils/helpers';
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export class DocumentValidator
-{
-    private _schemaValidator: ajv.Ajv;
-    private _validateDocument: ajv.ValidateFunction;
+export class DocumentValidator {
+    private _schemaValidator;
+    private _validateDocument;
 
-    constructor()
-    {
-        this._schemaValidator = new ajv({
+    constructor() {
+        this._schemaValidator = new AjvCore({
             schemas: [
                 documentSchema,
                 commonSchema,
@@ -54,13 +51,16 @@ export class DocumentValidator
         );
     }
 
-    validate(document: IDocument): H.IOResults
-    {
+    validate(document: IDocument): H.IOResults {
         if (!this._validateDocument(document)) {
             const error: string = this._schemaValidator.errorsText(this._validateDocument.errors, { separator: ', ', dataVar: 'document' });
             LOG.error(error, LOG.LS.eSYS);
             return { success: false, error };
         }
+
+        // if (ENV_DEVELOPMENT) {
+        //     console.log('JSONValidator.validateDocument - OK');
+        // }
 
         return { success: true };
     }

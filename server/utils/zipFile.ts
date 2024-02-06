@@ -14,15 +14,13 @@ import { IZip, zipFilterResults } from './IZip';
  */
 export class ZipFile implements IZip {
     private _fileName: string;
-    private _logErrors: boolean = true;
     private _zip: StreamZip | null = null;
     private _entries: string[] = [];
     private _files: string[] = [];
     private _dirs: string[] = [];
 
-    constructor(fileName: string, logErrors: boolean = true) {
+    constructor(fileName: string) {
         this._fileName = fileName;
-        this._logErrors = logErrors;
     }
 
     async load(): Promise<H.IOResults> {
@@ -31,7 +29,7 @@ export class ZipFile implements IZip {
             return new Promise<H.IOResults>((resolve) => {
                 /* istanbul ignore else */
                 if (this._zip) {
-                    this._zip.on('error', () => resolve({ success: false, error: `Error unzipping ${this._fileName}` }));
+                    this._zip.on('error', (error) => resolve({ success: false, error: `Error unzipping ${this._fileName} (${error.message})` }));
                     this._zip.on('ready', () => {
                         /* istanbul ignore else */
                         if (this._zip) {
@@ -55,8 +53,7 @@ export class ZipFile implements IZip {
                     resolve({ success: false, error: 'Zip not initialized' });
             });
         } catch (error) /* istanbul ignore next */ {
-            if (this._logErrors)
-                LOG.error('ZipFile.load', LOG.LS.eSYS, error);
+            LOG.error('ZipFile.load', LOG.LS.eSYS, error);
             return { success: false, error: JSON.stringify(error) };
         }
     }
@@ -78,8 +75,7 @@ export class ZipFile implements IZip {
                         resolve({ success: true });
                     else {
                         const error: string = `ZipFile.close ${err}`;
-                        if (this._logErrors)
-                            LOG.error(error, LOG.LS.eSYS);
+                        LOG.error(error, LOG.LS.eSYS);
                         resolve({ success: false, error });
                     }
                 });
@@ -91,8 +87,7 @@ export class ZipFile implements IZip {
     async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(this._files, filter); }
     async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(this._dirs, filter); }
 
-    async streamContent(entry: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null> {
-        const logErrors = this._logErrors && (doNotLogErrors !== true);
+    async streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null> {
         return new Promise<NodeJS.ReadableStream | null>((resolve) => {
             if (!this._zip)
                 resolve(null);
@@ -105,15 +100,13 @@ export class ZipFile implements IZip {
                             if (!error && stream)
                                 resolve(stream);
                             else {
-                                if (logErrors)
-                                    LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
+                                LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
                                 resolve(null);
                             }
                         });
                     }
                 } catch (error) /* istanbul ignore next */ {
-                    if (logErrors)
-                        LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
+                    LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
                     resolve(null);
                 }
             }

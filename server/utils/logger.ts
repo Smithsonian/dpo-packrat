@@ -17,6 +17,7 @@ export enum LS { // logger section
     eCON,   // console-redirected messages
     eCONF,  // config
     eDB,    // database
+    eDEBUG, // debug only output
     eEVENT, // event
     eGQL,   // graphql
     eHTTP,  // http
@@ -58,6 +59,7 @@ function loggerSectionName(eLogSection: LS | undefined): string {
         case LS.eCON:   return 'CON';
         case LS.eCONF:  return 'CNF';
         case LS.eDB:    return 'DB ';
+        case LS.eDEBUG: return 'DBG';
         case LS.eEVENT: return 'EVE';
         case LS.eGQL:   return 'GQL';
         case LS.eHTTP:  return 'HTP';

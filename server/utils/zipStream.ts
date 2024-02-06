@@ -10,15 +10,13 @@ import { IZip, zipFilterResults } from './IZip';
  */
 export class ZipStream implements IZip {
     private _inputStream: NodeJS.ReadableStream | null;
-    private _logErrors: boolean = true;
     private _zip: JSZip | null = null;
     private _entries: Set<string> = new Set<string>();
     private _files: Set<string> = new Set<string>();
     private _dirs: Set<string> = new Set<string>();
 
-    constructor(inputStream: NodeJS.ReadableStream | null = null, logErrors: boolean = true) {
+    constructor(inputStream: NodeJS.ReadableStream | null = null) {
         this._inputStream = inputStream;
-        this._logErrors = logErrors;
     }
 
     async load(): Promise<H.IOResults> {
@@ -32,15 +30,14 @@ export class ZipStream implements IZip {
 
             const P = new Promise<Buffer>((resolve, reject) => {
                 this._inputStream!.on('data', (chunk: Buffer) => chunks.push(chunk)); /* istanbul ignore next */    // eslint-disable-line @typescript-eslint/no-non-null-assertion
-                this._inputStream!.on('error', () => reject());                                                     // eslint-disable-line @typescript-eslint/no-non-null-assertion
+                this._inputStream!.on('error', (error) => reject(error));                                           // eslint-disable-line @typescript-eslint/no-non-null-assertion
                 this._inputStream!.on('end', () => resolve(Buffer.concat(chunks)));                                 // eslint-disable-line @typescript-eslint/no-non-null-assertion
             });
 
             this._zip = await JSZ.loadAsync(await P);
             return this.extractEntries();
         } catch (err) /* istanbul ignore next */ {
-            if (this._logErrors)
-                LOG.error('ZipStream.load', LOG.LS.eSYS, err);
+            LOG.error('ZipStream.load', LOG.LS.eSYS, err);
             return { success: false, error: 'ZipStream.load' };
         }
     }
@@ -54,8 +51,7 @@ export class ZipStream implements IZip {
             this._zip.file(fileNameAndPath, H.Helpers.readFileFromStreamThrowErrors(inputStream), { binary: true });
             return this.extractEntries(); // Order n^2 if we're add()'ing lots of entries.
         } catch (err) /* istanbul ignore next */ {
-            if (this._logErrors)
-                LOG.error('ZipStream.add', LOG.LS.eSYS, err);
+            LOG.error('ZipStream.add', LOG.LS.eSYS, err);
             return { success: false, error: 'ZipStream.add' };
         }
     }
@@ -70,8 +66,7 @@ export class ZipStream implements IZip {
                 this.extractEntry(entry);
         } catch (err) /* istanbul ignore next */ {
             const error: string = `ZipStream.extractEntries: ${JSON.stringify(err)}`;
-            if (this._logErrors)
-                LOG.error(error, LOG.LS.eSYS,);
+            LOG.error(error, LOG.LS.eSYS,);
             return { success: false, error };
         }
         return { success: true };
@@ -101,8 +96,7 @@ export class ZipStream implements IZip {
     async getJustFiles(filter: string | null): Promise<string[]> { return zipFilterResults(Array.from(this._files.values()), filter); }
     async getJustDirectories(filter: string | null): Promise<string[]> { return zipFilterResults(Array.from(this._dirs.values()), filter); }
 
-    async streamContent(entry: string | null, doNotLogErrors?: boolean | undefined): Promise<NodeJS.ReadableStream | null> {
-        const logErrors = this._logErrors && (doNotLogErrors !== true);
+    async streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null> {
         try {
             if (!this._zip)
                 return null;
@@ -114,8 +108,7 @@ export class ZipStream implements IZip {
             }
         } catch (err) /* istanbul ignore next */ {
             const error: string = `ZipStream.streamContent: ${JSON.stringify(err)}`;
-            if (logErrors)
-                LOG.error(error, LOG.LS.eSYS);
+            LOG.error(error, LOG.LS.eSYS);
             return null;
         }
     }
