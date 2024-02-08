@@ -697,7 +697,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(downloadType);
         if(!usage || !quality || !uvResolution) {
-            LOG.error(`JobCookSIGenerateDownloads.computeModelAutomationTag unsupported downloadType: '${downloadType}' (${usage} | ${quality} | ${uvResolution})`,LOG.LS.eJOB);
+            LOG.error(`JobCookSIGenerateDownloads.computeModelAutomationTag unsupported downloadType: '${downloadType}' (${usage} | ${quality} | ${uvResolution})`,LOG.LS.eDEBUG);
             return `error-${downloadType}-null-null`;
         }
 
