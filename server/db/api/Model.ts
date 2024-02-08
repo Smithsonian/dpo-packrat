@@ -251,4 +251,20 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return null;
         }
     }
+
+    /** fetch model that is a parent of the scene. intended use is to grab the 'master' model used to generate the scene */
+    static async fetchParentModel(idScene: number): Promise<Model[] | null> {
+        try {
+            return DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT s.idScene, s.Name, m.* FROM Scene AS s
+                JOIN SystemObject AS sos ON (sos.idScene = s.idScene AND s.idScene = ${idScene})
+                JOIN SystemObjectXref AS sox ON (sos.idSystemObject = sox.idSystemObjectDerived)
+                JOIN SystemObject AS som ON (sox.idSystemObjectMaster = som.idSystemObject AND som.idModel IS NOT NULL)
+                JOIN Model AS m ON (som.idModel = m.idModel);`, Model);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }
