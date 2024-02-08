@@ -14,6 +14,7 @@ import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 import { getCookResource } from './routes/resources';
+import { sceneCreate } from './routes/sceneCreate';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -89,6 +90,7 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, download);
 
         this.app.get('/resources/cook', getCookResource);
+        this.app.post('/ops/scene/create', sceneCreate);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {

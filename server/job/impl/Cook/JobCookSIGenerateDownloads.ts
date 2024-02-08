@@ -696,6 +696,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     public static computeModelAutomationTagFromDownloadType(downloadType: string): string {
 
         const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(downloadType);
+        // TODO: check if no download type provided then may be master model
         if(!usage || !quality || !uvResolution)
             return `error-${downloadType}-null-null`;
 
@@ -943,7 +944,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!idVUnits)
             return undefined;
 
-        // acceptable units for Cook's si-voyager-scene, as of 1/20/2022:  "mm", "cm", "m", "in", "ft", "yd"
+        // acceptable units for Cook's si-generate-downloads, as of 1/20/2022:  "mm", "cm", "m", "in", "ft", "yd"
         const eModelUnits: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVUnits);
         switch (eModelUnits) {
             case COMMON.eVocabularyID.eModelUnitsMillimeter: return 'mm';
