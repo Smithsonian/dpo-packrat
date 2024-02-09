@@ -696,8 +696,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     public static computeModelAutomationTagFromDownloadType(downloadType: string): string {
 
         const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(downloadType);
-        if(!usage || !quality || !uvResolution)
+        if(usage==undefined || quality==undefined || uvResolution==undefined) {
+            // LOG.error(`JobCookSIGenerateDownloads.computeModelAutomationTag unsupported downloadType: '${downloadType}' (${usage} | ${quality} | ${uvResolution})`,LOG.LS.eDEBUG);
             return `error-${downloadType}-null-null`;
+        }
 
         switch(downloadType) {
             // HACK: need to hardcode these because the model is created outside ModelScreneXref context
