@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
+import * as DBAPI from '../';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
@@ -266,5 +267,25 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    /** determine if this model has a specific vocabulary type */
+    async matchesPurpose(term: string): Promise<boolean> {
+
+        // grab the vocabulary object for this model
+        const vPurpose: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(this.idVPurpose ?? -1);
+        if(!vPurpose) {
+            LOG.error(`DBAPI.Model.matchesPurpose cannot verify. vocabulary purpose not found. (idModel: ${this.idModel} | idVPurpose: ${this.idVPurpose})`, LOG.LS.eDB);
+            return false;
+        }
+
+        // check to see if the term is 'Master'
+        // FUTURE: change to be more flexible and support raw/presentation model labels
+        if(vPurpose.Term.toLowerCase()!==term.toLocaleLowerCase()) {
+            LOG.error(`DBAPI.Model.matchesPurpose model purpose (${vPurpose.Term}) does not match request (${term}). (idModel: ${this.idModel})`, LOG.LS.eDB);
+            return false;
+        }
+
+        return true;
     }
 }

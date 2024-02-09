@@ -1,12 +1,7 @@
 import * as LOG from '../../utils/logger';
 import * as DBAPI from '../../db';
+import * as WF from '../../workflow/interface';
 import { Request, Response } from 'express';
-// import Vocabulary from '../../graphql/schema/vocabulary/resolvers/types/Vocabulary';
-
-type ModelResult = {
-    model: DBAPI.Model | null;
-    error?: string | undefined;
-};
 
 export async function sceneCreate(req: Request, res: Response): Promise<void> {
 
@@ -26,7 +21,7 @@ export async function sceneCreate(req: Request, res: Response): Promise<void> {
             return sendError(res, 400, `unable to fetch model by id (idModel: ${idModel})`);
 
         // make sure we're a master model
-        if(await isMasterModel(model)===false)
+        if(await model.matchesPurpose('Master') === false)
             return sendError(res, 400, `retrieved model is not a scene generating model (idModel: ${idModel})`);
     }
 
@@ -40,13 +35,9 @@ export async function sceneCreate(req: Request, res: Response): Promise<void> {
 
         // get 'master' model from the scene
         // fetching the child models of the scene with MULL as the automationTag 'should' always return the master model
-        const sceneModel: DBAPI.Model | null = await getModelFromScene(scene.idScene);
+        const sceneModel: DBAPI.Model | null = await getMasterModelFromScene(scene.idScene);
         if(!sceneModel)
             return sendError(res, 400, `unable to find model attached to scene (idScene: ${idScene})`);
-
-        // make sure we're a master model
-        if(await isMasterModel(sceneModel)===false)
-            return sendError(res, 400, `retrieved model is not a scene generating model (idScene: ${idScene} | idModel: ${sceneModel.idModel})`);
 
         // if we don't have a reference model yet, assign it
         if(!model)
@@ -54,26 +45,27 @@ export async function sceneCreate(req: Request, res: Response): Promise<void> {
 
         // push our scene into the array
         scenes.push(scene);
-    } else {
-        // if we have
-
     }
 
-    /*
-        - what parameters does recipe need to run
-        - change params to reflect what is needed
-    */
+    // Generate Scenes
+    const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+    if (!workflowEngine)
+        return sendError(res, 400, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
 
-    // cycle through scenes
-    const result: any = { success: true, reports: [], model: { id: model?.idModel, } };
-    for(let i=0; i<scenes.length; i++) {
-        // we have our scene generating model so now we run the si-voyager-scene recipe
-        // create workflow, recipe, and start
-        const idWorkflowReport = -1;
-    }
+    // if we don't have our model, bail
+    if(!model)
+        return sendError(res, 400, `cannot create voyager scene. no valid 'master' model found. (idModel: ${idModel} | idScene: ${idScene})`);
+
+    // trigger the workflow/recipe
+    const workflow: WF.IWorkflow[] | null = await workflowEngine.generateVoyagerScene(model.idModel, { idUserInitiator: 1 }); // don't await // todo: idUser
+    if(!workflow || workflow.length === 0)
+        return sendError(res, 400, `cannot create voyager scene. workflow failed (idModel: ${idModel} | idScene: ${idScene})`);
+
+    // TODO: get workflow report
+    const idWorkflowReport = 1;
 
     // return our results
-    result = {
+    const result = {
         success: true,
         report: {
             id: -1,
@@ -88,47 +80,27 @@ export async function sceneCreate(req: Request, res: Response): Promise<void> {
     res.status(200).send(result);
 }
 
-const getModelFromScene = async (idScene: number): Promise<ModelResult> => {
+const getMasterModelFromScene = async (idScene: number): Promise<DBAPI.Model | null> => {
 
-    const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, scene.idScene, null);
-    matches && matches.length > 0 ? matches[0] : null;
+    const matches: DBAPI.Model[] | null = await DBAPI.Model.fetchParentModel(idScene);
+    if(!matches || matches.length === 0)
+        return null;
 
-    // grab our scene
-    // const scene: DBAPI.Scene | null = DBAPI.Scene.fetch(idScene);
-    // if(!scene)
-    //     return { model: null, error: `unable to fetch by scene id (idScene: ${idScene})` };
-
-    // get 'master' model from the scene
-    // ...
-
-    // make sure we're a master model
-    // ...
-
-    return { model: null, error: `getting model from scene id not yet supported (${idScene})` };
-};
-
-const isMasterModel = async (model: DBAPI.Model): Promise<boolean> => {
-    // check if model purpose matches that of master
-    if(!model || !model.idVPurpose) {
-        LOG.error(`API.SceneCreate cannot verify scene generating model. (idModel: ${model?.idModel})`, LOG.LS.eHTTP);
-        return false;
+    // get our vocabulary id for 'master' models
+    const vPurposeMaster: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetchFromTerm('Master');
+    if(!vPurposeMaster) {
+        LOG.error(`API.SceneCreate failed. no vocabulary for a master model. (idScene: ${idScene})`,LOG.LS.eHTTP);
+        return null;
     }
 
-    // grab the vocabulary object for this model
-    const vPurpose: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(model.idVPurpose);
-    if(!vPurpose) {
-        LOG.error(`API.SceneCreate cannot verify scene generating model. purpose not assigned. (idModel: ${model?.idModel})`, LOG.LS.eHTTP);
-        return false;
+    // get the model used for scene generation
+    const models: DBAPI.Model[] | null = matches.filter(mdl => mdl.idVPurpose === vPurposeMaster.idVocabulary);
+    if(!models || models.length != 1) {
+        LOG.error(`API.SceneCreate failed. invalid models for scene generation. (models: ${models.length ?? -1})`,LOG.LS.eHTTP);
+        return null;
     }
 
-    // check to see if the term is 'Master'
-    // FUTURE: change to be more flexible and support raw/presentation model labels
-    if(vPurpose.Term.toLowerCase()!=='master') {
-        LOG.error(`API.SceneCreate model is not a scene generating model. (idModel: ${model?.idModel} | purpose: ${vPurpose.Term})`, LOG.LS.eHTTP);
-        return false;
-    }
-
-    return true;
+    return models[0];
 };
 
 const getQueryParam = (param): number | null => {
@@ -146,4 +118,4 @@ const getQueryParam = (param): number | null => {
 const sendError = (res: Response, statusCode: number, message?: string | undefined) => {
     res.status(statusCode).send({ success: false, message });
     LOG.error(`API.SceneCreate failed: ${message}`, LOG.LS.eHTTP);
-}
+};

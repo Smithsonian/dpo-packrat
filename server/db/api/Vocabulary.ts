@@ -82,5 +82,20 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return null;
         }
     }
+
+    static async fetchFromTerm(term: string): Promise<Vocabulary | null> {
+        if(term.length <= 0) {
+            LOG.error('DBAPI.Vocabulary.fetchFromTerm',LOG.LS.eDB,'empty string');
+            return null;
+        }
+
+        try {
+            return DBC.CopyObject<VocabularyBase, Vocabulary>(
+                await DBC.DBConnection.prisma.vocabulary.findFirst({ where: { Term: term, }, }), Vocabulary);
+        } catch (error) {
+            LOG.error('DBAPI.Vocabulary.fetchFromTerm', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }
 
