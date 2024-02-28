@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IAuth, VerifyUserResult } from '../interface';
-import { Config, ENVIRONMENT_TYPE, LDAPConfig } from '../../config';
+import { Config, /*ENVIRONMENT_TYPE,*/ LDAPConfig } from '../../config';
 import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
@@ -60,11 +60,11 @@ class LDAPAuth implements IAuth {
         //
         // if we're in production environment on Linux (the server) add our certificate path
         // note: path is relative to the container NOT system
-        // process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
-        if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
-            clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
-        else
-            LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
+        process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
+        // if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
+        //     clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
+        // else
+        //     LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
 
         // Step 1: Create a ldap client using our config
         LOG.info(`>>> LDAPAuth.fetchClient creating client: ${H.Helpers.JSONStringify(clientConfig)}`,LOG.LS.eDEBUG);
@@ -79,12 +79,30 @@ class LDAPAuth implements IAuth {
             else
                 LOG.error('LDAPAuth.fetchClient', LOG.LS.eAUTH, error);
 
-            if (this._client) {
-                this._client.destroy();
-                this._client = null;
-            }
+            this.destroyClient();
         });
+
+        // catching other events from the client
+        this._client.on('connectRefused', msg => { LOG.error(`LDAPAuth.fetchClient connection refused (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('connectTimeout', msg => { LOG.error(`LDAPAuth.fetchClient server timed out (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('connectError', msg => { LOG.error(`LDAPAuth.fetchClient socket connection error (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('setupError', msg => { LOG.error(`LDAPAuth.fetchClient setup error after successful connection (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('socketTimeout', msg => { LOG.error(`LDAPAuth.fetchClient socket timed out (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('destroy', msg => { LOG.info(`LDAPAuth.fetchClient connection destroyed (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eDEBUG); });
+        this._client.on('end', msg => { LOG.info(`LDAPAuth.fetchClient socket end event (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eDEBUG); });
+        this._client.on('close', msg => { LOG.info(`LDAPAuth.fetchClient socket closed (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eDEBUG); });
+        this._client.on('connect', msg => { LOG.info(`LDAPAuth.fetchClient client connected (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); });
+
+        // return success regardless
+        // TODO: wait for finish (end event?) before returning so we block and ensure system doesn't progress without knowing.
         return { success: true };
+    }
+
+    private destroyClient() {
+        if(this._client) {
+            this._client.destroy();
+            this._client = null;
+        }
     }
 
     private async bindService(): Promise<VerifyUserResult> {
