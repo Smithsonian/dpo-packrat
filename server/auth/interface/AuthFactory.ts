@@ -27,6 +27,8 @@ class AuthFactory {
     }
 
     static async verifyUser(email: string, password: string): Promise<VerifiedUser> {
+        LOG.info(`>>> AuthFactory.verifyUser: ${email}`,LOG.LS.eDEBUG);
+
         const auth: IAuth = AuthFactory.getInstance();
         const verifyRes: VerifyUserResult = await auth.verifyUser(email, password);
         if (!verifyRes.success) {

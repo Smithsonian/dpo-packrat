@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IAuth, VerifyUserResult } from '../interface';
 import { Config, ENVIRONMENT_TYPE, LDAPConfig } from '../../config';
+import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
 import os from 'os';
@@ -46,7 +47,7 @@ class LDAPAuth implements IAuth {
             return { success: true };
 
         LOG.info(`Auth connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
+        LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert_exists: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
@@ -66,7 +67,9 @@ class LDAPAuth implements IAuth {
             LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
 
         // Step 1: Create a ldap client using our config
+        LOG.info(`>>> LDAPAuth.fetchClient creating client: ${H.Helpers.JSONStringify(clientConfig)}`,LOG.LS.eDEBUG);
         this._client = LDAP.createClient(clientConfig);
+        LOG.info(`>>> post createClient (connected: ${this._client.connected})`,LOG.LS.eDEBUG);
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
         this._client.on('error', error => {
