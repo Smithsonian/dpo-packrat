@@ -87,6 +87,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     }
 
     public computeModelAutomationTag(): string {
+        // LOG.info(`>>> computeModelAutomationTag for ${this.Name} (${this.Usage}|${this.Quality}|${this.UVResolution})`,LOG.LS.eDEBUG);
         return `scene-${this.Usage}-${this.Quality}-${this.UVResolution}`;
     }
 

@@ -123,5 +123,5 @@ server/config/solr/data/packratMeta/data
 ### Per-developer settings ###
 JTConfig
 
-### Init Scripts ###
+### Environment Setup Scripts ###
 *.bat

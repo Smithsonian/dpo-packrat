@@ -48,7 +48,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
     // HACK: temporarily bypass download generation while development on it wraps up.
-    private tmpSkipGenDownloads: boolean = true;
+    // private tmpSkipGenDownloads: boolean = true;
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (!workflowParams.eWorkflowType) {
@@ -131,6 +131,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
+        LOG.info(`WorkflowEngine.generateSceneDownloads working...(idScene:${idScene})`,LOG.LS.eWF);
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
         if (!scene) {
             LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
@@ -233,12 +234,13 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         let workflows: WF.IWorkflow[] = [];
         if (CMIR)
             workflows = workflows.concat(await this.eventIngestionIngestObjectModel(CMIR, workflowParams, assetsIngested) ?? []);
-        if (CSIR)
+        if (CSIR) {
             workflows = workflows.concat(await this.eventIngestionIngestObjectScene(CSIR, workflowParams, assetsIngested) ?? []);
+        }
         return workflows.length > 0 ? workflows : null;
     }
 
-    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow[] | null> {
+    private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean, generateDownloads: boolean = true): Promise<WF.IWorkflow[] | null> {
         if (!assetsIngested) {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
@@ -315,12 +317,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         } else
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
 
-        // HACK: skip generate downloads while other issues are resolved with it
-        if(this.tmpSkipGenDownloads===false) {
+        // do we want to generate downloads for this ingestion
+        if(generateDownloads===true) {
+
             // does this ingested model have a scene child?  If so, initiate WorkflowJob for cook si-generate-downloads
             const SODerived: DBAPI.SystemObject[] | null = CMIR.idSystemObjectModel ? await DBAPI.SystemObject.fetchDerivedFromXref(CMIR.idSystemObjectModel) : null;
             if (!SODerived)
                 return workflows.length > 0 ? workflows : null;
+
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel generating downloads: ${H.Helpers.JSONStringify(CMIR)}`,LOG.LS.eWF);
 
             for (const SO of SODerived) {
                 if (SO.idScene) {
@@ -362,6 +367,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         parameters: jobParamSIGenerateDownloads,
                     };
 
+                    // LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene. generating downloads...\n${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`,LOG.LS.eWF);
+
                     const wfSIGenerateDownloads: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
                     if (wfSIGenerateDownloads)
                         workflows.push(wfSIGenerateDownloads);
@@ -375,7 +382,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return workflows.length > 0 ? workflows : null;
     }
 
-    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean): Promise<WF.IWorkflow[] | null> {
+    private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean, generateDownloads: boolean = true): Promise<WF.IWorkflow[] | null> {
         if (!assetsIngested) {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CSIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
@@ -408,14 +415,30 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (SOMTL)
             idSystemObject.push(SOMTL.idSystemObject);
 
-        // HACK: skip generate downloads while other issues are resolved with it
-        if(this.tmpSkipGenDownloads===false) {
+        // do we want to generate downloads for this scene
+        // TODO: currently always true. needs to be fed upstream from business logic
+        if(generateDownloads===true) {
+
             // initiate WorkflowJob for cook si-generate-download
-            const { modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
+            const { sceneBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
+
+            // make sure we have our basic parameters
+            if(!CSIR.idModel || !CSIR.idScene) {
+                LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene cannot find idModel(${CSIR.idModel}) or idScene(${CSIR.idScene})`, LOG.LS.eWF);
+                return null;
+            }
+
+            // get our scene parameters
+            const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CSIR.idModel);
+            if(parameterHelper==null) {
+                LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene cannot find model/scene ids\n(CSIR:${JSON.stringify(CSIR, H.Helpers.saferStringify)})`, LOG.LS.eWF);
+                return null;
+            }
+
             const jobParamSIGenerateDownloads: WFP.WorkflowJobParameters =
                 new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads,
                     new COOK.JobCookSIGenerateDownloadsParameters(CSIR.idScene, CSIR.idModel, CSIR.assetVersionGeometry.FileName,
-                        CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, modelBaseName));
+                        CSIR.assetSVX.FileName, CSIR.assetVersionDiffuse?.FileName, CSIR.assetVersionMTL?.FileName, sceneBaseName, undefined, undefined, parameterHelper ));
 
             const wfParamSIGenerateDownloads: WF.WorkflowParameters = {
                 eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
@@ -424,6 +447,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 idUserInitiator: workflowParams.idUserInitiator,
                 parameters: jobParamSIGenerateDownloads,
             };
+
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene. generating downloads...\n${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`,LOG.LS.eWF);
 
             const workflow: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
             if (workflow)

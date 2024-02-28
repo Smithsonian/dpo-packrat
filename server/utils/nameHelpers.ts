@@ -4,7 +4,7 @@ import * as CACHE from '../cache';
 import * as H from './helpers';
 import * as LOG from './logger';
 import * as COMMON from '@dpo-packrat/common';
-import sanitize from 'sanitize-filename';
+// import sanitize from 'sanitize-filename';
 
 export const UNKNOWN_NAME: string = '<UNKNOWN>';
 
@@ -47,9 +47,22 @@ export class NameHelpers {
         return scene.Name;
     }
 
+    /* eslint-disable no-control-regex */
     static sanitizeFileName(fileName: string): string {
-        return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
+        //basic_clean: return sanitize(fileName.replace(/[\s,]/g, '_').replace(/[^a-zA-Z0-9\-_.]/g, '-'));
+        //legacy: return sanitize(fileName.replace(/:/g, '-').replace(/ /g, '_'), { replacement: '_' });
+
+        const result = fileName.replace(/[\s,]/g, '_')  // replace spaces and commas
+            .replace(/[^\x00-\x7F]/g, '')       // remove non-ascii characters
+            .replace(/['`]/g, '')               // remove all apostrophes and single quotes
+            .replace(/\./g, '-')                // replace periods with hyphens
+            .replace(/[^a-zA-Z0-9\-_]/g, '-')   // remove everything except letters, digits, hyphens, and underscores
+            .replace(/\W$/, '');                // remove the last character if it's not alphanumeric or an underscore (cleanup)
+        LOG.info(`nameHelpers.sanitizeFileNmae (${fileName} -> ${result})`,LOG.LS.eDEBUG);
+
+        return result;
     }
+    /* eslint-enable no-control-regex */
 
     static computeBaseTitle(name: string, subtitle: string | undefined | null): string {
         return (subtitle) ? name.replace(`: ${subtitle}`, '') : name; // base title is the display name, with its subtitle removed, if any

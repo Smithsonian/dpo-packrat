@@ -550,7 +550,7 @@ const streamToFile = (inputStream: Stream, filePath: string) => {
         inputStream
             .pipe(fileWriteStream)
             .on('finish', resolve)
-            .on('error', reject);
+            .on('error', (error) => reject(error));
     });
 };
 */
