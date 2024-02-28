@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IAuth, VerifyUserResult } from '../interface';
-import { Config, /*ENVIRONMENT_TYPE,*/ LDAPConfig } from '../../config';
+import { Config, ENVIRONMENT_TYPE, LDAPConfig } from '../../config';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
 import os from 'os';
@@ -45,8 +45,8 @@ class LDAPAuth implements IAuth {
         if (this._client)
             return { success: true };
 
-        LOG.info(`Connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        console.log(`>>> working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert: ${fs.existsSync(this._ldapConfig.CA)}`);
+        LOG.info(`Auth connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
+        LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
@@ -59,11 +59,11 @@ class LDAPAuth implements IAuth {
         //
         // if we're in production environment on Linux (the server) add our certificate path
         // note: path is relative to the container NOT system
-        process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
-        // if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
-        //     clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
-        // else
-        //     LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
+        // process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
+        if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
+            clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
+        else
+            LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
 
         // Step 1: Create a ldap client using our config
         this._client = LDAP.createClient(clientConfig);

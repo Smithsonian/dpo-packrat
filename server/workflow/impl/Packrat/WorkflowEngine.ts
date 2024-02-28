@@ -47,9 +47,6 @@ type ComputeSceneInfoResult = {
 export class WorkflowEngine implements WF.IWorkflowEngine {
     private workflowMap: Map<number, WF.IWorkflow> = new Map<number, WF.IWorkflow>();
 
-    // HACK: temporarily bypass download generation while development on it wraps up.
-    // private tmpSkipGenDownloads: boolean = true;
-
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (!workflowParams.eWorkflowType) {
             LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
