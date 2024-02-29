@@ -44,9 +44,13 @@ class LDAPAuth implements IAuth {
     }
 
     private async fetchClient(): Promise<VerifyUserResult> {
-        LOG.info(`LDAPAuth.fetchClient entry for client (hasClient: ${this._client?true:false}).`, LOG.LS.eDEBUG);
+        LOG.info(`LDAPAuth.fetchClient entry for client (hasClient: ${this._client==null?false:true}).`, LOG.LS.eDEBUG);
+
+        // if we already have a client destroy it as it hangs with LDAPS requests
+        // this appears to be tied to required certificates.
         if (this._client)
-            return { success: true };
+            this.destroyClient();
+            // return { success: true };
 
         LOG.info(`Auth connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
         LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert_exists: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
@@ -102,6 +106,7 @@ class LDAPAuth implements IAuth {
 
     private destroyClient() {
         if(this._client) {
+            LOG.info('LDAPAuth.destroyClient destroying LDAPS client...',LOG.LS.eAUTH);
             this._client.destroy();
             this._client = null;
         }

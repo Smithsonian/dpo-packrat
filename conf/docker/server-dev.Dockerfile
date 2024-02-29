@@ -13,7 +13,7 @@ RUN apk update
 RUN apk add perl
 RUN apk add git
 RUN apk add bash
-RUN apk add dcron
+#RUN apk add dcron
 
 # Debugging packages
 RUN apk add --no-cache openssl
@@ -28,8 +28,8 @@ COPY ./conf/scripts/update-ca.sh /etc/ssl/update-ca.sh
 RUN chmod +x /etc/ssl/update-ca.sh
 
 # setup logging and echoing directly into root's crontab
-RUN touch /var/log/cron.log
-RUN echo "*/20 * * * * /etc/ssl/update-ca.sh" >> /etc/crontabs/root
+#RUN touch /var/log/cron.log
+#RUN echo "*/20 * * * * /etc/ssl/update-ca.sh" >> /etc/crontabs/root
 
 # Run crond with log level 8 in foreground, output log to stdout
 #RUN crond -l 8 -f
@@ -49,5 +49,5 @@ RUN yarn build:dev
 
 # Expose port, and provide start command on execution
 EXPOSE 4000
-CMD crond -l 8 -f && yarn start:server
-#[ "yarn", "start:server" ]
+#CMD crond -l 8 -f && yarn start:server
+CMD [ "yarn", "start:server" ]
