@@ -17,6 +17,7 @@ class LDAPAuth implements IAuth {
     private _ldapConfig: LDAPConfig = Config.auth.ldap;
     private _client: LDAP.Client | null = null;
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
+        LOG.info(`LDAPAuth.verifyUser verifying: ${email}`,LOG.LS.eDEBUG);
         try {
             let res: VerifyUserResult = await this.fetchClient();
             if (!res.success) {
@@ -43,6 +44,7 @@ class LDAPAuth implements IAuth {
     }
 
     private async fetchClient(): Promise<VerifyUserResult> {
+        LOG.info(`LDAPAuth.fetchClient entry for client (hasClient: ${this._client?true:false}).`, LOG.LS.eDEBUG);
         if (this._client)
             return { success: true };
 
