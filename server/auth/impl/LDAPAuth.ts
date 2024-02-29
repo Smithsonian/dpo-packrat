@@ -5,7 +5,7 @@ import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
 import os from 'os';
-import fs from 'fs';
+// import fs from 'fs';
 
 type UserSearchResult = {
     success: boolean;
@@ -16,6 +16,7 @@ type UserSearchResult = {
 class LDAPAuth implements IAuth {
     private _ldapConfig: LDAPConfig = Config.auth.ldap;
     private _client: LDAP.Client | null = null;
+
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
         LOG.info(`LDAPAuth.verifyUser verifying: ${email}`,LOG.LS.eDEBUG);
         try {
@@ -44,7 +45,6 @@ class LDAPAuth implements IAuth {
     }
 
     private async fetchClient(): Promise<VerifyUserResult> {
-        LOG.info(`LDAPAuth.fetchClient entry for client (hasClient: ${this._client==null?false:true}).`, LOG.LS.eDEBUG);
 
         // if we already have a client destroy it as it hangs with LDAPS requests
         // this appears to be tied to required certificates.
@@ -53,7 +53,7 @@ class LDAPAuth implements IAuth {
             // return { success: true };
 
         LOG.info(`Auth connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
-        LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert_exists: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
+        // LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert_exists: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
 
         // setup our client configuration for TLS/LDAPS
         const clientConfig: any = {
@@ -61,21 +61,24 @@ class LDAPAuth implements IAuth {
             tlsOptions:  { rejectUnauthorized: true, } // set to false for self-signed certificates (development only)
         };
 
+        // re-introduce the full path to our SSL certificate to ensure it's in the environment variables.
+        process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
+
+        // LEGACY: add the certificate to the LDAPS request. often results in UNABLE_TO_GET_ISSUER_CERT_LOCALLY which
+        // suggests it cannot verify the certificate with the authority server. keeping this code until timeout issue is proven resolved
+        //
         // Windows desktops have a trusted US domain cert already installed because it is joined to the US domain
         // Linux does not because it's not part of the US domain so we have to point to a certificate
         //
-        // if we're in production environment on Linux (the server) add our certificate path
-        // note: path is relative to the container NOT system
-        process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
+        // if we're in production environment on Linux (the server) add our certificate path (note: path is relative to the container NOT system)
         // if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
         //     clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
         // else
         //     LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
 
         // Step 1: Create a ldap client using our config
-        LOG.info(`>>> LDAPAuth.fetchClient creating client: ${H.Helpers.JSONStringify(clientConfig)}`,LOG.LS.eDEBUG);
+        // LOG.info(`>>> LDAPAuth.fetchClient creating client: ${H.Helpers.JSONStringify(clientConfig)}`,LOG.LS.eDEBUG);
         this._client = LDAP.createClient(clientConfig);
-        LOG.info(`>>> post createClient (connected: ${this._client.connected})`,LOG.LS.eDEBUG);
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
         this._client.on('error', error => {
@@ -106,7 +109,7 @@ class LDAPAuth implements IAuth {
 
     private destroyClient() {
         if(this._client) {
-            LOG.info('LDAPAuth.destroyClient destroying LDAPS client...',LOG.LS.eAUTH);
+            LOG.info(`LDAPAuth.destroyClient destroying LDAPS client... (${this._ldapConfig.server})`,LOG.LS.eAUTH);
             this._client.destroy();
             this._client = null;
         }
