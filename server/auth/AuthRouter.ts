@@ -5,6 +5,8 @@ import * as LOG from '../utils/logger';
 const AuthRouter: Router = express.Router();
 
 AuthRouter.post('/login', (request: Request, response: Response, next: NextFunction) => {
+    // LOG.info('AuthRouter.post login request received.',LOG.LS.eDEBUG);
+
     passport.authenticate('local', (error, user) => {
         if (error)
             return response.send({ success: false, message: error });
@@ -18,7 +20,7 @@ AuthRouter.post('/login', (request: Request, response: Response, next: NextFunct
 
 AuthRouter.get('/logout', (request: Request, response: Response) => {
     request['logout'](err => {
-        LOG.error('AuthRouter.get logout', LOG.LS.eSYS, err);
+        LOG.error('Auth logout', LOG.LS.eSYS, err);
     });
     response.send({ success: true });
 });

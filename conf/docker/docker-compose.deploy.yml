@@ -76,6 +76,7 @@ services:
             - PACKRAT_LDAP_CN=$PACKRAT_LDAP_CN
             - PACKRAT_LDAP_OU=$PACKRAT_LDAP_OU
             - PACKRAT_LDAP_DC=$PACKRAT_LDAP_DC
+            - PACKRAT_LDAP_CA=$PACKRAT_LDAP_CA
             - PACKRAT_SMTP_HOST=$PACKRAT_SMTP_HOST
             - PACKRAT_SMTP_PORT=$PACKRAT_SMTP_PORT
             - PACKRAT_SMTP_SECURE=$PACKRAT_SMTP_SECURE
@@ -92,6 +93,7 @@ services:
             - $PACKRAT_EDAN_STAGING_ROOT:$PACKRAT_EDAN_STAGING_ROOT
             - $PACKRAT_EDAN_RESOURCES_HOTFOLDER:$PACKRAT_EDAN_RESOURCES_HOTFOLDER
             - /data/Packrat/digitization:/data/Packrat/digitization
+            - /etc/ssl/certs:/etc/ssl/certs
 
     packrat-server-prod:
         container_name: packrat-server-prod
@@ -125,6 +127,7 @@ services:
             - PACKRAT_LDAP_CN=$PACKRAT_LDAP_CN
             - PACKRAT_LDAP_OU=$PACKRAT_LDAP_OU
             - PACKRAT_LDAP_DC=$PACKRAT_LDAP_DC
+            - PACKRAT_LDAP_CA=$PACKRAT_LDAP_CA
             - PACKRAT_LOG_ROOT=$PACKRAT_LOG_ROOT
             - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
             - PACKRAT_SOLR_PORT=$PACKRAT_SOLR_PORT
@@ -136,6 +139,7 @@ services:
             - $PACKRAT_EDAN_STAGING_ROOT:$PACKRAT_EDAN_STAGING_ROOT
             - $PACKRAT_EDAN_RESOURCES_HOTFOLDER:$PACKRAT_EDAN_RESOURCES_HOTFOLDER
             - /data/Packrat/digitization:/data/Packrat/digitization
+            - /etc/ssl/certs:/etc/ssl/certs
 
     packrat-server-inspect:
         container_name: packrat-server-inspect
@@ -171,6 +175,7 @@ services:
             - PACKRAT_LDAP_CN=$PACKRAT_LDAP_CN
             - PACKRAT_LDAP_OU=$PACKRAT_LDAP_OU
             - PACKRAT_LDAP_DC=$PACKRAT_LDAP_DC
+            - PACKRAT_LDAP_CA=$PACKRAT_LDAP_CA
             - PACKRAT_SMTP_HOST=$PACKRAT_SMTP_HOST
             - PACKRAT_SMTP_PORT=$PACKRAT_SMTP_PORT
             - PACKRAT_SMTP_SECURE=$PACKRAT_SMTP_SECURE
@@ -188,6 +193,7 @@ services:
             - $PACKRAT_EDAN_STAGING_ROOT:$PACKRAT_EDAN_STAGING_ROOT
             - $PACKRAT_EDAN_RESOURCES_HOTFOLDER:$PACKRAT_EDAN_RESOURCES_HOTFOLDER
             - /data/Packrat/digitization:/data/Packrat/digitization
+            - /etc/ssl/certs:/etc/ssl/certs
 
     packrat-db-dev:
         container_name: packrat-db-dev
@@ -252,6 +258,8 @@ services:
             
 networks:
     default:
+        driver: bridge
+        enable_ipv6: false
         ipam:
             config:
                 - subnet: 192.168.4.0/24

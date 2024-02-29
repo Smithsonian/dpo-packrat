@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { IAuth, VerifyUserResult } from '../interface';
-import { Config, LDAPConfig } from '../../config';
+import { Config, /*ENVIRONMENT_TYPE,*/ LDAPConfig } from '../../config';
+import * as H from '../../utils/helpers';
 import * as LOG from '../../utils/logger';
 import * as LDAP from 'ldapjs';
+import os from 'os';
+// import fs from 'fs';
 
 type UserSearchResult = {
     success: boolean;
@@ -13,7 +16,9 @@ type UserSearchResult = {
 class LDAPAuth implements IAuth {
     private _ldapConfig: LDAPConfig = Config.auth.ldap;
     private _client: LDAP.Client | null = null;
+
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
+        LOG.info(`LDAPAuth.verifyUser verifying: ${email}`,LOG.LS.eDEBUG);
         try {
             let res: VerifyUserResult = await this.fetchClient();
             if (!res.success) {
@@ -40,13 +45,40 @@ class LDAPAuth implements IAuth {
     }
 
     private async fetchClient(): Promise<VerifyUserResult> {
-        if (this._client)
-            return { success: true };
 
-        // Step 1: Create a ldap client using server address
-        this._client = LDAP.createClient({
+        // if we already have a client destroy it as it hangs with LDAPS requests
+        // this appears to be tied to required certificates.
+        if (this._client)
+            this.destroyClient();
+            // return { success: true };
+
+        LOG.info(`Auth connecting to ${this._ldapConfig.server} for LDAP authentication on ${os.type()}.`, LOG.LS.eAUTH);
+        // LOG.info(`LDAPAuth.fetchClient (working directory: ${__dirname} | system: ${Config.environment.type} | ca: ${this._ldapConfig.CA} | cert_exists: ${fs.existsSync(this._ldapConfig.CA)}`,LOG.LS.eDEBUG);
+
+        // setup our client configuration for TLS/LDAPS
+        const clientConfig: any = {
             url: this._ldapConfig.server,
-            tlsOptions: { rejectUnauthorized: true } });
+            tlsOptions:  { rejectUnauthorized: true, } // set to false for self-signed certificates (development only)
+        };
+
+        // re-introduce the full path to our SSL certificate to ensure it's in the environment variables.
+        process.env.NODE_EXTRA_CA_CERTS = this._ldapConfig.CA;
+
+        // LEGACY: add the certificate to the LDAPS request. often results in UNABLE_TO_GET_ISSUER_CERT_LOCALLY which
+        // suggests it cannot verify the certificate with the authority server. keeping this code until timeout issue is proven resolved
+        //
+        // Windows desktops have a trusted US domain cert already installed because it is joined to the US domain
+        // Linux does not because it's not part of the US domain so we have to point to a certificate
+        //
+        // if we're in production environment on Linux (the server) add our certificate path (note: path is relative to the container NOT system)
+        // if(Config.environment.type==ENVIRONMENT_TYPE.PRODUCTION && os.type().toLowerCase()=='linux' && fs.existsSync(this._ldapConfig.CA)==true)
+        //     clientConfig.tlsOptions.ca = [ fs.readFileSync(this._ldapConfig.CA) ];
+        // else
+        //     LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
+
+        // Step 1: Create a ldap client using our config
+        // LOG.info(`>>> LDAPAuth.fetchClient creating client: ${H.Helpers.JSONStringify(clientConfig)}`,LOG.LS.eDEBUG);
+        this._client = LDAP.createClient(clientConfig);
 
         // this is needed to avoid nodejs crash of server when the LDAP connection is unavailable
         this._client.on('error', error => {
@@ -56,12 +88,31 @@ class LDAPAuth implements IAuth {
             else
                 LOG.error('LDAPAuth.fetchClient', LOG.LS.eAUTH, error);
 
-            if (this._client) {
-                this._client.destroy();
-                this._client = null;
-            }
+            this.destroyClient();
         });
+
+        // catching other events from the client
+        this._client.on('connectRefused', msg => { LOG.error(`LDAPAuth.fetchClient connection refused (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('connectTimeout', msg => { LOG.error(`LDAPAuth.fetchClient server timed out (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('connectError', msg => { LOG.error(`LDAPAuth.fetchClient socket connection error (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('setupError', msg => { LOG.error(`LDAPAuth.fetchClient setup error after successful connection (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('socketTimeout', msg => { LOG.error(`LDAPAuth.fetchClient socket timed out (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); this.destroyClient(); });
+        this._client.on('destroy', msg => { LOG.info(`LDAPAuth.fetchClient connection destroyed (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eDEBUG); });
+        this._client.on('end', msg => { LOG.info(`LDAPAuth.fetchClient socket end event (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eDEBUG); });
+        this._client.on('close', msg => { LOG.info(`LDAPAuth.fetchClient socket closed (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eDEBUG); });
+        this._client.on('connect', msg => { LOG.info(`LDAPAuth.fetchClient client connected (${H.Helpers.JSONStringify(msg)})`,LOG.LS.eAUTH); });
+
+        // return success regardless
+        // TODO: wait for finish (end event?) before returning so we block and ensure system doesn't progress without knowing.
         return { success: true };
+    }
+
+    private destroyClient() {
+        if(this._client) {
+            LOG.info(`LDAPAuth.destroyClient destroying LDAPS client... (${this._ldapConfig.server})`,LOG.LS.eAUTH);
+            this._client.destroy();
+            this._client = null;
+        }
     }
 
     private async bindService(): Promise<VerifyUserResult> {

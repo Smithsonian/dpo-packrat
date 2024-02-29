@@ -20,6 +20,11 @@ export enum EVENT_TYPE {
     INPROCESS = 'in-process'
 }
 
+export enum ENVIRONMENT_TYPE {
+    PRODUCTION = 'production',
+    DEVELOPMENT = 'development',
+}
+
 export enum JOB_TYPE {
     NODE_SCHEDULE = 'node-schedule'
 }
@@ -44,6 +49,7 @@ export interface LDAPConfig {
     CN: string;
     OU: string;
     DC: string;
+    CA: string;
 }
 
 export type ConfigType = {
@@ -72,6 +78,9 @@ export type ConfigType = {
     },
     event: {
         type: EVENT_TYPE;
+    },
+    environment: {
+        type: ENVIRONMENT_TYPE;
     },
     http: {
         clientUrl: string;
@@ -104,7 +113,7 @@ export type ConfigType = {
     },
     workflow: {
         type: WORKFLOW_TYPE;
-    },
+    }
 };
 
 const oneDay            = 24 * 60 * 60;
@@ -119,15 +128,16 @@ export const Config: ConfigType = {
     auth: {
         type: process.env.PACKRAT_AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
-            maxAge: !debugSessionTimeout ? (((process.env.NODE_ENV === 'production') ? threeHours : oneDay) * 1000) : 8000, // expiration time 15 minutes, in milliseconds
+            maxAge: !debugSessionTimeout ? (((process.env.NODE_ENV === 'production') ? threeHours : oneDay) * 1000) : 8000,     // expiration time 3 hours, in milliseconds (HACK: revert to 15min with updated Auth support)
             checkPeriod: oneDay                                                                                                 // prune expired entries every 24 hours
         },
         ldap: {
-            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldap://160.111.103.197:389',
+            server: process.env.PACKRAT_LDAP_SERVER ? process.env.PACKRAT_LDAP_SERVER : 'ldaps://ldaps.si.edu:636',
             password: process.env.PACKRAT_LDAP_PASSWORD ? process.env.PACKRAT_LDAP_PASSWORD : '',
             CN: process.env.PACKRAT_LDAP_CN ? process.env.PACKRAT_LDAP_CN : 'CN=PackratAuthUser',
             OU: process.env.PACKRAT_LDAP_OU ? process.env.PACKRAT_LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
             DC: process.env.PACKRAT_LDAP_DC ? process.env.PACKRAT_LDAP_DC : 'DC=US,DC=SINET,DC=SI,DC=EDU',
+            CA: process.env.PACKRAT_LDAP_CA ? process.env.PACKRAT_LDAP_CA : '/etc/ssl/certs/ldaps.si.edu.cer',
         },
     },
     collection: {
@@ -145,6 +155,9 @@ export const Config: ConfigType = {
     },
     event: {
         type: EVENT_TYPE.INPROCESS,
+    },
+    environment: {
+        type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,
     },
     http: {
         clientUrl: process.env.PACKRAT_CLIENT_ENDPOINT ? process.env.PACKRAT_CLIENT_ENDPOINT : 'https://packrat.si.edu:8443',
