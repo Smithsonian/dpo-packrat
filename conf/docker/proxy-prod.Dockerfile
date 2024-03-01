@@ -8,4 +8,5 @@ COPY ./conf/nginx/conf.d/common-locations-dev /etc/nginx/conf.d/common-locations
 # COPY ./conf/nginx/certs/packrat-test.si.edu.cert /etc/pki/tls/certs/packrat-test.si.edu.cert
 # COPY ./conf/nginx/keys/packrat.si.edu.key /etc/pki/tls/private/packrat.si.edu.key
 # COPY ./conf/nginx/keys/packrat-test.si.edu.key /etc/pki/tls/private/packrat-test.si.edu.key
+
 CMD ["nginx", "-g", "daemon off;"]

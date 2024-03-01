@@ -24,10 +24,18 @@ RUN apk update
 RUN apk add perl
 RUN apk add bash
 
+# certificate packages and update
+RUN apk add --no-cache ca-certificates && update-ca-certificates
+RUN update-ca-certificates
+
+# copy our files over and setup file system
 COPY --from=base /app/server ./server
 COPY --from=base /app/common ./common
 COPY --from=base /app/node_modules ./node_modules
 RUN mkdir -p /app/node_modules/@dpo-packrat/ && rm /app/node_modules/@dpo-packrat/common && ln -s /app/common/build /app/node_modules/@dpo-packrat/common
+
+# cleanup from APK actions
+RUN rm -rf /var/cache/apk/*
 
 # Expose port, and provide start command on execution
 EXPOSE 4000

@@ -128,7 +128,7 @@ export class HttpServer {
         const idUser = user ? user['idUser'] : undefined;
         ASL.run(new LocalStore(true, idUser), () => {
             if (!req.originalUrl.startsWith('/graphql'))
-                LOG.info(req.originalUrl, LOG.LS.eHTTP);
+                LOG.info(`HTTP request for: ${req.originalUrl}`, LOG.LS.eHTTP);
             next();
         });
     }
