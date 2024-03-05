@@ -1,7 +1,7 @@
-/* eslint-disable quotes, @typescript-eslint/brace-style */
+/* eslint-disable quotes, @typescript-eslint/brace-style, @typescript-eslint/no-explicit-any */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 1/24/2024. It was then modified,
+ * This was imported from Voyager's source/client/schema on 3/5/2024. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -25,7 +25,6 @@ import { ELanguageType, TLanguageType } from "./common";
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 
 export type TShaderMode = "Default" | "Clay" | "XRay" | "Normals" | "Wireframe";
 export enum EShaderMode { Default, Clay, XRay, Normals, Wireframe }
@@ -57,6 +56,7 @@ export interface ISetup
     slicer?: ISlicer;
     tours?: ITours;
     snapshots?: ISnapshots;
+    audio?: IAudio;
 }
 
 export interface IInterface
