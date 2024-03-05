@@ -25,11 +25,11 @@
 // import { Dictionary } from "@ff/core/types";
 // import { ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
 type Dictionary<T> = Record<string, T>;
-import { ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
+import { ColorRGBA, /*EUnitType,*/ TUnitType, Vector3, Vector4 } from "./common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export { EUnitType, TUnitType };
+// export { EUnitType, TUnitType };
 
 export type TNormalSpaceType = "Tangent" | "Object";
 
