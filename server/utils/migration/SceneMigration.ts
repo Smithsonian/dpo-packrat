@@ -428,6 +428,7 @@ export class SceneMigration {
             EntireSubject: true,
             Title: null,
             idItem: 0,
+            BaseName: null,
         });
         if (!await itemDB.create())
             return this.recordError('createTestObjects', `unable to create item ${H.Helpers.JSONStringify(itemDB)}`);

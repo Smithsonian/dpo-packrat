@@ -587,7 +587,8 @@ class IngestDataWorker extends ResolverBase {
                 Name: NameHelpers.mediaGroupDisplayName(item.name, item.subtitle, subjectsDB),
                 EntireSubject: item.entireSubject,
                 Title: item.subtitle,
-                idItem: 0
+                idItem: 0,
+                BaseName: item.baseName,
             });
 
             if (!await itemDB.create()) {

@@ -505,4 +505,7 @@ INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, Gene
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: Digitization', 'http://ocio-73qycx3.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'workstation');
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: #9', 'http://ocio-3ddigisi-9.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'workstation');
 
+-- 2024-03-12 Add 'BaseName' to 'Item' table (Eric)
+ALTER TABLE Item ADD COLUMN BaseName VARCHAR(255) DEFAULT NULL;
+
 ------

@@ -776,6 +776,7 @@ export class ModelMigration {
             EntireSubject: true,
             Title: null,
             idItem: 0,
+            BaseName: null,
         });
         if (!await itemDB.create())
             return this.returnStatus('createTestObjects', false, `unable to create item ${H.Helpers.JSONStringify(itemDB)}`);

@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { Item as ItemBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
+import * as DBAPI from '../../db';
 import * as DBC from '../connection';
 import * as LOG from '../../utils/logger';
 import { Merge } from '../../utils/types';
@@ -14,6 +15,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
     Name!: string;
     EntireSubject!: boolean;
     Title!: string | null;
+    BaseName!: string | null;
 
     constructor(input: ItemBase) {
         super(input);
@@ -30,12 +32,13 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             Name: item.Name,
             EntireSubject: (item.EntireSubject ? true : false), // we're expecting Prisma to send values like 0 and 1
             Title: item.Title,
+            BaseName: item.BaseName,
         });
     }
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title } = this;
+            const { idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title, BaseName } = this;
             ({ idItem: this.idItem, EntireSubject: this.EntireSubject, Title: this.Title, idAssetThumbnail: this.idAssetThumbnail,
                 idGeoLocation: this.idGeoLocation, Name: this.Name } =
                 await DBC.DBConnection.prisma.item.create({
@@ -46,6 +49,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                         EntireSubject,
                         Title,
                         SystemObject:   { create: { Retired: false }, },
+                        BaseName,
                     },
                 }));
             return true;
@@ -56,7 +60,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title } = this;
+            const { idItem, idAssetThumbnail, idGeoLocation, Name, EntireSubject, Title, BaseName } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.item.update({
                 where: { idItem, },
                 data: {
@@ -65,6 +69,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                     Name,
                     EntireSubject,
                     Title,
+                    BaseName,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
@@ -363,5 +368,38 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             LOG.error('DBAPI.Item.fetchRelatedItemsAndProjects', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    /**
+     * Computes array of all assets associated with a specific Item.
+     * @param idItem id for the desired Item matching Item.idItem
+     */
+    static async fetchRelatedAssets(_idItem: number): Promise<DBAPI.Asset[] | null> {
+        return null;
+    }
+
+    /**
+     * Retrieves the Item's calculated BaseName used for naming derivative files. If a BaseName is not present
+     * the routine will search for one in existing associated assets.  Otherwise, one is generated from the Item Name.
+     *  @param idItem id for the desired Item matching Item.idItem
+     */
+    static async getBaseName(_idItem: number): Promise<string | undefined> {
+        // verify id is valid
+
+        // get Item from DB
+
+        // if BaseName exists, return it
+
+        // otherwise, get our related assets
+        // const assets: DBAPI.Asset[] | null = await this.fetchRelatedAssets(_idItem);
+
+        // if we have assets try to decipher base name from filenames
+
+        // if no assets, create a base name from the existing name
+
+        // store/update the new name
+
+        // return it
+        return undefined;
     }
 }

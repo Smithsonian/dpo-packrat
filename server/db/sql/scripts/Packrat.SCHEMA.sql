@@ -221,6 +221,7 @@ CREATE TABLE IF NOT EXISTS `Item` (
   `Name` varchar(255) NOT NULL,
   `EntireSubject` boolean NOT NULL,
   `Title` varchar(255) DEFAULT NULL,
+  `BaseName` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idItem`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

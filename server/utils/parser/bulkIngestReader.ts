@@ -302,6 +302,7 @@ export class BulkIngestReader {
                 idGeoLocation: null,
                 Name: bagitItem.item_name,
                 Title: bagitItem.item_subtitle,
+                BaseName: bagitItem.item_basename,
             });
 
         // try to load from guid as a item identifier

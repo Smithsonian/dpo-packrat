@@ -24,6 +24,7 @@ export type ItemsCSVFields = {
     item_guid: string;
     item_name: string;
     item_subtitle: string;
+    item_basename: string;
     entire_subject: number;
 };
 

@@ -290,6 +290,7 @@ model Item {
   Name             String        @mariasql.VarChar(255)
   EntireSubject    Boolean
   Title            String?       @mariasql.VarChar(255)
+  BaseName         String?       @mariasql.VarChar(255)
   Asset            Asset?        @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_asset1")
   GeoLocation      GeoLocation?  @relation(fields: [idGeoLocation], references: [idGeoLocation], onDelete: NoAction, onUpdate: NoAction, map: "fk_item_geolocation1")
   SystemObject     SystemObject?

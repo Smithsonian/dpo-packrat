@@ -1080,6 +1080,7 @@ export type IngestItemInput = {
   id?: InputMaybe<Scalars['Int']>;
   name?: InputMaybe<Scalars['String']>;
   subtitle: Scalars['String'];
+  baseName: Scalars['String'];
 };
 
 export type IngestModel = {

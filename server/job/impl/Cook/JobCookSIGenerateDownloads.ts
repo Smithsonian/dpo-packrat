@@ -309,7 +309,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // Cook/Voyager is assumed to be source of truth.
         for(const model of modelFiles) {
 
-            // find modelDetails from scene
+            // find modelDetails from the voyager scene returned from Cook
             const svxModelDetails = svxSceneFile.data.modelDetails.find(svxModel => svxModel.Name === model.fileName);
             // LOG.info(`>>> found matching model for MSX update (${model.fileName}): ${H.Helpers.JSONStringify(svxModelDetails)}`, LOG.LS.eDEBUG);
 

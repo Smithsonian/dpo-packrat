@@ -26,6 +26,7 @@ export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitl
                 Name: item.name + ((item.subtitle) ? `: ${item.subtitle}` : ''),
                 EntireSubject: item.entireSubject,
                 Title: item.subtitle,
+                BaseName: item.baseName,
             });
         }
         const ingestTitle: IngestTitle = NameHelpers.modelTitleOptions(itemDB);
