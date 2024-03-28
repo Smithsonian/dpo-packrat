@@ -666,4 +666,70 @@ export abstract class JobCook<T> extends JobPackrat {
             LOG.info(error, LOG.LS.eJOB);
         return res;
     }
+
+    protected async verifyIncomingCookData(sceneSource: DBAPI.Scene, fileMap: Map<string,string>): Promise<H.IOResults> {
+
+        // simple check on download map making sure we have an SVX file in the mix
+        const filteredScenes = Array.from(fileMap.entries()).filter(([key, value]) => {
+            return key === 'scene' && value.includes('.svx');
+        });
+        if(filteredScenes.length!==1)
+            return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData invalid svx files. found ${filteredScenes.length} svx scenes. (${sceneSource.fetchLogInfo()})`);
+
+        // get assets in Packrat Scene
+        const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromScene(sceneSource.idScene);
+        if(!sceneAssets || sceneAssets.length == 0)
+            return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot find any assets for the Packrat scene. (${sceneSource.fetchLogInfo()})`);
+
+        // determine baseName from existing assets in the Packrat scene (error on diff)
+        const sceneBaseName: string | null = this.extractBaseName(sceneAssets.map(asset => asset.FileName));
+        if(!sceneBaseName)
+            return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot extract base name. (${sceneSource.fetchLogInfo()})`);
+
+        // determine baseName from incoming assets from Cook (error on diff)
+        const incomingBaseName: string | null = this.extractBaseName([...fileMap.values()]);
+        if(!incomingBaseName)
+            return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData invalid incoming basename. (${sceneSource.fetchLogInfo()})`);
+        else if(sceneBaseName != incomingBaseName)
+            return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData invalid incoming basename. (${sceneSource.fetchLogInfo()} | ${sceneBaseName}:${incomingBaseName})`);
+
+        // TODO: cycle through incoming assets, compare against what Packrat is expecting for
+        // this recipe and make sure it's present.
+        // ...
+
+        LOG.info(`JobCookSIGenerateDownloads incoming Cook data verified. (scene: ${sceneSource.idScene}:${sceneSource.Name} | EDAN: ${sceneSource.EdanUUID}  | svx: ${filteredScenes[0][1]})`,LOG.LS.eJOB);
+        return { success: true };
+    }
+
+    private extractBaseName(filenames: string[]): string | null {
+        // extract the base name from the list of incoming filenames and make sure they all share
+        // the same values. input (currently) requires an SVX file in the list
+        // TODO: broader support for other 'groups' of filenames that may not have an SVX
+        const svxFilename: string | null = 'yup.svx';
+        if(!svxFilename || svxFilename.length == 0) {
+            this.logError('JobCookSIGenerateDownloads cannot extract basename. SVX file not found');
+            return null;
+        }
+
+        // get the baseName from the SVX file
+        const baseName: string = svxFilename.replace(/\.svx\.json$/, '');
+
+        // compare with others in the list to make sure they match
+        const errorNames: string[] = filenames.filter(filename => !filename.startsWith(baseName));
+        if(errorNames.length>0) {
+            this.logError(`JobCookSIGenerateDownloads filenames don't share base name. (${errorNames.join(' | ')})`);
+            return null;
+        }
+
+        // return success
+        return baseName;
+    }
+
+    protected async logError(errorMessage: string): Promise<H.IOResults> {
+        // const error: string = `JobCookSIGenerateDownloads.${errorMessage}`;
+        // TODO: prepend with recipe type/info/jobId. overriden by each derived class
+        const error = `${this.name} - ${errorMessage}`;
+        await this.appendToReportAndLog(error, true);
+        return { success: false, error };
+    }
 }
