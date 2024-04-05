@@ -681,6 +681,8 @@ export abstract class JobCook<T> extends JobPackrat {
         if(!sceneAssets || sceneAssets.length == 0)
             return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot find any assets for the Packrat scene. (${sceneSource.fetchLogInfo()})`);
 
+        LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData\n\t${H.Helpers.JSONStringify(sceneAssets)}\n\t${H.Helpers.JSONStringify(fileMap)}`,LOG.LS.eDEBUG);
+
         // determine baseName from existing assets in the Packrat scene (error on diff)
         const sceneBaseName: string | null = this.extractBaseName(sceneAssets.map(asset => asset.FileName));
         if(!sceneBaseName)
@@ -694,7 +696,7 @@ export abstract class JobCook<T> extends JobPackrat {
             return await this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData invalid incoming basename. (${sceneSource.fetchLogInfo()} | ${sceneBaseName}:${incomingBaseName})`);
 
         // TODO: cycle through incoming assets, compare against what Packrat is expecting for
-        // this recipe and make sure it's present.
+        // this recipe and make sure it's present. (use overridden methods)
         // ...
 
         LOG.info(`JobCookSIGenerateDownloads incoming Cook data verified. (scene: ${sceneSource.idScene}:${sceneSource.Name} | EDAN: ${sceneSource.EdanUUID}  | svx: ${filteredScenes[0][1]})`,LOG.LS.eJOB);
