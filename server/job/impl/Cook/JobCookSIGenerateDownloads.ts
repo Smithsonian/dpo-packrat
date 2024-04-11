@@ -169,7 +169,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             this.cleanupCalled = true;
 
             const results: H.IOResults = await this.createSystemObjects();
-            await this.appendToReportAndLog(`${this.name()} ${results.success ? 'succeeded' : 'failed: ' + results.error}`, !results.success);
+            if(results.success==false)
+                this.recordFailure(null,results.error);
+            else
+                await this.appendToReportAndLog(`${this.name()} succeeded`, false);
             return results;
         } catch (error) {
             LOG.error('JobCookSIGenerateDownloads.cleanupJob', LOG.LS.eJOB, error);
@@ -184,17 +187,17 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // grab our Packrat Scene from the database. idScene is a parameter passed in when creating this object
         const sceneSource: DBAPI.Scene | null = this.idScene ? await DBAPI.Scene.fetch(this.idScene) : null;
         if (!sceneSource)
-            return await this.logError(`createSystemObjects unable to compute source scene from id ${this.idScene}`);
+            return this.logError(`unable to compute source scene from id ${this.idScene}`);
 
         // grab the scene's SystemObject.
         const sceneSystemObject: DBAPI.SystemObject | null = await sceneSource.fetchSystemObject();
         if (!sceneSystemObject)
-            return await this.logError(`createSystemObjects unable to fetch scene system object from ${H.Helpers.JSONStringify(sceneSource)}`);
+            return this.logError(`unable to fetch scene system object from ${H.Helpers.JSONStringify(sceneSource)}`);
 
         // grab our master model's source info
         const modelSource: DBAPI.Model | null = this.idModel ? await DBAPI.Model.fetch(this.idModel) : null;
         if (!modelSource)
-            return await this.logError(`createSystemObjects unable to compute source model from id ${this.idModel}`);
+            return this.logError(`unable to compute source model from id ${this.idModel}`);
 
         // Retrieve generated files from Cook. Cook may return multiple types of objects (models, scenes, etc.)
         // map from download type -> download filename
@@ -210,12 +213,13 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // if nothing returned then bail
         if(downloadMap.size<=0)
-            return await this.logError('JobCookSIGenerateDownloads did not receive any files to process. Cook error?');
+            return this.logError('JobCookSIGenerateDownloads did not receive any files to process. Cook error?');
 
         // verify the downloads/files we received from Cook are compatible with the current Packrat representation.
         // we do this to avoid issues where incoming Cook assets differ causing a new object be created.
-        if(!this.verifyIncomingCookData(sceneSource, downloadMap))
-            return await this.logError('createSystemObjects incoming Cook data is not valid. Cannot generate downloads.');
+        const verifyDataResult: H.IOResults = await this.verifyIncomingCookData(sceneSource, downloadMap);
+        if(verifyDataResult.success == false)
+            return this.logError('incoming Cook data is not valid. Cannot generate downloads.',false);
 
         // array to handle accumulated errors/warning while processing files
         // returned as a string for further processing or display to user. (Q?)
@@ -239,7 +243,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             LOG.info(`JobCookSIGenerateDownloads processing download ${downloadFile} of type ${downloadType}`, LOG.LS.eJOB);
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
             if (!RSR.success || !RSR.readStream)
-                return await this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch stream for generated download ${downloadFile}: ${RSR.error}`);
+                return this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to fetch stream for generated download ${downloadFile}: ${RSR.error}`);
 
             // build our item for tracking the file and push into our queue
             const currentItemResult: FileProcessItem = {
@@ -257,7 +261,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     const svx: SvxReader = new SvxReader();
                     const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
                     if (!res.success || !svx.SvxExtraction)
-                        return await this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to parse scene file ${downloadFile}: ${res.error}`);
+                        return this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to parse scene file ${downloadFile}: ${res.error}`);
 
                     // store the results. skip additional scenes if any
                     currentItemResult.data = svx.SvxExtraction;
@@ -295,7 +299,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // if we don't have a scene file, then we bail
         // TODO: cleanup ingested models on failure
         if(!svxSceneFile || svxSceneFile.success===false)
-            return await this.appendToReportAndLog(`JobCookSIGenerateDownloads failed processing of returned download files (${H.Helpers.JSONStringify(svxSceneFile)})`,true);
+            return this.logError(`JobCookSIGenerateDownloads failed processing of returned download files (${H.Helpers.JSONStringify(svxSceneFile)})`);
 
         // if we had errors processing models, then we bail
         // TODO: rollback to previous versions of all models that were successful on failure (i.e. cleanup)
@@ -304,7 +308,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             const errors = `["${
                 modelFiles.filter(obj => obj.success === false).map(obj => obj.error).join('","')
             }"]`;
-            return await this.appendToReportAndLog(`JobCookSIGenerateDownloads failed processing of returned download model files (name: ${sceneSource.Name} | idScene: ${sceneSource.idScene} | errors: ${errors})`,true);
+            return this.logError(`JobCookSIGenerateDownloads failed processing of returned download model files (name: ${sceneSource.Name} | idScene: ${sceneSource.idScene} | errors: ${errors})`);
         }
 
         // update all ModelSceneXrefs transforms for generated models in the svx scene with what's in the
@@ -355,7 +359,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // process the scene file, ingesting it
         const result = await this.processSceneFile(modelSource, svxSceneFile, idUserCreator);
         if(result.success===false)
-            await this.appendToReportAndLog(`JobCookSIGenerateDownloads failed to process svx scene (${result.error})`);
+            return this.logError(`JobCookSIGenerateDownloads failed to process svx scene (${result.error})`);
         else
             await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful processing of svx scene: ${svxSceneFile.fileName}`);
 
@@ -364,7 +368,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null,
             'Created by Cook si-generate-downloads', assetVersionOverrideMap);
         if (!SOV)
-            return await this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to clone SystemObjectVersion for ${H.Helpers.JSONStringify(sceneSystemObject)}`);
+            return this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to clone SystemObjectVersion for ${H.Helpers.JSONStringify(sceneSystemObject)}`);
 
         // cycle through models and if there's an asset version link up
         for(const model of modelFiles) {
@@ -381,7 +385,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // LOG.info('JobCookSIGenerateDownloads.createSystemObjects calling PublishScene.extractSceneMetadata', LOG.LS.eJOB);
         const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(sceneSystemObject.idSystemObject, LS?.idUser ?? null);
         if (!metadataResult.success)
-            return await this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to persist scene attachment metadata: ${metadataResult.error}`);
+            return this.logError(`JobCookSIGenerateDownloads.createSystemObjects unable to persist scene attachment metadata: ${metadataResult.error}`);
 
         await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful generation of downloads: ${svxSceneFile.fileName}`);
         return { success: true };
@@ -994,6 +998,68 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 LOG.error('JobCookSIGenerateDownloads unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
         }
         return JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile;
+    }
+
+    protected async verifyIncomingCookData(sceneSource: DBAPI.Scene, fileMap: Map<string,string>): Promise<H.IOResults> {
+
+        const result: H.IOResults = await super.verifyIncomingCookData(sceneSource, fileMap);
+        if(result.success == false)
+            return this.logError('verifyIncomingCookData base failed');
+
+        // get assets in Packrat Scene
+        const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromScene(sceneSource.idScene);
+        if(!sceneAssets || sceneAssets.length == 0)
+            return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot find any assets for the Packrat scene. (${sceneSource.fetchLogInfo()})`);
+        const sceneAssetFilenames: string[] = sceneAssets.map(asset => asset.FileName);
+        LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData\n\t${H.Helpers.JSONStringify(sceneAssetFilenames)}\n\t${H.Helpers.JSONStringify(fileMap)}`,LOG.LS.eDEBUG);
+
+        // determine baseName from existing assets in the Packrat scene (error on diff)
+        const sceneBaseName: string | null = this.extractBaseName(sceneAssets.map(asset => asset.FileName));
+        if(!sceneBaseName)
+            return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot extract base name. (${sceneSource.fetchLogInfo()})`);
+
+        // get list of filenames from the incoming fileMap
+        const incomingAssetFilenames: string[] = [...fileMap.values()];
+
+        // define expected suffixes to look for in the system
+        // NOTE: need to update this list if si-generate-downloads returns new/different assets
+        const suffixes: string[] = ['-150k-4096_std.glb','-100k-2048_std_draco.glb','.svx.json','-100k-2048_std.usdz','-full_resolution-obj_std.zip','-150k-4096-gltf_std.zip','-150k-4096-obj_std.zip'];
+        const mismatches: string[] = [];
+
+        // cycle through Scene assets comparing with incoming.
+        // if we have a file with the provided suffix in the Scene then check for a full name match with the incoming map
+        for(let i=0; i<suffixes.length; i++) {
+            // Only check for the filenames in the system already. If not in the system, assuming
+            // it's a new file or first run of the recipe.
+            // NOTE: if scene file has the correct name but generated downloads do not then this will succeed because
+            //       it cannot find the files in the scene and assumes them to be new.
+            const filename: string = sceneBaseName + suffixes[i];
+            if(sceneAssetFilenames.includes(filename)==true) {
+                // see if the same filename exists with the Cook response
+                // if not, then we assume there is a name difference and is not valid
+                if(incomingAssetFilenames.includes(filename)==false) {
+                    this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData couldn't find match in Cook map for: ${filename}`,false);
+                    mismatches.push(filename);
+                } else {
+                    LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData found match for ${filename}.`,LOG.LS.eDEBUG);
+                }
+            } else {
+                // if it's not in the scene then we check just the suffix in case we have a mismatch in the system (critical)
+                const found: string|undefined = sceneAssetFilenames.find(filename => filename.endsWith(suffixes[i]));
+                if(found)
+                    return this.logError(`CRITICAL: JobCookSIGenerateDownloads.verifyIncomingCookData found an incoming asset (${found}) that doesn't share the scene (id: ${sceneSource.idScene}) base name (${sceneBaseName}).`);
+                else {
+                    LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData didn't find ${filename}. Assuming it's new...`,LOG.LS.eDEBUG);
+                }
+            }
+        }
+
+        // if we have mismatches throw an error and dump out specifics
+        if(mismatches.length > 0)
+            return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData couldn't find matching assets with '${sceneBaseName}' base name. (${mismatches.length}: ${incomingAssetFilenames.join('|')}`);
+
+        LOG.info(`JobCookSIGenerateDownloads incoming Cook data verified. (${sceneSource.fetchLogInfo()}  | baseName: ${sceneBaseName})`,LOG.LS.eJOB);
+        return { success: true };
     }
 
     // private async getModelDetailsFromVoyagerScene(svxFile): Promise<DBAPI.ModelSceneXref[] | null> {

@@ -72,6 +72,10 @@ class UploadAssetWorker extends ResolverBase {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
             return { status: UploadStatus.Noauth, error: 'User not authenticated' };
         }
+
+        // if an idAsset was provided then we are trying to update an existing asset
+        // else if an 'attachment' is specified (this is a child) then we will try to attach
+        // otherwise, we are adding a new asset to the system
         if (this.idAsset)
             await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${filename}`, true);
         else if (this.idSOAttachment)
@@ -128,10 +132,13 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorkerOnFinish(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
+
+        // grab our local storage
         const LSLocal: LocalStore | undefined = ASL.getStore();
         if (LSLocal)
             return await this.uploadWorkerOnFinishWorker(storageKey, filename, idVocabulary);
 
+        // if we can't get the local storage system we will use the cache
         if (this.LS) {
             LOG.info('uploadAsset missing LocalStore, using cached value', LOG.LS.eGQL);
             return ASL.run(this.LS, async () => {
