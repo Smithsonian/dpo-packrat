@@ -78,6 +78,7 @@ function useIngest(): UseIngest {
             }));
 
             const item: StateItem = getSelectedItem() || { id: '', entireSubject: false, selected: false, subtitle: '', idProject: -1, projectName: '' };
+            // console.log('item',item);
 
             const isDefaultItem = item.id === defaultItem.id;
 
@@ -107,7 +108,7 @@ function useIngest(): UseIngest {
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
-                // console.log('ingestionStart metadata', metadata);
+                // console.log('ingestionStart metadata',metadata);
                 const { file, photogrammetry, model, scene, other, sceneAttachment } = metadata;
                 const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther } = getAssetType(file.type);
 
@@ -186,7 +187,8 @@ function useIngest(): UseIngest {
                         sourceObjects,
                         derivedObjects,
                         updateNotes,
-                        subtitles
+                        subtitles,
+                        skipSceneGenerate
                     } = model;
 
                     let {
@@ -198,6 +200,7 @@ function useIngest(): UseIngest {
                     } else if (typeof dateCreated === 'object') {
                         dateCreated = nonNullValue<string>('dateCreated', dateCreated.toISOString());
                     }
+                    // console.log('model',model);
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
                     const selectedSubtitle = subtitles.find(subtitle => subtitle.selected);
@@ -214,8 +217,10 @@ function useIngest(): UseIngest {
                         directory,
                         systemCreated,
                         sourceObjects,
-                        derivedObjects
+                        derivedObjects,
+                        skipSceneGenerate
                     };
+                    // console.log('modelData', modelData);
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);
                     if (idAsset) {
@@ -306,7 +311,7 @@ function useIngest(): UseIngest {
                 other: ingestOther,
                 sceneAttachment: ingestSceneAttachment
             };
-            // console.log(`** IngestDataInput`, input);
+            console.log('** IngestDataInput',input);
 
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,

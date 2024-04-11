@@ -23,7 +23,7 @@ function SceneGenerateWorkflowControl(props: SceneGenerateWorkflowControlProps):
             />
             <span>
                 <Typography style={{ fontSize: '0.8rem' }}>Generate Voyager Scene</Typography>
-                <em style={{ fontSize: '0.7rem', fontWeight: 300 }}>To enable, <b>Units</b> must be set to mm, cm, m, in, ft, or yd, <b>Purpose</b> must be set to Master, and <b>Model File Type</b> must be set to obj, ply, stl, x3d, wrl, dae, or fbx</em>
+                <em style={{ fontSize: '0.7rem', fontWeight: 300 }}>(X) To enable, <b>Units</b> must be set to mm, cm, m, in, ft, or yd, <b>Purpose</b> must be set to Master, and <b>Model File Type</b> must be set to obj, ply, stl, x3d, wrl, dae, or fbx</em>
             </span>
         </Box>
     );
