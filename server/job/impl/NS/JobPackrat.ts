@@ -50,6 +50,8 @@ export abstract class JobPackrat implements JOB.IJob {
         for (let attempt: number = 0; attempt < JOB_RETRY_COUNT; attempt++) {
             await this.recordCreated();
             this._results = await this.startJobWorker(fireDate);
+            LOG.info(`JobPackrat.executeJob start job worker results (${H.Helpers.JSONStringify(this._results)})`,LOG.LS.eDEBUG);
+
             if (!this._results.success)
                 await this.recordFailure(null, this._results.error);
 
@@ -203,6 +205,15 @@ export abstract class JobPackrat implements JOB.IJob {
             await this._dbJobRun.update();
             this.updateEngines(true, true); // don't block
         }
+    }
+
+    protected async logError(errorMessage: string, addToReport: boolean = true): Promise<H.IOResults> {
+        // const error: string = `JobCookSIGenerateDownloads.${errorMessage}`;
+        // TODO: prepend with recipe type/info/jobId. overriden by each derived class
+        const error = `[${this.name()}] ${errorMessage}`;
+        if(addToReport == true)
+            await this.appendToReportAndLog(error, true);
+        return { success: false, error: errorMessage };
     }
     // #endregion
 }

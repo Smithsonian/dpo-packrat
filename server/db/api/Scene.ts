@@ -34,6 +34,9 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     public fetchTableName(): string { return 'Scene'; }
     public fetchID(): number { return this.idScene; }
+    public fetchLogInfo(): string {
+        return `scene: ${this.Name}[id:${this.idScene}] | EDAN: ${this.EdanUUID}`;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {
@@ -208,4 +211,5 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return null;
         }
     }
+
 }
