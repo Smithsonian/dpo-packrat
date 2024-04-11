@@ -406,14 +406,23 @@ export abstract class JobCook<T> extends JobPackrat {
             if(cookJobReport['state']!=='waiting' && cookJobReport['state']!=='running')
                 LOG.info(`JobCook [${this.name()}] polling [exited], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
 
+            // extract our Cook JobID
+            const cookJobID: string = cookJobReport['id'];
+
+            // depending on our state we handle our state changes
             switch (cookJobReport['state']) {
-                case 'created':     await this.recordCreated();                                                         break;
+                case 'created':     await this.recordCreated();                                                break;
                 case 'waiting':     await this.recordWaiting();                                                         break;
-                case 'running':     await this.recordStart();                                                           break;
+                case 'running':     await this.recordStart(cookJobID);                                                           break;
                 case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return { success: true, allowRetry: false, connectFailure: false, otherCookError: false };
                 case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
                 case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
             }
+
+            // we always update our output so it represents the latest from Cook
+            // TODO: measure performance and wrap into staggered updates if needed
+            await this.updateJobOutput(JSON.stringify(cookJobReport));
+
         } catch (err) {
             return this.handleRequestException(err, requestUrl, 'get', undefined);
         }
@@ -701,14 +710,4 @@ export abstract class JobCook<T> extends JobPackrat {
         // return success
         return baseName;
     }
-
-    // private getSceneFilenamesFromMap(fileMap: Map<string, string>): string[] {
-    //     const result: string[] = [];
-    //     fileMap.forEach((value, _key) => {
-    //         if (value.includes('svx.json')) {
-    //             result.push(value);
-    //         }
-    //     });
-    //     return result;
-    // }
 }
