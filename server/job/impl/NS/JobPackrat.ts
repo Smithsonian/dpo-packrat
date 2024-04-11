@@ -120,6 +120,14 @@ export abstract class JobPackrat implements JOB.IJob {
         return await this._report.append(content);
     }
 
+    protected async updateJobOutput(output: string, updateEngines: boolean=false): Promise<void> {
+        //this._dbJobRun.Result = true;
+        this._dbJobRun.Output = output;
+        await this._dbJobRun.update();
+        if(updateEngines)
+            this.updateEngines(true); // don't block
+    }
+
     protected async recordCreated(): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() == COMMON.eWorkflowJobRunStatus.eUnitialized);
         if (updated) {
@@ -141,10 +149,10 @@ export abstract class JobPackrat implements JOB.IJob {
         }
     }
 
-    protected async recordStart(): Promise<void> {
+    protected async recordStart(idJob: string): Promise<void> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eRunning);
         if (updated) {
-            this.appendToReportAndLog(`JobPackrat [${this.name()}] Starting`);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Starting (CookJobId: ${idJob})`);
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eRunning);
             await this._dbJobRun.update();
@@ -159,8 +167,8 @@ export abstract class JobPackrat implements JOB.IJob {
             this._results = { success: true };   // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = true;
+            this._dbJobRun.Output = output ?? this._dbJobRun.Output; // if we don't have output, keep what we've got.
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eDone);
-            this._dbJobRun.Output = output;
             await this._dbJobRun.update();
 
             if (this._report) {
@@ -179,11 +187,19 @@ export abstract class JobPackrat implements JOB.IJob {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true);
             this._results = { success: false, error: errorMsg }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
-            this._dbJobRun.Result = false;
+            this._dbJobRun.Result = true;
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eError);
-            this._dbJobRun.Output = output;
+            this._dbJobRun.Output = output ?? this._dbJobRun.Output; // if we don't have output, keep what we've got.
             this._dbJobRun.Error = errorMsg ?? '';
             await this._dbJobRun.update();
+
+            // make sure we attach our report if there is one
+            if (this._report) {
+                const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+                const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
+                await this._report.append(`${hrefDownload}<br/>\n`);
+            }
+
             this.updateEngines(true, true); // don't block
         }
     }
@@ -197,18 +213,26 @@ export abstract class JobPackrat implements JOB.IJob {
             } else
                 this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel`, true);
 
+            console.log(`>>> cancel: ${output}`);
             this._results = { success: false, error: 'Job Cancelled' + (errorMsg ? ` ${errorMsg}` : '') }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
-            this._dbJobRun.Result = false;
+            this._dbJobRun.Result = true;
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eCancelled);
-            this._dbJobRun.Output = output;
+            this._dbJobRun.Output = output ?? this._dbJobRun.Output; // if we don't have output, keep what we've got.
             await this._dbJobRun.update();
+
+            // make sure we attach our report if there is one
+            if (this._report) {
+                const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+                const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
+                await this._report.append(`${hrefDownload}<br/>\n`);
+            }
+
             this.updateEngines(true, true); // don't block
         }
     }
 
     protected async logError(errorMessage: string, addToReport: boolean = true): Promise<H.IOResults> {
-        // const error: string = `JobCookSIGenerateDownloads.${errorMessage}`;
         // TODO: prepend with recipe type/info/jobId. overriden by each derived class
         const error = `[${this.name()}] ${errorMessage}`;
         if(addToReport == true)
