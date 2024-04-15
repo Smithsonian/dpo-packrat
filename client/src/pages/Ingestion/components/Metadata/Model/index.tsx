@@ -23,7 +23,6 @@ import { apolloClient } from '../../../../../graphql/index';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { errorFieldStyling } from '../Photogrammetry';
 import SubtitleControl from '../Control/SubtitleControl';
-// import SceneGenerateWorkflowControl from '../Control/SceneGenerateWorkflowControl';
 import { enableSceneGenerateCheck } from '../../../../../store/utils';
 import clsx from 'clsx';
 import lodash from 'lodash';
@@ -375,13 +374,6 @@ function Model(props: ModelProps): React.ReactElement {
                                     hasError={fieldErrors?.model.subtitles ?? false}
                                 />
                             </Box>
-                            {/* <Box style={{ marginBottom: 10 }}>
-                                <SceneGenerateWorkflowControl
-                                    selected={model.skipSceneGenerate}
-                                    disabled={sceneGenerateDisabled}
-                                    setCheckboxField={setSceneGenerate}
-                                />
-                            </Box> */}
                         </>
                     )}
                     <Box className={classes.modelDetailsContainer}>
