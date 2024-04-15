@@ -11,6 +11,8 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     FileName!: string;
     idAssetGroup!: number | null;
     idVAssetType!: number;
+    // is idVAssetType is 135 (Model) then idSystemObject = the Packrat Model object
+    // if idVAssetType is 137 (Scene) then idSystemObject = the Packrat Scene object (only for SVX files)
     idSystemObject!: number | null;
     StorageKey!: string | null;
 
@@ -140,6 +142,22 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             LOG.error('DBAPI.Asset.fetchFromSystemObject', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    /** Fetch assets that are connected to a specific Scene via the scene's id. **/
+    static async fetchFromScene(idScene: number): Promise<Asset[] | null> {
+
+        // when grabbing assets we need to grab those that are referenced by SystemObjectXref where
+        // our Packrat scene is the parent (e.g. models), but we also need to return those assets
+        // that don't use the xrefs and explicitly link to the Packrat Scene via it's idSystemObject field.
+        return DBC.CopyArray<AssetBase, Asset>(
+            await DBC.DBConnection.prisma.$queryRaw<Asset[]>`
+                SELECT DISTINCT a.* FROM Scene AS scn
+                JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene 
+                JOIN SystemObjectXref AS scnSOX ON scnSO.idSystemObject = scnSOX.idSystemObjectMaster
+                JOIN Asset AS a ON (a.idSystemObject = scnSOX.idSystemObjectDerived OR a.idSystemObject = scnSO.idSystemObject)
+                WHERE scn.idScene = ${idScene};
+            `,Asset);
     }
 
     /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,

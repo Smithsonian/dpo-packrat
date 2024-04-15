@@ -531,10 +531,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         return JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile;
     }
 
-    private async logError(errorBase: string): Promise<H.IOResults> {
-        const error: string = `${this.name()} ${errorBase}`;
-        await this.appendToReportAndLog(error, true);
-        return { success: false, error };
-    }
+    // private async logError(errorBase: string): Promise<H.IOResults> {
+    //     const error: string = `${this.name()} ${errorBase}`;
+    //     await this.appendToReportAndLog(error, true);
+    //     return { success: false, error };
+    // }
 }
 

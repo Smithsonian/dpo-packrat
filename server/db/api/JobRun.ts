@@ -9,7 +9,7 @@ import * as H from '../../utils/helpers';
 export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     idJobRun!: number;
     idJob!: number;
-    Status!: number;
+    Status!: number;    // defined in common/constantss.ts (ln. 403)
     Result!: boolean | null;
     DateStart!: Date | null;
     DateEnd!: Date | null;
@@ -176,6 +176,21 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             return jobRunList;
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.JobRun.fetchMatching', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchFromWorkflow(idWorkflow: number): Promise<JobRun[] | null> {
+        // direct get of JubRun(s) from a specific workflow
+        try {
+            return DBC.CopyArray<JobRunBase, JobRun> (
+                await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
+                SELECT jRun.* FROM Workflow AS w
+                JOIN WorkflowStep AS wStep ON wStep.idWorkflow = w.idWorkflow
+                JOIN JobRun AS jRun ON jRun.idJobRun = wStep.idJobRun
+                WHERE w.idWorkflow = ${idWorkflow};`,JobRun);
+        } catch (error) {
+            LOG.error('DBAPI.JobRun.fetchFromWorkflow', LOG.LS.eDB, error);
             return null;
         }
     }

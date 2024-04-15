@@ -81,6 +81,8 @@ export class WorkflowJob implements WF.IWorkflow {
             frequency: null               // null means create but don't run
         };
 
+        // create our job, but don't start it so we can hook it up to the WorkflowStep first
+        // this is done to ensure the Job can reference the associated WorkflowStep.
         const job: JOB.IJob | null = await jobEngine.create(jobCreationParameters);
         if (!job) {
             const error: string = `WorkflowJob.start unable to start job ${jobCreationParameters.eJobType
@@ -127,6 +129,7 @@ export class WorkflowJob implements WF.IWorkflow {
         let updateWFSNeeded: boolean = false;
         let workflowComplete: boolean = false;
 
+        // see if the Job stopped and handle any errors
         const eWorkflowStepState: COMMON.eWorkflowJobRunStatus = jobRun.getStatus();
         switch (eWorkflowStepState) {
             case COMMON.eWorkflowJobRunStatus.eDone:
@@ -140,11 +143,13 @@ export class WorkflowJob implements WF.IWorkflow {
                 break;
         }
 
+        // if our state is different then we update the WorkflowStep, which holds the job
         if (eWorkflowStepState != eWorkflowStepStateOrig) {
             workflowStep.setState(eWorkflowStepState);
             updateWFSNeeded = true;
         }
 
+        // update when we finished this job (if applicable)
         if (dateCompleted) {
             workflowStep.DateCompleted = dateCompleted;
             updateWFSNeeded = true;
@@ -157,11 +162,13 @@ export class WorkflowJob implements WF.IWorkflow {
 
         let dbUpdateResult: boolean = true;
 
+        // if we need to update our WorkflowStep (DB) due to change in state, do so
         if (updateWFSNeeded)
             dbUpdateResult = await workflowStep.update() && dbUpdateResult;
         if (workflowComplete && this.workflowData.workflow)
             dbUpdateResult = await this.workflowData.workflow.update() && dbUpdateResult;
 
+        // if the workflow finished then we tell it to cleanup any mutex's created
         if (workflowComplete) {
             LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${COMMON.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${COMMON.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
             this.signalCompletion();
@@ -188,30 +195,40 @@ export class WorkflowJob implements WF.IWorkflow {
     }
 
     signalCompletion() {
+        // set our flag for completion and cycle through all pending mutex to cancel them
+        // BUG: in rare situations this is not called on fast/successful Cook jobs and thus goes
+        //      until the full timeout (10hr).
         this.complete = true;
         for (const mutex of this.completionMutexes)
             mutex.cancel();
     }
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
+
         if (this.complete)
             return this.results;
+
+        // create a new mutex with the provided timeout value.
+        // 'acquire()' returns a promise that resolves when the mutex is 'released'.
+        // this mutex is stored in the array of mutext (i.e. actions) needed for job completion
+        // a mutex will lock until it's timeout is satisfied or receives E_CANCEL, which is triggered
+        // when the Job finishes and calls signalCompletion().
         const waitMutex: MutexInterface = withTimeout(new Mutex(), timeout);
         this.completionMutexes.push(waitMutex);
 
         const releaseOuter = await waitMutex.acquire();     // first acquire should succeed
         try {
             const releaseInner = await waitMutex.acquire(); // second acquire should wait
-            releaseInner();
+            releaseInner(); // releases the lock
         } catch (error) {
-            if (error === E_CANCELED)                   // we're done -- cancel comes from signalCompletion()
+            if (error === E_CANCELED)                       // we're done -- cancel comes from signalCompletion()
                 return this.results;
-            else if (error === E_TIMEOUT)               // we timed out
+            else if (error === E_TIMEOUT)                   // we timed out
                 return { success: false, error: `WorkflowJob.waitForCompletion timed out after ${timeout}ms` };
             else
                 return { success: false, error: `WorkflowJob.waitForCompletion failure: ${JSON.stringify(error)}` };
         } finally {
-            releaseOuter();
+            releaseOuter(); // releases the lock
         }
         return this.results;
     }

@@ -93,4 +93,36 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
             return null;
         }
     }
+
+    static async fetchFromJobRun(idJobRun: number): Promise<WorkflowReport[] | null> {
+        try {
+            return DBC.CopyArray<WorkflowReportBase, WorkflowReport> (
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowReport[]>`
+                SELECT w.* FROM JobRun AS jRun
+                JOIN WorkflowStep AS wStep ON wStep.idJobRun = jRun.idJobRun
+                JOIN WorkflowReport AS wReport ON wReport.idWorkflow = wStep.idWorkflow
+                WHERE jRun.idJobRun = ${idJobRun};`,WorkflowReport);
+        } catch (error) {
+            LOG.error('DBAPI.WorkflowReport.fetchFromJobRun', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchAllWithError(includeCancelled: boolean = false, includeUninitialized: boolean = false): Promise<WorkflowReport[] | null> {
+        // return all reports that contain a step/job that has an error.
+        // optionally include those cancelled or uninitialized.
+        // TODO: check against JobRun.Result for additional possible errors
+        try {
+            return DBC.CopyArray<WorkflowReportBase, WorkflowReport> (
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowReport[]>`
+                SELECT wReport.* FROM WorkflowStep AS wStep
+                JOIN WorkflowReport AS wReport ON wStep.idWorkflow = wReport.idWorkflow
+                JOIN JobRun AS jRun ON wStep.idJobRun = jRun.idJobRun
+                JOIN Workflow AS w ON wStep.idWorkflow = w.idWorkflow
+                WHERE (wStep.State = 5 ${(includeCancelled?'OR wStep.State = 6 ':'')}${includeUninitialized?'OR wStep.State = 0':''});`,WorkflowReport);
+        } catch (error) {
+            LOG.error('DBAPI.WorkflowReport.fetchAllWithError', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

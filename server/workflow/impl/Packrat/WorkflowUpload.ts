@@ -7,7 +7,6 @@ import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
-import { Config } from '../../../config';
 import { ZipFile } from '../../../utils';
 import { SvxReader } from '../../../utils/parser';
 
@@ -112,10 +111,18 @@ export class WorkflowUpload implements WF.IWorkflow {
                 // we are not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
             } else {
-
                 // it's not a model (e.g. Capture Data)
+                // grab our storage instance
+                const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
+                if (!storage) {
+                    const error: string = 'WorkflowUpload.validateFiles: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+                    return this.handleError(error);
+                }
+
+                // figure out our path
+                const filePath: string = await storage.stagingFileName(assetVersion.StorageKeyStaging);
+
                 // use ZipFile so we don't need to load it all into memory
-                const filePath: string = Config.storage.rootStaging+'/'+assetVersion.StorageKeyStaging;
                 const ZS: ZipFile = new ZipFile(filePath);
                 const zipRes: H.IOResults = await ZS.load();
                 if (!zipRes.success)
