@@ -7,7 +7,7 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem } from '@material-ui/core';
+import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
@@ -23,7 +23,6 @@ import { apolloClient } from '../../../../../graphql/index';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { errorFieldStyling } from '../Photogrammetry';
 import SubtitleControl from '../Control/SubtitleControl';
-import SceneGenerateWorkflowControl from '../Control/SceneGenerateWorkflowControl';
 import { enableSceneGenerateCheck } from '../../../../../store/utils';
 import clsx from 'clsx';
 import lodash from 'lodash';
@@ -222,8 +221,9 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const setSceneGenerate = ({ target }): void => {
-        const { name, checked } = target;
-        updateMetadataField(metadataIndex, name, !checked, MetadataType.model);
+        const { name, value } = target;
+        console.log(`skipSceneGenerate: ${value} | eval:${(value==='false')} | model:${model.skipSceneGenerate}`);
+        updateMetadataField(metadataIndex, name, (value==='false'), MetadataType.model);
     };
 
     const setIdField = ({ target }): void => {
@@ -374,13 +374,6 @@ function Model(props: ModelProps): React.ReactElement {
                                     hasError={fieldErrors?.model.subtitles ?? false}
                                 />
                             </Box>
-                            <Box style={{ marginBottom: 10 }}>
-                                <SceneGenerateWorkflowControl
-                                    selected={model.skipSceneGenerate}
-                                    disabled={sceneGenerateDisabled}
-                                    setCheckboxField={setSceneGenerate}
-                                />
-                            </Box>
                         </>
                     )}
                     <Box className={classes.modelDetailsContainer}>
@@ -467,6 +460,25 @@ function Model(props: ModelProps): React.ReactElement {
                                                 >
                                                     {getEntries(eVocabularySetID.eModelFileType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow}>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Generate Voyager Scene</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>To enable, <u><b>Units</b></u> must be set to mm, cm, m, in, ft, or yd, <u><b>Purpose</b></u> must be set to Master, and <u><b>Model File Type</b></u> must be set to obj, ply, stl, x3d, wrl, dae, or fbx</span>}>
+                                                    <Select
+                                                        value={String(!model.skipSceneGenerate)}
+                                                        name='skipSceneGenerate'
+                                                        onChange={setSceneGenerate}
+                                                        disableUnderline
+                                                        disabled={sceneGenerateDisabled}
+                                                        className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                    >
+                                                        <MenuItem value='true'>True</MenuItem>
+                                                        <MenuItem value='false'>False</MenuItem>
+                                                    </Select>
+                                                </Tooltip>
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>

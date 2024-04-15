@@ -396,17 +396,33 @@ export abstract class JobCook<T> extends JobPackrat {
             }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
+            // write to the log for the first 10 polling cycles, then every 5th one after that
             const cookJobReport = axiosResponse.data;
             if (pollNumber <= 10 || ((pollNumber % 5) == 0))
                 LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
+
+            // if we finished (i.e. not running or waiting) then we push out an additional log statement
+            // to ensure it's caught
+            if(cookJobReport['state']!=='waiting' && cookJobReport['state']!=='running')
+                LOG.info(`JobCook [${this.name()}] polling [exited], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
+
+            // extract our Cook JobID
+            const cookJobID: string = cookJobReport['id'];
+
+            // depending on our state we handle our state changes
             switch (cookJobReport['state']) {
-                case 'created':     await this.recordCreated();                                                         break;
+                case 'created':     await this.recordCreated();                                                break;
                 case 'waiting':     await this.recordWaiting();                                                         break;
-                case 'running':     await this.recordStart();                                                           break;
+                case 'running':     await this.recordStart(cookJobID);                                                           break;
                 case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return { success: true, allowRetry: false, connectFailure: false, otherCookError: false };
                 case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
                 case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
             }
+
+            // we always update our output so it represents the latest from Cook
+            // TODO: measure performance and wrap into staggered updates if needed
+            await this.updateJobOutput(JSON.stringify(cookJobReport));
+
         } catch (err) {
             return this.handleRequestException(err, requestUrl, 'get', undefined);
         }
@@ -665,5 +681,33 @@ export abstract class JobCook<T> extends JobPackrat {
         if (emitLog)
             LOG.info(error, LOG.LS.eJOB);
         return res;
+    }
+
+    protected async verifyIncomingCookData(_sceneSource: DBAPI.Scene, _fileMap: Map<string,string>): Promise<H.IOResults> {
+        return { success: true };
+    }
+
+    protected extractBaseName(filenames: string[]): string | null {
+        // extract the base name from the list of incoming filenames and make sure they all share
+        // the same values. input (currently) requires an SVX file in the list
+        // TODO: broader support for other 'groups' of filenames that may not have an SVX
+        const svxFilename: string | undefined = filenames.find(filename => filename.includes('.svx.json'));
+        if(!svxFilename || svxFilename.length == 0) {
+            this.logError('JobCookSIGenerateDownloads cannot extract basename. SVX file not found');
+            return null;
+        }
+
+        // get the baseName from the SVX file
+        const baseName: string = svxFilename.replace(/\.svx\.json$/, '');
+
+        // compare with others in the list to make sure they match
+        const errorNames: string[] = filenames.filter(filename => !filename.startsWith(baseName));
+        if(errorNames.length>0) {
+            this.logError(`JobCookSIGenerateDownloads filenames don't share base name. (${errorNames.join(' | ')})`);
+            return null;
+        }
+
+        // return success
+        return baseName;
     }
 }
