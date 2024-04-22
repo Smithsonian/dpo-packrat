@@ -15,6 +15,8 @@ import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 import { getCookResource } from './routes/resources';
 
+import { generateDownloads } from './routes/api/generateDownloads';
+
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
 import { ApolloServer } from 'apollo-server-express';
@@ -79,6 +81,11 @@ export class HttpServer {
         await server.start();
         server.applyMiddleware({ app: this.app, cors: false });
 
+        // Packrat API endpoints (WIP)
+        this.app.post('/api/scene/gen-downloads', generateDownloads);
+        this.app.get('/api/scene/gen-downloads', generateDownloads);
+
+        // utility endpoints
         this.app.get('/logtest', logtest);
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);

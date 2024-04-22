@@ -6,6 +6,8 @@
  *
  * This component renders repository details view for the Repository UI.
  */
+import API, { RequestResponse } from '../../../../api';
+
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
@@ -101,6 +103,9 @@ function DetailsView(): React.ReactElement {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [detailQuery, setDetailQuery] = useState<any>({});
     const [isUpdatingData, setIsUpdatingData] = useState(false);
+    const [isGeneratingDownloads, setIsGeneratingDownloads] = useState(false);
+    const [canGenerateDownloads, setCanGenerateDownloads] = useState(true);
+
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
     const idSystemObject: number = Number.parseInt(params.idSystemObject as string, 10);
@@ -167,6 +172,29 @@ function DetailsView(): React.ReactElement {
 
     };
 
+    const verifyGenerateDownloads = async (): Promise<boolean> => {
+        // check whether we can actually generate downloads
+        // TODO: check QC checkbox status, (ideally) if a generate downloads is already running, ...
+        console.log('Verifying Generate Downloads...');
+
+        // make a call to our generate downloads endpoint with the current scene id
+        const response: RequestResponse = await API.generateDownloads(idSystemObject, true);
+        console.log(response);
+        if(response.success === false) {
+            console.log(`[Packrat - ERROR] cannot verify if generate downloads is available. (${response.message})`);
+            setCanGenerateDownloads(false);
+            return false;
+        }
+
+        // see if we can actually run based on if a job isn't already running
+        // and our scene meets the core requirements
+        const canRun: boolean = (response.data.isRunning === false) && (response.data.isSceneValid === true);
+
+        // we have success so enable it
+        setCanGenerateDownloads(canRun);
+        return canRun;
+    };
+
     useEffect(() => {
         if (data) {
             const handleDetailTab = async () => {
@@ -209,6 +237,10 @@ function DetailsView(): React.ReactElement {
         onUploaderReset();
 
         return () => onUploaderReset();
+    }, []);
+
+    useEffect(() => {
+        verifyGenerateDownloads();
     }, []);
 
     if (!data || !params.idSystemObject) {
@@ -527,6 +559,55 @@ function DetailsView(): React.ReactElement {
         }
     };
 
+    const generateDownloads = async (): Promise<boolean> => {
+        // fire off download generation for the scene. (UI element, ln. 593)
+        // TODO: move into 'Assets' tab (currently lacking context/details on if we're a scene)
+        console.log('Generating Downloads...');
+        if(isGeneratingDownloads === true || canGenerateDownloads === false) {
+            console.error('[Packrat] cannot generate downloads. not sure how you got here...');
+            return false;
+        }
+        setIsGeneratingDownloads(true);
+        setCanGenerateDownloads(false);
+
+        // get our current time so we can make sure we exeecute for a certain amount of time
+        const startTime: number = Date.now();
+
+        // make a call to our generate downloads endpoint with the current scene id
+        // return sucess when the job is started or if one is already running
+        const response: RequestResponse = await API.generateDownloads(idSystemObject);
+        if(response.success === false) {
+            console.log(`[Packrat - ERROR] cannot generate downloads. (${response.message})`);
+            toast.error('Cannot generate downloads. Check the report.');
+            setCanGenerateDownloads(true);
+            setIsGeneratingDownloads(false);
+            return false;
+        }
+
+        console.log(params);
+        console.log(data);
+
+        // wait for a period of time before resetting our buttons
+        // setting a minimal time improves UX and shows spinning logo
+        const diffTime = Math.max(1,2000-(Date.now()-startTime));
+        setTimeout(() => {
+            // TODO: keep polling to set our button state back
+            // if our message is already running then we notify the user
+            if(response.message && response.message.includes('already running')) {
+                console.log(`[Packrat - WARN] cannot generate downloads. (${response.message})`);
+                toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
+            } else
+                toast.success('Generating Downloads started. This may take awhile...');
+
+            // cleanup our button state
+            setCanGenerateDownloads(true);
+            setIsGeneratingDownloads(false);
+        }, diffTime);
+
+        //console.log(`waiting ${diffTime/1000}s before cleaning up button`);
+        return true;
+    };
+
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
 
     return (
@@ -583,8 +664,25 @@ function DetailsView(): React.ReactElement {
                     <LoadingButton className={classes.updateButton} onClick={updateData} disableElevation loading={isUpdatingData}>
                         Update
                     </LoadingButton>
-                    {(updatedIdentifiers || updatedMetadata) && <div style={{ fontStyle: 'italic', marginLeft: '5px' }}>Update needed to save your data</div>}
-                    {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && <LoadingButton className={classes.updateButton} loading={false} onClick={() => document.getElementById('Voyager-Explorer')?.scrollIntoView()} style={{ marginLeft: 5 }}>View</LoadingButton>}
+                    {(updatedIdentifiers || updatedMetadata) &&
+                        <div
+                            style={{ fontStyle: 'italic', marginLeft: '5px' }}
+                        >Update needed to save your data</div>}
+
+                    {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) &&
+                        <LoadingButton className={classes.updateButton}
+                            loading={false}
+                            onClick={() => document.getElementById('Voyager-Explorer')?.scrollIntoView()}
+                            style={{ marginLeft: 5 }}
+                        >View</LoadingButton>}
+
+                    {(objectType === eSystemObjectType.eScene) &&
+                        <LoadingButton className={classes.updateButton}
+                            loading={isGeneratingDownloads}
+                            disabled={!canGenerateDownloads}
+                            onClick={generateDownloads}
+                            style={{ marginLeft: 5, width: '200px' }}
+                        >Generate Downloads</LoadingButton>}
                 </Box>
 
                 <Box display='flex'>
