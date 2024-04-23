@@ -556,6 +556,9 @@ function DetailsView(): React.ReactElement {
             return false;
         } finally {
             setIsUpdatingData(false);
+
+            // check our generate downloads button
+            await verifyGenerateDownloads();
         }
     };
 

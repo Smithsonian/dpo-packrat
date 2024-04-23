@@ -51,10 +51,14 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         // grab our parameters, parse them and see if we have the scene
         try {
             const json = JSON.parse(this.Parameters);
-            if(!json.idScene)
-                return false;
 
-            return (json.idScene == idScene);
+            if(json.idScene)
+                return (json.idScene == idScene);
+
+            if(!json.model && !json.model.idScene)
+                return (json.model.idScene == idScene);
+
+            return false;
         } catch(error) {
             LOG.error(`JobRun.usesScene failed. (${error})`,LOG.LS.eDB);
             return false;
@@ -68,10 +72,14 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         // grab our parameters, parse them and see if we have the model
         try {
             const json = JSON.parse(this.Parameters);
-            if(!json.idModel)
-                return false;
 
-            return (json.idModel == idModel);
+            if(json.idModel)
+                return (json.idModel == idModel);
+
+            if(!json.model && !json.model.idModel)
+                return (json.model.idModel == idModel);
+
+            return false;
         } catch(error) {
             LOG.error(`JobRun.usesModel failed. (${error})`,LOG.LS.eDB);
             return false;

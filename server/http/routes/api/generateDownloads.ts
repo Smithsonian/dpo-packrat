@@ -47,7 +47,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     const idSystemObject: number = parseInt((req.query.id as string) ?? '0');
     if(idSystemObject === 0) {
         LOG.error(`API.generateDownloads failed. invalid id: ${idSystemObject}`,LOG.LS.eHTTP);
-        res.status(400).send(JSON.stringify(generateResponse(false,`invalid id parameter: ${req.query.id ?? -1}`)));
+        res.status(200).send(JSON.stringify(generateResponse(false,`invalid id parameter: ${req.query.id ?? -1}`)));
         return;
     }
 
@@ -55,16 +55,16 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetchBySystemObject(idSystemObject);
     if(!scene) {
         LOG.error(`API.generateDownloads failed. cannot find Scene. (id:${idSystemObject})`,LOG.LS.eHTTP);
-        res.status(400).send(JSON.stringify(generateResponse(false,`cannot find scene: ${idSystemObject}`)));
+        res.status(200).send(JSON.stringify(generateResponse(false,`cannot find scene: ${idSystemObject}`)));
         return;
     }
 
     // see if scene is valid
     // TODO: add more checks to ensure it's safe to run generate downloads (e.g. master model good, names good, etc.)
-    const isSceneValid: boolean = (scene.PosedAndQCd)?false:true;
+    const isSceneValid: boolean = (scene.PosedAndQCd)?true:false; // doing this to unlocked from number
     if(isSceneValid === false) {
         LOG.error(`API.generateDownloads failed. scene is not QC'd. (id:${idSystemObject} | scene:${scene.idScene})`,LOG.LS.eHTTP);
-        res.status(400).send(JSON.stringify(generateResponse(false,'scene has not be QC\'d.')));
+        res.status(200).send(JSON.stringify(generateResponse(false,'scene has not be QC\'d.')));
         return;
     }
 
@@ -86,11 +86,10 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     //       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
     let isRunning: number = -1;
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchByJobFiltered(8,true);
-    console.log(activeJobs);
     if(activeJobs && activeJobs.length > 0) {
         // see if it's ours and if so, throw response
         for(let i=0; i< activeJobs.length; i++){
-            if(activeJobs[i].usesScene(97)) {
+            if(activeJobs[i].usesScene(scene.idScene)) {
                 LOG.info(`API.generateDownloads found running job (${activeJobs[i].idJobRun}) for scene (${scene.idScene}).`,LOG.LS.eDEBUG);
                 isRunning = activeJobs[i].idJobRun;
                 break;
@@ -101,12 +100,12 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
     // if we only want the status, we're finished and can return success
     if(statusOnly === true) {
-        const message: string = (isRunning)?`Job already running (id: ${scene.idScene} | scene: ${scene.Name})`:`Job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`;
+        const message: string = (isRunning>0)?`Job already running (id: ${scene.idScene} | scene: ${scene.Name})`:`Job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`;
         LOG.info(`API.generateDownloads ${message}`,LOG.LS.eHTTP);
-        res.status(200).send(JSON.stringify(generateResponse(true,message,{ idWorkflow: -1, isSceneValid, isRunning })));
+        res.status(200).send(JSON.stringify(generateResponse(true,message,{ idWorkflow: -1, isSceneValid, isRunning: (isRunning>0) })));
         return;
     }
 
     // return success
-    res.status(200).send(JSON.stringify(generateResponse(true,`Generating Downloads for: ${scene.Name}`,{ idWorkflow: -1, isSceneValid, isRunning })));
+    res.status(200).send(JSON.stringify(generateResponse(true,`Generating Downloads for: ${scene.Name}`,{ idWorkflow: -1, isSceneValid, isRunning: (isRunning>0) })));
 }
