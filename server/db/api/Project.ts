@@ -161,4 +161,19 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return null;
         }
     }
+
+    static async fetchFromScene(idScene: number): Promise<Project[] | null> {
+        // return the project(s) associated with a particular scene
+        return DBC.CopyArray<ProjectBase, Project>(
+            await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT proj.* FROM Scene AS scn
+                JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene
+                JOIN SystemObjectXref AS scnSOX ON scnSO.idSystemObject = scnSOX.idSystemObjectDerived
+                JOIN SystemObject AS itemSO ON scnSOX.idSystemObjectMaster = itemSO.idSystemObject AND itemSO.idItem IS NOT NULL
+                JOIN SystemObjectXref AS itemSOX ON itemSO.idSystemObject = itemSOX.idSystemObjectDerived
+                JOIN SystemObject AS projSO ON itemSOX.idSystemObjectMaster = projSO.idSystemObject AND projSO.idProject IS NOT NULL
+                JOIN Project AS proj ON projSO.idProject = proj.idProject
+                WHERE scn.idScene = ${idScene};
+            `,Project);
+    }
 }

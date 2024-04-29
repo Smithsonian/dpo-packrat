@@ -3,15 +3,16 @@ import { WorkflowReport } from '../../db';
 import * as H from '../../utils/helpers';
 
 export class Report implements IReport {
-    private _workflowReport: WorkflowReport;
+    workflowReport: WorkflowReport;
+
     constructor(workflowReport: WorkflowReport) {
-        this._workflowReport = workflowReport;
+        this.workflowReport = workflowReport;
     }
 
     async append(content: string): Promise<H.IOResults> {
-        const seperator: string = (this._workflowReport.Data) ? '<br/>\n' : '';
-        this._workflowReport.Data += seperator + content;
-        if (await this._workflowReport.update())
+        const seperator: string = (this.workflowReport.Data) ? '<br/>\n' : '';
+        this.workflowReport.Data += seperator + content;
+        if (await this.workflowReport.update())
             return { success: true };
         return { success: false, error: 'Database error persisting WorkflowReport' };
     }

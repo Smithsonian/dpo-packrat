@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
-// import * as COMMON from '@dpo-packrat/common';
-// import { VocabularyCache } from '../../../cache';
+import * as H from '../../../utils/helpers';
+import { ASL, LocalStore } from '../../../utils/localStore';
 
 import { Request, Response } from 'express';
+import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
 type GenDownloadsStatus = {
     idWorkflow?: number,        // do we have a workflow/report so we can (later) jump to its status page
+    idWorkflowReport?: number,  // do we have a report for this workflow to help with future polling
     isSceneValid: boolean,      // if the referenced scene is QC'd and has basic requirements met
-    isRunning: boolean,         // is there a job already running
-    message?: string
+    isJobRunning: boolean,         // is there a job already running
 };
 
 type GenDownloadsResponse = {
@@ -19,7 +20,7 @@ type GenDownloadsResponse = {
     data?: GenDownloadsStatus
 };
 
-const generateResponse = (success: boolean, message?: string | undefined, data?: any | undefined): GenDownloadsResponse => {
+const generateResponse = (success: boolean, message?: string | undefined, data?: GenDownloadsStatus | undefined): GenDownloadsResponse => {
     return {
         success,
         message,
@@ -42,7 +43,27 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         }
     }
 
-    // #region verify the status of the scene/workflow
+    // make sure we have a user
+    const user = req['user'];
+    const idUser: number = user ? user['idUser'] : undefined;
+    if(idUser == undefined) {
+        LOG.error(`API.generateDownloads failed. invalid user id: ${req['user']}`,LOG.LS.eHTTP);
+        res.status(200).send(JSON.stringify(generateResponse(false,'invalid user id')));
+        return;
+    }
+
+    // see if our system has the useId stored
+    // TODO: check our AuthFactory for status here...
+    const LS: LocalStore | undefined = await ASL.getOrCreateStore();
+    if(!LS) {
+        LOG.error(`API.generateDownloads failed. cannot get Local Storage or auth user. (${idUser})`,LOG.LS.eHTTP);
+        res.status(200).send(JSON.stringify(generateResponse(false,'cannot verify user')));
+        return;
+    } else if(!LS.idUser && idUser>0) {
+        LOG.info(`API.generateDownloads manually assigning authenticated user (${idUser}) to LocalStorage.`,LOG.LS.eHTTP);
+        LS.idUser = idUser;
+    }
+
     // extract query param for idSystemObject
     const idSystemObject: number = parseInt((req.query.id as string) ?? '0');
     if(idSystemObject === 0) {
@@ -59,53 +80,76 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         return;
     }
 
-    // see if scene is valid
-    // TODO: add more checks to ensure it's safe to run generate downloads (e.g. master model good, names good, etc.)
-    const isSceneValid: boolean = (scene.PosedAndQCd)?true:false; // doing this to unlocked from number
-    if(isSceneValid === false) {
-        LOG.error(`API.generateDownloads failed. scene is not QC'd. (id:${idSystemObject} | scene:${scene.idScene})`,LOG.LS.eHTTP);
-        res.status(200).send(JSON.stringify(generateResponse(false,'scene has not be QC\'d.')));
-        return;
-    }
-
-    // TODO: get our idJob from the vocabulary for COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads
-    // FIX: vocabulary structure/enum is returning values different than what's in the db or undefined
-    // const eVocabID: COMMON.eVocabularyID = (<any>COMMON.eVocabularyID)[COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads];
-    // const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
-    // console.log(`vocabulary: ${eVocabID} | ${typeof(eVocabID)} | ${COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads} | ${typeof(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads)}`);
-
-    // const jobs: DBAPI.Job[] | null = await DBAPI.Job.fetchByType(vocabulary.idVocabulary);
-    // if(!jobs) {
-    //     LOG.error(`API.generateDownloads failed. unable to find Job of correct type. (type: ${COMMON.eVocabularyID[vocabulary.idVocabulary]})`,LOG.LS.eHTTP);
-    //     res.status(400).send(JSON.stringify(generateResponse(false,'unable to find Job type')));
-    //     return;
-    // }
-
     // get any generate downloads workflows/jobs running
     // HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
     //       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
-    let isRunning: number = -1;
-    const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchByJobFiltered(8,true);
-    if(activeJobs && activeJobs.length > 0) {
-        // see if it's ours and if so, throw response
-        for(let i=0; i< activeJobs.length; i++){
-            if(activeJobs[i].usesScene(scene.idScene)) {
-                LOG.info(`API.generateDownloads found running job (${activeJobs[i].idJobRun}) for scene (${scene.idScene}).`,LOG.LS.eDEBUG);
-                isRunning = activeJobs[i].idJobRun;
-                break;
-            }
+    const idJob: number = 8;
+
+    // #region verify the status of the scene/workflow
+    // if we only want the status then we need to do some checks ourself instead of WorkflowEngine
+    if(statusOnly === true) {
+        // see if scene is valid
+        const isSceneValid: boolean = scene.canGenerateDownloads();
+        if(isSceneValid === false) {
+            LOG.error(`API.generateDownloads failed. scene is not QC'd. (id:${idSystemObject} | scene:${scene.idScene})`,LOG.LS.eHTTP);
+            res.status(200).send(JSON.stringify(generateResponse(false,'scene has not be QC\'d.')));
+            return;
         }
+
+        // get any active jobs
+        const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,scene.idScene);
+        if(!activeJobs) {
+            LOG.error(`API.generateDownloads failed. cannot determine if job is running. (id:${idSystemObject} | idScene: ${scene.idScene})`,LOG.LS.eHTTP);
+            res.status(200).send(JSON.stringify(generateResponse(false,'failed to get active jobs from DB', { isSceneValid, isJobRunning: false })));
+            return;
+        }
+
+        // if we're running, we don't duplicate our efforts
+        const idActiveJobRun: number[] = activeJobs.map(job => job.idJobRun);
+        if(activeJobs.length > 0) {
+            // TODO: return idWorkflowReport so client can create a link
+            LOG.info(`API.generateDownloads job already running (idScene: ${scene.idScene} | idJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
+            res.status(200).send(JSON.stringify(generateResponse(false,'job already running',{ isSceneValid, isJobRunning: (activeJobs.length>0) })));
+            return;
+        }
+
+        // TODO: get our workflow & report from the active job id
+
+        // send our info back to the client
+        LOG.info(`API.generateDownloads job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`,LOG.LS.eHTTP);
+        res.status(200).send(JSON.stringify(generateResponse(true,'scene is valid and no job is running',{ isSceneValid, isJobRunning: (activeJobs.length>0) })));
+        return;
     }
     // #endregion
 
-    // if we only want the status, we're finished and can return success
-    if(statusOnly === true) {
-        const message: string = (isRunning>0)?`Job already running (id: ${scene.idScene} | scene: ${scene.Name})`:`Job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`;
-        LOG.info(`API.generateDownloads ${message}`,LOG.LS.eHTTP);
-        res.status(200).send(JSON.stringify(generateResponse(true,message,{ idWorkflow: -1, isSceneValid, isRunning: (isRunning>0) })));
+    // if we're here then we want to try and initiate the workflow
+    const wfEngine: IWorkflowEngine | null = await WorkflowFactory.getInstance();
+    if(!wfEngine) {
+        LOG.error(`API.generateDownloads failed to get WorkflowEngine. (id: ${scene.idScene} | scene: ${scene.Name})`,LOG.LS.eHTTP);
+        res.status(200).send(JSON.stringify(generateResponse(false,'failed to get WorkflowEngine')));
+        return;
+    }
+
+    // build our parameters for the workflow
+    const workflowParams: WorkflowParameters = {
+        idUserInitiator: idUser
+    };
+
+    // create our workflow for generating downloads
+    const result: WorkflowCreateResult = await wfEngine.generateDownloads(scene.idScene, workflowParams);
+    LOG.info(`API.generateDownloads post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
+    const isSceneValid: boolean = result.data.isSceneValid ?? false;
+    const isJobRunning: boolean = (result.data.activeJobs.length>0) ?? false;
+    const idWorkflow: number | undefined = (result.data.workflow?.idWorkflow) ?? undefined;
+    const idWorkflowReport: number | undefined = (result.data.workflowReport?.idWorkflowReport) ?? undefined;
+
+    // make sure we saw success, otherwise bail
+    if(result.success===false) {
+        LOG.error(`API.generateDownloads failed to generate downloads: ${result.message}`,LOG.LS.eHTTP);
+        res.status(200).send(JSON.stringify(generateResponse(false,result.message,{ isSceneValid, isJobRunning })));
         return;
     }
 
     // return success
-    res.status(200).send(JSON.stringify(generateResponse(true,`Generating Downloads for: ${scene.Name}`,{ idWorkflow: -1, isSceneValid, isRunning: (isRunning>0) })));
+    res.status(200).send(JSON.stringify(generateResponse(true,`Generating Downloads for: ${scene.Name}`,{ isSceneValid, isJobRunning, idWorkflow, idWorkflowReport })));
 }

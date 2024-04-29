@@ -188,9 +188,10 @@ function DetailsView(): React.ReactElement {
 
         // see if we can actually run based on if a job isn't already running
         // and our scene meets the core requirements
-        const canRun: boolean = (response.data.isRunning === false) && (response.data.isSceneValid === true);
+        const canRun: boolean = (response.data.isJobRunning === false) && (response.data.isSceneValid === true);
 
         // we have success so enable it
+        console.log(`[PACKRAT - DEBUG] can generate downloads: ${canRun}`);
         setCanGenerateDownloads(canRun);
         return canRun;
     };
@@ -580,9 +581,20 @@ function DetailsView(): React.ReactElement {
         // return sucess when the job is started or if one is already running
         const response: RequestResponse = await API.generateDownloads(idSystemObject);
         if(response.success === false) {
-            console.log(`[Packrat - ERROR] cannot generate downloads. (${response.message})`);
-            toast.error('Cannot generate downloads. Check the report.');
+
+            // if the job is running then handle differently
+            if(response.message && response.message.includes('already running')) {
+                console.log(`[Packrat - WARN] cannot generate downloads. (${response.message})`);
+                toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
+            } else {
+                console.log(`[Packrat - ERROR] cannot generate downloads. (${response.message})`);
+                toast.error('Cannot generate downloads. Check the report.');
+            }
+
+            // update our button state
             setCanGenerateDownloads(true);
+
+            // set to false to stop 'loading' animation on button. doesn't (currently) represent state of job on server
             setIsGeneratingDownloads(false);
             return false;
         }
@@ -596,11 +608,7 @@ function DetailsView(): React.ReactElement {
         setTimeout(() => {
             // TODO: keep polling to set our button state back
             // if our message is already running then we notify the user
-            if(response.message && response.message.includes('already running')) {
-                console.log(`[Packrat - WARN] cannot generate downloads. (${response.message})`);
-                toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
-            } else
-                toast.success('Generating Downloads started. This may take awhile...');
+            toast.success('Generating Downloads started. This may take awhile...');
 
             // cleanup our button state
             setCanGenerateDownloads(true);

@@ -248,6 +248,24 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         }
     }
 
+    static async fetchActiveByScene(idJob: number, idScene: number): Promise<JobRun[] | null> {
+        const jobs: JobRun[] = [];
+        const activeJobs: JobRun[] | null = await JobRun.fetchByJobFiltered(idJob,true);
+        if(!activeJobs) {
+            LOG.error('DBAPI.JobRun.fetchActiveByScene failed to get filtered jobs',LOG.LS.eDB);
+            return null;
+        }
+
+        // see if it's ours and if so, store the job's id
+        for(let i=0; i< activeJobs.length; i++){
+            if(activeJobs[i].usesScene(idScene)) {
+                jobs.push(activeJobs[i]);
+            }
+        }
+
+        return jobs;
+    }
+
     static async fetchFromWorkflow(idWorkflow: number): Promise<JobRun[] | null> {
         // direct get of JubRun(s) from a specific workflow
         try {

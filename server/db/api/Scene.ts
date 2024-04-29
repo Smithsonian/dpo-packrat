@@ -37,6 +37,14 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     public fetchLogInfo(): string {
         return `scene: ${this.Name}[id:${this.idScene}] | EDAN: ${this.EdanUUID}`;
     }
+    public canGenerateDownloads(): boolean {
+        // determine if this scene is valid for generating downloads
+        // TODO: do a check to make sure it has a valid master model attached
+        if(!this.PosedAndQCd)
+            return false;
+
+        return true;
+    }
 
     protected async createWorker(): Promise<boolean> {
         try {

@@ -81,10 +81,6 @@ export class HttpServer {
         await server.start();
         server.applyMiddleware({ app: this.app, cors: false });
 
-        // Packrat API endpoints (WIP)
-        this.app.post('/api/scene/gen-downloads', generateDownloads);
-        this.app.get('/api/scene/gen-downloads', generateDownloads);
-
         // utility endpoints
         this.app.get('/logtest', logtest);
         this.app.get('/heartbeat', heartbeat);
@@ -96,6 +92,10 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, download);
 
         this.app.get('/resources/cook', getCookResource);
+
+        // Packrat API endpoints (WIP)
+        this.app.post('/api/scene/gen-downloads', generateDownloads);
+        this.app.get('/api/scene/gen-downloads', generateDownloads);
 
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {
