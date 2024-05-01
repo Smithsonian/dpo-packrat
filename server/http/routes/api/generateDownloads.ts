@@ -4,6 +4,10 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
 
+import { eEventKey } from '../../../event/interface/EventEnums';
+import { AuditFactory } from '../../../audit/interface/AuditFactory';
+import { isAuthenticated } from '../../auth';
+
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
@@ -29,7 +33,15 @@ const generateResponse = (success: boolean, message?: string | undefined, data?:
 };
 
 export async function generateDownloads(req: Request, res: Response): Promise<void> {
-    LOG.info('Generating Downloads from API request...', LOG.LS.eHTTP);
+    // LOG.info('Generating Downloads from API request...', LOG.LS.eHTTP);
+
+    // make sure we're authenticated (i.e. see if request has a 'user' object)
+    if (!isAuthenticated(req)) {
+        AuditFactory.audit({ url: req.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eGenDownloads);
+        LOG.error('API.generateDownloads failed. not authenticated.', LOG.LS.eHTTP);
+        res.status(403).send('no authenticated');
+        return;
+    }
 
     // get our method to see what we should do
     let statusOnly: boolean = true;
@@ -43,9 +55,8 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         }
     }
 
-    // make sure we have a user
-    const user = req['user'];
-    const idUser: number = user ? user['idUser'] : undefined;
+    // get our user id
+    const idUser: number = req['user'] ? req['user']['idUser'] : undefined;
     if(idUser == undefined) {
         LOG.error(`API.generateDownloads failed. invalid user id: ${req['user']}`,LOG.LS.eHTTP);
         res.status(200).send(JSON.stringify(generateResponse(false,'invalid user id')));
@@ -54,15 +65,27 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
     // see if our system has the useId stored
     // TODO: check our AuthFactory for status here...
+    // const LS: LocalStore | undefined = await ASL.getOrCreateStore(idUser);
     const LS: LocalStore | undefined = await ASL.getOrCreateStore();
+    LOG.info(`API.generateDownloads (${H.Helpers.JSONStringify(LS)})`,LOG.LS.eDEBUG);
     if(!LS) {
         LOG.error(`API.generateDownloads failed. cannot get Local Storage or auth user. (${idUser})`,LOG.LS.eHTTP);
-        res.status(200).send(JSON.stringify(generateResponse(false,'cannot verify user')));
-        return;
-    } else if(!LS.idUser && idUser>0) {
-        LOG.info(`API.generateDownloads manually assigning authenticated user (${idUser}) to LocalStorage.`,LOG.LS.eHTTP);
+        LOG.error(`\t ${H.Helpers.getStackTrace('(API) Generate Downloads')}`,LOG.LS.eDEBUG);
+    } else if(!LS.idUser) {
+        LOG.error(`API.generateDownloads failed. LocalStore is missing idUser. (${idUser})`,LOG.LS.eHTTP);
+        LOG.error(`\t ${H.Helpers.getStackTrace('(API) Generate Downloads User')}`,LOG.LS.eDEBUG);
         LS.idUser = idUser;
     }
+    // if(LS && !LS.idUser)
+    //     LS.idUser = idUser;
+    // if(!LS) {
+    //     LOG.error(`API.generateDownloads failed. cannot get Local Storage or auth user. (${idUser})`,LOG.LS.eHTTP);
+    //     // res.status(200).send(JSON.stringify(generateResponse(false,'cannot verify user')));
+    //     // return;
+    // } else if(!LS.idUser && idUser>0) {
+    //     LOG.info(`API.generateDownloads manually assigning authenticated user (${idUser}) to LocalStorage.`,LOG.LS.eHTTP);
+    //     LS.idUser = idUser;
+    // }
 
     // extract query param for idSystemObject
     const idSystemObject: number = parseInt((req.query.id as string) ?? '0');

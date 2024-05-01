@@ -275,35 +275,40 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             parameters: jobParamSIGenerateDownloads,
         };
         LOG.info(`WorkflowEngine.generateDownloads generating downloads... (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eDEBUG);
-        return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs } };
         //#endregion
 
+        const doCreate: boolean = false;
+        if(doCreate) {
         // create our workflow
-        // const wf: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
-        // if (!wf) {
-        //     LOG.error(`WorkflowEngine.generateDownloads unable to create Cook si-generate-downloads workflow: ${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
-        //     return { success: false, message: 'cannot create downloads workflow', data: { isSceneValid, activeJobs } };
-        // }
+            const wf: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
+            if (!wf) {
+                LOG.error(`WorkflowEngine.generateDownloads unable to create Cook si-generate-downloads workflow: ${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
+                return { success: false, message: 'cannot create downloads workflow', data: { isSceneValid, activeJobs } };
+            }
 
-        // // get our Workflow object from the database
-        // const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
-        // if(!workflow) {
-        //     LOG.error(`WorkflowEngine.generateDownloads unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eWF);
-        //     return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
-        // }
+            // get our Workflow object from the database
+            const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
+            if(!workflow) {
+                LOG.error(`WorkflowEngine.generateDownloads unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eWF);
+                return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
+            }
 
-        // // get our workflow report for the new workflow
-        // // const report: REP.IReport | null = await REP.ReportFactory.getReport();
-        // // const workflowReport: DBAPI.WorkflowReport = (report as Report).workflowReport;
+            // get our workflow report for the new workflow
+            // const report: REP.IReport | null = await REP.ReportFactory.getReport();
+            // const workflowReport: DBAPI.WorkflowReport = (report as Report).workflowReport;
 
-        // const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
-        // if(!workflowReport || workflowReport.length <= 0) {
-        //     LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
-        //     return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
-        // }
+            const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
+            if(!workflowReport || workflowReport.length <= 0) {
+                LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
+                return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
+            }
 
-        // // return success
-        // return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs, workflow, workflowReport } };
+            // return success
+            return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs, workflow, workflowReport } };
+        } else {
+            return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs } };
+        }
+
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
