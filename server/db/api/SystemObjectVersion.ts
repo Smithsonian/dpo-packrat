@@ -143,6 +143,10 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             if (!DBC.DBConnection.isFullPrismaClient(prismaClient))
                 return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap, assetsUnzipped);
 
+            // set our options for all transactions. these timeout values help with situations
+            // where concurrent requests to the DB take longer than expected. (in seconds)
+            const transactionOptions = { maxWait: 5000, timeout: 10000 };
+
             // otherwise, start a new transaction:
             // LOG.info('DBAPI.SystemObjectVersion.cloneObjectAndXrefs starting a new DB transaction', LOG.LS.eDB);
             return await prismaClient.$transaction(async (prisma) => {
@@ -150,7 +154,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 const retValue: SystemObjectVersion | null = await SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap, assetsUnzipped);
                 DBC.DBConnection.clearPrismaTransaction(transactionNumber);
                 return retValue;
-            });
+            },transactionOptions);
         } catch (error) /* istanbul ignore next */ {
             LOG.error('DBAPI.SystemObjectVersion.cloneObjectAndXrefs', LOG.LS.eDB, error);
             return null;

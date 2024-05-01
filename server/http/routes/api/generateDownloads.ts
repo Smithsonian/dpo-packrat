@@ -15,7 +15,7 @@ type GenDownloadsStatus = {
     idWorkflow?: number,        // do we have a workflow/report so we can (later) jump to its status page
     idWorkflowReport?: number,  // do we have a report for this workflow to help with future polling
     isSceneValid: boolean,      // if the referenced scene is QC'd and has basic requirements met
-    isJobRunning: boolean,         // is there a job already running
+    isJobRunning: boolean,      // is there a job already running
 };
 
 type GenDownloadsResponse = {
@@ -55,37 +55,13 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         }
     }
 
-    // get our user id
-    const idUser: number = req['user'] ? req['user']['idUser'] : undefined;
-    if(idUser == undefined) {
-        LOG.error(`API.generateDownloads failed. invalid user id: ${req['user']}`,LOG.LS.eHTTP);
-        res.status(200).send(JSON.stringify(generateResponse(false,'invalid user id')));
+    // get our LocalStore. If we don't have one then bail. it is needed for the user id, auditing, and workflows
+    const LS: LocalStore | undefined = ASL.getStore();
+    if(!LS || !LS.idUser){
+        LOG.error('API.generateDownloads failed. cannot get LocalStore or idUser',LOG.LS.eHTTP);
+        res.status(200).send(JSON.stringify(generateResponse(false,'missing store/user')));
         return;
     }
-
-    // see if our system has the useId stored
-    // TODO: check our AuthFactory for status here...
-    // const LS: LocalStore | undefined = await ASL.getOrCreateStore(idUser);
-    const LS: LocalStore | undefined = await ASL.getOrCreateStore();
-    LOG.info(`API.generateDownloads (${H.Helpers.JSONStringify(LS)})`,LOG.LS.eDEBUG);
-    if(!LS) {
-        LOG.error(`API.generateDownloads failed. cannot get Local Storage or auth user. (${idUser})`,LOG.LS.eHTTP);
-        LOG.error(`\t ${H.Helpers.getStackTrace('(API) Generate Downloads')}`,LOG.LS.eDEBUG);
-    } else if(!LS.idUser) {
-        LOG.error(`API.generateDownloads failed. LocalStore is missing idUser. (${idUser})`,LOG.LS.eHTTP);
-        LOG.error(`\t ${H.Helpers.getStackTrace('(API) Generate Downloads User')}`,LOG.LS.eDEBUG);
-        LS.idUser = idUser;
-    }
-    // if(LS && !LS.idUser)
-    //     LS.idUser = idUser;
-    // if(!LS) {
-    //     LOG.error(`API.generateDownloads failed. cannot get Local Storage or auth user. (${idUser})`,LOG.LS.eHTTP);
-    //     // res.status(200).send(JSON.stringify(generateResponse(false,'cannot verify user')));
-    //     // return;
-    // } else if(!LS.idUser && idUser>0) {
-    //     LOG.info(`API.generateDownloads manually assigning authenticated user (${idUser}) to LocalStorage.`,LOG.LS.eHTTP);
-    //     LS.idUser = idUser;
-    // }
 
     // extract query param for idSystemObject
     const idSystemObject: number = parseInt((req.query.id as string) ?? '0');
@@ -108,11 +84,10 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     //       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
     const idJob: number = 8;
 
-    // #region verify the status of the scene/workflow
-    // if we only want the status then we need to do some checks ourself instead of WorkflowEngine
+    // if we only want the status then we need to do some quick checks ourself instead of WorkflowEngine
     if(statusOnly === true) {
         // see if scene is valid
-        const isSceneValid: boolean = scene.canGenerateDownloads();
+        const isSceneValid: boolean = (scene.PosedAndQCd)?true:false;
         if(isSceneValid === false) {
             LOG.error(`API.generateDownloads failed. scene is not QC'd. (id:${idSystemObject} | scene:${scene.idScene})`,LOG.LS.eHTTP);
             res.status(200).send(JSON.stringify(generateResponse(false,'scene has not be QC\'d.')));
@@ -130,20 +105,27 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         // if we're running, we don't duplicate our efforts
         const idActiveJobRun: number[] = activeJobs.map(job => job.idJobRun);
         if(activeJobs.length > 0) {
-            // TODO: return idWorkflowReport so client can create a link
-            LOG.info(`API.generateDownloads job already running (idScene: ${scene.idScene} | idJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
-            res.status(200).send(JSON.stringify(generateResponse(false,'job already running',{ isSceneValid, isJobRunning: (activeJobs.length>0) })));
+            // get our workflow & report from the first active job id
+            let idWorkflow: number | undefined = undefined;
+            let idWorkflowReport: number | undefined = undefined;
+            const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromJobRun(activeJobs[0].idJobRun);
+            if(workflowReport && workflowReport.length>0) {
+                idWorkflowReport = workflowReport[0].idWorkflowReport;
+                idWorkflow = workflowReport[0].idWorkflow;
+            } else
+                LOG.info(`API.generateDownloads unable to get workflowReport (idScene: ${scene.idScene} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+
+            // return our response and log it
+            LOG.info(`API.generateDownloads job already running (idScene: ${scene.idScene} | idJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eHTTP);
+            res.status(200).send(JSON.stringify(generateResponse(false,'job already running',{ isSceneValid, isJobRunning: (activeJobs.length>0), idWorkflow, idWorkflowReport })));
             return;
         }
-
-        // TODO: get our workflow & report from the active job id
 
         // send our info back to the client
         LOG.info(`API.generateDownloads job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`,LOG.LS.eHTTP);
         res.status(200).send(JSON.stringify(generateResponse(true,'scene is valid and no job is running',{ isSceneValid, isJobRunning: (activeJobs.length>0) })));
         return;
     }
-    // #endregion
 
     // if we're here then we want to try and initiate the workflow
     const wfEngine: IWorkflowEngine | null = await WorkflowFactory.getInstance();
@@ -155,7 +137,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
     // build our parameters for the workflow
     const workflowParams: WorkflowParameters = {
-        idUserInitiator: idUser
+        idUserInitiator: LS.idUser
     };
 
     // create our workflow for generating downloads
@@ -169,7 +151,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     // make sure we saw success, otherwise bail
     if(result.success===false) {
         LOG.error(`API.generateDownloads failed to generate downloads: ${result.message}`,LOG.LS.eHTTP);
-        res.status(200).send(JSON.stringify(generateResponse(false,result.message,{ isSceneValid, isJobRunning })));
+        res.status(200).send(JSON.stringify(generateResponse(false,result.message,{ isSceneValid, isJobRunning, idWorkflow, idWorkflowReport })));
         return;
     }
 

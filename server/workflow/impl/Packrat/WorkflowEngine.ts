@@ -156,6 +156,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     async generateDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
 
         // TODO: make this it's own workflow implementation instead of a routine (e.g. WorkflowGenDownloads)
+        // TODO: move scene verification into Scene class (returns CSIR). we then check everything is available for gen downloads here
 
         //#region get and verify scene
         // grab our scene from the DB
@@ -212,8 +213,18 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // TODO: allow for cancelling/overwritting existing jobs
         const idActiveJobRun: number[] = activeJobs.map(job => job.idJobRun);
         if(activeJobs.length > 0) {
+            // get our workflow & report from the first active job id
+            let idWorkflow: number | undefined = undefined;
+            let idWorkflowReport: number | undefined = undefined;
+            const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromJobRun(activeJobs[0].idJobRun);
+            if(workflowReport && workflowReport.length>0) {
+                idWorkflowReport = workflowReport[0].idWorkflowReport;
+                idWorkflow = workflowReport[0].idWorkflow;
+            } else
+                LOG.info(`WorkflowEngine.generateDownloads unable to get workflowReport (idScene: ${scene.idScene} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+
             LOG.info(`WorkflowEngine.generateDownloads did not start. Job already running (idScene: ${scene.idScene} | activeJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
-            return { success: false, message: 'Job already running', data: { isSceneValid: true, activeJobs } };
+            return { success: false, message: 'Job already running', data: { isSceneValid: true, activeJobs, idWorkflow, idWorkflowReport } };
         }
         //#endregion
 
@@ -243,7 +254,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         // build our base names
         const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
-        LOG.info(`WorkflowEngine.generateDownloads comput names (sceneBaseName: ${sceneBaseName} | modelBaseName: ${modelBaseName})`,LOG.LS.eDEBUG);
+        LOG.info(`WorkflowEngine.generateDownloads compute names (sceneBaseName: ${sceneBaseName} | modelBaseName: ${modelBaseName})`,LOG.LS.eDEBUG);
 
         // #region build our scene parameters
         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CSIR.idModel);
@@ -277,9 +288,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         LOG.info(`WorkflowEngine.generateDownloads generating downloads... (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eDEBUG);
         //#endregion
 
-        const doCreate: boolean = false;
+        const doCreate: boolean = true;
         if(doCreate) {
-        // create our workflow
+            // create our workflow
             const wf: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
             if (!wf) {
                 LOG.error(`WorkflowEngine.generateDownloads unable to create Cook si-generate-downloads workflow: ${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
@@ -292,23 +303,21 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 LOG.error(`WorkflowEngine.generateDownloads unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eWF);
                 return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
             }
+            LOG.info(`WorkflowEngine.generateDownloads retrieved workflow (${workflow.idWorkflow} | ${workflow.idWorkflowSet})`,LOG.LS.eDEBUG);
 
             // get our workflow report for the new workflow
-            // const report: REP.IReport | null = await REP.ReportFactory.getReport();
-            // const workflowReport: DBAPI.WorkflowReport = (report as Report).workflowReport;
-
             const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
             if(!workflowReport || workflowReport.length <= 0) {
                 LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
-                return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
+                return { success: false, message: 'cannot get worfklow report object', data: { isSceneValid, activeJobs } };
             }
+            LOG.info(`WorkflowEngine.generateDownloads retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
+            LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
 
             // return success
             return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs, workflow, workflowReport } };
-        } else {
+        } else
             return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs } };
-        }
-
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {

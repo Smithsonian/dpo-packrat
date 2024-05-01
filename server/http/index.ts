@@ -50,10 +50,8 @@ export class HttpServer {
         LOG.info('**************************', LOG.LS.eSYS);
         LOG.info('Packrat Server Initialized', LOG.LS.eSYS);
 
-        let res: boolean = false;
-        // await ASL.run(new LocalStore(true, undefined), async () => {
-        res = await this.configureMiddlewareAndRoutes();
-        // });
+        // configure our routes/endpoints
+        const res: boolean = await this.configureMiddlewareAndRoutes();
 
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
         EventFactory.getInstance();
@@ -63,25 +61,6 @@ export class HttpServer {
         }
         return res;
     }
-
-    // private static printRequest(req: Request, label: string = 'Request'): void {
-    //     if(!req) {
-    //         console.log('nothing');
-    //     }
-    //     LOG.info(`${label}: ${H.Helpers.JSONStringify({
-    //         // headers: req.headers,
-    //         // body: req.body,
-    //         query: req.query,
-    //         params: req.params,
-    //         url: req.url,
-    //         method: req.method,
-    //         ip: req.ip,
-    //         path: req.path,
-    //         sid: req.cookies?.connect?.sid ?? undefined,
-    //         // cookies: req.cookies,
-    //         user: req.user
-    //     })}`,LOG.LS.eDEBUG);
-    // }
 
     static bodyProcessorExclusions: RegExp = /^\/(?!webdav).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
@@ -93,60 +72,49 @@ export class HttpServer {
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
-        // this.app.use((req,_res,next)=>{ HttpServer.printRequest(req,'[Pre-Auth]'); next(); });
         this.app.use(cors(authCorsConfig));
         this.app.use(cookieParser());
         this.app.use(authSession);
         this.app.use(passport.initialize());
         this.app.use(passport.session());
-        // this.app.use((req,_res,next)=>{ HttpServer.printRequest(req,'[Post-Auth]'); next(); });
 
         // create our LocalStore for all future interactions
-        // this.app.use(HttpServer.checkLocalStore('[Pre-LocalStore]'));
         this.app.use(HttpServer.logRequest);
-        this.app.use(HttpServer.idRequestMiddleware);
-        this.app.use(HttpServer.checkLocalStore('0:Create'));
+        this.app.use(HttpServer.assignLocalStore);
 
-        // this.app.use('/auth', HttpServer.idRequestMiddleware2);
+        // authentication and graphQL endpoints
+        this.app.use(HttpServer.checkLocalStore('0:Auth/GraphQL'));
         this.app.use('/auth', AuthRouter);
-        // this.app.use(HttpServer.checkLocalStore('h'));
-        // this.app.use('/graphql', HttpServer.idRequestMiddleware2);
-        // this.app.use('/graphql', HttpServer.graphqlLoggingMiddleware);
-        // this.app.use(HttpServer.checkLocalStore('i'));
         this.app.use('/graphql', graphqlUploadExpress());
-        // this.app.use(HttpServer.checkLocalStore('d'));
 
         // start our ApolloServer
-        this.app.use(HttpServer.checkLocalStore('1:Auth/GraphQL'));
+        this.app.use(HttpServer.checkLocalStore('1:Apollo'));
         const server = new ApolloServer(ApolloServerOptions);
         await server.start();
         server.applyMiddleware({ app: this.app, cors: false });
-        this.app.use(HttpServer.checkLocalStore('2:Utility'));
 
         // utility endpoints
+        this.app.use(HttpServer.checkLocalStore('2:Utility'));
         this.app.get('/logtest', logtest);
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         this.app.get('/migrate', migrate);
         this.app.get('/migrate/*', migrate);
-        // this.app.get(`${Downloader.httpRoute}*`, HttpServer.idRequestMiddleware2);
         this.app.get(`${Downloader.httpRoute}*`, download);
-        this.app.use(HttpServer.checkLocalStore('3:API'));
 
         // Packrat API endpoints (WIP)
+        this.app.use(HttpServer.checkLocalStore('3:API'));
         this.app.get('/resources/cook', getCookResource);
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
-        this.app.use(HttpServer.checkLocalStore('4:WebDAV'));
 
         // WebDAV storage (used for staging to Voyager/Cook)
+        this.app.use(HttpServer.checkLocalStore('4:WebDAV'));
         const WDSV: WebDAVServer | null = await WebDAVServer.server();
         if (WDSV) {
-            this.app.use(HttpServer.checkLocalStore('g-WebDAV'));
-            // this.app.use(WebDAVServer.httpRoute, HttpServer.idRequestMiddleware2);
             this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, WDSV.webdav()));
-            this.app.use(HttpServer.checkLocalStore('h-WebDAV'));
+            this.app.use(HttpServer.checkLocalStore('4b:WebDAV'));
         } else
             LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
 
@@ -165,47 +133,16 @@ export class HttpServer {
     }
 
     // creates a LocalStore populated with the next requestID
-    private static idRequestMiddleware(req: Request, _res, next): void {
-        // const user = req['user'];
-        // const idUser = user ? user['idUser'] : undefined;
-        // const LS: LocalStore | undefined = ASL.getStore();
-        // if(!LS) {
-        //     LOG.info(`HTTP.idRequestMiddleware no LocalStore found. creating new LocalStore (url: ${req.originalUrl} | user: ${H.Helpers.JSONStringify(req['user'])})`,LOG.LS.eDEBUG);
-        //     ASL.run(new LocalStore(true, idUser), () => {
-        //         LOG.info(`request: ${req.originalUrl}`, LOG.LS.eHTTP);
-        //     });
-        // } else if(!LS.idUser) {
-        //     LOG.error(`HTTP.idRequestMiddleware warning. LocalStore is missing idUser. (${idUser})`,LOG.LS.eHTTP);
-        //     LS.idUser = idUser;
-        // }
-        // next();
-
-        // if (!req.originalUrl.startsWith('/auth/') &&
-        //     !req.originalUrl.startsWith('/graphql') &&
-        //     !req.originalUrl.startsWith(Downloader.httpRoute) &&
-        //     !req.originalUrl.startsWith(WebDAVServer.httpRoute)) {
-        // HttpServer.printRequest(req, `idRequestMiddleware [${req.originalUrl}]`);
+    private static assignLocalStore(req: Request, _res, next): void {
         const user = req['user'];
         const idUser = user ? user['idUser'] : undefined;
         ASL.run(new LocalStore(true, idUser), () => {
             LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
             next();
         });
-        // } else
-        //     next();
     }
 
-    // private static idRequestMiddleware2(req: Request, _res, next): void {
-    //     const user = req['user'];
-    //     const idUser = user ? user['idUser'] : undefined;
-    //     ASL.run(new LocalStore(true, idUser), () => {
-    //         if (!req.originalUrl.startsWith('/graphql'))
-    //             LOG.info(`HTTP request for: ${req.originalUrl}`, LOG.LS.eHTTP);
-    //         next();
-    //     });
-    // }
-
-    // logging middleware routines
+    // utility routines and middleware
     private static logRequest(req: Request, _res, next): void {
         // TODO: more detailed information about the request
         // figure out who is calling this
@@ -230,21 +167,30 @@ export class HttpServer {
         LOG.info(`New ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
         next();
     }
-    // private static graphqlLoggingMiddleware(req: Request, _res, next): void {
-    //     const query: string | null = computeGQLQuery(req);
-    //     if (query && query !== '__schema') // silence __schema logging, issued by GraphQL playground
-    //         LOG.info(`${query} ${JSON.stringify(req.body.variables)}`, LOG.LS.eGQL);
-    //     return next();
-    // }
-
-    // private static idCheck = 0;
-    // private static lblCheck = '';
     private static checkLocalStore(label: string) {
         return function (req, _res, next) {
             LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
             next();
         };
     }
+    // private static printRequest(req: Request, label: string = 'Request'): void {
+    //     if(!req) {
+    //         console.log('nothing');
+    //     }
+    //     LOG.info(`${label}: ${H.Helpers.JSONStringify({
+    //         // headers: req.headers,
+    //         // body: req.body,
+    //         query: req.query,
+    //         params: req.params,
+    //         url: req.url,
+    //         method: req.method,
+    //         ip: req.ip,
+    //         path: req.path,
+    //         sid: req.cookies?.connect?.sid ?? undefined,
+    //         // cookies: req.cookies,
+    //         user: req.user
+    //     })}`,LOG.LS.eDEBUG);
+    // }
 }
 
 process.on('uncaughtException', (err) => {
