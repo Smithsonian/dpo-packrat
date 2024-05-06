@@ -4,7 +4,6 @@ import * as STORE from '../../storage/interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
-import * as H from '../../utils/helpers';
 import { BufferStream } from '../../utils/bufferStream';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
@@ -71,12 +70,12 @@ export class WebDAVServer {
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
-            // LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} START`, LOG.LS.eDEBUG);
+            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} START`, LOG.LS.eHTTP);
             next();
         });
         this.server.afterRequest((ctx, next) => {
             // Display the method, the URI, the returned status code and the returned message
-            // LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} END ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eDEBUG);
+            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} END ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eHTTP);
             next();
         });
     }
@@ -424,8 +423,6 @@ class WebDAVFileSystem extends webdav.FileSystem {
             if (lockUUID === undefined)
                 return;
             */
-
-            const cacheStore: LocalStore | undefined = ASL.getStore();
 
             const pathS: string = pathWD.toString();
             const DP: DownloaderParser = new DownloaderParser('', pathS);

@@ -67,11 +67,13 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
     // we shouldn't need this routine as all LocalStore should be created when the request is first made
     // so the idRequest and idUser are consistent throughout all related operations.
     // TODO: phase out in favor of getStore().
-    async getOrCreateStore(idUser: number | undefined = undefined): Promise<LocalStore> {
+    async getOrCreateStore(idUser: number | undefined = undefined, logUse: boolean = false): Promise<LocalStore> {
         let LS: LocalStore | undefined = this.getStore();
         if (LS) {
-            LOG.info(`AsyncLocalStore.getOrCreateStore using existing store (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
-            // LOG.info(`\t ${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
+            if(logUse===true)
+                LOG.info(`AsyncLocalStore.getOrCreateStore using existing store (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
+                // LOG.info(`\t ${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
+
             if(!LS.idUser && idUser) {
                 LOG.error(`AsyncLocalStore.getOrCreateStore adding missing user id (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
                 LS.idUser = idUser;
@@ -81,8 +83,9 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
 
         return new Promise<LocalStore>((resolve) => {
             LS = new LocalStore(true, idUser);
-            LOG.error(`AsyncLocalStore.getOrCreateStore creating a new store. lost context? (idRequest: ${LS.idRequest} | idUser: ${idUser})`,LOG.LS.eSYS);
-            // LOG.error(`\t${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
+            if(logUse===true)
+                LOG.error(`AsyncLocalStore.getOrCreateStore creating a new store. lost context? (idRequest: ${LS.idRequest} | idUser: ${idUser})`,LOG.LS.eSYS);
+                // LOG.error(`\t${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
             this.run(LS, () => { resolve(LS!); }); // eslint-disable-line @typescript-eslint/no-non-null-assertion
         });
     }

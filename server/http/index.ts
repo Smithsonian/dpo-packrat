@@ -140,7 +140,6 @@ export class HttpServer {
         ASL.run(new LocalStore(true, idUser), () => {
             LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
             next();
-            LOG.info(`HTTP.idRequestMiddleware POST store run (${ASL.getStore()?.idRequest})`,LOG.LS.eDEBUG);
         });
     }
 
@@ -164,18 +163,18 @@ export class HttpServer {
                 query = queryGQL;
                 queryParams = H.Helpers.JSONStringify(req.body.variables);
             } else
-                query = 'Unknown GraphQL';
+                query = `Unknown GraphQL: ${query}|${req.path}`;
         }
         LOG.info(`New ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
         next();
     }
-    private static checkLocalStore(label: string) {
-        return function (_req, _res, next) {
-            //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
-            ASL.checkLocalStore(label);
-            next();
-        };
-    }
+    // private static checkLocalStore(label: string) {
+    //     return function (_req, _res, next) {
+    //         //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
+    //         ASL.checkLocalStore(label);
+    //         next();
+    //     };
+    // }
     // private static printRequest(req: Request, label: string = 'Request'): void {
     //     if(!req) {
     //         console.log('nothing');
