@@ -97,18 +97,15 @@ export class HttpServer {
             this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, this.WDSV.webdav()));
 
         // authentication and graphQL endpoints
-        this.app.use(HttpServer.checkLocalStore('0:Auth/GraphQL'));
         this.app.use('/auth', AuthRouter);
         this.app.use('/graphql', graphqlUploadExpress());
 
         // start our ApolloServer
-        this.app.use(HttpServer.checkLocalStore('1:Apollo'));
         const server = new ApolloServer(ApolloServerOptions);
         await server.start();
         server.applyMiddleware({ app: this.app, cors: false });
 
         // utility endpoints
-        this.app.use(HttpServer.checkLocalStore('2:Utility'));
         this.app.get('/logtest', logtest);
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
@@ -118,19 +115,9 @@ export class HttpServer {
         this.app.get(`${Downloader.httpRoute}*`, download);
 
         // Packrat API endpoints (WIP)
-        this.app.use(HttpServer.checkLocalStore('3:API'));
         this.app.get('/resources/cook', getCookResource);
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
-
-        // // WebDAV storage (used for staging to Voyager/Cook)
-        // this.app.use(HttpServer.checkLocalStore('4:WebDAV'));
-        // const WDSV: WebDAVServer | null = await WebDAVServer.server();
-        // if (WDSV) {
-        //     this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, WDSV.webdav()));
-        //     this.app.use(HttpServer.checkLocalStore('4b:WebDAV'));
-        // } else
-        //     LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
 
         // if we're here then we handle any errors that may have surfaced
         this.app.use(errorhandler); // keep last
@@ -143,7 +130,6 @@ export class HttpServer {
         }
 
         // only gets here if no other route is satisfied
-        this.app.use(HttpServer.checkLocalStore('5:Exit'));
         return true;
     }
 

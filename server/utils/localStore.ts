@@ -14,7 +14,7 @@ export class LocalStore {
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
-        LOG.info(`LocalStore.getIDRequestNext incrementing ID. (${LocalStore.idRequestNext}->${LocalStore.idRequestNext+1})`,LOG.LS.eDEBUG);
+        // LOG.info(`LocalStore.getIDRequestNext incrementing ID. (${LocalStore.idRequestNext}->${LocalStore.idRequestNext+1})`,LOG.LS.eDEBUG);
         return ++LocalStore.idRequestNext;
     }
 
@@ -109,12 +109,12 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
         return LS;
     }
 
-    checkLocalStore(label: string = 'LocalStore', stackTraceOnNull: boolean = false): void {
+    checkLocalStore(label: string = 'LocalStore', logUndefined: boolean = false): void {
         label = `LocalStore [check: ${label}]`;
         LOG.info(`${label} (${H.Helpers.JSONStringify(this.getStore())})`,LOG.LS.eDEBUG);
 
         // if we don't have a store then dump the trace so we know where it came from
-        if(!this.getStore() && stackTraceOnNull===true)
+        if(!this.getStore() && logUndefined===true)
             LOG.info(`\t ${H.Helpers.getStackTrace(label)}`,LOG.LS.eDEBUG);
     }
 }
