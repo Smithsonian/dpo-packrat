@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncLocalStorage } from 'async_hooks';
+import { AsyncLocalStorage, AsyncResource } from 'async_hooks';
 import * as LOG from './logger';
 import * as H from './helpers';
 
@@ -122,4 +122,5 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
     }
 }
 
+export { AsyncResource as ASR };
 export const ASL: AsyncLocalStore = new AsyncLocalStore();

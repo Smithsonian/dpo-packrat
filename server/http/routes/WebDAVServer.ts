@@ -7,7 +7,7 @@ import * as COMMON from '@dpo-packrat/common';
 import { BufferStream } from '../../utils/bufferStream';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
-import { ASL, LocalStore } from '../../utils/localStore';
+import { ASL, ASR, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
 
@@ -483,7 +483,10 @@ class WebDAVFileSystem extends webdav.FileSystem {
             // BS.on('unpipe', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onUnPipe for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
             // BS.on('drain', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onDrain for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
             // BS.on('close', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onClose for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
-            BS.on('finish', async () => {
+
+            // we wrap our function in AsyncResource to preserve the context since the callback may be called outside
+            // the original context and thus breaking LocalStore.
+            BS.on('finish', ASR.bind(async () => {
                 try {
                     // LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eDEBUG);
                     const ISI: STORE.IngestStreamOrFileInput = {
@@ -535,7 +538,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 } finally {
                     callbackComplete(undefined);
                 }
-            });
+            }));
 
             // LOG.info('WebDAVFileSystem._openWriteStream callback()', LOG.LS.eHTTP);
             callback(undefined, BS);
