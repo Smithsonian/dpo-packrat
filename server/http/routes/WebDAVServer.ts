@@ -71,11 +71,13 @@ export class WebDAVServer {
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
+            ASL.checkLocalStore(`WebDAV:After - ${ctx.request.method} ${ctx.request.url}`);
             LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} START`, LOG.LS.eHTTP);
             next();
         });
         this.server.afterRequest((ctx, next) => {
             // Display the method, the URI, the returned status code and the returned message
+            ASL.checkLocalStore(`WebDAV:After - ${ctx.request.method} ${ctx.request.url}`);
             LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} END ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eHTTP);
             next();
         });
@@ -415,14 +417,26 @@ class WebDAVFileSystem extends webdav.FileSystem {
         releaser();
     }
 
+    // _openWriteStream?(path: webdav.Path, ctx: webdav.OpenWriteStreamInfo, callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): void {
+    //     ASL.checkLocalStore('WRAP:1');
+    //     ASL.clone(ASL.getStore(),async () => {
+    //         await this.__openWriteStream(path,ctx,callback,callbackComplete);
+    //     });
+    // }
+
     async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo,
         callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): Promise<void> {
+        // console.trace('_openWriteStream');
+
         try {
             /*
             const lockUUID: string | undefined = await this.setLock<Writable>(pathWD, _info.context, callback);
             if (lockUUID === undefined)
                 return;
             */
+
+            ASL.checkLocalStore('WebDAV:1b');
+            const cacheStore: LocalStore | undefined = ASL.getStore();
 
             const pathS: string = pathWD.toString();
             const DP: DownloaderParser = new DownloaderParser('', pathS);
@@ -435,11 +449,13 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
+            ASL.checkLocalStore('WebDAV:2');
             // Audit upload
             const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
             const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
             AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPUpload);
 
+            ASL.checkLocalStore('WebDAV:3');
             const SOP: DBAPI.SystemObjectPairs | null = (DP.idSystemObjectV) ? await DBAPI.SystemObjectPairs.fetch(DP.idSystemObjectV) : null;
             const SOBased: DBAPI.SystemObjectBased | null = SOP ? SOP.SystemObjectBased : null;
             if (!SOBased) {
@@ -450,6 +466,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
+            ASL.checkLocalStore('WebDAV:4');
             const assetVersion: DBAPI.AssetVersion | undefined = DPResults.assetVersion;
             const asset: DBAPI.Asset | null = assetVersion ? await DBAPI.Asset.fetch(assetVersion.idAsset) : null;
 
@@ -470,7 +487,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
             }
-
+            ASL.checkLocalStore('WebDAV:5');
             LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}), FileName ${FileName}, FilePath ${FilePath}, asset type ${COMMON.eVocabularyID[eVocab]}, SOBased ${JSON.stringify(SOBased, H.Helpers.saferStringify)}`, LOG.LS.eHTTP);
 
             const LS: LocalStore = await ASL.getOrCreateStore();
@@ -485,6 +502,8 @@ class WebDAVFileSystem extends webdav.FileSystem {
             // BS.on('drain', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onDrain for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
             // BS.on('close', async () => { LOG.info(`WebDAVFileSystem._openWriteStream: (W) onClose for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP); });
             BS.on('finish', async () => {
+                console.trace('WebDAV: BufferStream');
+                ASL.checkLocalStore(`WebDAV:Fin:1 - ${cacheStore?.idRequest}`);
                 try {
                     LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish for ${asset ? JSON.stringify(asset, H.Helpers.saferStringify) : 'new asset'}`, LOG.LS.eHTTP);
                     const ISI: STORE.IngestStreamOrFileInput = {
@@ -503,12 +522,14 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
                     // Serialize access per DP.idSystemObjectV via Semaphore, allowing only 1 ingestion at a time per system object
                     const writeLock: SemaphoreInterface | undefined = await this.computeWriteLock(DP.idSystemObjectV, pathS);
-
+                    ASL.checkLocalStore(`WebDAV:Fin:2 - ${cacheStore?.idRequest}`);
                     if (writeLock) {
                         for (let lockAttempt = 1; lockAttempt <= 5; lockAttempt++) {
                             try {
+                                ASL.checkLocalStore('WebDAV:Fin:3');
                                 await writeLock.runExclusive(async (_value) => {
                                     try {
+                                        LOG.info(`WebDAVFileSystem._openWriteStream cached store: ${cacheStore}`,LOG.LS.eDEBUG);
                                         LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream START`, LOG.LS.eHTTP);
                                         return await this.ingestStream(ISI, pathS);
                                     } finally {
@@ -516,6 +537,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                                         LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream END`, LOG.LS.eHTTP);
                                     }
                                 });
+                                ASL.checkLocalStore('WebDAV:Fin:4');
                                 return;
                             } catch (error) {
                                 if (error === E_TIMEOUT) {
@@ -529,17 +551,23 @@ class WebDAVFileSystem extends webdav.FileSystem {
                                     LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream`, LOG.LS.eHTTP, error);
                             }
                         }
-                    } else
+                    } else {
+                        ASL.checkLocalStore('WebDAV:Fin:3b');
                         return await this.ingestStream(ISI, pathS);
+                    }
                 } catch (error) {
                     LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD}) (W) onFinish`, LOG.LS.eHTTP, error);
                 } finally {
+                    ASL.checkLocalStore(`WebDAV:Fin:10 - ${cacheStore?.idRequest}`);
                     callbackComplete(undefined);
+                    ASL.checkLocalStore(`WebDAV:Fin:10b - ${cacheStore?.idRequest}`);
                 }
             });
 
             // LOG.info('WebDAVFileSystem._openWriteStream callback()', LOG.LS.eHTTP);
+            ASL.checkLocalStore(`WebDAV:11 - ${cacheStore?.idRequest}`);
             callback(undefined, BS);
+            ASL.checkLocalStore(`WebDAV:11b - ${cacheStore?.idRequest}`);
         } catch (error) {
             LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD})`, LOG.LS.eHTTP, error);
         }

@@ -144,8 +144,12 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap, assetsUnzipped);
 
             // set our options for all transactions. these timeout values help with situations
-            // where concurrent requests to the DB take longer than expected. (in seconds)
-            const transactionOptions = { maxWait: 5000, timeout: 10000 };
+            // where concurrent requests to the DB take longer than expected. (in ms)
+            const transactionOptions = {
+                maxWait: 10000, // how long Prisma will wait to get a connection (default: 2000)
+                timeout: 20000  // how long an interactive transaction can take (default: 5000)
+                // isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // how much concurrency is allowed 'serializable' is most strict (default: RepeatableRead)
+            };
 
             // otherwise, start a new transaction:
             // LOG.info('DBAPI.SystemObjectVersion.cloneObjectAndXrefs starting a new DB transaction', LOG.LS.eDB);

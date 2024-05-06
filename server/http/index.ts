@@ -36,6 +36,7 @@ const monitorVerboseSamples: number = 300;
  */
 export class HttpServer {
     public app: Express = express();
+    private WDSV: WebDAVServer | null = null;
     private static _singleton: HttpServer | null = null;
 
     static async getInstance(): Promise<HttpServer | null> {
@@ -49,6 +50,15 @@ export class HttpServer {
     private async initializeServer(): Promise<boolean> {
         LOG.info('**************************', LOG.LS.eSYS);
         LOG.info('Packrat Server Initialized', LOG.LS.eSYS);
+
+        // get our webDAV server
+        this.WDSV = await WebDAVServer.server();
+        if (this.WDSV) {
+            LOG.info('initialized WebDAV Server', LOG.LS.eSYS);
+        } else {
+            LOG.error('Failed to initialize WebDAV server', LOG.LS.eSYS);
+            return false;
+        }
 
         // configure our routes/endpoints
         const res: boolean = await this.configureMiddlewareAndRoutes();
@@ -82,6 +92,10 @@ export class HttpServer {
         this.app.use(HttpServer.logRequest);
         this.app.use(HttpServer.assignLocalStore);
 
+        // if we have a WebDAV server (always), attach it to express
+        if(this.WDSV)
+            this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, this.WDSV.webdav()));
+
         // authentication and graphQL endpoints
         this.app.use(HttpServer.checkLocalStore('0:Auth/GraphQL'));
         this.app.use('/auth', AuthRouter);
@@ -109,14 +123,14 @@ export class HttpServer {
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
 
-        // WebDAV storage (used for staging to Voyager/Cook)
-        this.app.use(HttpServer.checkLocalStore('4:WebDAV'));
-        const WDSV: WebDAVServer | null = await WebDAVServer.server();
-        if (WDSV) {
-            this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, WDSV.webdav()));
-            this.app.use(HttpServer.checkLocalStore('4b:WebDAV'));
-        } else
-            LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
+        // // WebDAV storage (used for staging to Voyager/Cook)
+        // this.app.use(HttpServer.checkLocalStore('4:WebDAV'));
+        // const WDSV: WebDAVServer | null = await WebDAVServer.server();
+        // if (WDSV) {
+        //     this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, WDSV.webdav()));
+        //     this.app.use(HttpServer.checkLocalStore('4b:WebDAV'));
+        // } else
+        //     LOG.error('HttpServer.configureMiddlewareAndRoutes failed to initialize WebDAV server', LOG.LS.eHTTP);
 
         // if we're here then we handle any errors that may have surfaced
         this.app.use(errorhandler); // keep last
@@ -128,6 +142,7 @@ export class HttpServer {
             });
         }
 
+        // only gets here if no other route is satisfied
         this.app.use(HttpServer.checkLocalStore('5:Exit'));
         return true;
     }
@@ -139,6 +154,7 @@ export class HttpServer {
         ASL.run(new LocalStore(true, idUser), () => {
             LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
             next();
+            LOG.info(`HTTP.idRequestMiddleware POST store run (${ASL.getStore()?.idRequest})`,LOG.LS.eDEBUG);
         });
     }
 
@@ -168,8 +184,9 @@ export class HttpServer {
         next();
     }
     private static checkLocalStore(label: string) {
-        return function (req, _res, next) {
-            LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
+        return function (_req, _res, next) {
+            //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
+            ASL.checkLocalStore(label);
             next();
         };
     }
