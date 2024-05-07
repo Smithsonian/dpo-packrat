@@ -161,6 +161,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     }
 
     static async fetchFromXref(idScene: number): Promise<Model[] | null> {
+        // get's the assets using the ModelSceneXref table, which includes derivative models
         if (!idScene)
             return null;
         try {
@@ -170,6 +171,23 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             LOG.error('DBAPI.fetchModelFromXref', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    static async fetchMasterFromScene(idScene: number): Promise<Model[] | null> {
+        // get the master Model associated with a given Scene
+        // TODO: get 'Master' model type id from VocabularyID
+        const idvMasterModelType: number = 45;
+
+        return DBC.CopyArray<ModelBase, Model>(
+            await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT mdl.* FROM Scene AS scn
+                JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene
+                JOIN SystemObjectXref AS scnSOX ON scnSO.idSystemObject = scnSOX.idSystemObjectDerived
+                JOIN SystemObject AS masterSO ON (scnSOX.idSystemObjectMaster = masterSO.idSystemObject AND masterSO.idModel IS NOT NULL)
+                JOIN Model AS mdl ON (masterSO.idModel = mdl.idModel AND mdl.idVPurpose = ${idvMasterModelType})
+                JOIN SystemObject AS mdlSO ON mdl.idModel = mdlSO.idModel
+                WHERE scn.idScene = ${idScene};
+            `,Model);
     }
 
     /**

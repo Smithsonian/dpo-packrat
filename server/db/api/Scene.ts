@@ -149,6 +149,27 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         }
     }
 
+    static async fetchBySystemObject(idSystemObject: number): Promise<Scene | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            const scenes: Scene[] | null =  DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.$queryRaw<Scene[]>`
+                SELECT * FROM Scene AS scn
+                JOIN SystemObject AS so ON (scn.idScene = so.idScene)
+                WHERE so.idSystemObject = ${idSystemObject};`, Scene);
+
+            // if we have scenes just return the first one, else null
+            if(scenes)
+                return scenes[0];
+
+            return null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Scene.fetchBySystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     /**
      * Computes the array of Scenes that are connected to any of the specified items.
      * Scenes are connected to system objects; we examine those system objects which are in a *derived* relationship
