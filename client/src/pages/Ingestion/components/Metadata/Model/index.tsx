@@ -508,11 +508,11 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                     <IconButton
                         className={classes.modelDetailsContainer}
-                        style={{ marginTop: '1rem' }}
+                        style={{ marginTop: '1rem', fontSize: '1.2rem' }}
                         onClick={() => setShowDetails(showDetails === true ? false:true )}
                     >
-                        {showDetails === true ? (<KeyboardArrowUpIcon />):( <KeyboardArrowDownIcon /> )}
                         Inspection Details
+                        {showDetails === true ? (<KeyboardArrowUpIcon />):( <KeyboardArrowDownIcon /> )}
                     </IconButton>
                     <Collapse in={showDetails}>
                         <Box
