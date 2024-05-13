@@ -301,7 +301,7 @@ export class PublishScene {
         return DownloadMSXMap;
     }
 
-    static async handleSceneUpdates(idScene: number, idSystemObject: number, _idUser: number | undefined,
+    static async handleSceneUpdates(idScene: number, _idSystemObject: number, _idUser: number | undefined,
         oldPosedAndQCd: boolean, newPosedAndQCd: boolean,
         LicenseOld: DBAPI.License | undefined, LicenseNew: DBAPI.License | undefined): Promise<SceneUpdateResult> {
         // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
@@ -319,8 +319,9 @@ export class PublishScene {
                 return PublishScene.sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
 
             // trigger the workflow/recipe
-            workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: _idUser }); // don't await
-            return { success: true, downloadsGenerated: true, downloadsRemoved: false };
+            // HACK: disable automatic download generation for the moment
+            // workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: _idUser }); // don't await
+            return { success: true, downloadsGenerated: false, downloadsRemoved: false };
         } else { // Remove downloads
             LOG.info(`PublishScene.handleSceneUpdates removing downloads for scene ${idScene}`, LOG.LS.eGQL);
             // Compute downloads
@@ -338,9 +339,11 @@ export class PublishScene {
                     assetVersionOverrideMap.set(asset.idAsset, 0);
             }
 
-            const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, 'Removing Downloads', assetVersionOverrideMap);
-            if (!SOV)
-                return PublishScene.sendResult(false, `Unable to clone system object version for idSystemObject ${idSystemObject} for scene ${idScene}`);
+            // HACK: preventing modifying downloads in the Scene.
+            //       Publishing should not add/remove assets but select what is included when sent to EDAN
+            // const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, 'Removing Downloads', assetVersionOverrideMap);
+            // if (!SOV)
+            //     return PublishScene.sendResult(false, `Unable to clone system object version for idSystemObject ${idSystemObject} for scene ${idScene}`);
             return { success: true, downloadsGenerated: false, downloadsRemoved: true };
         }
     }

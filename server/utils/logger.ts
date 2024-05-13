@@ -95,7 +95,9 @@ function configureLogger(logPath: string | null): void {
             // winston.format.json()
             // winston.format.simple(),
             winston.format.printf((info) => {
-                const LS: LocalStore | undefined = ASL.getStore();
+                // we catch if ASL is undefined (ASL?) as it will be during JEST testing
+                // otherwise it should never be undefined.
+                const LS: LocalStore | undefined = ASL?.getStore();
                 const idRequest: number | undefined = LS?.idRequest;
                 const reqID: string = idRequest ? ('00000' + (idRequest % 100000)).slice(-5) : ' --- ';
 

@@ -249,4 +249,16 @@ export class WorkflowUpload implements WF.IWorkflow {
         this.results = { success: false, error: (this.results.error ? this.results.error + '/n' : '') + error };
         return this.results;
     }
+
+    async getWorkflowObject(): Promise<DBAPI.Workflow | null> {
+
+        // get our constellation
+        const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
+        if(!wfConstellation) {
+            LOG.error('WorkflowUpload.getWorkflowObject failed. No constellation found. unitialized?',LOG.LS.eWF);
+            return null;
+        }
+
+        return wfConstellation.workflow;
+    }
 }

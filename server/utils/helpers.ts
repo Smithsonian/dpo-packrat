@@ -539,4 +539,12 @@ export class Helpers {
         if (typeof value === 'number' && value > 0 && value < 2147483648) return true;
         return false;
     }
+
+    static getStackTrace(label: string = 'Capture Stack'): string {
+        try {
+            throw new Error(label);
+        } catch (error) {
+            return (error as Error).stack || `${label}: No stack trace available`;
+        }
+    }
 }
