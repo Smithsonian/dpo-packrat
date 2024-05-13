@@ -86,6 +86,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             for (const sVocabID in COMMON.eVocabularyID) {
                 if (!isNaN(Number(sVocabID)))
                     continue;
+
                 const eVocabID: COMMON.eVocabularyID = (<any>COMMON.eVocabularyID)[sVocabID];
                 const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(eVocabID);
                 // LOG.info(`*** sVocab=${sVocabID}, eVocabID=${COMMON.eVocabularyID[eVocabID]}, vocabulary=${JSON.stringify(vocabulary)}`, LOG.LS.eTEST);

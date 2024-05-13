@@ -17,7 +17,8 @@ const useStyles = makeStyles(({ palette }) => ({
         width: 'fit-content',
         height: 'fit-content',
         padding: '5px',
-        outline: '1px solid rgba(141, 171, 196, 0.4)'
+        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        marginRight: '1rem'
     },
     caption: {
         flex: '1 1 0%',
@@ -84,7 +85,6 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
         alignItems: 'center',
         columnGap: 10,
     };
-
     return (
         <>
             {modelObjects.map(modelObject => {

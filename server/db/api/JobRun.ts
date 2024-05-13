@@ -43,6 +43,49 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     getStatus(): COMMON.eWorkflowJobRunStatus { return convertWorkflowJobRunStatusToEnum(this.Status); }
     setStatus(eStatus: COMMON.eWorkflowJobRunStatus): void { this.Status = eStatus; }
 
+    usesScene(idScene: number): boolean {
+        // checks to see if this job was associated with a specific Packrat Scene
+        if(!this.Parameters || this.Parameters.length===0)
+            return false;
+
+        // grab our parameters, parse them and see if we have the scene
+        try {
+            const json = JSON.parse(this.Parameters);
+
+            if(json.idScene)
+                return (json.idScene == idScene);
+
+            if(!json.model && !json.model.idScene)
+                return (json.model.idScene == idScene);
+
+            return false;
+        } catch(error) {
+            LOG.error(`JobRun.usesScene failed. (${error})`,LOG.LS.eDB);
+            return false;
+        }
+    }
+    usesModel(idModel: number): boolean {
+        // checks to see if this job was associated with a specific model
+        if(!this.Parameters || this.Parameters.length===0)
+            return false;
+
+        // grab our parameters, parse them and see if we have the model
+        try {
+            const json = JSON.parse(this.Parameters);
+
+            if(json.idModel)
+                return (json.idModel == idModel);
+
+            if(!json.model && !json.model.idModel)
+                return (json.model.idModel == idModel);
+
+            return false;
+        } catch(error) {
+            LOG.error(`JobRun.usesModel failed. (${error})`,LOG.LS.eDB);
+            return false;
+        }
+    }
+
     protected async createWorker(): Promise<boolean> {
         try {
             const { idJob, Status, Result, DateStart, DateEnd, Configuration, Parameters, Output, Error } = this;
@@ -178,6 +221,49 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             LOG.error('DBAPI.JobRun.fetchMatching', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    static async fetchByJobFiltered(idJob: number, active: boolean = true): Promise<JobRun[] | null> {
+        // get the JobRuns that are of a specific type and (optionally) those active/inactive
+        // TODO: pass in array of status codes want to consider. can't find accepted way to include array values to queryRaw
+        try {
+            if(active===true) {
+                // return those uninitialized(0), created(1), running(2), waiting(3)
+                return DBC.CopyArray<JobRunBase, JobRun> (
+                    await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
+                        SELECT * FROM JobRun AS jr
+                        JOIN WorkflowStep AS wfStep ON jr.idJobRun = wfStep.idJobRun
+                        WHERE (jr.idJob = ${idJob}) AND (jr.Status IN (${0},${1},${2},${3}));`,JobRun);
+            } else {
+                // return those done(4), error(5), or cancelled(6)
+                return DBC.CopyArray<JobRunBase, JobRun> (
+                    await DBC.DBConnection.prisma.$queryRaw<JobRun[]>`
+                        SELECT * FROM JobRun AS jr
+                        JOIN WorkflowStep AS wfStep ON jr.idJobRun = wfStep.idJobRun
+                        WHERE (jr.idJob = ${idJob}) AND (jr.Status IN (${4},${5},${6}));`,JobRun);
+            }
+        } catch (error) {
+            LOG.error('DBAPI.JobRun.fetchFromWorkflow', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchActiveByScene(idJob: number, idScene: number): Promise<JobRun[] | null> {
+        const jobs: JobRun[] = [];
+        const activeJobs: JobRun[] | null = await JobRun.fetchByJobFiltered(idJob,true);
+        if(!activeJobs) {
+            LOG.error('DBAPI.JobRun.fetchActiveByScene failed to get filtered jobs',LOG.LS.eDB);
+            return null;
+        }
+
+        // see if it's ours and if so, store the job's id
+        for(let i=0; i< activeJobs.length; i++){
+            if(activeJobs[i].usesScene(idScene)) {
+                jobs.push(activeJobs[i]);
+            }
+        }
+
+        return jobs;
     }
 
     static async fetchFromWorkflow(idWorkflow: number): Promise<JobRun[] | null> {

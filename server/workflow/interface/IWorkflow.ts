@@ -15,4 +15,5 @@ export interface IWorkflow {
     updateStatus(eStatus: COMMON.eWorkflowJobRunStatus): Promise<WorkflowUpdateResults>;
     waitForCompletion(timeout: number): Promise<H.IOResults>;
     workflowConstellation(): Promise<DBAPI.WorkflowConstellation | null>;
+    getWorkflowObject(): Promise<DBAPI.Workflow | null>;
 }

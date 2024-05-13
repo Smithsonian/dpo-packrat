@@ -181,7 +181,6 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     }
 
     private async createSystemObjects(): Promise<H.IOResults> {
-
         // grab our Packrat Scene from the database. idScene is a parameter passed in when creating this object
 
         // grab our Packrat Scene from the database. idScene is a parameter passed in when creating this object

@@ -7,13 +7,21 @@
  */
 enum API_ROUTES {
     LOGIN = 'auth/login',
-    LOGOUT = 'auth/logout'
+    LOGOUT = 'auth/logout',
+    GEN_DOWNLOADS = 'api/scene/gen-downloads'
 }
 
 export type AuthResponseType = {
     success: boolean;
     message?: string;
     originalUrl?: string;
+};
+
+export type RequestResponse = {
+    success: boolean;
+    message?: string;
+    originalUrl?: string;
+    data?: any;
 };
 
 export default class API {
@@ -31,6 +39,20 @@ export default class API {
         return this.request(API_ROUTES.LOGOUT);
     }
 
+    static async generateDownloads(idSystemObject: number, statusOnly: boolean = false): Promise<RequestResponse> {
+        // initiates the generate downloads routine and either runs the recipe with the given id or returns its status.
+        // idSystemObject = the SystemObject id for the Packrat Scene making this request
+        const body = JSON.stringify({ idSystemObject });
+
+        let options;
+        if(statusOnly)
+            options = { method: 'GET' };
+        else
+            options = { method: 'POST', body };
+
+        return this.request(`${API_ROUTES.GEN_DOWNLOADS}?id=${idSystemObject}`, options);
+    }
+
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
         const defaultOptions: RequestInit = {
@@ -41,7 +63,17 @@ export default class API {
             ...options
         };
 
-        return fetch(`${serverEndpoint}/${route}`, defaultOptions).then(response => response.json());
+        // TODO: return an error response
+        return fetch(`${serverEndpoint}/${route}`, defaultOptions)
+            .then(response => {
+                // Check if the response returned a successful status code
+                if (!response.ok)
+                    return { success: false, message: response.statusText };
+                return response.json(); // Assuming the server responds with JSON
+            })
+            .catch(error => {
+                console.error(`[Packrat] could not complete request (${route}) due to error: ${error}`);
+            });
     }
 
     static serverEndpoint(): string {

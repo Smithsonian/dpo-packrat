@@ -160,6 +160,31 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             `,Asset);
     }
 
+    static async fetchFromModel(idModel: number): Promise<Asset[] | null> {
+        // get any assets associated with the given Model. Can include meshes, textures, and materials
+        return DBC.CopyArray<AssetBase, Asset>(
+            await DBC.DBConnection.prisma.$queryRaw<Asset[]>`
+                SELECT * FROM Model AS mdl
+                JOIN SystemObject AS mdlSO ON mdl.idModel = mdlSO.idModel
+                JOIN Asset AS a ON a.idSystemObject = mdlSO.idSystemObject
+                WHERE mdl.idModel = ${idModel};
+            `,Asset);
+    }
+
+    static async fetchVoyagerSceneFromScene(idScene: number): Promise<Asset[] | null> {
+        // get the voyager scene asset associated with the Packrat scene (if any)
+        // TODO: get asset type id from VocabularyID
+        const idvAssetType: number = 137;
+
+        return DBC.CopyArray<AssetBase, Asset>(
+            await DBC.DBConnection.prisma.$queryRaw<Asset[]>`
+                SELECT a.* FROM Scene AS scn
+                JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene
+                JOIN Asset AS a ON a.idSystemObject = scnSO.idSystemObject
+                WHERE scn.idScene = ${idScene} AND a.idVAssetType = ${idvAssetType};
+            `,Asset);
+    }
+
     /** Fetches assets that are connected to the specified idSystemObject (via that object's last SystemObjectVersion,
      * and that SystemObjectVersionAssetVersionXref's records). For those assets, we look for a match on FileName, idVAssetType */
     static async fetchMatching(idSystemObject: number, FileName: string, idVAssetType: number): Promise<Asset | null> {

@@ -21,9 +21,10 @@ const useStyles = makeStyles(({ palette, typography }) => ({
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: ({ hasPrimaryTheme, hasError }: { hasPrimaryTheme: boolean, hasError: boolean }) => hasError ? '#e57373' : hasPrimaryTheme ? palette.primary.light : palette.secondary.light,
-        width: 'fit-content',
+        width: '100%',
         minWidth: 300,
-        borderRadius: 5
+        borderRadius: 5,
+        paddingBottom: '0.5rem'
     },
     selected: {
         cursor: 'pointer',

@@ -266,4 +266,16 @@ export class WorkflowJob implements WF.IWorkflow {
         this.idAssetVersions = WFUVersion.idAssetVersions;
         return { success: true };
     }
+
+    async getWorkflowObject(): Promise<DBAPI.Workflow | null> {
+
+        // get our constellation
+        const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
+        if(!wfConstellation) {
+            LOG.error('WorkflowJob.getWorkflowObject failed. No constellation found. unitialized?',LOG.LS.eWF);
+            return null;
+        }
+
+        return wfConstellation.workflow;
+    }
 }

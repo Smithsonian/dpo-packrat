@@ -2,6 +2,7 @@ import * as WF from '../../interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import * as LOG  from '../../../utils/logger';
 
 // This Workflow represents an ingestion action, typically initiated by a user.
 // The workflow itself performs no work (ingestion is performed in the graphQl ingestData routine)
@@ -55,5 +56,17 @@ export class WorkflowIngestion implements WF.IWorkflow {
 
     async workflowConstellation(): Promise<DBAPI.WorkflowConstellation | null> {
         return this.workflowData;
+    }
+
+    async getWorkflowObject(): Promise<DBAPI.Workflow | null> {
+
+        // get our constellation
+        const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
+        if(!wfConstellation) {
+            LOG.error('WorkflowIngestion.getWorkflowObject failed. No constellation found. unitialized?',LOG.LS.eWF);
+            return null;
+        }
+
+        return wfConstellation.workflow;
     }
 }

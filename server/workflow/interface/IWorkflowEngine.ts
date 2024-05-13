@@ -10,9 +10,17 @@ export interface WorkflowParameters {
     parameters?: any | undefined;                     // Additional workflow parameters; each workflow template should define their own parameter interface
 }
 
+export interface WorkflowCreateResult {
+    success: boolean;
+    message?: string | undefined;
+    workflow?: IWorkflow[] | undefined;
+    data?: any | undefined;
+}
+
 export interface IWorkflowEngine {
     create(workflowParams: WorkflowParameters): Promise<IWorkflow | null>;
     jobUpdated(idJobRun: number): Promise<boolean>;
     event(eWorkflowEvent: COMMON.eVocabularyID, workflowParams: WorkflowParameters | null): Promise<IWorkflow[] | null>;
     generateSceneDownloads(idScene: number, workflowParams: WorkflowParameters): Promise<IWorkflow[] | null>;
+    generateDownloads(idScene: number, workflowParams: WorkflowParameters): Promise<WorkflowCreateResult>;
 }

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncLocalStorage } from 'async_hooks';
-// import * as LOG from './logger';
+import { AsyncLocalStorage, AsyncResource } from 'async_hooks';
+import * as LOG from './logger';
+import * as H from './helpers';
 
 export class LocalStore {
     idRequest: number;
@@ -13,11 +14,12 @@ export class LocalStore {
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
+        // LOG.info(`LocalStore.getIDRequestNext incrementing ID. (${LocalStore.idRequestNext}->${LocalStore.idRequestNext+1})`,LOG.LS.eDEBUG);
         return ++LocalStore.idRequestNext;
     }
 
-    constructor(getNextID: boolean, idUser: any | undefined) {
-        this.idRequest = (getNextID) ? LocalStore.getIDRequestNext() : 0;
+    constructor(getNextID: boolean, idUser: any | undefined, idRequest?: number | undefined) {
+        this.idRequest = (getNextID) ? LocalStore.getIDRequestNext() : (idRequest ?? 0);
         this.idUser = (typeof(idUser) === 'number') ? idUser : null;
         this.idWorkflow = [];
     }
@@ -62,16 +64,63 @@ export class LocalStore {
 }
 
 export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
-    async getOrCreateStore(): Promise<LocalStore> {
+    // we shouldn't need this routine as all LocalStore should be created when the request is first made
+    // so the idRequest and idUser are consistent throughout all related operations.
+    // TODO: phase out in favor of getStore().
+    async getOrCreateStore(idUser: number | undefined = undefined, logUse: boolean = false): Promise<LocalStore> {
         let LS: LocalStore | undefined = this.getStore();
-        if (LS)
+        if (LS) {
+            if(logUse===true)
+                LOG.info(`AsyncLocalStore.getOrCreateStore using existing store (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
+                // LOG.info(`\t ${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
+
+            if(!LS.idUser && idUser) {
+                LOG.error(`AsyncLocalStore.getOrCreateStore adding missing user id (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
+                LS.idUser = idUser;
+            }
             return LS;
+        }
 
         return new Promise<LocalStore>((resolve) => {
-            LS = new LocalStore(true, undefined);
+            LS = new LocalStore(true, idUser);
+            if(logUse===true)
+                LOG.error(`AsyncLocalStore.getOrCreateStore creating a new store. lost context? (idRequest: ${LS.idRequest} | idUser: ${idUser})`,LOG.LS.eSYS);
+                // LOG.error(`\t${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
             this.run(LS, () => { resolve(LS!); }); // eslint-disable-line @typescript-eslint/no-non-null-assertion
         });
     }
+
+    clone(src: LocalStore | undefined, fn: () => unknown): LocalStore | null {
+        // creates a new LocalStore based on an existing one. This is used for wrappers
+        // around non-async libraries and preserves the context info entering a new
+        // context for logging/auditing.
+        //
+        // NOTE: any changes DO NOT propagate back out to the previous context.
+
+        // if we don't have a source, get from the current store
+        src = src ?? this.getStore();
+        if(!src) {
+            LOG.error('AsyncLocalStore.clone no source store found',LOG.LS.eSYS);
+            return null;
+        }
+
+        LOG.info(`AsyncLocalStore.clone from existing LocalStore (idRequest: ${src.idRequest} | idUser: ${src.idUser})`,LOG.LS.eSYS);
+
+        // create our new LocalStore and pass in our callback function
+        const LS: LocalStore = new LocalStore(false, src.idUser, src.idRequest);
+        this.run(LS,fn);
+        return LS;
+    }
+
+    checkLocalStore(label: string = 'LocalStore', logUndefined: boolean = false): void {
+        label = `LocalStore [check: ${label}]`;
+        LOG.info(`${label} (${H.Helpers.JSONStringify(this.getStore())})`,LOG.LS.eDEBUG);
+
+        // if we don't have a store then dump the trace so we know where it came from
+        if(!this.getStore() && logUndefined===true)
+            LOG.info(`\t ${H.Helpers.getStackTrace(label)}`,LOG.LS.eDEBUG);
+    }
 }
 
+export { AsyncResource as ASR };
 export const ASL: AsyncLocalStore = new AsyncLocalStore();
