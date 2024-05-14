@@ -178,6 +178,7 @@ export class EdanCollection implements COL.ICollection {
             case COMMON.ePublishedState.eNotPublished:
             case COMMON.ePublishedState.eAPIOnly:
             case COMMON.ePublishedState.ePublished:
+            case COMMON.ePublishedState.eInternal:
                 break;
             default:
                 LOG.error(`EdanCollection.publish called with invalid ePublishState ${ePublishState} for idSystemObject ${idSystemObject}`, LOG.LS.eCOLL);

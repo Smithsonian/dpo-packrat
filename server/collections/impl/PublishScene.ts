@@ -117,6 +117,7 @@ export class PublishScene {
             return false;
         const media_usage: COL.EdanLicenseInfo = EdanCollection.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
 
+        // figure out our flags for the package so we have the correct visibility within EDAN
         const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended);
         const haveDownloads: boolean = (this.edan3DResourceList.length > 0);
         const updatePackage: boolean = haveDownloads                                // we have downloads, or
@@ -795,6 +796,7 @@ export class PublishScene {
             case COMMON.ePublishedState.eNotPublished:       status = 1; publicSearch = false; downloads = false; break;
             case COMMON.ePublishedState.eAPIOnly:            status = 0; publicSearch = false; downloads = true;  break;
             case COMMON.ePublishedState.ePublished:          status = 0; publicSearch = true;  downloads = true;  break;
+            case COMMON.ePublishedState.eInternal:           status = 1; publicSearch = false; downloads = true;  break; // same as 'NotPublished' but needed since default is 'NotPublished' and never triggers update.
             // case COMMON.ePublishedState.eViewOnly:           status = 0; publicSearch = true;  downloads = false; break;
         }
         LOG.info(`PublishScene.computeEdanSearchFlags(${COMMON.ePublishedState[eState]}) = { status ${status}, publicSearch ${publicSearch}, downloads ${downloads} }`, LOG.LS.eCOLL);

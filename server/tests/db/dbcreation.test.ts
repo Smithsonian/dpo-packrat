@@ -4287,6 +4287,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished)).toEqual('Not Published');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('API Only');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Published');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eInternal)).toEqual('Internal');
     });
 
     test('DB Fetch SystemObject: LicenseRestrictLevelToPublishedStateEnum', async () => {

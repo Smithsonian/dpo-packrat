@@ -351,6 +351,7 @@ export enum ePublishedState {
     eNotPublished = 0,              // 'Not Published', default
     eAPIOnly = 1,                   // 'API Only',
     ePublished = 2,                 // 'Published'
+    eInternal = 3,                  // 'Internal' use only
 }
 
 export function LicenseEnumToString(eState: eLicense): string {
@@ -367,8 +368,10 @@ export function PublishedStateEnumToString(eState: ePublishedState): string {
     switch (eState) {
         case ePublishedState.eAPIOnly:                  return 'API Only';
         case ePublishedState.ePublished:                return 'Published';
+        case ePublishedState.eInternal:                 return 'Internal';
         default:
         case ePublishedState.eNotPublished:             return 'Not Published';
+
     }
 }
 

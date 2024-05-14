@@ -34,7 +34,7 @@ import {
     UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
+import { ePublishedState, eSystemObjectType, eVocabularySetID, PublishedStateEnumToString } from '@dpo-packrat/common';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
@@ -114,6 +114,8 @@ function DetailsView(): React.ReactElement {
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const [uploadReferences, setUploadReferences] = useState<UploadReferences | null>(null);
+    // const [publishedState, setPublishedState] = useState<ePublishedState>(ePublishedState.eNotPublished);
+
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
         stateIdentifiers,
@@ -175,11 +177,10 @@ function DetailsView(): React.ReactElement {
     const verifyGenerateDownloads = async (): Promise<boolean> => {
         // check whether we can actually generate downloads
         // TODO: check QC checkbox status, (ideally) if a generate downloads is already running, ...
-        console.log('Verifying Generate Downloads...');
+        console.log('[PACKRAT] Verifying Generate Downloads...');
 
         // make a call to our generate downloads endpoint with the current scene id
         const response: RequestResponse = await API.generateDownloads(idSystemObject, true);
-        console.log(response);
         if(response.success === false) {
             console.log(`[Packrat - ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
@@ -191,7 +192,7 @@ function DetailsView(): React.ReactElement {
         const canRun: boolean = (response.data.isJobRunning === false) && (response.data.isSceneValid === true);
 
         // we have success so enable it
-        console.log(`[PACKRAT - DEBUG] can generate downloads: ${canRun}`);
+        // console.log(`[PACKRAT - DEBUG] can generate downloads: ${canRun}`);
         setCanGenerateDownloads(canRun);
         return canRun;
     };
@@ -346,6 +347,26 @@ function DetailsView(): React.ReactElement {
         setDetails(details => ({ ...details, subtitle: target.value }));
         updatedDataFields.Subtitle = target.value;
         setUpdatedData(updatedDataFields);
+    };
+
+    const onPublishUpdate = ({ target }): void => {
+        console.log(`[PACKRAT] ${JSON.stringify(target)}`);
+        console.log(`[PACKRAT] value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState}`);
+
+        // const pState: ePublishedState = ePublishedState[parseInt(target.value)];
+        // if(pState.toString() != publishedState) {
+        //     console.warn('published states diff. updating...');
+        // } else  {
+        //     console.info('published states are identical. skipping update');
+        //     return;
+        // }
+        // switch(pState) {
+        //     case ePublishedState.eNotPublished: {
+        //         console.info('[PACKRAT] un-publishing...');
+        //     }
+
+        //     case
+        // }
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
@@ -566,7 +587,7 @@ function DetailsView(): React.ReactElement {
     const generateDownloads = async (): Promise<boolean> => {
         // fire off download generation for the scene. (UI element, ln. 593)
         // TODO: move into 'Assets' tab (currently lacking context/details on if we're a scene)
-        console.log('Generating Downloads...');
+        console.log('[PACKRAT] Generating Downloads...');
         if(isGeneratingDownloads === true || canGenerateDownloads === false) {
             console.error('[Packrat] cannot generate downloads. not sure how you got here...');
             return false;
@@ -598,9 +619,6 @@ function DetailsView(): React.ReactElement {
             setIsGeneratingDownloads(false);
             return false;
         }
-
-        console.log(params);
-        console.log(data);
 
         // wait for a period of time before resetting our buttons
         // setting a minimal time improves UX and shows spinning logo
@@ -648,6 +666,7 @@ function DetailsView(): React.ReactElement {
                         objectType={objectType}
                         onRetiredUpdate={onRetiredUpdate}
                         onLicenseUpdate={onLicenseUpdate}
+                        onPublishUpdate={onPublishUpdate}
                         originalFields={data.getSystemObjectDetails}
                         license={withDefaultValueNumber(details.idLicense, 0)}
                         idSystemObject={idSystemObject}
