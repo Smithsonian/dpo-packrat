@@ -197,7 +197,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish'); };
     const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish for API Only'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
-    const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Internal'); };
+    const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Publish for Internal Only'); };
     const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {

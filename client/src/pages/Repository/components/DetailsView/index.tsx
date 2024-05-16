@@ -114,7 +114,6 @@ function DetailsView(): React.ReactElement {
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const [uploadReferences, setUploadReferences] = useState<UploadReferences | null>(null);
-    // const [publishedState, setPublishedState] = useState<ePublishedState>(ePublishedState.eNotPublished);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [

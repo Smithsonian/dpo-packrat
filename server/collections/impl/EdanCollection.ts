@@ -172,7 +172,7 @@ export class EdanCollection implements COL.ICollection {
 
     async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
 
-        LOG.info(`EdanCollection.publish (idSystemObject: ${idSystemObject}`,LOG.LS.eDEBUG);
+        LOG.info(`EdanCollection.publish (idSystemObject: ${idSystemObject} | state: ${COMMON.ePublishedState[ePublishState]})`,LOG.LS.eDEBUG);
 
         switch (ePublishState) {
             case COMMON.ePublishedState.eNotPublished:
@@ -217,14 +217,35 @@ export class EdanCollection implements COL.ICollection {
     }
 
     async createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<COL.EdanRecord | null> {
+        console.log(`createEdan3DPackage input: ${path}`);
+        // const body: any = sceneFile ? { resource: path.replace(/\.zip|-zip$/, ''), document: sceneFile } : { resource: path.replace(/\.zip|-zip$/, '') };
         const body: any = sceneFile ? { resource: path, document: sceneFile } : { resource: path };
-        return this.upsertResource(body, 'createEdan3DPackage');
+        LOG.info(`body:\n${H.Helpers.JSONStringify(body)}`,LOG.LS.eDEBUG);
+
+        const edanRecord: COL.EdanRecord | null = await this.upsertResource(body, 'createEdan3DPackage');
+        if(!edanRecord)
+            return null;
+
+        // returned URL may include a zip extension so we clean that out
+        // only seems to happen when running locally with a Proxy
+        const packageUrl: string = edanRecord.url.replace(/\.zip|-zip$/, '');
+        if(edanRecord.url!==packageUrl)
+            LOG.info(`EdanCollection.createEdan3DPackage returned url needed correction. (${edanRecord.url} -> ${packageUrl})`,LOG.LS.eCOLL);
+
+        return { ...edanRecord, url: packageUrl };
     }
 
     async updateEdan3DPackage(url: string, title: string | undefined, sceneContent: COL.Edan3DPackageContent,
         status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {
+
+        // make sure the url doesn't include file extensions
+        // only seems to happen when running locally with a Proxy
+        const packageUrl: string = url.replace(/\.zip|-zip$/, '');
+        if(url!==packageUrl)
+            LOG.info(`EdanCollection.updateEdan3DPackage incoming url needed correction. (${url} -> ${packageUrl})`,LOG.LS.eCOLL);
+
         const body: any = {
-            url,
+            url: packageUrl,
             title,
             status,
             publicSearch,
@@ -237,10 +258,9 @@ export class EdanCollection implements COL.ICollection {
 
     /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertContent */
     private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
-        // LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
-        LOG.info('EdanCollection.upsertContent', LOG.LS.eCOLL);
+        LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
-        LOG.info(`EdanCollection.upsertContent:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
+        LOG.info(`EdanCollection.upsertContent result:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;
@@ -256,9 +276,10 @@ export class EdanCollection implements COL.ICollection {
 
     /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertResource */
     private async upsertResource(body: any, caller: string): Promise<COL.EdanRecord | null> {
-        LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+        // LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertResource', '', JSON.stringify(body), 'application/json');
-        // LOG.info(`EdanCollection.upsertResource:\n${JSON.stringify(body)}:\n${reqResult.output}`, LOG.LS.eCOLL);
+        LOG.info(`EdanCollection.upsertResource:\n${H.Helpers.JSONStringify(body)}:\n${H.Helpers.JSONStringify(reqResult)}`, LOG.LS.eDEBUG);
+
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;

@@ -7204,6 +7204,8 @@ describe('DB Update Test Suite', () => {
             expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eAPIOnly);
             systemObjectVersion.setPublishedState(COMMON.ePublishedState.ePublished);
             expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.ePublished);
+            systemObjectVersion.setPublishedState(COMMON.ePublishedState.eInternal);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eInternal);
             bUpdated = await systemObjectVersion.update();
 
             const systemObjectVersionFetch: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(systemObjectVersion.idSystemObjectVersion);
