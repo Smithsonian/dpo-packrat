@@ -251,28 +251,24 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
             const eventData: UploadProgressEvent = data.detail;
             onProgressEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.PROGRESS, onProgress);
 
         const onSetCancelled = data => {
             const eventData: UploadSetCancelEvent = data.detail;
             onSetCancelledEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.SET_CANCELLED, onSetCancelled);
 
         const onFailed = data => {
             const eventData: UploadFailedEvent = data.detail;
             onFailedEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.FAILED, onFailed);
 
         const onComplete = data => {
             const eventData: UploadCompleteEvent = data.detail;
             onCompleteEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.COMPLETE, onComplete);
 
         return () => {

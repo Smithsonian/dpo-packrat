@@ -8,7 +8,7 @@
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
 import { useUploadStore } from '../../../../store';
@@ -52,6 +52,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         width: 120,
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
+        marginBottom: '2rem',
         color: Colors.defaults.white,
         '&:focus': {
             outline: '2px solid #8DABC4',
@@ -60,13 +61,14 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
     },
     title: {
         margin: '1% 0px',
-        fontSize: '.8em',
+        fontSize: '1em',
+        fontWeight: 500
     },
-    subtitle: {
-        margin: '1% 0px',
-        fontSize: '.8em',
-        color: '#878585',
-        marginBottom: '2.5em'
+    uploadNotice: {
+        padding: 2,
+        textAlign: 'center',
+        color: 'white',
+        backgroundColor: palette.primary.main,
     }
 }));
 
@@ -80,30 +82,43 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const { pending } = useUploadStore();
     const { loading, open } = props;
 
+    const [showUploadNotice, setShowUploadNotice] = useState<boolean>(true);
+
+    useEffect(() => {
+        // if an empty array return false ('every' returns true if empty)
+        // otherwise check for any item to be either processing or uploading
+        const hasPending: boolean = (pending.length===0)?false:pending.every(
+            (item) => item.status === 'PROCESSING' || item.status === 'UPLOADING'
+        );
+        setShowUploadNotice(hasPending);
+    }, [pending, loading]);
+
     return (
-        <div>
-            <Box className={classes.container}>
-                <FieldType
-                    required
-                    align='left'
-                    label='Upload Files.'
-                    labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
-                    width={'calc(100% - 20px)'}
-                    padding='10px'
-                >
-                    <UploadListHeader />
-                    <Box className={classes.list}>
-                        <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
-                        <BsCloudUpload className={classes.icon} size='50px' />
-                        <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
-                            Browse files
-                        </Button>
-                        <Typography className={classes.title}>Drag and drop files here or choose file.</Typography>
-                    </Box>
-                </FieldType>
-            </Box>
-            <Typography className={classes.subtitle}>Supported Formats: <br /> Model Type: obj, ply, stl, x3d, wrl, dae, or fbx*.<br /> Textures: jpg, png, tif, tga, bmp</Typography>
-        </div>
+        <Box className={classes.container}>
+            <FieldType
+                required
+                align='center'
+                label='Upload Files'
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
+                width={'calc(100% - 20px)'}
+                padding='10px'
+            >
+                <UploadListHeader />
+                <Box className={classes.list}>
+                    <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
+                    <Typography className={classes.title}>Drag and drop files here or click the button</Typography>
+                    <BsCloudUpload className={classes.icon} size='50px' />
+                    <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
+                        Browse files
+                    </Button>
+                </Box>
+            </FieldType>
+            {showUploadNotice && (
+                <Box className={classes.uploadNotice}>
+                    <Typography>NOTE: Please do not leave this page until your files finish uploading and they show in the box below.</Typography>
+                </Box>
+            )}
+        </Box>
     );
 }
 

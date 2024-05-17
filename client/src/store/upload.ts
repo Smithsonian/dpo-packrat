@@ -357,6 +357,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                         progress
                     };
                     UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
+
+                    // since React only triggers an update when a reference changes (not properties) we
+                    // create a new array/reference for pending so we can catch changes to its status.
+                    // console.log(`onProgress ${progress} | ${updateProgress} | ${JSON.stringify(pending)}`);
+                    set({ pending: [ ...pending ] });
                 }
             };
 
@@ -604,7 +609,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             }
         } else {
             const updatedComplete = pending.filter(file => file.id !== id);
-
             set({ pending: updatedComplete });
         }
     },
