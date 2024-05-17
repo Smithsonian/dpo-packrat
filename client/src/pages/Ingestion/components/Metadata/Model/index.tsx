@@ -152,7 +152,7 @@ function Model(props: ModelProps): React.ReactElement {
         }
     ]);
     const [sceneGenerateDisabled, setSceneGenerateDisabled] = useState<boolean>(false);
-    const [showDetails, setShowDetails] = useState<boolean>(true);
+    const [showDetails, setShowDetails] = useState<boolean>(false);
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
