@@ -14,7 +14,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         height: 50,
         width: '100%',
         borderRadius: 5,
-        background: palette.background.paper,
+        background: palette.primary.main,
+        color: 'white',
         [breakpoints.down('lg')]: {
             height: 35
         }
@@ -43,7 +44,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         fontWeight: 400
     },
     label: {
-        color: palette.primary.dark,
+        color: 'white', /*palette.primary.dark,*/
         fontWeight: 400
     }
 }));

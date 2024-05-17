@@ -15,13 +15,13 @@ import LoadingButton from '../controls/LoadingButton';
 
 const useStyles = makeStyles(({ breakpoints }) => ({
     uploadContainer: {
-        //display: 'flex',
+        display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '10px',
         //background: palette.background.paper
-        background: 'rgb(236, 245, 253)'
+        background: 'rgb(236, 245, 253)',
     },
     container: {
         //display: 'flex',

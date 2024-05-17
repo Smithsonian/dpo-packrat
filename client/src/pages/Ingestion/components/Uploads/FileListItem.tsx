@@ -30,7 +30,9 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         alignItems: 'center',
         backgroundColor: palette.background.paper,
         marginTop: 10,
-        borderRadius: 5,
+        borderRadius: 1,
+        border: `1px solid ${fade(palette.primary.main, 0.3)}`,
+        boxSizing: 'border-box',
         width: '100%',
         zIndex: 10,
         [breakpoints.down('lg')]: {

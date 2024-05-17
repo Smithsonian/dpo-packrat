@@ -23,7 +23,8 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        //marginBottom: '50px'
+        background: '0',
+        // marginBottom: '1rem'
     },
     list: {
         display: 'flex',
@@ -119,12 +120,11 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
         <Box className={classes.container}>
             <FieldType
                 required
-                align='left'
-                label='Select file(s) in the droplist below to ingest.'
+                align='center'
+                label='Ready for Ingest'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, color: Colors.defaults.dark } }}
                 width={'calc(100% - 20px)'}
-                padding='10px'
             >
                 <UploadListHeader />
                 <Box className={classes.list}>{content}</Box>
