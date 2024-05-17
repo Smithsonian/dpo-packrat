@@ -8,7 +8,7 @@
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
 import { useUploadStore } from '../../../../store';
@@ -52,6 +52,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         width: 120,
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
+        marginBottom: '2rem',
         color: Colors.defaults.white,
         '&:focus': {
             outline: '2px solid #8DABC4',
@@ -62,6 +63,12 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         margin: '1% 0px',
         fontSize: '1em',
         fontWeight: 500
+    },
+    uploadNotice: {
+        padding: 2,
+        textAlign: 'center',
+        color: 'white',
+        backgroundColor: palette.primary.main,
     }
 }));
 
@@ -74,6 +81,17 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const classes = useUploadListStyles();
     const { pending } = useUploadStore();
     const { loading, open } = props;
+
+    const [showUploadNotice, setShowUploadNotice] = useState<boolean>(true);
+
+    useEffect(() => {
+        // if an empty array return false ('every' returns true if empty)
+        // otherwise check for any item to be either processing or uploading
+        const hasPending: boolean = (pending.length===0)?false:pending.every(
+            (item) => item.status === 'PROCESSING' || item.status === 'UPLOADING'
+        );
+        setShowUploadNotice(hasPending);
+    }, [pending, loading]);
 
     return (
         <Box className={classes.container}>
@@ -95,6 +113,11 @@ function UploadList(props: UploadListProps): React.ReactElement {
                     </Button>
                 </Box>
             </FieldType>
+            {showUploadNotice && (
+                <Box className={classes.uploadNotice}>
+                    <Typography>NOTE: Please do not leave this page until your files finish uploading and they show in the box below.</Typography>
+                </Box>
+            )}
         </Box>
     );
 }
