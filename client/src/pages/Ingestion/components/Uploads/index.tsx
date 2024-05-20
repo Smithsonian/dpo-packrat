@@ -27,7 +27,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        // overflow: 'auto',
+        // overflow: 'hidden',
         maxHeight: 'calc(100vh - 60px)',
         overflow: 'auto'
     },

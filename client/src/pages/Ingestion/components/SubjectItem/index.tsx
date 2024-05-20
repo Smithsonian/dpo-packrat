@@ -49,6 +49,7 @@ const useStyles = makeStyles(({ palette }) => ({
         margin: '0.5rem',
         padding: 0
     },
+
     fileChip: {
         marginRight: 10
     },
