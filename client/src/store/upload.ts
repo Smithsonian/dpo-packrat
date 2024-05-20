@@ -340,6 +340,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             set({ pendingUpdates: updatedUpdates });
         }
     },
+
+    //This is the uploading for the Processed Files
     startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
         const { pending } = get();
         const { id, file, type } = ingestionFile;
@@ -355,6 +357,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                         progress
                     };
                     UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
+
+                    // since React only triggers an update when a reference changes (not properties) we
+                    // create a new array/reference for pending so we can catch changes to its status.
+                    // console.log(`onProgress ${progress} | ${updateProgress} | ${JSON.stringify(pending)}`);
+                    set({ pending: [ ...pending ] });
                 }
             };
 
@@ -392,7 +399,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 if (status === UploadStatus.Complete) {
                     const uploadEvent: UploadCompleteEvent = { id };
                     UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
-
+                    //This message occurs when the upload is successfully transferred for processing.
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
                     console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, error = ${error}`);
@@ -602,7 +609,6 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             }
         } else {
             const updatedComplete = pending.filter(file => file.id !== id);
-
             set({ pending: updatedComplete });
         }
     },

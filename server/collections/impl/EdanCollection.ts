@@ -305,6 +305,7 @@ export class EdanCollection implements COL.ICollection {
         return prependNameAuthority ? this.transformArkIntoUrl(arkId) : arkId;
     }
 
+    // Basically this extracts the URL from the ark ID. Then returns it to ingestData.ts on line
     extractArkFromUrl(url: string): string | null {
         const arkPosition: number = url.indexOf('ark:');
         return (arkPosition > -1) ? url.substring(arkPosition) : null;
@@ -321,6 +322,13 @@ export class EdanCollection implements COL.ICollection {
     getArkNameAssigningAuthority(): string {
         return NAME_ASSIGNING_AUTHORITY;
     }
+
+    // EDAN Identifier
+    checkEdanIdentifier(edan: string): string | null {
+        const edanPosition: number = edan.indexOf('edanmdm:');
+        return (edanPosition > -1) ? edan : null;
+    }
+
     // #endregion
 
     // #region HTTP Helpers
