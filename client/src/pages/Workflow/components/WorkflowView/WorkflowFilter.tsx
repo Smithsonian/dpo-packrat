@@ -196,6 +196,8 @@ function FilterSelect(props: FilterSelectProps): React.ReactElement {
 function FilterDate(props: FilterDateProps): React.ReactElement {
     const { label } = props;
     const classes = useStyles();
+
+    // workflow.tsx (state handle)
     // eslint-disable-next-line prefer-const
     let [dateFrom, dateTo, updateFilterValue] = useWorkflowStore(state => [state.dateFrom, state.dateTo, state.updateFilterValue]);
 
