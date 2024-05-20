@@ -22,17 +22,20 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
-        paddingBottom: 10
     },
     searchField: {
         display: 'flex',
         flex: 1,
-        marginRight: 20
+        marginTop: 0,
+        marginBottom: '1rem',
+        marginRight: 20,
+        marginLeft: '1rem',
     },
     searchButton: {
         height: 35,
         width: 60,
         color: palette.background.paper,
+        marginRight: '1rem',
         [breakpoints.down('lg')]: {
             height: 30
         }
@@ -85,8 +88,8 @@ function SearchList(props: SearchListProps): React.ReactElement {
         <FieldType
             required={false}
             label='Search for Subject'
-            marginTop={2}
-            padding='10px'
+            align='center'
+            labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px' } }}
             labelTooltip='This is the entity that the digital asset(s) is based on and where it will be saved to.'
         >
             <Box className={classes.container}>

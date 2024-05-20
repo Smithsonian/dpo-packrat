@@ -24,9 +24,9 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        marginBottom: '2rem',
-        border: `1px dashed ${palette.primary.main}`,
-        borderRadius: '0.5rem',
+        // marginBottom: '2rem',
+        // border: `1px dashed ${palette.primary.main}`,
+        // borderRadius: '0.5rem',
         background: '0',
         overflow: 'hidden'
     },
@@ -38,7 +38,8 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         height: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
-        width: '100%',
+        // width: '100%',
+        padding: '0px 10px',
         ...scrollBarProperties(true, false, palette.text.disabled)
     },
     listDetail: {
@@ -62,7 +63,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         outline: '2px hidden #8DABC4'
     },
     title: {
-        margin: '1% 0px',
+        margin: '1rem 0px',
         fontSize: '1em',
         fontWeight: 500
     },
@@ -71,6 +72,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         textAlign: 'center',
         color: 'white',
         backgroundColor: palette.primary.main,
+        borderRadius: '2rem 2rem 0px 0px'
     }
 }));
 
@@ -103,7 +105,6 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 label='Upload Files'
                 labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark } }}
                 width={'calc(100% - 20px)'}
-                padding='10px'
             >
                 <UploadListHeader />
                 <Box className={classes.list}>

@@ -12,10 +12,11 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         display: 'flex',
         alignItems: 'center',
         height: 50,
-        width: '100%',
+        // width: '100%',
+        padding: '0px 10px',
         borderRadius: 5,
-        background: palette.primary.main,
-        color: 'white',
+        background: '#d1e7fa', //palette.primary.dark,
+        border: `1px solid ${palette.primary.main}`,
         [breakpoints.down('lg')]: {
             height: 35
         }
@@ -44,8 +45,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         fontWeight: 400
     },
     label: {
-        color: 'white', /*palette.primary.dark,*/
-        fontWeight: 400
+        color: palette.primary.dark,
+        fontWeight: 'bold'
     }
 }));
 
