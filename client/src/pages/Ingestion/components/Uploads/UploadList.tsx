@@ -8,7 +8,7 @@
  */
 import { Box, Typography, Button } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Dropzone from 'react-dropzone';
 import { BsCloudUpload } from 'react-icons/bs';
 import { useUploadStore } from '../../../../store';
@@ -24,16 +24,18 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        marginTop: 20,
-        marginBottom: 40,
-        border: `1px dashed ${palette.primary.main}`
+        marginBottom: '2rem',
+        border: `1px dashed ${palette.primary.main}`,
+        borderRadius: '0.5rem',
+        background: '0',
+        overflow: 'hidden'
     },
     list: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '16vh',
-        height: '30vh',
+        height: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         width: '100%',
@@ -52,6 +54,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         width: 120,
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
+        marginBottom: '2rem',
         color: Colors.defaults.white,
         '&:focus': {
             outline: '2px solid #8DABC4',
@@ -62,6 +65,12 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         margin: '1% 0px',
         fontSize: '1em',
         fontWeight: 500
+    },
+    uploadNotice: {
+        padding: 2,
+        textAlign: 'center',
+        color: 'white',
+        backgroundColor: palette.primary.main,
     }
 }));
 
@@ -75,13 +84,24 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const { pending } = useUploadStore();
     const { loading, open } = props;
 
+    const [showUploadNotice, setShowUploadNotice] = useState<boolean>(true);
+
+    useEffect(() => {
+        // if an empty array return false ('every' returns true if empty)
+        // otherwise check for any item to be either processing or uploading
+        const hasPending: boolean = (pending.length===0)?false:pending.every(
+            (item) => item.status === 'PROCESSING' || item.status === 'UPLOADING'
+        );
+        setShowUploadNotice(hasPending);
+    }, [pending, loading]);
+
     return (
         <Box className={classes.container}>
             <FieldType
                 required
                 align='center'
                 label='Upload Files'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark } }}
                 width={'calc(100% - 20px)'}
                 padding='10px'
             >
@@ -95,6 +115,11 @@ function UploadList(props: UploadListProps): React.ReactElement {
                     </Button>
                 </Box>
             </FieldType>
+            {showUploadNotice && (
+                <Box className={classes.uploadNotice}>
+                    <Typography>NOTE: Please do not leave this page until your files finish uploading and they show in the box below.</Typography>
+                </Box>
+            )}
         </Box>
     );
 }

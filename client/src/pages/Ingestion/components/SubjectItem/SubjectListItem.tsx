@@ -57,6 +57,11 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
 
     return (
         <TableRow>
+            <TableCell style={cellStyle} align='left'>
+                <Box className={classes.options}>
+                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={20} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={20} />}
+                </Box>
+            </TableCell>
             <TableCell style={cellStyle}>
                 <Typography className={classes.label} variant='caption'>{arkId}</Typography>
             </TableCell>
@@ -67,12 +72,10 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
                 <Typography className={classes.label} variant='caption'>{name}</Typography>
             </TableCell>
             <TableCell style={cellStyle} align='left'>
-                <Typography className={classes.label} variant='caption'>{collectionId}</Typography>
+                <Typography className={classes.label} variant='caption'>{name}</Typography>
             </TableCell>
             <TableCell style={cellStyle} align='left'>
-                <Box className={classes.options}>
-                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={20} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={20} />}
-                </Box>
+                <Typography className={classes.label} variant='caption'>{collectionId}</Typography>
             </TableCell>
         </TableRow>
     );
