@@ -21,7 +21,6 @@ import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
 import { eIngestionMode } from '../../../../constants';
 import { UploadReferences } from '../../../../store';
-import { toast } from 'react-toastify';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
     container: {
@@ -199,7 +198,6 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const classes = useStyles(props);
     const upload = () => {
         onUpload(id);
-        toast.info('Do not leave this page! Upload in Progress.');
     };
 
     const remove = () => {
