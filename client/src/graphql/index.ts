@@ -41,7 +41,7 @@ class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
 
     private handleException(error: any): void {
         const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-        console.log(`Apollo Client Error${message}`);
+        console.log(`[PACKRAT:ERROR] Apollo Client Error ${message}`);
         // console.log(`Apollo Client Error${message}: ${JSON.stringify(error)}`);
         throw error;
     }
@@ -52,6 +52,8 @@ const SAMLRedirectPath: string = '/saml/idp/profile/redirectorpost/sso';
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     let sentToLogin: boolean = false;
+
+    console.log(`[PACKRAT:ERROR] Network: ${JSON.stringify(networkError)}`);
 
     if (graphQLErrors) {
         graphQLErrors.forEach(({ message, locations, path }) => {
@@ -67,9 +69,6 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     }
 
     if (networkError) {
-        console.log(`[Network error]: ${networkError}`);
-        // console.log(`[Network error]: ${JSON.stringify(networkError)}`);
-
         if (!sentToLogin) {
             let redirectToLogin: boolean = false;
 
@@ -173,6 +172,7 @@ interface IApolloUploader {
     refetchQueries?: string[];
     onProgress: (event: ProgressEvent) => void;
     onCancel: (cancelHandler: () => void) => void;
+    onFailed: (error: ErrorEvent) => void;
 }
 
 async function apolloUploader(options: IApolloUploader): Promise<any> {

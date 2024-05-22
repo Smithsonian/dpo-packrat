@@ -7,7 +7,7 @@
  * This component renders file list item used in FileListItem component.
  */
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
-import { green, grey, red, yellow } from '@material-ui/core/colors';
+import { green, grey, red } from '@material-ui/core/colors';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import { motion } from 'framer-motion';
 import React from 'react';
@@ -218,13 +218,13 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     const select = () => (complete ? onSelect(id, !selected) : null);
     let options: React.ReactNode = null;
     if (!complete) {
-        {/*Uploaded Items State*/}
+        /*Uploaded Items State*/
         options = (
             <React.Fragment>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={22} color={green[500]} />}
                 {uploading && !failed && <Progress className={classes.option} size={16} />}
-                {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
-                <IoIosCloseCircle className={classes.option} onClick={remove} size={20} color={red[500]} />
+                {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={red[900]} />}
+                <IoIosCloseCircle className={classes.option} onClick={remove} size={25} color={red[800]} />
             </React.Fragment>
         );
     }

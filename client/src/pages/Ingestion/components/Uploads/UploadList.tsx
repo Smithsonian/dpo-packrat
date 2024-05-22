@@ -70,9 +70,11 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
     uploadNotice: {
         padding: 2,
         textAlign: 'center',
-        color: 'white',
-        backgroundColor: palette.primary.main,
-        borderRadius: '2rem 2rem 0px 0px'
+        color: palette.secondary.contrastText,
+        backgroundColor: palette.secondary.main,
+        borderRadius: '2rem 2rem 0px 0px',
+        border: `1px solid ${palette.secondary.dark}`,
+        borderBottom: '0'
     }
 }));
 
@@ -91,6 +93,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
     useEffect(() => {
         // if an empty array return false ('every' returns true if empty)
         // otherwise check for any item to be either processing or uploading
+        // console.log(`UploadList.pending (${pending})`);
         const hasPending: boolean = (pending.length===0)?false:pending.every(
             (item) => item.status === 'PROCESSING' || item.status === 'UPLOADING'
         );
@@ -118,7 +121,7 @@ function UploadList(props: UploadListProps): React.ReactElement {
             </FieldType>
             {showUploadNotice && (
                 <Box className={classes.uploadNotice}>
-                    <Typography>NOTE: Please do not leave this page until your files finish uploading and they show in the box below.</Typography>
+                    <Typography><strong>NOTE:</strong> Please do not leave this page until your file(s) finish uploading and they show in the box below.</Typography>
                 </Box>
             )}
         </Box>
