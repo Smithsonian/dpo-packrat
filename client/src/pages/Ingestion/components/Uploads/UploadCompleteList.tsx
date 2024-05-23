@@ -32,7 +32,7 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '12vh',
-        //height: '30vh',
+        maxHeight: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         // width: '100%',

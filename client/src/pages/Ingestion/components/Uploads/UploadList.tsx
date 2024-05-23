@@ -19,14 +19,11 @@ import FileList from './FileList';
 import UploadListHeader from './UploadListHeader';
 import { eIngestionMode } from '../../../../constants';
 
-export const useUploadListStyles = makeStyles(({ palette, typography, spacing }) => ({
+export const useUploadListStyles = makeStyles(({ palette, typography }) => ({
     container: {
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        // marginBottom: '2rem',
-        // border: `1px dashed ${palette.primary.main}`,
-        // borderRadius: '0.5rem',
         background: '0',
         overflow: 'hidden'
     },
@@ -35,12 +32,21 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '16vh',
-        height: '25vh',
+        maxHeight: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
         // width: '100%',
         padding: '0px 10px',
         ...scrollBarProperties(true, false, palette.text.disabled)
+    },
+    listEmpty: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '16vh',
+        maxHeight: '25vh',
+        padding: '10px 10px',
     },
     listDetail: {
         textAlign: 'center',
@@ -51,11 +57,15 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
     icon: {
         color: palette.primary.main
     },
+    listFooter: {
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-end'
+    },
     button: {
         width: 120,
         fontSize: typography.caption.fontSize,
-        marginTop: spacing(1),
-        marginBottom: '2rem',
+        margin: '0.5rem',
         color: Colors.defaults.white,
         '&:focus': {
             outline: '2px solid #8DABC4',
@@ -64,7 +74,7 @@ export const useUploadListStyles = makeStyles(({ palette, typography, spacing })
     },
     title: {
         margin: '1rem 0px',
-        fontSize: '1em',
+        fontSize: '0.75rem',
         fontWeight: 500
     },
     uploadNotice: {
@@ -89,15 +99,19 @@ function UploadList(props: UploadListProps): React.ReactElement {
     const { loading, open } = props;
 
     const [showUploadNotice, setShowUploadNotice] = useState<boolean>(true);
+    const [isListEmpty, setIsListEmpty] = useState<boolean>(true);
 
     useEffect(() => {
         // if an empty array return false ('every' returns true if empty)
         // otherwise check for any item to be either processing or uploading
-        // console.log(`UploadList.pending (${pending})`);
-        const hasPending: boolean = (pending.length===0)?false:pending.every(
+        const hasPending: boolean = (pending.length > 0) && pending.some(
             (item) => item.status === 'PROCESSING' || item.status === 'UPLOADING'
         );
+        // console.log(`UploadList.pending (state: ${hasPending} [${pending.length}] | ${JSON.stringify(pending)})`);
         setShowUploadNotice(hasPending);
+
+        // mark whether the list is empty or not
+        setIsListEmpty(pending.length<=0);
     }, [pending, loading]);
 
     return (
@@ -110,10 +124,17 @@ function UploadList(props: UploadListProps): React.ReactElement {
                 width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
-                <Box className={classes.list}>
-                    <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
-                    <Typography className={classes.title}>Drag and drop files here or click the button</Typography>
-                    <BsCloudUpload className={classes.icon} size='50px' />
+                {isListEmpty ? (
+                    <Box className={classes.listEmpty}>
+                        <BsCloudUpload className={classes.icon} size='50px' />
+                        <Typography className={classes.title}><u>DRAG AND DROP</u> files here or click the <u>BROWSE</u> button below.</Typography>
+                    </Box>
+                ): (
+                    <Box className={classes.list}>
+                        <FileList files={pending} uploadPendingList uploadType={eIngestionMode.eIngest} />
+                    </Box>
+                )}
+                <Box className={classes.listFooter}>
                     <Button className={classes.button} color='primary' variant='contained' onClick={open} disabled={loading} disableElevation>
                         Browse files
                     </Button>
