@@ -133,7 +133,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         //If there's an error send a warning. You best believe that the Identifier warning will be processed here.
         } catch (error) {
             hasError = true;
-            console.log('Toast Error' + ': ' + error);
+            console.log(`Toast Error: ${error}`);
             if (error instanceof yup.ValidationError) {
                 for (const message of error.errors) {
                     toast.warn(message, { autoClose: false });

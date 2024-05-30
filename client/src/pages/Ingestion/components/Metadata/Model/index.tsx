@@ -57,12 +57,15 @@ const useStyles = makeStyles(({ palette }) => ({
         outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     modelDetailsAndSubtitleContainer: {
-        borderRadius: 5,
-        padding: 10,
+        padding: '10px',
         backgroundColor: palette.primary.light,
-        width: 'fit-content',
+        // width: 'fit-content',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: '0.5rem', // 5
+        border: `1px dashed ${palette.primary.main}`,
+
     },
     modelDetailsContainer: {
         display: 'flex',
@@ -72,7 +75,8 @@ const useStyles = makeStyles(({ palette }) => ({
         width: '100%',
         columnGap: 10,
         rowGap: 10,
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        justifyContent: 'center'
     },
     caption: {
         flex: '1 1 0%',
@@ -87,6 +91,14 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         backgroundColor: palette.secondary.light,
         width: '200px'
+    },
+    ingestContainer: {
+        borderRadius: '0.5rem',
+        border: `1px dashed ${palette.primary.main}`,
+        overflow: 'hidden',
+        backgroundColor: palette.primary.light,
+        padding: 0,
+        marginBottom: '1rem',
     },
 }));
 
@@ -318,7 +330,8 @@ function Model(props: ModelProps): React.ReactElement {
 
     const readOnlyContainerProps: React.CSSProperties = {
         height: 26,
-        alignItems: 'center'
+        alignItems: 'center',
+        background: 0
     };
 
     return (
@@ -330,7 +343,7 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                 )}
 
-                <Box mb={2} width='52vw'>
+                <Box className={ classes.ingestContainer } style={{ padding: '10px', paddingBottom: '0' }}>
                     {/*ASSET IDENTIFIERS FORM STARTS HERE*/}
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}
@@ -345,7 +358,7 @@ function Model(props: ModelProps): React.ReactElement {
 
                 {!idAsset && (
                     <React.Fragment>
-                        <Box mb={2}>
+                        <Box className={ classes.ingestContainer } >
                             <RelatedObjectsList
                                 type={RelatedObjectType.Source}
                                 relatedObjects={model.sourceObjects}
@@ -354,7 +367,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 relationshipLanguage='Parents'
                             />
                         </Box>
-                        <Box mb={2}>
+                        <Box className={ classes.ingestContainer } >
                             <RelatedObjectsList
                                 type={RelatedObjectType.Derived}
                                 relatedObjects={model.derivedObjects}

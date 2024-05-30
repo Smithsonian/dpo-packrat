@@ -23,7 +23,8 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        background: '0',
+        margin: '0px 10px',
+        // background: '0',
         // marginBottom: '1rem'
     },
     list: {
@@ -31,10 +32,11 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         flexDirection: 'column',
         alignItems: 'center',
         minHeight: '12vh',
-        //height: '30vh',
+        maxHeight: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
-        width: '100%',
+        // width: '100%',
+        padding: '0px 10px',
         ...scrollBarProperties(true, false, palette.text.disabled)
     },
     listDetail: {
@@ -123,8 +125,8 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                 align='center'
                 label='Ready for Ingest'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, color: Colors.defaults.dark } }}
-                width={'calc(100% - 20px)'}
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark } }}
+                // width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
                 <Box className={classes.list}>{content}</Box>
