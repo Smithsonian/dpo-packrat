@@ -9,7 +9,7 @@ import React from 'react';
 import { StateSubject, useSubjectStore } from '../../../../store';
 import SubjectListItem from './SubjectListItem';
 
-const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         maxHeight: '20vh',
         backgroundColor: palette.background.paper
@@ -18,11 +18,11 @@ const useStyles = makeStyles(({ palette, spacing, breakpoints }) => ({
         position: 'sticky',
         top: 0,
         fontSize: '0.8em',
-        backgroundColor: palette.background.paper,
-        color: palette.primary.contrastText,
-        [breakpoints.down('lg')]: {
-            padding: '5px 16px',
-        }
+        backgroundColor: '#d1e7fa', //palette.primary.light, //palette.background.paper,
+        color: palette.primary.dark, //contrastText,
+        // [breakpoints.down('lg')]: {
+        //     padding: '5px 16px',
+        // }
     },
     body: {
         overflow: 'auto'

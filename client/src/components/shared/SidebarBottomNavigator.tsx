@@ -21,16 +21,17 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         justifyContent: 'space-between',
         padding: '10px',
         //background: palette.background.paper
-        background: 'rgb(236, 245, 253)',
+        // background: 'rgb(236, 245, 253)',
     },
     container: {
         //display: 'flex',
         bottom: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
-        width: '100%',
-        padding: '20px',
-        //marginLeft: 20,
+        // width: '100%',
+        // padding: '20px',
+        margin: '10px',
+        marginLeft: '20px',
         //background: palette.background.paper
         //background: 'rgb(236, 245, 253)'
     },

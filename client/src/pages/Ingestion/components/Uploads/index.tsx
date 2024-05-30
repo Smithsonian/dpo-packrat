@@ -29,7 +29,7 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         flexDirection: 'column',
         // overflow: 'auto',
         maxHeight: 'calc(100vh - 60px)',
-        overflow: 'hidden'
+        overflow: 'auto'
     },
     content: {
         display: 'flex',
@@ -63,7 +63,10 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
     ingestContainer: {
         borderRadius: '0.5rem',
         border: `1px dashed ${palette.primary.main}`,
-        overflow: 'hidden'
+        overflow: 'hidden',
+        backgroundColor: palette.primary.light,
+        padding: '0px 10px',
+        marginBottom: '2rem',
     },
 }));
 
@@ -286,7 +289,9 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
 
     return (
         <React.Fragment>
-            <UploadFilesPicker />
+            <Box className={classes.ingestContainer}>
+                <UploadFilesPicker />
+            </Box>
             <Box className={classes.ingestContainer}>
                 <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
                 <SidebarBottomNavigator

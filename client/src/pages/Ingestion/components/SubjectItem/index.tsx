@@ -31,7 +31,7 @@ const useStyles = makeStyles(({ palette }) => ({
     content: {
         display: 'flex',
         flex: 1,
-        width: '52vw',
+        // width: '52vw',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0
@@ -42,10 +42,24 @@ const useStyles = makeStyles(({ palette }) => ({
         fontWeight: 'bold',
         fontSize: '1em',
     },
-
+    fieldContainer: {
+        borderRadius: '0.5rem',
+        border: `1px dashed ${palette.primary.main}`,
+        overflow: 'hidden',
+        margin: '0.5rem',
+        padding: 0
+    },
     fileChip: {
         marginRight: 10
-    }
+    },
+    ingestContainer: {
+        borderRadius: '0.5rem',
+        border: `1px dashed ${palette.primary.main}`,
+        overflow: 'hidden',
+        backgroundColor: palette.primary.light,
+        padding: 0,
+        marginBottom: '1rem',
+    },
 }));
 
 function SubjectItem(): React.ReactElement {
@@ -151,29 +165,38 @@ function SubjectItem(): React.ReactElement {
                     <Typography className={classes.filesLabel}>Select Subject and Media Group for:</Typography>
                     {metadatas.map(({ file }, index) => <Chip key={index} className={classes.fileChip} label={file.name} variant='outlined' />)}
                 </Box>
-                <SearchList />
-                <FieldType
-                    error={subjectError}
-                    required
-                    label='Subject(s) Selected'
-                    marginTop={2}
-                    padding='10px'
-                    labelTooltip='This shows the subject currently selected.'
-                >
-                    <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
-                </FieldType>
+                <Box className={classes.ingestContainer} style={{ marginTop: '2rem' }}>
+                    <SearchList />
+                </Box>
 
-                <FieldType
-                    loading={itemsLoading}
-                    error={itemError}
-                    required
-                    label='Media Group'
-                    marginTop={2}
-                    padding='10px'
-                    labelTooltip='Media groups are basically a group of digital assets that when grouped together can be used to make up a single subject or portion of a subject.  Each subject can have more than one media group'
-                >
-                    <ItemList />
-                </FieldType>
+                <Box className={classes.ingestContainer}>
+                    <FieldType
+                        error={subjectError}
+                        required
+                        label='Subject(s) Selected'
+                        align='center'
+                        labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', padding: 0 } }}
+                        labelTooltip='This shows the subject currently selected.'
+                    >
+                        <SubjectList subjects={subjects} selected emptyLabel='Search and select subject from above' />
+                    </FieldType>
+                </Box>
+
+                <Box className={classes.ingestContainer}>
+                    <FieldType
+                        loading={itemsLoading}
+                        error={itemError}
+                        required
+                        label='Media Group'
+                        padding='10px'
+                        align='center'
+                        labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px' } }}
+                        labelTooltip='Media groups are basically a group of digital assets that when grouped together can be used to make up a single subject or portion of a subject.  Each subject can have more than one media group'
+                    >
+                        <ItemList />
+                    </FieldType>
+                </Box>
+
             </Box>
             <SidebarBottomNavigator
                 rightLoading={metadataStepLoading}

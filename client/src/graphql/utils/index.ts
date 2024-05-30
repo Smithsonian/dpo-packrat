@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any */
+
 /**
  * GraphQL Utils
  *
@@ -19,12 +20,31 @@ const parseHeaders = (rawHeaders: any) => {
     return headers;
 };
 
-export const uploadFailureMessage: string = 'Upload cancelled';
+// our central variable holding the most relevant message on why the upload failed
+export let uploadFailureMessage: string = 'undefined';
+
+// fetch our actual upload passing in the url and relevant options such as
+// the method, headers, etc.
 const uploadFetch = (url: string, options: any): any =>
     new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.withCredentials = true;
+
+        // initialize our request and set any headers
+        xhr.open(options.method, url, true);
+        Object.keys(options.headers).forEach(key => {
+            xhr.setRequestHeader(key, options.headers[key]);
+        });
+
+        // once the request completed, handle any errors or the response body
         xhr.onload = () => {
+            // The request was completed, but it was not successful
+            if (xhr.status < 200 && xhr.status >= 300) {
+                uploadFailureMessage = `Request failed with status: ${xhr.status}`;
+                return reject(new Error(uploadFailureMessage));
+            }
+
+            // if we have success then build our response
             const opts: any = {
                 status: xhr.status,
                 statusText: xhr.statusText,
@@ -36,30 +56,31 @@ const uploadFetch = (url: string, options: any): any =>
         };
 
         xhr.onerror = () => {
-            reject(new TypeError('Network request failed'));
+            uploadFailureMessage = 'Network request failed';
+            reject(new Error(uploadFailureMessage));
         };
 
         xhr.ontimeout = () => {
-            reject(new TypeError('Network request failed'));
+            uploadFailureMessage = 'Upload request timed out';
+            reject(new Error(uploadFailureMessage));
         };
-
-        xhr.open(options.method, url, true);
-
-        Object.keys(options.headers).forEach(key => {
-            xhr.setRequestHeader(key, options.headers[key]);
-        });
-
-        if (xhr.upload) {
-            xhr.upload.onprogress = options.onProgress;
-        }
 
         xhr.onabort = () => {
-            reject(new TypeError(uploadFailureMessage));
+            uploadFailureMessage = 'Upload aborted';
+            reject(new Error(uploadFailureMessage));
         };
 
-        options.onCancel(() => {
-            xhr.abort();
-        });
+        // if we have an upload request then connect our callbacks to handle responses
+        if (xhr.upload) {
+            xhr.upload.onprogress = options.onProgress;
+            xhr.upload.onabort = options.onCancel;
+            xhr.upload.onerror = options.onFailed;
+        }
+
+        // why cancel and abort here automatically?
+        // options.onCancel(() => {
+        //     xhr.abort();
+        // });
 
         xhr.send(options.body);
     });
@@ -75,6 +96,6 @@ export const apolloFetch = (uri: any, options: any): any => {
         });
     } catch (error) {
         const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-        console.log(`apolloFetch failed${message}`);
+        console.log(`[PACKRAT:ERROR] apolloFetch failed ${message}`);
     }
 };

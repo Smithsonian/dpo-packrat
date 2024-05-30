@@ -347,30 +347,39 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const { id, file, type } = ingestionFile;
         try {
             const onProgress = (event: ProgressEvent) => {
+                // registered with Apollo xhr.upload.onprogress callback and triggers
+                // PROGRESS event at every 10 steps so the UX can properly update.
                 const { loaded, total } = event;
                 const progress = Math.floor((loaded / total) * 100);
-                const updateProgress = !(progress % 1);
+                const updateProgress = (progress % 10) === 0;
 
                 if (updateProgress) {
                     const progressEvent: UploadProgressEvent = {
                         id,
                         progress
                     };
+                    // console.log(`[PACKRAT] startUploadTransfer.onProgress fire event (event: ${progressEvent} | pending: ${JSON.stringify(pending)})`);
                     UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
-
-                    // since React only triggers an update when a reference changes (not properties) we
-                    // create a new array/reference for pending so we can catch changes to its status.
-                    // console.log(`onProgress ${progress} | ${updateProgress} | ${JSON.stringify(pending)}`);
-                    set({ pending: [ ...pending ] });
                 }
             };
-
-            const onCancel = (cancel: () => void) => {
-                const setCancelEvent: UploadSetCancelEvent = {
+            const onCancel = (cancelCallback: () => void) => {
+                // registered with Apollo xhr.upload.onabort callbacks and triggers a cancelled event
+                const cancelEvent: UploadSetCancelEvent = {
                     id,
-                    cancel
+                    onCancel: cancelCallback
                 };
-                UploadEvents.dispatch(UploadEventType.SET_CANCELLED, setCancelEvent);
+
+                // console.log(`[PACKRAT] startUploadTransfer.onCancel fire event (event: ${cancelEvent} | pending: ${JSON.stringify(pending)})`);
+                UploadEvents.dispatch(UploadEventType.SET_CANCELLED, cancelEvent);
+            };
+            const onFailed = () => {
+                // registered with Apollo xhr.upload.onerror and triggers a failed event
+                const failedEvent: UploadFailedEvent = {
+                    id,
+                };
+
+                // console.error(`[PACKRAT] startUploadTransfer.onFailed fire event (event: ${error})`);
+                UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
             };
 
             const uploadAssetInputs: UploadAssetInput = { file, type };
@@ -389,10 +398,12 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 refetchQueries: ['getUploadedAssetVersion'],
                 useUpload: true,
                 onProgress,
-                onCancel
+                onCancel,
+                onFailed,
             });
             const { uploadAsset }: UploadAssetMutation = data;
 
+            // once we have an uploaded asset we check/handle our response
             if (uploadAsset) {
                 const { status, error } = uploadAsset;
 
@@ -402,7 +413,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     //This message occurs when the upload is successfully transferred for processing.
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
-                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, error = ${error}`);
+                    console.log(`[PACKRAT] startUploadTransfer upload failed (id: ${id} | file: ${(file)?file['path']:'na'} | error: ${error})`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
@@ -419,12 +430,12 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             }
         } catch (error) {
             const message: string = (error instanceof Error) ? error.message : '';
-            console.log(`startUploadTransfer Exception ${message}`);
+            console.log(`[PACKRAT:ERROR] startUploadTransfer Exception ${message}`);
             const file = getFile(id, pending);
 
             if (file) {
                 if (file.status !== FileUploadStatus.CANCELLED) {
-                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, exception ${message}`);
+                    console.log(`[PACKRAT:ERROR] startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, exception ${message}`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
                 }
@@ -438,7 +449,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 lodash.set(file, 'type', assetType);
             }
         });
-        set({ pending: updatedPending });
+
+        // set our pending list to the new values. need to create new array because
+        // React only updates when reference changes (not properties).
+        set({ pending: [ ...updatedPending ] });
     },
     discardFiles: async (): Promise<void> => {
         const { completed, getSelectedFiles, refetch } = get();
@@ -471,7 +485,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
 
                 const updatedCompleted = getSelectedFiles(completed, false);
-                set({ completed: updatedCompleted });
+                set({ completed: [ ...updatedCompleted ] });
 
                 if (refetch)
                     refetch();
@@ -485,13 +499,23 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     removeSelectedUploads: (): void => {
         const { completed } = get();
         const updatedCompleted = completed.filter(({ selected }) => !selected);
-        set({ completed: updatedCompleted });
+        set({ completed: [ ...updatedCompleted ] });
     },
     onProgressEvent: (eventData: UploadProgressEvent, options?: UploadOptions): void => {
         const { pending, pendingAttachments, pendingUpdates } = get();
         const { id, progress } = eventData;
 
-        // handles updates and attachments
+        // DEBUG: to help track status changes and events
+        const statusPending = pending.map(item => {
+            return {
+                filename: item.file['path'],
+                status: item.status,
+                progress: item.progress
+            };
+        });
+        console.log(`[PACKRAT] onProgressEvent (options: ${JSON.stringify(options)} | pending: ${JSON.stringify(statusPending)})`);
+
+        // handles updates and attachments if a SystemObject id is provided
         if (options?.idSystemObject) {
             const isAttachment = options.references.idSOAttachment;
             const isUpdate = options.references.idAsset;
@@ -515,6 +539,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 updatedUpdate.set(options.idSystemObject, file);
                 set({ pendingUpdates: updatedUpdate });
             }
+
+            // since React only triggers an update when a reference changes (not properties) we
+            // create a new array/reference for pending so we can catch changes to its status.
+            set({ pending: [...pending] });
+
         } else {
             const updatedPendingProgress = lodash.forEach(pending, file => {
                 if (file.id === id) {
@@ -523,12 +552,25 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                         lodash.set(file, 'status', FileUploadStatus.PROCESSING);
                 }
             });
-            set({ pending: updatedPendingProgress });
+
+            // set our pending list to the new values. need to create new array because
+            // React only updates when reference changes (not properties).
+            set({ pending: [...updatedPendingProgress] });
         }
     },
     onSetCancelledEvent: (eventData: UploadSetCancelEvent, options?: UploadOptions): void => {
         const { pending, pendingAttachments, pendingUpdates } = get();
-        const { id, cancel } = eventData;
+        const { id, onCancel } = eventData;
+
+        // DEBUG: to help track status changes and events
+        const statusPending = pending.map(item => {
+            return {
+                filename: item.file['path'],
+                status: item.status,
+                progress: item.progress
+            };
+        });
+        console.log(`[PACKRAT] onCancelledEvent (pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -538,28 +580,46 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             if (isAttachment) {
                 const updatedAttachments = new Map(pendingAttachments);
                 const file = pendingAttachments.get(options.idSystemObject) as IngestionFile;
-                file.cancel = cancel;
+                file.cancel = onCancel;
                 set({ pendingAttachments: updatedAttachments });
             }
 
             if (isUpdate) {
                 const updatedUpdates = new Map(pendingUpdates);
                 const file = pendingUpdates.get(options.idSystemObject) as IngestionFile;
-                file.cancel = cancel;
+                file.cancel = onCancel;
                 set({ pendingUpdates: updatedUpdates });
             }
+
+            // since React only triggers an update when a reference changes (not properties) we
+            // create a new array/reference for pending so we can catch changes to its status.
+            set({ pending: [ ...pending ] });
+
         } else {
             const updateSetCancel = lodash.forEach(pending, file => {
                 if (file.id === id) {
-                    lodash.set(file, 'cancel', cancel);
+                    lodash.set(file, 'cancel', onCancel);
                 }
             });
-            set({ pending: updateSetCancel });
+
+            // set our pending list to the new values. need to create new array because
+            // React only updates when reference changes (not properties).
+            set({ pending: [ ...updateSetCancel ] });
         }
     },
     onFailedEvent: (eventData: UploadFailedEvent, options?: UploadOptions): void => {
         const { pending, pendingAttachments, pendingUpdates } = get();
         const { id } = eventData;
+
+        // DEBUG: to help track status changes and events
+        const statusPending = pending.map(item => {
+            return {
+                filename: item.file['path'],
+                status: item.status,
+                progress: item.progress
+            };
+        });
+        console.log(`[PACKRAT] onFailedEvent (pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -579,6 +639,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 file.status = FileUploadStatus.FAILED;
                 set({ pendingUpdates: updatedUpdates });
             }
+
+            // since React only triggers an update when a reference changes (not properties) we
+            // create a new array/reference for pending so we can catch changes to its status.
+            set({ pending: [ ...pending ] });
+
         } else {
             const updatedFailedPending = lodash.forEach(pending, file => {
                 if (file.id === id) {
@@ -586,12 +651,25 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 }
             });
 
-            set({ pending: updatedFailedPending });
+            // set our pending list to the new values. need to create new array because
+            // React only updates when reference changes (not properties).
+            set({ pending: [ ...updatedFailedPending ] });
         }
     },
     onCompleteEvent: (eventData: UploadCompleteEvent, options?: UploadOptions): void => {
+        // subscribed to via the main upload index/component
         const { pending, pendingAttachments, pendingUpdates } = get();
         const { id } = eventData;
+
+        // DEBUG: to help track status changes and events
+        const statusPending = pending.map(item => {
+            return {
+                filename: item.file['path'],
+                status: item.status,
+                progress: item.progress
+            };
+        });
+        console.log(`[PACKRAT] onCompleteEvent (pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -607,20 +685,40 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 updatedUpdate.delete(options.idSystemObject);
                 set({ pendingUpdates: updatedUpdate });
             }
+
+            // since React only triggers an update when a reference changes (not properties) we
+            // create a new array/reference for pending so we can catch changes to its status.
+            set({ pending: [ ...pending ] });
+
         } else {
             const updatedComplete = pending.filter(file => file.id !== id);
-            set({ pending: updatedComplete });
+
+            // set our pending list to the new values. need to create new array because
+            // React only updates when reference changes (not properties).
+            set({ pending: [ ...updatedComplete ] });
         }
     },
     reset: (): void => {
-        const { completed } = get();
+        const { completed, pending } = get();
         const unselectFiles = (file: IngestionFile): IngestionFile => ({
             ...file,
             selected: false
         });
-
         const updatedCompleted: IngestionFile[] = completed.map(unselectFiles);
-        set({ completed: updatedCompleted, loading: false });
+
+        // DEBUG: to help track status changes and events
+        const statusPending = pending.map(item => {
+            return {
+                filename: item.file['path'],
+                status: item.status,
+                progress: item.progress
+            };
+        });
+        console.log(`[PACKRAT] Upload store reset (pending: ${JSON.stringify(statusPending)})`);
+
+        // set our pending list to the new values. need to create new array because
+        // React only updates when reference changes (not properties).
+        set({ completed: [ ...updatedCompleted ], loading: false });
     },
     resetSpecialPending: (uploadType: eIngestionMode) => {
         if (uploadType === eIngestionMode.eAttach) set({ pendingAttachments: new Map() });

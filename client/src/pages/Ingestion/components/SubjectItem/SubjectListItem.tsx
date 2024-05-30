@@ -12,6 +12,7 @@ import { StateSubject } from '../../../../store';
 const useStyles = makeStyles(() => ({
     label: {
         width: '100%',
+        fontSize: '0.75rem',
     },
     options: {
         marginLeft: 20
@@ -67,9 +68,6 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
             </TableCell>
             <TableCell style={cellStyle} align='left'>
                 <Typography className={classes.label} variant='caption'>{unit}</Typography>
-            </TableCell>
-            <TableCell style={cellStyle} align='left'>
-                <Typography className={classes.label} variant='caption'>{name}</Typography>
             </TableCell>
             <TableCell style={cellStyle} align='left'>
                 <Typography className={classes.label} variant='caption'>{name}</Typography>
