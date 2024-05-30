@@ -62,7 +62,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         fieldSizing: {
             width: '240px',
             padding: 0,
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            textAlign: 'center'
         },
         fileChip: {
             marginRight: 10
@@ -309,6 +310,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
                             <TableRow className={tableClasses.tableRow}>
+                                {/* Spacer */}
+                                <TableCell className={tableClasses.tableCell}>
+                                    <Typography className={tableClasses.labelText} style={{ margin: '1rem' }}> </Typography>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Dataset Type</Typography>
                                 </TableCell>
@@ -339,6 +346,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         onChange={setIdField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
                                     />
+                                </TableCell>
+                            </TableRow>
+                            <TableRow className={tableClasses.tableRow}>
+                                {/* Spacer */}
+                                <TableCell className={tableClasses.tableCell}>
+                                    <Typography className={tableClasses.labelText} style={{ margin: '1rem' }}> </Typography>
                                 </TableCell>
                             </TableRow>
                             <TableRow className={tableClasses.tableRow}>
@@ -391,6 +404,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
                             <TableRow className={tableClasses.tableRow}>
+                                {/* Spacer */}
+                                <TableCell className={tableClasses.tableCell}>
+                                    <Typography className={tableClasses.labelText} style={{ margin: '1rem' }}> </Typography>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Focus Type</Typography>
                                 </TableCell>
@@ -439,6 +458,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     >
                                         {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
+                                </TableCell>
+                            </TableRow>
+                            <TableRow className={tableClasses.tableRow}>
+                                {/* Spacer */}
+                                <TableCell className={tableClasses.tableCell}>
+                                    <Typography className={tableClasses.labelText} style={{ margin: '1rem' }}> </Typography>
                                 </TableCell>
                             </TableRow>
                             <TableRow className={tableClasses.tableRow}>
