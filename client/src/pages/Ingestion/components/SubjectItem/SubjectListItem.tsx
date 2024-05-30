@@ -12,6 +12,7 @@ import { StateSubject } from '../../../../store';
 const useStyles = makeStyles(() => ({
     label: {
         width: '100%',
+        fontSize: '0.75rem',
     },
     options: {
         marginLeft: 20
