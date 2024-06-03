@@ -41,6 +41,8 @@ services:
             target: server
         ports:
             - $PACKRAT_SERVER_PORT:4000
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         environment:
             - NODE_ENV=$NODE_ENV
             - REACT_APP_PACKRAT_SERVER_ENDPOINT=$REACT_APP_PACKRAT_SERVER_ENDPOINT

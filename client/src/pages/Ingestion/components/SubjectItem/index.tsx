@@ -31,7 +31,7 @@ const useStyles = makeStyles(({ palette }) => ({
     content: {
         display: 'flex',
         flex: 1,
-        // width: '52vw',
+        marginRight: '1rem',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0
