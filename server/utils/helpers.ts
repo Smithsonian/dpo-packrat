@@ -489,7 +489,8 @@ export class Helpers {
         try {
             return { json: JSON.parse(input) };
         } catch(error) {
-            return { error };
+            LOG.error(`JSON Failure: ${this.JSONStringify(error)}`,LOG.LS.eSYS);
+            return undefined;
         }
     }
 
