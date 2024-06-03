@@ -98,14 +98,14 @@ export class PublishScene {
             return false;
         }
 
-        // create EDAN 3D Package
+        // create EDAN 3D Package for our scene and push to EDAN
+        // this is done first so when we update with license/status info the scene is there
         let edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
         if (!edanRecord) {
             LOG.error('PublishScene.publish EDAN failed', LOG.LS.eCOLL);
             return false;
         }
-        LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch}`, LOG.LS.eCOLL);
-        // LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch}:\n${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eCOLL);
+        LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch} (path: ${this.sharedName})`, LOG.LS.eCOLL);
 
         // stage downloads
         if (!await this.stageDownloads() || !this.edan3DResourceList)
@@ -117,6 +117,7 @@ export class PublishScene {
             return false;
         const media_usage: COL.EdanLicenseInfo = EdanCollection.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
 
+        // figure out our flags for the package so we have the correct visibility within EDAN
         const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended);
         const haveDownloads: boolean = (this.edan3DResourceList.length > 0);
         const updatePackage: boolean = haveDownloads                                // we have downloads, or
@@ -456,13 +457,13 @@ export class PublishScene {
 
     private async stageSceneFiles(): Promise<boolean> {
         if (this.SacList.length <= 0 || !this.scene) {
-            LOG.error(`PublishScene.stageSceneFiles casnnot stage files for scene (${this.sceneFile}). No scene or assets list (${this.scene}|${this.SacList.length})`,LOG.LS.eCOLL);
+            LOG.error(`PublishScene.stageSceneFiles cannot stage files for scene (${this.sceneFile}). No scene or assets list (${this.scene}|${this.SacList.length})`,LOG.LS.eCOLL);
             return false;
         }
         let stageRes: H.IOResults = { success: true };
 
         // log what will be included
-        const assets: string[] = this.SacList.map(SAC => { return `${SAC.asset.FileName}(${SAC.assetVersion.Version})`; });
+        const assets: string[] = this.SacList.map(SAC => { return `${SAC.asset.FileName}(v${SAC.assetVersion.Version})`; });
         LOG.info(`PublishScene.stageSceneFiles collecting assets for scene (${this.sceneFile}): ${assets.join(',')}`,LOG.LS.eCOLL);
 
         // second pass: zip up appropriate assets; prepare to copy downloads
@@ -491,12 +492,14 @@ export class PublishScene {
             }
         }
 
+        // stream entire zip
         const zipStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
         if (!zipStream) {
             LOG.error('PublishScene.stageSceneFiles failed to extract stream from zip', LOG.LS.eCOLL);
             return false;
         }
 
+        // make sure we have a folder to stage our file in
         stageRes = await H.Helpers.fileOrDirExists(Config.collection.edan.stagingRoot);
         if (!stageRes.success)
             stageRes = await H.Helpers.createDirectory(Config.collection.edan.stagingRoot);
@@ -505,10 +508,14 @@ export class PublishScene {
             return false;
         }
 
+        // build our paths for the staged content and store in this instance via sharedName
+        // 'sharedName' represents the path to the resource 'shared' and accessible to EDAN
+        // in production where we put resources for EDAN to find is different than the staging root
         const noFinalSlash: boolean = !Config.collection.edan.upsertContentRoot.endsWith('/');
         this.sharedName = Config.collection.edan.upsertContentRoot + (noFinalSlash ? '/' : '') + this.scene.EdanUUID! + '.zip'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const stagedName: string = path.join(Config.collection.edan.stagingRoot, this.scene.EdanUUID!) + '.zip'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         LOG.info(`PublishScene.stageSceneFiles staging file ${stagedName}, referenced in publish as ${this.sharedName}`, LOG.LS.eCOLL);
+        LOG.info(`PublishScene.stageSceneFiles paths (upsertRoot: ${Config.collection.edan.upsertContentRoot} | stagingRoot: ${Config.collection.edan.stagingRoot} | shared: ${this.sharedName} | staged: ${stagedName}).`,LOG.LS.eDEBUG);
 
         stageRes = await H.Helpers.writeStreamToFile(zipStream, stagedName);
         if (!stageRes.success) {
@@ -795,6 +802,7 @@ export class PublishScene {
             case COMMON.ePublishedState.eNotPublished:       status = 1; publicSearch = false; downloads = false; break;
             case COMMON.ePublishedState.eAPIOnly:            status = 0; publicSearch = false; downloads = true;  break;
             case COMMON.ePublishedState.ePublished:          status = 0; publicSearch = true;  downloads = true;  break;
+            case COMMON.ePublishedState.eInternal:           status = 1; publicSearch = false; downloads = true;  break; // same as 'NotPublished' but needed since default is 'NotPublished' and never triggers update.
             // case COMMON.ePublishedState.eViewOnly:           status = 0; publicSearch = true;  downloads = false; break;
         }
         LOG.info(`PublishScene.computeEdanSearchFlags(${COMMON.ePublishedState[eState]}) = { status ${status}, publicSearch ${publicSearch}, downloads ${downloads} }`, LOG.LS.eCOLL);
