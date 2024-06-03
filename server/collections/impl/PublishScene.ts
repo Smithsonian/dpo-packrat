@@ -106,7 +106,6 @@ export class PublishScene {
             return false;
         }
         LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch} (path: ${this.sharedName})`, LOG.LS.eCOLL);
-        // LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch}:\n${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eCOLL);
 
         // stage downloads
         if (!await this.stageDownloads() || !this.edan3DResourceList)
@@ -493,12 +492,14 @@ export class PublishScene {
             }
         }
 
+        // stream entire zip
         const zipStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
         if (!zipStream) {
             LOG.error('PublishScene.stageSceneFiles failed to extract stream from zip', LOG.LS.eCOLL);
             return false;
         }
 
+        // make sure we have a folder to stage our file in
         stageRes = await H.Helpers.fileOrDirExists(Config.collection.edan.stagingRoot);
         if (!stageRes.success)
             stageRes = await H.Helpers.createDirectory(Config.collection.edan.stagingRoot);
@@ -514,7 +515,7 @@ export class PublishScene {
         this.sharedName = Config.collection.edan.upsertContentRoot + (noFinalSlash ? '/' : '') + this.scene.EdanUUID! + '.zip'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const stagedName: string = path.join(Config.collection.edan.stagingRoot, this.scene.EdanUUID!) + '.zip'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         LOG.info(`PublishScene.stageSceneFiles staging file ${stagedName}, referenced in publish as ${this.sharedName}`, LOG.LS.eCOLL);
-        LOG.info(`PublishScene.stageSceneFiles paths (upsertRoot: ${Config.collection.edan.upsertContentRoot} | stagingRoot: ${Config.collection.edan.stagingRoot} | shared: ${this.sharedName}).`,LOG.LS.eDEBUG);
+        LOG.info(`PublishScene.stageSceneFiles paths (upsertRoot: ${Config.collection.edan.upsertContentRoot} | stagingRoot: ${Config.collection.edan.stagingRoot} | shared: ${this.sharedName} | staged: ${stagedName}).`,LOG.LS.eDEBUG);
 
         stageRes = await H.Helpers.writeStreamToFile(zipStream, stagedName);
         if (!stageRes.success) {

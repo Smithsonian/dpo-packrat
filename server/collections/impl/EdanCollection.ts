@@ -260,7 +260,8 @@ export class EdanCollection implements COL.ICollection {
     private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
         LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
-        LOG.info(`EdanCollection.upsertContent result:\n${JSON.stringify(body)}\n${reqResult.output}`, LOG.LS.eCOLL);
+        LOG.info(`EdanCollection.upsertContent result:\n${H.Helpers.JSONStringify(H.Helpers.JSONParse(reqResult.output))}`, LOG.LS.eCOLL);
+
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
             return null;
@@ -278,7 +279,7 @@ export class EdanCollection implements COL.ICollection {
     private async upsertResource(body: any, caller: string): Promise<COL.EdanRecord | null> {
         // LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertResource', '', JSON.stringify(body), 'application/json');
-        LOG.info(`EdanCollection.upsertResource:\n${H.Helpers.JSONStringify(body)}:\n${H.Helpers.JSONStringify(reqResult)}`, LOG.LS.eDEBUG);
+        LOG.info(`EdanCollection.upsertResource result:\n${H.Helpers.JSONStringify(H.Helpers.JSONParse(reqResult.output))}`, LOG.LS.eDEBUG);
 
         if (!reqResult.success) {
             LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
