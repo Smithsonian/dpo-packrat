@@ -73,7 +73,7 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
                 <Typography className={classes.label} variant='caption'>{name}</Typography>
             </TableCell>
             <TableCell style={cellStyle} align='left'>
-                <Typography className={classes.label} variant='caption'>{name}</Typography>
+                <Typography className={classes.label} variant='caption'>{collectionId}</Typography>
             </TableCell>
         </TableRow>
     );
