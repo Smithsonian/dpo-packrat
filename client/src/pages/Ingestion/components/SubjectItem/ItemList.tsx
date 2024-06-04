@@ -16,7 +16,7 @@ import { StateItem, useItemStore, useSubjectStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import lodash from 'lodash';
 
-const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => createStyles({
+const useStyles = makeStyles(({ palette, typography }) => createStyles({
     container: {
         maxHeight: '18vh',
         backgroundColor: palette.background.paper
@@ -25,12 +25,12 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         position: 'sticky',
         top: 0,
         fontSize: '0.8em',
-        backgroundColor: palette.background.paper,
-        color: palette.primary.contrastText,
+        backgroundColor: '#d1e7fa', // palette.primary.light, //palette.background.paper,
+        color: palette.primary.dark, //contrastText,
         zIndex: 10,
-        [breakpoints.down('lg')]: {
-            padding: '5px 16px',
-        }
+        // [breakpoints.down('lg')]: {
+        //     padding: '5px 16px',
+        // }
     },
     body: {
         overflow: 'auto'
@@ -39,11 +39,10 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
         textAlign: 'center',
         color: palette.grey[500],
         fontStyle: 'italic',
-        marginTop: spacing(4)
+        // marginTop: spacing(4)
     },
     selected: {
         cursor: 'pointer',
-        marginTop: 4
     },
     nameInput: {
         width: '100%',
@@ -107,7 +106,6 @@ function ItemList(): React.ReactElement {
                         <TableCell className={classes.headerText} align='left'>PROJECT</TableCell>
                         <TableCell className={classes.headerText} style={{ width: 100 }} align='center'>FULL SUBJECT?</TableCell>
                         <TableCell className={classes.headerText} align='left'>NAME/SUBTITLE</TableCell>
-
                     </TableRow>
                 </TableHead>
                 <TableBody className={classes.body}>

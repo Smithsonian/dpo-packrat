@@ -15,22 +15,27 @@ import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import SubjectList from './SubjectList';
 import { toast } from 'react-toastify';
 import { actionOnKeyPress } from '../../../../utils/shared';
+// import { HelpOutline } from '@material-ui/icons';
+// import Tooltip from "@material-ui/core/Tooltip";
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         alignItems: 'center',
-        paddingBottom: 10
     },
     searchField: {
         display: 'flex',
         flex: 1,
-        marginRight: 20
+        marginTop: 0,
+        marginBottom: '1rem',
+        marginRight: 20,
+        marginLeft: '1rem',
     },
     searchButton: {
         height: 35,
         width: 60,
         color: palette.background.paper,
+        marginRight: '1rem',
         [breakpoints.down('lg')]: {
             height: 30
         }
@@ -38,7 +43,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
 }));
 
 type SearchListProps = {
-    EdanOnly?: boolean
+    EdanOnly?: boolean;
 };
 
 function SearchList(props: SearchListProps): React.ReactElement {
@@ -80,7 +85,13 @@ function SearchList(props: SearchListProps): React.ReactElement {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
 
     return (
-        <FieldType required={false} label='Search for Subject' marginTop={2} padding='10px'>
+        <FieldType
+            required={false}
+            label='Search for Subject'
+            align='center'
+            labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px' } }}
+            labelTooltip='This is the entity that the digital asset(s) is based on and where it will be saved to.'
+        >
             <Box className={classes.container}>
                 <label htmlFor='searchSubjectFilter' style={{ display: 'none' }}>Search Subject</label>
                 <TextField

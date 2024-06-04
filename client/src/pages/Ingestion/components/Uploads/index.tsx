@@ -27,8 +27,9 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)'
+        // overflow: 'auto',
+        maxHeight: 'calc(100vh - 60px)',
+        overflow: 'auto'
     },
     content: {
         display: 'flex',
@@ -44,9 +45,6 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         justifyContent: 'center',
         height: '30vh',
         width: '40vw',
-        border: `1px dashed ${palette.primary.main}`,
-        borderRadius: 10,
-        backgroundColor: palette.primary.light
     },
     uploadIcon: {
         color: palette.primary.main
@@ -61,7 +59,15 @@ const useStyles = makeStyles(({ palette, typography, spacing }) => createStyles(
         fontSize: typography.caption.fontSize,
         marginTop: spacing(1),
         color: Colors.defaults.white
-    }
+    },
+    ingestContainer: {
+        borderRadius: '0.5rem',
+        border: `1px dashed ${palette.primary.main}`,
+        overflow: 'hidden',
+        backgroundColor: palette.primary.light,
+        padding: '0px 10px',
+        marginBottom: '2rem',
+    },
 }));
 
 function Uploads(): React.ReactElement {
@@ -237,6 +243,7 @@ type AliveUploadComponentsProps = {
 };
 
 function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactElement {
+    const classes = useStyles();
     // console.log(`AliveUploadComponents ${JSON.stringify(props)}`);
     const { discardingFiles, gettingAssetDetails, onDiscard, onIngest, setUpdatedAssetVersionMetadata } = props;
     const [onProgressEvent, onSetCancelledEvent, onFailedEvent, onCompleteEvent] = useUploadStore(state => [
@@ -251,28 +258,24 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
             const eventData: UploadProgressEvent = data.detail;
             onProgressEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.PROGRESS, onProgress);
 
         const onSetCancelled = data => {
             const eventData: UploadSetCancelEvent = data.detail;
             onSetCancelledEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.SET_CANCELLED, onSetCancelled);
 
         const onFailed = data => {
             const eventData: UploadFailedEvent = data.detail;
             onFailedEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.FAILED, onFailed);
 
         const onComplete = data => {
             const eventData: UploadCompleteEvent = data.detail;
             onCompleteEvent(eventData);
         };
-
         UploadEvents.subscribe(UploadEventType.COMPLETE, onComplete);
 
         return () => {
@@ -286,17 +289,21 @@ function AliveUploadComponents(props: AliveUploadComponentsProps): React.ReactEl
 
     return (
         <React.Fragment>
-            <UploadFilesPicker />
-            <SidebarBottomNavigator
-                leftLabel='Discard'
-                rightLabel='Ingest'
-                leftLoading={discardingFiles}
-                rightLoading={gettingAssetDetails}
-                onClickLeft={onDiscard}
-                onClickRight={onIngest}
-                uploadVersion
-            />
-            <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
+            <Box className={classes.ingestContainer}>
+                <UploadFilesPicker />
+            </Box>
+            <Box className={classes.ingestContainer}>
+                <UploadCompleteList setUpdatedAssetVersionMetadata={setUpdatedAssetVersionMetadata} />
+                <SidebarBottomNavigator
+                    leftLabel='Discard'
+                    rightLabel='Ingest'
+                    leftLoading={discardingFiles}
+                    rightLoading={gettingAssetDetails}
+                    onClickLeft={onDiscard}
+                    onClickRight={onIngest}
+                    uploadVersion
+                />
+            </Box>
         </React.Fragment>
     );
 }

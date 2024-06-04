@@ -3,6 +3,7 @@ import { Parent } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
 import * as DBAPI from '../../../../../db';
 import * as LOG from '../../../../../utils/logger';
+// import * as H from '../../../../../utils/helpers';
 
 export default async function searchIngestionSubjects(_: Parent, args: QuerySearchIngestionSubjectsArgs): Promise<SearchIngestionSubjectsResult> {
     const { input } = args;
@@ -14,6 +15,7 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
 
     const results: DBAPI.SubjectUnitIdentifier[] = [];
     const resultSet: Set<string> = new Set<string>();
+
 
     if (resultsDB) {
         for (const resultDB of resultsDB) {

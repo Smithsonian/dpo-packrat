@@ -64,6 +64,7 @@ type MetadataStore = {
     getSubtitlesError: (subtitles: SubtitleFields) => boolean;
 };
 
+
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
     getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => identifiers,
@@ -118,6 +119,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         return errors;
     },
+
     validateFields: (fields: ValidateFields, schema: ValidateFieldsSchema): boolean => {
         let hasError: boolean = false;
         const options = {
@@ -128,8 +130,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         try {
             schema.validateSync(fields, options);
+        //If there's an error send a warning. You best believe that the Identifier warning will be processed here.
         } catch (error) {
             hasError = true;
+            console.log(`Toast Error: ${error}`);
             if (error instanceof yup.ValidationError) {
                 for (const message of error.errors) {
                     toast.warn(message, { autoClose: false });
