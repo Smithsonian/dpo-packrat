@@ -484,6 +484,16 @@ export class Helpers {
         return parseFloat(input.toFixed(precision));
     }
 
+    /** parses a string as JSON */
+    static JSONParse(input: string): any {
+        try {
+            return { json: JSON.parse(input) };
+        } catch(error) {
+            LOG.error(`JSON Failure: ${this.JSONStringify(error)}`,LOG.LS.eSYS);
+            return undefined;
+        }
+    }
+
     static JSONStringify(obj: any): string {
         return JSON.stringify(obj, Helpers.saferStringify);
     }

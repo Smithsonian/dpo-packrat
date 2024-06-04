@@ -7,6 +7,7 @@ import { eVocabularySetID } from '@dpo-packrat/common';
 import FieldType from './FieldType';
 import IdentifierList from './IdentifierList';
 
+//Styles
 const useStyles = makeStyles(({ palette, spacing }) => ({
     assetIdentifier: {
         display: 'flex',
@@ -31,6 +32,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
     }
 }));
 
+//Defines the prop type
 interface AssetIdentifiersProps {
     systemCreated: boolean;
     identifiers: StateIdentifier[];
@@ -44,11 +46,18 @@ interface AssetIdentifiersProps {
 }
 
 function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
+
+    //Props - types defined in interface
     const { systemCreated, identifiers, onSystemCreatedChange, onAddIdentifer, onUpdateIdentifer, onRemoveIdentifer,
         subjectView, onUpdateIdIdentifierPreferred, identifierName } = props;
+
+    //Component styling
     const classes = useStyles();
+
+    //Handles state change for the Identifier entries
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
 
+    //Function creates object to define new identifier
     const addIdentifer = (initialEntry: number | null) => {
         const newIdentifier: StateIdentifier = {
             id: identifiers.length + 1,
@@ -62,11 +71,13 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
         onAddIdentifer(updatedIdentifiers);
     };
 
+    //Function removes Identifier
     const removeIdentifier = (_idIdentifier: number, id: number) => {
         const updatedIdentifiers = lodash.filter(identifiers, identifier => identifier.id !== id);
         onRemoveIdentifer(updatedIdentifiers);
     };
 
+    //Function updates any changes to the Identifier
     const updateIdentifierFields = (id: number, name: string, value: string | number | boolean) => {
         const updatedIdentifiers = identifiers.map(identifier => {
             if (identifier.id === id) {
@@ -80,10 +91,12 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
         onUpdateIdentifer(updatedIdentifiers);
     };
 
+    //The label of the Asset Identifier UI (currently says 'Model Identifier(s))
     const label: string = (identifierName ? identifierName : 'Asset') + ' Identifier(s)';
     return (
+        //The Identifier Component
         <Box marginBottom='10px'>
-            <FieldType required label={label} padding='10px'>
+            <FieldType required label={label} padding='10px' labelTooltip='Assign an identifier to your digital asset here.  The identifier will make it easier to search for the digital asset later.'>
                 <Box display='flex' justifyContent='space-between'>
                     <Box className={classes.assetIdentifier}>
                         <label htmlFor='systemCreated' style={{ display: 'none' }}>System Created Identifier</label>
@@ -98,6 +111,8 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                             System will create an identifier
                         </Typography>
                     </Box>
+
+                    {/*May need to write the logic here to check if there are no identifiers in existence.*/}
                     {!identifiers.length && (
                         <Button
                             className={classes.addIdentifierButton}

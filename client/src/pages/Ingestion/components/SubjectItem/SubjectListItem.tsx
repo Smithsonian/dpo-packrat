@@ -12,6 +12,7 @@ import { StateSubject } from '../../../../store';
 const useStyles = makeStyles(() => ({
     label: {
         width: '100%',
+        fontSize: '0.75rem',
     },
     options: {
         marginLeft: 20
@@ -57,6 +58,11 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
 
     return (
         <TableRow>
+            <TableCell style={cellStyle} align='left'>
+                <Box className={classes.options}>
+                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={20} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={20} />}
+                </Box>
+            </TableCell>
             <TableCell style={cellStyle}>
                 <Typography className={classes.label} variant='caption'>{arkId}</Typography>
             </TableCell>
@@ -68,11 +74,6 @@ function SubjectListItem(props: SubjectListItemProps): React.ReactElement {
             </TableCell>
             <TableCell style={cellStyle} align='left'>
                 <Typography className={classes.label} variant='caption'>{collectionId}</Typography>
-            </TableCell>
-            <TableCell style={cellStyle} align='left'>
-                <Box className={classes.options}>
-                    {selected ? <MdRemoveCircleOutline className={classes.option} onClick={remove} size={20} /> : <MdAddCircleOutline className={classes.option} onClick={add} size={20} />}
-                </Box>
             </TableCell>
         </TableRow>
     );

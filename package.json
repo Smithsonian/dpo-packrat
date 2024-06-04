@@ -5,10 +5,7 @@
   "license": "Apache-2.0",
   "description": "Data Repository and Workflow Management for 3D data captures, models, and scenes",
   "homepage": "https://github.com/Smithsonian/dpo-packrat#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Smithsonian/dpo-packrat.git"
-  },
+  "repository": "git+https://github.com/Smithsonian/dpo-packrat.git",
   "bugs": {
     "url": "https://github.com/Smithsonian/dpo-packrat/issues"
   },
@@ -102,5 +99,7 @@
   "volta": {
     "node": "18.9.0",
     "yarn": "1.22.19"
-  }
+  },
+  "main": "index.js",
+  "author": "Natasha Johnson"
 }

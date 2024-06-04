@@ -105,6 +105,7 @@ interface ObjectDetailsProps {
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
+    onPublishUpdate?: (event) => void;
     path?: RepositoryPath[][] | null;
     updateData?: () => Promise<boolean>;
     idSystemObject: number;
@@ -129,6 +130,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         originalFields,
         onRetiredUpdate,
         onLicenseUpdate,
+        // onPublishUpdate,
         idSystemObject,
         license,
         licenseInheritance,
@@ -195,6 +197,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish'); };
     const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish for API Only'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
+    const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Publish for Internal Only'); };
     const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {
@@ -233,8 +236,15 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             <Typography className={classes.value}>{publishedState}</Typography>
                             &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
                             &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
+                            &nbsp;<LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
                             &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
                             &nbsp;<Tooltip arrow title={ <ToolTip text={scenePublishNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+                            {/* <Select name='PublishedState' className={classes.select} style={{ width: '16rem' }} onChange={onPublishUpdate} value={publishedState}>
+                                <MenuItem value={0}>Unpublished</MenuItem>
+                                <MenuItem value={1}>Unlisted (API)</MenuItem>
+                                <MenuItem value={2}>Public Site</MenuItem>
+                                <MenuItem value={3}>Internal</MenuItem>
+                            </Select> */}
                         </Box>
                     }
                 />
@@ -247,23 +257,6 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                             <Typography className={classes.value}>{publishedState}</Typography>
                             &nbsp;<LoadingButton onClick={onSyncToEdan} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Sync to Edan</LoadingButton>
                         </Box>
-                    }
-                />
-            )}
-            {!hideRetired && (
-                <Detail
-                    label='Retired'
-                    name='retired'
-                    valueComponent={
-                        <CheckboxNoPadding
-                            id='retired'
-                            name='retired'
-                            disabled={disabled}
-                            checked={withDefaultValueBoolean(retired, false)}
-                            onChange={onRetiredUpdate}
-                            {...getUpdatedCheckboxProps(isRetiredUpdated)}
-                            color='primary'
-                        />
                     }
                 />
             )}
@@ -290,7 +283,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     label='License'
                     valueComponent={
                         <Box className={classes.assignedLicense}>
-                            <Select name='License' className={classes.select} onChange={onLicenseUpdate} value={license}>
+                            <Select name='License' className={classes.select}  style={{ width: '16rem' }} onChange={onLicenseUpdate} value={license}>
                                 <MenuItem value={0}>None</MenuItem>
                                 {licenseList.map(license => (
                                     <MenuItem value={license.idLicense} key={license.idLicense}>
@@ -302,6 +295,23 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                                 Clear Assignment
                             </LoadingButton>
                         </Box>
+                    }
+                />
+            )}
+            {!hideRetired && (
+                <Detail
+                    label='Retired'
+                    name='retired'
+                    valueComponent={
+                        <CheckboxNoPadding
+                            id='retired'
+                            name='retired'
+                            disabled={disabled}
+                            checked={withDefaultValueBoolean(retired, false)}
+                            onChange={onRetiredUpdate}
+                            {...getUpdatedCheckboxProps(isRetiredUpdated)}
+                            color='primary'
+                        />
                     }
                 />
             )}

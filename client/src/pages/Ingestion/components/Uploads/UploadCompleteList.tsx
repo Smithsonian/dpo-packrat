@@ -23,17 +23,20 @@ const useStyles = makeStyles(({ palette /*, breakpoints*/ }) => ({
         display: 'flex',
         flex: 1,
         flexDirection: 'column',
-        marginBottom: '50px'
+        margin: '0px 10px',
+        // background: '0',
+        // marginBottom: '1rem'
     },
     list: {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        minHeight: '16vh',
-        height: '30vh',
+        minHeight: '12vh',
+        maxHeight: '25vh',
         'overflow-y': 'auto',
         'overflow-x': 'hidden',
-        width: '100%',
+        // width: '100%',
+        padding: '0px 10px',
         ...scrollBarProperties(true, false, palette.text.disabled)
     },
     listDetail: {
@@ -107,7 +110,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
             <React.Fragment>
                 {!completed.length && (
                     <Typography className={classes.listDetail} variant='body1'>
-                        No files available
+                        No files available.
                     </Typography>
                 )}
                 <FileList files={completed} />
@@ -120,11 +123,10 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
             <FieldType
                 required
                 align='center'
-                label='Uploaded Files'
+                label='Ready for Ingest'
                 labelTooltip='Select assets to ingest which belong to the same Subject &amp; Item'
-                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark, backgroundColor: 'rgb(236, 245, 253)' } }}
-                width={'calc(100% - 20px)'}
-                padding='10px'
+                labelProps={{ style: { fontSize: '1em', fontWeight: 500, margin: '1% 0px', color: Colors.defaults.dark } }}
+                // width={'calc(100% - 20px)'}
             >
                 <UploadListHeader />
                 <Box className={classes.list}>{content}</Box>

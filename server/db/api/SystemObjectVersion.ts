@@ -24,6 +24,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         switch (this.PublishedState) {
             case 1: return COMMON.ePublishedState.eAPIOnly;
             case 2: return COMMON.ePublishedState.ePublished;
+            case 3: return COMMON.ePublishedState.eInternal;
             default: return COMMON.ePublishedState.eNotPublished;
         }
     }

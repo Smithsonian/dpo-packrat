@@ -59,7 +59,6 @@ const hasModelSourcesValidation = {
     test: array => array.length && array.some(source => source.objectType === eSystemObjectType.eModel),
     message: 'Should provide at least 1 model parent for scene ingestion'
 };
-
 const notesWhenUpdate = {
     is: value => value > 0,
     then: yup.string().required()

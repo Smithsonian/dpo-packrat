@@ -34,7 +34,7 @@ const useStyles = makeStyles(({ palette }) => ({
         },
         '& :not(:first-child)': {
             textIndent: '30px'
-        }
+        },
     },
     unindentedFields: {
         '& > :first-child': {
@@ -84,6 +84,10 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
         height: 26,
         alignItems: 'center',
         columnGap: 10,
+        background: 0
+    };
+    const readOnlyContainerTitles: React.CSSProperties = {
+        background: 0
     };
     return (
         <>
@@ -102,7 +106,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                                         {materialType.ModelMaterialChannel.map((channel, index) => {
                                             return (
                                                 <Box className={classes.unindentedFields} key={channel.Value + `.${index}`}>
-                                                    <ReadOnlyRow label='Type' value={channel.Type} paddingString='5px 0px 0px 0px' />
+                                                    <ReadOnlyRow label='Type' value={channel.Type} paddingString='5px 0px 0px 0px' containerStyle={readOnlyContainerTitles} />
                                                     <Box className={classes.indentedFields}>
                                                         <IndentedReadOnlyRow label='Source' value={channel.Source} indentation={1} padding='0px' />
                                                         <IndentedReadOnlyRow label='Value' value={parseAndRoundValues(channel.Value)} indentation={1} padding='0px' />
@@ -153,7 +157,7 @@ function ObjectMeshTable({ modelObjects }): React.ReactElement {
                             <ReadOnlyRow label='Is Watertight?' value={interpretTrinary(modelObject.IsWatertight)} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             <ReadOnlyRow label='Self Intersecting?' value={interpretTrinary(modelObject.SelfIntersecting)} paddingString='0px' containerStyle={readOnlyContainerProps} />
                             <Box className={classes.boundingBox}>
-                                <ReadOnlyRow label='Bounding Box' paddingString='0px' />
+                                <ReadOnlyRow label='Bounding Box' paddingString='0px' containerStyle={readOnlyContainerTitles} />
                                 <ReadOnlyRow
                                     label='Min'
                                     value={`(${roundToTwoPlaces(modelObject.BoundingBoxP1X)}, ${roundToTwoPlaces(modelObject.BoundingBoxP1Y)}, ${roundToTwoPlaces(

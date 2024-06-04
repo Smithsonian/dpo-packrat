@@ -41,7 +41,7 @@ const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         '& .MuiSvgIcon-root': {
             height: 20,
             width: 20
-        }
+        },
     }
 }));
 

@@ -7,15 +7,18 @@ import { Box, BoxProps, PropTypes, Typography, TypographyProps, Tooltip, Grid, G
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import Progress from './Progress';
+import { HelpOutline } from '@material-ui/icons';
+// import { HelpOutline } from '@material-ui/icons';
 
 const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
-        padding: ({ padding }: FieldTypeProps) => padding ? padding : '0px 10px',
-        borderRadius: 5,
-        width: ({ width }: FieldTypeProps) => width || '100%',
+        // padding: ({ padding }: FieldTypeProps) => padding ? padding : '0px 10px',
+        //borderRadius: 5,
+        //border: `1px dashed #0086ff`,
+        // width: ({ width }: FieldTypeProps) => width || '100%',
         marginTop: ({ marginTop }: FieldTypeProps) => spacing(marginTop || 0),
-        backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
+        backgroundColor: ({ required, error }: FieldTypeProps) => (error ? fade(palette.error.light, 0.3) : required ? '0' : palette.primary.light)
     },
     label: {
         color: 'auto'
@@ -24,7 +27,11 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         position: 'absolute',
         top: 16,
         right: 10
-    }
+    },
+    tooltip: {
+        fontSize: '0.75rem',
+        fontWeight: 'lighter'
+    },
 }));
 
 interface FieldTypeProps {
@@ -53,18 +60,28 @@ function FieldType(props: FieldTypeProps): React.ReactElement {
     const classes = useStyles(props);
 
     let content: React.ReactNode = (
-        <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
-            {label}
-        </Typography>
+        <>
+            <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
+                {label}
+            </Typography>
+        </>
     );
 
     if (labelTooltip) {
         const tooltipContent = (
-            <Tooltip title={labelTooltip}>
+            <>
                 <Typography align={align} className={classes.label} variant='caption' {...labelProps}>
                     {label}
+                    <Tooltip
+                        title={labelTooltip}
+                        classes={{
+                            tooltip: classes.tooltip,
+                        }}
+                    >
+                        <HelpOutline style={{ alignSelf: 'center', cursor: 'pointer', verticalAlign: 'middle', padding: '0px 5px', paddingBottom: '3px', fontSize: '1rem' }} />
+                    </Tooltip>
                 </Typography>
-            </Tooltip>
+            </>
         );
         content = tooltipContent;
     }

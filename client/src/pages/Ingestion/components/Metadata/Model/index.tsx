@@ -57,12 +57,15 @@ const useStyles = makeStyles(({ palette }) => ({
         outline: '1px solid rgba(141, 171, 196, 0.4)'
     },
     modelDetailsAndSubtitleContainer: {
-        borderRadius: 5,
-        padding: 10,
+        padding: '10px',
         backgroundColor: palette.primary.light,
-        width: 'fit-content',
+        // width: 'fit-content',
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: '0.5rem', // 5
+        border: `1px dashed ${palette.primary.main}`,
+
     },
     modelDetailsContainer: {
         display: 'flex',
@@ -72,7 +75,8 @@ const useStyles = makeStyles(({ palette }) => ({
         width: '100%',
         columnGap: 10,
         rowGap: 10,
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        justifyContent: 'center'
     },
     caption: {
         flex: '1 1 0%',
@@ -87,6 +91,14 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         backgroundColor: palette.secondary.light,
         width: '200px'
+    },
+    ingestContainer: {
+        borderRadius: '0.5rem',
+        border: `1px dashed ${palette.primary.main}`,
+        overflow: 'hidden',
+        backgroundColor: palette.primary.light,
+        padding: 0,
+        marginBottom: '1rem',
     },
 }));
 
@@ -152,7 +164,7 @@ function Model(props: ModelProps): React.ReactElement {
         }
     ]);
     const [sceneGenerateDisabled, setSceneGenerateDisabled] = useState<boolean>(false);
-    const [showDetails, setShowDetails] = useState<boolean>(true);
+    const [showDetails, setShowDetails] = useState<boolean>(false);
 
     const urlParams = new URLSearchParams(window.location.search);
     const idAssetVersion = urlParams.get('fileId');
@@ -318,7 +330,8 @@ function Model(props: ModelProps): React.ReactElement {
 
     const readOnlyContainerProps: React.CSSProperties = {
         height: 26,
-        alignItems: 'center'
+        alignItems: 'center',
+        background: 0
     };
 
     return (
@@ -330,7 +343,8 @@ function Model(props: ModelProps): React.ReactElement {
                     </Box>
                 )}
 
-                <Box mb={2} width='52vw'>
+                <Box className={ classes.ingestContainer } style={{ padding: '10px', paddingBottom: '0' }}>
+                    {/*ASSET IDENTIFIERS FORM STARTS HERE*/}
                     <AssetIdentifiers
                         systemCreated={model.systemCreated}
                         identifiers={model.identifiers}
@@ -344,7 +358,7 @@ function Model(props: ModelProps): React.ReactElement {
 
                 {!idAsset && (
                     <React.Fragment>
-                        <Box mb={2}>
+                        <Box className={ classes.ingestContainer } >
                             <RelatedObjectsList
                                 type={RelatedObjectType.Source}
                                 relatedObjects={model.sourceObjects}
@@ -353,7 +367,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 relationshipLanguage='Parents'
                             />
                         </Box>
-                        <Box mb={2}>
+                        <Box className={ classes.ingestContainer } >
                             <RelatedObjectsList
                                 type={RelatedObjectType.Derived}
                                 relatedObjects={model.derivedObjects}
@@ -382,6 +396,8 @@ function Model(props: ModelProps): React.ReactElement {
                             </Box>
                         </>
                     )}
+
+                    {/* METADATA FORMS AREA*/}
                     <Box className={classes.modelDetailsContainer}>
                         <Box display='flex' flexDirection='column' className={classes.dataEntry}>
                             <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: 'rgb(255, 252, 209', paddingTop: '10px' }}>
@@ -404,6 +420,8 @@ function Model(props: ModelProps): React.ReactElement {
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                 >
+
+                                                    {/* Grabs the dropdown options for SELECT */}
                                                     {getEntries(eVocabularySetID.eModelCreationMethod).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
                                             </TableCell>

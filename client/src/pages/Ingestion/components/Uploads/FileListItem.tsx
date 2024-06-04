@@ -7,7 +7,7 @@
  * This component renders file list item used in FileListItem component.
  */
 import { Box, MenuItem, Select, Typography } from '@material-ui/core';
-import { green, grey, red, yellow } from '@material-ui/core/colors';
+import { green, grey, red } from '@material-ui/core/colors';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import { motion } from 'framer-motion';
 import React from 'react';
@@ -29,7 +29,9 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
         alignItems: 'center',
         backgroundColor: palette.background.paper,
         marginTop: 10,
-        borderRadius: 5,
+        borderRadius: 1,
+        border: `1px solid ${fade(palette.primary.main, 0.3)}`,
+        boxSizing: 'border-box',
         width: '100%',
         zIndex: 10,
         [breakpoints.down('lg')]: {
@@ -39,6 +41,7 @@ const useStyles = makeStyles(({ palette, breakpoints }) => createStyles({
     item: {
         display: 'flex',
         width: '100%',
+        padding: '0px 10px',
         zIndex: 'inherit',
         cursor: ({ complete }: FileListItemProps) => (complete ? 'pointer' : 'default')
     },
@@ -194,7 +197,10 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         onSelect
     } = props;
     const classes = useStyles(props);
-    const upload = () => onUpload(id);
+    const upload = () => {
+        onUpload(id);
+    };
+
     const remove = () => {
         const isUpdate = references?.idAsset;
         const isAttachment = references?.idSOAttachment;
@@ -211,14 +217,14 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     };
     const select = () => (complete ? onSelect(id, !selected) : null);
     let options: React.ReactNode = null;
-
     if (!complete) {
+        /*Uploaded Items State*/
         options = (
             <React.Fragment>
                 {!uploading && !failed && <MdFileUpload className={classes.option} onClick={upload} size={22} color={green[500]} />}
                 {uploading && !failed && <Progress className={classes.option} size={16} />}
-                {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={yellow[600]} />}
-                <IoIosCloseCircle className={classes.option} onClick={remove} size={20} color={red[500]} />
+                {failed && <FaRedo className={classes.option} onClick={retry} size={20} color={red[900]} />}
+                <IoIosCloseCircle className={classes.option} onClick={remove} size={25} color={red[800]} />
             </React.Fragment>
         );
     }

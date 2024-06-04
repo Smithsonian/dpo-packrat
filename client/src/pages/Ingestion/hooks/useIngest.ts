@@ -313,12 +313,14 @@ function useIngest(): UseIngest {
             };
             console.log('** IngestDataInput',input);
 
+            //This responsible for initiating sending data to the server.
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({
                 mutation: IngestDataDocument,
                 variables: { input },
                 refetchQueries: ['getUploadedAssetVersion']
             });
 
+            //Throws an error if the inges Data was successful or not.  Throws a toast.
             const { data } = ingestDataMutation;
             if (data) {
                 const { ingestData } = data;
@@ -326,10 +328,10 @@ function useIngest(): UseIngest {
 
                 return { success, message: message || '' };
             }
-
+        //This error message is auto-generated.  It does not lead to a custom message unless there's a throw.
         } catch (error) {
             const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Ingestion failed${message}`);
+            toast.error(`Ingestion failed ${message}`);
         }
 
         return { success: false, message: 'unable to start ingestion process' };

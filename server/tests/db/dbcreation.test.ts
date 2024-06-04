@@ -4287,6 +4287,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished)).toEqual('Not Published');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('API Only');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Published');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eInternal)).toEqual('Internal');
     });
 
     test('DB Fetch SystemObject: LicenseRestrictLevelToPublishedStateEnum', async () => {
@@ -7199,6 +7200,8 @@ describe('DB Update Test Suite', () => {
         if (systemObjectVersion) {
             systemObjectVersion.setPublishedState(COMMON.ePublishedState.eNotPublished);
             expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eNotPublished);
+            systemObjectVersion.setPublishedState(COMMON.ePublishedState.eInternal);
+            expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eInternal);
             systemObjectVersion.setPublishedState(COMMON.ePublishedState.eAPIOnly);
             expect(systemObjectVersion.publishedStateEnum()).toEqual(COMMON.ePublishedState.eAPIOnly);
             systemObjectVersion.setPublishedState(COMMON.ePublishedState.ePublished);

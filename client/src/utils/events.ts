@@ -14,7 +14,7 @@ export type UploadProgressEvent = {
 
 export type UploadSetCancelEvent = {
     id: FileId;
-    cancel: () => void;
+    onCancel: () => void;
 };
 
 export type UploadFailedEvent = {

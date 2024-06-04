@@ -42,6 +42,7 @@ function Description(props: DescriptionProps): React.ReactElement {
         <FieldType
             required
             label='Description'
+            labelTooltip='Add your uploaded file(s) description here.'
             direction='row'
             containerProps={{ ...rowFieldProps, ...containerProps }}
             width={viewMode ? 'auto' : undefined}
