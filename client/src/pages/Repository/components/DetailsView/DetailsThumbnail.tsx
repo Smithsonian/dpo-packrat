@@ -4,7 +4,7 @@
  *
  * This component renders details thumbnail for the Repository Details UI.
  */
-import { Box, Button } from '@material-ui/core';
+import { Box, Button, Dialog } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
@@ -12,6 +12,7 @@ import VoyagerStory from './DetailsTab/VoyagerStory';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { getVoyagerParams } from '../../hooks/useDetailsView';
 import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager, getVoyagerStoryUrl } from '../../../../utils/repository';
+// import CloseIcon from '@material-ui/icons/Close';
 import API from '../../../../api';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
@@ -30,6 +31,9 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             height: 30
         },
         outline: '0.5px hidden rgba(141, 171, 196, 0.4)'
+    },
+    wrapVoyagerStory: {
+        color: palette.background.paper
     }
 }));
 
@@ -47,6 +51,9 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const [rootLink, setRootLink] = useState('');
     const [documentLink, setDocumentLink] = useState('');
     const [eMode, setMode] = useState(eVoyagerStoryMode.eViewer);
+    const [openVoyagerStory, setOpenVoyagerStory] = React.useState(false);
+    // const [showVoyagerPreview, setShowVoyagerPreview] = React.useState(true);
+    // const [showVoyagerStory, setShowVoyagerStory] = React.useState(false);
 
     useEffect(() => {
         const fetchVoyagerParams = async () => {
@@ -75,8 +82,23 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const thumbnailContent = thumbnail ? <img className={classes.thumbnail} src={thumbnail} loading='lazy' alt='asset thumbnail' /> : null;
     // console.log(`thumbnail: ${thumbnail}, thumbnailContent: ${thumbnailContent}`);
 
+    const handleVoyagerEditOpen = () => {
+        // setShowVoyagerPreview(false);
+        setOpenVoyagerStory(true);
+    };
+
+    const handleVoyagerEditClose = () => {
+        setOpenVoyagerStory(false);
+    };
+
     return (
-        <Box display='flex' flex={1} flexDirection='column' alignItems='start'>
+        <Box
+            display='flex'
+            flex={1}
+            flexDirection='column'
+            alignItems='start'
+            maxWidth='52vw'
+        >
             {objectType !== eSystemObjectType.eScene && thumbnailContent}
             {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && rootLink.length > 0 && documentLink.length > 0 && eMode === eVoyagerStoryMode.eViewer && (
                 <React.Fragment>
@@ -110,6 +132,32 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                     height='500px' width='100%'
                 />
             )}
+            <Button
+                className={classes.editButton}
+                variant='contained'
+                color='primary'
+                onClick={handleVoyagerEditOpen}
+                style={{ marginTop: '2rem', width: 'auto' }}
+            >Dialog Test</Button>
+            <Dialog
+                fullScreen
+                open={openVoyagerStory}
+                onClose={handleVoyagerEditClose}
+            >
+                <Button
+                    className={classes.editButton}
+                    variant='contained'
+                    color='primary'
+                    onClick={handleVoyagerEditClose}
+                >Close</Button>
+                <VoyagerStory id='Voyager-Story2'
+                    root={rootLink}
+                    document={documentLink}
+                    mode={getModeForVoyager(eVoyagerStoryMode.eQC)}
+                    height='100%'
+                    width='100%'
+                />
+            </Dialog>
         </Box>
     );
 }
