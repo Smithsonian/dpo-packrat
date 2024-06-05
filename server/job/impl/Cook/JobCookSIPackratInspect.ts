@@ -13,7 +13,7 @@ import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { IZip } from '../../../utils/IZip';
-import { ZipStream } from '../../../utils/zipStream';
+// import { ZipStream } from '../../../utils/zipStream';
 import { ZipFile } from '../../../utils/zipFile';
 import { maybe, maybeString } from '../../../utils/types';
 
@@ -806,19 +806,26 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 
     private async fetchZip(assetVersion: DBAPI.AssetVersion): Promise<IZip | null> {
-        // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
+
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
-        if (!RSR.success || !RSR.readStream) {
+        if (!RSR.success || !RSR.readStream || !RSR.fileName) {
             LOG.error(`JobCookSIPackratInspect.fetchZip unable to read asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eJOB);
             return null;
+        } else {
+            LOG.info(`JobCookSIPackratInspect.fetchZip processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
         }
 
-        if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024))
-            return new ZipStream(RSR.readStream);
+        // if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024))
+        //     return new ZipStream(RSR.readStream);
 
         // if our zipped asset is larger than 500MB, copy it locally so that we can avoid loading the full zip into memory
         // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
         // when we've fully read a (very large) zip entry with its nodeStream method
+
+        // construct our full path with a random filename to avoid collisions
+        // and then write our stream to that location.
+        // const filePath: string = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
+        // console.log(filePath);
         const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
         try {
             const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
@@ -826,12 +833,17 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}: ${res.error}`, LOG.LS.eJOB);
                 return null;
             }
+
+            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${tempFile.path} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
             return new ZipFile(tempFile.path);
         } catch (err) {
             LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
             return null;
         } finally {
-            await tempFile.cleanup();
+            LOG.info(`JobCookSIPackratInspect.fetchZip finally: ${tempFile.path}`,LOG.LS.eDEBUG);
+            // TODO: delete temp file
+            // H.Helpers.removeFile(filePath);
+            // await tempFile.cleanup();
         }
     }
 }
