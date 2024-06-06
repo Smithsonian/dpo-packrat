@@ -5,7 +5,7 @@
  */
 const Config = {
     contact: {
-        email: 'blundellj@si.edu'
+        email: 'maslowskiec@si.edu'
     },
     /*
         Notes about Voyager:

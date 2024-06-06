@@ -5,9 +5,9 @@
 // This component is responsible for rendering the voyager story editor
 
 import * as React from 'react';
-import useScript from '../../../hooks/useScript';
-import useLink from '../../../hooks/useLink';
-import Config from '../../../../../config';
+// import useScript from '../../../hooks/useScript';
+// import useLink from '../../../hooks/useLink';
+// import Config from '../../../../../config';
 
 declare global {
     namespace JSX {
@@ -29,11 +29,11 @@ type VoyagerStoryProps = {
 function VoyagerStory(props: VoyagerStoryProps): React.ReactElement {
     const { root, document, width, height, mode } = props;
 
-    useLink({ rel: 'stylesheet', href: Config.voyager.storyCSS });
+    // useLink({ rel: 'stylesheet', href: Config.voyager.storyCSS });
 
     // Note that this script is in a location maintained by Andrew Gunther ...
     // Our non-prod builds should use a location that is accessible and updatable by our DEV team
-    useScript(Config.voyager.storyJS);
+    // useScript(Config.voyager.storyJS);
 
     // NOTE:  root and document are *not* properties of voyager-story
     // Instead, they need to be present as arguments to the URL for the page
