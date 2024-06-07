@@ -235,7 +235,6 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
             flex={1}
             flexDirection='column'
             alignItems='start'
-            maxWidth='52vw'
         >
             {objectType !== eSystemObjectType.eScene && thumbnailContent}
             {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && rootExplorerLink.length > 0 && documentLink.length > 0 && (
