@@ -88,65 +88,6 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         };
     }, []);
 
-    // useEffect for handling VoyagerStory exit
-    // useEffect(() => {
-    //     // a helper function for rechecking for the element. we set our check inside a delay
-    //     // because it's not available until the dialog's first redraw
-    //     const getExitEventElement = async(): Promise<HTMLElement | null> => {
-
-    //         const tagVoyagerStory: string = 'voyager-story#Voyager-Story';
-    //         const tagButton: string = 'ff-button[icon="exit"][text="Exit"]';
-
-    //         // grab our element. if it fails, wait 1s and try again
-    //         let element: HTMLElement | null = document.querySelector(tagVoyagerStory);
-    //         if (!element) {
-    //             await delay(1000);
-    //             element = document.querySelector(tagVoyagerStory);
-    //             if(!element)
-    //                 return null;
-    //         }
-
-    //         // grab our 'Exit' button from VoyagerStory
-    //         const buttonElement: HTMLElement | null = element.querySelector<HTMLElement>(tagButton);
-    //         if(!buttonElement)
-    //             return null;
-
-    //         //return buttonElement;
-    //         return element;
-    //     };
-
-    //     // add/remove listeners for VoyagerStory 'exit'
-    //     const addListener = async (): Promise<void> => {
-
-    //         // get our element that will have the exit event
-    //         const element: HTMLElement | null = await getExitEventElement();
-    //         if(!element) {
-    //             console.log('[PACKRAT:ERROR] cannot find exit button for VoyagerStory. Not entering edit mode.');
-    //             setOpenVoyagerStory(false);
-    //             return;
-    //         }
-
-    //         // HACK: currently listening for 'click' until 'exit' event is available
-    //         console.log('[PACKRAT] adding event to Voyager Story "Exit" button');
-    //         element.addEventListener('click',handleCloseVoyagerStory);
-    //         return;
-    //     };
-    //     const removeListener = async (): Promise<void> => {
-    //         console.log('[PACKRAT] remove event from Voyager Story "Exit" button');
-    //         const element: HTMLElement | null = await getExitEventElement();
-    //         if(element)
-    //             element.removeEventListener('click',handleCloseVoyagerStory);
-    //     };
-
-    //     // if we are opening our VoyagerStory dialog we need to grab the element and listen
-    //     // for the 'Exit' event. Otherwise, remove the event if it exists
-    //     if(openVoyagerStory===true)
-    //         addListener();
-    //     else
-    //         removeListener();
-
-    // }, [openVoyagerStory]);
-
     // useEffect for on mounted, or if id changes, to grab incoming parameters
     useEffect(() => {
         const fetchVoyagerParams = async () => {
@@ -160,14 +101,12 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
 
             if (document) {
                 const rootExplorer: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObjectScene, path, eVoyagerStoryMode.eViewer);
-                const rootStory: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObjectScene, path, eVoyagerStoryMode.eEdit); //getRootSceneDownloadUrlForVoyager(serverEndpoint,idSystemObject ?? 0,pathLink,eVoyagerStoryMode.eEdit)
+                const rootStory: string = getRootSceneDownloadUrlForVoyager(serverEndpoint, idSystemObjectScene, path, eVoyagerStoryMode.eEdit);
                 // console.log(`Voyager root: ${root}, document: ${document}, mode: ${eVoyagerStoryMode[eMode]}`);
 
-                // setPathLink(path);
                 setRootExplorerLink(rootExplorer);
                 setRootStoryLink(rootStory);
                 setDocumentLink(document);
-                // setMode(eMode);
             }
         };
 
