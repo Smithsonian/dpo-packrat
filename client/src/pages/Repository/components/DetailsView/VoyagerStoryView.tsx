@@ -5,6 +5,8 @@
  * VoyagerStoryDetails
  *
  * This component is a special Details View for depicting models using Voyager Story UI.
+ * Currently, not used by the Details page but may be used downstream for a direct link
+ * to editing a specific scene.
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
@@ -82,6 +84,8 @@ function VoyagerStoryView(): React.ReactElement {
         objectType,
         objectAncestors
     } = data.getSystemObjectDetails;
+
+    // console.log(`VoyagerStoryView component (root: ${root} | document: ${document} | params: ${JSON.stringify(params)} | location: ${JSON.stringify(location)}})`);
 
     return (
         <Box className={classes.container}>
