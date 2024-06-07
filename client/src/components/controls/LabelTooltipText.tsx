@@ -3,7 +3,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Typography, TypographyProps, Tooltip, PropTypes } from '@material-ui/core';
 import { HelpOutline } from '@material-ui/icons';
 
-const useStyles = makeStyles(({ spacing }) => ({
+const useStyles = makeStyles(({ palette, spacing }) => ({
     container: {
         display: 'flex',
         padding: ({ padding }: LabelTooltipTextProps ) => padding ? padding : '0px 10px',
@@ -14,7 +14,7 @@ const useStyles = makeStyles(({ spacing }) => ({
         //backgroundColor: ({ required, error }: LabelTooltipTextProps ) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
     },
     label: {
-        color: 'auto'
+        color: palette.primary.dark
     },
     loading: {
         position: 'absolute',
