@@ -5,6 +5,8 @@
  * VoyagerStoryDetails
  *
  * This component is a special Details View for depicting models using Voyager Story UI.
+ * Currently, not used by the Details page but may be used downstream for a direct link
+ * to editing a specific scene.
  */
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';

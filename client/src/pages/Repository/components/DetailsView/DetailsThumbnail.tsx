@@ -9,15 +9,12 @@
 import { Box, Button, Dialog, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-// import VoyagerExplorer from './DetailsTab/VoyagerExplorer';
-// import VoyagerStory from './DetailsTab/VoyagerStory';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { getVoyagerParams } from '../../hooks/useDetailsView';
-import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager/*, getVoyagerStoryUrl*/ } from '../../../../utils/repository';
+import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager } from '../../../../utils/repository';
 import API from '../../../../api';
 import { Link } from 'react-router-dom';
 import Logo from '../../../../assets/images/logo-packrat.square.png';
-// import { useUserStore } from '../../../../store';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     thumbnail: {
@@ -63,15 +60,10 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const serverEndpoint = API.serverEndpoint();
     const { thumbnail, objectType, idSystemObject } = props;
     const classes = useStyles();
-    // const [pathLink, setPathLink] = useState('');
-    // const { user } = useUserStore();
     const [rootExplorerLink, setRootExplorerLink] = useState('');
     const [rootStoryLink, setRootStoryLink] = useState('');
     const [documentLink, setDocumentLink] = useState('');
-    // const [eMode, setMode] = useState(eVoyagerStoryMode.eViewer);
     const [openVoyagerStory, setOpenVoyagerStory] = React.useState(false);
-    // const [showVoyagerPreview, setShowVoyagerPreview] = React.useState(true);
-    // const [showVoyagerStory, setShowVoyagerStory] = React.useState(false);
 
     // helper function to wait X ms
     const delay = (ms) => {
@@ -298,8 +290,6 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         setOpenVoyagerStory(false);
     };
 
-    // { (rootExplorerLink.length > 0 && documentLink.length > 0) && console.log(`Details Render: (root: ${rootExplorerLink} | document: ${documentLink})`); }
-
     return (
         <Box
             display='flex'
@@ -324,17 +314,6 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                         onClick={handleOpenVoyagerStory}
                         style={{ marginTop: '1rem', width: 'auto' }}
                     >Edit Scene</Button>
-                    {/* <Button
-                        className={classes.editButton}
-                        variant='contained'
-                        color='primary'
-                        disableElevation
-                        href={getVoyagerStoryUrl(serverEndpoint, idSystemObject ?? 0, encodeURIComponent(documentLink), pathLink, eVoyagerStoryMode.eEdit)}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                    >
-                        Legacy
-                    </Button> */}
                     <Dialog
                         fullScreen
                         open={openVoyagerStory}
