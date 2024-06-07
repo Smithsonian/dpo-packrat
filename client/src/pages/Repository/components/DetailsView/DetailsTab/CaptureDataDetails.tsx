@@ -53,7 +53,7 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         fontSize: '0.8rem'
     },
     labelText: {
-        color: 'auto',
+        color: palette.primary.dark,
         fontSize: '0.8rem'
     },
     select: {

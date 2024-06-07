@@ -38,13 +38,13 @@ const useStyles = makeStyles(({ typography, palette }) => ({
     },
     tableCell: {
         border: 'none',
-        padding: '1px 10px'
+        padding: '1px 10px',
     },
     tableRow: {
         height: '26.5px'
     },
     blueRow: {
-        backgroundColor: palette.primary.light
+        backgroundColor: palette.primary.light,
     },
     yellowRow: {
         backgroundColor: palette.secondary.light
