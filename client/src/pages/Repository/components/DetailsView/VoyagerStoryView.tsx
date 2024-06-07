@@ -83,6 +83,8 @@ function VoyagerStoryView(): React.ReactElement {
         objectAncestors
     } = data.getSystemObjectDetails;
 
+    // console.log(`VoyagerStoryView component (root: ${root} | document: ${document} | params: ${JSON.stringify(params)} | location: ${JSON.stringify(location)}})`);
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
