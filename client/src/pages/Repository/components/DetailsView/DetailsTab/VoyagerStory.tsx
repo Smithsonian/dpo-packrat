@@ -2,7 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-namespace */
 
-// This component is responsible for rendering the voyager story editor
+/**
+ * This component is responsible for rendering the voyager story editor
+ * It cannot be used on the same page as voyager explorer. (deprecated)
+**/
 
 import * as React from 'react';
 import useScript from '../../../hooks/useScript';
