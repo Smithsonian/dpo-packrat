@@ -109,6 +109,7 @@ export class LocalStorage implements STORE.IStorage {
             return retValue;
         }
 
+        LOG.info(`LocalStorage.writeStream writing to disk (res: ${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
         try {
             retValue.writeStream = fs.createWriteStream(res.locationPrivate);
             retValue.storageKey = res.locationPublic;
