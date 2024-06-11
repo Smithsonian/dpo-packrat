@@ -13,7 +13,7 @@ import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { IZip } from '../../../utils/IZip';
-import { ZipStream } from '../../../utils/zipStream';
+// import { ZipStream } from '../../../utils/zipStream';
 import { ZipFile } from '../../../utils/zipFile';
 import { maybe, maybeString } from '../../../utils/types';
 
@@ -823,17 +823,17 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         LOG.info(`JobCookSIPackratInspect.fetchZip fetching ZIP file (${H.Helpers.JSONStringify(assetVersion)})`,LOG.LS.eDEBUG);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
-        if (!RSR.success || !RSR.readStream) { //} || !RSR.fileName) {
+        if (!RSR.success || !RSR.readStream || !RSR.fileName) {
             LOG.error(`JobCookSIPackratInspect.fetchZip unable to read asset version ${assetVersion.idAssetVersion}: ${RSR.error} (${RSR.success} | ${RSR.readStream ? true:false} | ${ RSR.fileName ? true:false})`, LOG.LS.eJOB);
             return null;
         } else {
             LOG.info(`JobCookSIPackratInspect.fetchZip processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
         }
 
-        if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024)) {
-            LOG.info(`JobCookSIPackratInspect.fetchZip zip larger than 500MB. using in-memory (assetVersion: ${assetVersion.FileName})`,LOG.LS.eDEBUG);
-            return new ZipStream(RSR.readStream);
-        }
+        // if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024)) {
+        //     LOG.info(`JobCookSIPackratInspect.fetchZip zip smaller than 500MB. using in-memory (assetVersion: ${assetVersion.FileName})`,LOG.LS.eDEBUG);
+        //     return new ZipStream(RSR.readStream);
+        // }
 
         // if our zipped asset is larger than 500MB, copy it locally so that we can avoid loading the full zip into memory
         // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
