@@ -64,6 +64,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const [rootStoryLink, setRootStoryLink] = useState('');
     const [documentLink, setDocumentLink] = useState('');
     const [openVoyagerStory, setOpenVoyagerStory] = React.useState(false);
+    const [showVoyagerExplorer, setShowVoyagerExplorer] = React.useState(false);
 
     // helper function to wait X ms
     const delay = (ms) => {
@@ -215,6 +216,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
 
         // attach an event listener for Voyager 'Exit'
         await addVoyagerExitListener();
+        setShowVoyagerExplorer(false);
     };
     const handleCloseVoyagerStory = async () => {
         console.log('[PACKRAT] Closing Voyager Story...');
@@ -226,6 +228,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         if(!removeVoyagerStoryElement())
             console.log('[PACKRAT: ERROR] Failed to remove Voyager Story');
 
+        setShowVoyagerExplorer(true);
         setOpenVoyagerStory(false);
     };
 
@@ -239,12 +242,14 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
             {objectType !== eSystemObjectType.eScene && thumbnailContent}
             {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && rootExplorerLink.length > 0 && documentLink.length > 0 && (
                 <React.Fragment>
-                    <voyager-explorer
-                        id='Voyager-Explorer'
-                        root={rootExplorerLink}
-                        document={encodeURIComponent(documentLink)}
-                        style={{ width: '100%', height: '500px', display: 'block', position: 'relative' }}
-                    />
+                    { showVoyagerExplorer && (
+                        <voyager-explorer
+                            id='Voyager-Explorer'
+                            root={rootExplorerLink}
+                            document={encodeURIComponent(documentLink)}
+                            style={{ width: '100%', height: '500px', display: 'block', position: 'relative' }}
+                        />
+                    )}
                     <Button
                         className={classes.editButton}
                         variant='contained'
