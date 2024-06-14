@@ -13,13 +13,11 @@ import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { IZip } from '../../../utils/IZip';
-// import { ZipStream } from '../../../utils/zipStream';
 import { ZipFile } from '../../../utils/zipFile';
 import { maybe, maybeString } from '../../../utils/types';
 
 import { isArray } from 'lodash';
 import * as path from 'path';
-// import tmp from 'tmp-promise';
 
 export class JobCookSIPackratInspectParameters {
     /** Specify sourceMeshStream when we have the stream for sourceMeshFile in hand (e.g. during upload fo a scene zip that contains this model) */
@@ -838,12 +836,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             LOG.info(`JobCookSIPackratInspect.fetchZip processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
         }
 
-        // if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024)) {
-        //     LOG.info(`JobCookSIPackratInspect.fetchZip zip smaller than 500MB. using in-memory (assetVersion: ${assetVersion.FileName})`,LOG.LS.eDEBUG);
-        //     return new ZipStream(RSR.readStream);
-        // }
-
-        // if our zipped asset is larger than 500MB, copy it locally so that we can avoid loading the full zip into memory
+        // copy our zip locally so that we can avoid loading the full zip into memory and use ZipFile
         // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
         // when we've fully read a (very large) zip entry with its nodeStream method
 
@@ -856,8 +849,6 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // construct our full path with a random filename to avoid collisions
         // and then write our stream to that location.
         this.tempFilePath = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
-        // console.log(filePath);
-        // const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
         try {
             const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, this.tempFilePath);
             if (!res.success) {
@@ -870,11 +861,6 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         } catch (err) {
             LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}`, LOG.LS.eJOB, err);
             return null;
-        } finally {
-            // LOG.info(`JobCookSIPackratInspect.fetchZip finally: ${this.tempFilePath}`,LOG.LS.eDEBUG);
-            // TODO: delete temp file
-            // H.Helpers.removeFile(filePath);
-            // await tempFile.cleanup();
         }
     }
 }

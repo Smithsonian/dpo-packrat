@@ -10,7 +10,7 @@ import * as DBAPI from '../../../../../db';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
-import { ASL, LocalStore } from '../../../../../utils/localStore';
+import { ASL, ASR, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
@@ -107,23 +107,23 @@ class UploadAssetWorker extends ResolverBase {
             // TODO: use ASR.bind(async () =>< {});
             const fileStream = createReadStream();
             const stream = fileStream.pipe(writeStream);
-            LOG.info(`UploadAssetWorker.uploadWorker writing to stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
+            LOG.info(`UploadAssetWorker.uploadWorker writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
 
             return new Promise(resolve => {
-                fileStream.on('error', (error) => {
+                fileStream.on('error', ASR.bind((error) => {
                     LOG.error('uploadAsset', LOG.LS.eGQL, error);
                     stream.emit('error', error);
-                });
+                }));
 
-                stream.on('finish', async () => {
+                stream.on('finish', ASR.bind(async () => {
                     resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
-                });
+                }));
 
-                stream.on('error', async (error) => {
+                stream.on('error', ASR.bind(async (error) => {
                     await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
                     resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
-                });
+                }));
 
                 // stream.on('close', async () => { });
             });
