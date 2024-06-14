@@ -693,6 +693,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
     private sourceMeshStream: NodeJS.ReadableStream | undefined;
+    private tempFilePath: string | undefined = undefined;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
@@ -709,6 +710,13 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 
     async cleanupJob(): Promise<H.IOResults> {
+        // if we have a temp file path, see if it exists, and clean it up.
+        if(this.tempFilePath) {
+            LOG.info(`JobCookSIPackratInspect.cleanupJob removing temp file (PATH: ${this.tempFilePath})`,LOG.LS.eDEBUG);
+            await H.Helpers.removeFile(this.tempFilePath);
+            this.tempFilePath = undefined;
+        }
+
         return { success: true };
     }
 
@@ -839,25 +847,31 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
         // when we've fully read a (very large) zip entry with its nodeStream method
 
+        // if we have a temp file already, destroy it.
+        if(this.tempFilePath) {
+            await H.Helpers.removeFile(this.tempFilePath);
+            this.tempFilePath = undefined;
+        }
+
         // construct our full path with a random filename to avoid collisions
         // and then write our stream to that location.
-        const filePath: string = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
+        this.tempFilePath = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
         // console.log(filePath);
         // const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
         try {
-            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, filePath);
+            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, this.tempFilePath);
             if (!res.success) {
-                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${filePath}: ${res.error}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}: ${res.error}`, LOG.LS.eJOB);
                 return null;
             }
 
-            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${filePath} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
-            return new ZipFile(filePath);
+            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${this.tempFilePath} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
+            return new ZipFile(this.tempFilePath);
         } catch (err) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${filePath}`, LOG.LS.eJOB, err);
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}`, LOG.LS.eJOB, err);
             return null;
         } finally {
-            LOG.info(`JobCookSIPackratInspect.fetchZip finally: ${filePath}`,LOG.LS.eDEBUG);
+            // LOG.info(`JobCookSIPackratInspect.fetchZip finally: ${this.tempFilePath}`,LOG.LS.eDEBUG);
             // TODO: delete temp file
             // H.Helpers.removeFile(filePath);
             // await tempFile.cleanup();
