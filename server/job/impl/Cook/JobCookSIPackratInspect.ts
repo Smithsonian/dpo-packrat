@@ -19,7 +19,7 @@ import { maybe, maybeString } from '../../../utils/types';
 
 import { isArray } from 'lodash';
 import * as path from 'path';
-import tmp from 'tmp-promise';
+// import tmp from 'tmp-promise';
 
 export class JobCookSIPackratInspectParameters {
     /** Specify sourceMeshStream when we have the stream for sourceMeshFile in hand (e.g. during upload fo a scene zip that contains this model) */
@@ -841,23 +841,23 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // construct our full path with a random filename to avoid collisions
         // and then write our stream to that location.
-        // const filePath: string = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
+        const filePath: string = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
         // console.log(filePath);
-        const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
+        // const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
         try {
-            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
+            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, filePath);
             if (!res.success) {
-                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}: ${res.error}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${filePath}: ${res.error}`, LOG.LS.eJOB);
                 return null;
             }
 
-            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${tempFile.path} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
-            return new ZipFile(tempFile.path);
+            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${filePath} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
+            return new ZipFile(filePath);
         } catch (err) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${filePath}`, LOG.LS.eJOB, err);
             return null;
         } finally {
-            LOG.info(`JobCookSIPackratInspect.fetchZip finally: ${tempFile.path}`,LOG.LS.eDEBUG);
+            LOG.info(`JobCookSIPackratInspect.fetchZip finally: ${filePath}`,LOG.LS.eDEBUG);
             // TODO: delete temp file
             // H.Helpers.removeFile(filePath);
             // await tempFile.cleanup();

@@ -64,7 +64,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const [rootStoryLink, setRootStoryLink] = useState('');
     const [documentLink, setDocumentLink] = useState('');
     const [openVoyagerStory, setOpenVoyagerStory] = React.useState(false);
-    const [showVoyagerExplorer, setShowVoyagerExplorer] = React.useState(false);
+    const [showVoyagerExplorer, setShowVoyagerExplorer] = React.useState(true);
 
     // helper function to wait X ms
     const delay = (ms) => {
