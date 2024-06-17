@@ -353,6 +353,12 @@ export class Helpers {
     static async writeStreamToFile(readStream: NodeJS.ReadableStream, fileName: string): Promise<IOResults> {
         let writeStream: NodeJS.WritableStream | null = null;
         try {
+
+            // extract the directory from our path and make sure it exists
+            const dirName: string = path.dirname(fileName);
+            await Helpers.createDirectory(dirName);
+
+            // write our stream to file
             writeStream = await fs.createWriteStream(fileName);
             const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
             return retValue;

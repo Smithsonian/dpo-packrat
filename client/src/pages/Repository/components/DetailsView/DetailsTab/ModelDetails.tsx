@@ -64,7 +64,7 @@ export const useStyles = makeStyles(({ palette, typography }) => createStyles({
     detailsContainer: {
     },
     label: {
-        color: 'auto'
+        color: palette.primary.dark
     },
     input: {
         width: 'fit-content',
@@ -248,7 +248,7 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
     return (
         <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
             <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
-                <Typography style={{ color: 'auto' }} variant='caption'>
+                <Typography style={{ color: 'black' }} variant='caption'>
                     {label}
                 </Typography>
             </div>

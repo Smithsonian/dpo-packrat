@@ -38,13 +38,13 @@ export const useStyles = makeStyles(({ palette }) => ({
         height: 'fit-content',
         backgroundColor: palette.secondary.light,
         paddingBottom: '5px',
-        borderBottomLeftRadius: '5px',
-        borderBottomRightRadius: '5px',
         // need to specify top radius in table container AND MuiToolbar override
-        borderTopRightRadius: '5px',
-        borderTopLeftRadius: '5px',
-        width: 'fit-content',
+        borderRadius: '5px',
+        width: '100%',
         minWidth: '400px'
+    },
+    muiTable: {
+        minWidth: '100%'
     },
     centeredTableHead: {
         '& > span': {
@@ -53,7 +53,7 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     container: {
         background: palette.secondary.light,
-        padding: 5,
+        // padding: 5,
         borderRadius: 5,
         marginBottom: 7,
         borderCollapse: 'collapse'
@@ -221,8 +221,29 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
 
     const initializeAssetGridColumnCookie = (cookieName, columns) => {
         const columnsToDisplay = {};
-        columns.forEach(column => columnsToDisplay[column.colName] = column.colDisplay);
-        document.cookie = `${cookieName}=${JSON.stringify(columnsToDisplay)};path=/;max-age=630700000`;
+
+        // initialize to core fields
+        columns.forEach(column => {
+            switch(column.colName) {
+                // 7 column table (e.g. scene details)
+                case 'link':
+                case 'name':
+                case 'assetType':
+                case 'version':
+                case 'dateCreated':
+                case 'size':
+                case 'quality':
+                case 'uvResolution':
+                case 'boundingBox':
+                    columnsToDisplay[column.colName] = true;
+                    break;
+                default:
+                    columnsToDisplay[column.colName] = false;
+            }
+            console.log(`${column.colName}:${column.colDisplay}`);
+            // columnsToDisplay[column.colName] = column.colDisplay;
+        });
+        document.cookie = `${cookieName}=${JSON.stringify(columnsToDisplay)};path=/;max-age=34560000`;
     };
 
     const getColumnsObjectByName = (cookieName) => {
@@ -418,7 +439,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
             <MuiThemeProvider theme={getMuiTheme()}>
                 <Box className={classes.tableContainer}>
                     {assetRows.length > 0 && (
-                        <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} />
+                        <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} className={classes.muiTable} />
                     )}
                     {assetRows.length === 0 && (
                         <Typography align='center' className={classes.emptyValue}>

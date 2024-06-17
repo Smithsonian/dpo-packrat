@@ -87,6 +87,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     // if we only want the status then we need to do some quick checks ourself instead of WorkflowEngine
     if(statusOnly === true) {
         // see if scene is valid
+        // TODO: shouldn't be an error if first run by page but only when responding to user action
         const isSceneValid: boolean = (scene.PosedAndQCd)?true:false;
         if(isSceneValid === false) {
             LOG.error(`API.generateDownloads failed. scene is not QC'd. (id:${idSystemObject} | scene:${scene.idScene})`,LOG.LS.eHTTP);

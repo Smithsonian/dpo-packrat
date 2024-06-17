@@ -20,7 +20,7 @@ const useStyles = makeStyles(({ palette, spacing }) => ({
         backgroundColor: ({ required, error }: IndentedReadOnlyRowProps) => (error ? fade(palette.error.light, 0.3) : required ? palette.primary.light : palette.secondary.light)
     },
     label: {
-        color: 'auto',
+        color: palette.primary.dark,
         gridColumnStart: 2,
         gridColumnEnd: 3
     },

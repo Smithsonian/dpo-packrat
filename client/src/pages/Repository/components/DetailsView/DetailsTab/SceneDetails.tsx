@@ -34,7 +34,8 @@ export const useStyles = makeStyles(({ palette }) => ({
             '&:not(:last-child)': {
                 borderBottom: '1px solid #D8E5EE'
             }
-        }
+        },
+        color: palette.primary.dark
     }
 }));
 

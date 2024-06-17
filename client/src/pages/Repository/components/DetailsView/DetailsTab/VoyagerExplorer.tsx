@@ -2,7 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-namespace */
 
-// This component is responsible for rendering the voyager scene viewer
+/**
+ * This component is responsible for rendering the voyager scene viewer.
+ * It cannot be used as is on the same page as voyager story. (deprecated)
+**/
 
 import * as React from 'react';
 import Config from '../../../../../config';

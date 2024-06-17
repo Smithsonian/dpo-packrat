@@ -13,13 +13,11 @@ import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { IZip } from '../../../utils/IZip';
-import { ZipStream } from '../../../utils/zipStream';
 import { ZipFile } from '../../../utils/zipFile';
 import { maybe, maybeString } from '../../../utils/types';
 
 import { isArray } from 'lodash';
 import * as path from 'path';
-import tmp from 'tmp-promise';
 
 export class JobCookSIPackratInspectParameters {
     /** Specify sourceMeshStream when we have the stream for sourceMeshFile in hand (e.g. during upload fo a scene zip that contains this model) */
@@ -693,6 +691,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectParameters> {
     private parameters: JobCookSIPackratInspectParameters;
     private sourceMeshStream: NodeJS.ReadableStream | undefined;
+    private tempFilePath: string | undefined = undefined;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
@@ -709,6 +708,13 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 
     async cleanupJob(): Promise<H.IOResults> {
+        // if we have a temp file path, see if it exists, and clean it up.
+        if(this.tempFilePath) {
+            LOG.info(`JobCookSIPackratInspect.cleanupJob removing temp file (PATH: ${this.tempFilePath})`,LOG.LS.eDEBUG);
+            await H.Helpers.removeFile(this.tempFilePath);
+            this.tempFilePath = undefined;
+        }
+
         return { success: true };
     }
 
@@ -749,8 +755,10 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         const ZS: IZip | null = await this.fetchZip(assetVersion);
-        if (!ZS)
+        if (!ZS) {
+            LOG.error(`JobCookSIPackratInspect.testZipOrStream failed (assetVersion: ${assetVersion.FileName}:${assetVersion.idAssetVersion})`,LOG.LS.eDEBUG);
             return false;
+        }
 
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
@@ -758,24 +766,29 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             return false;
         }
 
+        // grab our list of files in the ZIP and cycle through each streaming them in
         let sourceMeshFile: string | undefined = undefined;
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
+        LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing files (assetVersion: ${assetVersion.idAssetVersion} | ${files.join('|')})`,LOG.LS.eDEBUG);
         for (const file of files) {
+            // figure out our type based on the file's extension
             const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
-            // LOG.info(`JobCookSIPackratInspect.testForZipOrStream considering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
+            LOG.info(`JobCookSIPackratInspect.testForZipOrStream considering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
             if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
                 continue;
 
+            // stream our content in
             const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
             if (!readStream) {
                 LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
                 return false;
             }
 
+            // store the stream for later reference
             LOG.info(`JobCookSIPackratInspect.testForZipOrStream creating stream override for zip file entry ${file}`, LOG.LS.eJOB);
             RSRs.push({
                 readStream,
@@ -785,10 +798,13 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             });
 
             // If we haven't yet defined the source mesh and we are processing a geometry file (eVocabID is defined), use this file as our source mesh:
+            // TEST: multiple models in the same zip. may need validation/rejection to avoid confusion
             if (!sourceMeshFile && eVocabID !== undefined)
                 sourceMeshFile = path.basename(file);
         }
 
+        // if we found a mesh file to use as the source we update or JobRun in the db so it knows about it
+        // when feeding parameters to the Cook recipe.
         if (sourceMeshFile) {
             this.parameters.sourceMeshFile = sourceMeshFile;
             this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
@@ -796,42 +812,55 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 LOG.error(`JobCookSIPackratInspect.testForZipOrStream failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
         }
 
+        // if we have at least one stream store them in our overrideMap, which is used to keep track of
+        // streams/files for processing
         if (RSRs.length > 0) {
             // LOG.info(`JobCookSIPackratInspect.testForZipOrStream recording ${RSRs.length} stream overrides for idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
             this._streamOverrideMap.set(this._idAssetVersions[0], RSRs);
             return true;
         }
 
+        // no streams found so we return
+        LOG.error  (`JobCookSIPackratInspect.testForZipOrStream no streams found (assetVersion: ${assetVersion.idAssetVersion})`,LOG.LS.eDEBUG);
         return false;
     }
 
     private async fetchZip(assetVersion: DBAPI.AssetVersion): Promise<IZip | null> {
-        // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
+
+        LOG.info(`JobCookSIPackratInspect.fetchZip fetching ZIP file (${H.Helpers.JSONStringify(assetVersion)})`,LOG.LS.eDEBUG);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
-        if (!RSR.success || !RSR.readStream) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to read asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eJOB);
+        if (!RSR.success || !RSR.readStream || !RSR.fileName) {
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to read asset version ${assetVersion.idAssetVersion}: ${RSR.error} (${RSR.success} | ${RSR.readStream ? true:false} | ${ RSR.fileName ? true:false})`, LOG.LS.eJOB);
             return null;
+        } else {
+            LOG.info(`JobCookSIPackratInspect.fetchZip processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
         }
 
-        if (assetVersion.StorageSize <= BigInt(500 * 1024 * 1024))
-            return new ZipStream(RSR.readStream);
-
-        // if our zipped asset is larger than 500MB, copy it locally so that we can avoid loading the full zip into memory
+        // copy our zip locally so that we can avoid loading the full zip into memory and use ZipFile
         // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
         // when we've fully read a (very large) zip entry with its nodeStream method
-        const tempFile: tmp.FileResult = await tmp.file({ mode: 0o666, postfix: '.zip' });
+
+        // if we have a temp file already, destroy it.
+        if(this.tempFilePath) {
+            await H.Helpers.removeFile(this.tempFilePath);
+            this.tempFilePath = undefined;
+        }
+
+        // construct our full path with a random filename to avoid collisions
+        // and then write our stream to that location.
+        this.tempFilePath = path.join(Config.storage.rootStaging,'tmp', H.Helpers.randomFilename('',RSR.fileName));
         try {
-            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, tempFile.path);
+            const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, this.tempFilePath);
             if (!res.success) {
-                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}: ${res.error}`, LOG.LS.eJOB);
+                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}: ${res.error}`, LOG.LS.eJOB);
                 return null;
             }
-            return new ZipFile(tempFile.path);
+
+            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${this.tempFilePath} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
+            return new ZipFile(this.tempFilePath);
         } catch (err) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${tempFile.path}`, LOG.LS.eJOB, err);
+            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}`, LOG.LS.eJOB, err);
             return null;
-        } finally {
-            await tempFile.cleanup();
         }
     }
 }

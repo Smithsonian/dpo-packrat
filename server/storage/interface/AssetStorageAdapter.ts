@@ -205,6 +205,7 @@ export class AssetStorageAdapter {
         LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
         // LOG.info(`AssetStorageAdapter.commitNewAssetVersion write stream. (${H.Helpers.JSONStringify(commitWriteStreamInput)})`, LOG.LS.eDEBUG);
 
+        // get our storage system
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             const error: string = 'AssetStorageAdapter.commitNewAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
@@ -711,7 +712,7 @@ export class AssetStorageAdapter {
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${assetVersion.FilePath}/` : '';
         for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
-            // LOG.info(`Checking ${entry} for ${fileID}`, LOG.LS.eSTR);
+            LOG.info(`Checking ${entry} for ${fileID}`, LOG.LS.eDEBUG);
             if (bulkIngest && !entry.includes(fileID)) // only process assets found in our path
                 continue;
 
@@ -735,7 +736,7 @@ export class AssetStorageAdapter {
             // Get a second readstream to that part of the zip, to reset stream position after computing the hash
             inputStream = await zip.streamContent(entry); /* istanbul ignore next */
             if (!inputStream) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion (reset) ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
                 LOG.error(error, LOG.LS.eSTR);
                 if (IAR.success)
                     IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
@@ -801,7 +802,7 @@ export class AssetStorageAdapter {
                 await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, idVAssetType) : null;
 
             if (assetComponent) {
-                LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; assetComponent=${JSON.stringify(assetComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching idSystemObject:${asset.idSystemObject} (FileName: ${FileName} | FilePath:${FilePath} | idVAssetType:${idVAssetType} | assetComponent:${JSON.stringify(assetComponent, H.Helpers.saferStringify)})`, LOG.LS.eSTR);
                 // examine most recent asset version, if any; if the hash matches, avoid creating a new version
                 assetVersionComponent = await DBAPI.AssetVersion.fetchLatestFromAsset(assetComponent.idAsset);
                 if (assetVersionComponent && assetVersionComponent.StorageHash === hashResults.hash) {
