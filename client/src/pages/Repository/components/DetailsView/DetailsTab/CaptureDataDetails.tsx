@@ -14,7 +14,6 @@ import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
-// import Description from '../../../../Ingestion/components/Metadata/Photogrammetry/Description';
 import { DetailComponentProps } from './index';
 import { toast } from 'react-toastify';
 import { useDetailTabStore } from '../../../../../store';
