@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
- * Description
+ * Description (a.k.a. Capture Notes)
  *
  * This component renders description field used in photogrammetry metadata component.
  */
@@ -41,14 +41,14 @@ function Description(props: DescriptionProps): React.ReactElement {
     return (
         <FieldType
             required
-            label='Description'
-            labelTooltip='Add your uploaded file(s) description here.'
+            label='Capture Notes'
+            labelTooltip='Add capture details for the uploaded file(s) here.'
             direction='row'
             containerProps={{ ...rowFieldProps, ...containerProps }}
             width={viewMode ? 'auto' : undefined}
             padding='10px'
         >
-            <label htmlFor='description' style={{ display: 'none' }}>Description</label>
+            <label htmlFor='description' style={{ display: 'none' }}>Capture Notes</label>
             <DebounceInput
                 id='description'
                 element='textarea'
