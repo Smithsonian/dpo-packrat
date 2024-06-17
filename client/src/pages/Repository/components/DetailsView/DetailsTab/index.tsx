@@ -57,10 +57,10 @@ import MetadataDisplayTable from './MetadataDisplayTable';
 
 const useStyles = makeStyles(({ palette }) => ({
     tab: {
-        backgroundColor: fade(palette.primary.main, 0.25)
+        backgroundColor: fade(palette.primary.main, 0.25),
     },
     tabpanel: {
-        backgroundColor: fade(palette.primary.main, 0.25)
+        backgroundColor: fade(palette.primary.main, 0.25),
     },
     assetOwner: {
         display: 'flex',
@@ -409,7 +409,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     }
 
     return (
-        <Box display='flex' flex={1} flexDirection='column' mt={2}>
+        <Box display='flex' flex={1} flexDirection='column' mt={2} style={{ width: '41rem' }}>
             <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange} aria-label='detailsTab'>
                 {tabs.map((tab: string, index: number) => (
                     <StyledTab key={index} label={tab} aria-label={tab} />

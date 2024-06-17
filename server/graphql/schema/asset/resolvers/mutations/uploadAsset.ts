@@ -10,7 +10,7 @@ import * as DBAPI from '../../../../../db';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
-import { ASL, LocalStore } from '../../../../../utils/localStore';
+import { ASL, ASR, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
@@ -86,7 +86,7 @@ class UploadAssetWorker extends ResolverBase {
         const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             LOG.error('uploadAsset unable to retrieve Storage Implementation from StorageFactory.getInstance()', LOG.LS.eGQL);
-            return { status: UploadStatus.Failed, error: 'Storage unavailable' };
+            return { status: UploadStatus.Failed, error: 'Storage system unavailable' };
         }
 
         // get a write stream for us to store the incoming stream
@@ -104,24 +104,26 @@ class UploadAssetWorker extends ResolverBase {
 
         try {
             // write our incoming stream of bytes to a file in local storage (staging)
+            // TODO: use ASR.bind(async () =>< {});
             const fileStream = createReadStream();
             const stream = fileStream.pipe(writeStream);
+            LOG.info(`UploadAssetWorker.uploadWorker writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
 
             return new Promise(resolve => {
-                fileStream.on('error', (error) => {
+                fileStream.on('error', ASR.bind((error) => {
                     LOG.error('uploadAsset', LOG.LS.eGQL, error);
                     stream.emit('error', error);
-                });
+                }));
 
-                stream.on('finish', async () => {
+                stream.on('finish', ASR.bind(async () => {
                     resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
-                });
+                }));
 
-                stream.on('error', async (error) => {
+                stream.on('error', ASR.bind(async (error) => {
                     await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
                     resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
-                });
+                }));
 
                 // stream.on('close', async () => { });
             });
@@ -133,12 +135,17 @@ class UploadAssetWorker extends ResolverBase {
 
     private async uploadWorkerOnFinish(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
 
-        // grab our local storage
+        LOG.info(`UploadAssetWorker.uploadWorkerOnFinish upload finished (storageKey: ${storageKey} | filename: ${filename} | idVocabulary: ${idVocabulary})`,LOG.LS.eDEBUG);
+
+        // grab our local storage and log context in case it's lost
         const LSLocal: LocalStore | undefined = ASL.getStore();
+        ASL.checkLocalStore('UploadAssetVersion.uploadWorkerOnFinish',true);
         if (LSLocal)
             return await this.uploadWorkerOnFinishWorker(storageKey, filename, idVocabulary);
 
         // if we can't get the local storage system we will use the cache
+        // TODO: do we want this as it occurs when the context is lost for ASL. when is the cache set?
+        //       if CACHE is used how does it sync back with the main storage system?
         if (this.LS) {
             LOG.info('uploadAsset missing LocalStore, using cached value', LOG.LS.eGQL);
             return ASL.run(this.LS, async () => {
@@ -175,6 +182,7 @@ class UploadAssetWorker extends ResolverBase {
                 DateCreated: new Date()
             };
 
+            LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker committing new asset (asset: ${H.Helpers.JSONStringify(ASCNAI)})`,LOG.LS.eDEBUG);
             commitResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
         } else { // update existing asset with new asset version
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(this.idAsset);
@@ -201,6 +209,8 @@ class UploadAssetWorker extends ResolverBase {
                 opInfo,
                 DateCreated: new Date()
             };
+
+            LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker committing new asset version (assetVersion: ${H.Helpers.JSONStringify(ASCNAVI)})`,LOG.LS.eDEBUG);
             commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
         }
 
