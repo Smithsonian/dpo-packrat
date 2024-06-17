@@ -13,7 +13,6 @@ import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVoca
 import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
 import { withDefaultValueNumber, withDefaultValueBoolean } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
-// import Description from './Description';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
 import { RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
@@ -274,9 +273,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     </Box>
                 </React.Fragment>
             )}
-            {/* <Box  className={ classes.ingestContainer } style={{ padding: '10px' }}>
-                <Description value={photogrammetry.description} onChange={setField} />
-            </Box> */}
 
             <Box  className={ classes.ingestContainer } style={{ padding: '10px' }}>
                 <TableContainer component={Paper} className={tableClasses.captureMethodTableContainer}  elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
@@ -343,14 +339,13 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         id='description'
                                         element='textarea'
                                         name='description'
-                                        // title='itemPositionFieldId-input'
                                         value={photogrammetry.description}
                                         type='string'
                                         onChange={setField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
                                         forceNotifyByEnter={false}
                                         debounceTimeout={400}
-                                        style={{ width: '100%', minHeight: '4rem' }}
+                                        style={{ width: '100%', minHeight: '4rem', textAlign: 'left', padding: '5px' }}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -373,85 +368,11 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     </Table>
                 </TableContainer>
             </Box>
+
             <Box className={clsx(classes.ingestContainer, classes.splitView)}>
                 <TableContainer component={Paper} className={tableClasses.captureMethodTableContainer}  elevation={0} style={{ paddingTop: '10px', width: '30rem' }}>
                     <Table className={tableClasses.table}>
                         <TableBody>
-                            <TableRow className={tableClasses.tableRow}>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText}>Name</Typography>
-                                </TableCell>
-                                <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='itemPositionFieldId-input'
-                                        value={photogrammetry.name}
-                                        type='string'
-                                        name='name'
-                                        onChange={setNameField}
-                                        className={clsx(tableClasses.input, classes.fieldSizing)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={tableClasses.tableRow} style={{ ...errorFieldStyling(errors.photogrammetry.dateCaptured) }}>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText}>
-                                        Date Captured
-                                    </Typography>
-                                </TableCell>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <DateInputField
-                                        value={photogrammetry.dateCaptured}
-                                        onChange={(_, value) => setDateField('dateCaptured', value)}
-                                        dateHeight='22px'
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
-                                {/* Spacer */}
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText} style={{ margin: '1rem' }}> </Typography>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText}>Dataset Type</Typography>
-                                </TableCell>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Select
-                                        value={withDefaultValueNumber(photogrammetry.datasetType, getInitialEntry(eVocabularySetID.eCaptureDataDatasetType))}
-                                        name='datasetType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(tableClasses.select, classes.fieldSizing)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText}>Dataset Field ID</Typography>
-                                </TableCell>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <DebounceInput
-                                        element='input'
-                                        title='datasetFieldId-input'
-                                        value={photogrammetry.datasetFieldId || ''}
-                                        type='number'
-                                        name='datasetFieldId'
-                                        onChange={setIdField}
-                                        className={clsx(tableClasses.input, classes.fieldSizing)}
-                                    />
-                                </TableCell>
-                            </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
-                                {/* Spacer */}
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText} style={{ margin: '1rem' }}> </Typography>
-                                </TableCell>
-                            </TableRow>
                             <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Item Position Type</Typography>
@@ -615,15 +536,15 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         </TableBody>
                     </Table>
                 </TableContainer>
+            </Box>
 
-                <Box className={classes.assetContents}>
-                    <AssetContents
-                        folders={photogrammetry.folders}
-                        originalFolders={[...photogrammetry.folders]}
-                        options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
-                        onUpdate={updateFolderVariant}
-                    />
-                </Box>
+            <Box className={clsx(classes.ingestContainer, classes.assetContents)}>
+                <AssetContents
+                    folders={photogrammetry.folders}
+                    originalFolders={[...photogrammetry.folders]}
+                    options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
+                    onUpdate={updateFolderVariant}
+                />
             </Box>
 
             <ObjectSelectModal
