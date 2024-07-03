@@ -1,3 +1,8 @@
+/**
+* This file serves as a changelog tracking any and all modifications made to the
+* the DB. If a change is made append it to the end of this file with a date and 
+* comment.
+*/
 -- 2021-05-12 Jon
 UPDATE Model SET MASTER = 0 WHERE MASTER = 1 AND idVPurpose <> 45;
 UPDATE Model SET idVPurpose = 46 WHERE MASTER = 0 AND idVPurpose = 45;

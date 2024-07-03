@@ -60,6 +60,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 5, 'Focal S
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 1, 'Raw');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 2, 'Processed');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 3, 'From Camera');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (9, 1, 'Scan To Mesh');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (9, 2, 'CAD');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (10, 1, 'Point Cloud');
