@@ -111,6 +111,7 @@ export enum eVocabularyID {
     eCaptureDataFileVariantTypeRaw,
     eCaptureDataFileVariantTypeProcessed,
     eCaptureDataFileVariantTypeFromCamera,
+    eCaptureDataFileVariantTypeMasks,
     eModelCreationMethodScanToMesh,
     eModelCreationMethodCAD,
     eModelModalityPointCloud,

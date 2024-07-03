@@ -125,3 +125,6 @@ JTConfig
 
 ### Environment Setup Scripts ###
 *.bat
+
+### GitHub Secrets File ###
+.github/workflows/.secrets

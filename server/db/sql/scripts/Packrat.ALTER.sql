@@ -1,3 +1,8 @@
+/**
+* This file serves as a changelog tracking any and all modifications made to the
+* the DB. If a change is made append it to the end of this file with a date and 
+* comment.
+*/
 -- 2021-05-12 Jon
 UPDATE Model SET MASTER = 0 WHERE MASTER = 1 AND idVPurpose <> 45;
 UPDATE Model SET idVPurpose = 46 WHERE MASTER = 0 AND idVPurpose = 45;
@@ -505,4 +510,6 @@ INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, Gene
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: Digitization', 'http://ocio-73qycx3.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'workstation');
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: #9', 'http://ocio-3ddigisi-9.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'workstation');
 
+-- 2023-10-19 Add 'Masks' variant type for Capture Data (Eric)
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
 ------

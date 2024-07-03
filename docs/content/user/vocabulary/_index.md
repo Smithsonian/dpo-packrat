@@ -37,6 +37,7 @@ Packrat makes use of the following controlled vocabularies:
 | CaptureDataFile | VariantType | Raw |
 | CaptureDataFile | VariantType | Processed |
 | CaptureDataFile | VariantType | From Camera |
+| CaptureDataFile | VariantType | Masks |
 | Model | CreationMethod | Scan To Mesh |
 | Model | CreationMethod | CAD |
 | Model | Modality | Point Cloud |

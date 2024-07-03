@@ -58,6 +58,7 @@
     "lint:fix": "yarn prettier --write . && yarn lint --fix",
     "test": "yarn workspaces run test",
     "test:e2e": "cd e2e && yarn test",
+    "test:act": "act pull_request --secret-file ./github/workflows/.secrets",
     "docs": "rm -rf docs/public && cd docs && hugo",
     "docs:clean": "rm -rf docs/public && rm -rf docs/resources/_gen && rm docs/.hugo_build.lock",
     "install:husky": "husky install",
