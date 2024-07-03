@@ -195,6 +195,7 @@ export class VocabularyCache {
                         case 'Raw':                 eVocabEnum = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
                         case 'Processed':           eVocabEnum = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
                         case 'From Camera':         eVocabEnum = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+                        case 'Masks':               eVocabEnum = COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks; break;
                     }
                 } break;
 
@@ -602,25 +603,27 @@ export class VocabularyCache {
     static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {
         let eVocabID: COMMON.eVocabularyID;
         switch (variantType.toLowerCase().replace(/_/g, '')) {
-            case 'raw': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'cr2': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'cr3': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'dng': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'arw': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'camdng': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'tif': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'tiff': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'bmp': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'png': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
-            case 'processed': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
-            case 'colcor': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
-            case 'zeroed': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'raw':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'cr2':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'cr3':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'dng':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'arw':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'camdng':      eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'tif':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'tiff':        eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'bmp':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'png':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
+            case 'processed':   eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'colcor':      eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
+            case 'converted':   eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed; break;
             case 'from camera': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'fromcamera': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'jpg': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'jpeg': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'camerajpg': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
-            case 'camera': eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'fromcamera':  eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'jpg':         eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'jpeg':        eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'camerajpg':   eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'camera':      eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera; break;
+            case 'masks':       eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks; break;
+            case 'mask':        eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks; break;
             default: return undefined;
         }
         return await VocabularyCache.vocabularyByEnum(eVocabID);
