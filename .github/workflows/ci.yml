@@ -64,6 +64,9 @@ jobs:
       - name: Setup test DB Data
         run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat < server/db/sql/scripts/Packrat.DATA.sql
 
+      - name: Setup test DB Data Alterations
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat < server/db/sql/scripts/Packrat.ALTER.sql
+
       - name: Setup node version
         uses: actions/setup-node@v3
         with:
