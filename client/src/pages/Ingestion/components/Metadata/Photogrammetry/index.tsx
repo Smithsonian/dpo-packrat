@@ -5,7 +5,7 @@
  *
  * This component renders the metadata fields specific to photogrammetry asset.
  */
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Typography, Select, MenuItem, Checkbox } from '@material-ui/core';
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Typography, Select, MenuItem, Checkbox, Chip, Input } from '@material-ui/core';
 import { DebounceInput } from 'react-debounce-input';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, TextArea } from '../../../../../components';
@@ -28,6 +28,12 @@ interface PhotogrammetryProps {
 function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
     const tableClasses = useTableStyles();
+
+    const datasetUses = [
+        'Alignment',
+        'Reconstruction',
+        'Texture Generation'
+    ];
 
     const useStyles = makeStyles(({ palette }) => ({
         container: {
@@ -110,6 +116,18 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         fieldLabel: {
             width: '7rem'
         },
+        chips: {
+            display: 'flex',
+            flexWrap: 'wrap',
+        },
+        chip: {
+            margin: 2,
+            height: 'auto',
+        },
+        chipSelect: {
+            width: 'auto',
+            minWidth: '240px'
+        }
     }));
     const classes = useStyles();
 
@@ -123,6 +141,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { photogrammetry, file } = metadata;
     const { idAsset } = file;
     const errors = getFieldErrors(metadata);
+    const [datasetUse, setDatasetUse] = useState<string[]>([]);
 
     useEffect(() => {
         if (idAsset)
@@ -227,6 +246,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         onModalClose();
     };
 
+    const onDatasetUseChange = (event) => {
+        setDatasetUse(event.target.value);
+    };
+
+    console.log(photogrammetry);
+
     return (
         <Box className={classes.container}>
             {idAsset && (
@@ -295,6 +320,39 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </Select>
                                 </TableCell>
                             </TableRow>
+
+                            {   // TODO: explictly set to 6 (Photogrammetry Set). Check against enums/COMMON
+                                photogrammetry.datasetType === 6 &&
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Dataset Use</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Select
+                                            multiple
+                                            value={datasetUse}
+                                            onChange={onDatasetUseChange}
+                                            disableUnderline
+                                            className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
+                                            input={<Input id='select-multiple-chip' />}
+                                            renderValue={(selected) => (
+                                                <div className={classes.chips}>
+                                                    {(selected as string[]).map((value) => (
+                                                        <Chip key={value} label={value} className={classes.chip} />
+                                                    ))}
+                                                </div>
+                                            )}
+                                            // MenuProps={MenuProps}
+                                        >
+                                            {datasetUses.map((name) => (
+                                                <MenuItem key={name} value={name}>
+                                                    {name}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            }
 
                             <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
