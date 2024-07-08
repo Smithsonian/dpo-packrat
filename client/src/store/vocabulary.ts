@@ -42,6 +42,7 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                 eVocabSetIDs: [
                     eVocabularySetID.eIdentifierIdentifierType,
                     eVocabularySetID.eCaptureDataDatasetType,
+                    eVocabularySetID.eCaptureDataDatasetUse,
                     eVocabularySetID.eCaptureDataItemPositionType,
                     eVocabularySetID.eCaptureDataFocusType,
                     eVocabularySetID.eCaptureDataLightSourceType,

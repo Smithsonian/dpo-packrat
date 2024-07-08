@@ -61,6 +61,7 @@ export class VocabularyCache {
             switch (vocabularySet.Name) {
                 case 'CaptureData.CaptureMethod':               eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataCaptureMethod; break;
                 case 'CaptureData.DatasetType':                 eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetType; break;
+                case 'CaptureData.DatasetUse':                  eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetUse; break;
                 case 'CaptureData.ItemPositionType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataItemPositionType; break;
                 case 'CaptureData.FocusType':                   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFocusType; break;
                 case 'CaptureData.LightSourceType':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataLightSourceType; break;

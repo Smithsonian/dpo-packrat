@@ -510,6 +510,19 @@ INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, Gene
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: Digitization', 'http://ocio-73qycx3.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'workstation');
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: #9', 'http://ocio-3ddigisi-9.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'workstation');
 
--- 2023-10-19 Add 'Masks' variant type for Capture Data (Eric)
+-- 2024-07-03 Add 'Masks' variant type for Capture Data (Eric)
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
+
+-- 2024-07-05 Add 'Dataset Use' to vocabulary and table for Capture Data (Eric)
+ALTER TABLE CaptureDataPhoto
+  ADD COLUMN CaptureDatasetUse JSON NOT NULL DEFAULT '[]';
+
+-- define vocab set and values
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureData.DatasetUse', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 1, 'Alignment');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Reconstruction');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation');
+
+-- update tables for the field
+
 ------

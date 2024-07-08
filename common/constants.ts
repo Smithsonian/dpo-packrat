@@ -10,6 +10,7 @@
 export enum eVocabularySetID {
     eCaptureDataCaptureMethod,
     eCaptureDataDatasetType,
+    eCaptureDataDatasetUse,
     eCaptureDataItemPositionType,
     eCaptureDataFocusType,
     eCaptureDataLightSourceType,

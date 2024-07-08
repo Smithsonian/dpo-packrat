@@ -216,6 +216,7 @@ model CaptureDataPhoto {
   idCaptureDataPhoto                                                 Int         @id @default(autoincrement())
   idCaptureData                                                      Int
   idVCaptureDatasetType                                              Int
+  CaptureDatasetUse                                                  String      @default("[]") @mariasql.LongText
   CaptureDatasetFieldID                                              Int?
   idVItemPositionType                                                Int?
   ItemPositionFieldID                                                Int?

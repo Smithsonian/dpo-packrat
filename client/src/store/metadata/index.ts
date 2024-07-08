@@ -75,8 +75,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         const errors: FieldErrors = {
             photogrammetry: {
                 dateCaptured: false,
-                datasetType: false
-                // datasetUse: false,
+                datasetType: false,
+                datasetUse: false,
             },
             model: {
                 name: false,
@@ -101,7 +101,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         if (assetType.photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
             errors.photogrammetry.datasetType = lodash.isNull(metadata.photogrammetry.datasetType);
-            // errors.photogrammetry.datasetUse = metadata.photogrammetry.
+            errors.photogrammetry.datasetUse = lodash.isNull(metadata.photogrammetry.datasetUse) || metadata.photogrammetry.datasetUse.length === 0;
         }
 
         if (assetType.model) {

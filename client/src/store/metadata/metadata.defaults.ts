@@ -76,6 +76,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
+    datasetUse: [],
     datasetFieldId: null,
     itemPositionType: null,
     itemPositionFieldId: null,

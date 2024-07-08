@@ -47,7 +47,7 @@ export type FieldErrors = {
     photogrammetry: {
         dateCaptured: boolean;
         datasetType: boolean;
-        // datasetUse: boolean;
+        datasetUse: boolean;
     };
     model: {
         name: boolean;
@@ -96,7 +96,7 @@ export type PhotogrammetryFields = {
     description: string;
     dateCaptured: Date;
     datasetType: number | null;
-    // datasetUse: string[] | null;
+    datasetUse: string[] | null;
     datasetFieldId: number | null;
     itemPositionType: number | null;
     itemPositionFieldId: number | null;
