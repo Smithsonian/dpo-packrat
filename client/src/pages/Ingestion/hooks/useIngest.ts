@@ -134,7 +134,8 @@ function useIngest(): UseIngest {
                         folders,
                         sourceObjects,
                         derivedObjects,
-                        updateNotes
+                        updateNotes,
+                        datasetUse,
                     } = photogrammetry;
 
                     const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
@@ -161,7 +162,8 @@ function useIngest(): UseIngest {
                         clusterType,
                         clusterGeometryFieldId,
                         sourceObjects,
-                        derivedObjects
+                        derivedObjects,
+                        datasetUse,
                     };
 
                     const idAsset: number | undefined = idToIdAssetMap.get(file.id);

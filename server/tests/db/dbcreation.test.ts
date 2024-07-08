@@ -841,7 +841,8 @@ describe('DB Creation Test Suite', () => {
                 ClusterGeometryFieldID: 0,
                 CameraSettingsUniform: false,
                 idCaptureData: captureData.idCaptureData,
-                idCaptureDataPhoto: 0
+                idCaptureDataPhoto: 0,
+                CaptureDatasetUse: '[]',
             });
         expect(captureDataPhoto).toBeTruthy();
         if (captureDataPhoto) {
@@ -865,7 +866,8 @@ describe('DB Creation Test Suite', () => {
                 ClusterGeometryFieldID: 0,
                 CameraSettingsUniform: false,
                 idCaptureData: captureData.idCaptureData,
-                idCaptureDataPhoto: 0
+                idCaptureDataPhoto: 0,
+                CaptureDatasetUse: '[]',
             });
         expect(captureDataPhotoNulls).toBeTruthy();
         if (captureDataPhotoNulls) {

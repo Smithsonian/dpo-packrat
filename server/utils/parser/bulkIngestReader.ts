@@ -377,6 +377,8 @@ export class BulkIngestReader {
             }
         }
 
+        // TODO: support CaptureDatasetUse properties
+
         // directory_path: string;
         return {
             idAssetVersion: 0,
@@ -399,7 +401,8 @@ export class BulkIngestReader {
             clusterGeometryFieldId: bagitCDP.cluster_geometry_field_id,
             directory: bagitCDP.directory_path,
             sourceObjects: [],
-            derivedObjects: []
+            derivedObjects: [],
+            datasetUse: '[]'
         };
     }
 

@@ -76,7 +76,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
-    datasetUse: [],
+    datasetUse: '[]',
     datasetFieldId: null,
     itemPositionType: null,
     itemPositionFieldId: null,
@@ -130,7 +130,13 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .max(MAX_INTEGER, 'Cluster Geometry Field ID is too large'),
     cameraSettingUniform: yup.boolean().required(),
     directory: yup.string(),
-    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate),
+    datasetUse: yup
+        .string()
+        .typeError('Must select at least one Dataset Use')
+        .test('not-empty-or-brackets', 'Must select at least one Dataset Use', value => {
+            return value !== '' && value !== '[]';
+        }),
 });
 
 export const photogrammetryFieldsSchema = photogrammetryFieldsSchemaUpdate.shape({

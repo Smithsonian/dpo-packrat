@@ -96,7 +96,7 @@ export type PhotogrammetryFields = {
     description: string;
     dateCaptured: Date;
     datasetType: number | null;
-    datasetUse: string[] | null;
+    datasetUse: string;
     datasetFieldId: number | null;
     itemPositionType: number | null;
     itemPositionFieldId: number | null;

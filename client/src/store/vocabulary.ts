@@ -36,13 +36,15 @@ type VocabularyStore = {
 export const useVocabularyStore = create<VocabularyStore>((set: SetState<VocabularyStore>, get: GetState<VocabularyStore>) => ({
     vocabularies: new Map<eVocabularySetID, VocabularyOption[]>(),
     vocabularyMap: new Map<eVocabularyID, Vocabulary>(),
+
+    // makes a GraphQL request to return many of the Vocabulary items given the list below.
+    // the results are stored in 'vocabularies', which is where routines like getEntries() pulls.
     updateVocabularyEntries: async (): Promise<StateVocabulary> => {
         const variables = {
             input: {
                 eVocabSetIDs: [
                     eVocabularySetID.eIdentifierIdentifierType,
                     eVocabularySetID.eCaptureDataDatasetType,
-                    eVocabularySetID.eCaptureDataDatasetUse,
                     eVocabularySetID.eCaptureDataItemPositionType,
                     eVocabularySetID.eCaptureDataFocusType,
                     eVocabularySetID.eCaptureDataLightSourceType,
@@ -66,7 +68,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eEdan3DResourceType,
                     eVocabularySetID.eEdan3DResourceCategory,
                     eVocabularySetID.eEdanMDMFields,
-                    eVocabularySetID.eMetadataMetadataSource
+                    eVocabularySetID.eMetadataMetadataSource,
+                    eVocabularySetID.eCaptureDataDatasetUse,
                 ]
             }
         };
@@ -88,10 +91,15 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             });
         });
 
+        console.log('[PACKRAT:DEBUG] Vocabulary Store: ', data);
+        console.log('[PACKRAT:DEBUG] Vocabulary Store (vocabularies): ', vocabularies);
+
         set({ vocabularies, vocabularyMap });
         return vocabularies;
     },
     getEntries: (eVocabularySetID: eVocabularySetID): VocabularyOption[] => {
+        // returns list of vocabulary (reduced properties) from when the store was
+        // initially filled.
         const { vocabularies } = get();
         const vocabularyEntry = vocabularies.get(eVocabularySetID);
 

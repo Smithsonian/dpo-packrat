@@ -267,6 +267,7 @@ export type CaptureDataPhoto = {
   CameraSettingsUniform?: Maybe<Scalars['Boolean']>;
   CaptureData?: Maybe<CaptureData>;
   CaptureDatasetFieldID?: Maybe<Scalars['Int']>;
+  CaptureDatasetUse: Scalars['String'];
   ClusterGeometryFieldID?: Maybe<Scalars['Int']>;
   ItemArrangementFieldID?: Maybe<Scalars['Int']>;
   ItemPositionFieldID?: Maybe<Scalars['Int']>;
@@ -317,6 +318,7 @@ export type CreateCaptureDataInput = {
 export type CreateCaptureDataPhotoInput = {
   CameraSettingsUniform: Scalars['Boolean'];
   CaptureDatasetFieldID: Scalars['Int'];
+  CaptureDatasetUse: Scalars['String'];
   ClusterGeometryFieldID: Scalars['Int'];
   ItemArrangementFieldID: Scalars['Int'];
   ItemPositionFieldID: Scalars['Int'];
@@ -1135,6 +1137,7 @@ export type IngestPhotogrammetry = {
   clusterType?: Maybe<Scalars['Int']>;
   datasetFieldId?: Maybe<Scalars['Int']>;
   datasetType: Scalars['Int'];
+  datasetUse: Scalars['String'];
   dateCaptured: Scalars['String'];
   derivedObjects: Array<RelatedObject>;
   description: Scalars['String'];
@@ -1159,6 +1162,7 @@ export type IngestPhotogrammetryInput = {
   clusterType?: InputMaybe<Scalars['Int']>;
   datasetFieldId?: InputMaybe<Scalars['Int']>;
   datasetType: Scalars['Int'];
+  datasetUse: Scalars['String'];
   dateCaptured: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
   description: Scalars['String'];

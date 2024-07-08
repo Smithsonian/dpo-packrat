@@ -231,6 +231,7 @@ type CaptureDataPhoto {
   CameraSettingsUniform: Boolean
   CaptureData: CaptureData
   CaptureDatasetFieldID: Int
+  CaptureDatasetUse: String!
   ClusterGeometryFieldID: Int
   ItemArrangementFieldID: Int
   ItemPositionFieldID: Int
@@ -279,6 +280,7 @@ input CreateCaptureDataInput {
 input CreateCaptureDataPhotoInput {
   CameraSettingsUniform: Boolean!
   CaptureDatasetFieldID: Int!
+  CaptureDatasetUse: String!
   ClusterGeometryFieldID: Int!
   ItemArrangementFieldID: Int!
   ItemPositionFieldID: Int!
@@ -1030,6 +1032,7 @@ type IngestPhotogrammetry {
   clusterType: Int
   datasetFieldId: Int
   datasetType: Int!
+  datasetUse: String!
   dateCaptured: String!
   derivedObjects: [RelatedObject!]!
   description: String!
@@ -1054,6 +1057,7 @@ input IngestPhotogrammetryInput {
   clusterType: Int
   datasetFieldId: Int
   datasetType: Int!
+  datasetUse: String!
   dateCaptured: String!
   derivedObjects: [RelatedObjectInput!]!
   description: String!

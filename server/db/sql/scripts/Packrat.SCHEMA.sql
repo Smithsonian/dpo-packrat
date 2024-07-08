@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `CaptureDataPhoto` (
   `idCaptureDataPhoto` int(11) NOT NULL AUTO_INCREMENT,
   `idCaptureData` int(11) NOT NULL,
   `idVCaptureDatasetType` int(11) NOT NULL,
-  `CaptureDatasetUse` JSON NOT NULL DEFAULT '[]',
+  `CaptureDatasetUse` longtext NOT NULL DEFAULT '[]',
   `CaptureDatasetFieldID` int(11) DEFAULT NULL,
   `idVItemPositionType` int(11) DEFAULT NULL,
   `ItemPositionFieldID` int(11) DEFAULT NULL,

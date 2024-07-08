@@ -57,6 +57,7 @@ input IngestPhotogrammetryInput {
     sourceObjects: [RelatedObjectInput!]!
     derivedObjects: [RelatedObjectInput!]!
     updateNotes: String
+    datasetUse: String!
 }
 
 input RelatedObjectInput {

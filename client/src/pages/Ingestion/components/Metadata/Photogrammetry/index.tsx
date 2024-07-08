@@ -29,24 +29,15 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { metadataIndex } = props;
     const tableClasses = useTableStyles();
 
-    const datasetUses = [
-        'Alignment',
-        'Reconstruction',
-        'Texture Generation'
-    ];
-
     const useStyles = makeStyles(({ palette }) => ({
         container: {
             display: 'flex',
             flex: 1,
             flexDirection: 'column',
-            // overflow: 'auto',
-            // maxHeight: 'calc(100vh - 60px)'
         },
         content: {
             display: 'flex',
             flex: 1,
-            // width: '52vw',
             flexDirection: 'column',
             padding: 20,
             paddingBottom: 0
@@ -133,7 +124,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const [getFieldErrors, updateMetadataField] = useMetadataStore(state => [state.getFieldErrors, state.updateMetadataField]);
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
+    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry, state.getVocabularyId]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
@@ -141,7 +132,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const { photogrammetry, file } = metadata;
     const { idAsset } = file;
     const errors = getFieldErrors(metadata);
-    const [datasetUse, setDatasetUse] = useState<string[]>([]);
 
     useEffect(() => {
         if (idAsset)
@@ -189,6 +179,18 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const setCheckboxField = ({ target }): void => {
         const { name, checked } = target;
         updateMetadataField(metadataIndex, name, checked, MetadataType.photogrammetry);
+    };
+
+    const setDatasetUseField = (event) => {
+        const  { value } = event.target;
+        // make sure we got an array as value
+        if(!Array.isArray(value))
+            return console.error('did not receive array', value);
+
+        // convert array into JSON array and feed to metadata update
+        // pass in 'datasetUse', or the name of the property holding the data for this
+        const arrayString = JSON.stringify(value);
+        updateMetadataField(metadataIndex, 'datasetUse', arrayString, MetadataType.photogrammetry);
     };
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
@@ -246,11 +248,24 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         onModalClose();
     };
 
-    const onDatasetUseChange = (event) => {
-        setDatasetUse(event.target.value);
+    const getSelectedIDsFromJSON = (value: string): number[] => {
+        // used to extract array from JSON
+        console.log('getStringFromJSON: ', value);
+        try {
+            const data = JSON.parse(value);
+            if(Array.isArray(data) === false)
+                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
+            return data.sort();
+        } catch(error) {
+            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
+        }
+
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Dataset Use. Unsupported value. (${value})`);
+        return [];
     };
 
-    console.log(photogrammetry);
+    // console.log('>>> Metadata Photogrammetry index.ts ', photogrammetry);
+    // console.log('vocabulary id: ', getVocabularyID(eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry));
 
     return (
         <Box className={classes.container}>
@@ -330,25 +345,28 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     <TableCell className={tableClasses.tableCell}>
                                         <Select
                                             multiple
-                                            value={datasetUse}
-                                            onChange={onDatasetUseChange}
+                                            value={getSelectedIDsFromJSON(photogrammetry.datasetUse)}
+                                            onChange={setDatasetUseField}
                                             disableUnderline
                                             className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
                                             input={<Input id='select-multiple-chip' />}
-                                            renderValue={(selected) => (
-                                                <div className={classes.chips}>
-                                                    {(selected as string[]).map((value) => (
-                                                        <Chip key={value} label={value} className={classes.chip} />
-                                                    ))}
-                                                </div>
-                                            )}
-                                            // MenuProps={MenuProps}
+                                            renderValue={(selected) => {
+                                                // get our entries and cycle through what's selected drawing as Chips,
+                                                // and pulling the name from the entries.
+                                                const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
+                                                return (<div className={classes.chips}>
+                                                    {(selected as number[]).map((value) => {
+                                                        const entry = entries.find(entry => entry.idVocabulary === value);
+                                                        return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                    })}
+                                                </div>);
+                                            }}
                                         >
-                                            {datasetUses.map((name) => (
-                                                <MenuItem key={name} value={name}>
-                                                    {name}
-                                                </MenuItem>
-                                            ))}
+                                            { getEntries(eVocabularySetID.eCaptureDataDatasetUse)
+                                                .map(({ idVocabulary, Term }, index) =>
+                                                    <MenuItem key={index} value={idVocabulary}>
+                                                        {Term}
+                                                    </MenuItem>)}
                                         </Select>
                                     </TableCell>
                                 </TableRow>

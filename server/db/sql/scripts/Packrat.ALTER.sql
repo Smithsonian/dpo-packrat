@@ -514,8 +514,8 @@ INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, Gene
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
 
 -- 2024-07-05 Add 'Dataset Use' to vocabulary and table for Capture Data (Eric)
-ALTER TABLE CaptureDataPhoto
-  ADD COLUMN CaptureDatasetUse JSON NOT NULL DEFAULT '[]';
+-- using 'longtext' for JSON since JSON fields stored as longtext by MariaDB losing assignment
+ALTER TABLE CaptureDataPhoto ADD COLUMN CaptureDatasetUse longtext NOT NULL DEFAULT '[]';
 
 -- define vocab set and values
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureData.DatasetUse', 1);

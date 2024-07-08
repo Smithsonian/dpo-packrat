@@ -124,6 +124,8 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         const variantType = getInitialEntryWithVocabularies(vocabularyMap, COMMON.eVocabularySetID.eCaptureDataFileVariantType) || 0;
                         const datasetType = getInitialEntryWithVocabularies(vocabularyMap, COMMON.eVocabularySetID.eCaptureDataDatasetType) || 0;
 
+                        // TODO: test datasetUse.
+
                         const identifier: IngestIdentifier = {
                             identifier: 'ark:/65665/p2b-a6ae6ff4-89a5-44b3-9edc-09728f884076',
                             identifierType,
@@ -178,7 +180,8 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             identifiers: [identifier],
                             folders: [folder],
                             sourceObjects: [],
-                            derivedObjects: []
+                            derivedObjects: [],
+                            datasetUse: '[]'
                         };
 
                         const ingestDataInput = {

@@ -64,7 +64,6 @@ type MetadataStore = {
     getSubtitlesError: (subtitles: SubtitleFields) => boolean;
 };
 
-
 export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataStore>, get: GetState<MetadataStore>) => ({
     metadatas: [],
     getSelectedIdentifiers: (identifiers: StateIdentifier[]): StateIdentifier[] | undefined => identifiers,
@@ -284,7 +283,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     if (CaptureDataPhoto) {
                         const { identifiers, folders } = CaptureDataPhoto;
                         const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
-
+                        console.log('Store - Metadata: ', metadataStep);
                         metadataStep = {
                             ...metadataStep,
                             photogrammetry: {
@@ -339,7 +338,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         }
 
                         if (existingIdAssetVersion && updatePhoto) {
-                            const { datasetType, name, dateCaptured, description, cameraSettingUniform, datasetFieldId, itemPositionType, itemPositionFieldId, itemArrangementFieldId, focusType, lightsourceType, backgroundRemovalMethod, clusterType, clusterGeometryFieldId, folders } = updatePhoto;
+                            const { datasetType, name, dateCaptured, description, cameraSettingUniform, datasetFieldId, itemPositionType, itemPositionFieldId, itemArrangementFieldId, focusType, lightsourceType, backgroundRemovalMethod, clusterType, clusterGeometryFieldId, folders, datasetUse } = updatePhoto;
                             if (datasetType) metadataStep.photogrammetry.datasetType = datasetType;
                             if (name) metadataStep.photogrammetry.name = name;
                             if (new Date(dateCaptured)) metadataStep.photogrammetry.dateCaptured = new Date(dateCaptured);
@@ -355,6 +354,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (clusterType) metadataStep.photogrammetry.clusterType = clusterType;
                             if (clusterGeometryFieldId) metadataStep.photogrammetry.clusterGeometryFieldId = clusterGeometryFieldId;
                             if (folders) metadataStep.photogrammetry.folders = folders;
+                            if (datasetUse) metadataStep.photogrammetry.datasetUse = datasetUse;
                         }
                         if (existingIdAssetVersion && updateModel) {
                             const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated } = updateModel;
@@ -403,7 +403,15 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         };
     },
     updateMetadataField: (metadataIndex: Readonly<number>, name: string, value: MetadataFieldValue, metadataType: MetadataType) => {
+        // finds the correct property in the stored object but using the metadataIndex (always 0),
+        // metadataType (e.g. 'photogrammetry, model, etc.), and name (e.g. datasetType).
+        // NOTE: this does not sync with the server or DB in any way and just operates in memory
+
         const { metadatas } = get();
+
+        console.log(`[PACKRAT:DEBUG] updateMetadataField: ${metadataIndex} | ${name} | ${value} | ${metadataType}`);
+        console.log('[PACKRAT:DEBUG] metadatas: ', metadatas);
+
         if (!(name in metadatas[metadataIndex][metadataType])) {
             toast.error(`Field ${name} doesn't exist on a ${metadataType} asset`);
             return;

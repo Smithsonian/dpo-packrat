@@ -20,6 +20,14 @@ export const withDefaultValueNumber = (value: number | undefined | null, default
     return defaultValue;
 };
 
+export const withDefaultValueString = (value: string | undefined, defaultValue: string): string => {
+    console.log('withDefaultValueString: ', value+':'+defaultValue);
+    if(value && typeof(value).toLowerCase()==='string')
+        return value;
+
+    return defaultValue;
+};
+
 export function nonNullValue<T>(name: string, value: T | null | undefined): T {
     if (value === null || value === undefined) throw new Error(`Provided ${name} is null`);
 

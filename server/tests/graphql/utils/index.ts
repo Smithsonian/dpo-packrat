@@ -110,7 +110,8 @@ class TestSuiteUtils {
             idVItemPositionType: idVocabulary,
             idVFocusType: idVocabulary,
             idVLightSourceType: idVocabulary,
-            idVClusterType: idVocabulary
+            idVClusterType: idVocabulary,
+            CaptureDatasetUse: '[]',
         };
     };
 
