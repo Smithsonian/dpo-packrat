@@ -72,6 +72,7 @@ type CaptureDataDetailFields {
     clusterGeometryFieldId: Int
     folders: [IngestFolder!]!
     isValidData: Boolean
+    datasetUse: String!
 }
 
 type SceneDetailFields {

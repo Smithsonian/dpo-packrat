@@ -171,7 +171,8 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 
 async function getCaptureDataDetailFields(idCaptureData: number): Promise<CaptureDataDetailFields> {
     let fields: CaptureDataDetailFields = {
-        folders: []
+        folders: [],
+        datasetUse: '[]'
     };
 
     // creates a unique map of AssetVersion.filePath and file.idVVariantType
@@ -208,7 +209,8 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             backgroundRemovalMethod: CD.idVBackgroundRemovalMethod,
             clusterType: CD.idVClusterType,
             clusterGeometryFieldId: CD.ClusterGeometryFieldID,
-            isValidData: true
+            isValidData: true,
+            datasetUse: CD.CaptureDatasetUse
         };
     } else {
         fields = {

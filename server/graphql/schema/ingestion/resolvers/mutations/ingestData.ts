@@ -735,7 +735,7 @@ class IngestDataWorker extends ResolverBase {
                 CameraSettingsUniform: photogrammetry.cameraSettingUniform ? photogrammetry.cameraSettingUniform : false,
                 idCaptureData: CDDB.idCaptureData,
                 idCaptureDataPhoto: 0,
-                CaptureDatasetUse: '[]',
+                CaptureDatasetUse: photogrammetry.datasetUse,
             });
         }
         const CDPhotoRes = idCaptureData ? photoDB.update() : photoDB.create();

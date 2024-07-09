@@ -152,7 +152,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         clusterType: null,
         clusterGeometryFieldId: null,
         folders: [],
-        isValidData: null
+        isValidData: null,
+        datasetUse: '[]'
     },
     SceneDetails: {
         CountScene: 0,
@@ -259,6 +260,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         if (assetType === eSystemObjectType.eCaptureData) {
             const CaptureDataDetails = getDetail(eSystemObjectType.eCaptureData) as CaptureDataDetailFields;
             const updatedDetails = { ...CaptureDataDetails, [fieldName]: value };
+            console.log('updateDetailField: ',updatedDetails);
             set({
                 CaptureDataDetails: updatedDetails
             });
@@ -451,7 +453,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                     itemArrangementFieldId,
                     itemPositionFieldId,
                     itemPositionType,
-                    lightsourceType
+                    lightsourceType,
+                    datasetUse
                 }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eCaptureData, 'backgroundRemovalMethod', backgroundRemovalMethod);
@@ -476,6 +479,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'itemPositionFieldId', itemPositionFieldId);
             updateDetailField(eSystemObjectType.eCaptureData, 'itemPositionType', itemPositionType);
             updateDetailField(eSystemObjectType.eCaptureData, 'lightsourceType', lightsourceType);
+            updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', datasetUse);
         }
 
         if (objectType === eSystemObjectType.eScene) {

@@ -182,15 +182,14 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     };
 
     const setDatasetUseField = (event) => {
-        const  { value } = event.target;
+        const  { value, name } = event.target;
         // make sure we got an array as value
         if(!Array.isArray(value))
             return console.error('did not receive array', value);
 
         // convert array into JSON array and feed to metadata update
-        // pass in 'datasetUse', or the name of the property holding the data for this
         const arrayString = JSON.stringify(value);
-        updateMetadataField(metadataIndex, 'datasetUse', arrayString, MetadataType.photogrammetry);
+        updateMetadataField(metadataIndex, name, arrayString, MetadataType.photogrammetry);
     };
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
@@ -346,6 +345,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         <Select
                                             multiple
                                             value={getSelectedIDsFromJSON(photogrammetry.datasetUse)}
+                                            name='datasetUse'
                                             onChange={setDatasetUseField}
                                             disableUnderline
                                             className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}

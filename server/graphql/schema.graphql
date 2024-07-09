@@ -179,6 +179,7 @@ type CaptureDataDetailFields {
   clusterType: Int
   datasetFieldId: Int
   datasetType: Int
+  datasetUse: String!
   dateCaptured: String
   description: String
   focusType: Int
@@ -199,6 +200,7 @@ input CaptureDataDetailFieldsInput {
   clusterType: Int
   datasetFieldId: Int
   datasetType: Int
+  datasetUse: String!
   dateCaptured: DateTime
   description: String
   focusType: Int
@@ -1981,6 +1983,7 @@ type UpdatePhotogrammetryMetadata {
   clusterType: Int
   datasetFieldId: Int
   datasetType: Int!
+  datasetUse: String!
   dateCaptured: String!
   description: String!
   focusType: Int

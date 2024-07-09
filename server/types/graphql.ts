@@ -212,6 +212,7 @@ export type CaptureDataDetailFields = {
   clusterType?: Maybe<Scalars['Int']>;
   datasetFieldId?: Maybe<Scalars['Int']>;
   datasetType?: Maybe<Scalars['Int']>;
+  datasetUse: Scalars['String'];
   dateCaptured?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
   focusType?: Maybe<Scalars['Int']>;
@@ -232,6 +233,7 @@ export type CaptureDataDetailFieldsInput = {
   clusterType?: InputMaybe<Scalars['Int']>;
   datasetFieldId?: InputMaybe<Scalars['Int']>;
   datasetType?: InputMaybe<Scalars['Int']>;
+  datasetUse: Scalars['String'];
   dateCaptured?: InputMaybe<Scalars['DateTime']>;
   description?: InputMaybe<Scalars['String']>;
   focusType?: InputMaybe<Scalars['Int']>;
@@ -2493,6 +2495,7 @@ export type UpdatePhotogrammetryMetadata = {
   clusterType?: Maybe<Scalars['Int']>;
   datasetFieldId?: Maybe<Scalars['Int']>;
   datasetType: Scalars['Int'];
+  datasetUse: Scalars['String'];
   dateCaptured: Scalars['String'];
   description: Scalars['String'];
   focusType?: Maybe<Scalars['Int']>;

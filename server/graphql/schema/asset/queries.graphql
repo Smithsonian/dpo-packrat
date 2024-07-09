@@ -150,6 +150,7 @@ type UpdatePhotogrammetryMetadata {
     clusterType: Int
     clusterGeometryFieldId: Int
     folders: [IngestFolder!]!
+    datasetUse: String!
 }
 
 type UpdateModelMetadata {
