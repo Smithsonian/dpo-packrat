@@ -515,14 +515,17 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks')
 
 -- 2024-07-05 Add 'Dataset Use' to vocabulary and table for Capture Data (Eric)
 -- using 'longtext' for JSON since JSON fields stored as longtext by MariaDB losing assignment
-ALTER TABLE CaptureDataPhoto ADD COLUMN CaptureDatasetUse longtext NOT NULL DEFAULT '[]';
+-- GOTCHA: MariaDB doesn't support multi-value fields and we're using default Vocabulary 'index' values (see below)
+--         If the vocabulary order changes this will reference incorrect values.
+ALTER TABLE CaptureDataPhoto ADD COLUMN CaptureDatasetUse longtext NOT NULL DEFAULT '[207,208,209]';
 
 -- define vocab set and values
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureData.DatasetUse', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 1, 'Alignment');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Reconstruction');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 1, 'Alignment');          -- 207
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Reconstruction');     -- 208
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation'); -- 209
 
--- update tables for the field
+-- update tables for the field (where needed)
+UPDATE CaptureDataPhoto SET CaptureDatasetUse = "[207,208,209]" WHERE CaptureDatasetUse = "[]";
 
 ------

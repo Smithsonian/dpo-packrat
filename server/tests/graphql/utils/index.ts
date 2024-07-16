@@ -111,7 +111,7 @@ class TestSuiteUtils {
             idVFocusType: idVocabulary,
             idVLightSourceType: idVocabulary,
             idVClusterType: idVocabulary,
-            CaptureDatasetUse: '[]',
+            CaptureDatasetUse: '[207,208,209]',
         };
     };
 

@@ -842,7 +842,7 @@ describe('DB Creation Test Suite', () => {
                 CameraSettingsUniform: false,
                 idCaptureData: captureData.idCaptureData,
                 idCaptureDataPhoto: 0,
-                CaptureDatasetUse: '[]',
+                CaptureDatasetUse: '[207,208,209]',
             });
         expect(captureDataPhoto).toBeTruthy();
         if (captureDataPhoto) {
@@ -867,7 +867,7 @@ describe('DB Creation Test Suite', () => {
                 CameraSettingsUniform: false,
                 idCaptureData: captureData.idCaptureData,
                 idCaptureDataPhoto: 0,
-                CaptureDatasetUse: '[]',
+                CaptureDatasetUse: '[207,208,209]',
             });
         expect(captureDataPhotoNulls).toBeTruthy();
         if (captureDataPhotoNulls) {

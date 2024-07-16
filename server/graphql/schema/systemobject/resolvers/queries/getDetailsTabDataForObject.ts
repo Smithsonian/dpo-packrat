@@ -172,7 +172,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 async function getCaptureDataDetailFields(idCaptureData: number): Promise<CaptureDataDetailFields> {
     let fields: CaptureDataDetailFields = {
         folders: [],
-        datasetUse: '[]'
+        datasetUse: '[207,208,209]'
     };
 
     // creates a unique map of AssetVersion.filePath and file.idVVariantType

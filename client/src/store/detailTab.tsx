@@ -153,7 +153,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         clusterGeometryFieldId: null,
         folders: [],
         isValidData: null,
-        datasetUse: '[]'
+        datasetUse: '[207,208,209]'
     },
     SceneDetails: {
         CountScene: 0,

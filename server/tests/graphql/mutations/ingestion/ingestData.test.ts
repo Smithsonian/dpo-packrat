@@ -181,7 +181,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             folders: [folder],
                             sourceObjects: [],
                             derivedObjects: [],
-                            datasetUse: '[]'
+                            datasetUse: '[207,208,209]'
                         };
 
                         const ingestDataInput = {

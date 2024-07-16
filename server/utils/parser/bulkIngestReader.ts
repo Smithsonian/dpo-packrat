@@ -377,8 +377,6 @@ export class BulkIngestReader {
             }
         }
 
-        // TODO: support CaptureDatasetUse properties
-
         // directory_path: string;
         return {
             idAssetVersion: 0,
@@ -402,7 +400,7 @@ export class BulkIngestReader {
             directory: bagitCDP.directory_path,
             sourceObjects: [],
             derivedObjects: [],
-            datasetUse: '[]'
+            datasetUse: '[207,208,209]'
         };
     }
 
