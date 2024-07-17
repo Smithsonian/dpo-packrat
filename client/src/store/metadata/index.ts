@@ -100,7 +100,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         if (assetType.photogrammetry) {
             errors.photogrammetry.dateCaptured = metadata.photogrammetry.dateCaptured.toString() === 'Invalid Date';
             errors.photogrammetry.datasetType = lodash.isNull(metadata.photogrammetry.datasetType);
-            errors.photogrammetry.datasetUse = lodash.isNull(metadata.photogrammetry.datasetUse); // TODO: check for empty array only if we're photogrammetry image set
+            errors.photogrammetry.datasetUse = lodash.isNull(metadata.photogrammetry.datasetUse);
         }
 
         if (assetType.model) {

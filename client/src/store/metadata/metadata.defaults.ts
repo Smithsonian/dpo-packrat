@@ -76,7 +76,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
-    datasetUse: '[207,208,209]',
+    datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
     datasetFieldId: null,
     itemPositionType: null,
     itemPositionFieldId: null,
@@ -135,7 +135,7 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .string()
         .typeError('Must select at least one Dataset Use')
         .test('not-empty-or-brackets', 'Must select at least one Dataset Use', value => {
-            return value !== '' && value !== '[207,208,209]';
+            return value !== '' && value !== '[207,208,209]'; // indices into Vocabulary: alignment, reconstruction, texture generation
         }),
 });
 

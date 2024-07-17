@@ -172,7 +172,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 async function getCaptureDataDetailFields(idCaptureData: number): Promise<CaptureDataDetailFields> {
     let fields: CaptureDataDetailFields = {
         folders: [],
-        datasetUse: '[207,208,209]'
+        datasetUse: '[207,208,209]' // indices into Vocabulary for: alignment, reconstruction, texture generation
     };
 
     // creates a unique map of AssetVersion.filePath and file.idVVariantType

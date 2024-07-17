@@ -216,6 +216,7 @@ model CaptureDataPhoto {
   idCaptureDataPhoto                                                 Int         @id @default(autoincrement())
   idCaptureData                                                      Int
   idVCaptureDatasetType                                              Int
+  CaptureDatasetUse                                                  String      @default("[207,208,209]") @mariasql.LongText
   CaptureDatasetFieldID                                              Int?
   idVItemPositionType                                                Int?
   ItemPositionFieldID                                                Int?
@@ -226,7 +227,6 @@ model CaptureDataPhoto {
   idVClusterType                                                     Int?
   ClusterGeometryFieldID                                             Int?
   CameraSettingsUniform                                              Boolean?
-  CaptureDatasetUse                                                  String      @default("[207,208,209]") @mariasql.LongText
   CaptureData                                                        CaptureData @relation(fields: [idCaptureData], references: [idCaptureData], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_capturedata1")
   Vocabulary_CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary      Vocabulary  @relation("CaptureDataPhoto_idVCaptureDatasetTypeToVocabulary", fields: [idVCaptureDatasetType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary1")
   Vocabulary_CaptureDataPhoto_idVItemPositionTypeToVocabulary        Vocabulary? @relation("CaptureDataPhoto_idVItemPositionTypeToVocabulary", fields: [idVItemPositionType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedataphoto_vocabulary2")

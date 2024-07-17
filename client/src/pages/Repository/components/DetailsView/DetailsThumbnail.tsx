@@ -15,6 +15,7 @@ import { eVoyagerStoryMode, getRootSceneDownloadUrlForVoyager, getModeForVoyager
 import API from '../../../../api';
 import { Link } from 'react-router-dom';
 import Logo from '../../../../assets/images/logo-packrat.square.png';
+import Config from '../../../../config';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     thumbnail: {
@@ -75,11 +76,11 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     useEffect(() => {
         const css = document.createElement('link');
         css.rel = 'stylesheet';
-        css.href = 'https://3d-api.si.edu/resources/css/voyager-story.min.css';
+        css.href = Config.voyager.storyCSS;
         document.head.appendChild(css);
 
         const script = document.createElement('script');
-        script.src = 'https://www.egofarms.com/temp/voyager-story.min.js';
+        script.src = Config.voyager.storyJS;
         script.async = true;
         document.body.appendChild(script);
 

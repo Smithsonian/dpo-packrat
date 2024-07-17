@@ -181,7 +181,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             folders: [folder],
                             sourceObjects: [],
                             derivedObjects: [],
-                            datasetUse: '[207,208,209]'
+                            datasetUse: '[207,208,209]', // indices into Vocabulary for: alignment, reconstruction, and texture generation
                         };
 
                         const ingestDataInput = {

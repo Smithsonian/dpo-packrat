@@ -153,7 +153,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         clusterGeometryFieldId: null,
         folders: [],
         isValidData: null,
-        datasetUse: '[207,208,209]'
+        datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
     },
     SceneDetails: {
         CountScene: 0,
