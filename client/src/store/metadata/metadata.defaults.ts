@@ -135,7 +135,7 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .string()
         .typeError('Must select at least one Dataset Use')
         .test('not-empty-or-brackets', 'Must select at least one Dataset Use', value => {
-            return value !== '' && value !== '[207,208,209]'; // indices into Vocabulary: alignment, reconstruction, texture generation
+            return value !== ''; // indices into Vocabulary: alignment, reconstruction, texture generation
         }),
 });
 
