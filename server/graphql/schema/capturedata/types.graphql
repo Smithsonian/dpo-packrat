@@ -51,4 +51,5 @@ type CaptureDataPhoto {
     VFocusType: Vocabulary
     VItemPositionType: Vocabulary
     VLightSourceType: Vocabulary
+    CaptureDatasetUse: String!
 }

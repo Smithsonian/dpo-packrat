@@ -16,7 +16,8 @@ export default async function CreateCaptureDataPhoto(_: Parent, args: MutationCr
         idVItemPositionType,
         idVFocusType,
         idVLightSourceType,
-        idVClusterType
+        idVClusterType,
+        CaptureDatasetUse,
     } = input;
 
     const captureDataPhotoArgs = {
@@ -32,7 +33,8 @@ export default async function CreateCaptureDataPhoto(_: Parent, args: MutationCr
         idVItemPositionType: idVItemPositionType || null,
         idVFocusType: idVFocusType || null,
         idVLightSourceType: idVLightSourceType || null,
-        idVClusterType: idVClusterType || null
+        idVClusterType: idVClusterType || null,
+        CaptureDatasetUse,
     };
 
     const CaptureDataPhoto = new DBAPI.CaptureDataPhoto(captureDataPhotoArgs);

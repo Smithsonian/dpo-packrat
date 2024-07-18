@@ -325,6 +325,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 switch (eVocabSetID) {
                     case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
                     case COMMON.eVocabularySetID.eCaptureDataDatasetType:
+                    case COMMON.eVocabularySetID.eCaptureDataDatasetUse:
                     case COMMON.eVocabularySetID.eCaptureDataItemPositionType:
                     case COMMON.eVocabularySetID.eCaptureDataFocusType:
                     case COMMON.eVocabularySetID.eCaptureDataLightSourceType:

@@ -510,6 +510,22 @@ INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, Gene
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: Digitization', 'http://ocio-73qycx3.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'workstation');
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: #9', 'http://ocio-3ddigisi-9.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'workstation');
 
--- 2023-10-19 Add 'Masks' variant type for Capture Data (Eric)
+-- 2024-07-03 Add 'Masks' variant type for Capture Data (Eric)
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
+
+-- 2024-07-05 Add 'Dataset Use' to vocabulary and table for Capture Data (Eric)
+-- using 'longtext' for JSON since JSON fields stored as longtext by MariaDB losing assignment
+-- GOTCHA: MariaDB doesn't support multi-value fields and we're using default Vocabulary 'index' values (see below)
+--         If the vocabulary order changes this will reference incorrect values.
+ALTER TABLE CaptureDataPhoto ADD COLUMN CaptureDatasetUse longtext NOT NULL DEFAULT '[207,208,209]';
+
+-- define vocab set and values
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureData.DatasetUse', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 1, 'Alignment');          -- 207
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Reconstruction');     -- 208
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation'); -- 209
+
+-- update tables for the field (where needed)
+UPDATE CaptureDataPhoto SET CaptureDatasetUse = "[207,208,209]" WHERE CaptureDatasetUse = "[]";
+
 ------

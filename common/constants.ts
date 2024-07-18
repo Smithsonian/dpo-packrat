@@ -6,7 +6,9 @@
  * (i.e. no imports here!)
  */
 
-/** enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets */
+/** enum used to provide declarative, programmatic access to sorted vocabulary for system-generated vocabulary sets
+ * Note: all new sets need to go at the bottom of the list so they match IDs added to the DB
+*/
 export enum eVocabularySetID {
     eCaptureDataCaptureMethod,
     eCaptureDataDatasetType,
@@ -37,6 +39,7 @@ export enum eVocabularySetID {
     eEdan3DResourceType,
     eEdan3DResourceCategory,
     eEdanMDMFields,
+    eCaptureDataDatasetUse,
     eNone = -1
 }
 

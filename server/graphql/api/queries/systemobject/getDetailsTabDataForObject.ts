@@ -56,6 +56,7 @@ const getDetailsTabDataForObject = gql`
                     variantType
                 }
                 isValidData
+                datasetUse
             }
             Model {
                 Model {

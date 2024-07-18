@@ -17,6 +17,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
     idVClusterType!: number | null;
     ClusterGeometryFieldID!: number | null;
     CameraSettingsUniform!: boolean | null;
+    CaptureDatasetUse!: string;             // JSON field, stored as a string
 
     constructor(input: CaptureDataPhotoBase) {
         super(input);
@@ -29,13 +30,13 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         try {
             const { idCaptureData, idVCaptureDatasetType, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-                ClusterGeometryFieldID, CameraSettingsUniform } = this;
+                ClusterGeometryFieldID, CameraSettingsUniform, CaptureDatasetUse } = this;
             ({ idCaptureData: this.idCaptureData, idCaptureDataPhoto: this.idCaptureDataPhoto, idVCaptureDatasetType: this.idVCaptureDatasetType,
                 CaptureDatasetFieldID: this.CaptureDatasetFieldID,
                 idVItemPositionType: this.idVItemPositionType, ItemPositionFieldID: this.ItemPositionFieldID,
                 ItemArrangementFieldID: this.ItemArrangementFieldID, idVFocusType: this.idVFocusType, idVLightSourceType: this.idVLightSourceType,
                 idVBackgroundRemovalMethod: this.idVBackgroundRemovalMethod, idVClusterType: this.idVClusterType,
-                ClusterGeometryFieldID: this.ClusterGeometryFieldID, CameraSettingsUniform: this.CameraSettingsUniform } =
+                ClusterGeometryFieldID: this.ClusterGeometryFieldID, CameraSettingsUniform: this.CameraSettingsUniform, CaptureDatasetUse: this.CaptureDatasetUse } =
                 await DBC.DBConnection.prisma.captureDataPhoto.create({
                     data: {
                         CaptureData:                                                        { connect: { idCaptureData }, },
@@ -50,6 +51,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
                         Vocabulary_CaptureDataPhoto_idVClusterTypeToVocabulary:             idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : undefined,
                         ClusterGeometryFieldID,
                         CameraSettingsUniform,
+                        CaptureDatasetUse,
                     },
                 }));
             return true;
@@ -62,7 +64,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         try {
             const { idCaptureData, idCaptureDataPhoto, idVCaptureDatasetType, CaptureDatasetFieldID, idVItemPositionType,
                 ItemPositionFieldID, ItemArrangementFieldID, idVFocusType, idVLightSourceType, idVBackgroundRemovalMethod, idVClusterType,
-                ClusterGeometryFieldID, CameraSettingsUniform } = this;
+                ClusterGeometryFieldID, CameraSettingsUniform, CaptureDatasetUse } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.captureDataPhoto.update({
                 where: { idCaptureDataPhoto, },
                 data: {
@@ -78,6 +80,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
                     Vocabulary_CaptureDataPhoto_idVClusterTypeToVocabulary:             idVClusterType ? { connect: { idVocabulary: idVClusterType }, } : { disconnect: true, },
                     ClusterGeometryFieldID,
                     CameraSettingsUniform,
+                    CaptureDatasetUse,
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
