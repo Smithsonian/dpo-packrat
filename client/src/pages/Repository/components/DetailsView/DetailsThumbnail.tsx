@@ -115,6 +115,44 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         fetchVoyagerParams();
     }, [idSystemObject]);
 
+    // useEffect for assigning CSS adjustments to Voyager dynamic elements
+    useEffect(() => {
+        // add custom inline properties to ff-message-box elements
+        const addCustomClassToMessageBox = () => {
+            const messageBoxes = document.querySelectorAll('ff-message-box');
+            messageBoxes.forEach((box) => {
+                // manually set the zIndex to a higher value so it shows above the rest of the UI
+                (box as HTMLElement).style.setProperty('z-index', '1300', 'important');
+            });
+        };
+
+        // Use MutationObserver to detect dynamically created elements
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node instanceof HTMLElement && node.tagName.toLowerCase() === 'ff-message-box') {
+                        // manually set the zIndex to a higher value so it shows above the rest of the UI
+                        node.style.setProperty('z-index', '1300', 'important');
+                    }
+                });
+            });
+        });
+
+        // Start observing the body for child list changes
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+
+        // Apply custom class to any existing ff-message-box elements on component mount
+        addCustomClassToMessageBox();
+
+        // Clean up observer on component unmount
+        return () => {
+            observer.disconnect();
+        };
+    }, []);
+
     const thumbnailContent = thumbnail ? <img className={classes.thumbnail} src={thumbnail} loading='lazy' alt='asset thumbnail' /> : null;
     // console.log(`thumbnail: ${thumbnail}, thumbnailContent: ${thumbnailContent}`);
 
@@ -260,6 +298,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                     >Edit Scene</Button>
                     <Dialog
                         fullScreen
+                        disableEnforceFocus // needed so edit fields in Voyager Story maintain focus when clicked
                         open={openVoyagerStory}
                         onClose={handleCloseVoyagerStory}
                     >
