@@ -31,6 +31,7 @@ input CreateCaptureDataPhotoInput {
     idVFocusType: Int
     idVLightSourceType: Int
     idVClusterType: Int
+    CaptureDatasetUse: String!
 }
 
 type CreateCaptureDataPhotoResult {

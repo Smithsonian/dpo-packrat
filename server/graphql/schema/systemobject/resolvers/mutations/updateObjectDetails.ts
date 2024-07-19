@@ -255,7 +255,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     backgroundRemovalMethod,
                     clusterType,
                     clusterGeometryFieldId,
-                    folders
+                    folders,
+                    datasetUse
                 } = data.CaptureData;
 
                 if (datasetFieldId && !H.Helpers.validFieldId(datasetFieldId)) return sendResult(false, 'Dataset Field ID is invalid; update failed');
@@ -305,6 +306,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 CD.idVBackgroundRemovalMethod = maybe<number>(backgroundRemovalMethod);
                 CD.idVClusterType = maybe<number>(clusterType);
                 CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
+                CD.CaptureDatasetUse = datasetUse;
                 if (!await CD.update())
                     return sendResult(false, `Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`);
             }

@@ -4,10 +4,11 @@
  * This component renders the folder type selector for contents present in
  * the uploaded assets
  */
-import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper } from '@material-ui/core';
+import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Tooltip } from '@material-ui/core';
 import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { AiFillFolder } from 'react-icons/ai';
+import { HelpOutline } from '@material-ui/icons';
 import { StateFolder, VocabularyOption } from '../../../../../store';
 import { palette } from '../../../../../theme';
 import { ViewableProps } from '../../../../../types/repository';
@@ -67,9 +68,21 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                             </Typography>
                         </TableCell>
                         <TableCell align='center' style={{ paddingBottom: 0 }}>
-                            <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
-                                Variant Type
-                            </Typography>
+                            <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                                <Typography style={{ alignItems: 'center', color: palette.primary.dark }} variant='caption'>
+                                    Variant Type
+                                </Typography>
+                                <Tooltip arrow title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What type of images are in the folder?
+                                    <p><b><u>RAW:</u></b>         original unmodified images. (e.g. RAW, CR2)</p>
+                                    <p><b><u>PROCESSED:</u></b>   images that have been modified/converted. (e.g. JPG, PNG, etc.)</p>
+                                    <p><b><u>FROM CAMERA:</u></b> compressed images directly from the camera (e.g. JPG, PNG)</p>
+                                    <p><b><u>MASKS:</u></b>       images used as masks for reconstruction (any format).</p>
+                                </span>
+                                }
+                                >
+                                    <HelpOutline fontSize='small' style={{ cursor: 'pointer', fontSize: '1.0rem', paddingLeft: '0.5rem' }} />
+                                </Tooltip>
+                            </Box>
                         </TableCell>
                     </TableRow>
                     {folders.length > 0 && (folders.map(({ id, name, variantType }: StateFolder, index: number) => {

@@ -719,6 +719,7 @@ class IngestDataWorker extends ResolverBase {
             photoDB.idVClusterType = photogrammetry.clusterType ? photogrammetry.clusterType : null;
             photoDB.ClusterGeometryFieldID = photogrammetry.clusterGeometryFieldId ? photogrammetry.clusterGeometryFieldId : null;
             photoDB.CameraSettingsUniform = photogrammetry.cameraSettingUniform ? photogrammetry.cameraSettingUniform : false;
+            photoDB.CaptureDatasetUse = photogrammetry.datasetUse;
         } else {
             photoDB = new DBAPI.CaptureDataPhoto({
                 idVCaptureDatasetType: photogrammetry.datasetType,
@@ -733,7 +734,8 @@ class IngestDataWorker extends ResolverBase {
                 ClusterGeometryFieldID: photogrammetry.clusterGeometryFieldId ? photogrammetry.clusterGeometryFieldId : null,
                 CameraSettingsUniform: photogrammetry.cameraSettingUniform ? photogrammetry.cameraSettingUniform : false,
                 idCaptureData: CDDB.idCaptureData,
-                idCaptureDataPhoto: 0
+                idCaptureDataPhoto: 0,
+                CaptureDatasetUse: photogrammetry.datasetUse,
             });
         }
         const CDPhotoRes = idCaptureData ? photoDB.update() : photoDB.create();

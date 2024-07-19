@@ -399,7 +399,8 @@ export class BulkIngestReader {
             clusterGeometryFieldId: bagitCDP.cluster_geometry_field_id,
             directory: bagitCDP.directory_path,
             sourceObjects: [],
-            derivedObjects: []
+            derivedObjects: [],
+            datasetUse: '[207,208,209]'  // indices into Vocabulary for: alignment, reconstruction, texture generation
         };
     }
 

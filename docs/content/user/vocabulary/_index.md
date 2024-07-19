@@ -34,9 +34,13 @@ Packrat makes use of the following controlled vocabularies:
 | CaptureData | ClusterType | Spherical Image Station |
 | CaptureData | ClusterType | Focal Stack Position Based |
 | CaptureData | ClusterType | Focal Stack Focus Based |
+| CaptureData | DatasetUse | Alignment |
+| CaptureData | DatasetUse | Reconstruction |
+| CaptureData | DatasetUse | Texture Generation |
 | CaptureDataFile | VariantType | Raw |
 | CaptureDataFile | VariantType | Processed |
 | CaptureDataFile | VariantType | From Camera |
+| CaptureDataFile | VariantType | Masks |
 | Model | CreationMethod | Scan To Mesh |
 | Model | CreationMethod | CAD |
 | Model | Modality | Point Cloud |
