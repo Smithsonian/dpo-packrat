@@ -506,14 +506,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const { id, progress } = eventData;
 
         // DEBUG: to help track status changes and events
-        const statusPending = pending.map(item => {
-            return {
-                filename: item.file['path'],
-                status: item.status,
-                progress: item.progress
-            };
-        });
-        console.log(`[PACKRAT] onProgressEvent (options: ${JSON.stringify(options)} | pending: ${JSON.stringify(statusPending)})`);
+        // const statusPending = pending.map(item => {
+        //     return {
+        //         filename: item.file['path'],
+        //         status: item.status,
+        //         progress: item.progress
+        //     };
+        // });
+        // console.log(`[PACKRAT] onProgressEvent (options: ${JSON.stringify(options)} | pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments if a SystemObject id is provided
         if (options?.idSystemObject) {
@@ -563,14 +563,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const { id, onCancel } = eventData;
 
         // DEBUG: to help track status changes and events
-        const statusPending = pending.map(item => {
-            return {
-                filename: item.file['path'],
-                status: item.status,
-                progress: item.progress
-            };
-        });
-        console.log(`[PACKRAT] onCancelledEvent (pending: ${JSON.stringify(statusPending)})`);
+        // const statusPending = pending.map(item => {
+        //     return {
+        //         filename: item.file['path'],
+        //         status: item.status,
+        //         progress: item.progress
+        //     };
+        // });
+        // console.log(`[PACKRAT] onCancelledEvent (pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -612,14 +612,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const { id } = eventData;
 
         // DEBUG: to help track status changes and events
-        const statusPending = pending.map(item => {
-            return {
-                filename: item.file['path'],
-                status: item.status,
-                progress: item.progress
-            };
-        });
-        console.log(`[PACKRAT] onFailedEvent (pending: ${JSON.stringify(statusPending)})`);
+        // const statusPending = pending.map(item => {
+        //     return {
+        //         filename: item.file['path'],
+        //         status: item.status,
+        //         progress: item.progress
+        //     };
+        // });
+        // console.log(`[PACKRAT] onFailedEvent (pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -662,14 +662,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const { id } = eventData;
 
         // DEBUG: to help track status changes and events
-        const statusPending = pending.map(item => {
-            return {
-                filename: item.file['path'],
-                status: item.status,
-                progress: item.progress
-            };
-        });
-        console.log(`[PACKRAT] onCompleteEvent (pending: ${JSON.stringify(statusPending)})`);
+        // const statusPending = pending.map(item => {
+        //     return {
+        //         filename: item.file['path'],
+        //         status: item.status,
+        //         progress: item.progress
+        //     };
+        // });
+        // console.log(`[PACKRAT] onCompleteEvent (pending: ${JSON.stringify(statusPending)})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -699,7 +699,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         }
     },
     reset: (): void => {
-        const { completed, pending } = get();
+        const { completed, /*pending*/ } = get();
         const unselectFiles = (file: IngestionFile): IngestionFile => ({
             ...file,
             selected: false
@@ -707,14 +707,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const updatedCompleted: IngestionFile[] = completed.map(unselectFiles);
 
         // DEBUG: to help track status changes and events
-        const statusPending = pending.map(item => {
-            return {
-                filename: item.file['path'],
-                status: item.status,
-                progress: item.progress
-            };
-        });
-        console.log(`[PACKRAT] Upload store reset (pending: ${JSON.stringify(statusPending)})`);
+        // const statusPending = pending.map(item => {
+        //     return {
+        //         filename: item.file['path'],
+        //         status: item.status,
+        //         progress: item.progress
+        //     };
+        // });
+        // console.log(`[PACKRAT] Upload store reset (pending: ${JSON.stringify(statusPending)})`);
 
         // set our pending list to the new values. need to create new array because
         // React only updates when reference changes (not properties).

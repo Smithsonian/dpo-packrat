@@ -49,6 +49,7 @@ const getAssetVersionsDetails = gql`
                         identifierType
                         idIdentifier
                     }
+                    datasetUse
                 }
                 Model {
                     idAssetVersion

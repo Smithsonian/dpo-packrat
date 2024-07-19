@@ -538,7 +538,8 @@ function DetailsView(): React.ReactElement {
                     backgroundRemovalMethod,
                     clusterType,
                     clusterGeometryFieldId,
-                    folders
+                    folders,
+                    datasetUse
                 } = CaptureDataDetails;
 
                 updatedData.CaptureData = {
@@ -557,10 +558,11 @@ function DetailsView(): React.ReactElement {
                     backgroundRemovalMethod,
                     clusterType,
                     clusterGeometryFieldId,
-                    folders
+                    folders,
+                    datasetUse
                 };
             }
-
+            console.log('updatedData: ', updatedData);
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
             updatedData.Metadata = metadata;
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);

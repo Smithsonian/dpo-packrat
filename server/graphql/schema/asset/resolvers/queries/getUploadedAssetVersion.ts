@@ -115,7 +115,8 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
                 backgroundRemovalMethod: CDP.idVBackgroundRemovalMethod,
                 clusterType: CDP.idVClusterType,
                 clusterGeometryFieldId: CDP.ClusterGeometryFieldID,
-                folders
+                folders,
+                datasetUse: CDP.CaptureDatasetUse ?? '[207,208,209]' // indices into Vocabulary: alignment, reconstruction, texture generation
             };
         } else {
             LOG.error(`getUploadedAssetVersion failed to retrieve CaptureDataPhoto from ${JSON.stringify(SOP.CaptureData, H.Helpers.saferStringify)}`, LOG.LS.eGQL);

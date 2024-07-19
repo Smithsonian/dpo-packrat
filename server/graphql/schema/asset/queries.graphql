@@ -44,6 +44,7 @@ type IngestPhotogrammetry {
     identifiers: [IngestIdentifier!]!
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
+    datasetUse: String!
 }
 
 enum RelatedObjectType {
@@ -149,6 +150,7 @@ type UpdatePhotogrammetryMetadata {
     clusterType: Int
     clusterGeometryFieldId: Int
     folders: [IngestFolder!]!
+    datasetUse: String!
 }
 
 type UpdateModelMetadata {

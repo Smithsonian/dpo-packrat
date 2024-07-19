@@ -6,7 +6,7 @@
  *
  * This component renders details tab for CaptureData specific details used in DetailsTab component.
  */
-import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox } from '@material-ui/core';
+import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Chip, Input } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
@@ -136,6 +136,18 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         height: '24px',
         wordBreak: 'break-word'
     },
+    chips: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    chip: {
+        margin: 2,
+        height: 'auto',
+    },
+    chipSelect: {
+        width: 'auto',
+        minWidth: '240px'
+    }
 }));
 
 function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
@@ -150,7 +162,9 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     }, [CaptureDataDetails]);
 
     useEffect(() => {
-        if (!data?.getDetailsTabDataForObject.CaptureData?.isValidData) toast.error('Invalid data detected', { autoClose: false });
+        if (!data?.getDetailsTabDataForObject.CaptureData?.isValidData)
+            toast.error('Invalid data detected', { autoClose: false });
+        console.log(data);
     }, [data, loading]);
 
     if (!data || loading) {
@@ -185,6 +199,37 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
         updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
+    };
+
+    const setDatasetUseField = (event) => {
+        const  { value, name } = event.target;
+        // make sure we got an array as value
+        if(!Array.isArray(value))
+            return console.error('did not receive array', value);
+        console.log('setDatasetUseField (Details): ',value);
+
+        // convert array into JSON array and feed to metadata update
+        const arrayString = JSON.stringify(value);
+        updateDetailField(eSystemObjectType.eCaptureData, name, arrayString);
+    };
+
+    const getSelectedIDsFromJSON = (value: string | undefined | null): number[] => {
+        // used to extract array from JSON
+        console.log('getStringFromJSON: ', value);
+        try {
+            if(!value)
+                throw new Error('[PACKRAT:ERROR] cannot get selected IDs. undefined value');
+
+            const data = JSON.parse(value);
+            if(Array.isArray(data) === false)
+                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
+            return data.sort();
+        } catch(error) {
+            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
+        }
+
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Dataset Use. Unsupported value. (${value})`);
+        return [];
     };
 
     const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
@@ -231,6 +276,43 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     </Select>
                                 </TableCell>
                             </TableRow>
+
+                            {   // TODO: explictly set to 6 (Photogrammetry Set). Check against enums/COMMON
+                                CaptureDataDetails?.datasetType === 6 &&
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                                        <Typography className={classes.labelText}>Dataset Use</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            multiple
+                                            value={getSelectedIDsFromJSON(CaptureDataDetails?.datasetUse)}
+                                            name='datasetUse'
+                                            onChange={setDatasetUseField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.fieldSizing, classes.chipSelect)}
+                                            input={<Input id='select-multiple-chip' />}
+                                            renderValue={(selected) => {
+                                                // get our entries and cycle through what's selected drawing as Chips,
+                                                // and pulling the name from the entries.
+                                                const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
+                                                return (<div className={classes.chips}>
+                                                    {(selected as number[]).map((value) => {
+                                                        const entry = entries.find(entry => entry.idVocabulary === value);
+                                                        return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                    })}
+                                                </div>);
+                                            }}
+                                        >
+                                            { getEntries(eVocabularySetID.eCaptureDataDatasetUse)
+                                                .map(({ idVocabulary, Term }, index) =>
+                                                    <MenuItem key={index} value={idVocabulary}>
+                                                        {Term}
+                                                    </MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            }
 
                             <TableRow className={classes.tableRow}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>

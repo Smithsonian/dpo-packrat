@@ -44,6 +44,7 @@ const getUploadedAssetVersion = gql`
                         name
                         variantType
                     }
+                    datasetUse
                 }
                 Model {
                     name

@@ -163,6 +163,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
+                    case COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks: testVocabulary(vocabulary, 'Masks'); break;
 
                     case COMMON.eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
                     case COMMON.eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
@@ -324,6 +325,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 switch (eVocabSetID) {
                     case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
                     case COMMON.eVocabularySetID.eCaptureDataDatasetType:
+                    case COMMON.eVocabularySetID.eCaptureDataDatasetUse:
                     case COMMON.eVocabularySetID.eCaptureDataItemPositionType:
                     case COMMON.eVocabularySetID.eCaptureDataFocusType:
                     case COMMON.eVocabularySetID.eCaptureDataLightSourceType:
@@ -469,6 +471,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'Raw');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'Processed');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'From Camera');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFileVariantType, 'Masks');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelCreationMethod, 'Scan To Mesh');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelCreationMethod, 'CAD');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eModelModality, 'Point Cloud');
@@ -658,13 +661,15 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testMapPhotogrammetryVariantType('png', COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw);
             await testMapPhotogrammetryVariantType('processed', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
             await testMapPhotogrammetryVariantType('col_cor', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
-            await testMapPhotogrammetryVariantType('zeroed', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
+            await testMapPhotogrammetryVariantType('converted', COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed);
             await testMapPhotogrammetryVariantType('from camera', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('fromcamera', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('jpg', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('jpeg', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('camerajpg', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
             await testMapPhotogrammetryVariantType('camera', COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera);
+            await testMapPhotogrammetryVariantType('masks', COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks);
+            await testMapPhotogrammetryVariantType('mask', COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks);
             await testMapPhotogrammetryVariantType('FOOBARFAULTY', COMMON.eVocabularyID.eNone);
         });
 
