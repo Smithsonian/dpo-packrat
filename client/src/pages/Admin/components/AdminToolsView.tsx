@@ -9,7 +9,7 @@
 import API, { RequestResponse } from '../../../api';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
+import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 // import { DebounceInput } from 'react-debounce-input';
 import { useLocation } from 'react-router';
@@ -200,10 +200,11 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
     const [selected, setSelected] = React.useState<T[]>([]);
     const [order, setOrder] = React.useState<Order>('asc');
     const [orderBy, setOrderBy] = React.useState<string>('id');
+    const [page, setPage] = React.useState(0);
+    const [dense, setDense] = React.useState(false);
+    const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
-    // console.log('table.column: ',columns);
-    // console.log('table.data: ',data);
-
+    // utility
     const convertDateToString = (date: Date): string => {
         // resulting format is <year>-<month>-<day>. example: 2024-07-24
         const year = date.getFullYear();
@@ -352,9 +353,19 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         handleRequestSort(event, property);
     };
 
+    // pagination
+    const emptyRows = rowsPerPage - Math.min(rowsPerPage, data.length - page * rowsPerPage);
+    const handleChangePage = (_event: unknown, newPage: number) => {
+        setPage(newPage);
+    };
+    const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
+
     // JSX
     return (
-        <Box style={{ marginTop: '1rem' }}>
+        <Box style={{ marginTop: '2rem', marginBottom: '2rem' }}>
             <TableContainer>
                 <Table
                     className={tableClasses.table}
@@ -401,6 +412,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                     <TableBody>
                         { (data && Array.isArray(data)) ?
                             stableSort(data, getComparator(order, orderBy))
+                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                                 .map((row, index) => {
                                     const isItemSelected = isSelected(row);
                                     const labelId = `table-checkbox-${index}`;
@@ -436,9 +448,24 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                     );
                                 }):
                             <></>}
+
+                        {emptyRows > 0 && (
+                            <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
+                                <TableCell colSpan={6} />
+                            </TableRow>
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>
+            <TablePagination
+                rowsPerPageOptions={[5, 10, 25, (data.length>25)?data.length:100].filter(option => option <= data.length)} // include options based on total count and one option to view all
+                component='div'
+                count={data.length}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onChangePage={handleChangePage}
+                onChangeRowsPerPage={handleChangeRowsPerPage}
+            />
         </Box>
     );
 };
@@ -459,12 +486,10 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const tableClasses = useTableStyles();
 
     const [operation, setOperation] = useState<number>(0);
-    const [selectedInput, setSelectedInput] = useState<string>('');
     const [selectedList, setSelectedList] = useState<ProjectScene[]>([]);
     const [isListValid, setIsListValid] = useState<boolean>(false);
     const [showBatchOps, setShowBacthOps] = useState<boolean>(false);
     const [projectList, setProjectList] = useState<Project[]>([]);
-    const [projectSelected, setProjectSelected] = useState<Project | null>(null);
     const [projectScenes, setProjectScenes] = useState<ProjectScene[]>([]);
 
     type Project = {
@@ -477,13 +502,13 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         VOYAGER_SCENE = 1,
     }
 
+    // get data
     const getProjectList = useCallback(async () => {
         try {
             const response: RequestResponse = await API.getProjects();
             if(response.success === false) {
                 console.log(`[Packrat:ERROR] cannot get project list. (${response.message})`);
                 setSelectedList([]);
-                setSelectedInput('');
                 return;
             }
 
@@ -624,23 +649,15 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         ];
     };
 
+    // handle changes
     const handleOperationChange = (event) => {
         setOperation(event.target.value);
     };
     const handleProjectChange = (_event, newValue: Project | null) => {
         // store our value so the table gets updated, null if empty
         console.log(newValue);
-        setProjectSelected(newValue);
-
         getProjectScenes(newValue ?? undefined);
     };
-
-    useEffect(() => {
-        // propogate our list of projects and scenes
-        getProjectList();
-        getProjectScenes();
-    }, [getProjectList, getProjectScenes]);
-
     const onProcessOperation = async () => {
 
         console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for: ${selectedList.join(', ')}`);
@@ -659,6 +676,14 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         setIsListValid(selection.length>0);
     };
 
+    // mounting/alteration routines
+    useEffect(() => {
+        // propogate our list of projects and scenes
+        getProjectList();
+        getProjectScenes();
+    }, [getProjectList, getProjectScenes]);
+
+    // JSX
     return (
         <Box className={classes.container} style={{ margin: '10px' }}>
             <IconButton

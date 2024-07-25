@@ -286,6 +286,8 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
         }
     ];
 
+    console.log(`data size: ${JSON.stringify(scenes).length} bytes`);
+
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${scenes.length} scenes`,[...scenes])));
 }
