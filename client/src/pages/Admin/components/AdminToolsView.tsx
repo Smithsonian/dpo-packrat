@@ -9,13 +9,12 @@
 import API, { RequestResponse } from '../../../api';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Button, Select, TextField, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
+import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 // import { DebounceInput } from 'react-debounce-input';
 import { useLocation } from 'react-router';
 import { useUserStore } from '../../../store';
 // import { User } from '../../../types/graphql';
-// import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import clsx from 'clsx';
@@ -164,9 +163,19 @@ const useStyles = makeStyles(({ palette }) => ({
         boxSizing: 'border-box',
         borderRadius: 5,
         paddingBottom: '20px'
-    }
+    },
+    visuallyHidden: {
+        border: 0,
+        clip: 'rect(0 0 0 0)',
+        height: 1,
+        margin: -1,
+        overflow: 'hidden',
+        padding: 0,
+        position: 'absolute',
+        top: 20,
+        width: 1,
+    },
 }));
-
 
 type DBReference = {
     id: number,     // system object id
@@ -183,11 +192,17 @@ type SelectTableProps<T> = {
     columns: ColumnHeader[];
 };
 const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, columns }: SelectTableProps<T>): React.ReactElement => { //(props: SelectTableProps<T>): React.ReactElement {
+
+    type Order = 'asc' | 'desc';
+
     const classes = useStyles();
     const tableClasses = useTableStyles();
     const [selected, setSelected] = React.useState<T[]>([]);
-    console.log('table.column: ',columns);
-    console.log('table.data: ',data);
+    const [order, setOrder] = React.useState<Order>('asc');
+    const [orderBy, setOrderBy] = React.useState<string>('id');
+
+    // console.log('table.column: ',columns);
+    // console.log('table.data: ',data);
 
     const convertDateToString = (date: Date): string => {
         // resulting format is <year>-<month>-<day>. example: 2024-07-24
@@ -196,7 +211,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
-
     const resolveProperty = (obj: T, path: string): string | undefined => {
 
         if(!obj || path.length<=0) {
@@ -238,21 +252,25 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
             }
 
             case 'object': {
-                if(result instanceof Date)
-                    return convertDateToString(result); //result.toDateString();
+                if(result instanceof Date) {
+                    return convertDateToString(result);
+                }
             }
         }
 
         console.log('[PACKRAT:ERROR] unsupported type for table data',result);
         return 'NA';
     };
+
+    // selection
     const updateSelected = (selected: T[]) => {
         console.log('updateSelected: ', selected);
         setSelected(selected);
         onUpdateSelection(selected);
     };
+    const isSelected = (item: T) => selected.findIndex((selectedItem) => selectedItem.id === item.id) !== -1;
 
-    const onUpdateSelectionAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRowSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
             // now we update our selection and propogate changes to calling component
             updateSelected([...data]);
@@ -262,7 +280,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         // reset our selected list and feed it to the calling comp
         updateSelected([]);
     };
-
     const handleRowSelect = (_event: React.MouseEvent<unknown>, item: T) => {
         // expecting a full object to be passed in
         const selectedIndex = selected.findIndex((selectedItem) => selectedItem.id === item.id);
@@ -284,8 +301,58 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         // now we update our selection and propogate changes to calling component
         updateSelected(newSelected);
     };
-    const isSelected = (item: T) => selected.findIndex((selectedItem) => selectedItem.id === item.id) !== -1;
 
+    // sorting
+    function getComparator(
+        order: Order,
+        orderBy: string,
+    ): (a: { [key: string]: number | string }, b: { [key: string]: number | string }) => number {
+        return order === 'desc'
+            ? (a, b) => descendingComparator(a, b, orderBy)
+            : (a, b) => -descendingComparator(a, b, orderBy);
+    }
+    function descendingComparator(
+        a: { [key: string]: number | string },
+        b: { [key: string]: number | string },
+        orderBy: string
+    ): number {
+        if (b[orderBy] < a[orderBy]) {
+            return -1;
+        }
+        if (b[orderBy] > a[orderBy]) {
+            return 1;
+        }
+        return 0;
+    }
+    function stableSort<T>(array: T[], comparator: (a: T, b: T) => number): T[] {
+        if (!array || !Array.isArray(array)) {
+            console.error('not array', array);
+            return [];
+        }
+
+        // Create an array of indices
+        const indices = array.map((_, index) => index);
+
+        // Sort indices based on the comparator applied to the elements in the original array
+        indices.sort((a, b) => {
+            const order = comparator(array[a], array[b]);
+            if (order !== 0) return order;
+            return a - b; // Preserve original order for equal elements
+        });
+
+        // Map the sorted indices back to the original elements
+        return indices.map(index => array[index]);
+    }
+    const handleRequestSort = (_event: React.MouseEvent<unknown>, property: string) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+    const createSortHandler = (property: string) => (event: React.MouseEvent<unknown>) => {
+        handleRequestSort(event, property);
+    };
+
+    // JSX
     return (
         <Box style={{ marginTop: '1rem' }}>
             <TableContainer>
@@ -301,66 +368,77 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                 <Checkbox
                                     indeterminate={selected.length > 0 && selected.length < data.length}
                                     checked={data.length > 0 && selected.length === data.length}
-                                    onChange={onUpdateSelectionAll}
+                                    onChange={handleRowSelectAll}
                                     inputProps={{ 'aria-label': 'select all items' }}
                                 />
                             </TableCell>
-                            {columns.map((columnHeading) => (
+                            { columns.map((columnHeading) => (
                                 <TableCell
                                     key={columnHeading.key}
                                     align={columnHeading.align ?? 'center'}
                                     padding='none'
                                     component='th'
-                                >{columnHeading.label}
+                                    sortDirection={orderBy === columnHeading.key ? order : false}
+                                >
+                                    {/* columnHeading.label */}
+                                    <TableSortLabel
+                                        active={orderBy === columnHeading.key}
+                                        direction={orderBy === columnHeading.key ? order : 'asc'}
+                                        onClick={createSortHandler(columnHeading.key)}
+                                    >
+                                        {columnHeading.label}
+                                        {orderBy === columnHeading.key ? (
+                                            <span className={classes.visuallyHidden}>
+                                                {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                                            </span>
+                                        ) : null}
+                                    </TableSortLabel>
                                 </TableCell>
                             ))}
                         </TableRow>
                     </TableHead>
 
                     <TableBody>
-                        { (data && Array.isArray(data)) ? data.map((row, index) => {
-                            const isItemSelected = isSelected(row);
-                            const labelId = `table-checkbox-${index}`;
+                        { (data && Array.isArray(data)) ?
+                            stableSort(data, getComparator(order, orderBy))
+                                .map((row, index) => {
+                                    const isItemSelected = isSelected(row);
+                                    const labelId = `table-checkbox-${index}`;
 
-                            return (
-                                <TableRow
-                                    hover
-                                    onClick={(event) => handleRowSelect(event, row)}
-                                    role='checkbox'
-                                    aria-checked={isItemSelected}
-                                    tabIndex={-1}
-                                    key={row.id}
-                                    selected={isItemSelected}
-                                >
-                                    <TableCell padding='checkbox'>
-                                        <Checkbox
-                                            checked={isItemSelected}
-                                            inputProps={{ 'aria-labelledby': labelId }}
-                                        />
-                                    </TableCell>
-                                    <TableCell component='th' id={labelId} scope='row' padding='none'>
-                                        {row.id}
-                                    </TableCell>
-                                    {columns.map((column) => (
-                                        // we do 'id' above so we can flag the entire row for accessibility
-                                        (column.key!=='id') && (
-                                            <TableCell key={column.key} align={column.align ?? 'center'}>
-                                                { resolveProperty(row, column.key) }
+                                    return (
+                                        <TableRow
+                                            hover
+                                            onClick={(event) => handleRowSelect(event, row)}
+                                            role='checkbox'
+                                            aria-checked={isItemSelected}
+                                            tabIndex={-1}
+                                            key={row.id}
+                                            selected={isItemSelected}
+                                        >
+                                            <TableCell padding='checkbox'>
+                                                <Checkbox
+                                                    checked={isItemSelected}
+                                                    inputProps={{ 'aria-labelledby': labelId }}
+                                                />
                                             </TableCell>
-                                        )
-                                    ))}
-                                </TableRow>
-                            );
-                        }):<></>}
+                                            <TableCell component='th' id={labelId} scope='row' padding='none'>
+                                                {row.id}
+                                            </TableCell>
+                                            {columns.map((column) => (
+                                                // we do 'id' above so we can flag the entire row for accessibility
+                                                (column.key!=='id') && (
+                                                    <TableCell key={column.key} align={column.align ?? 'center'}>
+                                                        { resolveProperty(row, column.key) }
+                                                    </TableCell>
+                                                )
+                                            ))}
+                                        </TableRow>
+                                    );
+                                }):
+                            <></>}
                     </TableBody>
                 </Table>
             </TableContainer>
-
-            {/* <Button
-                className={classes.btn}
-                onClick={onUpdateSelection}
-                disableElevation
-            > Update </Button> */}
         </Box>
     );
 };
@@ -369,8 +447,6 @@ type ProjectScene = DBReference & {
     project: DBReference,
     subject: DBReference,
     mediaGroup: DBReference,
-    // id: number,     // idScene
-    // name: string,
     dateCreated: Date,
     hasDownloads: boolean,
     dateGenDownloads: Date,
@@ -378,7 +454,7 @@ type ProjectScene = DBReference & {
     datePublished: Date,
     isReviewed: boolean
 };
-const AdminToolsBatchOperation = (): React.ReactElement => {
+const AdminToolsBatchGeneration = (): React.ReactElement => {
     const classes = useStyles();
     const tableClasses = useTableStyles();
 
@@ -521,6 +597,14 @@ const AdminToolsBatchOperation = (): React.ReactElement => {
                 return;
             }
 
+            // cycle through data converting ISO to Date objects since they are
+            // stored as strings in transit.
+            response.data.forEach(obj => {
+                obj.dateCreated = new Date(obj.dateCreated as string);
+                obj.dateGenDownloads = new Date(obj.dateGenDownloads as string);
+                obj.datePublished = new Date(obj.datePublished as string);
+            });
+
             console.log('getProjectScenes: ',response.data);
             setProjectScenes(response.data);
         } catch(error) {
@@ -557,39 +641,7 @@ const AdminToolsBatchOperation = (): React.ReactElement => {
         getProjectScenes();
     }, [getProjectList, getProjectScenes]);
 
-    // const verifySelection = (): boolean => {
-
-    //     // if we're empty cleanup
-    //     if(selectedInput.length <= 0) {
-    //         setSelectedList([]);
-    //         setIsListValid(false);
-    //         return false;
-    //     }
-
-    //     // we accept comma separated values only. (todo: support one each line)
-    //     const pieces: string[] = selectedInput.split(',').map(val => val.trim());
-    //     const isValid = pieces.every(val => !isNaN(Number(val)) && val !== '');
-
-    //     // if we're valid then we assign the array to a separate variable for easier processing
-    //     if(isValid) {
-    //         const values: number[] = pieces.map(Number);
-    //         setSelectedList(values);
-    //         setIsListValid(true);
-    //     } else {
-    //         console.log('[PACKRAT:ERROR] invalid list of IDs. please separate valid ids by commas:',pieces);
-    //         setIsListValid(false);
-    //     }
-
-    //     console.log('verify selection - selected list: ',selectedList);
-    //     return isValid;
-    // };
     const onProcessOperation = async () => {
-
-        // make sure our selection is valid
-        // if(!verifySelection()) {
-        //     console.log('[PACKRAT:ERROR] cannot process batch generation operation. invalid indices.');
-        //     return;
-        // }
 
         console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for: ${selectedList.join(', ')}`);
 
@@ -656,6 +708,7 @@ const AdminToolsBatchOperation = (): React.ReactElement => {
                                             size={'small'}
                                             className={clsx(tableClasses.select, classes.fieldSizing)}
                                             style={{ width: '300px', paddingLeft: '5px' }}
+                                            getOptionSelected={(option, value) => option.idProject === value.idProject}
                                             renderInput={(params) =>
                                                 // <TextField {...params} variant='outlined' placeholder='Project' style={{ border: 'none' }} />
                                                 <div ref={params.InputProps.ref} style={{ height: '100%' }}>
@@ -665,26 +718,6 @@ const AdminToolsBatchOperation = (): React.ReactElement => {
                                         />
                                     </TableCell>
                                 </TableRow>
-
-                                {/* <TableRow className={tableClasses.tableRow}>
-                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Typography className={tableClasses.labelText}>Selected Items</Typography>
-                                    </TableCell>
-                                    <TableCell className={tableClasses.tableCell}>
-                                        <DebounceInput
-                                            value={selectedInput}
-                                            element='textarea'
-                                            name='selectedItems'
-                                            onChange={(e) => setSelectedInput(e.target.value as string)}
-                                            onBlur={verifySelection}
-                                            placeholder='Selected items...'
-                                            className={clsx(tableClasses.input, classes.fieldSizing)}
-                                            forceNotifyByEnter={false}
-                                            debounceTimeout={400}
-                                            style={{ width: '100%', minHeight: '4rem', textAlign: 'left', padding: '5px' }}
-                                        />
-                                    </TableCell>
-                                </TableRow> */}
                             </TableBody>
                         </Table>
                     </TableContainer>
@@ -751,7 +784,7 @@ function AdminToolsView(): React.ReactElement {
                 </Box>
                 {
                     isAuthorized ? (
-                        <AdminToolsBatchOperation />
+                        <AdminToolsBatchGeneration />
                     ):(
                         <p>Not Authorized!</p>
                     )
