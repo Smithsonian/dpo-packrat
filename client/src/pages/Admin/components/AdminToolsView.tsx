@@ -4,9 +4,14 @@
 /* eslint-disable react/prop-types */
 /* eslint-disable react/jsx-max-props-per-line */
 
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, Paper, Collapse, IconButton } from '@material-ui/core';
-import { DebounceInput } from 'react-debounce-input';
+/* eslint-disable no-unused-vars */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import API, { RequestResponse } from '../../../api';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Box, Typography, Button, Select, TextField, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
+import { Autocomplete } from '@material-ui/lab';
+// import { DebounceInput } from 'react-debounce-input';
 import { useLocation } from 'react-router';
 import { useUserStore } from '../../../store';
 // import { User } from '../../../types/graphql';
@@ -162,58 +167,429 @@ const useStyles = makeStyles(({ palette }) => ({
     }
 }));
 
-function AdminToolsBatchOperation(): React.ReactElement {
+
+type DBReference = {
+    id: number,     // system object id
+    name: string,   // name of object
+};
+type ColumnHeader = {
+    key: string,
+    label: string,
+    align?: 'left' | 'right' | 'inherit' | 'center' | 'justify' | undefined,
+};
+type SelectTableProps<T> = {
+    onUpdateSelection: (selection: T[]) => void;
+    data: Array<T>;
+    columns: ColumnHeader[];
+};
+const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, columns }: SelectTableProps<T>): React.ReactElement => { //(props: SelectTableProps<T>): React.ReactElement {
+    const classes = useStyles();
+    const tableClasses = useTableStyles();
+    const [selected, setSelected] = React.useState<T[]>([]);
+    console.log('table.column: ',columns);
+    console.log('table.data: ',data);
+
+    const convertDateToString = (date: Date): string => {
+        // resulting format is <year>-<month>-<day>. example: 2024-07-24
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const resolveProperty = (obj: T, path: string): string | undefined => {
+
+        if(!obj || path.length<=0) {
+            console.log(`[PACKRAT:ERROR] invalid inputs for resolveProperty (obj: ${obj ? 'true':'false'} | path: ${path})`);
+            return 'NA';
+        }
+
+        const keys = path.split('.');
+
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        let result: any = '';
+
+        // get the value stored (only two levels deep)
+        switch(keys.length){
+            case 1: {
+                result = ((obj[keys[0]]) ?? 'NA');
+                break;
+            }
+            case 2: {
+                result = ((obj[keys[0]][keys[1]]) ?? 'NA');
+                break;
+            }
+            default: {
+                console.log('error.keys: ', Object.keys(obj));
+                result = 'NA';
+            }
+        }
+
+        // convert into a string and return based on type
+        const type = typeof(result);
+        switch(type) {
+            case 'string': {
+                return result;
+            }
+
+            case 'number':
+            case 'boolean': {
+                return result.toString();
+            }
+
+            case 'object': {
+                if(result instanceof Date)
+                    return convertDateToString(result); //result.toDateString();
+            }
+        }
+
+        console.log('[PACKRAT:ERROR] unsupported type for table data',result);
+        return 'NA';
+    };
+    const updateSelected = (selected: T[]) => {
+        console.log('updateSelected: ', selected);
+        setSelected(selected);
+        onUpdateSelection(selected);
+    };
+
+    const onUpdateSelectionAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.checked) {
+            // now we update our selection and propogate changes to calling component
+            updateSelected([...data]);
+            return;
+        }
+
+        // reset our selected list and feed it to the calling comp
+        updateSelected([]);
+    };
+
+    const handleRowSelect = (_event: React.MouseEvent<unknown>, item: T) => {
+        // expecting a full object to be passed in
+        const selectedIndex = selected.findIndex((selectedItem) => selectedItem.id === item.id);
+        let newSelected: T[] = [];
+
+        if (selectedIndex === -1) {
+            newSelected = newSelected.concat(selected, item);
+        } else if (selectedIndex === 0) {
+            newSelected = newSelected.concat(selected.slice(1));
+        } else if (selectedIndex === selected.length - 1) {
+            newSelected = newSelected.concat(selected.slice(0, -1));
+        } else if (selectedIndex > 0) {
+            newSelected = newSelected.concat(
+                selected.slice(0, selectedIndex),
+                selected.slice(selectedIndex + 1),
+            );
+        }
+
+        // now we update our selection and propogate changes to calling component
+        updateSelected(newSelected);
+    };
+    const isSelected = (item: T) => selected.findIndex((selectedItem) => selectedItem.id === item.id) !== -1;
+
+    return (
+        <Box style={{ marginTop: '1rem' }}>
+            <TableContainer>
+                <Table
+                    className={tableClasses.table}
+                    aria-labelledby='tableTitle'
+                    size='small'
+                    aria-label='enhanced table'
+                >
+                    <TableHead>
+                        <TableRow>
+                            <TableCell padding='checkbox'>
+                                <Checkbox
+                                    indeterminate={selected.length > 0 && selected.length < data.length}
+                                    checked={data.length > 0 && selected.length === data.length}
+                                    onChange={onUpdateSelectionAll}
+                                    inputProps={{ 'aria-label': 'select all items' }}
+                                />
+                            </TableCell>
+                            {columns.map((columnHeading) => (
+                                <TableCell
+                                    key={columnHeading.key}
+                                    align={columnHeading.align ?? 'center'}
+                                    padding='none'
+                                    component='th'
+                                >{columnHeading.label}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+
+                    <TableBody>
+                        { (data && Array.isArray(data)) ? data.map((row, index) => {
+                            const isItemSelected = isSelected(row);
+                            const labelId = `table-checkbox-${index}`;
+
+                            return (
+                                <TableRow
+                                    hover
+                                    onClick={(event) => handleRowSelect(event, row)}
+                                    role='checkbox'
+                                    aria-checked={isItemSelected}
+                                    tabIndex={-1}
+                                    key={row.id}
+                                    selected={isItemSelected}
+                                >
+                                    <TableCell padding='checkbox'>
+                                        <Checkbox
+                                            checked={isItemSelected}
+                                            inputProps={{ 'aria-labelledby': labelId }}
+                                        />
+                                    </TableCell>
+                                    <TableCell component='th' id={labelId} scope='row' padding='none'>
+                                        {row.id}
+                                    </TableCell>
+                                    {columns.map((column) => (
+                                        // we do 'id' above so we can flag the entire row for accessibility
+                                        (column.key!=='id') && (
+                                            <TableCell key={column.key} align={column.align ?? 'center'}>
+                                                { resolveProperty(row, column.key) }
+                                            </TableCell>
+                                        )
+                                    ))}
+                                </TableRow>
+                            );
+                        }):<></>}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+
+            {/* <Button
+                className={classes.btn}
+                onClick={onUpdateSelection}
+                disableElevation
+            > Update </Button> */}
+        </Box>
+    );
+};
+
+type ProjectScene = DBReference & {
+    project: DBReference,
+    subject: DBReference,
+    mediaGroup: DBReference,
+    // id: number,     // idScene
+    // name: string,
+    dateCreated: Date,
+    hasDownloads: boolean,
+    dateGenDownloads: Date,
+    isPublished: boolean,
+    datePublished: Date,
+    isReviewed: boolean
+};
+const AdminToolsBatchOperation = (): React.ReactElement => {
     const classes = useStyles();
     const tableClasses = useTableStyles();
 
     const [operation, setOperation] = useState<number>(0);
     const [selectedInput, setSelectedInput] = useState<string>('');
-    const [selectedList, setSelectedList] = useState<number[]>([]);
+    const [selectedList, setSelectedList] = useState<ProjectScene[]>([]);
     const [isListValid, setIsListValid] = useState<boolean>(false);
     const [showBatchOps, setShowBacthOps] = useState<boolean>(false);
-    const [showBatchOpsSelector, setShowBatchOpsSelector] = useState<boolean>(false);
+    const [projectList, setProjectList] = useState<Project[]>([]);
+    const [projectSelected, setProjectSelected] = useState<Project | null>(null);
+    const [projectScenes, setProjectScenes] = useState<ProjectScene[]>([]);
 
+    type Project = {
+        idProject: number,
+        Name: string,
+        Description: string | null
+    };
     enum BatchOperations {
         DOWNLOADS = 0,
         VOYAGER_SCENE = 1,
     }
 
+    const getProjectList = useCallback(async () => {
+        try {
+            const response: RequestResponse = await API.getProjects();
+            if(response.success === false) {
+                console.log(`[Packrat:ERROR] cannot get project list. (${response.message})`);
+                setSelectedList([]);
+                setSelectedInput('');
+                return;
+            }
+
+            setProjectList(response.data);
+            console.log('getProjectList: ',response.data);
+        } catch(error) {
+            console.error(`[Packrat:ERROR] Unexpected error fetching project list: ${error}`);
+        }
+    }, []);
+    const getProjectScenes = useCallback(async (project?: Project) => {
+
+        try {
+            const scenes: ProjectScene[] = [
+                {
+                    project: { id: 1, name: 'Project Apollo' },
+                    subject: { id: 1, name: 'Lunar Module' },
+                    mediaGroup: { id: 1, name: 'Moon Landing' },
+                    id: 101,
+                    name: 'Eagle Has Landed',
+                    dateCreated: new Date('2024-01-15'),
+                    hasDownloads: true,
+                    dateGenDownloads: new Date('2024-01-20'),
+                    isPublished: true,
+                    datePublished: new Date('2024-01-25'),
+                    isReviewed: true
+                },
+                {
+                    project: { id: 2, name: 'Project Voyager' },
+                    subject: { id: 2, name: 'Voyager 1' },
+                    mediaGroup: { id: 2, name: 'Outer Solar System' },
+                    id: 102,
+                    name: 'Journey to Jupiter',
+                    dateCreated: new Date('2024-02-10'),
+                    hasDownloads: false,
+                    dateGenDownloads: new Date('2024-02-15'),
+                    isPublished: false,
+                    datePublished: new Date('2024-02-20'),
+                    isReviewed: false
+                },
+                {
+                    project: { id: 3, name: 'Project Mars' },
+                    subject: { id: 3, name: 'Rover Curiosity' },
+                    mediaGroup: { id: 3, name: 'Mars Exploration' },
+                    id: 103,
+                    name: 'Martian Landscape',
+                    dateCreated: new Date('2024-03-05'),
+                    hasDownloads: true,
+                    dateGenDownloads: new Date('2024-03-10'),
+                    isPublished: true,
+                    datePublished: new Date('2024-03-15'),
+                    isReviewed: true
+                },
+                {
+                    project: { id: 4, name: 'Project Neptune' },
+                    subject: { id: 4, name: 'Deep Sea Probe' },
+                    mediaGroup: { id: 4, name: 'Oceanic Research' },
+                    id: 104,
+                    name: 'Into the Abyss',
+                    dateCreated: new Date('2024-04-01'),
+                    hasDownloads: false,
+                    dateGenDownloads: new Date('2024-04-05'),
+                    isPublished: false,
+                    datePublished: new Date('2024-04-10'),
+                    isReviewed: false
+                },
+                {
+                    project: { id: 5, name: 'Project Gaia' },
+                    subject: { id: 5, name: 'Earth Observation' },
+                    mediaGroup: { id: 5, name: 'Global Monitoring' },
+                    id: 105,
+                    name: 'Blue Marble',
+                    dateCreated: new Date('2024-05-15'),
+                    hasDownloads: true,
+                    dateGenDownloads: new Date('2024-05-20'),
+                    isPublished: true,
+                    datePublished: new Date('2024-05-25'),
+                    isReviewed: true
+                },
+                {
+                    project: { id: 6, name: 'Project Titan' },
+                    subject: { id: 6, name: 'Saturn\'s Moon' },
+                    mediaGroup: { id: 6, name: 'Space Missions' },
+                    id: 106,
+                    name: 'Ringed Giant',
+                    dateCreated: new Date('2024-06-10'),
+                    hasDownloads: false,
+                    dateGenDownloads: new Date('2024-06-15'),
+                    isPublished: false,
+                    datePublished: new Date('2024-06-20'),
+                    isReviewed: false
+                },
+                {
+                    project: { id: 7, name: 'Project Orion' },
+                    subject: { id: 7, name: 'Deep Space Mission' },
+                    mediaGroup: { id: 7, name: 'Future Exploration' },
+                    id: 107,
+                    name: 'Beyond the Stars',
+                    dateCreated: new Date('2024-07-05'),
+                    hasDownloads: true,
+                    dateGenDownloads: new Date('2024-07-10'),
+                    isPublished: true,
+                    datePublished: new Date('2024-07-15'),
+                    isReviewed: true
+                }
+            ];
+
+            const response: RequestResponse = await API.getProjectScenes(project ? project.idProject : -1);
+            if(response.success === false) {
+                console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project ? project.Name : 'all'} | message: ${response.message})`);
+                setProjectScenes([]);
+                return;
+            }
+
+            console.log('getProjectScenes: ',response.data);
+            setProjectScenes(response.data);
+        } catch(error) {
+            console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
+        }
+    }, []);
+    const getColumnHeader = (): ColumnHeader[] => {
+        return [
+            { key: 'id', label: 'ID', align: 'center' },
+            { key: 'name', label: 'Scene Name', align: 'left' },
+            { key: 'subject.name', label: 'Subject Name', align: 'center' },
+            { key: 'hasDownloads', label: 'Downloads', align: 'right' },
+            { key: 'dateGenDownloads', label: 'Downloads (Date)', align: 'center' },
+            { key: 'isPublished', label: 'Published', align: 'center' },
+            // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
+            // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
+        ];
+    };
+
     const handleOperationChange = (event) => {
         setOperation(event.target.value);
     };
-    const verifySelection = (): boolean => {
+    const handleProjectChange = (_event, newValue: Project | null) => {
+        // store our value so the table gets updated, null if empty
+        console.log(newValue);
+        setProjectSelected(newValue);
 
-        // if we're empty cleanup
-        if(selectedInput.length <= 0) {
-            setSelectedList([]);
-            setIsListValid(false);
-            return false;
-        }
-
-        // we accept comma separated values only. (todo: support one each line)
-        const pieces: string[] = selectedInput.split(',').map(val => val.trim());
-        const isValid = pieces.every(val => !isNaN(Number(val)) && val !== '');
-
-        // if we're valid then we assign the array to a separate variable for easier processing
-        if(isValid) {
-            const values: number[] = pieces.map(Number);
-            setSelectedList(values);
-            setIsListValid(true);
-        } else {
-            console.log('[PACKRAT:ERROR] invalid list of IDs. please separate valid ids by commas:',pieces);
-            setIsListValid(false);
-        }
-
-        console.log('verify selection - selected list: ',selectedList);
-        return isValid;
+        getProjectScenes(newValue ?? undefined);
     };
+
+    useEffect(() => {
+        // propogate our list of projects and scenes
+        getProjectList();
+        getProjectScenes();
+    }, [getProjectList, getProjectScenes]);
+
+    // const verifySelection = (): boolean => {
+
+    //     // if we're empty cleanup
+    //     if(selectedInput.length <= 0) {
+    //         setSelectedList([]);
+    //         setIsListValid(false);
+    //         return false;
+    //     }
+
+    //     // we accept comma separated values only. (todo: support one each line)
+    //     const pieces: string[] = selectedInput.split(',').map(val => val.trim());
+    //     const isValid = pieces.every(val => !isNaN(Number(val)) && val !== '');
+
+    //     // if we're valid then we assign the array to a separate variable for easier processing
+    //     if(isValid) {
+    //         const values: number[] = pieces.map(Number);
+    //         setSelectedList(values);
+    //         setIsListValid(true);
+    //     } else {
+    //         console.log('[PACKRAT:ERROR] invalid list of IDs. please separate valid ids by commas:',pieces);
+    //         setIsListValid(false);
+    //     }
+
+    //     console.log('verify selection - selected list: ',selectedList);
+    //     return isValid;
+    // };
     const onProcessOperation = async () => {
 
         // make sure our selection is valid
-        if(!verifySelection()) {
-            console.log('[PACKRAT:ERROR] cannot process batch generation operation. invalid indices.');
-            return;
-        }
+        // if(!verifySelection()) {
+        //     console.log('[PACKRAT:ERROR] cannot process batch generation operation. invalid indices.');
+        //     return;
+        // }
 
         console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for: ${selectedList.join(', ')}`);
 
@@ -224,6 +600,11 @@ function AdminToolsBatchOperation(): React.ReactElement {
         // get report and store details
         //      change button to 'cancel'
         //      fire iteration polling status of job
+    };
+    const onUpdatedSelection = (selection) => {
+        console.log('updated selection: ', selection);
+        setSelectedList(selection);
+        setIsListValid(selection.length>0);
     };
 
     return (
@@ -264,6 +645,29 @@ function AdminToolsBatchOperation(): React.ReactElement {
 
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Project</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Autocomplete
+                                            id='project-list'
+                                            options={projectList}
+                                            getOptionLabel={(option) => option.Name}
+                                            onChange={handleProjectChange}
+                                            size={'small'}
+                                            className={clsx(tableClasses.select, classes.fieldSizing)}
+                                            style={{ width: '300px', paddingLeft: '5px' }}
+                                            renderInput={(params) =>
+                                                // <TextField {...params} variant='outlined' placeholder='Project' style={{ border: 'none' }} />
+                                                <div ref={params.InputProps.ref} style={{ height: '100%' }}>
+                                                    <input style={{ width: '100%', border: 'none', height: '100%', background: 'none', paddingLeft: '5px' }} type='text' {...params.inputProps} />
+                                                </div>
+                                            }
+                                        />
+                                    </TableCell>
+                                </TableRow>
+
+                                {/* <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
                                         <Typography className={tableClasses.labelText}>Selected Items</Typography>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
@@ -280,10 +684,16 @@ function AdminToolsBatchOperation(): React.ReactElement {
                                             style={{ width: '100%', minHeight: '4rem', textAlign: 'left', padding: '5px' }}
                                         />
                                     </TableCell>
-                                </TableRow>
+                                </TableRow> */}
                             </TableBody>
                         </Table>
                     </TableContainer>
+
+                    <SelectScenesTable<ProjectScene>
+                        onUpdateSelection={onUpdatedSelection}
+                        data={projectScenes}
+                        columns={getColumnHeader()}
+                    />
 
                     { isListValid ? ( // if we have valid indices show the button to submit
                         <Box style={{ display: 'flex', justifyContent: 'center' }}>
@@ -299,29 +709,11 @@ function AdminToolsBatchOperation(): React.ReactElement {
                     ):(
                         <Typography style={{ textAlign: 'center' }}>List of IDs is invalid. Please check.</Typography>
                     )}
-
-                    <IconButton
-                        className={classes.collapseHeader}
-                        style={{ width: '95%', fontSize: '0.75rem', padding: 0, margin: 'auto', marginTop: '1rem' }}
-                        onClick={() => setShowBatchOpsSelector(showBatchOpsSelector === true ? false:true )}
-                    >
-                        Select from Repository
-                        {showBatchOpsSelector === true ? (<KeyboardArrowUpIcon />):( <KeyboardArrowDownIcon /> )}
-                    </IconButton>
-                    <Collapse in={showBatchOpsSelector} className={classes.container}>
-                        <Box className={classes.collapseContainer} style={{ padding: '10px', width: '95%', margin: 'auto' }}>
-                            <Typography>TODO: data table selecting scenes elements based on project</Typography>
-                            <Typography>more data</Typography>
-                            <Typography>more data</Typography>
-                            <Typography>more data</Typography>
-                        </Box>
-                    </Collapse>
-
                 </Box>
             </Collapse>
         </Box>
     );
-}
+};
 
 function AdminToolsView(): React.ReactElement {
     const classes = useStyles();
@@ -347,26 +739,6 @@ function AdminToolsView(): React.ReactElement {
 
         isUserAuthorized();
     }, [user]);
-
-    // const queryProjectsByFilter = async newSearchText => {
-    //     const newFilterQuery = await apolloClient.query({
-    //         query: GetProjectListDocument,
-    //         variables: {
-    //             input: {
-    //                 search: newSearchText
-    //             }
-    //         }
-    //     });
-
-    //     const {
-    //         data: {
-    //             getProjectList: { projects }
-    //         }
-    //     } = newFilterQuery;
-
-    //     setProjectList(projects);
-    // };
-
 
     return (
         <React.Fragment>

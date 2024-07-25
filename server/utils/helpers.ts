@@ -453,6 +453,14 @@ export class Helpers {
         }
     }
 
+    static convertDateToString(date: Date): string {
+        // resulting format is <year>-<month>-<day>. example: 2024-07-24
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
     static safeNumber(value: any): number | null {
         if (value == null)
             return null;
@@ -515,6 +523,8 @@ export class Helpers {
             return [...value];
         if (value instanceof Set)
             return [...value];
+        if (value instanceof Date)
+            return value.toISOString();
         if (value.pipe && typeof (value.pipe) === 'function')
             return 'stream';
         return value;
