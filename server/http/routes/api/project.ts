@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
+// import * as DBC from '../../../db/connection';
 import * as H from '../../../utils/helpers';
+import * as COMMON from '../../../../common';
 import { ASL, LocalStore } from '../../../utils/localStore';
+import { PublishScene } from '../../../collections/impl/PublishScene';
 
 // import { eEventKey } from '../../../event/interface/EventEnums';
 // import { AuditFactory } from '../../../audit/interface/AuditFactory';
@@ -11,56 +14,12 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 // import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
-// enum PublishedState {
-//     UNDEFINED = -1,
-//     UNPUBLISHED = 0,
-//     INTERNAL = 1,
-//     API_ONLY = 2,
-//     PUBLIC = 3,
-// }
-// enum DataType {
-//     UNDEFINED = -1,
-//     PROJECT = 0,
-//     MEDIAGROUP = 1,
-//     SCENE = 2,
-//     MODEL = 3,
-// }
-// enum Operation {
-//     UNDEFINED = -1,
-//     GET_LIST = 0,
-//     GET_DETAILS = 1,
-//     GET_SCENES = 10,
-// }
-
-// type SummaryScene = {
-//     hasDownloads: boolean,
-//     isQC: boolean,
-//     published: PublishedState,
-//     modified: Date,
-//     downloads
-
-// };
-// type SummaryModel = {
-//     hasScene: boolean,
-// };
-// type SummaryMediaGroup = {
-//     name: string,
-//     project: { id: number, name: string },
-//     scenes: SummaryScene[],
-//     models: SummaryModel[],
-// };
-// type SummarySubject = {
-//     name: string,
-//     unit: { id: number, name: string },
-//     items: SummaryMediaGroup[],
-// };
 type ProjectResponse = {
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
     // dataType?: DataType,        // what to expect in 'data'
     data? //ummarySubject | SummaryMediaGroup | SummaryScene
 };
-
 const generateResponse = (success: boolean, message?: string | undefined, data?): ProjectResponse => {
     return {
         success,
@@ -68,7 +27,6 @@ const generateResponse = (success: boolean, message?: string | undefined, data?)
         data
     };
 };
-
 const isAuthorized = async (req: Request): Promise<H.IOResults> => {
 
     // make sure we're authenticated (i.e. see if request has a 'user' object)
@@ -121,25 +79,29 @@ export async function getProjects(req: Request, res: Response): Promise<void> {
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${projects.length} projects`,[...projects])));
 }
 
-type DBReference = {
-    id: number,     // system object id
-    name: string,   // name of object
-};
-type ProjectScene = DBReference & {
-    project: DBReference,
-    subject: DBReference,
-    mediaGroup: DBReference,
-    // idScene: number,
-    // name: string,
-    dateCreated: Date,
-    hasDownloads: boolean,
-    dateGenDownloads: Date,
-    isPublished: boolean,
-    datePublished: Date,
-    isReviewed: boolean
+// interface ProjectSceneRaw {
+//     name: string,
+//     subtitle: string,
+//     id: number,
+//     edanUUID: string,
+//     isReviewed: number,
+//     canPublish: number,
+//     isPublished: number,
+//     dateCreated: Date,
+//     idProject: number,
+//     nameProject: string,
+//     idItem: number,
+//     nameItem: string,
+//     subtitleItem: string
+// }
+
+const getElapseSeconds = (startTime: number, endTime: number): number => {
+    return (endTime - startTime)/1000;
 };
 
 export async function getProjectScenes(req: Request, res: Response): Promise<void> {
+    // TODO: optimize with one or more crafted SQL statements returning exactly what's needed
+    //       instead of iterating over scenes with many DB requests.
 
     // make sure we're authorized to run this routine
     const authResult = await isAuthorized(req);
@@ -150,144 +112,156 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
 
     // get our project id from our params
     const { id } = req.params;
-    console.log(`>>> get project scenes: ${id}`);
+    const idProject: number = parseInt(id);
+    console.log(`>>> get project scenes: ${idProject}`);
 
-    // HACK: placeholder data
-    const scenes: ProjectScene[] = [
-        {
-            project: { id: 1, name: 'Project Apollo' },
-            subject: { id: 1, name: 'Lunar Module' },
-            mediaGroup: { id: 1, name: 'Moon Landing' },
-            id: 101,
-            name: 'Eagle Has Landed',
-            dateCreated: new Date('2024-01-15'),
-            hasDownloads: true,
-            dateGenDownloads: new Date('2024-01-20'),
-            isPublished: true,
-            datePublished: new Date('2024-01-25'),
-            isReviewed: true
-        },
-        {
-            project: { id: 2, name: 'Project Voyager' },
-            subject: { id: 2, name: 'Voyager 1' },
-            mediaGroup: { id: 2, name: 'Outer Solar System' },
-            id: 102,
-            name: 'Journey to Jupiter',
-            dateCreated: new Date('2024-02-10'),
-            hasDownloads: false,
-            dateGenDownloads: new Date('2024-02-15'),
-            isPublished: false,
-            datePublished: new Date('2024-02-20'),
-            isReviewed: false
-        },
-        {
-            project: { id: 3, name: 'Project Mars' },
-            subject: { id: 3, name: 'Rover Curiosity' },
-            mediaGroup: { id: 3, name: 'Mars Exploration' },
-            id: 103,
-            name: 'Martian Landscape',
-            dateCreated: new Date('2024-03-05'),
-            hasDownloads: true,
-            dateGenDownloads: new Date('2024-03-10'),
-            isPublished: true,
-            datePublished: new Date('2024-03-15'),
-            isReviewed: true
-        },
-        {
-            project: { id: 4, name: 'Project Neptune' },
-            subject: { id: 4, name: 'Deep Sea Probe' },
-            mediaGroup: { id: 4, name: 'Oceanic Research' },
-            id: 104,
-            name: 'Into the Abyss',
-            dateCreated: new Date('2024-04-01'),
-            hasDownloads: false,
-            dateGenDownloads: new Date('2024-04-05'),
-            isPublished: false,
-            datePublished: new Date('2024-04-10'),
-            isReviewed: false
-        },
-        {
-            project: { id: 5, name: 'Project Gaia' },
-            subject: { id: 5, name: 'Earth Observation' },
-            mediaGroup: { id: 5, name: 'Global Monitoring' },
-            id: 105,
-            name: 'Blue Marble',
-            dateCreated: new Date('2024-05-15'),
-            hasDownloads: true,
-            dateGenDownloads: new Date('2024-05-20'),
-            isPublished: true,
-            datePublished: new Date('2024-05-25'),
-            isReviewed: true
-        },
-        {
-            project: { id: 6, name: 'Project Titan' },
-            subject: { id: 6, name: 'Saturn\'s Moon' },
-            mediaGroup: { id: 6, name: 'Space Missions' },
-            id: 106,
-            name: 'Ringed Giant',
-            dateCreated: new Date('2024-06-10'),
-            hasDownloads: false,
-            dateGenDownloads: new Date('2024-06-15'),
-            isPublished: false,
-            datePublished: new Date('2024-06-20'),
-            isReviewed: false
-        },
-        {
-            project: { id: 7, name: 'Project Orion' },
-            subject: { id: 7, name: 'Deep Space Mission' },
-            mediaGroup: { id: 7, name: 'Future Exploration' },
-            id: 107,
-            name: 'Beyond the Stars',
-            dateCreated: new Date('2024-07-05'),
-            hasDownloads: true,
-            dateGenDownloads: new Date('2024-07-10'),
-            isPublished: true,
-            datePublished: new Date('2024-07-15'),
-            isReviewed: true
-        },
-        {
-            project: { id: 8, name: 'Project Horizon' },
-            subject: { id: 8, name: 'Space Telescope' },
-            mediaGroup: { id: 8, name: 'Astronomical Observations' },
-            id: 108,
-            name: 'Galactic Views',
-            dateCreated: new Date('2024-08-01'),
-            hasDownloads: false,
-            dateGenDownloads: new Date('2024-08-05'),
-            isPublished: false,
-            datePublished: new Date('2024-08-10'),
-            isReviewed: false
-        },
-        {
-            project: { id: 9, name: 'Project Phoenix' },
-            subject: { id: 9, name: 'Asteroid Mining' },
-            mediaGroup: { id: 9, name: 'Resource Acquisition' },
-            id: 109,
-            name: 'Mining the Stars',
-            dateCreated: new Date('2024-09-15'),
-            hasDownloads: true,
-            dateGenDownloads: new Date('2024-09-20'),
-            isPublished: true,
-            datePublished: new Date('2024-09-25'),
-            isReviewed: true
-        },
-        {
-            project: { id: 10, name: 'Project Infinity' },
-            subject: { id: 10, name: 'Quantum Research' },
-            mediaGroup: { id: 10, name: 'Advanced Physics' },
-            id: 110,
-            name: 'Quantum Leap',
-            dateCreated: new Date('2024-10-10'),
-            hasDownloads: false,
-            dateGenDownloads: new Date('2024-10-15'),
-            isPublished: false,
-            datePublished: new Date('2024-10-20'),
-            isReviewed: false
+    // our holder for final scenes
+    let project: DBAPI.Project | null = null;
+    let scenes: DBAPI.Scene[] | null = null;
+    let timestamp: number = Date.now();
+
+    // either get all scenes (id < 0) or those for a project
+    if(idProject < 0) {
+        scenes = await DBAPI.Scene.fetchAll();
+    } else {
+        // get our project
+        project = await DBAPI.Project.fetch(idProject);
+        if(!project) {
+            const error = `cannot find Project (${idProject})`;
+            LOG.error(`API.getProjectScenes ${error}`,LOG.LS.eDB);
+            res.status(200).send(JSON.stringify(generateResponse(false,error)));
+            return;
         }
-    ];
 
-    console.log(`data size: ${JSON.stringify(scenes).length} bytes`);
+        // get our scenes for the project
+        scenes = await DBAPI.Scene.fetchByProjectID(project.idProject);
+    }
+
+    // make sure we have scenes
+    if(!scenes) {
+        const error = `cannot get scenes from Project in DB (${idProject})`;
+        LOG.error(`API.getProjectScenes ${error}`,LOG.LS.eDB);
+        res.status(200).send(JSON.stringify(generateResponse(false,error)));
+        return;
+    } else if(scenes.length===0) {
+        res.status(200).send(JSON.stringify(generateResponse(true,'Returned 0 scenes',[])));
+        return;
+    }
+
+    // initial scene gathering status output
+    LOG.info(`API.getProjectScenes grabbed ${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
+    timestamp = Date.now();
+
+    // cycle through scenes building results, and removing any that are null
+    const buildScenePromises = scenes.map(scene => buildProjectSceneDef(scene, project));
+    const builtScenes = await Promise.all(buildScenePromises);
+    const result: ProjectScene[] = builtScenes.filter((scene): scene is ProjectScene => scene !== null);
+
+    // initial scene gathering status output
+    LOG.info(`API.getProjectScenes processed ${result.length}/${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
 
     // return success
-    res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${scenes.length} scenes`,[...scenes])));
+    console.log(`data size: ${JSON.stringify(scenes).length} bytes`);
+    res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${result.length} scenes`,[...result])));
 }
+
+type DBReference = {
+    id: number,     // system object id
+    name: string,   // name of object
+};
+// TODO: rename SceneSummary
+type ProjectScene = DBReference & {
+    project: DBReference,
+    subject: DBReference,
+    mediaGroup: DBReference,
+    // idScene: number,
+    // name: string,
+    dateCreated: Date,
+    hasDownloads: boolean,
+    dateGenDownloads: Date,
+    publishedState: COMMON.ePublishedState,
+    datePublished: Date,
+    isReviewed: boolean
+    // TODO:
+    //  list of downloads
+    //  canPublish
+};
+const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<ProjectScene | null> => {
+
+    // get published state and properties (SystemObjectVersion)
+    const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+    if(!sceneSO) {
+        LOG.error(`API.Project.buildProjectSceneDef failed to get scene (${scene.idScene}) SystemObject`,LOG.LS.eDB);
+        return null;
+    }
+    const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(sceneSO.idSystemObject);
+    if(!sceneSOV) {
+        LOG.error(`API.Project.buildProjectSceneDef failed to get SystemObjectVersion (${sceneSO.idSystemObject}) for scene (idScene: ${scene.idScene})`,LOG.LS.eDB);
+        return null;
+    }
+
+    // get our item
+    const itemResults: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
+    if(!itemResults || itemResults.length===0) {
+        LOG.error(`API.Project.buildProjectSceneDef failed to get Item (${scene.idScene})`,LOG.LS.eDB);
+        return null;
+    } else if(itemResults.length > 1) {
+        LOG.error(`API.Project.buildProjectSceneDef scene (idScene: ${scene.idScene}) has more than one Media Group (idItem: ${itemResults.map((i)=>i.idItem).join(',')})`,LOG.LS.eDB);
+    }
+    const item: DBAPI.Item = itemResults[0];
+
+    // get our Subject
+    const subjectResults: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([item.idItem]);
+    let subjectAltName: string | null = null;
+    if(!subjectResults || subjectResults.length===0) {
+        LOG.error(`API.Project.buildProjectSceneDef failed to get Subject (${scene.idScene})`,LOG.LS.eDB);
+        return null;
+    } else if(subjectResults.length > 1) {
+        // if we have more than one subject assigned (error) then we concat the names so it's clear
+        // on the front end too.
+        LOG.error(`API.Project.buildProjectSceneDef MediaGroup (idItem: ${item.idItem}) of scene (idScene: ${scene.idScene}) has more than one Subject (idSubject: ${subjectResults.map((i)=>i.idSubject).join(',')})`,LOG.LS.eDB);
+        subjectAltName = '(X) '+subjectResults.map((s) => s.Name).join(' | ');
+    }
+    const subject: DBAPI.Subject = subjectResults[0];
+    if(subjectAltName)
+        subject.Name = subjectAltName;
+
+    // get our Project if one doesn't already exist
+    if(!project) {
+        const projResults: DBAPI.Project[] | null = await DBAPI.Project.fetchFromScene(scene.idScene);
+        if(projResults && projResults.length>0)
+            project = projResults[0];
+    }
+
+    // get downloads for scene and determine if available
+    const downloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(scene.idScene);
+    console.log(downloadMSXMap);
+
+    // build our data structure to return
+    const result: ProjectScene = {
+        id: scene.idScene, //change to idSystemObject
+        name: scene.Name,
+        project: (project)
+            ? { id: project.idProject, name: project.Name }
+            : { id: -1, name: 'NA' },
+        subject:
+            { id: subject.idSubject, name: subject.Name },
+        mediaGroup:
+            { id: item.idItem, name: getItemName(item) },
+        dateCreated: sceneSOV.DateCreated,
+        hasDownloads: false,
+        dateGenDownloads: new Date(),
+        publishedState: sceneSOV.PublishedState,
+        datePublished: new Date(), // does it exist?
+        isReviewed: scene.PosedAndQCd as boolean
+    };
+    return result;
+
+};
+
+const getItemName = (item: DBAPI.Item): string => {
+    let result: string = item.Name;
+    if(item.Title && item.Title.length>0 && !result.includes(item.Title))
+        result += ': '+item.Title;
+    return result;
+};

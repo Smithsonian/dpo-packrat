@@ -6,6 +6,7 @@
 
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import * as COMMON from '@dpo-packrat/common';
 import API, { RequestResponse } from '../../../api';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -201,7 +202,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
     const [order, setOrder] = React.useState<Order>('asc');
     const [orderBy, setOrderBy] = React.useState<string>('id');
     const [page, setPage] = React.useState(0);
-    const [dense, setDense] = React.useState(false);
     const [rowsPerPage, setRowsPerPage] = React.useState(5);
 
     // utility
@@ -450,7 +450,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                             <></>}
 
                         {emptyRows > 0 && (
-                            <TableRow style={{ height: (dense ? 33 : 53) * emptyRows }}>
+                            <TableRow style={{ height: 33 * emptyRows }}>
                                 <TableCell colSpan={6} />
                             </TableRow>
                         )}
@@ -477,7 +477,7 @@ type ProjectScene = DBReference & {
     dateCreated: Date,
     hasDownloads: boolean,
     dateGenDownloads: Date,
-    isPublished: boolean,
+    publishedState: COMMON.ePublishedState,
     datePublished: Date,
     isReviewed: boolean
 };
@@ -531,7 +531,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-01-15'),
                     hasDownloads: true,
                     dateGenDownloads: new Date('2024-01-20'),
-                    isPublished: true,
+                    publishedState: 1,
                     datePublished: new Date('2024-01-25'),
                     isReviewed: true
                 },
@@ -544,7 +544,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-02-10'),
                     hasDownloads: false,
                     dateGenDownloads: new Date('2024-02-15'),
-                    isPublished: false,
+                    publishedState: 0,
                     datePublished: new Date('2024-02-20'),
                     isReviewed: false
                 },
@@ -557,7 +557,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-03-05'),
                     hasDownloads: true,
                     dateGenDownloads: new Date('2024-03-10'),
-                    isPublished: true,
+                    publishedState: 1,
                     datePublished: new Date('2024-03-15'),
                     isReviewed: true
                 },
@@ -570,7 +570,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-04-01'),
                     hasDownloads: false,
                     dateGenDownloads: new Date('2024-04-05'),
-                    isPublished: false,
+                    publishedState: 0,
                     datePublished: new Date('2024-04-10'),
                     isReviewed: false
                 },
@@ -583,7 +583,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-05-15'),
                     hasDownloads: true,
                     dateGenDownloads: new Date('2024-05-20'),
-                    isPublished: true,
+                    publishedState: 1,
                     datePublished: new Date('2024-05-25'),
                     isReviewed: true
                 },
@@ -596,7 +596,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-06-10'),
                     hasDownloads: false,
                     dateGenDownloads: new Date('2024-06-15'),
-                    isPublished: false,
+                    publishedState: 0,
                     datePublished: new Date('2024-06-20'),
                     isReviewed: false
                 },
@@ -609,7 +609,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                     dateCreated: new Date('2024-07-05'),
                     hasDownloads: true,
                     dateGenDownloads: new Date('2024-07-10'),
-                    isPublished: true,
+                    publishedState: 1,
                     datePublished: new Date('2024-07-15'),
                     isReviewed: true
                 }
@@ -622,12 +622,15 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                 return;
             }
 
-            // cycle through data converting ISO to Date objects since they are
-            // stored as strings in transit.
+            // cycle through data converting as needed
             response.data.forEach(obj => {
+                // stored ISO strings to Date objects
                 obj.dateCreated = new Date(obj.dateCreated as string);
                 obj.dateGenDownloads = new Date(obj.dateGenDownloads as string);
                 obj.datePublished = new Date(obj.datePublished as string);
+
+                // published state to string (TODO: more natural mapping)
+                obj.publishedState = COMMON.ePublishedState[obj.publishedState];
             });
 
             console.log('getProjectScenes: ',response.data);
@@ -639,11 +642,11 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const getColumnHeader = (): ColumnHeader[] => {
         return [
             { key: 'id', label: 'ID', align: 'center' },
-            { key: 'name', label: 'Scene Name', align: 'left' },
+            { key: 'name', label: 'Scene Name', align: 'center' },
             { key: 'subject.name', label: 'Subject Name', align: 'center' },
-            { key: 'hasDownloads', label: 'Downloads', align: 'right' },
+            { key: 'hasDownloads', label: 'Downloads', align: 'center' },
             { key: 'dateGenDownloads', label: 'Downloads (Date)', align: 'center' },
-            { key: 'isPublished', label: 'Published', align: 'center' },
+            { key: 'publishedState', label: 'Published', align: 'center' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
         ];
