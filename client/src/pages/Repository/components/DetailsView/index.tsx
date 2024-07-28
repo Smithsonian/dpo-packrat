@@ -179,7 +179,7 @@ function DetailsView(): React.ReactElement {
         console.log('[PACKRAT] Verifying Generate Downloads...');
 
         // make a call to our generate downloads endpoint with the current scene id
-        const response: RequestResponse = await API.generateDownloads(idSystemObject, true);
+        const response: RequestResponse = await API.generateDownloads([idSystemObject], true);
         if(response.success === false) {
             console.log(`[Packrat - ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
@@ -601,7 +601,7 @@ function DetailsView(): React.ReactElement {
 
         // make a call to our generate downloads endpoint with the current scene id
         // return sucess when the job is started or if one is already running
-        const response: RequestResponse = await API.generateDownloads(idSystemObject);
+        const response: RequestResponse = await API.generateDownloads([idSystemObject]);
         if(response.success === false) {
 
             // if the job is running then handle differently

@@ -1,19 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
-// import * as DBC from '../../../db/connection';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '../../../../common';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { PublishScene } from '../../../collections/impl/PublishScene';
-
 // import { eEventKey } from '../../../event/interface/EventEnums';
 // import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
-
 import { Request, Response } from 'express';
-// import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
+//#region Project List
 type ProjectResponse = {
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
@@ -55,7 +52,9 @@ const isAuthorized = async (req: Request): Promise<H.IOResults> => {
 
     return { success: true };
 };
-
+const getElapseSeconds = (startTime: number, endTime: number): number => {
+    return (endTime - startTime)/1000;
+};
 export async function getProjects(req: Request, res: Response): Promise<void> {
     // LOG.info('Generating Downloads from API request...', LOG.LS.eHTTP);
 
@@ -78,27 +77,9 @@ export async function getProjects(req: Request, res: Response): Promise<void> {
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${projects.length} projects`,[...projects])));
 }
+//#endregion
 
-// interface ProjectSceneRaw {
-//     name: string,
-//     subtitle: string,
-//     id: number,
-//     edanUUID: string,
-//     isReviewed: number,
-//     canPublish: number,
-//     isPublished: number,
-//     dateCreated: Date,
-//     idProject: number,
-//     nameProject: string,
-//     idItem: number,
-//     nameItem: string,
-//     subtitleItem: string
-// }
-
-const getElapseSeconds = (startTime: number, endTime: number): number => {
-    return (endTime - startTime)/1000;
-};
-
+//#region Project Scenes
 export async function getProjectScenes(req: Request, res: Response): Promise<void> {
     // TODO: optimize with one or more crafted SQL statements returning exactly what's needed
     //       instead of iterating over scenes with many DB requests.
@@ -155,7 +136,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     // cycle through scenes building results, and removing any that are null
     const buildScenePromises = scenes.map(scene => buildProjectSceneDef(scene, project));
     const builtScenes = await Promise.all(buildScenePromises);
-    const result: ProjectScene[] = builtScenes.filter((scene): scene is ProjectScene => scene !== null);
+    const result: SceneSummary[] = builtScenes.filter((scene): scene is SceneSummary => scene !== null);
 
     // initial scene gathering status output
     LOG.info(`API.getProjectScenes processed ${result.length}/${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
@@ -165,28 +146,33 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${result.length} scenes`,[...result])));
 }
 
+// NOTE: 'Summary' types/objects are intended for return via the API and for external use
+//       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type DBReference = {
     id: number,     // system object id
     name: string,   // name of object
 };
-// TODO: rename SceneSummary
-type ProjectScene = DBReference & {
+type AssetSummary = DBReference & {
+    downloadable: boolean,
+    quality: string,
+    usage: string,
+    dateCreated: Date,
+};
+type AssetList = {
+    status: string,
+    items: AssetSummary[];
+};
+type SceneSummary = DBReference & {
     project: DBReference,
     subject: DBReference,
     mediaGroup: DBReference,
-    // idScene: number,
-    // name: string,
     dateCreated: Date,
-    hasDownloads: boolean,
-    dateGenDownloads: Date,
-    publishedState: COMMON.ePublishedState,
+    downloads: AssetList,
+    publishedState: string,
     datePublished: Date,
     isReviewed: boolean
-    // TODO:
-    //  list of downloads
-    //  canPublish
 };
-const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<ProjectScene | null> => {
+const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
 
     // get published state and properties (SystemObjectVersion)
     const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
@@ -209,6 +195,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         LOG.error(`API.Project.buildProjectSceneDef scene (idScene: ${scene.idScene}) has more than one Media Group (idItem: ${itemResults.map((i)=>i.idItem).join(',')})`,LOG.LS.eDB);
     }
     const item: DBAPI.Item = itemResults[0];
+    const itemSO: DBAPI.SystemObject | null = await item.fetchSystemObject();
 
     // get our Subject
     const subjectResults: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([item.idItem]);
@@ -225,6 +212,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     const subject: DBAPI.Subject = subjectResults[0];
     if(subjectAltName)
         subject.Name = subjectAltName;
+    const subjectSO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
 
     // get our Project if one doesn't already exist
     if(!project) {
@@ -232,36 +220,167 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         if(projResults && projResults.length>0)
             project = projResults[0];
     }
+    const projectSO: DBAPI.SystemObject | null = await project?.fetchSystemObject() ?? null;
 
     // get downloads for scene and determine if available
     const downloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(scene.idScene);
-    console.log(downloadMSXMap);
+    if(!downloadMSXMap) {
+        LOG.error(`API.Project.buildProjectSceneDef failed to get downloads map (${scene.idScene})`,LOG.LS.eDB);
+        return null;
+    }
+
+    // build list of downloads (filename, usage/flags)
+    const downloadSummaries: AssetSummary[] | null = [];
+    for(const [key, value] of downloadMSXMap) {
+        const download: AssetSummary | null = await buildAssetSummaryFromMSX(key,value);
+        if(download)
+            downloadSummaries.push(download);
+    }
 
     // build our data structure to return
-    const result: ProjectScene = {
-        id: scene.idScene, //change to idSystemObject
+    const result: SceneSummary = {
+        id: sceneSO.idSystemObject,
         name: scene.Name,
         project: (project)
-            ? { id: project.idProject, name: project.Name }
+            ? { id: projectSO?.idSystemObject ?? -1, name: project.Name }
             : { id: -1, name: 'NA' },
         subject:
-            { id: subject.idSubject, name: subject.Name },
+            { id: subjectSO?.idSystemObject ?? -1, name: subject.Name },
         mediaGroup:
-            { id: item.idItem, name: getItemName(item) },
+            { id: itemSO?.idSystemObject ?? -1, name: getItemName(item) },
         dateCreated: sceneSOV.DateCreated,
-        hasDownloads: false,
-        dateGenDownloads: new Date(),
-        publishedState: sceneSOV.PublishedState,
-        datePublished: new Date(), // does it exist?
+        downloads: { status: getDownloadStatus(downloadSummaries), items: downloadSummaries },
+        publishedState: resolvePublishedState(sceneSOV.PublishedState),
+        datePublished: new Date(0), // does it exist? store epoch to signal error
         isReviewed: scene.PosedAndQCd as boolean
     };
-    return result;
 
+    return result;
 };
 
+const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
+
+    const { usage, quality } = getDownloadProperties(msx.Usage,msx.Quality);
+
+    // get our actual model so we can get the date created
+    const model: DBAPI.Model | null = await DBAPI.Model.fetch(msx.idModel);
+
+    // build our structure and return
+    const result: AssetSummary = {
+        id,
+        name: msx.Name ?? 'NA',
+        quality,
+        usage,
+        downloadable: isDownloadable(msx.Name),
+        dateCreated: (model) ? model.DateCreated : new Date(0), // if erro store epoch as date
+    };
+    return result;
+};
+const isDownloadable = (filename: string | null): boolean => {
+    if(!filename)
+        return false;
+
+    const downloadSuffixes: string[] = [
+        '4096_std.glb',                 // webAssetGlbLowUncompressed
+        '4096-gltf_std.zip',            // gltfZipLow
+        '2048_std_draco.glb',           // AR: App3D
+        '2048_std.usdz',                // AR: iOSApp3D
+        'full_resolution-obj_std.zip',  // objZipFull
+        '4096-obj_std.zip'              // objZipLow
+    ];
+
+    for(let i=0; i<downloadSuffixes.length; i++) {
+        if(filename.includes(downloadSuffixes[i])===true) {
+            return true;
+        }
+    }
+    return false;
+};
+const getDownloadStatus = (downloads: AssetSummary[]): string => {
+
+    // if we have less than 6 downloads we're missing some
+    if(downloads.length<6)
+        return 'Missing';
+
+    // check the dates to see if any are before a fix in Cook on June 14th, 2024
+    // which better handled material properties during inspection.
+    const targetDate: Date = new Date('2024-06-14T00:00:00Z');
+    for(let i=0; i<downloads.length; i++) {
+        if(downloads[i].dateCreated < targetDate)
+            return 'Error';
+    }
+    return 'Good';
+};
+const getDownloadProperties = (usage: string | null, quality: string | null) => {
+
+    const voyagerUsageTypes: string[] = [
+        'webAssetGlbLowUncompressed',
+        'App3D',
+        'iOSApp3D',
+        'objZipFull',
+        'gltfZipLow',
+        'objZipLow'
+    ];
+
+    // cycle through suffixes to determine usage type/purpose
+    // types: Web, Native, AR, Printing, Undefined
+    let assetUsage: string = 'Undefined';
+    if(usage) {
+        for(let i=0; i<voyagerUsageTypes.length; i++) {
+            const usageType: string = voyagerUsageTypes[i];
+            if(usage.includes(usageType)) {
+                switch(usageType) {
+                    case 'webAssetGlbLowUncompressed':   // webAssetGlbLowUncompressed
+                    case 'gltfZipLow':                  // gltfZipLow
+                        { assetUsage = 'Web'; } break;
+
+                    case 'objZipFull':                  // objZipFull
+                    case 'objZipLow':                   // objZipLow
+                        { assetUsage = 'Native'; } break;
+
+                    case 'App3D':                       // AR: App3D
+                    case 'iOSApp3D':                    // AR: iOSApp3D
+                        { assetUsage = 'AR'; } break;
+
+                    default:
+                        LOG.error(`Unsupported usage for download (${usage})`,LOG.LS.eHTTP);
+                }
+            }
+        }
+    }
+
+    // get our quality level. defaulting to 'low' for AR
+    let assetQuality: string = 'Undefined';
+    if(quality) {
+        switch(quality.toLocaleLowerCase()) {
+            case 'low':     assetQuality = 'Low'; break;
+            case 'medium':  assetQuality = 'Medium'; break;
+            case 'high':    assetQuality = 'High'; break;
+            case 'highest': assetQuality = 'Highest'; break;
+            case 'ar':      assetQuality = 'Low'; break;
+        }
+    }
+
+    return { usage: assetUsage, quality: assetQuality };
+};
 const getItemName = (item: DBAPI.Item): string => {
     let result: string = item.Name;
     if(item.Title && item.Title.length>0 && !result.includes(item.Title))
         result += ': '+item.Title;
     return result;
 };
+const resolvePublishedState = (state: COMMON.ePublishedState): string => {
+    switch (state) {
+        case COMMON.ePublishedState.eNotPublished:
+            return 'Not Published';
+        case COMMON.ePublishedState.eAPIOnly:
+            return 'API Only';
+        case COMMON.ePublishedState.ePublished:
+            return 'Published';
+        case COMMON.ePublishedState.eInternal:
+            return 'Internal';
+        default:
+            return 'Unknown State';
+    }
+};
+//#endregion

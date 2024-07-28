@@ -40,18 +40,22 @@ export default class API {
     }
 
     // generation operations
-    static async generateDownloads(idSystemObject: number, statusOnly: boolean = false): Promise<RequestResponse> {
+    static async generateDownloads(idSystemObject: number[], statusOnly: boolean = false): Promise<RequestResponse> {
         // initiates the generate downloads routine and either runs the recipe with the given id or returns its status.
         // idSystemObject = the SystemObject id for the Packrat Scene making this request
-        const body = JSON.stringify({ idSystemObject });
+        const body = JSON.stringify({ statusOnly, idSystemObject });
+        let uri: string = API_ROUTES.GEN_DOWNLOADS;
+        console.log('body: ',body);
 
         let options;
-        if(statusOnly)
+        if(statusOnly) {
             options = { method: 'GET' };
-        else
+            uri += `id=${idSystemObject[0]}`; // add our index. only get status for single element
+        } else {
             options = { method: 'POST', body };
+        }
 
-        return this.request(`${API_ROUTES.GEN_DOWNLOADS}?id=${idSystemObject}`, options);
+        return this.request(uri, options);
     }
 
     // project operations

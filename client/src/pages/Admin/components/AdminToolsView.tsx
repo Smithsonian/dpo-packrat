@@ -6,19 +6,18 @@
 
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import * as COMMON from '@dpo-packrat/common';
+// import * as COMMON from '@dpo-packrat/common';
 import API, { RequestResponse } from '../../../api';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
-// import { DebounceInput } from 'react-debounce-input';
 import { useLocation } from 'react-router';
 import { useUserStore } from '../../../store';
-// import { User } from '../../../types/graphql';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import clsx from 'clsx';
+import { toast } from 'react-toastify';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -186,6 +185,7 @@ type ColumnHeader = {
     key: string,
     label: string,
     align?: 'left' | 'right' | 'inherit' | 'center' | 'justify' | undefined,
+    tooltip?: string
 };
 type SelectTableProps<T> = {
     onUpdateSelection: (selection: T[]) => void;
@@ -262,6 +262,9 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         console.log('[PACKRAT:ERROR] unsupported type for table data',result);
         return 'NA';
     };
+    const getNestedValue = (obj: any, path: string): any => {
+        return path.split('.').reduce((value, key) => value[key], obj);
+    };
 
     // selection
     const updateSelected = (selected: T[]) => {
@@ -317,10 +320,14 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         b: { [key: string]: number | string },
         orderBy: string
     ): number {
-        if (b[orderBy] < a[orderBy]) {
+        // we handle this to ensure nested properties are sortable
+        const aValue = getNestedValue(a, orderBy);
+        const bValue = getNestedValue(b, orderBy);
+
+        if (bValue < aValue) {
             return -1;
         }
-        if (b[orderBy] > a[orderBy]) {
+        if (bValue > aValue) {
             return 1;
         }
         return 0;
@@ -344,13 +351,10 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         // Map the sorted indices back to the original elements
         return indices.map(index => array[index]);
     }
-    const handleRequestSort = (_event: React.MouseEvent<unknown>, property: string) => {
+    const createSortHandler = (property: string) => (event: React.MouseEvent<unknown>) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
-    };
-    const createSortHandler = (property: string) => (event: React.MouseEvent<unknown>) => {
-        handleRequestSort(event, property);
     };
 
     // pagination
@@ -359,8 +363,8 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         setPage(newPage);
     };
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
+        setRowsPerPage(parseInt(event.target.value, 10));
     };
 
     // JSX
@@ -391,7 +395,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                     component='th'
                                     sortDirection={orderBy === columnHeading.key ? order : false}
                                 >
-                                    {/* columnHeading.label */}
                                     <TableSortLabel
                                         active={orderBy === columnHeading.key}
                                         direction={orderBy === columnHeading.key ? order : 'asc'}
@@ -470,14 +473,26 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
     );
 };
 
-type ProjectScene = DBReference & {
+// TODO: add enums and types to library and/or COMMON as needed
+// NOTE: 'Summary' types/objects are intended for return via the API and for external use
+//       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
+type AssetSummary = DBReference & {
+    downloadable: boolean,
+    quality: string,
+    usage: string,
+    dateCreated: Date,
+};
+type AssetList = {
+    status: string,
+    items: AssetSummary[];
+};
+type SceneSummary = DBReference & {
     project: DBReference,
     subject: DBReference,
     mediaGroup: DBReference,
     dateCreated: Date,
-    hasDownloads: boolean,
-    dateGenDownloads: Date,
-    publishedState: COMMON.ePublishedState,
+    downloads: AssetList,
+    publishedState: string,
     datePublished: Date,
     isReviewed: boolean
 };
@@ -486,11 +501,11 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const tableClasses = useTableStyles();
 
     const [operation, setOperation] = useState<number>(0);
-    const [selectedList, setSelectedList] = useState<ProjectScene[]>([]);
+    const [selectedList, setSelectedList] = useState<SceneSummary[]>([]);
     const [isListValid, setIsListValid] = useState<boolean>(false);
     const [showBatchOps, setShowBacthOps] = useState<boolean>(false);
     const [projectList, setProjectList] = useState<Project[]>([]);
-    const [projectScenes, setProjectScenes] = useState<ProjectScene[]>([]);
+    const [projectScenes, setProjectScenes] = useState<SceneSummary[]>([]);
 
     type Project = {
         idProject: number,
@@ -521,100 +536,6 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const getProjectScenes = useCallback(async (project?: Project) => {
 
         try {
-            const scenes: ProjectScene[] = [
-                {
-                    project: { id: 1, name: 'Project Apollo' },
-                    subject: { id: 1, name: 'Lunar Module' },
-                    mediaGroup: { id: 1, name: 'Moon Landing' },
-                    id: 101,
-                    name: 'Eagle Has Landed',
-                    dateCreated: new Date('2024-01-15'),
-                    hasDownloads: true,
-                    dateGenDownloads: new Date('2024-01-20'),
-                    publishedState: 1,
-                    datePublished: new Date('2024-01-25'),
-                    isReviewed: true
-                },
-                {
-                    project: { id: 2, name: 'Project Voyager' },
-                    subject: { id: 2, name: 'Voyager 1' },
-                    mediaGroup: { id: 2, name: 'Outer Solar System' },
-                    id: 102,
-                    name: 'Journey to Jupiter',
-                    dateCreated: new Date('2024-02-10'),
-                    hasDownloads: false,
-                    dateGenDownloads: new Date('2024-02-15'),
-                    publishedState: 0,
-                    datePublished: new Date('2024-02-20'),
-                    isReviewed: false
-                },
-                {
-                    project: { id: 3, name: 'Project Mars' },
-                    subject: { id: 3, name: 'Rover Curiosity' },
-                    mediaGroup: { id: 3, name: 'Mars Exploration' },
-                    id: 103,
-                    name: 'Martian Landscape',
-                    dateCreated: new Date('2024-03-05'),
-                    hasDownloads: true,
-                    dateGenDownloads: new Date('2024-03-10'),
-                    publishedState: 1,
-                    datePublished: new Date('2024-03-15'),
-                    isReviewed: true
-                },
-                {
-                    project: { id: 4, name: 'Project Neptune' },
-                    subject: { id: 4, name: 'Deep Sea Probe' },
-                    mediaGroup: { id: 4, name: 'Oceanic Research' },
-                    id: 104,
-                    name: 'Into the Abyss',
-                    dateCreated: new Date('2024-04-01'),
-                    hasDownloads: false,
-                    dateGenDownloads: new Date('2024-04-05'),
-                    publishedState: 0,
-                    datePublished: new Date('2024-04-10'),
-                    isReviewed: false
-                },
-                {
-                    project: { id: 5, name: 'Project Gaia' },
-                    subject: { id: 5, name: 'Earth Observation' },
-                    mediaGroup: { id: 5, name: 'Global Monitoring' },
-                    id: 105,
-                    name: 'Blue Marble',
-                    dateCreated: new Date('2024-05-15'),
-                    hasDownloads: true,
-                    dateGenDownloads: new Date('2024-05-20'),
-                    publishedState: 1,
-                    datePublished: new Date('2024-05-25'),
-                    isReviewed: true
-                },
-                {
-                    project: { id: 6, name: 'Project Titan' },
-                    subject: { id: 6, name: 'Saturn\'s Moon' },
-                    mediaGroup: { id: 6, name: 'Space Missions' },
-                    id: 106,
-                    name: 'Ringed Giant',
-                    dateCreated: new Date('2024-06-10'),
-                    hasDownloads: false,
-                    dateGenDownloads: new Date('2024-06-15'),
-                    publishedState: 0,
-                    datePublished: new Date('2024-06-20'),
-                    isReviewed: false
-                },
-                {
-                    project: { id: 7, name: 'Project Orion' },
-                    subject: { id: 7, name: 'Deep Space Mission' },
-                    mediaGroup: { id: 7, name: 'Future Exploration' },
-                    id: 107,
-                    name: 'Beyond the Stars',
-                    dateCreated: new Date('2024-07-05'),
-                    hasDownloads: true,
-                    dateGenDownloads: new Date('2024-07-10'),
-                    publishedState: 1,
-                    datePublished: new Date('2024-07-15'),
-                    isReviewed: true
-                }
-            ];
-
             const response: RequestResponse = await API.getProjectScenes(project ? project.idProject : -1);
             if(response.success === false) {
                 console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project ? project.Name : 'all'} | message: ${response.message})`);
@@ -626,11 +547,8 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             response.data.forEach(obj => {
                 // stored ISO strings to Date objects
                 obj.dateCreated = new Date(obj.dateCreated as string);
-                obj.dateGenDownloads = new Date(obj.dateGenDownloads as string);
+                // obj.dateGenDownloads = new Date(obj.dateGenDownloads as string);
                 obj.datePublished = new Date(obj.datePublished as string);
-
-                // published state to string (TODO: more natural mapping)
-                obj.publishedState = COMMON.ePublishedState[obj.publishedState];
             });
 
             console.log('getProjectScenes: ',response.data);
@@ -644,8 +562,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             { key: 'id', label: 'ID', align: 'center' },
             { key: 'name', label: 'Scene Name', align: 'center' },
             { key: 'subject.name', label: 'Subject Name', align: 'center' },
-            { key: 'hasDownloads', label: 'Downloads', align: 'center' },
-            { key: 'dateGenDownloads', label: 'Downloads (Date)', align: 'center' },
+            { key: 'downloads.status', label: 'Downloads', align: 'center' },
             { key: 'publishedState', label: 'Published', align: 'center' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
@@ -663,15 +580,37 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     };
     const onProcessOperation = async () => {
 
-        console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for: ${selectedList.join(', ')}`);
+        if(selectedList.length===0) {
+            toast.error('Cannot submit job. Nothing selected.');
+            return;
+        }
+        console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+
+        // get our list of scene idSystemObject
+        const sceneIDs: number[] = selectedList.map((scene)=>scene.id);
 
         // build request to server
+        const response: RequestResponse = await API.generateDownloads(sceneIDs);
+        if(response.success === false) {
 
-        // send request and wait
+            // if the job is running then handle differently
+            if(response.message && response.message.includes('already running')) {
+                console.log(`[Packrat - WARN] cannot do ${BatchOperations[operation]}. (${response.message})`);
+                toast.warn(`Not running ${BatchOperations[operation]}. Job already running. Please wait for it to finish.`);
+            } else {
+                console.log(`[Packrat - ERROR] cannot run ${BatchOperations[operation]}. (${response.message})`);
+                toast.error(`Cannot ${BatchOperations[operation]}. Check the report.`);
+            }
+            return;
+        }
 
-        // get report and store details
+        // TODO: get report and store details
         //      change button to 'cancel'
         //      fire iteration polling status of job
+
+        toast.success(`Generate Downloads jobs submitted for ${sceneIDs.length} scenes. Check the workflow tab for progress.`);
+        console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+        return;
     };
     const onUpdatedSelection = (selection) => {
         console.log('updated selection: ', selection);
@@ -750,7 +689,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                         </Table>
                     </TableContainer>
 
-                    <SelectScenesTable<ProjectScene>
+                    <SelectScenesTable<SceneSummary>
                         onUpdateSelection={onUpdatedSelection}
                         data={projectScenes}
                         columns={getColumnHeader()}
