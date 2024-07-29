@@ -188,10 +188,10 @@ function DetailsView(): React.ReactElement {
 
         // see if we can actually run based on if a job isn't already running
         // and our scene meets the core requirements
-        const canRun: boolean = (response.data.isJobRunning === false) && (response.data.isSceneValid === true);
+        const canRun: boolean = (response.data.isJobRunning === false) && (response.data.isValid === true);
 
         // we have success so enable it
-        // console.log(`[PACKRAT - DEBUG] can generate downloads: ${canRun}`);
+        // console.log(`[PACKRAT:DEBUG] can generate downloads: ${canRun}`);
         setCanGenerateDownloads(canRun);
         return canRun;
     };

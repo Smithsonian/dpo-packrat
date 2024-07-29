@@ -11,20 +11,20 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
-type GenDownloadsStatus = {
+type OpStatus = {
     idWorkflow?: number,        // do we have a workflow/report so we can (later) jump to its status page
     idWorkflowReport?: number,  // do we have a report for this workflow to help with future polling
-    isSceneValid: boolean,      // if the referenced scene is QC'd and has basic requirements met
+    isValid: boolean,           // if the referenced scene|model|etc. is has basic requirements met (e.g. scenes need to be QC'd)
     isJobRunning: boolean,      // is there a job already running
 };
 
 type GenDownloadsResponse = {
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
-    data?: GenDownloadsStatus
+    data?: OpStatus
 };
 
-// enum JobStatus {
+// enum JobState {
 //     UNDEFINED,
 //     PENDING,
 //     STARTED,
@@ -33,16 +33,16 @@ type GenDownloadsResponse = {
 //     RETRY
 // }
 // type OpsQueueItem = {
-//     opState: JobStatus;
+//     opState: JobState;
 //     idSystemObject: number;
 //     message?: string;
-//     opStatus: GenDownloadsStatus;
+//     opStatus: OpStatus;
 // };
 
 // HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
 //       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
 const idJob: number = 8;
-const generateResponse = (success: boolean, message?: string | undefined, data?: GenDownloadsStatus | undefined): GenDownloadsResponse => {
+const generateResponse = (success: boolean, message?: string | undefined, data?: OpStatus | undefined): GenDownloadsResponse => {
     return {
         success,
         message,
@@ -66,7 +66,7 @@ const createOpForScene = async (scene: DBAPI.Scene, idUser: number): Promise<Gen
     // create our workflow for generating downloads
     const result: WorkflowCreateResult = await wfEngine.generateDownloads(scene.idScene, workflowParams);
     LOG.info(`API.generateDownloads post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
-    const isSceneValid: boolean = result.data.isSceneValid ?? false;
+    const isValid: boolean = result.data.isValid ?? false;
     const isJobRunning: boolean = (result.data.activeJobs.length>0) ?? false;
     const idWorkflow: number | undefined = (result.data.workflow?.idWorkflow) ?? undefined;
     const idWorkflowReport: number | undefined = (result.data.workflowReport?.idWorkflowReport) ?? undefined;
@@ -74,17 +74,17 @@ const createOpForScene = async (scene: DBAPI.Scene, idUser: number): Promise<Gen
     // make sure we saw success, otherwise bail
     if(result.success===false) {
         LOG.error(`API.generateDownloads failed to generate downloads: ${result.message}`,LOG.LS.eHTTP);
-        return generateResponse(false,result.message,{ isSceneValid, isJobRunning, idWorkflow, idWorkflowReport });
+        return generateResponse(false,result.message,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
     }
 
-    return generateResponse(true,`Generating Downloads for: ${scene.Name}`,{ isSceneValid, isJobRunning, idWorkflow, idWorkflowReport });
+    return generateResponse(true,`Generating Downloads for: ${scene.Name}`,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
 };
 const getOpStatusForScene = async (scene: DBAPI.Scene): Promise<GenDownloadsResponse> => {
 
     // see if scene is valid
     // TODO: shouldn't be an error if first run by page but only when responding to user action
-    const isSceneValid: boolean = (scene.PosedAndQCd)?true:false;
-    if(isSceneValid === false) {
+    const isValid: boolean = (scene.PosedAndQCd)?true:false;
+    if(isValid === false) {
         LOG.error(`API.generateDownloads failed. scene is not QC'd. (scene:${scene.idScene})`,LOG.LS.eHTTP);
         return generateResponse(false,'scene has not be QC\'d.');
     }
@@ -93,7 +93,7 @@ const getOpStatusForScene = async (scene: DBAPI.Scene): Promise<GenDownloadsResp
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,scene.idScene);
     if(!activeJobs) {
         LOG.error(`API.generateDownloads failed. cannot determine if job is running. (idScene: ${scene.idScene})`,LOG.LS.eHTTP);
-        return generateResponse(false,'failed to get active jobs from DB', { isSceneValid, isJobRunning: false });
+        return generateResponse(false,'failed to get active jobs from DB', { isValid, isJobRunning: false });
     }
 
     // if we're running, we don't duplicate our efforts
@@ -111,12 +111,12 @@ const getOpStatusForScene = async (scene: DBAPI.Scene): Promise<GenDownloadsResp
 
         // return our response and log it
         LOG.info(`API.generateDownloads job already running (idScene: ${scene.idScene} | idJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eHTTP);
-        return generateResponse(false,'job already running',{ isSceneValid, isJobRunning: (activeJobs.length>0), idWorkflow, idWorkflowReport });
+        return generateResponse(false,'job already running',{ isValid, isJobRunning: (activeJobs.length>0), idWorkflow, idWorkflowReport });
     }
 
     // send our info back to the client
     LOG.info(`API.generateDownloads job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`,LOG.LS.eHTTP);
-    return generateResponse(true,'scene is valid and no job is running',{ isSceneValid, isJobRunning: (activeJobs.length>0) });
+    return generateResponse(true,'scene is valid and no job is running',{ isValid, isJobRunning: (activeJobs.length>0) });
 };
 
 
@@ -141,7 +141,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
     // get our method to see what we should do, extracting the status and IDs
     let statusOnly: boolean = true;
-    const idSystemObjects: number[] = [];
+    let idSystemObjects: number[] = [];
     switch(req.method.toLocaleLowerCase()) {
         case 'get': {
             // GET method only returns status info. used for quick queries/checks on specific scenes
@@ -153,11 +153,18 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         case 'post': {
             // POST used for batch operations or creating the job
             const body = req.body;
-            console.log(typeof(body));
-            console.log(body);
-
             statusOnly = body.statusOnly;
-            // sceneIDs = body.
+            if(body.idSystemObject && Array.isArray(body.idSystemObject)) {
+                // if we're an array store only numbers and prune out any nulls
+                idSystemObjects = body.idSystemObject.map(item => {
+                    const num = Number(item);
+                    return isNaN(num) ? null : num;
+                }).filter((item): item is number => item !== null);
+
+                // post message if a count difference meaning we got bad data
+                if(idSystemObjects.length != body.idSystemObject.length)
+                    LOG.error(`API.generateDownloads received ${body.idSystemObject.length-idSystemObjects.length} bad IDs. (${body.idSystemObject.join(', ')})`,LOG.LS.eHTTP);
+            }
         } break;
         default: {
             LOG.error('API.generateDownloads failed. unsupported HTTP method',LOG.LS.eHTTP);
@@ -209,9 +216,10 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
                 res.status(200).send(JSON.stringify(result));
             } else {
                 // special response on success
-                res.status(200).send(JSON.stringify(generateResponse(true,`Generating Downloads for: ${scene.Name}`, result.data))); //{ isSceneValid, isJobRunning, idWorkflow, idWorkflowReport }
+                res.status(200).send(JSON.stringify(generateResponse(true,`Generating Downloads for: ${scene.Name}`, result.data))); //{ isValid, isJobRunning, idWorkflow, idWorkflowReport }
             }
             return;
         }
     }
 }
+
