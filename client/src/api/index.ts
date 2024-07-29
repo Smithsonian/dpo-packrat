@@ -50,7 +50,7 @@ export default class API {
         let options;
         if(statusOnly) {
             options = { method: 'GET' };
-            uri += `id=${idSystemObject[0]}`; // add our index. only get status for single element
+            uri += `?id=${idSystemObject[0]}`; // add our index. only get status for single element
         } else {
             options = { method: 'POST', body };
         }
