@@ -172,6 +172,7 @@ type SceneSummary = DBReference & {
     datePublished: Date,
     isReviewed: boolean
 };
+
 const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
 
     // get published state and properties (SystemObjectVersion)
@@ -257,7 +258,6 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
 
     return result;
 };
-
 const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
 
     const { usage, quality } = getDownloadProperties(msx.Usage,msx.Quality);

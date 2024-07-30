@@ -94,7 +94,6 @@ type DetailsFields = {
     subtitle?: string;
 };
 
-
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
@@ -180,15 +179,20 @@ function DetailsView(): React.ReactElement {
 
         // make a call to our generate downloads endpoint with the current scene id
         const response: RequestResponse = await API.generateDownloads([idSystemObject], true);
-        if(response.success === false) {
+        if(response.success === false || !response.data || response.data.length===0) {
             console.log(`[Packrat - ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
             return false;
         }
+        console.log(response);
+        // console.log(`[PACKRAT:DEBUG] array: ${response.data && Array.isArray(response.data)} | isRunning: ${response.data[0].state.isJobRunning}, isValid: ${response.data[0].state.isValid}`,response);
 
         // see if we can actually run based on if a job isn't already running
         // and our scene meets the core requirements
-        const canRun: boolean = (response.data.isJobRunning === false) && (response.data.isValid === true);
+        // should only receive one response here since this is from the details page
+        const canRun: boolean = (response.data && Array.isArray(response.data))
+            && (response.data[0].state.isJobRunning === false)
+            && (response.data[0].state.isValid === true);
 
         // we have success so enable it
         // console.log(`[PACKRAT:DEBUG] can generate downloads: ${canRun}`);
@@ -604,12 +608,15 @@ function DetailsView(): React.ReactElement {
         const response: RequestResponse = await API.generateDownloads([idSystemObject]);
         if(response.success === false) {
 
+            // get our message from our first response
+            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+
             // if the job is running then handle differently
-            if(response.message && response.message.includes('already running')) {
-                console.log(`[Packrat - WARN] cannot generate downloads. (${response.message})`);
+            if(responseMessage.includes('already running')) {
+                console.log(`[Packrat - WARN] cannot generate downloads. (${responseMessage})`);
                 toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
             } else {
-                console.log(`[Packrat - ERROR] cannot generate downloads. (${response.message})`);
+                console.log(`[Packrat - ERROR] cannot generate downloads. (${responseMessage})`);
                 toast.error('Cannot generate downloads. Check the report.');
             }
 
