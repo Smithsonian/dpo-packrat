@@ -137,4 +137,25 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return null;
         }
     }
+
+    static async fetchFromWorkflowSet(idWorkflowSet: number): Promise<WorkflowStep[] | null> {
+        if (!idWorkflowSet)
+            return null;
+        try {
+            const steps: WorkflowStep[] | null = await DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowStep[]>`
+                SELECT wfStep.* FROM WorkflowSet AS wfSet
+                JOIN Workflow AS wf ON wf.idWorkflowSet = wfSet.idWorkflowSet
+                JOIN WorkflowStep AS wfStep ON wfStep.idWorkflow = wf.idWorkflow
+                WHERE wfSet.idWorkflowSet = ${idWorkflowSet};`
+                , WorkflowStep);
+
+            if(steps)
+                return steps;
+            return null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.WorkflowStep.fetchFromWorkflowSet', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

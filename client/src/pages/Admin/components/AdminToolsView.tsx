@@ -590,7 +590,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         const sceneIDs: number[] = selectedList.map((scene)=>scene.id);
 
         // build request to server
-        const response: RequestResponse = await API.generateDownloads(sceneIDs);
+        const response: RequestResponse = await API.generateDownloads(sceneIDs,false,true);
         if(response.success === false) {
 
             // if the job is running then handle differently

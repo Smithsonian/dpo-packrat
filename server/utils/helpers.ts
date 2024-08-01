@@ -38,6 +38,12 @@ export type StatResults = {
     error?: string;
 };
 
+export type IOStatus = {
+    status: number;
+    message?: string;
+    data?: any;
+};
+
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
         if (!Array.isArray(input1) || ! Array.isArray(input2) || input1.length !== input2.length)

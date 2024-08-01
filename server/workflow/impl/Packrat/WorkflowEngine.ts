@@ -130,28 +130,29 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
     }
 
-    async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
+    // NOTE: bypassed with manual generateDownloads routine below.
+    // async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
 
-        LOG.info(`WorkflowEngine.generateSceneDownloads working...(idScene:${idScene})`,LOG.LS.eWF);
-        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
-        if (!scene) {
-            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
-            return null;
-        }
+    //     LOG.info(`WorkflowEngine.generateSceneDownloads working...(idScene:${idScene})`,LOG.LS.eWF);
+    //     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
+    //     if (!scene) {
+    //         LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
+    //         return null;
+    //     }
 
-        const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
-        if (!SOScene) {
-            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
-            return null;
-        }
+    //     const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+    //     if (!SOScene) {
+    //         LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+    //         return null;
+    //     }
 
-        const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
-        if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
-            LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
-            return null;
-        }
-        return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
-    }
+    //     const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
+    //     if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
+    //         LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+    //         return null;
+    //     }
+    //     return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
+    // }
 
     async generateDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
 

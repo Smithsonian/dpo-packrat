@@ -40,10 +40,10 @@ export default class API {
     }
 
     // generation operations
-    static async generateDownloads(idSystemObject: number[], statusOnly: boolean = false): Promise<RequestResponse> {
+    static async generateDownloads(idSystemObject: number[], statusOnly: boolean = false, rePublish: boolean = false): Promise<RequestResponse> {
         // initiates the generate downloads routine and either runs the recipe with the given id or returns its status.
         // idSystemObject = the SystemObject id for the Packrat Scene making this request
-        const body = JSON.stringify({ statusOnly, idSystemObject });
+        const body = JSON.stringify({ statusOnly, rePublish, idSystemObject });
         let uri: string = API_ROUTES.GEN_DOWNLOADS;
         console.log('[PACKRAT:DEBUG] body: ',body);
 
