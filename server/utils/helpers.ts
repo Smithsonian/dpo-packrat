@@ -39,7 +39,7 @@ export type StatResults = {
 };
 
 export type IOStatus = {
-    status: number;
+    state: number;
     message?: string;
     data?: any;
 };

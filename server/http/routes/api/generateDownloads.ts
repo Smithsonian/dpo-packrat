@@ -141,8 +141,6 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
 
 const publishScene = async (response: GenDownloadsResponse, intendedState: COMMON.ePublishedState): Promise<void> => {
     // CAUTION: this will likely continue running after the calling thread returns
-    // wait for a couple seconds so the job/workflow can be created
-    // await new Promise(resolve => setTimeout(resolve, 2000));
 
     console.log(`<<< publishing scene: ${response.id} (${COMMON.ePublishedState[intendedState]})`);
     if(!response || !response.id || !response.state || !response.state.idWorkflow) {
@@ -176,7 +174,7 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
     }
 
     // get our WorkflowSet status, which will bail on first error/cancel
-    let workflowSetState: H.IOStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
+    let workflowSetStatus: H.IOStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
 
     // cycle through workflow until it's finished
     // TODO: master timeout so we're not trying forever
@@ -186,15 +184,15 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
     while(isDone===false) {
 
         // get our WorkflowSet status, which will bail on first error/cancel
-        workflowSetState = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
-        LOG.info(`API.GenerateDownloads.PublishScene waiting for ${response.id} to finish (${COMMON.eWorkflowJobRunStatus[workflowSetState.status]})`,LOG.LS.eDEBUG);
+        workflowSetStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
+        LOG.info(`API.GenerateDownloads.PublishScene waiting for WorkflowSet to finish (${response.id}: ${COMMON.eWorkflowJobRunStatus[workflowSetStatus.state]})`,LOG.LS.eDEBUG);
 
         // see if we're done
         // there is a scenario where inspection fails on one of the objects, setting this state to Error
         // and breaking out of the loop. The remaining inspections will continue, but the results won't publish
-        isDone = workflowSetState.status===COMMON.eWorkflowJobRunStatus.eDone
-            || workflowSetState.status===COMMON.eWorkflowJobRunStatus.eCancelled
-            || workflowSetState.status===COMMON.eWorkflowJobRunStatus.eError;
+        isDone = workflowSetStatus.state===COMMON.eWorkflowJobRunStatus.eDone
+            || workflowSetStatus.state===COMMON.eWorkflowJobRunStatus.eCancelled
+            || workflowSetStatus.state===COMMON.eWorkflowJobRunStatus.eError;
 
         // inspections are triggered sequentially and sometimes there is a delay when one stops and the next fully starts
         // this can cause the 'known' list of steps to be all done and the loop can exit prematurely. we introduce an
@@ -204,14 +202,15 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
 
             // HACK: delaying so that when the first generate downloads finishes
             // there is enough time for the system to add 'inspection' steps
-            const preCount: number = workflowSetState.data.length;
+            const preCount: number = workflowSetStatus.data.length;
             await new Promise(resolve => setTimeout(resolve, iterationDelay*2));
 
-            if(workflowSetState.status===COMMON.eWorkflowJobRunStatus.eDone) {
+            if(workflowSetStatus.state===COMMON.eWorkflowJobRunStatus.eDone) {
                 // if we found a different number of responses then we keep going
-                workflowSetState = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
-                if(workflowSetState.data.length != preCount) {
-                    LOG.info(`API.GenerateDownloads.PublishScene found new steps (${preCount}->${workflowSetState.data.length})`,LOG.LS.eDEBUG);
+                // fetchStatus returns the list of WorkflowSteps used to determine the state
+                workflowSetStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
+                if(workflowSetStatus.data.length != preCount) {
+                    LOG.info(`API.GenerateDownloads.PublishScene found new steps (${preCount}->${workflowSetStatus.data.length})`,LOG.LS.eDEBUG);
                     isDone = false;
                 } else
                     LOG.error('API.GenerateDownloads.PublishScene could not fetch status when done',LOG.LS.eHTTP);
@@ -221,11 +220,11 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
             await new Promise(resolve => setTimeout(resolve, iterationDelay));
     }
 
-    LOG.info(`API.GenerateDownloads.PublishScene finished waiting for ${response.id}. (${COMMON.eWorkflowJobRunStatus[workflowSetState.status]}: ${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
+    LOG.info(`API.GenerateDownloads.PublishScene finished waiting for ${response.id}. (${COMMON.eWorkflowJobRunStatus[workflowSetStatus.state]}: ${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
 
     // if we are finished, publish the scene, otherwise, handle the error/state
-    if(workflowSetState.status===COMMON.eWorkflowJobRunStatus.eDone) {
-        LOG.info(`API.GenerateDownloads.PublishScene starting...(${H.Helpers.JSONStringify(workflowSetState)})`,LOG.LS.eDEBUG);
+    if(workflowSetStatus.state===COMMON.eWorkflowJobRunStatus.eDone) {
+        LOG.info(`API.GenerateDownloads.PublishScene starting...(${H.Helpers.JSONStringify(workflowSetStatus)})`,LOG.LS.eDEBUG);
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // get our collection and publish the id with the same state
@@ -234,10 +233,12 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
         if (success===false) {
             LOG.error(`API.Project.publishScene failed to publish (${response.id} | ${COMMON.ePublishedState[intendedState]})`,LOG.LS.eCOLL);
             return;
+        } else {
+            LOG.info(`API.GenerateDownloads.PublishScene scene (${response.id}) was published successfully.`,LOG.LS.eDEBUG);
         }
     }
 
-    console.log(`<<< finished publishing (${workflowSetState.status})`);
+    console.log(`<<< finished publishing (${workflowSetStatus.state})`);
     return;
 };
 

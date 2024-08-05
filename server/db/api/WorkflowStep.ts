@@ -167,7 +167,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         const workflowStep: WorkflowStep | null = await this.fetch(idWorkflowStep);
         if(!workflowStep) {
             LOG.error(`DBAPI.WorkflowStep.fetchStatus failed to find WorkflowStep (${idWorkflowStep})`,LOG.LS.eDB);
-            return { status: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowStep (${idWorkflowStep})` };
+            return { state: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowStep (${idWorkflowStep})` };
         }
 
         // if there is a JobRun use that for the status going back
@@ -175,11 +175,11 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         if(workflowStep.idJobRun) {
             const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(workflowStep.idJobRun);
             if(jobRun) {
-                return { status: jobRun.Status, message: `WorkflowStep (JobRun) status: ${COMMON.eWorkflowJobRunStatus[jobRun.Status]}.` };
+                return { state: jobRun.Status, message: `WorkflowStep (JobRun) status: ${COMMON.eWorkflowJobRunStatus[jobRun.Status]}.` };
             }
         }
 
         // otherwise use the workflow step's stored state
-        return { status: workflowStep.State, message: `WorkflowStep status: ${workflowStep.State}` };
+        return { state: workflowStep.State, message: `WorkflowStep status: ${workflowStep.State}` };
     }
 }

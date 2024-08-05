@@ -73,22 +73,29 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
         // the set assumes that status.
         const result: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(idWorkflowSet);
         if(!result || result.length===0)
-            return { status: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowSteps (${idWorkflowSet})` };
+            return { state: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowSteps (${idWorkflowSet})` };
 
         // our common response properties
-        const data: DBAPI.WorkflowStep[] = [...result];
+        const steps: DBAPI.WorkflowStep[] = [...result];
 
         // cycle through all steps building up an understanding of the various states
         // if any are cancelled or have an error then that represents all of them and we return immediately
         let hasWaiting: boolean = false;
         let hasCreated: boolean = false;
         let hasRunning: boolean = false;
-        for(let i=0; i<data.length; i++) {
+        for(let i=0; i<steps.length; i++) {
             // get our resolved status for the step so it includes the status of any associated JobRun
-            const stepStatus: H.IOStatus = await DBAPI.WorkflowStep.fetchStatus(data[i].idWorkflowStep);
-            switch(stepStatus.status) {
+            // rationale: we are explicitly querying the DB to ensure we have the correct states/values
+            //            as JobRun state propogation to WorkflowStep is not immediate and not always
+            //            accurate. (e.g. often a JobRun has an Error but Step signals 'Done')
+            // TODO: revisit core Workflow logic to identify/fix where states lose sync
+            const storedStepState: COMMON.eWorkflowJobRunStatus = steps[i].getState();
+            const stepStatus: H.IOStatus = await DBAPI.WorkflowStep.fetchStatus(steps[i].idWorkflowStep);
+            LOG.info(`WorkflowSet.fetchStatus getting WorkflowStep state (${steps[i].idWorkflowStep}: ${COMMON.eWorkflowJobRunStatus[stepStatus.state]} | stored: ${COMMON.eWorkflowJobRunStatus[storedStepState]})`,LOG.LS.eDEBUG);
+
+            switch(stepStatus.state) {
                 case COMMON.eWorkflowJobRunStatus.eError:
-                case COMMON.eWorkflowJobRunStatus.eCancelled:   return { status: stepStatus.status, message: 'set failed', data: result };
+                case COMMON.eWorkflowJobRunStatus.eCancelled:   return { state: stepStatus.state, message: 'set failed', data: result };
 
                 case COMMON.eWorkflowJobRunStatus.eUnitialized:
                 case COMMON.eWorkflowJobRunStatus.eCreated:     hasCreated = true; break;
@@ -100,13 +107,13 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
         }
 
         if(hasRunning)
-            return { status: COMMON.eWorkflowJobRunStatus.eRunning, message: 'set has running', data: result };
+            return { state: COMMON.eWorkflowJobRunStatus.eRunning, message: 'set has running', data: result };
         if(hasCreated)
-            return { status: COMMON.eWorkflowJobRunStatus.eCreated, message: 'set has created', data: result };
+            return { state: COMMON.eWorkflowJobRunStatus.eCreated, message: 'set has created', data: result };
         if(hasWaiting)
-            return { status: COMMON.eWorkflowJobRunStatus.eWaiting, message: 'set is waiting', data: result };
+            return { state: COMMON.eWorkflowJobRunStatus.eWaiting, message: 'set is waiting', data: result };
 
         // if all are done then we set that as the status
-        return { status: COMMON.eWorkflowJobRunStatus.eDone, message: 'set completed', data: result };
+        return { state: COMMON.eWorkflowJobRunStatus.eDone, message: 'set completed', data: result };
     }
 }
