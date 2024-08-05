@@ -6,11 +6,10 @@
 
 /* eslint-disable no-unused-vars */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// import * as COMMON from '@dpo-packrat/common';
 import API, { RequestResponse } from '../../../api';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Checkbox, Paper, Collapse, IconButton } from '@material-ui/core';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Checkbox, Paper, Collapse, Input, IconButton } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { useLocation } from 'react-router';
 import { useUserStore } from '../../../store';
@@ -185,14 +184,16 @@ type ColumnHeader = {
     key: string,
     label: string,
     align?: 'left' | 'right' | 'inherit' | 'center' | 'justify' | undefined,
-    tooltip?: string
+    tooltip?: string,
+    link?: boolean
 };
 type SelectTableProps<T> = {
     onUpdateSelection: (selection: T[]) => void;
     data: Array<T>;
     columns: ColumnHeader[];
+    resetSelection?: boolean;
 };
-const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, columns }: SelectTableProps<T>): React.ReactElement => {
+const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, columns, resetSelection }: SelectTableProps<T>): React.ReactElement => {
 
     type Order = 'asc' | 'desc';
 
@@ -202,7 +203,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
     const [order, setOrder] = React.useState<Order>('asc');
     const [orderBy, setOrderBy] = React.useState<string>('id');
     const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(5);
+    const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
     // utility
     const convertDateToString = (date: Date): string => {
@@ -215,7 +216,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
     const resolveProperty = (obj: T, path: string): string | undefined => {
 
         if(!obj || path.length<=0) {
-            console.log(`[PACKRAT:ERROR] invalid inputs for resolveProperty (obj: ${obj ? 'true':'false'} | path: ${path})`);
+            console.log(`[Packrat:ERROR] invalid inputs for resolveProperty (obj: ${obj ? 'true':'false'} | path: ${path})`);
             return 'NA';
         }
 
@@ -235,7 +236,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                 break;
             }
             default: {
-                console.log('error.keys: ', Object.keys(obj));
+                console.log('[Packrat:ERROR] error.keys: ', Object.keys(obj));
                 result = 'NA';
             }
         }
@@ -259,7 +260,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
             }
         }
 
-        console.log('[PACKRAT:ERROR] unsupported type for table data',result);
+        console.log('[Packrat:ERROR] unsupported type for table data',result);
         return 'NA';
     };
     const getNestedValue = (obj: any, path: string): any => {
@@ -268,12 +269,10 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 
     // selection
     const updateSelected = (selected: T[]) => {
-        console.log('updateSelected: ', selected);
         setSelected(selected);
         onUpdateSelection(selected);
     };
     const isSelected = (item: T) => selected.findIndex((selectedItem) => selectedItem.id === item.id) !== -1;
-
     const handleRowSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.checked) {
             // now we update our selection and propogate changes to calling component
@@ -366,6 +365,20 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         setRowsPerPage(parseInt(event.target.value, 10));
         setPage(0);
     };
+    const handleElementClick = (event) => {
+        event.stopPropagation();
+    };
+
+    // table operations
+    const onResetSelection = () => {
+        console.log('[Packrat:DEBUG] resetting table selection');
+        setSelected([]);
+    };
+    useEffect(() => {
+        if (resetSelection===true)
+            onResetSelection();
+
+    }, [resetSelection]);
 
     // JSX
     return (
@@ -443,7 +456,15 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                                 // we do 'id' above so we can flag the entire row for accessibility
                                                 (column.key!=='id') && (
                                                     <TableCell key={column.key} align={column.align ?? 'center'}>
-                                                        { resolveProperty(row, column.key) }
+                                                        { (column.link && column.link===true) ? (
+                                                            <>
+                                                                <a href={resolveProperty(row, `${column.key}_link`)} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
+                                                                    {resolveProperty(row,column.key)}
+                                                                </a>
+                                                            </>
+                                                        ) : (
+                                                            resolveProperty(row, column.key)
+                                                        )}
                                                     </TableCell>
                                                 )
                                             ))}
@@ -474,6 +495,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 };
 
 // TODO: add enums and types to library and/or COMMON as needed
+// TODO: refresh data table button
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
 //       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type AssetSummary = DBReference & {
@@ -506,6 +528,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const [showBatchOps, setShowBacthOps] = useState<boolean>(false);
     const [projectList, setProjectList] = useState<Project[]>([]);
     const [projectScenes, setProjectScenes] = useState<SceneSummary[]>([]);
+    const [resetSelection, setResetSelection] = useState<boolean>(false);
+    const [republishScenes, setRepublishScenes] = useState(false);
+    const [sceneNameFilter, setSceneNameFilter] = useState('');
 
     type Project = {
         idProject: number,
@@ -528,7 +553,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             }
 
             setProjectList(response.data);
-            console.log('getProjectList: ',response.data);
+            console.log('[Packrat:DEBUG] getProjectList: ',response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project list: ${error}`);
         }
@@ -544,14 +569,19 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             }
 
             // cycle through data converting as needed
+            const { protocol, host } = window.location;
             response.data.forEach(obj => {
                 // stored ISO strings to Date objects
                 obj.dateCreated = new Date(obj.dateCreated as string);
                 // obj.dateGenDownloads = new Date(obj.dateGenDownloads as string);
                 obj.datePublished = new Date(obj.datePublished as string);
+
+                // inject hyperlinks for the scene details page
+                // link ties to 'name' field so need to set property to prefix of 'name_'
+                obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
             });
 
-            console.log('getProjectScenes: ',response.data);
+            console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
@@ -560,7 +590,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const getColumnHeader = (): ColumnHeader[] => {
         return [
             { key: 'id', label: 'ID', align: 'center' },
-            { key: 'name', label: 'Scene Name', align: 'center' },
+            { key: 'name', label: 'Scene Name', align: 'center', link: true },
             { key: 'subject.name', label: 'Subject Name', align: 'center' },
             { key: 'downloads.status', label: 'Downloads', align: 'center' },
             { key: 'publishedState', label: 'Published', align: 'center' },
@@ -575,8 +605,10 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     };
     const handleProjectChange = (_event, newValue: Project | null) => {
         // store our value so the table gets updated, null if empty
-        console.log(newValue);
         getProjectScenes(newValue ?? undefined);
+    };
+    const handleRepublishChange = (event) => {
+        setRepublishScenes(event.target.value === 'true');
     };
     const onProcessOperation = async () => {
 
@@ -584,38 +616,46 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             toast.error('Cannot submit job. Nothing selected.');
             return;
         }
-        console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+        console.log(`[Packrat] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
 
         // get our list of scene idSystemObject
         const sceneIDs: number[] = selectedList.map((scene)=>scene.id);
 
         // build request to server
-        const response: RequestResponse = await API.generateDownloads(sceneIDs,false,true);
+        const response: RequestResponse = await API.generateDownloads(sceneIDs,false,republishScenes);
         if(response.success === false) {
 
             // if the job is running then handle differently
             if(response.message && response.message.includes('already running')) {
-                console.log(`[Packrat - WARN] cannot do ${BatchOperations[operation]}. (${response.message})`);
+                console.log(`[Packrat:WARN] cannot do ${BatchOperations[operation]}. (${response.message})`);
                 toast.warn(`Not running ${BatchOperations[operation]}. Job already running. Please wait for it to finish.`);
             } else {
-                console.log(`[Packrat - ERROR] cannot run ${BatchOperations[operation]}. (${response.message})`);
+                console.log(`[Packrat:ERROR] cannot run ${BatchOperations[operation]}. (${response.message})`);
                 toast.error(`Cannot ${BatchOperations[operation]}. Check the report.`);
             }
             return;
         }
 
         // clear selection on succcess
-        onUpdatedSelection([]);
+        onResetSelection();
 
+        // notify the user/log
         toast.success(`Generating Downloads for ${sceneIDs.length} scenes. Check the workflow tab for progress.`);
-        console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+        console.log(`[Packrat] Submitted ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
         return;
     };
     const onUpdatedSelection = (selection) => {
-        console.log('updated selection: ', selection);
         setSelectedList(selection);
         setIsListValid(selection.length>0);
     };
+    const onResetSelection = () => {
+        // quickly signal we want to reset the list and then set the value back to false
+        setResetSelection(true);
+        setTimeout(() => setResetSelection(false), 1); // set flag back so it doesn't keep resetting it
+    };
+    const filteredProjectScenes = useMemo(() => {
+        return projectScenes.filter(row => row.name.toLowerCase().includes(sceneNameFilter.toLowerCase()));
+    }, [projectScenes, sceneNameFilter]);
 
     // mounting/alteration routines
     useEffect(() => {
@@ -637,7 +677,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             </IconButton>
             <Collapse in={showBatchOps} className={classes.container}>
                 <Box className={classes.collapseContainer} style={{ paddingTop: '10px', width: '100%' }}>
-                    <TableContainer component={Paper} elevation={0}>
+                    <TableContainer component={Paper} elevation={0} style={{ overflow: 'hidden' }}>
                         <Table className={tableClasses.table}>
                             <TableBody>
                                 <TableRow className={tableClasses.tableRow}>
@@ -663,7 +703,28 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Typography className={tableClasses.labelText}>Project</Typography>
+                                        <Typography className={tableClasses.labelText}>Re-Publish Scenes</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Select
+                                            id='select_republish_scenes'
+                                            value={republishScenes}
+                                            onChange={handleRepublishChange}
+                                            disableUnderline
+                                            className={clsx(tableClasses.select, classes.fieldSizing)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            <MenuItem value='false'>False</MenuItem>
+                                            <MenuItem value='true'>True</MenuItem>
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+
+                                <TableRow style={{ height: '1rem' }} />
+
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Filter: Project</Typography>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
                                         <Autocomplete
@@ -684,14 +745,32 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                                         />
                                     </TableCell>
                                 </TableRow>
+
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Filter: Scene Name</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Input
+                                            type='text'
+                                            value={sceneNameFilter}
+                                            onChange={(e)=>setSceneNameFilter(e.target.value)}
+                                            placeholder='Search by name'
+                                            disableUnderline
+                                            className={clsx(tableClasses.select, classes.fieldSizing)}
+                                            style={{ width: '300px', paddingLeft: '5px' }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
                             </TableBody>
                         </Table>
                     </TableContainer>
 
                     <SelectScenesTable<SceneSummary>
                         onUpdateSelection={onUpdatedSelection}
-                        data={projectScenes}
+                        data={filteredProjectScenes}
                         columns={getColumnHeader()}
+                        resetSelection={resetSelection}
                     />
 
                     { isListValid ? ( // if we have valid indices show the button to submit
@@ -700,7 +779,6 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                                 className={classes.btn}
                                 onClick={onProcessOperation}
                                 disableElevation
-
                             >
                                 Go
                             </Button>
@@ -730,7 +808,7 @@ function AdminToolsView(): React.ReactElement {
 
             // if our current user ID is not in the list then return false
             if(!user) {
-                console.log('[PACKRAT:ERROR] Admin tools cannot get authenticated user');
+                console.log('[Packrat:ERROR] Admin tools cannot get authenticated user');
                 setIsAuthorized(false);
             }
             setIsAuthorized(authorizedUsers.includes(user?.idUser ?? -1));
