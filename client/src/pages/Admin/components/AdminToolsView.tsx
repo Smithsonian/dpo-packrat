@@ -192,7 +192,7 @@ type SelectTableProps<T> = {
     data: Array<T>;
     columns: ColumnHeader[];
 };
-const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, columns }: SelectTableProps<T>): React.ReactElement => { //(props: SelectTableProps<T>): React.ReactElement {
+const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, columns }: SelectTableProps<T>): React.ReactElement => {
 
     type Order = 'asc' | 'desc';
 
@@ -363,8 +363,8 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         setPage(newPage);
     };
     const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setPage(0);
         setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
     };
 
     // JSX
@@ -604,11 +604,10 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             return;
         }
 
-        // TODO: get report and store details
-        //      change button to 'cancel'
-        //      fire iteration polling status of job
+        // clear selection on succcess
+        onUpdatedSelection([]);
 
-        toast.success(`Generate Downloads jobs submitted for ${sceneIDs.length} scenes. Check the workflow tab for progress.`);
+        toast.success(`Generating Downloads for ${sceneIDs.length} scenes. Check the workflow tab for progress.`);
         console.log(`[PACKRAT] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
         return;
     };

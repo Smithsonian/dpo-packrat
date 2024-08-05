@@ -13,7 +13,7 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
-type OpState = {
+type OpState = {                // individual state for each processed scene
     idWorkflow?: number,        // do we have a workflow/report so we can (later) jump to its status page
     idWorkflowReport?: number,  // do we have a report for this workflow to help with future polling
     isValid: boolean,           // if the referenced scene|model|etc. is has basic requirements met (e.g. scenes need to be QC'd)
@@ -24,7 +24,7 @@ type OpResponse = {             // matches the expected returns on the client si
     message?: string,
     data?: GenDownloadsResponse[]
 };
-type GenDownloadsResponse = {
+type GenDownloadsResponse = {   // general response for each processed scene
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
     id?: number,                // optional number for the object this response refers to
@@ -139,85 +139,105 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
     return generateResponse(true,'scene is valid and no job is running', idSystemObject,{ isValid, isJobRunning: (activeJobs.length>0) });
 };
 
-const publishScene = async (response: GenDownloadsResponse): Promise<void> => {
+const publishScene = async (response: GenDownloadsResponse, intendedState: COMMON.ePublishedState): Promise<void> => {
     // CAUTION: this will likely continue running after the calling thread returns
+    // wait for a couple seconds so the job/workflow can be created
+    // await new Promise(resolve => setTimeout(resolve, 2000));
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    console.log(`<<< publishing scene: ${response.id}`);
+    console.log(`<<< publishing scene: ${response.id} (${COMMON.ePublishedState[intendedState]})`);
     if(!response || !response.id || !response.state || !response.state.idWorkflow) {
         LOG.error(`API.Project.publishScene cannot publish scene. invalid inputs (${response.id} | ${response.state} | ${response.state?.idWorkflow}).`,LOG.LS.eDB);
         return;
     }
 
-    // get our workflow
-    const workflow: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(response.state.idWorkflow);
-    if(!workflow || !workflow.idWorkflowSet) {
-        LOG.error('API.Project.publishScene cannot publish scene. no valid workflow(set) available.',LOG.LS.eDB);
+    const startTime: number = Date.now();
+    let attempts = 0;
+    const maxAttempts = 5;
+    let workflow: DBAPI.Workflow | null = null;
+
+    // keep trying to get workflow because it may take a moment to initialize and be addressable
+    while (attempts < maxAttempts) {
+        workflow = await DBAPI.Workflow.fetch(response.state.idWorkflow);
+        if (workflow && workflow.idWorkflowSet) {
+            break; // Break the loop if a valid workflow is fetched
+        }
+
+        attempts++;
+        if (attempts < 3) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retrying
+        }
+        console.log(`attempt: ${attempts}`);
+    }
+
+    // if we don't have anything then we failed
+    if (!workflow || !workflow.idWorkflowSet) {
+        LOG.error(`API.Project.publishScene cannot publish scene. no valid workflow(set) available after ${maxAttempts} attempts.`, LOG.LS.eDB);
         return;
     }
 
     // get our WorkflowSet status, which will bail on first error/cancel
-    let wfSetState: H.IOStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
-    // console.log(`<<< state: ${COMMON.eWorkflowJobRunStatus[wfSetState.status]}`);
+    let workflowSetState: H.IOStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
 
     // cycle through workflow until it's finished
     // TODO: master timeout so we're not trying forever
-    // BUG: there can be a gap in time between one inspect ending and the next starting causing all 'known' workflows to be Done ending premature
+    // HACK: there can be a gap in time between one inspect ending and the next starting causing all 'known' workflows to be Done ending premature
     const iterationDelay: number = 10000; // TODO: 30s
     let isDone: boolean = false;
     while(isDone===false) {
 
         // get our WorkflowSet status, which will bail on first error/cancel
-        wfSetState = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
-        LOG.info(`API.GenerateDownloads.PublishScene waiting for ${response.id} to finish (${COMMON.eWorkflowJobRunStatus[wfSetState.status]})`,LOG.LS.eDEBUG);
+        workflowSetState = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
+        LOG.info(`API.GenerateDownloads.PublishScene waiting for ${response.id} to finish (${COMMON.eWorkflowJobRunStatus[workflowSetState.status]})`,LOG.LS.eDEBUG);
 
         // see if we're done
-        isDone = wfSetState.status===COMMON.eWorkflowJobRunStatus.eDone
-            || wfSetState.status===COMMON.eWorkflowJobRunStatus.eCancelled
-            || wfSetState.status===COMMON.eWorkflowJobRunStatus.eError;
+        // there is a scenario where inspection fails on one of the objects, setting this state to Error
+        // and breaking out of the loop. The remaining inspections will continue, but the results won't publish
+        isDone = workflowSetState.status===COMMON.eWorkflowJobRunStatus.eDone
+            || workflowSetState.status===COMMON.eWorkflowJobRunStatus.eCancelled
+            || workflowSetState.status===COMMON.eWorkflowJobRunStatus.eError;
 
         // inspections are triggered sequentially and sometimes there is a delay when one stops and the next fully starts
         // this can cause the 'known' list of steps to be all done and the loop can exit prematurely. we introduce an
         // arbitrary delay if isDone to try and catch this.
         if(isDone===true) {
-            const preCount: number = wfSetState.data.length;
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            wfSetState = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
-            if(wfSetState.data.length != preCount)
-                isDone = false;
-            else
-                break;
-        }
+            LOG.info('API.GenerateDownloads.PublishScene is done',LOG.LS.eDEBUG);
 
-        // wait for X ms before trying again
-        await new Promise(resolve => setTimeout(resolve, iterationDelay));
+            // HACK: delaying so that when the first generate downloads finishes
+            // there is enough time for the system to add 'inspection' steps
+            const preCount: number = workflowSetState.data.length;
+            await new Promise(resolve => setTimeout(resolve, iterationDelay*2));
+
+            if(workflowSetState.status===COMMON.eWorkflowJobRunStatus.eDone) {
+                // if we found a different number of responses then we keep going
+                workflowSetState = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
+                if(workflowSetState.data.length != preCount) {
+                    LOG.info(`API.GenerateDownloads.PublishScene found new steps (${preCount}->${workflowSetState.data.length})`,LOG.LS.eDEBUG);
+                    isDone = false;
+                } else
+                    LOG.error('API.GenerateDownloads.PublishScene could not fetch status when done',LOG.LS.eHTTP);
+            } // error or cancelled
+        } else
+            // wait for X ms before trying again
+            await new Promise(resolve => setTimeout(resolve, iterationDelay));
     }
 
-    // if we are finished, publish the scene, otherwise, handle the error/state
-    if(wfSetState.status===COMMON.eWorkflowJobRunStatus.eDone) {
-        LOG.info(`API.GenerateDownloads.PublishScene starting...(${H.Helpers.JSONStringify(wfSetState)})`,LOG.LS.eDEBUG);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+    LOG.info(`API.GenerateDownloads.PublishScene finished waiting for ${response.id}. (${COMMON.eWorkflowJobRunStatus[workflowSetState.status]}: ${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
 
-        // get published state and properties (SystemObjectVersion)
-        const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(response.id ?? -1);
-        if(!sceneSOV) {
-            LOG.error(`API.Project.publishScene failed to get SystemObjectVersion for scene ((${response.id ?? -1}))`,LOG.LS.eDB);
-            return;
-        }
+    // if we are finished, publish the scene, otherwise, handle the error/state
+    if(workflowSetState.status===COMMON.eWorkflowJobRunStatus.eDone) {
+        LOG.info(`API.GenerateDownloads.PublishScene starting...(${H.Helpers.JSONStringify(workflowSetState)})`,LOG.LS.eDEBUG);
+        await new Promise(resolve => setTimeout(resolve, 2000));
 
         // get our collection and publish the id with the same state
         const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-        const success: boolean = await ICol.publish(response.id, sceneSOV.PublishedState);
+        const success: boolean = await ICol.publish(response.id, intendedState);
         if (success===false) {
-            LOG.error(`API.Project.publishScene failed to publish (${response.id} | ${COMMON.ePublishedState[sceneSOV.PublishedState]})`,LOG.LS.eCOLL);
+            LOG.error(`API.Project.publishScene failed to publish (${response.id} | ${COMMON.ePublishedState[intendedState]})`,LOG.LS.eCOLL);
             return;
         }
     }
 
-    // delay for 10s
-    // await new Promise(resolve => setTimeout(resolve, 10000));
-    console.log('<<< finished publishing');
+    console.log(`<<< finished publishing (${workflowSetState.status})`);
     return;
 };
 
@@ -328,6 +348,10 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
             const body = req.body;
             statusOnly = body.statusOnly;
             rePublish = body.rePublish ?? false;
+
+            console.log(req.body);
+            console.log(`<<< re-publish: ${rePublish}`);
+
             if(body.idSystemObject && Array.isArray(body.idSystemObject)) {
                 // if we're an array store only numbers and prune out any nulls
                 idSystemObjects = body.idSystemObject.map(item => {
@@ -355,9 +379,11 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     }
 
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat
+    let messageSuffix: string | null = null;
     const maxIDs: number = 10;
     if(idSystemObjects.length>maxIDs) {
         LOG.info('API.generateDownloads too many scenes submitted. limiting to 10',LOG.LS.eHTTP);
+        messageSuffix = `(Capped to ${maxIDs})`;
         idSystemObjects.splice(10);
     }
 
@@ -371,7 +397,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         if(statusOnly===true) {
             const result: GenDownloadsResponse = await getOpStatusForScene(idSystemObject);
             responses.push(result);
-            messagePrefix = 'Gathering Download Status for: ';
+            messagePrefix = 'Getting Status for:';
         } else {
             /** TODO
              * - push to queue
@@ -381,19 +407,34 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
              *          - if finished/error remove from list and store results (just return status obj)
              *          - if active list is empty then finish and return response
              */
+
+            // get our published state for the scene ebfore doing anything because generate downloads
+            // will create a new Scene version that is unpublished, affecting our ability to re-publish
+            const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject ?? -1);
+            if(!sceneSOV) {
+                LOG.error(`API.GenerateDownloads failed to get SystemObjectVersion for scene (${idSystemObject ?? -1})`,LOG.LS.eDB);
+                continue;
+            }
+            const currentPublishedState: COMMON.ePublishedState = sceneSOV.PublishedState;
+
+            // create our operation and execute download generation
             const result: GenDownloadsResponse = await createOpForScene(idSystemObject,LS.idUser);
             responses.push(result);
-            messagePrefix = 'Generating Downloads for: ';
+            messagePrefix = 'Generating Downloads for:';
 
             // if we want to republish the scene then we fire off the promise that checks the status
             // and when done re-publishes the scene (non-blocking)
-            // (rePublish===true) &&
-            publishScene(result);
+            if(rePublish===true) {
+                if(currentPublishedState===COMMON.ePublishedState.eNotPublished) {
+                    LOG.error(`API.GenerateDownloads cannot publish unpublished scenes (${idSystemObject ?? -1})`,LOG.LS.eDB);
+                    continue;
+                }
+                publishScene(result, currentPublishedState);
+            }
         }
     }
 
     // create our combined response and return info to client
-    res.status(200).send(JSON.stringify(buildOpResponse(`${messagePrefix}${responses.length} scenes`,responses)));
+    res.status(200).send(JSON.stringify(buildOpResponse(`${messagePrefix} ${responses.length} scenes ${messageSuffix ?? ''}`,responses)));
     LOG.info(`<<< post response (republish: ${rePublish})`,LOG.LS.eDEBUG);
 }
-

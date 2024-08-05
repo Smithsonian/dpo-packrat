@@ -76,32 +76,37 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             return { status: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowSteps (${idWorkflowSet})` };
 
         // our common response properties
-        const message: string = `evaluated ${result.length} steps`;
         const data: DBAPI.WorkflowStep[] = [...result];
 
-        // if all are done then we set that as the status
-        if(result.every(r => r.State===COMMON.eWorkflowJobRunStatus.eDone))
-            return { status: COMMON.eWorkflowJobRunStatus.eDone, message, data };
-
-        // if we're an error/cancelled then that trumps all other states
-        if(result.some(r => r.State===COMMON.eWorkflowJobRunStatus.eError))
-            return { status: COMMON.eWorkflowJobRunStatus.eError, message, data };
-        if(result.some(r => r.State===COMMON.eWorkflowJobRunStatus.eCancelled))
-            return { status: COMMON.eWorkflowJobRunStatus.eCancelled, message, data };
-
-        // otherwise, we return the first state found
-        for(let i=0; i<result.length; i<i++) {
-            switch(result[i].State) {
-                case COMMON.eWorkflowJobRunStatus.eDone:
+        // cycle through all steps building up an understanding of the various states
+        // if any are cancelled or have an error then that represents all of them and we return immediately
+        let hasWaiting: boolean = false;
+        let hasCreated: boolean = false;
+        let hasRunning: boolean = false;
+        for(let i=0; i<data.length; i++) {
+            // get our resolved status for the step so it includes the status of any associated JobRun
+            const stepStatus: H.IOStatus = await DBAPI.WorkflowStep.fetchStatus(data[i].idWorkflowStep);
+            switch(stepStatus.status) {
                 case COMMON.eWorkflowJobRunStatus.eError:
-                case COMMON.eWorkflowJobRunStatus.eCancelled:
-                    continue;
+                case COMMON.eWorkflowJobRunStatus.eCancelled:   return { status: stepStatus.status, message: 'set failed', data: result };
 
-                default:
-                    return { status: result[i].State, message, data };
+                case COMMON.eWorkflowJobRunStatus.eUnitialized:
+                case COMMON.eWorkflowJobRunStatus.eCreated:     hasCreated = true; break;
+
+                case COMMON.eWorkflowJobRunStatus.eRunning:     hasRunning = true; break;
+
+                case COMMON.eWorkflowJobRunStatus.eWaiting:     hasWaiting = true; break;
             }
         }
 
-        return { status: COMMON.eWorkflowJobRunStatus.eError, message: `unknown error (${idWorkflowSet})` };
+        if(hasRunning)
+            return { status: COMMON.eWorkflowJobRunStatus.eRunning, message: 'set has running', data: result };
+        if(hasCreated)
+            return { status: COMMON.eWorkflowJobRunStatus.eCreated, message: 'set has created', data: result };
+        if(hasWaiting)
+            return { status: COMMON.eWorkflowJobRunStatus.eWaiting, message: 'set is waiting', data: result };
+
+        // if all are done then we set that as the status
+        return { status: COMMON.eWorkflowJobRunStatus.eDone, message: 'set completed', data: result };
     }
 }

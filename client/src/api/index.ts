@@ -46,6 +46,7 @@ export default class API {
         const body = JSON.stringify({ statusOnly, rePublish, idSystemObject });
         let uri: string = API_ROUTES.GEN_DOWNLOADS;
         console.log('[PACKRAT:DEBUG] body: ',body);
+        console.trace('API.generateDownloads');
 
         let options;
         if(statusOnly) {
