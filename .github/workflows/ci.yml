@@ -50,7 +50,7 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
       - name: verify Docker installation
-        run: docker compose --version
+        run: docker compose version
         
       - name: Checkout code
         uses: actions/checkout@v3
@@ -107,7 +107,7 @@ jobs:
 
     steps:
       - name: Verify Docker installation
-        run: docker compose --version
+        run: docker compose version
         
       - name: Checkout code
         uses: actions/checkout@v3
