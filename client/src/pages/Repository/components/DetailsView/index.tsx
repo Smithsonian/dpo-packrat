@@ -33,7 +33,7 @@ import {
     UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
-import { ePublishedState, eSystemObjectType, eVocabularySetID, PublishedStateEnumToString } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularySetID, ePublishedState, PublishedStateEnumToString } from '@dpo-packrat/common';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
@@ -352,7 +352,7 @@ function DetailsView(): React.ReactElement {
 
     const onPublishUpdate = ({ target }): void => {
         // console.log(`[PACKRAT] ${JSON.stringify(target)}`);
-        // console.log(`[PACKRAT:DEBUG] value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState}`);
+        console.log(`[PACKRAT:DEBUG] Repository.DetailsView.onPublishUpdate (value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState})`);
 
         // const pState: ePublishedState = ePublishedState[parseInt(target.value)];
         // if(pState.toString() != publishedState) {
