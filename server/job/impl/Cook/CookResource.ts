@@ -44,33 +44,50 @@ const supportedJobTypes: string[] = ['inspect','scene_generation','generate_down
 const getCookResourceStatus = async (address: string, port: number): Promise<CookResourceState> => {
     // example: http://si-3dcook02.us.sinet.si.edu:8000/machine
     const endpoint = address+':'+port+'/machine';
+    const maxRetries: number = 3;
 
-    try {
-        LOG.info(`getCookResources getting status for resource: ${endpoint}.`,LOG.LS.eSYS);
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            LOG.info(`getCookResources getting status for resource: ${endpoint}.`,LOG.LS.eSYS);
 
-        // make our query to the resource and timeout after 5 seconds to minimize delays
-        const response: AxiosResponse | null = await axios.get(endpoint, { timeout: 5000 });
-        if (!response || response.status<200 || response.status>299) {
-            return {
-                success: false,
-                error: `${response?.status}: ${response?.statusText}`,
-                address };
+            // make our query to the resource and timeout after 5 seconds to minimize delays
+            const response: AxiosResponse | null = await axios.get(endpoint, { timeout: 5000 });
+            if (!response || response.status<200 || response.status>299) {
+                return {
+                    success: false,
+                    error: `${response?.status}: ${response?.statusText}`,
+                    address };
+            }
+
+            const data = await response.data;
+            const result: CookResourceState = {
+                success: true,
+                address,
+                weight: -1,
+                jobsCreated: data.jobs.created,
+                jobsWaiting: data.jobs.waiting,
+                jobsRunning: data.jobs.running,
+            };
+            return result;
+
+        } catch (error: any) {
+            const errorMessage = error.message ? error.message : JSON.stringify(error);
+            LOG.error(`getCookResources ${address} attempt ${attempt} failed with error: ${errorMessage}`, LOG.LS.eSYS);
+
+            if (attempt === maxRetries || !errorMessage.includes('getaddrinfo EAI_AGAIN')) {
+                return { success: false, error: errorMessage, address };
+            }
+
+            // Wait for a short delay before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            return { success: false, error: (error.message)?error.message:JSON.stringify(error), address, };
         }
-
-        const data = await response.data;
-        const result: CookResourceState = {
-            success: true,
-            address,
-            weight: -1,
-            jobsCreated: data.jobs.created,
-            jobsWaiting: data.jobs.waiting,
-            jobsRunning: data.jobs.running,
-        };
-        return result;
-
-    } catch (error: any) {
-        return { success: false, error: (error.message)?error.message:JSON.stringify(error), address, };
     }
+
+    // if all retries failed, return failed state
+    LOG.error(`getCookResources ${address} maximum retries reached.`, LOG.LS.eSYS);
+    return { success: false, error: 'Max retries reached', address };
 };
 const verifyCookResourceCapability = (job: string, resource: DBAPI.CookResource): number => {
     // check if the resource supports the given job type
