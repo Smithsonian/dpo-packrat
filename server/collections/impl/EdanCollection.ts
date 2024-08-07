@@ -217,10 +217,9 @@ export class EdanCollection implements COL.ICollection {
     }
 
     async createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<COL.EdanRecord | null> {
-        console.log(`createEdan3DPackage input: ${path}`);
         // const body: any = sceneFile ? { resource: path.replace(/\.zip|-zip$/, ''), document: sceneFile } : { resource: path.replace(/\.zip|-zip$/, '') };
         const body: any = sceneFile ? { resource: path, document: sceneFile } : { resource: path };
-        LOG.info(`body:\n${H.Helpers.JSONStringify(body)}`,LOG.LS.eDEBUG);
+        LOG.info(`createEdan3DPackage body:\n${H.Helpers.JSONStringify(body)}`,LOG.LS.eDEBUG);
 
         const edanRecord: COL.EdanRecord | null = await this.upsertResource(body, 'createEdan3DPackage');
         if(!edanRecord)

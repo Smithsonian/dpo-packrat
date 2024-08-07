@@ -115,14 +115,23 @@ export class WorkflowJob implements WF.IWorkflow {
     }
 
     async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
+
+        LOG.info(`WorkflowJob.update started for WorkflowStep (${workflowStep.idWorkflowStep}) and JobRun (${jobRun.idJobRun}:${COMMON.eWorkflowJobRunStatus[jobRun.getStatus()]})`,LOG.LS.eWF);
+
         // update workflowStep based on job run data
         const eWorkflowStepStateOrig: COMMON.eWorkflowJobRunStatus = workflowStep.getState();
         switch (eWorkflowStepStateOrig) {
             case COMMON.eWorkflowJobRunStatus.eDone:
             case COMMON.eWorkflowJobRunStatus.eError:
-            case COMMON.eWorkflowJobRunStatus.eCancelled:
-                LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} Already Completed`, LOG.LS.eWF);
+            case COMMON.eWorkflowJobRunStatus.eCancelled: {
+                // messaging in case states are not consistent. could mean workflow is done before job
+                if(eWorkflowStepStateOrig===COMMON.eWorkflowJobRunStatus.eDone && jobRun.getStatus()!==COMMON.eWorkflowJobRunStatus.eDone)
+                    LOG.error(`WorkflowJob.update exiting. Workflow state does not match JobRun. (${eWorkflowStepStateOrig}->${jobRun.getStatus()})`,LOG.LS.eWF);
+                else
+                    LOG.info(`WorkflowJob.update exiting. JobRun (${jobRun.idJobRun}) already completed. (${JSON.stringify(this.workflowJobParameters)})`, LOG.LS.eWF);
+
                 return { success: true, workflowComplete: true }; // job is already done
+            }
         }
 
         let dateCompleted: Date | null = null;
