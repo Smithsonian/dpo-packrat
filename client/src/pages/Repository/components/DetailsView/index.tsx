@@ -179,11 +179,10 @@ function DetailsView(): React.ReactElement {
         // make a call to our generate downloads endpoint with the current scene id
         const response: RequestResponse = await API.generateDownloads([idSystemObject], true);
         if(response.success === false || !response.data || response.data.length===0) {
-            console.log(`[Packrat - ERROR] cannot verify if generate downloads is available. (${response.message})`);
+            console.log(`[Packrat:ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
             return false;
         }
-        console.log(response);
         // console.log(`[PACKRAT:DEBUG] array: ${response.data && Array.isArray(response.data)} | isRunning: ${response.data[0].state.isJobRunning}, isValid: ${response.data[0].state.isValid}`,response);
 
         // see if we can actually run based on if a job isn't already running
@@ -352,8 +351,8 @@ function DetailsView(): React.ReactElement {
     };
 
     const onPublishUpdate = ({ target }): void => {
-        console.log(`[PACKRAT] ${JSON.stringify(target)}`);
-        console.log(`[PACKRAT] value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState}`);
+        // console.log(`[PACKRAT] ${JSON.stringify(target)}`);
+        // console.log(`[PACKRAT:DEBUG] value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState}`);
 
         // const pState: ePublishedState = ePublishedState[parseInt(target.value)];
         // if(pState.toString() != publishedState) {
@@ -565,7 +564,7 @@ function DetailsView(): React.ReactElement {
                     datasetUse
                 };
             }
-            console.log('updatedData: ', updatedData);
+
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
             updatedData.Metadata = metadata;
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);

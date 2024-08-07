@@ -94,7 +94,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     // get our project id from our params
     const { id } = req.params;
     const idProject: number = parseInt(id);
-    console.log(`>>> get project scenes: ${idProject}`);
+    LOG.info(`API.Projects get project scenes: ${idProject}`,LOG.LS.eHTTP);
 
     // our holder for final scenes
     let project: DBAPI.Project | null = null;
@@ -139,10 +139,10 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     const result: SceneSummary[] = builtScenes.filter((scene): scene is SceneSummary => scene !== null);
 
     // initial scene gathering status output
-    LOG.info(`API.getProjectScenes processed ${result.length}/${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
+    const dataSize: number = JSON.stringify(scenes).length;
+    LOG.info(`API.getProjectScenes processed ${result.length}/${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}: ${dataSize} bytes) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
 
     // return success
-    console.log(`data size: ${JSON.stringify(scenes).length} bytes`);
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${result.length} scenes`,[...result])));
 }
 

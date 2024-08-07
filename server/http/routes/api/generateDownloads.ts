@@ -142,7 +142,7 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
 const publishScene = async (response: GenDownloadsResponse, intendedState: COMMON.ePublishedState): Promise<void> => {
     // CAUTION: this will likely continue running after the calling thread returns
 
-    console.log(`<<< publishing scene: ${response.id} (${COMMON.ePublishedState[intendedState]})`);
+    LOG.info(`API.GenerateDownloads publishing scene: ${response.id} (${COMMON.ePublishedState[intendedState]})`,LOG.LS.eHTTP);
     if(!response || !response.id || !response.state || !response.state.idWorkflow) {
         LOG.error(`API.Project.publishScene cannot publish scene. invalid inputs (${response.id} | ${response.state} | ${response.state?.idWorkflow}).`,LOG.LS.eDB);
         return;
@@ -164,7 +164,6 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
         if (attempts < 3) {
             await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s before retrying
         }
-        console.log(`attempt: ${attempts}`);
     }
 
     // if we don't have anything then we failed
@@ -238,7 +237,7 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
         }
     }
 
-    console.log(`<<< finished publishing (${workflowSetStatus.state})`);
+    LOG.info(`API.GenerateDownloads finished publishing scene: ${response.id} (${COMMON.ePublishedState[workflowSetStatus.state]})`,LOG.LS.eHTTP);
     return;
 };
 
@@ -350,9 +349,6 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
             statusOnly = body.statusOnly;
             rePublish = body.rePublish ?? false;
 
-            console.log(req.body);
-            console.log(`<<< re-publish: ${rePublish}`);
-
             if(body.idSystemObject && Array.isArray(body.idSystemObject)) {
                 // if we're an array store only numbers and prune out any nulls
                 idSystemObjects = body.idSystemObject.map(item => {
@@ -437,5 +433,4 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
     // create our combined response and return info to client
     res.status(200).send(JSON.stringify(buildOpResponse(`${messagePrefix} ${responses.length} scenes ${messageSuffix ?? ''}`,responses)));
-    LOG.info(`<<< post response (republish: ${rePublish})`,LOG.LS.eDEBUG);
 }

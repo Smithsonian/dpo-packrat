@@ -213,7 +213,6 @@ export abstract class JobPackrat implements JOB.IJob {
             } else
                 this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel`, true);
 
-            console.log(`>>> cancel: ${output}`);
             this._results = { success: false, error: 'Job Cancelled' + (errorMsg ? ` ${errorMsg}` : '') }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
             this._dbJobRun.Result = true;

@@ -371,7 +371,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 
     // table operations
     const onResetSelection = () => {
-        console.log('[Packrat:DEBUG] resetting table selection');
         setSelected([]);
     };
     useEffect(() => {
@@ -553,7 +552,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             }
 
             setProjectList(response.data);
-            console.log('[Packrat:DEBUG] getProjectList: ',response.data);
+            // console.log('[Packrat:DEBUG] getProjectList: ',response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project list: ${error}`);
         }
@@ -581,7 +580,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                 obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
             });
 
-            console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
+            // console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
