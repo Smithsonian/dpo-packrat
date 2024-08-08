@@ -9,7 +9,7 @@
 import API, { RequestResponse } from '../../../api';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Checkbox, Paper, Collapse, Input, IconButton } from '@material-ui/core';
+import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Tooltip, Checkbox, Paper, Collapse, Input, IconButton } from '@material-ui/core';
 import { Autocomplete } from '@material-ui/lab';
 import { useLocation } from 'react-router';
 import { useUserStore } from '../../../store';
@@ -379,6 +379,14 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 
     }, [resetSelection]);
 
+    useEffect(() => {
+        console.log('new data');
+
+        // reapply the filters
+
+        // return to first page
+        // setPage(0);
+    }, [data]);
     // JSX
     return (
         <Box style={{ marginTop: '2rem', marginBottom: '2rem' }}>
@@ -527,6 +535,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const [showBatchOps, setShowBacthOps] = useState<boolean>(false);
     const [projectList, setProjectList] = useState<Project[]>([]);
     const [projectScenes, setProjectScenes] = useState<SceneSummary[]>([]);
+    const [projectSelected, setProjectSelected] = useState<Project|undefined>(undefined);
     const [resetSelection, setResetSelection] = useState<boolean>(false);
     const [republishScenes, setRepublishScenes] = useState(false);
     const [sceneNameFilter, setSceneNameFilter] = useState('');
@@ -558,7 +567,6 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         }
     }, []);
     const getProjectScenes = useCallback(async (project?: Project) => {
-
         try {
             const response: RequestResponse = await API.getProjectScenes(project ? project.idProject : -1);
             if(response.success === false) {
@@ -604,7 +612,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     };
     const handleProjectChange = (_event, newValue: Project | null) => {
         // store our value so the table gets updated, null if empty
-        getProjectScenes(newValue ?? undefined);
+        const project: Project | undefined = newValue ?? undefined;
+        setProjectSelected(project);
+        getProjectScenes(project);
     };
     const handleRepublishChange = (event) => {
         setRepublishScenes(event.target.value === 'true');
@@ -651,6 +661,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         // quickly signal we want to reset the list and then set the value back to false
         setResetSelection(true);
         setTimeout(() => setResetSelection(false), 1); // set flag back so it doesn't keep resetting it
+    };
+    const onRefreshList = async () => {
+        getProjectScenes(projectSelected);
     };
     const filteredProjectScenes = useMemo(() => {
         return projectScenes.filter(row => row.name.toLowerCase().includes(sceneNameFilter.toLowerCase()));
@@ -702,7 +715,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Typography className={tableClasses.labelText}>Re-Publish Scenes</Typography>
+                                        <Tooltip title={'Will re-publish selected scenes ONLY IF it is already published and Generate Downloads succeeds.'}>
+                                            <Typography className={tableClasses.labelText}>Re-Publish Scenes</Typography>
+                                        </Tooltip>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
                                         <Select
@@ -723,7 +738,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Typography className={tableClasses.labelText}>Filter: Project</Typography>
+                                        <Tooltip title={'Filters scenes to the selected project. This will reset your selection and what scenes are available in the table below.'}>
+                                            <Typography className={tableClasses.labelText}>Filter: Project</Typography>
+                                        </Tooltip>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
                                         <Autocomplete
@@ -747,7 +764,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Typography className={tableClasses.labelText}>Filter: Scene Name</Typography>
+                                        <Tooltip title={'Filters the list by any scenes containing the entered text. (Case Insensitive)'}>
+                                            <Typography className={tableClasses.labelText}>Filter: Scene Name</Typography>
+                                        </Tooltip>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
                                         <Input
@@ -772,19 +791,23 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                         resetSelection={resetSelection}
                     />
 
-                    { isListValid ? ( // if we have valid indices show the button to submit
-                        <Box style={{ display: 'flex', justifyContent: 'center' }}>
-                            <Button
-                                className={classes.btn}
-                                onClick={onProcessOperation}
-                                disableElevation
-                            >
-                                Go
-                            </Button>
-                        </Box>
-                    ):(
-                        <Typography style={{ textAlign: 'center' }}>List of IDs is invalid. Please check.</Typography>
-                    )}
+                    <Box style={{ display: 'flex', justifyContent: 'center' }}>
+                        <Button
+                            className={classes.btn}
+                            onClick={onProcessOperation}
+                            disableElevation
+                            disabled={!isListValid}
+                        >
+                            Go
+                        </Button>
+                        <Button
+                            className={classes.btn}
+                            onClick={onRefreshList}
+                            disableElevation
+                        >
+                            Refresh
+                        </Button>
+                    </Box>
                 </Box>
             </Collapse>
         </Box>
