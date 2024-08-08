@@ -38,7 +38,7 @@ export ENV=$ENV
 echo "Starting docker DB image for env $1 with tag: $IMAGE_TAG"
 
 # Start the databases
-docker-compose --env-file .env.$1 -f ./conf/docker/docker-compose.deploy.yml up -d packrat-db-$1
+docker compose --env-file .env.$1 -f ./conf/docker/docker-compose.deploy.yml up -d packrat-db-$1
 
 # DB init scripts
 docker exec -i packrat-db-$1 sh -c "mysql -u root -p$MYSQL_ROOT_PASSWORD -e 'CREATE DATABASE IF NOT EXISTS Packrat'"
