@@ -999,6 +999,21 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         return JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile;
     }
 
+    protected async verifyIncomingCookData_NEW(sceneSource: DBAPI.Scene, fileMap: Map<string,string>): Promise<H.IOResults> {
+
+        const result: H.IOResults = await super.verifyIncomingCookData(sceneSource, fileMap);
+        if(result.success == false)
+            return this.logError('verifyIncomingCookData base failed');
+
+        // fileMap is the list of received downloads. make sure we have all of the expected files
+        console.log(fileMap);
+        // const suffixes: string[] = ['-150k-4096_std.glb','-100k-2048_std_draco.glb','.svx.json','-100k-2048_std.usdz','-full_resolution-obj_std.zip','-150k-4096-gltf_std.zip','-150k-4096-obj_std.zip'];
+
+        // make sure we have all downloads accounted for. if 'count' differs then we fail
+
+        // get all assets from scene. if we have asset with the same suffix as in Map then we check the basenames (different = fail)
+    }
+
     protected async verifyIncomingCookData(sceneSource: DBAPI.Scene, fileMap: Map<string,string>): Promise<H.IOResults> {
 
         const result: H.IOResults = await super.verifyIncomingCookData(sceneSource, fileMap);
