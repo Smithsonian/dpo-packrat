@@ -350,7 +350,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         // Map the sorted indices back to the original elements
         return indices.map(index => array[index]);
     }
-    const createSortHandler = (property: string) => (event: React.MouseEvent<unknown>) => {
+    const createSortHandler = (property: string) => (_event: React.MouseEvent<unknown>) => {
         const isAsc = orderBy === property && order === 'asc';
         setOrder(isAsc ? 'desc' : 'asc');
         setOrderBy(property);
