@@ -2,7 +2,7 @@
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
-import * as COMMON from '../../../../common';
+import * as COMMON from '@dpo-packrat/common';
 import * as COL from '../../../collections/interface';
 import { ASL, LocalStore } from '../../../utils/localStore';
 

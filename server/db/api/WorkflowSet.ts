@@ -4,7 +4,7 @@ import * as DBC from '../connection';
 import * as DBAPI from '../';
 import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
-import * as COMMON from '../../../common';
+import * as COMMON from '@dpo-packrat/common';
 
 export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements WorkflowSetBase {
     idWorkflowSet!: number;
