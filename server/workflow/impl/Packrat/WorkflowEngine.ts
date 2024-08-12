@@ -321,6 +321,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: true, message: 'generating downloads', data: { isValid, activeJobs } };
     }
 
+    async generateScene(idModel: number, idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
+        console.log('placeholder for scene generation: ', idModel, idScene, workflowParams);
+        return { success: true, message: 'generating scene', data: { isValid: true, activeJobs: [] } };
+    }
+
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
         if (!workflowParams || !workflowParams.idSystemObject)

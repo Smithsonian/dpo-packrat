@@ -23,4 +23,5 @@ export interface IWorkflowEngine {
     event(eWorkflowEvent: COMMON.eVocabularyID, workflowParams: WorkflowParameters | null): Promise<IWorkflow[] | null>;
     // generateSceneDownloads(idScene: number, workflowParams: WorkflowParameters): Promise<IWorkflow[] | null>;
     generateDownloads(idScene: number, workflowParams: WorkflowParameters): Promise<WorkflowCreateResult>;
+    generateScene(idModel: number, idScene: number, workflowParams: WorkflowParameters): Promise<WorkflowCreateResult>;
 }

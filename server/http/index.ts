@@ -25,6 +25,7 @@ import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
+import { generateScene } from './routes/api/generateVoyagerScene';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -126,6 +127,9 @@ export class HttpServer {
         // this.app.get('/api/scene/details/:id');      // ...
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
+
+        this.app.get('/api/workflow/gen-scene', generateScene);
+        this.app.post('/api/workflow/gen-scene', generateScene);
 
         // if we're here then we handle any errors that may have surfaced
         this.app.use(errorhandler); // keep last

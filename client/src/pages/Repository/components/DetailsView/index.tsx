@@ -643,6 +643,37 @@ function DetailsView(): React.ReactElement {
         return true;
     };
 
+    const generateScene = async (): Promise<boolean> => {
+        console.log('[PACKRAT] Generating Scene...', data.getSystemObjectDetails);
+
+        // make a call to our generate scene endpoint with the current scene id
+        // return sucess when the job is started or if one is already running
+        const response: RequestResponse = await API.generateScene([idSystemObject]);
+        if(response.success === false) {
+
+            // get our message from our first response
+            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+
+            // if the job is running then handle differently
+            if(responseMessage.includes('already running')) {
+                console.log(`[Packrat - WARN] cannot generate scene. (${responseMessage})`);
+                toast.warn('Not generating scene. Job already running. Please wait for it to finish.');
+            } else {
+                console.log(`[Packrat - ERROR] cannot generate scene. (${responseMessage})`);
+                toast.error('Cannot generate scene. Check the report.');
+            }
+
+            // update our button state
+            // setCanGenerateDownloads(true);
+
+            // set to false to stop 'loading' animation on button. doesn't (currently) represent state of job on server
+            // setIsGeneratingDownloads(false);
+            return false;
+        }
+
+        return true;
+    };
+
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
 
     return (
@@ -719,6 +750,14 @@ function DetailsView(): React.ReactElement {
                             onClick={generateDownloads}
                             style={{ marginLeft: 5, width: '200px' }}
                         >Generate Downloads</LoadingButton>}
+
+                    {(objectType === eSystemObjectType.eModel) &&
+                        <LoadingButton className={classes.updateButton}
+                            loading={false}
+                            disabled={false}
+                            onClick={generateScene}
+                            style={{ marginLeft: 5, width: '200px' }}
+                        >Generate Scene</LoadingButton>}
                 </Box>
 
                 <Box display='flex'>

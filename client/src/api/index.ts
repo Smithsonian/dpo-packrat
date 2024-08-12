@@ -9,6 +9,7 @@ enum API_ROUTES {
     LOGIN = 'auth/login',
     LOGOUT = 'auth/logout',
     GEN_DOWNLOADS = 'api/scene/gen-downloads',
+    GEN_SCENE = 'api/workflow/gen-scene',
     PROJECTS = 'api/project',
 }
 
@@ -47,6 +48,24 @@ export default class API {
         let uri: string = API_ROUTES.GEN_DOWNLOADS;
         console.log('[PACKRAT:DEBUG] body: ',body);
         console.trace('API.generateDownloads');
+
+        let options;
+        if(statusOnly) {
+            options = { method: 'GET' };
+            uri += `?id=${idSystemObject[0]}`; // add our index. only get status for single element
+        } else {
+            options = { method: 'POST', body };
+        }
+
+        return this.request(uri, options);
+    }
+    static async generateScene(idSystemObject: number[], statusOnly: boolean = false, includeExisting: boolean = false): Promise<RequestResponse> {
+        // initiates the generate scene routine and either runs the recipe with the given id or returns its status.
+        // idSystemObject = the SystemObject id for the Packrat Model/Scene making this request
+        const body = JSON.stringify({ statusOnly, includeExisting, idSystemObject });
+        let uri: string = API_ROUTES.GEN_SCENE;
+        console.log('[PACKRAT:DEBUG] body: ',body);
+        console.trace('API.generateScene');
 
         let options;
         if(statusOnly) {
