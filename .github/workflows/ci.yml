@@ -49,6 +49,9 @@ jobs:
           - "3306:3306"
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
     steps:
+      - name: verify Docker installation
+        run: docker compose version
+        
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -103,6 +106,9 @@ jobs:
       PACKRAT_SOLR_HOST: packrat-solr
 
     steps:
+      - name: Verify Docker installation
+        run: docker compose version
+        
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -117,11 +123,11 @@ jobs:
 
       - name: Build Dev images
         if: ${{!contains(github.ref, 'master')}}
-        run: docker-compose --env-file .env.dev -f ./conf/docker/docker-compose.dev.yml build
+        run: docker compose --env-file .env.dev -f ./conf/docker/docker-compose.dev.yml build
 
       - name: Build Prod images
         if: contains(github.ref, 'master')
-        run: docker-compose --env-file .env.prod -f ./conf/docker/docker-compose.prod.yml build
+        run: docker compose --env-file .env.prod -f ./conf/docker/docker-compose.prod.yml build
 
       # Prepares tag for docker images
       - name: Prepare image tag

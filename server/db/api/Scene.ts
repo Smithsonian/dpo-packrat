@@ -233,4 +233,27 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         }
     }
 
+    /** fetches scenes from a specific project */
+    static async fetchByProjectID(idProject: number): Promise<Scene[] | null> {
+        if (!idProject)
+            return null;
+        try {
+            return DBC.CopyArray<SceneBase, Scene>(
+                await DBC.DBConnection.prisma.$queryRaw<Scene[]>`
+                SELECT DISTINCT
+                    s.*
+                FROM 
+                    Project AS p
+                    JOIN SystemObject AS soProject ON (soProject.idProject = p.idProject AND p.idProject = ${idProject})
+                    JOIN SystemObjectXref AS soxProject ON soxProject.idSystemObjectMaster = soProject.idSystemObject
+                    JOIN SystemObject AS soItem ON soItem.idSystemObject = soxProject.idSystemObjectDerived AND soItem.idItem IS NOT NULL
+                    JOIN SystemObjectXref AS soxItem ON soxItem.idSystemObjectMaster = soItem.idSystemObject
+                    JOIN SystemObject AS soScene ON soScene.idSystemObject = soxItem.idSystemObjectDerived AND soScene.idScene IS NOT NULL
+                    JOIN Scene AS s ON soScene.idScene = s.idScene
+                ;`, Scene);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchByProjectID', LOG.LS.eDB, error);
+            return null;
+        }
+    }
 }

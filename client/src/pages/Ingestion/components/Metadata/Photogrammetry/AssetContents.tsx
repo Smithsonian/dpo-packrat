@@ -117,7 +117,7 @@ function AssetContents(props: AssetContentsProps): React.ReactElement {
                     }))}
                 </TableBody>
             </Table>
-            <EmptyContent label='folders' isEmpty={!folders.length} />
+            <EmptyContent label='folders' isEmpty={folders.length<=0} />
         </TableContainer>
     );
 }
