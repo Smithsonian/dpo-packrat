@@ -27,7 +27,6 @@ const CaptureDataPhoto = {
         return await DBAPI.Vocabulary.fetch(parent.idVClusterType);
     },
     CaptureDatasetUse: async (parent: Parent): Promise<DBAPI.Vocabulary[] | null> => {
-        console.log(`>>> parent: ${JSON.stringify(parent)}`);
         return await DBAPI.Vocabulary.fetchFromVocabularySet(parent.idVocabularySet);
     }
 };

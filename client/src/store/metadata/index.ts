@@ -134,7 +134,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
         //If there's an error send a warning. You best believe that the Identifier warning will be processed here.
         } catch (error) {
             hasError = true;
-            console.log(`Toast Error: ${error}`);
+            console.log(`[PACKRAT:ERROR] Toast Error: ${error}`);
             if (error instanceof yup.ValidationError) {
                 for (const message of error.errors) {
                     toast.warn(message, { autoClose: false });
@@ -283,7 +283,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                     if (CaptureDataPhoto) {
                         const { identifiers, folders } = CaptureDataPhoto;
                         const stateIdentifiers: StateIdentifier[] = parseIdentifiersToState(identifiers, defaultIdentifierField);
-                        console.log('Store - Metadata: ', metadataStep);
                         metadataStep = {
                             ...metadataStep,
                             photogrammetry: {
@@ -409,8 +408,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         const { metadatas } = get();
 
-        console.log(`[PACKRAT:DEBUG] updateMetadataField: ${metadataIndex} | ${name} | ${value} | ${metadataType}`);
-        console.log('[PACKRAT:DEBUG] metadatas: ', metadatas);
+        // console.log(`[PACKRAT:DEBUG] updateMetadataField: ${metadataIndex} | ${name} | ${value} | ${metadataType}`);
+        // console.log('[PACKRAT:DEBUG] metadatas: ', metadatas);
 
         if (!(name in metadatas[metadataIndex][metadataType])) {
             toast.error(`Field ${name} doesn't exist on a ${metadataType} asset`);

@@ -21,7 +21,7 @@ export const withDefaultValueNumber = (value: number | undefined | null, default
 };
 
 export const withDefaultValueString = (value: string | undefined, defaultValue: string): string => {
-    console.log('withDefaultValueString: ', value+':'+defaultValue);
+    // console.log('withDefaultValueString: ', value+':'+defaultValue);
     if(value && typeof(value).toLowerCase()==='string')
         return value;
 

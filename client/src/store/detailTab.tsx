@@ -260,7 +260,6 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         if (assetType === eSystemObjectType.eCaptureData) {
             const CaptureDataDetails = getDetail(eSystemObjectType.eCaptureData) as CaptureDataDetailFields;
             const updatedDetails = { ...CaptureDataDetails, [fieldName]: value };
-            console.log('updateDetailField: ',updatedDetails);
             set({
                 CaptureDataDetails: updatedDetails
             });

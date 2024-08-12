@@ -91,8 +91,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             });
         });
 
-        console.log('[PACKRAT:DEBUG] Vocabulary Store: ', data);
-        console.log('[PACKRAT:DEBUG] Vocabulary Store (vocabularies): ', vocabularies);
+        // console.log('[PACKRAT:DEBUG] Vocabulary Store: ', data);
+        // console.log('[PACKRAT:DEBUG] Vocabulary Store (vocabularies): ', vocabularies);
 
         set({ vocabularies, vocabularyMap });
         return vocabularies;

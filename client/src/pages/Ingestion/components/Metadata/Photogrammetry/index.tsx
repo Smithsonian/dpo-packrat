@@ -249,7 +249,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const getSelectedIDsFromJSON = (value: string): number[] => {
         // used to extract array from JSON
-        console.log('getStringFromJSON: ', value);
         try {
             const data = JSON.parse(value);
             if(Array.isArray(data) === false)

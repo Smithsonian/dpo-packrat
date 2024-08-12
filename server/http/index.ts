@@ -10,12 +10,14 @@ import { UsageMonitor } from '../utils/osStats';
 import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
-import { migrate } from './routes/migrate';
+// import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 import { getCookResource } from './routes/resources';
+
 import { generateDownloads } from './routes/api/generateDownloads';
+import { getProjects, getProjectScenes } from './routes/api/project';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -110,12 +112,18 @@ export class HttpServer {
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
-        this.app.get('/migrate', migrate);
-        this.app.get('/migrate/*', migrate);
+        // this.app.get('/migrate', migrate);
+        // this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, download);
 
-        // Packrat API endpoints (WIP)
+        // Packrat API endpoints
         this.app.get('/resources/cook', getCookResource);
+
+        this.app.get('/api/project',getProjects);                   // get basic listing info for all projects
+        this.app.get('/api/project/:id/scenes',getProjectScenes);   // get all scenes for a specific project
+
+        // this.app.get('/api/scene');                  // get basic info for all scenes
+        // this.app.get('/api/scene/details/:id');      // ...
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
 

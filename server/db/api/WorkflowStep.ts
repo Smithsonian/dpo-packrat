@@ -2,7 +2,9 @@
 import { WorkflowStep as WorkflowStepBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { SystemObject, convertWorkflowJobRunStatusToEnum } from '..';
 import * as DBC from '../connection';
+import * as DBAPI from '../';
 import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 
 export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements WorkflowStepBase {
@@ -136,5 +138,48 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             LOG.error('DBAPI.WorkflowStep.fetchFromJobRun', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    static async fetchFromWorkflowSet(idWorkflowSet: number): Promise<WorkflowStep[] | null> {
+        if (!idWorkflowSet)
+            return null;
+        try {
+            const steps: WorkflowStep[] | null = await DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
+                await DBC.DBConnection.prisma.$queryRaw<WorkflowStep[]>`
+                SELECT wfStep.* FROM WorkflowSet AS wfSet
+                JOIN Workflow AS wf ON wf.idWorkflowSet = wfSet.idWorkflowSet
+                JOIN WorkflowStep AS wfStep ON wfStep.idWorkflow = wf.idWorkflow
+                WHERE wfSet.idWorkflowSet = ${idWorkflowSet};`
+                , WorkflowStep);
+
+            if(steps)
+                return steps;
+            return null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.WorkflowStep.fetchFromWorkflowSet', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    static async fetchStatus(idWorkflowStep: number): Promise<H.IOStatus> {
+        // returns the resolved status taking into account any derived processes and their state
+        // rationale: DB is source of truth, maintains Parent 'knows' child philosophy
+        const workflowStep: WorkflowStep | null = await this.fetch(idWorkflowStep);
+        if(!workflowStep) {
+            LOG.error(`DBAPI.WorkflowStep.fetchStatus failed to find WorkflowStep (${idWorkflowStep})`,LOG.LS.eDB);
+            return { state: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowStep (${idWorkflowStep})` };
+        }
+
+        // if there is a JobRun use that for the status going back
+        // since WorkflowStep doesn't inherit from it and a step can be 'Done' but have an error
+        if(workflowStep.idJobRun) {
+            const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(workflowStep.idJobRun);
+            if(jobRun) {
+                return { state: jobRun.Status, message: `WorkflowStep (JobRun) status: ${COMMON.eWorkflowJobRunStatus[jobRun.Status]}.` };
+            }
+        }
+
+        // otherwise use the workflow step's stored state
+        return { state: workflowStep.State, message: `WorkflowStep status: ${workflowStep.State}` };
     }
 }

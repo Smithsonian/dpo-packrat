@@ -80,7 +80,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         document.head.appendChild(css);
 
         const script = document.createElement('script');
-        script.src = Config.voyager.storyJS;
+        script.src = 'https://www.egofarms.com/temp/voyager-story.min.js'; //TODO: replace with config once bug fix applied: Config.voyager.storyJS;
         script.async = true;
         document.body.appendChild(script);
 

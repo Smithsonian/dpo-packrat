@@ -21,7 +21,7 @@ const CookWebDAVSimultaneousTransfers: number = 10;
 const CookSimultaneousJobs: number = 25;
 const CookRequestRetryCount: number = 5;
 const CookWebDAVTransmitRetryCount: number = 5;
-const CookWebDAVStatRetryCount: number = 100;
+const CookWebDAVStatRetryCount: number = 10; //100; TODO: Revert
 const CookRetryDelay: number = 5000;
 const CookTimeout: number = 10 * 60 * 60 * 1000; // ten hours
 const CookFailureNotificationTime: number = 60 * 60 * 1000; // 1 hour
@@ -411,9 +411,9 @@ export abstract class JobCook<T> extends JobPackrat {
 
             // depending on our state we handle our state changes
             switch (cookJobReport['state']) {
-                case 'created':     await this.recordCreated();                                                break;
+                case 'created':     await this.recordCreated();                                                         break;
                 case 'waiting':     await this.recordWaiting();                                                         break;
-                case 'running':     await this.recordStart(cookJobID);                                                           break;
+                case 'running':     await this.recordStart(cookJobID);                                                  break;
                 case 'done':        await this.recordSuccess(JSON.stringify(cookJobReport));                            return { success: true, allowRetry: false, connectFailure: false, otherCookError: false };
                 case 'error':       await this.recordFailure(JSON.stringify(cookJobReport), cookJobReport['error']);    return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
                 case 'cancelled':   await this.recordCancel(JSON.stringify(cookJobReport), cookJobReport['error']);     return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };

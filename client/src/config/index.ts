@@ -18,6 +18,7 @@ const Config = {
     */
     voyager: {
         storyJS: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-story.min.js': 'https://3d-api.si.edu/resources/js/voyager-story.min.js',
+        storyJSDev: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-story.dev.js': 'https://3d-api.si.edu/resources/js/voyager-story.dev.js',
         storyCSS: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/css/voyager-story.min.css' : 'https://3d-api.si.edu/resources/css/voyager-story.min.css',
         explorerJS: process.env.NODE_ENV === 'development' ? 'https://3d-api.si.edu/resources/js/voyager-explorer.min.js' : 'https://3d-api.si.edu/resources/js/voyager-explorer.min.js',
     }

@@ -1003,61 +1003,62 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         const result: H.IOResults = await super.verifyIncomingCookData(sceneSource, fileMap);
         if(result.success == false)
-            return this.logError('verifyIncomingCookData base failed');
+            return this.logError('JobCookSIGenerateDownloads.verifyIncomingCookData base failed');
 
-        // get assets in Packrat Scene
+        // fileMap is the list of received downloads. make sure we have all of the expected files
+        const suffixes: string[] = [
+            '-150k-4096_std.glb',
+            '-100k-2048_std_draco.glb',
+            '.svx.json',
+            '-100k-2048_std.usdz',
+            '-full_resolution-obj_std.zip',
+            '-150k-4096-gltf_std.zip',
+            '-150k-4096-obj_std.zip'
+        ];
+        const missingIncomingFiles: string[] = [];
+
+        // make sure we have all downloads accounted for
+        const incomingFilenames: string[] = Array.from(fileMap.values());
+        suffixes.forEach(suffix => {
+            const found: boolean = incomingFilenames.some(filename => filename.endsWith(suffix));
+            if(found===false)
+                missingIncomingFiles.push(suffix);
+        });
+        if(missingIncomingFiles.length>0)
+            return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData failed to find ${missingIncomingFiles.length} expected files in Cook response (${missingIncomingFiles.join(', ')})`);
+
+        // determine all incoming filenames are consistent
+        const incomingBaseName: string | null = this.extractBaseName(incomingFilenames);
+        if(!incomingBaseName)
+            return this.logError('JobCookSIGenerateDownloads.verifyIncomingCookData incoming filenames are inconsistent.');
+
+        // get all assets from scene.
         const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromScene(sceneSource.idScene);
         if(!sceneAssets || sceneAssets.length == 0)
             return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot find any assets for the Packrat scene. (${sceneSource.fetchLogInfo()})`);
         const sceneAssetFilenames: string[] = sceneAssets.map(asset => asset.FileName);
         LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData\n\t${H.Helpers.JSONStringify(sceneAssetFilenames)}\n\t${H.Helpers.JSONStringify(fileMap)}`,LOG.LS.eDEBUG);
 
-        // determine baseName from existing assets in the Packrat scene (error on diff)
-        const sceneBaseName: string | null = this.extractBaseName(sceneAssets.map(asset => asset.FileName));
-        if(!sceneBaseName)
-            return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData cannot extract base name. (${sceneSource.fetchLogInfo()})`);
+        // cycle through returned downloads seeing if we have a similar file already in the scene
+        // if so, then we check to see if they have the same basename. If not, then we fail and the
+        // scene needs to be rebuilt.
+        const assetsToReplace: string[] = [];
+        for(let i=0; i<incomingFilenames.length; i++) {
+            const filename: string = incomingFilenames[i];
+            const suffix: string | undefined = suffixes.find(s => filename.endsWith(s) );
+            if(!suffix)
+                return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData couldn't find suffix in verified filenames (${filename})`);
 
-        // get list of filenames from the incoming fileMap
-        const incomingAssetFilenames: string[] = [...fileMap.values()];
-
-        // define expected suffixes to look for in the system
-        // NOTE: need to update this list if si-generate-downloads returns new/different assets
-        const suffixes: string[] = ['-150k-4096_std.glb','-100k-2048_std_draco.glb','.svx.json','-100k-2048_std.usdz','-full_resolution-obj_std.zip','-150k-4096-gltf_std.zip','-150k-4096-obj_std.zip'];
-        const mismatches: string[] = [];
-
-        // cycle through Scene assets comparing with incoming.
-        // if we have a file with the provided suffix in the Scene then check for a full name match with the incoming map
-        for(let i=0; i<suffixes.length; i++) {
-            // Only check for the filenames in the system already. If not in the system, assuming
-            // it's a new file or first run of the recipe.
-            // NOTE: if scene file has the correct name but generated downloads do not then this will succeed because
-            //       it cannot find the files in the scene and assumes them to be new.
-            const filename: string = sceneBaseName + suffixes[i];
-            if(sceneAssetFilenames.includes(filename)==true) {
-                // see if the same filename exists with the Cook response
-                // if not, then we assume there is a name difference and is not valid
-                if(incomingAssetFilenames.includes(filename)==false) {
-                    this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData couldn't find match in Cook map for: ${filename}`,false);
-                    mismatches.push(filename);
-                } else {
-                    LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData found match for ${filename}.`,LOG.LS.eDEBUG);
-                }
-            } else {
-                // if it's not in the scene then we check just the suffix in case we have a mismatch in the system (critical)
-                const found: string|undefined = sceneAssetFilenames.find(filename => filename.endsWith(suffixes[i]));
-                if(found)
-                    return this.logError(`CRITICAL: JobCookSIGenerateDownloads.verifyIncomingCookData found an incoming asset (${found}) that doesn't share the scene (id: ${sceneSource.idScene}) base name (${sceneBaseName}).`);
-                else {
-                    LOG.info(`JobCookSIGenerateDownloads.verifyIncomingCookData didn't find ${filename}. Assuming it's new...`,LOG.LS.eDEBUG);
-                }
-            }
+            // find the existing scene asset with the same suffix and check it's basename
+            const matchingAsset: DBAPI.Asset | undefined = sceneAssets.find(asset => asset.FileName.endsWith(suffix) );
+            if(matchingAsset)
+                if(filename!=matchingAsset.FileName)
+                    return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData incoming download (${filename}) has different basename than existing asset (${matchingAsset.FileName})`);
+                else
+                    assetsToReplace.push(filename);
         }
 
-        // if we have mismatches throw an error and dump out specifics
-        if(mismatches.length > 0)
-            return this.logError(`JobCookSIGenerateDownloads.verifyIncomingCookData couldn't find matching assets with '${sceneBaseName}' base name. (${mismatches.length}: ${incomingAssetFilenames.join('|')}`);
-
-        LOG.info(`JobCookSIGenerateDownloads incoming Cook data verified. (${sceneSource.fetchLogInfo()}  | baseName: ${sceneBaseName})`,LOG.LS.eJOB);
+        LOG.info(`JobCookSIGenerateDownloads incoming Cook data verified (${sceneSource.fetchLogInfo()} | new: ${incomingFilenames.length-assetsToReplace.length} | updated: ${assetsToReplace.length})`,LOG.LS.eJOB);
         return { success: true };
     }
 

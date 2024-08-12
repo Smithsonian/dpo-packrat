@@ -7,7 +7,6 @@
  * This component renders repository details view for the Repository UI.
  */
 import API, { RequestResponse } from '../../../../api';
-
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
@@ -34,7 +33,7 @@ import {
     UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
-import { ePublishedState, eSystemObjectType, eVocabularySetID, PublishedStateEnumToString } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularySetID, ePublishedState, PublishedStateEnumToString } from '@dpo-packrat/common';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
@@ -93,7 +92,6 @@ type DetailsFields = {
     idLicense?: number;
     subtitle?: string;
 };
-
 
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
@@ -179,19 +177,23 @@ function DetailsView(): React.ReactElement {
         console.log('[PACKRAT] Verifying Generate Downloads...');
 
         // make a call to our generate downloads endpoint with the current scene id
-        const response: RequestResponse = await API.generateDownloads(idSystemObject, true);
-        if(response.success === false) {
-            console.log(`[Packrat - ERROR] cannot verify if generate downloads is available. (${response.message})`);
+        const response: RequestResponse = await API.generateDownloads([idSystemObject], true);
+        if(response.success === false || !response.data || response.data.length===0) {
+            console.log(`[Packrat:ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
             return false;
         }
+        // console.log(`[PACKRAT:DEBUG] array: ${response.data && Array.isArray(response.data)} | isRunning: ${response.data[0].state.isJobRunning}, isValid: ${response.data[0].state.isValid}`,response);
 
         // see if we can actually run based on if a job isn't already running
         // and our scene meets the core requirements
-        const canRun: boolean = (response.data.isJobRunning === false) && (response.data.isSceneValid === true);
+        // should only receive one response here since this is from the details page
+        const canRun: boolean = (response.data && Array.isArray(response.data))
+            && (response.data[0].state.isJobRunning === false)
+            && (response.data[0].state.isValid === true);
 
         // we have success so enable it
-        // console.log(`[PACKRAT - DEBUG] can generate downloads: ${canRun}`);
+        // console.log(`[PACKRAT:DEBUG] can generate downloads: ${canRun}`);
         setCanGenerateDownloads(canRun);
         return canRun;
     };
@@ -349,8 +351,8 @@ function DetailsView(): React.ReactElement {
     };
 
     const onPublishUpdate = ({ target }): void => {
-        console.log(`[PACKRAT] ${JSON.stringify(target)}`);
-        console.log(`[PACKRAT] value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState}`);
+        // console.log(`[PACKRAT] ${JSON.stringify(target)}`);
+        console.log(`[PACKRAT:DEBUG] Repository.DetailsView.onPublishUpdate (value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState})`);
 
         // const pState: ePublishedState = ePublishedState[parseInt(target.value)];
         // if(pState.toString() != publishedState) {
@@ -562,7 +564,7 @@ function DetailsView(): React.ReactElement {
                     datasetUse
                 };
             }
-            console.log('updatedData: ', updatedData);
+
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
             updatedData.Metadata = metadata;
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
@@ -601,15 +603,18 @@ function DetailsView(): React.ReactElement {
 
         // make a call to our generate downloads endpoint with the current scene id
         // return sucess when the job is started or if one is already running
-        const response: RequestResponse = await API.generateDownloads(idSystemObject);
+        const response: RequestResponse = await API.generateDownloads([idSystemObject]);
         if(response.success === false) {
 
+            // get our message from our first response
+            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+
             // if the job is running then handle differently
-            if(response.message && response.message.includes('already running')) {
-                console.log(`[Packrat - WARN] cannot generate downloads. (${response.message})`);
+            if(responseMessage.includes('already running')) {
+                console.log(`[Packrat - WARN] cannot generate downloads. (${responseMessage})`);
                 toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
             } else {
-                console.log(`[Packrat - ERROR] cannot generate downloads. (${response.message})`);
+                console.log(`[Packrat - ERROR] cannot generate downloads. (${responseMessage})`);
                 toast.error('Cannot generate downloads. Check the report.');
             }
 

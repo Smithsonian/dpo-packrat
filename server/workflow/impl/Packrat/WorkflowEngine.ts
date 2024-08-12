@@ -130,28 +130,29 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
     }
 
-    async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
+    // NOTE: bypassed with manual generateDownloads routine below.
+    // async generateSceneDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow[] | null> {
 
-        LOG.info(`WorkflowEngine.generateSceneDownloads working...(idScene:${idScene})`,LOG.LS.eWF);
-        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
-        if (!scene) {
-            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
-            return null;
-        }
+    //     LOG.info(`WorkflowEngine.generateSceneDownloads working...(idScene:${idScene})`,LOG.LS.eWF);
+    //     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
+    //     if (!scene) {
+    //         LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene from idScene ${idScene}`, LOG.LS.eWF);
+    //         return null;
+    //     }
 
-        const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
-        if (!SOScene) {
-            LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
-            return null;
-        }
+    //     const SOScene: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+    //     if (!SOScene) {
+    //         LOG.error(`WorkflowEngine.generateSceneDownloads unable to fetch scene system object from scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+    //         return null;
+    //     }
 
-        const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
-        if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
-            LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
-            return null;
-        }
-        return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
-    }
+    //     const CSIR: ComputeSceneInfoResult = await this.computeSceneInfo(idScene, SOScene.idSystemObject);
+    //     if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
+    //         LOG.info(`WorkflowEngine.generateSceneDownloads did not locate a scene with a master model parent ready for download generation for scene ${H.Helpers.JSONStringify(scene)}`, LOG.LS.eWF);
+    //         return null;
+    //     }
+    //     return await this.eventIngestionIngestObjectScene(CSIR, workflowParams, true);
+    // }
 
     async generateDownloads(idScene: number, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
 
@@ -170,35 +171,35 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
         if(!sceneSO) {
             LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid without SystemObject. (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'cannot get SystemObject', data: { isSceneValid: false } };
+            return { success: false, message: 'cannot get SystemObject', data: { isValid: false } };
         }
 
         // get our information about the scene
         const CSIR: ComputeSceneInfoResult | null = await this.computeSceneInfo(scene.idScene,sceneSO.idSystemObject);
         if(!CSIR || !CSIR.idScene || CSIR.exitEarly==true) {
             LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'cannot compute scene info', data: { isSceneValid: false } };
+            return { success: false, message: 'cannot compute scene info', data: { isValid: false } };
         }
         LOG.info(`WorkflowEngine.generateDownloads verify scene (idScene:${CSIR.idScene} | sceneFile: ${CSIR.assetSVX?.FileName} | idModel: ${CSIR.idModel} | modelFile: ${CSIR.assetVersionGeometry?.FileName})`,LOG.LS.eDEBUG);
 
         // make sure we have a voyager scene
         if(!CSIR.assetSVX) {
             LOG.error(`WorkflowEngine.generateDownloads failed. No voyager scene found (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'no voyager scene found', data: { isSceneValid: false } };
+            return { success: false, message: 'no voyager scene found', data: { isValid: false } };
         }
 
         // make sure we have a master model
         if(!CSIR.assetVersionGeometry || !CSIR.idModel) {
             LOG.error(`WorkflowEngine.generateDownloads failed. No master model found (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'no master model found', data: { isSceneValid: false } };
+            return { success: false, message: 'no master model found', data: { isValid: false } };
         }
 
         // make sure we can run the recipe (valid scene, not running, etc)
         if(scene.PosedAndQCd === false) {
             LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'not posed or QC\'d', data: { isSceneValid: false } };
+            return { success: false, message: 'not posed or QC\'d', data: { isValid: false } };
         }
-        const isSceneValid: boolean = true;
+        const isValid: boolean = true;
         //#endregion
 
         //#region check for duplicate jobs
@@ -206,7 +207,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(8,scene.idScene);
         if(!activeJobs) {
             LOG.error(`WorkflowEngine.generateDownloads failed. cannot determine if job is running. (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'failed to get acti e jobs from DB', data: { isSceneValid: false } };
+            return { success: false, message: 'failed to get acti e jobs from DB', data: { isValid: false } };
         }
 
         // if we're running, we don't duplicate our efforts
@@ -224,7 +225,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 LOG.info(`WorkflowEngine.generateDownloads unable to get workflowReport (idScene: ${scene.idScene} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
 
             LOG.info(`WorkflowEngine.generateDownloads did not start. Job already running (idScene: ${scene.idScene} | activeJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
-            return { success: false, message: 'Job already running', data: { isSceneValid: true, activeJobs, idWorkflow, idWorkflowReport } };
+            return { success: false, message: 'Job already running', data: { isValid: true, activeJobs, idWorkflow, idWorkflowReport } };
         }
         //#endregion
 
@@ -232,14 +233,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const SOGeometry: DBAPI.SystemObject| null = await CSIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry file systemobject from ${JSON.stringify(CSIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
-            return { success: false, message: 'cannot get SystemObject for geometry file', data: { isSceneValid: false, activeJobs } };
+            return { success: false, message: 'cannot get SystemObject for geometry file', data: { isValid: false, activeJobs } };
         }
         const idSystemObject: number[] = [SOGeometry.idSystemObject];
 
         const SOSVX: DBAPI.SystemObject| null = CSIR.assetSVX ? await CSIR.assetSVX.fetchSystemObject() : null;
         if (!SOSVX) {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute scene file systemobject from ${JSON.stringify(CSIR.assetSVX, H.Helpers.saferStringify)}`, LOG.LS.eWF);
-            return { success: false, message: 'cannot get SystemObject for voyager scene file', data: { isSceneValid: false, activeJobs } };
+            return { success: false, message: 'cannot get SystemObject for voyager scene file', data: { isValid: false, activeJobs } };
         }
         idSystemObject.push(SOSVX.idSystemObject);
 
@@ -260,7 +261,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CSIR.idModel);
         if(parameterHelper==null) {
             LOG.error(`WorkflowEngine.generateDownloads cannot create workflow parameters\n(CSIR:${H.Helpers.JSONStringify(CSIR)})`, LOG.LS.eWF);
-            return { success: false, message: 'cannot create workflow parameters', data: { isSceneValid, activeJobs } };
+            return { success: false, message: 'cannot create workflow parameters', data: { isValid, activeJobs } };
         }
 
         // create our parameters for generating downloads job
@@ -274,7 +275,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const sceneProjects: DBAPI.Project[] | null = await DBAPI.Project.fetchFromScene(scene.idScene);
         if(!sceneProjects || sceneProjects.length!=1) {
             LOG.error(`WorkflowEngine.generateDownloads cannot find project for scene. (idScene: ${scene.idScene})`, LOG.LS.eWF);
-            return { success: false, message: `cannot create workflow if scene does not have a Project (${scene.idScene})`, data: { isSceneValid, activeJobs } };
+            return { success: false, message: `cannot create workflow if scene does not have a Project (${scene.idScene})`, data: { isValid, activeJobs } };
         }
 
         // create parameters for the workflow based on those created for the job
@@ -294,14 +295,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             const wf: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
             if (!wf) {
                 LOG.error(`WorkflowEngine.generateDownloads unable to create Cook si-generate-downloads workflow: ${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
-                return { success: false, message: 'cannot create downloads workflow', data: { isSceneValid, activeJobs } };
+                return { success: false, message: 'cannot create downloads workflow', data: { isValid, activeJobs } };
             }
 
             // get our Workflow object from the database
             const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
             if(!workflow) {
                 LOG.error(`WorkflowEngine.generateDownloads unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eWF);
-                return { success: false, message: 'cannot get worfklow object', data: { isSceneValid, activeJobs } };
+                return { success: false, message: 'cannot get worfklow object', data: { isValid, activeJobs } };
             }
             LOG.info(`WorkflowEngine.generateDownloads retrieved workflow (${workflow.idWorkflow} | ${workflow.idWorkflowSet})`,LOG.LS.eDEBUG);
 
@@ -309,15 +310,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
             if(!workflowReport || workflowReport.length <= 0) {
                 LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
-                return { success: false, message: 'cannot get worfklow report object', data: { isSceneValid, activeJobs } };
+                return { success: false, message: 'cannot get worfklow report object', data: { isValid, activeJobs } };
             }
             LOG.info(`WorkflowEngine.generateDownloads retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
             LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
 
             // return success
-            return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs, workflow, workflowReport } };
+            return { success: true, message: 'generating downloads', data: { isValid, activeJobs, workflow, workflowReport } };
         } else
-            return { success: true, message: 'generating downloads', data: { isSceneValid, activeJobs } };
+            return { success: true, message: 'generating downloads', data: { isValid, activeJobs } };
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {

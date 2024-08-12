@@ -164,7 +164,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     useEffect(() => {
         if (!data?.getDetailsTabDataForObject.CaptureData?.isValidData)
             toast.error('Invalid data detected', { autoClose: false });
-        console.log(data);
     }, [data, loading]);
 
     if (!data || loading) {
@@ -206,7 +205,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         // make sure we got an array as value
         if(!Array.isArray(value))
             return console.error('did not receive array', value);
-        console.log('setDatasetUseField (Details): ',value);
 
         // convert array into JSON array and feed to metadata update
         const arrayString = JSON.stringify(value);
@@ -215,7 +213,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const getSelectedIDsFromJSON = (value: string | undefined | null): number[] => {
         // used to extract array from JSON
-        console.log('getStringFromJSON: ', value);
         try {
             if(!value)
                 throw new Error('[PACKRAT:ERROR] cannot get selected IDs. undefined value');

@@ -98,20 +98,22 @@ export class PublishScene {
             return false;
         }
 
-        // create EDAN 3D Package for our scene and push to EDAN
+        // create EDAN 3D Package for our scene and push to EDAN (un-published state)
         // this is done first so when we update with license/status info the scene is there
         let edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
         if (!edanRecord) {
             LOG.error('PublishScene.publish EDAN failed', LOG.LS.eCOLL);
             return false;
         }
-        LOG.info(`PublishScene.publish ${edanRecord.url} succeeded with Edan status ${edanRecord.status}, publicSearch ${edanRecord.publicSearch} (path: ${this.sharedName})`, LOG.LS.eCOLL);
+        LOG.info(`PublishScene.publish 3D package (${edanRecord.url}) succeeded with Edan (status: ${edanRecord.status}, publicSearch: ${edanRecord.publicSearch}, resources: ${this.edan3DResourceList?.length ?? 0}, path: ${this.sharedName})`, LOG.LS.eCOLL);
 
         // stage downloads
-        if (!await this.stageDownloads() || !this.edan3DResourceList)
+        if (!await this.stageDownloads() || !this.edan3DResourceList) {
+            LOG.error(`PublishScene.publish failed to stage downloads. (count: ${this.edan3DResourceList?.length ?? -1})`,LOG.LS.eCOLL);
             return false;
+        }
 
-        // update SystemObjectVersion.PublishedState
+        // figure out our license information
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (!await this.updatePublishedState(LR, ePublishedStateIntended))
             return false;
@@ -144,7 +146,7 @@ export class PublishScene {
             // LOG.info(`PublishScene.publish updated ${edanRecord.url}:\n${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eCOLL);
         }
 
-        LOG.info(`PublishScene.publish UUID ${this.scene.EdanUUID}, status ${status}, publicSearch ${publicSearch}, downloads ${downloads}, has downloads ${haveDownloads}`, LOG.LS.eCOLL);
+        LOG.info(`PublishScene.publish (UUID: ${this.scene.EdanUUID}, status: ${COMMON.ePublishedState[status]}, publicSearch: ${publicSearch}, downloads: ${downloads}, has downloads: ${haveDownloads})`, LOG.LS.eCOLL);
         return true;
     }
 
@@ -793,6 +795,16 @@ export class PublishScene {
     }
 
     private computeEdanSearchFlags(edanRecord: COL.EdanRecord, eState: COMMON.ePublishedState): { status: number, publicSearch: boolean, downloads: boolean } {
+        // Published (site)
+        //      puts it on the 3d site
+        //      params = { status: 0, publicSearch: true }
+        // Published (API)
+        //      only accessible directly by link (i.e. not on 3d site and not searchable)
+        //      params = { status: 0, publicSearch: false }
+        // Published (Internal)
+        //      not publicly accessible and reserved for sensitive items that need an EDAN record but not publicly available (yet)
+        //      params = { status: 1, publicSearch: false }
+
         let status: number = edanRecord.status;
         let publicSearch: boolean = edanRecord.publicSearch;
         let downloads: boolean = publicSearch;

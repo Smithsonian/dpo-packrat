@@ -420,7 +420,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     const errorMessage = error || `Upload failed for ${file.name}`;
                     toast.error(errorMessage);
                 } else if (status === UploadStatus.Noauth) {
-                    console.log(`startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, user not authenticated`);
+                    console.log(`[PACKRAT:ERROR] startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, user not authenticated`);
                     const failedEvent: UploadFailedEvent = { id };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 

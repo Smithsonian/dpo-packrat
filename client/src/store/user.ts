@@ -86,7 +86,7 @@ async function getAuthenticatedUser(): Promise<User | null> {
 
         return getCurrentUser.User;
     } catch (error) {
-        console.log(`getAuthenticatedUser failure: ${JSON.stringify(error)}`);
+        console.log(`[PACKRAT:ERROR] getAuthenticatedUser failure: ${JSON.stringify(error)}`);
         return null;
     }
 }

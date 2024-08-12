@@ -30,6 +30,7 @@ interface TextAreaProps extends ViewableProps {
     value?: number | string | null;
     name: string;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    onBlur?: (event: React.ChangeEvent<HTMLInputElement>) => void;
     error?: boolean;
     placeholder?: string;
     height?: string;
@@ -37,7 +38,7 @@ interface TextAreaProps extends ViewableProps {
 }
 
 function TextArea(props: TextAreaProps): React.ReactElement {
-    const { label, name, value, onChange, required = false, viewMode = false, disabled = false, placeholder, rows } = props;
+    const { label, name, value, onChange, onBlur, required = false, viewMode = false, disabled = false, placeholder, rows } = props;
     const classes = useStyles(props);
 
     const rowFieldProps = { alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0 } };
@@ -59,6 +60,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                     className={classes.description}
                     name={name}
                     onChange={onChange}
+                    onBlur={onBlur}
                     debounceTimeout={400}
                     placeholder={placeholder}
                     rows={rows}
@@ -72,6 +74,7 @@ function TextArea(props: TextAreaProps): React.ReactElement {
                 className={classes.description}
                 name={name}
                 onChange={onChange}
+                onBlur={onBlur}
                 debounceTimeout={400}
                 placeholder={placeholder}
                 rows={rows}
