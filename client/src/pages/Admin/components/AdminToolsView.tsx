@@ -379,14 +379,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 
     }, [resetSelection]);
 
-    useEffect(() => {
-        console.log('new data');
-
-        // reapply the filters
-
-        // return to first page
-        // setPage(0);
-    }, [data]);
     // JSX
     return (
         <Box style={{ marginTop: '2rem', marginBottom: '2rem' }}>
@@ -568,6 +560,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     }, []);
     const getProjectScenes = useCallback(async (project?: Project) => {
         try {
+            console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - STARTED`);
             const response: RequestResponse = await API.getProjectScenes(project ? project.idProject : -1);
             if(response.success === false) {
                 console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project ? project.Name : 'all'} | message: ${response.message})`);
@@ -589,6 +582,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             });
 
             // console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
+            console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - FINISHED [${response.data.length}]`);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
@@ -666,7 +660,12 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         getProjectScenes(projectSelected);
     };
     const filteredProjectScenes = useMemo(() => {
-        return projectScenes.filter(row => row.name.toLowerCase().includes(sceneNameFilter.toLowerCase()));
+        const filterPattern: string = sceneNameFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        return projectScenes.filter(row => {
+            const sceneName: string = row.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            // console.log(`[Packrat:Debug] sceneName: ${sceneName} | filter: ${filterPattern}`);
+            return sceneName.includes(filterPattern);
+        });
     }, [projectScenes, sceneNameFilter]);
 
     // mounting/alteration routines
