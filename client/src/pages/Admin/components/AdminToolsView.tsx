@@ -666,7 +666,12 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         getProjectScenes(projectSelected);
     };
     const filteredProjectScenes = useMemo(() => {
-        return projectScenes.filter(row => row.name.toLowerCase().includes(sceneNameFilter.toLowerCase()));
+        const filterPattern: string = sceneNameFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+        return projectScenes.filter(row => {
+            const sceneName: string = row.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+            // console.log(`[Packrat:Debug] sceneName: ${sceneName} | filter: ${filterPattern}`);
+            return sceneName.includes(filterPattern);
+        });
     }, [projectScenes, sceneNameFilter]);
 
     // mounting/alteration routines
