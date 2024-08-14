@@ -690,7 +690,22 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             </IconButton>
             <Collapse in={showBatchOps} className={classes.container}>
                 <Box className={classes.collapseContainer} style={{ paddingTop: '10px', width: '100%' }}>
-                    <TableContainer component={Paper} elevation={0} style={{ overflow: 'hidden' }}>
+                    <Box style={{ paddingLeft: '1rem' }}>
+                        <Typography variant='body2' gutterBottom>
+                            This tool allows you to batch download and generate scenes with ease.
+                        </Typography>
+                        {/* <Typography variant='body1'>
+                            To get started, select your intended project from the dropdown menu. (<strong>Note:</strong> You can only select one project at a time.)
+                        </Typography>
+                        <Typography variant='body1' gutterBottom>
+                            If needed, you can filter the results by scene name. Once you have made your selections, click the <strong>Submit</strong> button to begin processing. Progress can be monitored in the <strong>Workflow Tab</strong>.
+                        </Typography> */}
+                        <Typography variant='body1' color='error' gutterBottom>
+                            Please remember, the process is limited to <strong>10 items</strong> at a time to prevent overloading the system. Additionally, you can only select from one project at a time.
+                        </Typography>
+                    </Box>
+
+                    <TableContainer component={Paper} elevation={0} style={{ overflow: 'hidden', marginTop: '2rem' }}>
                         <Table className={tableClasses.table}>
                             <TableBody>
                                 <TableRow className={tableClasses.tableRow}>
@@ -799,7 +814,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                             disableElevation
                             disabled={!isListValid}
                         >
-                            Go
+                            Submit
                         </Button>
                         <Button
                             className={classes.btn}
