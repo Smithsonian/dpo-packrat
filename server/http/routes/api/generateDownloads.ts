@@ -42,16 +42,31 @@ const generateResponse = (success: boolean, message?: string | undefined, id?: n
         state
     };
 };
-const buildOpResponse = (message: string, responses: GenDownloadsResponse[]): OpResponse => {
-    // if empty send error response
-    if(responses.length===0)
-        return { success: false, message: 'no responses from operation' };
+const buildOpResponse = (responses: GenDownloadsResponse[]): OpResponse => {
+    if (responses.length === 0) {
+        return { success: false, message: 'No responses from operation', data: [] };
+    }
 
-    // cycle through all responses and see if we
+    // see how many were successfuly and extract error messages from those not successful
+    const successCount = responses.filter(response => response.success).length;
+    const messages = Array.from(
+        new Set(
+            responses
+                .filter(response => !response.success && response.message)
+                .map(response => response.message as string)
+        )
+    );
+
+    // build up our final message based on what was found
+    const message =
+      successCount === responses.length
+          ? `All ${successCount} scenes submitted successfully`
+          : `${successCount}/${responses.length} scenes submitted successfully (errors: ${messages.join(', ')})`;
+
     return {
-        success: responses.every((r)=>r.success),
+        success: successCount === responses.length,
         message,
-        data: [...responses],
+        data: responses,
     };
 };
 
@@ -77,10 +92,10 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
 
     // create our workflow for generating downloads
     const result: WorkflowCreateResult = await wfEngine.generateDownloads(scene.idScene, workflowParams);
-    // LOG.info(`API.generateDownloads post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
+    LOG.info(`API.generateDownloads post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
 
     const isValid: boolean = result.data.isValid ?? false;
-    const isJobRunning: boolean = (result.data.activeJobs.length>0) ?? false;
+    const isJobRunning: boolean = (result.data.activeJobs?.length>0) ?? false;
     const idWorkflow: number | undefined = (result.data.workflow?.idWorkflow) ?? undefined;
     const idWorkflowReport: number | undefined = (result.data.workflowReport?.idWorkflowReport) ?? undefined;
 
@@ -90,6 +105,7 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
         return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
     }
 
+    console.log('a');
     return generateResponse(true,`Generating Downloads for: ${scene.Name}`,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
 };
 const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloadsResponse> => {
@@ -241,79 +257,6 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
     return;
 };
 
-// queue management
-// enum OpStatus {
-//     UNDEFINED,
-//     PENDING,
-//     RUNNING,
-//     FINISHED,
-//     ERROR,
-//     RETRY
-// }
-// type OpsQueueItem = {
-//     status: OpStatus;
-//     idSystemObject: number;
-//     message?: string;
-//     response: Promise<GenDownloadsResponse> | null;
-// };
-// const processScenes = async (idSystemObjects: number[], idUser: number): Promise<GenDownloadsResponse[]> => {
-//     const maxActive: number = 3;
-
-//     // add our ids to the queue
-//     const queue: OpsQueueItem[] = idSystemObjects.map((id) => ({
-//         status: OpStatus.PENDING,
-//         idSystemObject: id,
-//         response: null,
-//     }));
-
-//     // hold our active items and any returned promises
-//     const active: Set<OpsQueueItem> = new Set();
-//     const responses: GenDownloadsResponse[] = [];
-
-//     // function to process the next item checking that we're not exceeding our
-//     // concurrency and checking status of all items
-//     const processNext = async () => {
-//         // if over our max active, just return (nothing to add)
-//         if (active.size >= maxActive) return;
-
-//         // find the next item based on the status. find is sequential so we get a FIFO behavior
-//         const nextItem: OpsQueueItem | undefined = queue.find(item => item.status === OpStatus.PENDING || item.status === OpStatus.RETRY);
-//         if (!nextItem) return;
-
-//         // update our status and add to list of active items
-//         nextItem.status = OpStatus.RUNNING;
-//         active.add(nextItem);
-
-//         try {
-//             // we create the op and wait for it to finish
-//             // TODO: returns FINISH before checking state of the workflow
-//             nextItem.response = createOpForScene(nextItem.idSystemObject, idUser);
-//             const response = await nextItem.response;
-//             responses.push(response);
-//             nextItem.status = OpStatus.FINISHED;
-//         } catch (error) {
-//             // set our error and push a failed attempt into our responses
-//             nextItem.status = OpStatus.ERROR;
-//             nextItem.message = error as string;
-//             responses.push(generateResponse(false,error as string,nextItem.idSystemObject));
-//         } finally {
-//             // remove from our active items and process a new one
-//             active.delete(nextItem);
-//             processNext();
-//         }
-//     };
-
-//     // cycle through all queue items constantly
-//     while (queue.some(item => item.status !== OpStatus.FINISHED && item.status !== OpStatus.ERROR)) {
-//         if (active.size < maxActive) {
-//             processNext();
-//         }
-//         await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to prevent tight loop
-//     }
-
-//     return responses;
-// };
-
 export async function generateDownloads(req: Request, res: Response): Promise<void> {
 
     // make sure we're authenticated (i.e. see if request has a 'user' object)
@@ -376,16 +319,13 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     }
 
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat
-    let messageSuffix: string | null = null;
     const maxIDs: number = 10;
     if(idSystemObjects.length>maxIDs) {
         LOG.info('API.generateDownloads too many scenes submitted. limiting to 10',LOG.LS.eHTTP);
-        messageSuffix = `(Capped to ${maxIDs})`;
         idSystemObjects.splice(10);
     }
 
     // cycle through IDs
-    let messagePrefix: string = '';
     const responses: GenDownloadsResponse[] = [];
     for(let i=0; i<idSystemObjects.length; i++) {
         const idSystemObject: number = idSystemObjects[i];
@@ -394,17 +334,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         if(statusOnly===true) {
             const result: GenDownloadsResponse = await getOpStatusForScene(idSystemObject);
             responses.push(result);
-            messagePrefix = 'Getting Status for:';
         } else {
-            /** TODO
-             * - push to queue
-             * - spin up queue worker (if not already)
-             *      - if active list < threshold add new one to list
-             *      - cycle through active items
-             *          - if finished/error remove from list and store results (just return status obj)
-             *          - if active list is empty then finish and return response
-             */
-
             // get our published state for the scene ebfore doing anything because generate downloads
             // will create a new Scene version that is unpublished, affecting our ability to re-publish
             const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject ?? -1);
@@ -417,7 +347,6 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
             // create our operation and execute download generation
             const result: GenDownloadsResponse = await createOpForScene(idSystemObject,LS.idUser);
             responses.push(result);
-            messagePrefix = 'Generating Downloads for:';
 
             // if we want to republish the scene then we fire off the promise that checks the status
             // and when done re-publishes the scene (non-blocking)
@@ -429,8 +358,11 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
                 publishScene(result, currentPublishedState);
             }
         }
+
+        // stagger a second to avoid a tight request loop
+        H.Helpers.sleep(1000);
     }
 
     // create our combined response and return info to client
-    res.status(200).send(JSON.stringify(buildOpResponse(`${messagePrefix} ${responses.length} scenes ${messageSuffix ?? ''}`,responses)));
+    res.status(200).send(JSON.stringify(buildOpResponse(responses)));
 }
