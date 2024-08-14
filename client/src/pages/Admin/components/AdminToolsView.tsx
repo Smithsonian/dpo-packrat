@@ -400,26 +400,27 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                 />
                             </TableCell>
                             { columns.map((columnHeading) => (
-                                <TableCell
-                                    key={columnHeading.key}
-                                    align={columnHeading.align ?? 'center'}
-                                    padding='none'
-                                    component='th'
-                                    sortDirection={orderBy === columnHeading.key ? order : false}
-                                >
-                                    <TableSortLabel
-                                        active={orderBy === columnHeading.key}
-                                        direction={orderBy === columnHeading.key ? order : 'asc'}
-                                        onClick={createSortHandler(columnHeading.key)}
+                                <Tooltip key={columnHeading.key} title={columnHeading.tooltip ?? columnHeading.key} disableHoverListener={!columnHeading.tooltip}>
+                                    <TableCell
+                                        align={columnHeading.align ?? 'center'}
+                                        padding='none'
+                                        component='th'
+                                        sortDirection={orderBy === columnHeading.key ? order : false}
                                     >
-                                        {columnHeading.label}
-                                        {orderBy === columnHeading.key ? (
-                                            <span className={classes.visuallyHidden}>
-                                                {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                            </span>
-                                        ) : null}
-                                    </TableSortLabel>
-                                </TableCell>
+                                        <TableSortLabel
+                                            active={orderBy === columnHeading.key}
+                                            direction={orderBy === columnHeading.key ? order : 'asc'}
+                                            onClick={createSortHandler(columnHeading.key)}
+                                        >
+                                            {columnHeading.label}
+                                            {orderBy === columnHeading.key ? (
+                                                <span className={classes.visuallyHidden}>
+                                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                                                </span>
+                                            ) : null}
+                                        </TableSortLabel>
+                                    </TableCell>
+                                </Tooltip>
                             ))}
                         </TableRow>
                     </TableHead>
@@ -596,12 +597,12 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     }, []);
     const getColumnHeader = (): ColumnHeader[] => {
         return [
-            { key: 'id', label: 'ID', align: 'center' },
-            { key: 'name', label: 'Scene', align: 'center', link: true },
-            { key: 'mediaGroup.name', label: 'Media Group', align: 'center' },
-            { key: 'subject.name', label: 'Subject', align: 'center' },
-            { key: 'downloads.status', label: 'Downloads', align: 'center' },
-            { key: 'publishedState', label: 'Published', align: 'center' },
+            { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
+            { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
+            { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
+            { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
+            { key: 'downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
+            { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
         ];
@@ -701,7 +702,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                             If needed, you can filter the results by scene name. Once you have made your selections, click the <strong>Submit</strong> button to begin processing. Progress can be monitored in the <strong>Workflow Tab</strong>.
                         </Typography> */}
                         <Typography variant='body1' color='error' gutterBottom>
-                            Please remember, the process is limited to <strong>10 items</strong> at a time to prevent overloading the system. Additionally, you can only select from one project at a time.
+                            Please remember, the process is limited to <strong>10 items</strong> at a time to prevent overloading the system.
                         </Typography>
                     </Box>
 
@@ -754,7 +755,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Tooltip title={'Filters scenes to the selected project. This will reset your selection and what scenes are available in the table below.'}>
+                                        <Tooltip title={'Filters scenes to the selected project. This will reset your selection and what scenes are available in the table below. Changing the project will deselect anything currently selected.'}>
                                             <Typography className={tableClasses.labelText}>Filter: Project</Typography>
                                         </Tooltip>
                                     </TableCell>
