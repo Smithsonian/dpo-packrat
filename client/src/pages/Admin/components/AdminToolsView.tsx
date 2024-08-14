@@ -636,15 +636,43 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         const response: RequestResponse = await API.generateDownloads(sceneIDs,false,republishScenes);
         if(response.success === false) {
 
-            // if the job is running then handle differently
-            if(response.message && response.message.includes('already running')) {
-                console.log(`[Packrat:WARN] cannot do ${BatchOperations[operation]}. (${response.message})`);
-                toast.warn(`Not running ${BatchOperations[operation]}. Job already running. Please wait for it to finish.`);
-            } else {
-                console.log(`[Packrat:ERROR] cannot run ${BatchOperations[operation]}. (${response.message})`);
-                toast.error(`Cannot ${BatchOperations[operation]}. Check the report.`);
+            // make sure we have data and responses
+            if(!response.data || !Array.isArray(response.data)) {
+                console.log(`[Packrat:ERROR] cannot run ${BatchOperations[operation]}. invalid response data.`,response);
+                toast.error(`${BatchOperations[operation]} failed. Got unexpected data from server.`);
+                return;
             }
-            return;
+
+            // get our unique error messages
+            const uniqueMessages = Array.from(
+                new Set(
+                    response.data
+                        .filter(response => !response.success && response.message)  // Ensure there is a message
+                        .map(response => `${response.id}: ${response.message}`)     // Extract the messages
+                )
+            );
+            const toastErrorMsg: string = (uniqueMessages.length>1) ? 'Check the console.' : uniqueMessages[0];
+
+            // see if we have nuance to the response (i.e. some failed/some passed)
+            const allFailed: boolean = response.data.every( response => response.succcess===false );
+            if(allFailed===true) {
+                const errorMsg: string = (response.data.length>1)
+                    ? `All ${response.data.length} scenes failed during ${BatchOperations[operation]} run.`
+                    : `${BatchOperations[operation]} cannot run. ${uniqueMessages[0]}`;
+
+                console.log(`[Packrat:ERROR] ${errorMsg}`,response.data);
+                toast.error(`${BatchOperations[operation]} failed. (${toastErrorMsg})`);
+                return;
+            }
+
+            // only some failed so we need to handle this
+            const failedCount: number = response.data.filter(response => !response.success).length;
+            console.log(`[Packrat:ERROR] ${response.data.length}/${selectedList.length} scenes failed. (${uniqueMessages.join(' |')})`,response.data);
+            toast.warn(`${BatchOperations[operation]} had issues. ${failedCount} scenes failed. (${toastErrorMsg})`);
+
+            // we bail early so the selection is maintained on failure
+            // TODO: deselect those that were successful.
+            return false;
         }
 
         // clear selection on succcess
