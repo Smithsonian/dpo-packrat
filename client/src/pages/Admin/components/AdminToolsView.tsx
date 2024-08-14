@@ -589,8 +589,9 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const getColumnHeader = (): ColumnHeader[] => {
         return [
             { key: 'id', label: 'ID', align: 'center' },
-            { key: 'name', label: 'Scene Name', align: 'center', link: true },
+            { key: 'name', label: 'Scene', align: 'center', link: true },
             { key: 'mediaGroup.name', label: 'Media Group', align: 'center' },
+            { key: 'subject.name', label: 'Subject', align: 'center' },
             { key: 'downloads.status', label: 'Downloads', align: 'center' },
             { key: 'publishedState', label: 'Published', align: 'center' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
