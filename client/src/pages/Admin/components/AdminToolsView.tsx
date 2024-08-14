@@ -379,14 +379,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 
     }, [resetSelection]);
 
-    useEffect(() => {
-        console.log('new data');
-
-        // reapply the filters
-
-        // return to first page
-        // setPage(0);
-    }, [data]);
     // JSX
     return (
         <Box style={{ marginTop: '2rem', marginBottom: '2rem' }}>
@@ -598,7 +590,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         return [
             { key: 'id', label: 'ID', align: 'center' },
             { key: 'name', label: 'Scene Name', align: 'center', link: true },
-            { key: 'subject.name', label: 'Subject Name', align: 'center' },
+            { key: 'mediaGroup.name', label: 'Media Group', align: 'center' },
             { key: 'downloads.status', label: 'Downloads', align: 'center' },
             { key: 'publishedState', label: 'Published', align: 'center' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
