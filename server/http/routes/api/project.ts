@@ -43,7 +43,8 @@ const isAuthorized = async (req: Request): Promise<H.IOResults> => {
     const authorizedUsers: number[] = [
         2,  // Jon Blundell
         4,  // Jamie Cope
-        5   // Eric Maslowski
+        5,  // Eric Maslowski
+        6,  // Megan Dattoria
     ];
     if(!authorizedUsers.includes(LS.idUser)) {
         LOG.error(`API.getProjects failed. user is not authorized for this request (${LS.idUser})`,LOG.LS.eHTTP);
