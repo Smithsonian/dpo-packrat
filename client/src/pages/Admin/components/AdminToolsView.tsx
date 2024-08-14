@@ -213,7 +213,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     };
-    const resolveProperty = (obj: T, path: string): string | undefined => {
+    const resolveProperty = (obj: T, path: string): string => {
 
         if(!obj || path.length<=0) {
             console.log(`[Packrat:ERROR] invalid inputs for resolveProperty (obj: ${obj ? 'true':'false'} | path: ${path})`);
@@ -454,17 +454,25 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                             {columns.map((column) => (
                                                 // we do 'id' above so we can flag the entire row for accessibility
                                                 (column.key!=='id') && (
-                                                    <TableCell key={column.key} align={column.align ?? 'center'}>
-                                                        { (column.link && column.link===true) ? (
-                                                            <>
-                                                                <a href={resolveProperty(row, `${column.key}_link`)} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
-                                                                    {resolveProperty(row,column.key)}
-                                                                </a>
-                                                            </>
-                                                        ) : (
-                                                            resolveProperty(row, column.key)
-                                                        )}
-                                                    </TableCell>
+                                                    <Tooltip
+                                                        key={column.key}
+                                                        title={resolveProperty(row,column.key)}
+                                                    >
+                                                        <TableCell
+                                                            align={column.align ?? 'center'}
+                                                            style={{  whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '10rem', }}
+                                                        >
+                                                            { (column.link && column.link===true) ? (
+                                                                <>
+                                                                    <a href={resolveProperty(row, `${column.key}_link`)} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
+                                                                        {resolveProperty(row,column.key)}
+                                                                    </a>
+                                                                </>
+                                                            ) : (
+                                                                resolveProperty(row, column.key)
+                                                            )}
+                                                        </TableCell>
+                                                    </Tooltip>
                                                 )
                                             ))}
                                         </TableRow>
