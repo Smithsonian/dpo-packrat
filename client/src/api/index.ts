@@ -47,7 +47,6 @@ export default class API {
         const body = JSON.stringify({ statusOnly, rePublish, idSystemObject });
         let uri: string = API_ROUTES.GEN_DOWNLOADS;
         console.log('[PACKRAT:DEBUG] body: ',body);
-        console.trace('API.generateDownloads');
 
         let options;
         if(statusOnly) {
@@ -101,8 +100,10 @@ export default class API {
         return fetch(`${serverEndpoint}/${route}`, defaultOptions)
             .then(response => {
                 // Check if the response returned a successful status code
-                if (!response.ok)
+                if (!response.ok) {
+                    console.log('response: ',response);
                     return { success: false, message: response.statusText };
+                }
                 return response.json(); // Assuming the server responds with JSON
             })
             .catch(error => {

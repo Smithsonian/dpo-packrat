@@ -197,7 +197,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // make sure we can run the recipe (valid scene, not running, etc)
         if(scene.PosedAndQCd === false) {
             LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'not posed or QC\'d', data: { isValid: false } };
+            return { success: false, message: 'not posed, licensed, or QC', data: { isValid: false } };
         }
         const isValid: boolean = true;
         //#endregion
