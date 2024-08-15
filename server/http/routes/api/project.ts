@@ -9,13 +9,13 @@ import { PublishScene } from '../../../collections/impl/PublishScene';
 // import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
+import { Config } from '../../../config';
 
 //#region Project List
 type ProjectResponse = {
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
-    // dataType?: DataType,        // what to expect in 'data'
-    data? //ummarySubject | SummaryMediaGroup | SummaryScene
+    data?
 };
 const generateResponse = (success: boolean, message?: string | undefined, data?): ProjectResponse => {
     return {
@@ -39,13 +39,8 @@ const isAuthorized = async (req: Request): Promise<H.IOResults> => {
         return { success: false, error: `missing local store/user (${LS?.idUser})` };
     }
 
-    // make sure we're of specific class of user (e.g. admin)
-    const authorizedUsers: number[] = [
-        2,  // Jon Blundell
-        4,  // Jamie Cope
-        5,  // Eric Maslowski
-        6,  // Megan Dattoria
-    ];
+    // make sure we're of specific class of user (e.g. tools)
+    const authorizedUsers: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
     if(!authorizedUsers.includes(LS.idUser)) {
         LOG.error(`API.getProjects failed. user is not authorized for this request (${LS.idUser})`,LOG.LS.eHTTP);
         return { success: false, error: `user (${LS.idUser}) does not have permission.` };
