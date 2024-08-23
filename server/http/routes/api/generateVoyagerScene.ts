@@ -102,10 +102,11 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
     }
 
     // if we don't have either throw an error
-    if(!model || !scene) {
-        LOG.error(`API.generateScene failed. Don't have prerequisites (model: ${model ? model.idModel : 'null'} | scene: ${scene ? scene.idScene : 'null'})`,LOG.LS.eHTTP);
+    if(!model) {
+        LOG.error(`API.generateScene failed. Don't have prerequisites (idSystemObject: ${idSystemObject})`,LOG.LS.eHTTP);
         return generateResponse(false,'missing prerequisites',idSystemObject);
     }
+    LOG.info(`API.generateScene found prerequisites (${model.idModel} | scene: ${scene?.idScene ?? 'null'})`,LOG.LS.eDEBUG);
 
     // if we're here then we want to try and initiate the workflow
     const wfEngine: IWorkflowEngine | null = await WorkflowFactory.getInstance();
@@ -120,7 +121,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
     };
 
     // create our workflow for generating downloads
-    const result: WorkflowCreateResult = await wfEngine.generateScene(model.idModel, scene.idScene, workflowParams);
+    const result: WorkflowCreateResult = await wfEngine.generateScene(model.idModel, scene?.idScene ?? null, workflowParams);
     // LOG.info(`API.generateScene post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
 
     const isValid: boolean = result.data.isValid ?? false;
