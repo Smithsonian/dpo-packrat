@@ -227,7 +227,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     // get downloads for scene and determine if available
     const downloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(scene.idScene);
     if(!downloadMSXMap) {
-        LOG.error(`API.Project.buildProjectSceneDef failed to get downloads map (${scene.idScene})`,LOG.LS.eDB);
+        LOG.error(`API.Project.buildProjectSceneDef failed to get downloads map (${scene.idScene})`,LOG.LS.eHTTP);
         return null;
     }
 
@@ -237,6 +237,8 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         const download: AssetSummary | null = await buildAssetSummaryFromMSX(key,value);
         if(download)
             downloadSummaries.push(download);
+        else
+            LOG.error(`API.Project.buildProjectSceneDef failed to build asset summary (${scene.idScene} | key: ${key} | value: ${value})`,LOG.LS.eHTTP);
     }
 
     // build our data structure to return
@@ -257,6 +259,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         isReviewed: scene.PosedAndQCd as boolean
     };
 
+    // LOG.info(`API.Project.buildProjectSceneDef scene summary: ${H.Helpers.JSONStringify(result)}`,LOG.LS.eDEBUG);
     return result;
 };
 const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
@@ -265,6 +268,25 @@ const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): P
 
     // get our actual model so we can get the date created
     const model: DBAPI.Model | null = await DBAPI.Model.fetch(msx.idModel);
+    if(!model) {
+        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch model (${id} | msx: ${msx.Name})`,LOG.LS.eDB);
+        return null;
+    }
+
+    // get our asset for the model
+    const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model?.idModel);
+    if(!modelAsset || modelAsset.length===0) {
+        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch asset from model (idModel: ${model.idModel} | msx: ${msx.Name})`,LOG.LS.eDB);
+        return null;
+    } else if(modelAsset.length>1)
+        LOG.info(`API.Project.buildAssetSummaryFromMSX more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
+
+    // get our latest asset version
+    const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
+    if(!modelAssetVer) {
+        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
+        return null;
+    }
 
     // build our structure and return
     const result: AssetSummary = {
@@ -273,7 +295,7 @@ const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): P
         quality,
         usage,
         downloadable: isDownloadable(msx.Name),
-        dateCreated: (model) ? model.DateCreated : new Date(0), // if erro store epoch as date
+        dateCreated: modelAssetVer.DateCreated, // if erro store epoch as date
     };
     return result;
 };
@@ -307,8 +329,10 @@ const getDownloadStatus = (downloads: AssetSummary[]): string => {
     // which better handled material properties during inspection.
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     for(let i=0; i<downloads.length; i++) {
-        if(downloads[i].dateCreated < targetDate)
+        if(downloads[i].dateCreated < targetDate) {
+            LOG.info(`API.Project.getDownloadStatus for ${downloads[i].name} [${i}] (${downloads[i].dateCreated} - ${targetDate})`,LOG.LS.eDEBUG);
             return 'Error';
+        }
     }
     return 'Good';
 };
