@@ -150,7 +150,7 @@ type DBReference = {
 type AssetSummary = DBReference & {
     downloadable: boolean,
     quality: string,
-    usage: string,
+    usage: string,                  // how is this asset used. (e.g. Web, Native, AR, Master)
     dateCreated: Date,
 };
 type AssetList = {
@@ -177,6 +177,9 @@ type SceneSummary = DBReference & {
 };
 
 const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
+
+    // debug for timing routine
+    const startTime: number = Date.now();
 
     // get published state and properties (SystemObjectVersion)
     const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
@@ -234,7 +237,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     }
 
     // build summaries for all dependencies
-    const derivativeResult = await buildDerivativeSummaries(MSXs);
+    const derivativeResult = await buildSummaryDerivatives(MSXs);
     if(!derivativeResult) {
         LOG.error(`API.Project.buildProjectSceneDef unable to dependencies for scene ${scene.idScene}`, LOG.LS.eCOLL);
         return null;
@@ -242,7 +245,11 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     const { models, downloads, ar } = derivativeResult;
 
     // get master model(s)
-    // ...
+    const masterModels: AssetList | null = await buildSummaryMasterModels(scene.idScene);
+    if(!masterModels) {
+        LOG.error(`API.Project.buildProjectSceneDef unable get master model(s) for scene ${scene.idScene}`, LOG.LS.eCOLL);
+        return null;
+    }
 
     // get capture data reference(s)
     // ...
@@ -271,15 +278,15 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             },
         sources:
             {
-                models: { status: '', items: [] },
+                models: masterModels,
                 captureData: { status: '', items: [] },
             },
     };
 
-    // LOG.info(`API.Project.buildProjectSceneDef scene summary: ${H.Helpers.JSONStringify(result)}`,LOG.LS.eDEBUG);
+    LOG.info(`API.Project.buildProjectSceneDef built scene summary (${(Date.now()-startTime)/1000}s): ${H.Helpers.JSONStringify(result)}`,LOG.LS.eDEBUG);
     return result;
 };
-const buildDerivativeSummaries = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ models: AssetList, downloads: AssetList, ar: AssetList }  | null> => {
+const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ models: AssetList, downloads: AssetList, ar: AssetList }  | null> => {
     console.log(H.Helpers.JSONStringify(MSXs));
 
     // build up all of our summaries and wait for them to finish
@@ -288,7 +295,7 @@ const buildDerivativeSummaries = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{
             const summary: AssetSummary | null = await buildAssetSummaryFromMSX(MSX);
             return summary ? { summary, MSX } : null;
         } catch (error) {
-            LOG.error(`API.Project.buildDependencySummaries failed to build asset summary (id: ${MSX.idModelSceneXref} | model: ${MSX.idModel} | scene: ${MSX.idScene})`, LOG.LS.eHTTP);
+            LOG.error(`API.Project.buildSummaryDerivatives failed to build asset summary (id: ${MSX.idModelSceneXref} | model: ${MSX.idModel} | scene: ${MSX.idScene})`, LOG.LS.eHTTP);
             return null;
         }
     });
@@ -328,49 +335,98 @@ const buildDerivativeSummaries = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{
 
     return { models, downloads, ar };
 };
-const buildAssetSummaryFromMSX = async (msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
+const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | null> => {
 
-    const { usage, quality, downloadable } = getModelAssetProperties(msx);
+    const masterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchMasterFromScene(idScene);
+    if(!masterModels)
+        return null;
+
+    // default to good since it is HIGHLY unlikely for a scene to be present and no master model
+    const result: AssetList = { status: 'Good', items: [] };
+
+    // cycle through master models building summaries
+    for(const model of masterModels) {
+        const masterSummary: AssetSummary | null = await buildAssetSummaryFromModel(model.idModel);
+        if(!masterSummary) {
+            LOG.error(`API.Project.buildMasterModelSummarie unable to build summary for Master model of scene (idScene: ${idScene} | idModel: ${model.idModel})`, LOG.LS.eCOLL);
+            result.status = 'SysError';
+            continue;
+        }
+
+        // force highest levels for the asset
+        masterSummary.quality = 'Highest';
+        masterSummary.downloadable = false;
+
+        // get our purpose to use for usage. should be 'Master' but future may
+        // include 'Master:Raw' or 'Master:Presentation'
+        const masterVocab: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(model.idVPurpose ?? -1);
+        masterSummary.usage = `Source:${masterVocab?.Term ?? 'Master'}`;
+
+        result.items.push(masterSummary);
+    }
+
+    // if array is empty, then we have a data issue and need to make sure we signal the user
+    if(result.items.length===0)
+        result.status = 'SysError';
+
+    return result;
+};
+
+const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary | null> => {
 
     // get our actual model so we can get the date created
-    const model: DBAPI.Model | null = await DBAPI.Model.fetch(msx.idModel);
+    const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
     if(!model) {
-        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch model (id: ${msx.idModelSceneXref} | name: ${msx.Name})`,LOG.LS.eDB);
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch model (id: ${idModel})`,LOG.LS.eDB);
         return null;
     }
 
     // get our asset for the model
-    const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model?.idModel);
+    const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model.idModel);
     if(!modelAsset || modelAsset.length===0) {
-        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch asset from model (idModel: ${model.idModel} | msx: ${msx.Name})`,LOG.LS.eDB);
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset from model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
         return null;
     } else if(modelAsset.length>1)
-        LOG.info(`API.Project.buildAssetSummaryFromMSX more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
+        LOG.info(`API.Project.buildAssetSummaryFromModel more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
 
     // get our system object id
     const modelSO: DBAPI.SystemObject | null = await modelAsset[0].fetchSystemObject();
     if(!modelSO) {
-        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch SystemObject model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset} | msx: ${msx.Name})`,LOG.LS.eDB);
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset} | msx: ${modelAsset[0].FileName})`,LOG.LS.eDB);
         return null;
     }
 
     // get our latest asset version
     const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
     if(!modelAssetVer) {
-        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
         return null;
     }
 
-    // build our structure and return
     const result: AssetSummary = {
         id: modelSO.idSystemObject,
-        name: msx.Name ?? 'NA',
-        quality,
-        usage,
-        downloadable,
+        name: modelAsset[0].FileName,
+        quality: 'Highest',
+        usage: 'Source',
+        downloadable: false,
         dateCreated: modelAssetVer.DateCreated, // if erro store epoch as date
     };
     return result;
+};
+const buildAssetSummaryFromMSX = async (msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
+
+    const { usage, quality, downloadable } = getModelAssetProperties(msx);
+
+    // get our asset summary
+    const assetSummary: AssetSummary | null = await buildAssetSummaryFromModel(msx.idModel);
+    if(!assetSummary)
+        return null;
+
+    // build our structure and return
+    assetSummary.usage = usage;
+    assetSummary.quality = quality;
+    assetSummary.downloadable = downloadable;
+    return assetSummary;
 };
 
 const getStatusDownload = (downloads: AssetSummary[]): string => {
@@ -435,6 +491,7 @@ const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
 
     const voyagerUsageTypes: string[] = [
         'webAssetGlbLowUncompressed',
+        'Web3D',
         'App3D',
         'iOSApp3D',
         'objZipFull',
@@ -451,7 +508,7 @@ const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
             if(MSX.Usage.includes(usageType)) {
                 switch(usageType) {
                     case 'webAssetGlbLowUncompressed':   // webAssetGlbLowUncompressed
-                    case 'gltfZipLow':                  // gltfZipLow
+                    case 'gltfZipLow':                   // gltfZipLow
                         { assetUsage = 'Web'; } break;
 
                     case 'objZipFull':                  // objZipFull
@@ -461,6 +518,15 @@ const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
                     case 'App3D':                       // AR: App3D
                     case 'iOSApp3D':                    // AR: iOSApp3D
                         { assetUsage = 'AR'; } break;
+
+                    case 'Web3D':                       // most derivatives during scene generation
+                        {
+                            // check quality to see if AR or not
+                            if(MSX.Quality?.toLowerCase()==='ar')
+                                assetUsage = 'AR';
+                            else
+                                assetUsage = 'Web';
+                        } break;
 
                     default:
                         LOG.error(`Unsupported usage for model asset (${MSX.Usage})`,LOG.LS.eHTTP);
