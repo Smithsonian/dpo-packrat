@@ -260,20 +260,11 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
             responses.push(result);
             messagePrefix = 'Getting Status for:';
         } else {
-            /** TODO
-             * - push to queue
-             * - spin up queue worker (if not already)
-             *      - if active list < threshold add new one to list
-             *      - cycle through active items
-             *          - if finished/error remove from list and store results (just return status obj)
-             *          - if active list is empty then finish and return response
-             */
-
             // get our published state for the scene ebfore doing anything because generate downloads
             // will create a new Scene version that is unpublished, affecting our ability to re-publish
             const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject ?? -1);
             if(!sceneSOV) {
-                LOG.error(`API.GenerateDownloads failed to get SystemObjectVersion for scene (${idSystemObject ?? -1})`,LOG.LS.eDB);
+                LOG.error(`API.generateScene failed to get SystemObjectVersion for scene (${idSystemObject ?? -1})`,LOG.LS.eDB);
                 continue;
             }
 

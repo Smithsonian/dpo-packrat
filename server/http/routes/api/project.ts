@@ -4,7 +4,6 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { ASL, LocalStore } from '../../../utils/localStore';
-import { PublishScene } from '../../../collections/impl/PublishScene';
 // import { eEventKey } from '../../../event/interface/EventEnums';
 // import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
@@ -159,14 +158,22 @@ type AssetList = {
     items: AssetSummary[];
 };
 type SceneSummary = DBReference & {
+    publishedState: string,
+    datePublished: Date,
+    isReviewed: boolean
     project: DBReference,
     subject: DBReference,
     mediaGroup: DBReference,
     dateCreated: Date,
-    downloads: AssetList,
-    publishedState: string,
-    datePublished: Date,
-    isReviewed: boolean
+    derivatives:    {
+        models: AssetList,          // holds all derivative models
+        downloads: AssetList,       // specific models for download
+        ar: AssetList,              // models specific to AR
+    },
+    sources: {
+        models: AssetList,
+        captureData: AssetList,
+    }
 };
 
 const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
@@ -219,27 +226,36 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     }
     const projectSO: DBAPI.SystemObject | null = await project?.fetchSystemObject() ?? null;
 
-    // get downloads for scene and determine if available
-    const downloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(scene.idScene);
-    if(!downloadMSXMap) {
-        LOG.error(`API.Project.buildProjectSceneDef failed to get downloads map (${scene.idScene})`,LOG.LS.eHTTP);
+    // get all models associated with the Scene
+    const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
+    if (!MSXs) {
+        LOG.error(`API.Project.buildProjectSceneDef unable to fetch ModelSceneXrefs for scene ${scene.idScene}`, LOG.LS.eCOLL);
         return null;
     }
 
-    // build list of downloads (filename, usage/flags)
-    const downloadSummaries: AssetSummary[] | null = [];
-    for(const [key, value] of downloadMSXMap) {
-        const download: AssetSummary | null = await buildAssetSummaryFromMSX(key,value);
-        if(download)
-            downloadSummaries.push(download);
-        else
-            LOG.error(`API.Project.buildProjectSceneDef failed to build asset summary (${scene.idScene} | key: ${key} | value: ${value})`,LOG.LS.eHTTP);
+    // build summaries for all dependencies
+    const derivativeResult = await buildDerivativeSummaries(MSXs);
+    if(!derivativeResult) {
+        LOG.error(`API.Project.buildProjectSceneDef unable to dependencies for scene ${scene.idScene}`, LOG.LS.eCOLL);
+        return null;
     }
+    const { models, downloads, ar } = derivativeResult;
+
+    // get master model(s)
+    // ...
+
+    // get capture data reference(s)
+    // ...
 
     // build our data structure to return
     const result: SceneSummary = {
         id: sceneSO.idSystemObject,
         name: scene.Name,
+        dateCreated: sceneSOV.DateCreated,
+        publishedState: resolvePublishedState(sceneSOV.PublishedState),
+        datePublished: new Date(0), // does it exist? store epoch to signal error
+        isReviewed: scene.PosedAndQCd as boolean,
+
         project: (project)
             ? { id: projectSO?.idSystemObject ?? -1, name: project.Name }
             : { id: -1, name: 'NA' },
@@ -247,24 +263,79 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             { id: subjectSO?.idSystemObject ?? -1, name: subject.Name },
         mediaGroup:
             { id: itemSO?.idSystemObject ?? -1, name: getItemName(item) },
-        dateCreated: sceneSOV.DateCreated,
-        downloads: { status: getDownloadStatus(downloadSummaries), items: downloadSummaries },
-        publishedState: resolvePublishedState(sceneSOV.PublishedState),
-        datePublished: new Date(0), // does it exist? store epoch to signal error
-        isReviewed: scene.PosedAndQCd as boolean
+        derivatives:
+            {
+                models,
+                downloads,
+                ar,
+            },
+        sources:
+            {
+                models: { status: '', items: [] },
+                captureData: { status: '', items: [] },
+            },
     };
 
     // LOG.info(`API.Project.buildProjectSceneDef scene summary: ${H.Helpers.JSONStringify(result)}`,LOG.LS.eDEBUG);
     return result;
 };
-const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
+const buildDerivativeSummaries = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ models: AssetList, downloads: AssetList, ar: AssetList }  | null> => {
+    console.log(H.Helpers.JSONStringify(MSXs));
 
-    const { usage, quality } = getDownloadProperties(msx.Usage,msx.Quality);
+    // build up all of our summaries and wait for them to finish
+    const buildSummaries = MSXs.map(async (MSX) => {
+        try {
+            const summary: AssetSummary | null = await buildAssetSummaryFromMSX(MSX);
+            return summary ? { summary, MSX } : null;
+        } catch (error) {
+            LOG.error(`API.Project.buildDependencySummaries failed to build asset summary (id: ${MSX.idModelSceneXref} | model: ${MSX.idModel} | scene: ${MSX.idScene})`, LOG.LS.eHTTP);
+            return null;
+        }
+    });
+    const summaries = await Promise.all(buildSummaries);
+
+    const models: AssetList = { status: '', items: [] };
+    const downloads: AssetList = { status: '', items: [] };
+    const ar: AssetList = { status: '', items: [] };
+
+    // cycle through the summaries determining if any should be in the download list as well
+    summaries.forEach(item => {
+        if (item && item.summary) {
+            models.items.push(item.summary);
+
+            // if we are a downloadable model
+            if (item.summary.downloadable === true)
+                downloads.items.push(item.summary);
+
+            // if we are an AR model
+            if(item.summary.usage==='AR')
+                ar.items.push(item.summary);
+        }
+    });
+
+    // get download status
+    downloads.status = getStatusDownload(downloads.items);
+
+    ar.status = getStatusARModels(ar.items);
+
+    // figure out our status for models
+    if(downloads.status.includes('Error') || ar.status.includes('Error'))
+        models.status = 'Error';
+    else if(downloads.status.includes('Missing') || ar.status.includes('Missing'))
+        models.status = 'Missing';
+    else
+        models.status = 'Good';
+
+    return { models, downloads, ar };
+};
+const buildAssetSummaryFromMSX = async (msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
+
+    const { usage, quality, downloadable } = getModelAssetProperties(msx);
 
     // get our actual model so we can get the date created
     const model: DBAPI.Model | null = await DBAPI.Model.fetch(msx.idModel);
     if(!model) {
-        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch model (${id} | msx: ${msx.Name})`,LOG.LS.eDB);
+        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch model (id: ${msx.idModelSceneXref} | name: ${msx.Name})`,LOG.LS.eDB);
         return null;
     }
 
@@ -276,6 +347,13 @@ const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): P
     } else if(modelAsset.length>1)
         LOG.info(`API.Project.buildAssetSummaryFromMSX more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
 
+    // get our system object id
+    const modelSO: DBAPI.SystemObject | null = await modelAsset[0].fetchSystemObject();
+    if(!modelSO) {
+        LOG.error(`API.Project.buildAssetSummaryFromMSX cannot fetch SystemObject model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset} | msx: ${msx.Name})`,LOG.LS.eDB);
+        return null;
+    }
+
     // get our latest asset version
     const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
     if(!modelAssetVer) {
@@ -285,36 +363,17 @@ const buildAssetSummaryFromMSX = async (id: number,msx: DBAPI.ModelSceneXref): P
 
     // build our structure and return
     const result: AssetSummary = {
-        id,
+        id: modelSO.idSystemObject,
         name: msx.Name ?? 'NA',
         quality,
         usage,
-        downloadable: isDownloadable(msx.Name),
+        downloadable,
         dateCreated: modelAssetVer.DateCreated, // if erro store epoch as date
     };
     return result;
 };
-const isDownloadable = (filename: string | null): boolean => {
-    if(!filename)
-        return false;
 
-    const downloadSuffixes: string[] = [
-        '4096_std.glb',                 // webAssetGlbLowUncompressed
-        '4096-gltf_std.zip',            // gltfZipLow
-        '2048_std_draco.glb',           // AR: App3D
-        '2048_std.usdz',                // AR: iOSApp3D
-        'full_resolution-obj_std.zip',  // objZipFull
-        '4096-obj_std.zip'              // objZipLow
-    ];
-
-    for(let i=0; i<downloadSuffixes.length; i++) {
-        if(filename.includes(downloadSuffixes[i])===true) {
-            return true;
-        }
-    }
-    return false;
-};
-const getDownloadStatus = (downloads: AssetSummary[]): string => {
+const getStatusDownload = (downloads: AssetSummary[]): string => {
 
     // if we have less than 6 downloads we're missing some
     if(downloads.length<6)
@@ -331,7 +390,48 @@ const getDownloadStatus = (downloads: AssetSummary[]): string => {
     }
     return 'Good';
 };
-const getDownloadProperties = (usage: string | null, quality: string | null) => {
+const getStatusARModels = (models: AssetSummary[]): string => {
+
+    console.log('AR models',models);
+
+    const targetDate: Date = new Date('2024-06-14T00:00:00Z');
+    let nonDownloadableCount: number = 0;
+    let downloadableCount: number = 0;
+
+    for(const model of models) {
+
+        // if any model is too old or prior to known error return error
+        if(model.dateCreated < targetDate) {
+            LOG.info(`API.Project.getStatusARModels for ${model.name} (${model.dateCreated} - ${targetDate})`,LOG.LS.eDEBUG);
+            return (model.downloadable===true)?'Error: NativeAR':'Error: WebAR';
+        }
+
+        // build our counts for comparison
+        if(model.downloadable===true)
+            downloadableCount++;
+        else
+            nonDownloadableCount++;
+    }
+
+    // Check conditions based on the counts of downloadable and non-downloadable items
+    if (downloadableCount === 2 && nonDownloadableCount < 1) {
+        return 'Missing: WebAR';
+    }
+
+    if (nonDownloadableCount === 1 && downloadableCount < 2) {
+        return 'Missing: NativeAR';
+    }
+
+    if (nonDownloadableCount === 1 && downloadableCount === 2) {
+        return 'Good';
+    }
+
+    // If none of the conditions are met, log the error and return 'Unexpected'
+    LOG.error(`API.Project.getStatusARModels counts (native: ${downloadableCount} | web: ${nonDownloadableCount})`,LOG.LS.eHTTP);
+    return 'Unexpected';
+};
+
+const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
 
     const voyagerUsageTypes: string[] = [
         'webAssetGlbLowUncompressed',
@@ -345,10 +445,10 @@ const getDownloadProperties = (usage: string | null, quality: string | null) => 
     // cycle through suffixes to determine usage type/purpose
     // types: Web, Native, AR, Printing, Undefined
     let assetUsage: string = 'Undefined';
-    if(usage) {
+    if(MSX.Usage) {
         for(let i=0; i<voyagerUsageTypes.length; i++) {
             const usageType: string = voyagerUsageTypes[i];
-            if(usage.includes(usageType)) {
+            if(MSX.Usage.includes(usageType)) {
                 switch(usageType) {
                     case 'webAssetGlbLowUncompressed':   // webAssetGlbLowUncompressed
                     case 'gltfZipLow':                  // gltfZipLow
@@ -363,7 +463,7 @@ const getDownloadProperties = (usage: string | null, quality: string | null) => 
                         { assetUsage = 'AR'; } break;
 
                     default:
-                        LOG.error(`Unsupported usage for download (${usage})`,LOG.LS.eHTTP);
+                        LOG.error(`Unsupported usage for model asset (${MSX.Usage})`,LOG.LS.eHTTP);
                 }
             }
         }
@@ -371,8 +471,8 @@ const getDownloadProperties = (usage: string | null, quality: string | null) => 
 
     // get our quality level. defaulting to 'low' for AR
     let assetQuality: string = 'Undefined';
-    if(quality) {
-        switch(quality.toLocaleLowerCase()) {
+    if(MSX.Quality) {
+        switch(MSX.Quality.toLocaleLowerCase()) {
             case 'low':     assetQuality = 'Low'; break;
             case 'medium':  assetQuality = 'Medium'; break;
             case 'high':    assetQuality = 'High'; break;
@@ -381,7 +481,8 @@ const getDownloadProperties = (usage: string | null, quality: string | null) => 
         }
     }
 
-    return { usage: assetUsage, quality: assetQuality };
+    // are we downloadable
+    return { usage: assetUsage, quality: assetQuality, downloadable: MSX.isDownloadable() };
 };
 const getItemName = (item: DBAPI.Item): string => {
     let result: string = item.Name;
@@ -389,6 +490,7 @@ const getItemName = (item: DBAPI.Item): string => {
         result += ': '+item.Title;
     return result;
 };
+
 const resolvePublishedState = (state: COMMON.ePublishedState): string => {
     switch (state) {
         case COMMON.ePublishedState.eNotPublished:
