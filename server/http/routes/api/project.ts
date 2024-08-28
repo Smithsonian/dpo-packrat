@@ -4,52 +4,56 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { ASL, LocalStore } from '../../../utils/localStore';
-// import { eEventKey } from '../../../event/interface/EventEnums';
 // import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { Config } from '../../../config';
 
-//#region Project List
+//#region Types and Definitions
+
+// NOTE: 'Summary' types/objects are intended for return via the API and for external use
+//       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type ProjectResponse = {
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
     data?
 };
-const generateResponse = (success: boolean, message?: string | undefined, data?): ProjectResponse => {
-    return {
-        success,
-        message,
-        data
-    };
+type DBReference = {
+    id: number,     // system object id
+    name: string,   // name of object
 };
-const isAuthorized = async (req: Request): Promise<H.IOResults> => {
-
-    // make sure we're authenticated (i.e. see if request has a 'user' object)
-    if (!isAuthenticated(req)) {
-        LOG.error('API.getSummary failed. not authenticated.', LOG.LS.eHTTP);
-        return { success: false, error: 'not authenticated' };
-    }
-
-    // get our LocalStore. If we don't have one then bail. it is needed for the user id, auditing, and workflows
-    const LS: LocalStore | undefined = ASL.getStore();
-    if(!LS || !LS.idUser){
-        LOG.error('API.getSummary failed. cannot get LocalStore or idUser',LOG.LS.eHTTP);
-        return { success: false, error: `missing local store/user (${LS?.idUser})` };
-    }
-
-    // make sure we're of specific class of user (e.g. tools)
-    const authorizedUsers: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
-    if(!authorizedUsers.includes(LS.idUser)) {
-        LOG.error(`API.getProjects failed. user is not authorized for this request (${LS.idUser})`,LOG.LS.eHTTP);
-        return { success: false, error: `user (${LS.idUser}) does not have permission.` };
-    }
-
-    return { success: true };
+type AssetSummary = DBReference & {
+    downloadable: boolean,
+    quality: string,
+    usage: string,                  // how is this asset used. (e.g. Web, Native, AR, Master)
+    dateCreated: Date,
 };
-const getElapseSeconds = (startTime: number, endTime: number): number => {
-    return (endTime - startTime)/1000;
+type AssetList = {
+    status: string,
+    items: AssetSummary[];
 };
+type SceneSummary = DBReference & {
+    publishedState: string,
+    datePublished: Date,
+    isReviewed: boolean
+    project: DBReference,
+    subject: DBReference,
+    mediaGroup: DBReference,
+    dateCreated: Date,
+    derivatives:    {
+        models: AssetList,          // holds all derivative models
+        downloads: AssetList,       // specific models for download
+        ar: AssetList,              // models specific to AR
+    },
+    sources: {
+        models: AssetList,
+        captureData: AssetList,
+    }
+};
+
+//#endregion
+
+//#region Get Projects & Scenes
 export async function getProjects(req: Request, res: Response): Promise<void> {
     // LOG.info('Generating Downloads from API request...', LOG.LS.eHTTP);
 
@@ -72,9 +76,6 @@ export async function getProjects(req: Request, res: Response): Promise<void> {
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${projects.length} projects`,[...projects])));
 }
-//#endregion
-
-//#region Project Scenes
 export async function getProjectScenes(req: Request, res: Response): Promise<void> {
     // TODO: optimize with one or more crafted SQL statements returning exactly what's needed
     //       instead of iterating over scenes with many DB requests.
@@ -140,42 +141,9 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${result.length} scenes`,[...result])));
 }
+//#endregion
 
-// NOTE: 'Summary' types/objects are intended for return via the API and for external use
-//       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
-type DBReference = {
-    id: number,     // system object id
-    name: string,   // name of object
-};
-type AssetSummary = DBReference & {
-    downloadable: boolean,
-    quality: string,
-    usage: string,                  // how is this asset used. (e.g. Web, Native, AR, Master)
-    dateCreated: Date,
-};
-type AssetList = {
-    status: string,
-    items: AssetSummary[];
-};
-type SceneSummary = DBReference & {
-    publishedState: string,
-    datePublished: Date,
-    isReviewed: boolean
-    project: DBReference,
-    subject: DBReference,
-    mediaGroup: DBReference,
-    dateCreated: Date,
-    derivatives:    {
-        models: AssetList,          // holds all derivative models
-        downloads: AssetList,       // specific models for download
-        ar: AssetList,              // models specific to AR
-    },
-    sources: {
-        models: AssetList,
-        captureData: AssetList,
-    }
-};
-
+//#region Build Summary and Defs
 const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
 
     // debug for timing routine
@@ -252,7 +220,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     }
 
     // get capture data reference(s)
-    // ...
+    // TODO...
 
     // build our data structure to return
     const result: SceneSummary = {
@@ -371,7 +339,6 @@ const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | nu
 
     return result;
 };
-
 const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary | null> => {
 
     // get our actual model so we can get the date created
@@ -428,7 +395,43 @@ const buildAssetSummaryFromMSX = async (msx: DBAPI.ModelSceneXref): Promise<Asse
     assetSummary.downloadable = downloadable;
     return assetSummary;
 };
+//#endregion
 
+//#region Utility
+const generateResponse = (success: boolean, message?: string | undefined, data?): ProjectResponse => {
+    return {
+        success,
+        message,
+        data
+    };
+};
+const isAuthorized = async (req: Request): Promise<H.IOResults> => {
+
+    // make sure we're authenticated (i.e. see if request has a 'user' object)
+    if (!isAuthenticated(req)) {
+        LOG.error('API.getSummary failed. not authenticated.', LOG.LS.eHTTP);
+        return { success: false, error: 'not authenticated' };
+    }
+
+    // get our LocalStore. If we don't have one then bail. it is needed for the user id, auditing, and workflows
+    const LS: LocalStore | undefined = ASL.getStore();
+    if(!LS || !LS.idUser){
+        LOG.error('API.getSummary failed. cannot get LocalStore or idUser',LOG.LS.eHTTP);
+        return { success: false, error: `missing local store/user (${LS?.idUser})` };
+    }
+
+    // make sure we're of specific class of user (e.g. tools)
+    const authorizedUsers: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
+    if(!authorizedUsers.includes(LS.idUser)) {
+        LOG.error(`API.getProjects failed. user is not authorized for this request (${LS.idUser})`,LOG.LS.eHTTP);
+        return { success: false, error: `user (${LS.idUser}) does not have permission.` };
+    }
+
+    return { success: true };
+};
+const getElapseSeconds = (startTime: number, endTime: number): number => {
+    return (endTime - startTime)/1000;
+};
 const getStatusDownload = (downloads: AssetSummary[]): string => {
 
     // if we have less than 6 downloads we're missing some
@@ -486,7 +489,6 @@ const getStatusARModels = (models: AssetSummary[]): string => {
     LOG.error(`API.Project.getStatusARModels counts (native: ${downloadableCount} | web: ${nonDownloadableCount})`,LOG.LS.eHTTP);
     return 'Unexpected';
 };
-
 const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
 
     const voyagerUsageTypes: string[] = [
@@ -556,7 +558,6 @@ const getItemName = (item: DBAPI.Item): string => {
         result += ': '+item.Title;
     return result;
 };
-
 const resolvePublishedState = (state: COMMON.ePublishedState): string => {
     switch (state) {
         case COMMON.ePublishedState.eNotPublished:
