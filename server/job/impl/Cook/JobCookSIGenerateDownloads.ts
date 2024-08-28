@@ -61,7 +61,6 @@ export class JobCookSIGenerateDownloadsParameters {
         this.parameterHelper = parameterHelper ? parameterHelper : undefined;
     }
 
-
     idScene: number | undefined;
     idModel: number | undefined;
     sourceMeshFile: string;             // required

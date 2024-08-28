@@ -207,7 +207,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(8,scene.idScene);
         if(!activeJobs) {
             LOG.error(`WorkflowEngine.generateDownloads failed. cannot determine if job is running. (idScene: ${scene.idScene})`,LOG.LS.eWF);
-            return { success: false, message: 'failed to get acti e jobs from DB', data: { isValid: false } };
+            return { success: false, message: 'failed to get active jobs from DB', data: { isValid: false } };
         }
 
         // if we're running, we don't duplicate our efforts
@@ -310,7 +310,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
             if(!workflowReport || workflowReport.length <= 0) {
                 LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
-                return { success: false, message: 'cannot get worfklow report object', data: { isValid, activeJobs } };
+                return { success: false, message: 'cannot get workflow report object', data: { isValid, activeJobs } };
             }
             LOG.info(`WorkflowEngine.generateDownloads retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
             LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
@@ -322,8 +322,162 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     async generateScene(idModel: number, idScene: number | null, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
-        console.log('placeholder for scene generation: ', idModel, idScene, workflowParams);
-        return { success: true, message: 'generating scene', data: { isValid: true, activeJobs: [] } };
+        LOG.info(`WorkflowEngine.generateScene (idModel: ${idModel} | idScene: ${idScene} | params: ${H.Helpers.JSONStringify(workflowParams)})`,LOG.LS.eDEBUG);
+
+        //#region check for duplicate jobs
+        // make sure we don't have any jobs running. >0 if a running job was found.
+        const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByModel(8,idModel);
+        if(!activeJobs) {
+            LOG.error(`WorkflowEngine.generateScene failed. cannot determine if job is running. (idModel: ${idModel})`,LOG.LS.eWF);
+            return { success: false, message: 'failed to get active jobs from DB', data: { isValid: false } };
+        }
+
+        // if we're running, we don't duplicate our efforts
+        // TODO: allow for cancelling/overwritting existing jobs
+        const idActiveJobRun: number[] = activeJobs.map(job => job.idJobRun);
+        if(activeJobs.length > 0) {
+            // get our workflow & report from the first active job id
+            let idWorkflow: number | undefined = undefined;
+            let idWorkflowReport: number | undefined = undefined;
+            const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromJobRun(activeJobs[0].idJobRun);
+            if(workflowReport && workflowReport.length>0) {
+                idWorkflowReport = workflowReport[0].idWorkflowReport;
+                idWorkflow = workflowReport[0].idWorkflow;
+            } else
+                LOG.info(`WorkflowEngine.generateScene unable to get workflowReport (idModel: ${idModel} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+
+            LOG.info(`WorkflowEngine.generateScene did not start. Job already running (idModel: ${idModel} | activeJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
+            return { success: false, message: 'Job already running', data: { isValid: true, activeJobs, idWorkflow, idWorkflowReport } };
+        }
+        //#endregion
+
+        //#region get & verify model
+        // get and verify model (must be master)
+        const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
+        if(!model) {
+            LOG.error(`WorkflowEngine.generateScene cannot get model (idModel: ${idModel})`, LOG.LS.eDB);
+            return { success: false, message: 'cannot get model', data: { isValid: false }  };
+        }
+
+        // get the system object of the model since we need the id for it's info
+        const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(idModel);
+        if(!modelSO) {
+            LOG.error(`WorkflowEngine.generateScene cannot get model SystemObject (idModel: ${idModel})`, LOG.LS.eDB);
+            return { success: false, message: 'cannot get model SystemObject', data: { isValid: false }  };
+        }
+        //#endregion
+
+        //#region collect remaining objects
+        // get our asset and version used by the model
+        const { success, asset, assetVersion } = await this.computeAssetAndVersion(modelSO.idSystemObject);
+        if (!success || !asset || !assetVersion || !asset.idSystemObject) {
+            LOG.error(`WorkflowEngine.generateScene cannot get model asset and version (idModel: ${idModel} | idSystemObject: ${modelSO.idSystemObject})`, LOG.LS.eDB);
+            return { success: false, message: 'cannot get model asset and version', data: { isValid: false }  };
+        }
+
+        // get model info
+        const CMIR: ComputeModelInfoResult | undefined = await this.computeModelInfo(idModel, asset?.idSystemObject);
+        if (!CMIR || CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
+            LOG.error(`WorkflowEngine.generateScene cannot compute model info (idModel: ${idModel} | CMIR: ${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
+            return { success: false, message: 'cannot get model info', data: { isValid: false }  };
+        }
+
+        // bail if no units defined
+        if(CMIR.units ===undefined) {
+            LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units (CMIR: ${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
+            return { success: false, message: `model has invalid units (${CMIR.units})`, data: { isValid: false }  };
+        }
+
+        // get our geometry and the associated system object for our params
+        const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
+        if (!SOGeometry) {
+            LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file SystemObject (CMIR: ${H.Helpers.JSONStringify(CMIR.assetVersionGeometry)})`, LOG.LS.eWF);
+            return { success: false, message: 'failed to get geometry system object', data: { isValid: false }  };
+        }
+        const isValid: boolean = true;
+        //#endregion
+
+        // get our basename
+        const { sceneBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
+
+        // if we have a scene get it and a reference to the SVX so it can be fed in as a parameter
+        // TODO: if no scene then we need to create one for this Model and hook it up
+        // TODO: determine if we have an SVX file that is of different basename and bail/fix it
+        //       so it passes validation when returned from Cook.
+        if(!idScene) {
+            // get scene (if any) from master model
+
+            // get SVX from the scene
+
+            // compare filenames to see if it matches basename
+        }
+
+        //#region Job Parameters
+        // build up our parameters and create the workflow
+        const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CMIR.idModel);
+        if(parameterHelper==null) {
+            LOG.error(`WorkflowEngine.generateScene cannot create workflow parameters (CMIR:${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
+            return { success: false, message: 'cannot create workflow parameters', data: { isValid, activeJobs } };
+        }
+
+        // create parameters for a voyager scene
+        const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
+            new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
+                new COOK.JobCookSIVoyagerSceneParameters(
+                    parameterHelper,
+                    idModel,                            // idModel
+                    CMIR.assetVersionGeometry.FileName, // sourceMeshFile
+                    CMIR.units,                         // units
+                    CMIR.assetVersionDiffuse?.FileName, // sourceDiffuseMapFile
+                    sceneBaseName + '.svx.json',        // svxFile (assumes svx file is same basename & generated by Packrat)
+                    undefined,                          // metadata
+                    sceneBaseName                       // outputFileBaseName
+                )
+            );
+
+        // create parameters for the workflow based on those created for the job
+        const wfParamSIVoyagerScene: WF.WorkflowParameters = {
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
+            idSystemObject: [SOGeometry.idSystemObject],
+            idProject: workflowParams.idProject,
+            idUserInitiator: workflowParams.idUserInitiator,
+            parameters: jobParamSIVoyagerScene,
+        };
+        //#endregion
+
+        console.log(wfParamSIVoyagerScene);
+
+        // create our workflow
+        const doCreate: boolean = false;
+        if(doCreate) {
+            // create our workflow
+            const wf: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
+            if (!wf) {
+                LOG.error(`WorkflowEngine.generateScene unable to create Cook si-voyager-scene workflow: ${H.Helpers.JSONStringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+                return { success: false, message: 'cannot create voyager scene workflow', data: { isValid, activeJobs } };
+            }
+
+            // get our Workflow object from the database
+            const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
+            if(!workflow) {
+                LOG.error(`WorkflowEngine.generateScene unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIVoyagerScene)})`, LOG.LS.eWF);
+                return { success: false, message: 'cannot get workflow object', data: { isValid, activeJobs } };
+            }
+            LOG.info(`WorkflowEngine.generateScene retrieved workflow (${workflow.idWorkflow} | ${workflow.idWorkflowSet})`,LOG.LS.eDEBUG);
+
+            // get our workflow report for the new workflow
+            const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
+            if(!workflowReport || workflowReport.length <= 0) {
+                LOG.error(`WorkflowEngine.generateScene unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
+                return { success: false, message: 'cannot get worfklow report object', data: { isValid, activeJobs } };
+            }
+            LOG.info(`WorkflowEngine.generateScene retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
+            LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
+
+            // return success
+            return { success: true, message: 'generating scene', data: { isValid, activeJobs, workflow, workflowReport } };
+        } else
+            return { success: true, message: 'generating scene', data: { isValid, activeJobs } };
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
@@ -462,7 +616,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
 
         // initiate WorkflowJob for cook si-voyager-scene
-        if (CMIR.units !== undefined) {
+        if (CMIR.units !== undefined && CMIR.idModel !== undefined) {
             const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CMIR.idModel);
             if (parameterHelper) {
                 if (workflowParams.parameters.skipSceneGenerate) {
@@ -470,7 +624,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 } else {
                     const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
                         new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
-                            new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.assetVersionGeometry.FileName, CMIR.units,
+                            new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.idModel, CMIR.assetVersionGeometry.FileName, CMIR.units,
                             CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
 
                     const wfParamSIVoyagerScene: WF.WorkflowParameters = {
@@ -489,7 +643,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             } else
                 LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute parameter info needed by Cook si-voyager-scene workflow from model: ${CMIR.idModel}`, LOG.LS.eWF);
         } else
-            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units or model ID ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
 
         // do we want to generate downloads for this ingestion
         if(generateDownloads===true) {

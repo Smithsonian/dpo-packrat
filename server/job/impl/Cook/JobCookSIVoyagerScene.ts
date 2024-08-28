@@ -125,6 +125,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
 }
 
 export class JobCookSIVoyagerSceneParameters {
+    idModel: number;
     sourceMeshFile: string;
     units: string;
     sourceDiffuseMapFile?: string | undefined;
@@ -135,7 +136,9 @@ export class JobCookSIVoyagerSceneParameters {
     // extract and remove these from the parameter object before passing to Cook
     parameterHelper?: JobCookSIVoyagerSceneParameterHelper;
 
-    constructor(parameterHelper: JobCookSIVoyagerSceneParameterHelper,
+    constructor(
+        parameterHelper: JobCookSIVoyagerSceneParameterHelper,
+        idModel: number,    // make sure we have reference back to original model. also helps identify existing/active jobs
         sourceMeshFile: string,
         units: string,
         sourceDiffuseMapFile: string | undefined = undefined,
@@ -143,6 +146,7 @@ export class JobCookSIVoyagerSceneParameters {
         metaDataFile: string | undefined = undefined,
         outputFileBaseName: string | undefined = undefined) {
         this.parameterHelper = parameterHelper;
+        this.idModel = idModel;
         this.sourceMeshFile = path.basename(sourceMeshFile);
         this.units = units;
         this.sourceDiffuseMapFile = sourceDiffuseMapFile ? path.basename(sourceDiffuseMapFile) : undefined;

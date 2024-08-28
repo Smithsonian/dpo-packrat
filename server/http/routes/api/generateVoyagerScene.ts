@@ -13,6 +13,7 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
 
+//#region Types and Definitions
 type OpState = {                // individual state for each processed scene
     idWorkflow?: number,        // do we have a workflow/report so we can (later) jump to its status page
     idWorkflowReport?: number,  // do we have a report for this workflow to help with future polling
@@ -30,7 +31,9 @@ type WorkflowResponse = {       // general response for each
     id?: number,                // optional number for the object this response refers to
     state?: OpState
 };
+//#endregion
 
+//#region Utility
 // HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
 //       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
 const idJob: number = 8;
@@ -54,6 +57,7 @@ const buildOpResponse = (message: string, responses: WorkflowResponse[]): OpResp
         data: [...responses],
     };
 };
+//#endregion
 
 const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise<WorkflowResponse> => {
 
