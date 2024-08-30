@@ -129,7 +129,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
     // LOG.info(`API.generateScene post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
 
     const isValid: boolean = result.data.isValid ?? false;
-    const isJobRunning: boolean = (result.data.activeJobs.length>0) ?? false;
+    const isJobRunning: boolean = (result.data.activeJobs?.length>0) ?? false;
     const idWorkflow: number | undefined = (result.data.workflow?.idWorkflow) ?? undefined;
     const idWorkflowReport: number | undefined = (result.data.workflowReport?.idWorkflowReport) ?? undefined;
 

@@ -359,7 +359,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: false, message: 'cannot get model', data: { isValid: false }  };
         }
 
-        // get the system object of the model since we need the id for it's info
+        // make sure we're a 'master' model
+        // TODO: ...
+
+        // get the system object of the model since we need the id for its info
         const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(idModel);
         if(!modelSO) {
             LOG.error(`WorkflowEngine.generateScene cannot get model SystemObject (idModel: ${idModel})`, LOG.LS.eDB);
@@ -368,19 +371,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         //#endregion
 
         //#region collect remaining objects
+        // grab an Asset from the current Model. All assets associated with the Master model have their
+        // idSystemObject assigned to the idSystemObject of the Master model. We use this to compute our info/stats
+        const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(idModel);
+        if(!modelAssets || modelAssets.length===0)
+            return { success: false, message: 'cannot get model Asset', data: { isValid: false }  };
+        const modelAsset: DBAPI.Asset = modelAssets[0];
+
         // get our asset and version used by the model
-        const { success, asset, assetVersion } = await this.computeAssetAndVersion(modelSO.idSystemObject);
-        if (!success || !asset || !assetVersion || !asset.idSystemObject) {
-            LOG.error(`WorkflowEngine.generateScene cannot get model asset and version (idModel: ${idModel} | idSystemObject: ${modelSO.idSystemObject})`, LOG.LS.eDB);
-            return { success: false, message: 'cannot get model asset and version', data: { isValid: false }  };
-        }
+        // const { success, asset, assetVersion } = await this.computeAssetAndVersion(modelSO.idSystemObject);
+        // if (!success || !asset || !assetVersion || !asset.idSystemObject) {
+        //     LOG.error(`WorkflowEngine.generateScene cannot get model asset and version (idModel: ${idModel} | idSystemObject: ${modelSO.idSystemObject})`, LOG.LS.eDB);
+        //     return { success: false, message: 'cannot get model asset and version', data: { isValid: false }  };
+        // }
 
         // get model info
-        const CMIR: ComputeModelInfoResult | undefined = await this.computeModelInfo(idModel, asset?.idSystemObject);
+        const CMIR: ComputeModelInfoResult | undefined = await this.computeModelInfo(idModel, modelAsset.idSystemObject ?? -1);
         if (!CMIR || CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
             LOG.error(`WorkflowEngine.generateScene cannot compute model info (idModel: ${idModel} | CMIR: ${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
             return { success: false, message: 'cannot get model info', data: { isValid: false }  };
         }
+        // console.log(H.Helpers.JSONStringify(CMIR));
 
         // bail if no units defined
         if(CMIR.units ===undefined) {
@@ -444,11 +455,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             parameters: jobParamSIVoyagerScene,
         };
         //#endregion
-
-        console.log(wfParamSIVoyagerScene);
+        LOG.info(`WorkflowEngine.generateScene Cook parameters: ${H.Helpers.JSONStringify(wfParamSIVoyagerScene)}`,LOG.LS.eDEBUG);
 
         // create our workflow
-        const doCreate: boolean = false;
+        const doCreate: boolean = true;
         if(doCreate) {
             // create our workflow
             const wf: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
