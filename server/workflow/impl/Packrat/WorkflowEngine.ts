@@ -405,6 +405,16 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file SystemObject (CMIR: ${H.Helpers.JSONStringify(CMIR.assetVersionGeometry)})`, LOG.LS.eWF);
             return { success: false, message: 'failed to get geometry system object', data: { isValid: false }  };
         }
+        const idSystemObjects: number[] = [SOGeometry.idSystemObject];
+
+        // if we have a material/texture add it to the array so it's added to Job parameters and staged
+        const SODiffuse: DBAPI.SystemObject| null = CMIR.assetVersionDiffuse ? await CMIR.assetVersionDiffuse.fetchSystemObject() : null;
+        if (SODiffuse)
+            idSystemObjects.push(SODiffuse.idSystemObject);
+        const SOMTL: DBAPI.SystemObject| null = CMIR.assetVersionMTL ? await CMIR.assetVersionMTL.fetchSystemObject() : null;
+        if (SOMTL)
+            idSystemObjects.push(SOMTL.idSystemObject);
+
         const isValid: boolean = true;
         //#endregion
 
@@ -436,7 +446,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
                 new COOK.JobCookSIVoyagerSceneParameters(
                     parameterHelper,
-                    idModel,                            // idModel
                     CMIR.assetVersionGeometry.FileName, // sourceMeshFile
                     CMIR.units,                         // units
                     CMIR.assetVersionDiffuse?.FileName, // sourceDiffuseMapFile
@@ -449,7 +458,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // create parameters for the workflow based on those created for the job
         const wfParamSIVoyagerScene: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,
-            idSystemObject: [SOGeometry.idSystemObject],
+            idSystemObject: idSystemObjects,
             idProject: workflowParams.idProject,
             idUserInitiator: workflowParams.idUserInitiator,
             parameters: jobParamSIVoyagerScene,
@@ -634,7 +643,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 } else {
                     const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
                         new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
-                            new COOK.JobCookSIVoyagerSceneParameters(parameterHelper, CMIR.idModel, CMIR.assetVersionGeometry.FileName, CMIR.units,
+                            new COOK.JobCookSIVoyagerSceneParameters(parameterHelper,CMIR.assetVersionGeometry.FileName, CMIR.units,
                             CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName));
 
                     const wfParamSIVoyagerScene: WF.WorkflowParameters = {

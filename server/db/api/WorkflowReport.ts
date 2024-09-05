@@ -98,7 +98,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
         try {
             return DBC.CopyArray<WorkflowReportBase, WorkflowReport> (
                 await DBC.DBConnection.prisma.$queryRaw<WorkflowReport[]>`
-                SELECT w.* FROM JobRun AS jRun
+                SELECT wReport.* FROM JobRun AS jRun
                 JOIN WorkflowStep AS wStep ON wStep.idJobRun = jRun.idJobRun
                 JOIN WorkflowReport AS wReport ON wReport.idWorkflow = wStep.idWorkflow
                 WHERE jRun.idJobRun = ${idJobRun};`,WorkflowReport);

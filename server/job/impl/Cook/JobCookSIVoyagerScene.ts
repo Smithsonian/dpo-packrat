@@ -28,7 +28,6 @@ export type JobCookSIVoyagerSceneMetaDataFile = {
 };
 
 export class JobCookSIVoyagerSceneParameterHelper {
-    idModel: number;
     modelSource: DBAPI.Model;
     SOModelSource: DBAPI.SystemObject;
     OG: DBAPI.ObjectGraph;
@@ -39,9 +38,8 @@ export class JobCookSIVoyagerSceneParameterHelper {
     static initialized: boolean = false;
     static idVocabEdanRecordID: number;
 
-    constructor(idModel: number, modelSource: DBAPI.Model, SOModelSource: DBAPI.SystemObject, OG: DBAPI.ObjectGraph,
+    constructor(modelSource: DBAPI.Model, SOModelSource: DBAPI.SystemObject, OG: DBAPI.ObjectGraph,
         metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile, sceneName: string, sceneTitle: string | undefined) {
-        this.idModel = idModel;
         this.modelSource = modelSource;
         this.SOModelSource = SOModelSource;
         this.OG = OG;
@@ -75,7 +73,7 @@ export class JobCookSIVoyagerSceneParameterHelper {
             return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute metadata file JSON from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
 
         const sceneName: string = metaDataFileJSON.title + (metaDataFileJSON.sceneTitle ? ': ' + metaDataFileJSON.sceneTitle : '');
-        return new JobCookSIVoyagerSceneParameterHelper(idModel ?? 0, modelSource, SOModelSource, OG, metaDataFileJSON, sceneName, metaDataFileJSON.sceneTitle);
+        return new JobCookSIVoyagerSceneParameterHelper(/*idModel ?? 0, */modelSource, SOModelSource, OG, metaDataFileJSON, sceneName, metaDataFileJSON.sceneTitle);
     }
 
     private static async computeSceneMetaData(OG: DBAPI.ObjectGraph, modelSource: DBAPI.Model): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
@@ -125,7 +123,6 @@ export class JobCookSIVoyagerSceneParameterHelper {
 }
 
 export class JobCookSIVoyagerSceneParameters {
-    idModel: number;
     sourceMeshFile: string;
     units: string;
     sourceDiffuseMapFile?: string | undefined;
@@ -138,15 +135,14 @@ export class JobCookSIVoyagerSceneParameters {
 
     constructor(
         parameterHelper: JobCookSIVoyagerSceneParameterHelper,
-        idModel: number,    // make sure we have reference back to original model. also helps identify existing/active jobs
         sourceMeshFile: string,
         units: string,
         sourceDiffuseMapFile: string | undefined = undefined,
         svxFile: string | undefined = undefined,
         metaDataFile: string | undefined = undefined,
         outputFileBaseName: string | undefined = undefined) {
+
         this.parameterHelper = parameterHelper;
-        this.idModel = idModel;
         this.sourceMeshFile = path.basename(sourceMeshFile);
         this.units = units;
         this.sourceDiffuseMapFile = sourceDiffuseMapFile ? path.basename(sourceDiffuseMapFile) : undefined;
