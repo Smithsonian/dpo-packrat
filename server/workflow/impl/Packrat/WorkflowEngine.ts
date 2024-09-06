@@ -636,6 +636,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean, generateDownloads: boolean = false): Promise<WF.IWorkflow[] | null> {
+        LOG.info(H.Helpers.getStackTrace('WorkflowEngine.eventIngestionIngestObjectModel'),LOG.LS.eDEBUG);
         if (!assetsIngested) {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
@@ -785,6 +786,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean, generateDownloads: boolean = false): Promise<WF.IWorkflow[] | null> {
+        LOG.info(H.Helpers.getStackTrace('WorkflowEngine.eventIngestionIngestObjectScene'),LOG.LS.eDEBUG);
+
         if (!assetsIngested) {
             LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CSIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
             return null;
