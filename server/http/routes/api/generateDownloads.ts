@@ -4,6 +4,7 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import * as COL from '../../../collections/interface';
+import * as CACHE from '../../../cache';
 import { ASL, LocalStore } from '../../../utils/localStore';
 
 import { eEventKey } from '../../../event/interface/EventEnums';
@@ -123,6 +124,13 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
     if(isValid === false) {
         LOG.error(`API.generateDownloads failed. scene is not QC'd. (scene:${scene.idScene})`,LOG.LS.eHTTP);
         return generateResponse(false,'scene has not be QC\'d.',idSystemObject);
+    }
+
+    // we don't have a license resolver, or that license does not allow download generation then we bail
+    const licenseResolver: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+    if (!DBAPI.LicenseAllowsDownloadGeneration(licenseResolver?.License?.RestrictLevel)) {
+        LOG.info(`API.generateDownloads scene does not have a valid license for download generation (idScene: ${scene.idScene})`, LOG.LS.eWF);
+        return generateResponse(false, 'scene does not have valid license to generate downloads', scene.idScene);
     }
 
     // get any active jobs

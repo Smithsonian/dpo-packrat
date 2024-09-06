@@ -182,6 +182,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
         LOG.info(`WorkflowEngine.generateDownloads verify scene (idScene:${CSIR.idScene} | sceneFile: ${CSIR.assetSVX?.FileName} | idModel: ${CSIR.idModel} | modelFile: ${CSIR.assetVersionGeometry?.FileName})`,LOG.LS.eDEBUG);
 
+        // we don't have a license resolver, or that license does not allow download generation then we bail
+        if (!DBAPI.LicenseAllowsDownloadGeneration(CSIR.licenseResolver?.License?.RestrictLevel)) {
+            LOG.info(`API.generateDownloads scene does not have a valid license for download generation (idScene: ${scene.idScene})`, LOG.LS.eWF);
+            return { success: false, message: 'license does not allow download generation', data: { isValid: false } };
+        }
+
         // make sure we have a voyager scene
         if(!CSIR.assetSVX) {
             LOG.error(`WorkflowEngine.generateDownloads failed. No voyager scene found (idScene: ${scene.idScene})`,LOG.LS.eWF);
