@@ -548,6 +548,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
         LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+        LOG.info(H.Helpers.getStackTrace('WorkflowEngine.eventIngestionIngestObject'),LOG.LS.eDEBUG);
         if (!workflowParams || !workflowParams.idSystemObject)
             return null;
 
