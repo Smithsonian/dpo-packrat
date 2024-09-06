@@ -421,17 +421,62 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // get our basename
         const { sceneBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
 
+        //#region scene
         // if we have a scene get it and a reference to the SVX so it can be fed in as a parameter
         // TODO: if no scene then we need to create one for this Model and hook it up
         // TODO: determine if we have an SVX file that is of different basename and bail/fix it
         //       so it passes validation when returned from Cook.
-        if(!idScene) {
-            // get scene (if any) from master model
+        let scene: DBAPI.Scene | null = null;
 
-            // get SVX from the scene
-
-            // compare filenames to see if it matches basename
+        // if we received an id for the scene, use it
+        if(idScene) {
+            scene = await DBAPI.Scene.fetch(idScene);
+            if(!scene)
+                console.log(`no scene found for id: ${idScene}`);
         }
+
+        // if we still don't have a scene try to get it from the master model
+        if(!scene) {
+            // get scene (if any) from master model
+            const childScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(idModel);
+            if(!childScenes || childScenes.length===0) {
+                console.log(`No children scenes found (idModel: ${idModel})`);
+            } else {
+                if(childScenes.length > 1)
+                    console.log(`retrieved ${childScenes.length} scenes for model (idModel: ${idModel})`);
+                scene = childScenes[0];
+            }
+        }
+
+        // if we have a scene, we want to use it's SVX (if any) as the base for the recipe.
+        // if we don't have a scene then the model may have just been ingested
+        const svxFilename: string = sceneBaseName + '.svx.json';
+        if(scene) {
+            // get SVX from the scene
+            const svxAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchVoyagerSceneFromScene(scene.idScene);
+            if(!svxAsset || svxAsset.length===0)
+                console.log(`No SVX found for scene ${scene.idScene} (idModel: ${idModel})`);
+            else {
+                // compare filenames. if a match then add it to staged resources. otherwise, fail
+                if(svxAsset[0].FileName !== svxFilename)
+                    console.log(`basenames do not match. (${svxAsset[0].FileName} -> ${svxFilename})`);
+                else {
+                    // get our last version
+                    const svxAssetVersion:  DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(svxAsset[0].idAsset);
+                    if(!svxAssetVersion)
+                        console.log(`cannot get AssetVersion. (${svxAsset[0].idAsset})`);
+                    else {
+                        // grab our SystemObject since we need to feed it to the list of staged files
+                        const svxAssetVersionSO: DBAPI.SystemObject | null = await svxAssetVersion.fetchSystemObject();
+                        if(!svxAssetVersionSO)
+                            console.log(`cannot get SystemObject for asset version. (idAssetVersion: ${svxAssetVersion.idAssetVersion})`);
+                        else
+                            idSystemObjects.push(svxAssetVersionSO.idSystemObject);
+                    }
+                }
+            }
+        }
+        //#endregion scene
 
         //#region Job Parameters
         // build up our parameters and create the workflow
@@ -466,6 +511,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         //#endregion
         LOG.info(`WorkflowEngine.generateScene Cook parameters: ${H.Helpers.JSONStringify(wfParamSIVoyagerScene)}`,LOG.LS.eDEBUG);
 
+        //#region Workflow
         // create our workflow
         const doCreate: boolean = true;
         if(doCreate) {
@@ -497,6 +543,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: true, message: 'generating scene', data: { isValid, activeJobs, workflow, workflowReport } };
         } else
             return { success: true, message: 'generating scene', data: { isValid, activeJobs } };
+        //#endregion
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
