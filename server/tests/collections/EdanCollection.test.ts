@@ -127,7 +127,6 @@ function executeTestQuery(ICol: COL.ICollection, query: string, expectNoResults:
             };
 
         const results: COL.CollectionQueryResults | null = await ICol.queryCollection(query, 10, 0, options);
-
         expect(results).toBeTruthy();
         if (results) {
             expect(results.records).toBeTruthy();
