@@ -324,6 +324,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     async generateScene(idModel: number, idScene: number | null, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
         LOG.info(`WorkflowEngine.generateScene (idModel: ${idModel} | idScene: ${idScene} | params: ${H.Helpers.JSONStringify(workflowParams)})`,LOG.LS.eDEBUG);
 
+        // making sure we didn't make it here but user wanted to skip generation
+        // if (workflowParams.parameters.skipSceneGenerate===true) {
+        //     LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene per user instruction (idModel: ${idModel} | idSO: ${workflowParams.idSystemObject})`, LOG.LS.eWF);
+        //     return { success: false, message: 'skipped generating scene per user request', data: { isValid: false } };
+        // }
+
         //#region check for duplicate jobs
         // make sure we don't have any jobs running. >0 if a running job was found.
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByModel(8,idModel);
@@ -378,20 +384,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: false, message: 'cannot get model Asset', data: { isValid: false }  };
         const modelAsset: DBAPI.Asset = modelAssets[0];
 
-        // get our asset and version used by the model
-        // const { success, asset, assetVersion } = await this.computeAssetAndVersion(modelSO.idSystemObject);
-        // if (!success || !asset || !assetVersion || !asset.idSystemObject) {
-        //     LOG.error(`WorkflowEngine.generateScene cannot get model asset and version (idModel: ${idModel} | idSystemObject: ${modelSO.idSystemObject})`, LOG.LS.eDB);
-        //     return { success: false, message: 'cannot get model asset and version', data: { isValid: false }  };
-        // }
-
         // get model info
         const CMIR: ComputeModelInfoResult | undefined = await this.computeModelInfo(idModel, modelAsset.idSystemObject ?? -1);
         if (!CMIR || CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
             LOG.error(`WorkflowEngine.generateScene cannot compute model info (idModel: ${idModel} | CMIR: ${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
             return { success: false, message: 'cannot get model info', data: { isValid: false }  };
         }
-        // console.log(H.Helpers.JSONStringify(CMIR));
 
         // bail if no units defined
         if(CMIR.units ===undefined) {
@@ -423,9 +421,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         //#region scene
         // if we have a scene get it and a reference to the SVX so it can be fed in as a parameter
-        // TODO: if no scene then we need to create one for this Model and hook it up
-        // TODO: determine if we have an SVX file that is of different basename and bail/fix it
-        //       so it passes validation when returned from Cook.
         let scene: DBAPI.Scene | null = null;
 
         // if we received an id for the scene, use it
@@ -452,27 +447,23 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // if we don't have a scene then the model may have just been ingested
         const svxFilename: string = sceneBaseName + '.svx.json';
         if(scene) {
-            // get SVX from the scene
-            const svxAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchVoyagerSceneFromScene(scene.idScene);
-            if(!svxAsset || svxAsset.length===0)
-                console.log(`No SVX found for scene ${scene.idScene} (idModel: ${idModel})`);
+            // get the asset version for the active voyager scene. only returns the most recent and does not support
+            // multiple SVX files for a single scene
+            const svxAssetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchActiveVoyagerSceneFromScene(scene.idScene);
+            if(!svxAssetVersion)
+                LOG.info(`WorkflowEngine.generateScene no active SVX file found for scene ${scene.idScene} (idModel: ${idModel})`,LOG.LS.eWF);
             else {
                 // compare filenames. if a match then add it to staged resources. otherwise, fail
-                if(svxAsset[0].FileName !== svxFilename)
-                    console.log(`basenames do not match. (${svxAsset[0].FileName} -> ${svxFilename})`);
+                // TODO: fix the naming?
+                if(svxAssetVersion.FileName !== svxFilename)
+                    LOG.info(`WorkflowEngine.generateScene basenames do not match. (${svxAssetVersion.FileName} -> ${svxFilename})`,LOG.LS.eWF);
                 else {
-                    // get our last version
-                    const svxAssetVersion:  DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(svxAsset[0].idAsset);
-                    if(!svxAssetVersion)
-                        console.log(`cannot get AssetVersion. (${svxAsset[0].idAsset})`);
-                    else {
-                        // grab our SystemObject since we need to feed it to the list of staged files
-                        const svxAssetVersionSO: DBAPI.SystemObject | null = await svxAssetVersion.fetchSystemObject();
-                        if(!svxAssetVersionSO)
-                            console.log(`cannot get SystemObject for asset version. (idAssetVersion: ${svxAssetVersion.idAssetVersion})`);
-                        else
-                            idSystemObjects.push(svxAssetVersionSO.idSystemObject);
-                    }
+                    // grab our SystemObject since we need to feed it to the list of staged files
+                    const svxAssetVersionSO: DBAPI.SystemObject | null = await svxAssetVersion.fetchSystemObject();
+                    if(!svxAssetVersionSO)
+                        LOG.info(`WorkflowEngine.generateScene cannot get SystemObject for asset version. (idAssetVersion: ${svxAssetVersion.idAssetVersion})`,LOG.LS.eWF);
+                    else
+                        idSystemObjects.push(svxAssetVersionSO.idSystemObject);
                 }
             }
         }
