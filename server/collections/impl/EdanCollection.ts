@@ -68,7 +68,7 @@ export class EdanCollection implements COL.ICollection {
         }
 
         // in addition to URI encoding the query, also replace single quotes with %27
-        const params: string                = `q=${encodeURIComponent(query).replace(/'/g, '%27')}${filter}&rows=${rows}&start=${start}`;
+        const params: string = `q=${encodeURIComponent(query).replace(/'/g, '%27')}${filter}&rows=${rows}&start=${start}`;
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
         if (!reqResult.success) {
             LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL);
@@ -389,6 +389,12 @@ export class EdanCollection implements COL.ICollection {
             LOG.info(`EdanCollection.sendRequest: ${url}`, LOG.LS.eCOLL);
             const init: RequestInit = { method, body: body ?? undefined, headers: this.encodeHeader(params, contentType) };
             const res = await fetch(url, init);
+
+            // debug statement for response
+            // const headers: string[] = [];
+            // res.headers.forEach((value, name) => { headers.push(`${name}: ${value}`); });
+            // LOG.info(`EdanCollection.sendRequest [${res.status}:${res.statusText}] response from ${url} (params: ${params})\n${headers.join('\n\t')}`,LOG.LS.eDEBUG);
+
             return {
                 output: await res.text(),
                 statusText: res.statusText,

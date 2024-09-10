@@ -63,6 +63,10 @@ export type ConfigType = {
             checkPeriod: number;
         };
         ldap: LDAPConfig;
+        users: {
+            admin: number[];    // users that are full admin
+            tools: number[];    // users that can access tools like batch processing
+        }
     },
     collection: {
         type: COLLECTION_TYPE;
@@ -138,6 +142,20 @@ export const Config: ConfigType = {
             OU: process.env.PACKRAT_LDAP_OU ? process.env.PACKRAT_LDAP_OU : 'OU=Service Accounts,OU=Enterprise',
             DC: process.env.PACKRAT_LDAP_DC ? process.env.PACKRAT_LDAP_DC : 'DC=US,DC=SINET,DC=SI,DC=EDU',
             CA: process.env.PACKRAT_LDAP_CA ? process.env.PACKRAT_LDAP_CA : '/etc/ssl/certs/ldaps.si.edu.cer',
+        },
+        users: {
+            admin: [
+                2,  // Jon Blundell
+                4,  // Jamie Cope
+                5,  // Eric Maslowski
+            ],
+            tools: [
+                2,  // Jon Blundell
+                4,  // Jamie Cope
+                5,  // Eric Maslowski
+                6,  // Megan Dattoria
+                11, // Katie Wolfe
+            ]
         },
     },
     collection: {

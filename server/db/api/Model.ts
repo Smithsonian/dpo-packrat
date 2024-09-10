@@ -231,6 +231,27 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         }
     }
 
+    static async fetchBySystemObject(idSystemObject: number): Promise<Model | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            const scenes: Model[] | null =  DBC.CopyArray<ModelBase, Model>(
+                await DBC.DBConnection.prisma.$queryRaw<Model[]>`
+                SELECT * FROM Model AS mdl
+                JOIN SystemObject AS so ON (mdl.idModel = so.idModel)
+                WHERE so.idSystemObject = ${idSystemObject};`, Model);
+
+            // if we have scenes just return the first one, else null
+            if(scenes)
+                return scenes[0];
+
+            return null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Model.fetchBySystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     /** fetches models which are children of either the specified idModelParent or idSceneParent, and have matching AutomationTag values */
     static async fetchChildrenModels(idModelParent: number | null, idSceneParent: number | null, AutomationTag: string): Promise<Model[] | null> {
         try {

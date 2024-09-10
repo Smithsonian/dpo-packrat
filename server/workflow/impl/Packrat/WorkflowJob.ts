@@ -80,6 +80,7 @@ export class WorkflowJob implements WF.IWorkflow {
             parameters: this.workflowJobParameters.cookJobParameters,
             frequency: null               // null means create but don't run
         };
+        LOG.info(`WorkflowJob.start jobCreationParameters (${H.Helpers.JSONStringify(jobCreationParameters)})`,LOG.LS.eDEBUG);
 
         // create our job, but don't start it so we can hook it up to the WorkflowStep first
         // this is done to ensure the Job can reference the associated WorkflowStep.
@@ -265,6 +266,7 @@ export class WorkflowJob implements WF.IWorkflow {
         }
 
         // confirm that this.workflowParams.idSystemObject are asset versions; ultimately, we will want to allow a model and/or capture data, depending on the recipe
+        LOG.info(`WorkflowJob.extractParameters checking for AssetVersions (${this.workflowParams.idSystemObject})`,LOG.LS.eDEBUG);
         if (!this.workflowParams.idSystemObject)
             return { success: true }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
 

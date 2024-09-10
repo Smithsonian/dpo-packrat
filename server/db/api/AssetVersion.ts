@@ -356,6 +356,30 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
+    /** Fetches the the active asset version that is being used by the given scene for Voyager SVX scene */
+    static async fetchActiveVoyagerSceneFromScene(idScene: number): Promise<AssetVersion | null> {
+        try {
+            // get the (active) voyager scene asset associated with the Packrat scene (if any)
+            // TODO: get asset type id from VocabularyID
+            const idvAssetType: number = 137;
+            const assetVersion: AssetVersion[] | null = DBC.CopyArray<AssetVersionBase, AssetVersion>(
+                await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                    SELECT * FROM Scene AS scn
+                    JOIN SystemObject AS scnSO ON (scnSO.idScene=scn.idScene)
+                    JOIN SystemObjectVersion AS scnSOV ON (scnSOV.idSystemObject=scnSO.idSystemObject)
+                    JOIN SystemObjectVersionAssetVersionXref as sovAssetXref ON (sovAssetXref.idSystemObjectVersion=scnSOV.idSystemObjectVersion)
+                    JOIN AssetVersion AS av ON (av.idAssetVersion=sovAssetXref.idAssetVersion)
+                    JOIN Asset AS a ON (a.idAsset=av.idAsset AND a.idVAssetType=${idvAssetType})
+                    WHERE scn.idScene=${idScene}
+                    ORDER BY scnSOV.DateCreated DESC
+                    LIMIT 1`,AssetVersion);
+            return (!assetVersion || assetVersion.length===0) ? null : assetVersion[0];
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.AssetVersion.fetchVoyagerSceneFromScene', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     static async fetchFromUser(idUserCreator: number): Promise<AssetVersion[] | null> {
         if (!idUserCreator)
             return null;

@@ -61,7 +61,6 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (7, 5, 'Focal S
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 1, 'Raw');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 2, 'Processed');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 3, 'From Camera');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (9, 1, 'Scan To Mesh');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (9, 2, 'CAD');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (10, 1, 'Point Cloud');
@@ -237,6 +236,8 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 16, 'Place
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 17, 'Taxonomic Name (FT)');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 18, 'Notes (FT)');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (29, 19, 'Physical Description (FT)');
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (8, 4, 'Masks');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 1, 'Alignment');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Reconstruction');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation');
