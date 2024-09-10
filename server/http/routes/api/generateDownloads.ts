@@ -319,10 +319,10 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     }
 
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat
-    const maxIDs: number = 10;
+    const maxIDs: number = 50;
     if(idSystemObjects.length>maxIDs) {
-        LOG.info('API.generateDownloads too many scenes submitted. limiting to 10',LOG.LS.eHTTP);
-        idSystemObjects.splice(10);
+        LOG.info(`API.generateDownloads too many scenes submitted. limiting to ${maxIDs}`,LOG.LS.eHTTP);
+        idSystemObjects.splice(maxIDs);
     }
 
     // cycle through IDs
@@ -350,7 +350,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
             // if we want to republish the scene then we fire off the promise that checks the status
             // and when done re-publishes the scene (non-blocking)
-            if(rePublish===true) {
+            if(result.success===true && rePublish===true) {
                 if(currentPublishedState===COMMON.ePublishedState.eNotPublished) {
                     LOG.error(`API.GenerateDownloads cannot publish unpublished scenes (${idSystemObject ?? -1})`,LOG.LS.eDB);
                     continue;

@@ -877,7 +877,9 @@ function AdminToolsView(): React.ReactElement {
             const authorizedUsers: number[] = [
                 2,  // Jon Blundell
                 4,  // Jamie Cope
-                5   // Eric Maslowski
+                5,  // Eric Maslowski
+                6,  // Megan Dattoria
+                11, // Katie Wolfe
             ];
 
             // if our current user ID is not in the list then return false

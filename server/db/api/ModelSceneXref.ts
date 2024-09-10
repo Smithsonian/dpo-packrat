@@ -50,6 +50,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             && this.S1 === MSX.S1
             && this.S2 === MSX.S2;
     }
+
     /** return true if transform is updated */
     public updateIfNeeded(MSX: ModelSceneXref): { transformUpdated: boolean, updated: boolean } {
         let updated: boolean = false;
@@ -220,6 +221,32 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             LOG.error('DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution', LOG.LS.eDB, error);
             return null;
         }
+    }
+
+    /** is this a downloadable asset? returns the idSystemObject if so */
+    public isDownloadable(): boolean {
+        if(!this.Name || !this.Usage) {
+            LOG.error(`DBAPI.ModelSceneXref.isDownloadable cannot run check due to missing info (${this.Name} | ${this.Usage})`, LOG.LS.eDB);
+            return false;
+        }
+
+        const downloadSuffixes: string[] = [
+            '4096_std.glb',                 // webAssetGlbLowUncompressed
+            '4096-gltf_std.zip',            // gltfZipLow
+            '2048_std_draco.glb',           // AR: App3D
+            '2048_std.usdz',                // AR: iOSApp3D
+            'full_resolution-obj_std.zip',  // objZipFull
+            '4096-obj_std.zip'              // objZipLow
+        ];
+
+        for(let i=0; i<downloadSuffixes.length; i++) {
+            if(this.Name.includes(downloadSuffixes[i])===true) {
+                // make sure usage matches
+                if(this.Usage.startsWith('Download:') || this.Usage.startsWith('App3D') || this.Usage.startsWith('iOSApp3D'))
+                    return true;
+            }
+        }
+        return false;
     }
 }
 

@@ -703,7 +703,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // compare with others in the list to make sure they match
         const errorNames: string[] = filenames.filter(filename => !filename.startsWith(baseName));
         if(errorNames.length>0) {
-            this.logError(`JobCookSIGenerateDownloads filenames don't share base name. (${errorNames.join(' | ')})`);
+            this.logError(`JobCookSIGenerateDownloads filenames don't share base name. (${baseName} -> ${errorNames.join(' | ')})`);
             return null;
         }
 
