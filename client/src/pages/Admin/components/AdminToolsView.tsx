@@ -520,7 +520,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 };
 
 // TODO: add enums and types to library and/or COMMON as needed
-// TODO: refresh data table button
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
 //       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type AssetSummary = DBReference & {
@@ -723,6 +722,85 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
     const onRefreshList = async () => {
         getProjectScenes(projectSelected);
     };
+    const onExportTableDataToCSV = (): boolean => {
+        // Helper function to format date to a string or default 'N/A'
+        const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
+
+        // Helper function to handle null or undefined values and return 'N/A' as default
+        const handleNull = (value) => value != null ? value : 'N/A';
+
+        // Create CSV headers (clean names)
+        const headers = [
+            'ID',
+            'Scene Name',
+            'Published',
+            // 'Date Published',
+            'Reviewed',
+            // 'Project ID',
+            'Project',
+            // 'Subject ID',
+            'Subject',
+            // 'Media Group ID',
+            'Media Group',
+            'Date Created',
+            // 'Models Status',
+            // 'Models Items Count',
+            'Downloads',
+            // 'Downloads Items Count',
+            'AR',
+            // 'AR Items Count',
+            'Master Model',
+            // 'Source Models Items Count',
+            'Capture Data',
+            // 'Source Capture Data Items Count'
+        ];
+
+        // Build CSV rows
+        const rows = projectScenes.map(scene => {
+            return [
+                handleNull(scene.id),
+                handleNull(scene.name),
+                handleNull(scene.publishedState),
+                // formatDate(scene.datePublished),
+                scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
+                // handleNull(scene.project?.id),
+                handleNull(scene.project?.name),
+                // handleNull(scene.subject?.id),
+                handleNull(scene.subject?.name),
+                // handleNull(scene.mediaGroup?.id),
+                handleNull(scene.mediaGroup?.name),
+                formatDate(scene.dateCreated),
+                // handleNull(scene.derivatives.models?.status),
+                // handleNull(scene.derivatives.models?.items?.length),
+                handleNull(scene.derivatives.downloads?.status),
+                // handleNull(scene.derivatives.downloads?.items?.length),
+                handleNull(scene.derivatives.ar?.status),
+                // handleNull(scene.derivatives.ar?.items?.length),
+                handleNull(scene.sources.models?.status),
+                // handleNull(scene.sources.models?.items?.length),
+                handleNull(scene.sources.captureData?.status),
+                // handleNull(scene.sources.captureData?.items?.length)
+            ].join(',');  // Join the row values with commas
+        });
+
+        // Combine headers and rows into CSV format
+        const csvContent = [headers.join(','), ...rows].join('\n');
+
+        // Create a Blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        const fileName = !projectSelected ? 'scene_summaries' : projectSelected?.Name;
+
+        // add our temp link to the DOM, click it, and then return
+        link.href = url;
+        link.setAttribute('download', `${fileName}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        return true;
+    };
     const filteredProjectScenes = useMemo(() => {
         const filterPattern: string = sceneNameFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
         return projectScenes.filter(row => {
@@ -884,6 +962,13 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                             disableElevation
                         >
                             Refresh
+                        </Button>
+                        <Button
+                            className={classes.btn}
+                            onClick={onExportTableDataToCSV}
+                            disableElevation
+                        >
+                            CSV
                         </Button>
                     </Box>
                 </Box>
