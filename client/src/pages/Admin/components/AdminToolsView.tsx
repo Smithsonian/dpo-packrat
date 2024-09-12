@@ -220,19 +220,28 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
             return 'NA';
         }
 
+        // if we're doing a link just return it
+        if(path.includes('_link'))
+            return obj[path] ?? '#';
+
+        // otherwise, we split it up and try to resolve
         const keys = path.split('.');
 
         /* eslint-disable @typescript-eslint/no-explicit-any */
         let result: any = '';
 
-        // get the value stored (only two levels deep)
+        // get the value stored (only three levels deep)
         switch(keys.length){
             case 1: {
-                result = ((obj[keys[0]]) ?? 'NA');
+                result = ((obj?.[keys[0]]) ?? 'NA');
                 break;
             }
             case 2: {
-                result = ((obj[keys[0]][keys[1]]) ?? 'NA');
+                result = ((obj?.[keys[0]]?.[keys[1]]) ?? 'NA');
+                break;
+            }
+            case 3: {
+                result = ((obj?.[keys[0]]?.[keys[1]]?.[keys[2]]) ?? 'NA');
                 break;
             }
             default: {
@@ -376,7 +385,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
     useEffect(() => {
         if (resetSelection===true)
             onResetSelection();
-
     }, [resetSelection]);
 
     // JSX
@@ -464,11 +472,19 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                                             style={{  whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '10rem', }}
                                                         >
                                                             { (column.link && column.link===true) ? (
-                                                                <>
-                                                                    <a href={resolveProperty(row, `${column.key}_link`)} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
-                                                                        {resolveProperty(row,column.key)}
-                                                                    </a>
-                                                                </>
+                                                                (() => {
+                                                                    // if our link has a # we just skip adding the href so we don't
+                                                                    // reload page on click or go to different unrelated page
+                                                                    const link = resolveProperty(row, `${column.key}_link`);
+                                                                    const displayText = resolveProperty(row, column.key);
+                                                                    return link.includes('#') ? (
+                                                                        displayText
+                                                                    ) : (
+                                                                        <a href={link} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
+                                                                            {displayText}
+                                                                        </a>
+                                                                    );
+                                                                })()
                                                             ) : (
                                                                 resolveProperty(row, column.key)
                                                             )}
@@ -503,7 +519,6 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
 };
 
 // TODO: add enums and types to library and/or COMMON as needed
-// TODO: refresh data table button
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
 //       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type AssetSummary = DBReference & {
@@ -517,14 +532,30 @@ type AssetList = {
     items: AssetSummary[];
 };
 type SceneSummary = DBReference & {
+    // project: DBReference,
+    // subject: DBReference,
+    // mediaGroup: DBReference,
+    // dateCreated: Date,
+    // downloads: AssetList,
+    // publishedState: string,
+    // datePublished: Date,
+    // isReviewed: boolean
+    publishedState: string,
+    datePublished: Date,
+    isReviewed: boolean
     project: DBReference,
     subject: DBReference,
     mediaGroup: DBReference,
     dateCreated: Date,
-    downloads: AssetList,
-    publishedState: string,
-    datePublished: Date,
-    isReviewed: boolean
+    derivatives:    {
+        models: AssetList,          // holds all derivative models
+        downloads: AssetList,       // specific models for download
+        ar: AssetList,              // models specific to AR
+    },
+    sources: {
+        models: AssetList,
+        captureData: AssetList,
+    }
 };
 const AdminToolsBatchGeneration = (): React.ReactElement => {
     const classes = useStyles();
@@ -550,6 +581,18 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         DOWNLOADS = 0,
         VOYAGER_SCENE = 1,
     }
+
+    // utilities
+    const getOperationString = (operation: number): string => {
+        switch(operation) {
+            case BatchOperations.DOWNLOADS:
+                return 'Download Generation';
+            case BatchOperations.VOYAGER_SCENE:
+                return 'Scene Generation';
+            default:
+                return `Unsupported: ${operation}`;
+        }
+    };
 
     // get data
     const getProjectList = useCallback(async () => {
@@ -588,26 +631,52 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                 // inject hyperlinks for the scene details page
                 // link ties to 'name' field so need to set property to prefix of 'name_'
                 obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
+
+                // if our model is not a system error, add the link
+                obj['sources.models.status_link'] = (obj.sources.models.status!=='SysError') ? `${protocol}//${host}/repository/details/${obj.sources.models.items[0].id}` : '#';
+                console.log(obj['sources.models.status_link']);
             });
 
             // console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
             console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - FINISHED [${response.data.length}]`);
+            console.log('[Packrat:DEBUG] returned scenes', response.data);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
         }
     }, []);
     const getColumnHeader = (): ColumnHeader[] => {
-        return [
-            { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
-            { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
-            { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
-            { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
-            { key: 'downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
-            { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
-            // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
-            // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
-        ];
+        switch(operation) {
+            case BatchOperations.DOWNLOADS: {
+                return [
+                    { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
+                    { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
+                    { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
+                    { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
+                    { key: 'derivatives.downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
+                    { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
+                ];
+            }
+
+            case BatchOperations.VOYAGER_SCENE: {
+                return [
+                    { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
+                    { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
+                    { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
+                    { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
+                    { key: 'sources.models.status', label: 'Model', align: 'center', tooltip: 'Are the source model(s) in good standing (GOOD)?', link: true },
+                    { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
+                ];
+            }
+
+            default: {
+                return [
+                    { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
+                    { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
+                    { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
+                ];
+            }
+        }
     };
 
     // handle changes
@@ -629,19 +698,32 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             toast.error('Cannot submit job. Nothing selected.');
             return;
         }
-        console.log(`[Packrat] Starting ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
-
-        // get our list of scene idSystemObject
-        const sceneIDs: number[] = selectedList.map((scene)=>scene.id);
+        console.log(`[Packrat] Starting ${getOperationString(operation)} batch operation for ${selectedList.length} items: `,selectedList);
 
         // build request to server
-        const response: RequestResponse = await API.generateDownloads(sceneIDs,false,republishScenes);
+        let itemCount: number = 0;
+        let response: RequestResponse = { success: false, message: 'undefined' };
+        switch(operation) {
+            case BatchOperations.DOWNLOADS: {
+                const sceneIDs: number[] = selectedList.map((scene)=>scene.id);
+                response = await API.generateDownloads(sceneIDs,false,republishScenes);
+                itemCount = sceneIDs.length;
+            } break;
+
+            case BatchOperations.VOYAGER_SCENE: {
+                const modelIDs: number[] = selectedList.map((scene)=> scene.sources.models.items[0]?.id); // grab the first source model. need update if support multi-models
+                response = await API.generateScene(modelIDs, false, true);
+                itemCount = modelIDs.length;
+            } break;
+        }
+
+        // make sure we saw success
         if(response.success === false) {
 
             // make sure we have data and responses
             if(!response.data || !Array.isArray(response.data)) {
-                console.log(`[Packrat:ERROR] cannot run ${BatchOperations[operation]}. invalid response data.`,response);
-                toast.error(`${BatchOperations[operation]} failed. Got unexpected data from server.`);
+                console.log(`[Packrat:ERROR] cannot run ${getOperationString(operation)}. invalid response data.`,response);
+                toast.error(`${getOperationString(operation)} failed. Got unexpected data from server.`);
                 return;
             }
 
@@ -659,18 +741,18 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             const allFailed: boolean = response.data.every( response => response.succcess===false );
             if(allFailed===true) {
                 const errorMsg: string = (response.data.length>1)
-                    ? `All ${response.data.length} scenes failed during ${BatchOperations[operation]} run.`
-                    : `${BatchOperations[operation]} cannot run. ${uniqueMessages[0]}`;
+                    ? `All ${response.data.length} scenes failed during ${getOperationString(operation)} run.`
+                    : `${getOperationString(operation)} cannot run. ${uniqueMessages[0]}`;
 
                 console.log(`[Packrat:ERROR] ${errorMsg}`,response.data);
-                toast.error(`${BatchOperations[operation]} failed. (${toastErrorMsg})`);
+                toast.error(`${getOperationString(operation)} failed. (${toastErrorMsg})`);
                 return;
             }
 
             // only some failed so we need to handle this
             const failedCount: number = response.data.filter(response => !response.success).length;
             console.log(`[Packrat:ERROR] ${response.data.length}/${selectedList.length} scenes failed. (${uniqueMessages.join(' |')})`,response.data);
-            toast.warn(`${BatchOperations[operation]} had issues. ${failedCount} scenes failed. (${toastErrorMsg})`);
+            toast.warn(`${getOperationString(operation)} had issues. ${failedCount} scenes failed. (${toastErrorMsg})`);
 
             // we bail early so the selection is maintained on failure
             // TODO: deselect those that were successful.
@@ -681,8 +763,8 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         onResetSelection();
 
         // notify the user/log
-        toast.success(`Generating Downloads for ${sceneIDs.length} scenes. Check the workflow tab for progress.`);
-        console.log(`[Packrat] Submitted ${BatchOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+        toast.success(`${getOperationString(operation)} for ${itemCount} items. Check the workflow tab for progress.`);
+        console.log(`[Packrat] Submitted ${getOperationString(operation)} batch operation for ${itemCount} items: `,selectedList);
         return;
     };
     const onUpdatedSelection = (selection) => {
@@ -760,7 +842,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                                             SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                         >
                                             <MenuItem value={0}>Downloads</MenuItem>
-                                            <MenuItem value={1} disabled>Voyager Scenes</MenuItem>
+                                            <MenuItem value={1}>Voyager Scenes</MenuItem>
                                         </Select>
                                     </TableCell>
                                 </TableRow>

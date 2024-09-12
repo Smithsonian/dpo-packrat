@@ -35,8 +35,8 @@ type WorkflowResponse = {       // general response for each
 
 //#region Utility
 // HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
-//       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
-const idJob: number = 8;
+//       The actual idJob for si-voyager-scene is 12 (see above)
+const idJob: number = 12;
 const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined): WorkflowResponse => {
     return {
         success,

@@ -40,7 +40,7 @@ type SceneSummary = DBReference & {
     subject: DBReference,
     mediaGroup: DBReference,
     dateCreated: Date,
-    derivatives:    {
+    derivatives: {
         models: AssetList,          // holds all derivative models
         downloads: AssetList,       // specific models for download
         ar: AssetList,              // models specific to AR
@@ -50,6 +50,19 @@ type SceneSummary = DBReference & {
         captureData: AssetList,
     }
 };
+// type ModelSummary = DBReference & {
+//     publishedState: string,
+//     project: DBReference,
+//     subject: DBReference,
+//     mediaGroup: DBReference,
+//     dateCreated: Date,
+//     derivatives: {
+//         scene: AssetList,   // holds any Scenes built from this model
+//     },
+//     sources: {
+//         captureData: AssetList,
+//     }
+// };
 
 //#endregion
 
@@ -311,15 +324,19 @@ const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | nu
 
     // default to good since it is HIGHLY unlikely for a scene to be present and no master model
     const result: AssetList = { status: 'Good', items: [] };
+    console.log('masterModels',masterModels);
 
     // cycle through master models building summaries
     for(const model of masterModels) {
-        const masterSummary: AssetSummary | null = await buildAssetSummaryFromModel(model.idModel);
+        // we build this from the model itself and not the asset(s) attached to it so it's easier for
+        // the end user to get a summary of the related assets and jump to its detail page
+        const masterSummary: AssetSummary | null = await buildAssetSummaryFromModel(model.idModel,false);
         if(!masterSummary) {
             LOG.error(`API.Project.buildMasterModelSummarie unable to build summary for Master model of scene (idScene: ${idScene} | idModel: ${model.idModel})`, LOG.LS.eCOLL);
             result.status = 'SysError';
             continue;
         }
+        console.log('masterSummary',masterSummary);
 
         // force highest levels for the asset
         masterSummary.quality = 'Highest';
@@ -339,7 +356,11 @@ const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | nu
 
     return result;
 };
-const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary | null> => {
+
+const buildAssetSummaryFromModel = async (idModel: number, fromAsset: boolean = true): Promise<AssetSummary | null> => {
+    // Here we are loosely defining the Model as an asset when the asset is actually the
+    // geometry uploaded (e.g. obj, stl, ply, etc.). We do this so it's easier for the end user
+    // to: jump to the details page summarizing all aspects of the model with the provided id
 
     // get our actual model so we can get the date created
     const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
@@ -348,36 +369,57 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
         return null;
     }
 
-    // get our asset for the model
-    const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model.idModel);
-    if(!modelAsset || modelAsset.length===0) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset from model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
-        return null;
-    } else if(modelAsset.length>1)
-        LOG.info(`API.Project.buildAssetSummaryFromModel more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
-
-    // get our system object id
-    const modelSO: DBAPI.SystemObject | null = await modelAsset[0].fetchSystemObject();
-    if(!modelSO) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset} | msx: ${modelAsset[0].FileName})`,LOG.LS.eDB);
-        return null;
-    }
-
-    // get our latest asset version
-    const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
-    if(!modelAssetVer) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
-        return null;
-    }
-
     const result: AssetSummary = {
-        id: modelSO.idSystemObject,
-        name: modelAsset[0].FileName,
+        id: -1,
+        name: 'undefined',
         quality: 'Highest',
         usage: 'Source',
         downloadable: false,
-        dateCreated: modelAssetVer.DateCreated, // if erro store epoch as date
+        dateCreated: new Date()
     };
+
+    if(fromAsset===true) {
+        // get our asset for the model
+        const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model.idModel);
+        if(!modelAsset || modelAsset.length===0) {
+            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset from model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+            return null;
+        } else if(modelAsset.length>1)
+            LOG.info(`API.Project.buildAssetSummaryFromModel more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
+
+        // get our latest asset version
+        const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
+        if(!modelAssetVer) {
+            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
+            return null;
+        }
+
+        // find the one that is geometry or zip
+        // ...
+
+        // get our system object id for the model
+        const modelSO: DBAPI.SystemObject | null = await modelAsset[0].fetchSystemObject();
+        if(!modelSO) {
+            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+            return null;
+        }
+
+        result.id = modelSO.idSystemObject;
+        result.name = modelAsset[0].FileName;
+        result.dateCreated = modelAssetVer.DateCreated;
+    } else {
+        // get our system object id for the model
+        const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+        if(!modelSO) {
+            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+            return null;
+        }
+
+        result.id = modelSO.idSystemObject;
+        result.name = model.Name;
+        result.dateCreated = model.DateCreated;
+    }
+
     return result;
 };
 const buildAssetSummaryFromMSX = async (msx: DBAPI.ModelSceneXref): Promise<AssetSummary | null> => {
