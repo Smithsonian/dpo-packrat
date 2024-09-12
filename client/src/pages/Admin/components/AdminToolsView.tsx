@@ -220,19 +220,28 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
             return 'NA';
         }
 
+        // if we're doing a link just return it
+        if(path.includes('_link'))
+            return obj[path] ?? '#';
+
+        // otherwise, we split it up and try to resolve
         const keys = path.split('.');
 
         /* eslint-disable @typescript-eslint/no-explicit-any */
         let result: any = '';
 
-        // get the value stored (only two levels deep)
+        // get the value stored (only three levels deep)
         switch(keys.length){
             case 1: {
-                result = ((obj[keys[0]]) ?? 'NA');
+                result = ((obj?.[keys[0]]) ?? 'NA');
                 break;
             }
             case 2: {
-                result = ((obj[keys[0]][keys[1]]) ?? 'NA');
+                result = ((obj?.[keys[0]]?.[keys[1]]) ?? 'NA');
+                break;
+            }
+            case 3: {
+                result = ((obj?.[keys[0]]?.[keys[1]]?.[keys[2]]) ?? 'NA');
                 break;
             }
             default: {
@@ -464,11 +473,19 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                                                             style={{  whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '10rem', }}
                                                         >
                                                             { (column.link && column.link===true) ? (
-                                                                <>
-                                                                    <a href={resolveProperty(row, `${column.key}_link`)} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
-                                                                        {resolveProperty(row,column.key)}
-                                                                    </a>
-                                                                </>
+                                                                (() => {
+                                                                    // if our link has a # we just skip adding the href so we don't
+                                                                    // reload page on click or go to different unrelated page
+                                                                    const link = resolveProperty(row, `${column.key}_link`);
+                                                                    const displayText = resolveProperty(row, column.key);
+                                                                    return link.includes('#') ? (
+                                                                        displayText
+                                                                    ) : (
+                                                                        <a href={link} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
+                                                                            {displayText}
+                                                                        </a>
+                                                                    );
+                                                                })()
                                                             ) : (
                                                                 resolveProperty(row, column.key)
                                                             )}
@@ -517,14 +534,23 @@ type AssetList = {
     items: AssetSummary[];
 };
 type SceneSummary = DBReference & {
+    publishedState: string,
+    datePublished: Date,
+    isReviewed: boolean
     project: DBReference,
     subject: DBReference,
     mediaGroup: DBReference,
     dateCreated: Date,
     downloads: AssetList,
-    publishedState: string,
-    datePublished: Date,
-    isReviewed: boolean
+    derivatives:    {
+        models: AssetList,          // holds all derivative models
+        downloads: AssetList,       // specific models for download
+        ar: AssetList,              // models specific to AR
+    },
+    sources: {
+        models: AssetList,
+        captureData: AssetList,
+    }
 };
 const AdminToolsBatchGeneration = (): React.ReactElement => {
     const classes = useStyles();
@@ -603,7 +629,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
             { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
             { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
-            { key: 'downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
+            { key: 'derivatives.downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
             { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
