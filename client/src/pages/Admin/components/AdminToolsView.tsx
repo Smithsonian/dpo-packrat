@@ -729,8 +729,18 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         // Helper function to handle null or undefined values and return 'N/A' as default
         const handleNull = (value) => value != null ? value : 'N/A';
 
+        // handle characters that can mess up the outputted CSV
+        const escapeCsvValue = (value) => {
+            if (typeof value === 'string') {
+                const escapedValue = value.replace(/"/g, '""');
+                return /[",\n]/.test(escapedValue) ? `"${escapedValue}"` : escapedValue;
+            }
+            return value;
+        };
+
         // Create CSV headers (clean names)
         const headers = [
+            'Link',
             'ID',
             'Scene Name',
             'Published',
@@ -756,29 +766,34 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         ];
 
         // Build CSV rows
-        const rows = projectScenes.map(scene => {
+        const { protocol, host } = window.location;
+        const baseUrl = `${protocol}//${host}/repository/details/`;
+        const rows = projectScenes.map((scene, index) => {
+            const hyperlinkFormula = `=HYPERLINK("${baseUrl}/" & B${index + 2}, "url")`;
+
             return [
-                handleNull(scene.id),
-                handleNull(scene.name),
-                handleNull(scene.publishedState),
+                hyperlinkFormula,
+                escapeCsvValue(handleNull(scene.id)),
+                escapeCsvValue(handleNull(scene.name)),
+                escapeCsvValue(handleNull(scene.publishedState)),
                 // formatDate(scene.datePublished),
                 scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
                 // handleNull(scene.project?.id),
-                handleNull(scene.project?.name),
+                escapeCsvValue(handleNull(scene.project?.name)),
                 // handleNull(scene.subject?.id),
-                handleNull(scene.subject?.name),
+                escapeCsvValue(handleNull(scene.subject?.name)),
                 // handleNull(scene.mediaGroup?.id),
-                handleNull(scene.mediaGroup?.name),
+                escapeCsvValue(handleNull(scene.mediaGroup?.name)),
                 formatDate(scene.dateCreated),
                 // handleNull(scene.derivatives.models?.status),
                 // handleNull(scene.derivatives.models?.items?.length),
-                handleNull(scene.derivatives.downloads?.status),
+                escapeCsvValue(handleNull(scene.derivatives.downloads?.status)),
                 // handleNull(scene.derivatives.downloads?.items?.length),
-                handleNull(scene.derivatives.ar?.status),
+                escapeCsvValue(handleNull(scene.derivatives.ar?.status)),
                 // handleNull(scene.derivatives.ar?.items?.length),
-                handleNull(scene.sources.models?.status),
+                escapeCsvValue(handleNull(scene.sources.models?.status)),
                 // handleNull(scene.sources.models?.items?.length),
-                handleNull(scene.sources.captureData?.status),
+                escapeCsvValue(handleNull(scene.sources.captureData?.status)),
                 // handleNull(scene.sources.captureData?.items?.length)
             ].join(',');  // Join the row values with commas
         });
