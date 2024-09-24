@@ -16,6 +16,8 @@ import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 import { getCookResource } from './routes/resources';
 
+import { play } from './routes/sandbox';
+
 import { generateDownloads } from './routes/api/generateDownloads';
 import { getProjects, getProjectScenes } from './routes/api/project';
 
@@ -130,6 +132,9 @@ export class HttpServer {
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);
+
+        // sandbox playground
+        this.app.get('/api/sandbox/play',play);
 
         // if we're here then we handle any errors that may have surfaced
         this.app.use(errorhandler); // keep last
