@@ -4,6 +4,11 @@ import { createLogger, format, transports } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
 
+// Simulate __dirname in ES module scope
+// import { fileURLToPath } from 'url';
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
 export enum LogSection { // logger section
     eAUTH   = 'AUTH',  // authentication
     eCACHE  = 'CACHE', // cache
@@ -26,6 +31,7 @@ export enum LogSection { // logger section
     eNONE   = '*****', // none specified ... don't use this!
 }
 
+// our types
 interface LoggerContext {
     section: string | null;
     caller: string | null;
@@ -42,10 +48,53 @@ interface LogEntry {
     context: LoggerContext;
 }
 
-// Simulate __dirname in ES module scope
-// import { fileURLToPath } from 'url';
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+// helper to get speecific color codes for text out in the console
+export const getTextColorCode = (color?: string): string => {
+
+    // if nothing provided return closing code
+    if(!color)
+        return '\x1b[0m';
+
+    switch(color.toLowerCase()) {
+        case 'reset':       return '\x1b[0m';
+        case 'bright':      return '\x1b[1m';
+        case 'dim':         return '\x1b[2m';
+        case 'underscore':  return '\x1b[4m';
+        case 'blink':       return '\x1b[5m';
+        case 'reverse':     return '\x1b[7m';
+        case 'hidden':      return '\x1b[8m';
+
+        // colors tied to levels for easy lookup
+        case 'critical':    return '\x1b[35m';
+        case 'error':       return '\x1b[31m';
+        case 'warn':        return '\x1b[33m';
+        case 'info':        return '\x1b[32m';
+        case 'debug':       return '\x1b[37m';
+
+        // text color
+        case 'fg-black':    return '\x1b[30m';
+        case 'fg-red':      return '\x1b[31m';
+        case 'fg-green':    return '\x1b[32m';
+        case 'fg-yellow':   return '\x1b[33m';
+        case 'fg-blue':     return '\x1b[34m';
+        case 'fg-magenta':  return '\x1b[35m';
+        case 'fg-cyan':     return '\x1b[36m';
+        case 'fg-white':    return '\x1b[37m';
+
+        // highlight/background color
+        case 'bg-black':    return '\x1b[40m';
+        case 'bg-red':      return '\x1b[41m';
+        case 'bg-green':    return '\x1b[42m';
+        case 'bg-yellow':   return '\x1b[43m';
+        case 'bg-blue':     return '\x1b[44m';
+        case 'bg-magenta':  return '\x1b[45m';
+        case 'bg-cyan':     return '\x1b[46m';
+        case 'bg-white':    return '\x1b[47m';
+
+        default:
+            return '\x1b[37m';
+    }
+};
 
 export class Logger {
     private static logger: any;
@@ -66,60 +115,100 @@ export class Logger {
         return path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
     }
 
-    public static configure(logDirectory: string, env: 'prod' | 'dev'): void {
+    public static configure(logDirectory: string, env: 'prod' | 'dev'): { success: boolean; message?: string } {
         this.logDir = logDirectory;
         this.environment = env;
 
-        // we want a very specific order for the outputted JSON so we use a custom format to
-        // ensure fields are printed in a specific order to improve readability
-        const customJsonFormat = format.combine(
-            format.timestamp(),
-            format.printf((info) => {
+        try {
+            // we want a very specific order for the outputted JSON so we use a custom format to
+            // ensure fields are printed in a specific order to improve readability
+            const customJsonFormat = format.combine(
+                format.timestamp(),
+                format.printf((info) => {
+                    // eslint-disable-next-line no-control-regex
+                    const level = info.level.replace(/\u001b\[\d{2}m/g, ''); // Remove ANSI color codes
+
+                    // Arrange the properties in the desired order
+                    const log = {
+                        timestamp: new Date(info.timestamp).toISOString(), // UTC timestamp
+                        level,
+                        message: info.message,
+                        data: info.data,
+                        context: info.context
+                    };
+                    return JSON.stringify(log);
+                })
+            );
+
+            // when outputting to the console/terminal we want cleaner, single-line logs so it's easier
+            // to follow visually.
+            const customConsoleFormat = format.printf((info) => {
+                const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
+                const requestId: string = info.context.requestId ? `[${info.context.requestId}]` : '[00000]';
+                const userId: string = info.context.userId ? `U${info.context.userId}` : 'U---';
+                const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
+                const message: string = info.message;
+                const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
+
+                // to get right-aligned, colored levels we need to strip away any hidden colorization codes
+                // and use that to see how long the actual level text is. From there we determine how much
+                // padding is needed to right-align things. This is necessary because Winston's colorization
+                // code alters the formatting/lengths of the level stripping all whitespace.
+                const level: string = info.level.toLowerCase();
                 // eslint-disable-next-line no-control-regex
-                const level = info.level.replace(/\u001b\[\d{2}m/g, ''); // Remove ANSI color codes
+                const levelRaw: string = info.level.replace(/\u001b\[.*?m/g, '');
+                const levelPad: string = (levelRaw.length<6) ? ' '.repeat(6-levelRaw.length) : '';
 
-                // Arrange the properties in the desired order
-                const log = {
-                    timestamp: new Date(info.timestamp).toISOString(), // UTC timestamp
-                    level,
-                    message: info.message,
-                    data: info.data,
-                    context: info.context
-                };
-                return JSON.stringify(log);
-            })
-        );
+                // Format data fields in parenthesis
+                let dataFields: string = '';
+                if (info.data) {
+                    const dataEntries = Object.entries(info.data).map(([key, value]) => `${key}: ${value}`);
+                    dataFields = `${getTextColorCode('dim')}(${dataEntries.join(' | ')})${getTextColorCode()}`;
+                }
 
-        // Resolve relative paths to absolute paths using the current directory
-        if (!path.isAbsolute(logDirectory)) {
-            logDirectory = path.resolve(__dirname, logDirectory);
+                // Build the formatted log message
+                return `${timestamp} ${requestId} ${userId} ${section} ${levelPad}${level}: ${(caller ?? '')}${message} ${dataFields}`;
+            });
+
+            // Resolve relative paths to absolute paths using the current directory
+            if (!path.isAbsolute(logDirectory)) {
+                logDirectory = path.resolve(__dirname, logDirectory);
+            }
+
+            if (!fs.existsSync(this.logDir)) {
+                fs.mkdirSync(this.logDir, { recursive: true });
+            }
+
+            const fileTransport = new transports.File({
+                filename: this.getLogFilePath(),
+                format: customJsonFormat
+            });
+
+            const consoleTransport = new transports.Console({
+                format: format.combine(
+                    format.timestamp(),
+                    format.colorize(),
+                    customConsoleFormat
+                )
+            });
+
+            // Use both transports: console in dev mode, and file transport for file logging
+            this.logger = createLogger({
+                level: 'debug', // Logging all levels
+                transports: env === 'dev' ? [fileTransport, consoleTransport] : [fileTransport]
+            });
+        } catch(error) {
+            return {
+                success: false,
+                message: error instanceof Error ? error.message : String(error)
+            };
         }
 
-        if (!fs.existsSync(this.logDir)) {
-            fs.mkdirSync(this.logDir, { recursive: true });
-        }
-
-        const fileTransport = new transports.File({
-            filename: this.getLogFilePath(),
-            format: customJsonFormat
-        });
-
-        const consoleTransport = new transports.Console({
-            format: format.combine(
-                format.colorize(),
-                customJsonFormat
-            )
-        });
-
-        // Use both transports: console in dev mode, and file transport for file logging
-        this.logger = createLogger({
-            level: 'debug', // Logging all levels
-            transports: env === 'dev' ? [fileTransport, consoleTransport] : [fileTransport]
-        });
+        return { success: true, message: `(${env}) configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
     }
 
     // generic routine for printing to the log
-    private static log(level: string, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }) {
+    private static log(level: string, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): void {
         // create our object to submit to the logger with our structured format
         const entry: LogEntry = {
             timestamp: new Date().toISOString(),
