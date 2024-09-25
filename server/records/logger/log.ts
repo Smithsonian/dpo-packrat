@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-
-// Simulate __dirname in ES module scope
-// import { fileURLToPath } from 'url';
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
 
 export enum LogSection { // logger section
     eAUTH   = 'AUTH',  // authentication
@@ -47,9 +42,18 @@ interface LogEntry {
     audit: boolean;
     context: LoggerContext;
 }
+interface ProfileRequest {
+    startTime: Date,
+    logEntry: LogEntry
+}
+
+// Simulate __dirname in ES module scope
+// import { fileURLToPath } from 'url';
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
 // helper to get speecific color codes for text out in the console
-export const getTextColorCode = (color?: string): string => {
+const getTextColorCode = (color?: string): string => {
 
     // if nothing provided return closing code
     if(!color)
@@ -100,6 +104,7 @@ export class Logger {
     private static logger: any;
     private static logDir: string = path.join(__dirname, 'Logs');
     private static environment: 'prod' | 'dev' = 'dev';
+    private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
 
     private static getLogFilePath(): string {
         const date = new Date();
@@ -115,9 +120,31 @@ export class Logger {
         return path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
     }
 
-    public static configure(logDirectory: string, env: 'prod' | 'dev'): { success: boolean; message?: string } {
+    public static configure(logDirectory: string, env: 'prod' | 'dev'): { success: boolean; message: string } {
         this.logDir = logDirectory;
         this.environment = env;
+
+        const customLevels = {
+            levels: {
+                // levels set to RFC5424 standard  (https://datatracker.ietf.org/doc/html/rfc5424)
+                crit:   2,
+                error:  3,
+                warn:   4,
+                info:   6,
+                debug:  7,
+                perf:   10, // used specifically for metreix/performance timers
+            },
+            // available colors: black, red, green, yellow, blue, magenta, cyan, white, gray, grey
+            // available styles: bold, dim, italic, underline, inverse, hidden, strikethrough
+            colors: {
+                crit:   'bold magenta',
+                error:  'red',
+                warn:   'bold yellow',
+                info:   'cyan',
+                debug:  'gray',
+                perf:   'green'
+            }
+        };
 
         try {
             // we want a very specific order for the outputted JSON so we use a custom format to
@@ -144,8 +171,8 @@ export class Logger {
             // to follow visually.
             const customConsoleFormat = format.printf((info) => {
                 const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
-                const requestId: string = info.context.requestId ? `[${info.context.requestId}]` : '[00000]';
-                const userId: string = info.context.userId ? `U${info.context.userId}` : 'U---';
+                const requestId: string = info.context.idRequest ? `[${String(info.context.idRequest).padStart(4, '0')}]` : '[0000]';
+                const userId: string = info.context.idUser ? String(info.context.idUser).padStart(3, '0') : 'U---';
                 const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
                 const message: string = info.message;
                 const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
@@ -194,9 +221,13 @@ export class Logger {
 
             // Use both transports: console in dev mode, and file transport for file logging
             this.logger = createLogger({
-                level: 'debug', // Logging all levels
+                level: 'perf', // Logging all levels
+                levels: customLevels.levels,
                 transports: env === 'dev' ? [fileTransport, consoleTransport] : [fileTransport]
             });
+
+            // add our custom colors as well
+            addColors(customLevels.colors);
         } catch(error) {
             return {
                 success: false,
@@ -207,9 +238,8 @@ export class Logger {
         return { success: true, message: `(${env}) configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
     }
 
-    // generic routine for printing to the log
-    private static log(level: string, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): void {
-        // create our object to submit to the logger with our structured format
+    // build our log entry structure/object
+    private static getLogEntry(level: string, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
         const entry: LogEntry = {
             timestamp: new Date().toISOString(),
             message,
@@ -224,25 +254,68 @@ export class Logger {
                 idRequest: context.idRequest ?? -1
             }
         };
-
-        // Logging the JSON formatted log entry
-        this.logger.log(level, entry);
+        return entry;
     }
 
     // wrappers for each level of log
     public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
-        this.log('critical', message, data, audit, { section, caller, idUser, idRequest });
+        this.logger.log(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
     }
     public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
-        this.log('error', message, data, audit, { section, caller, idUser, idRequest });
+        this.logger.log(this.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
     }
     public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
-        this.log('warn', message, data, audit, { section, caller, idUser, idRequest });
+        this.logger.log(this.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
     }
     public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
-        this.log('info', message, data, audit, { section, caller, idUser, idRequest });
+        this.logger.log(this.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
     }
     public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
-        this.log('debug', message, data, audit, { section, caller, idUser, idRequest });
+        this.logger.log(this.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
+    }
+
+    // profiling
+    public static profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): { success: boolean, message: string } {
+
+        // make sure we don't have the same
+        if(this.requests.has(key)===true)
+            return { success: false, message: 'profile request key already created.' };
+
+        // otherwise, create our request entry for performance level
+        const logEntry: LogEntry = this.getLogEntry('perf', message, data, false, { section, caller, idUser, idRequest } );
+        const profileRequest: ProfileRequest = {
+            startTime: new Date(),
+            logEntry,
+        };
+        this.requests.set(key,profileRequest);
+
+        return { success: true, message: 'created profile request' };
+    }
+    public static profileEnd(key: string): { success: boolean, message: string } {
+
+        // get our request and make sure it's valid
+        const profileRequest: ProfileRequest | undefined = this.requests.get(key);
+        if(!profileRequest)
+            return { success: false, message: 'cannot find profile request' };
+
+        // Pad with leading zeros for display
+        const elapsedMilliseconds: number = new Date().getTime() - profileRequest.startTime.getTime();
+        const totalSeconds: number = Math.floor(elapsedMilliseconds / 1000);
+        const hours: string = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes: string = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds: string = String(totalSeconds % 60).padStart(2, '0');
+
+        // get our ellapsed time and update our data/message with it
+        profileRequest.logEntry.message += ` {${hours}:${minutes}:${seconds}}`;
+        profileRequest.logEntry.timestamp = new Date().toISOString();
+
+        if(profileRequest.logEntry.data)
+            profileRequest.logEntry.data.profiler = elapsedMilliseconds;
+        else
+            profileRequest.logEntry.data = { profiler: elapsedMilliseconds };
+
+        // log the results
+        this.logger.log(profileRequest.logEntry);
+        return { success: true, message: 'created profile request' };
     }
 }
