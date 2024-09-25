@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createLogger, format, transports, addColors } from 'winston';
@@ -31,8 +32,8 @@ interface LoggerContext {
     section: string | null;
     caller: string | null;
     environment: 'prod' | 'dev';
-    idUser: number;
-    idRequest: number;
+    idUser: number | undefined;
+    idRequest: number | undefined;
 }
 interface LogEntry {
     timestamp: string;
@@ -46,79 +47,18 @@ interface ProfileRequest {
     startTime: Date,
     logEntry: LogEntry
 }
+type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
 
 // Simulate __dirname in ES module scope
 // import { fileURLToPath } from 'url';
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
 
-// helper to get speecific color codes for text out in the console
-const getTextColorCode = (color?: string): string => {
-
-    // if nothing provided return closing code
-    if(!color)
-        return '\x1b[0m';
-
-    switch(color.toLowerCase()) {
-        case 'reset':       return '\x1b[0m';
-        case 'bright':      return '\x1b[1m';
-        case 'dim':         return '\x1b[2m';
-        case 'underscore':  return '\x1b[4m';
-        case 'blink':       return '\x1b[5m';
-        case 'reverse':     return '\x1b[7m';
-        case 'hidden':      return '\x1b[8m';
-
-        // colors tied to levels for easy lookup
-        case 'critical':    return '\x1b[35m';
-        case 'error':       return '\x1b[31m';
-        case 'warn':        return '\x1b[33m';
-        case 'info':        return '\x1b[32m';
-        case 'debug':       return '\x1b[37m';
-
-        // text color
-        case 'fg-black':    return '\x1b[30m';
-        case 'fg-red':      return '\x1b[31m';
-        case 'fg-green':    return '\x1b[32m';
-        case 'fg-yellow':   return '\x1b[33m';
-        case 'fg-blue':     return '\x1b[34m';
-        case 'fg-magenta':  return '\x1b[35m';
-        case 'fg-cyan':     return '\x1b[36m';
-        case 'fg-white':    return '\x1b[37m';
-
-        // highlight/background color
-        case 'bg-black':    return '\x1b[40m';
-        case 'bg-red':      return '\x1b[41m';
-        case 'bg-green':    return '\x1b[42m';
-        case 'bg-yellow':   return '\x1b[43m';
-        case 'bg-blue':     return '\x1b[44m';
-        case 'bg-magenta':  return '\x1b[45m';
-        case 'bg-cyan':     return '\x1b[46m';
-        case 'bg-white':    return '\x1b[47m';
-
-        default:
-            return '\x1b[37m';
-    }
-};
-
 export class Logger {
     private static logger: any;
     private static logDir: string = path.join(__dirname, 'Logs');
     private static environment: 'prod' | 'dev' = 'dev';
     private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
-
-    private static getLogFilePath(): string {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const logDir = path.join(this.logDir, `${year}`, `${month}`);
-
-        if (!fs.existsSync(logDir)) {
-            fs.mkdirSync(logDir, { recursive: true });
-        }
-
-        return path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
-    }
 
     public static configure(logDirectory: string, env: 'prod' | 'dev'): { success: boolean; message: string } {
         this.logDir = logDirectory;
@@ -171,8 +111,8 @@ export class Logger {
             // to follow visually.
             const customConsoleFormat = format.printf((info) => {
                 const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
-                const requestId: string = info.context.idRequest ? `[${String(info.context.idRequest).padStart(4, '0')}]` : '[0000]';
-                const userId: string = info.context.idUser ? String(info.context.idUser).padStart(3, '0') : 'U---';
+                const requestId: string = (info.context.idRequest && info.context.idRequest>=0) ? `[${String(info.context.idRequest).padStart(5, '0')}]` : '[00000]';
+                const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U---';
                 const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
                 const message: string = info.message;
                 const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
@@ -189,8 +129,7 @@ export class Logger {
                 // Format data fields in parenthesis
                 let dataFields: string = '';
                 if (info.data) {
-                    const dataEntries = Object.entries(info.data).map(([key, value]) => `${key}: ${value}`);
-                    dataFields = `${getTextColorCode('dim')}(${dataEntries.join(' | ')})${getTextColorCode()}`;
+                    dataFields = `${this.getTextColorCode('dim')}(${this.processData(info.data)})${this.getTextColorCode()}`;
                 }
 
                 // Build the formatted log message
@@ -238,6 +177,7 @@ export class Logger {
         return { success: true, message: `(${env}) configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
     }
 
+    //#region UTILS
     // build our log entry structure/object
     private static getLogEntry(level: string, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
         const entry: LogEntry = {
@@ -250,13 +190,113 @@ export class Logger {
                 section: context.section,
                 caller: context.caller ?? null,
                 environment: this.environment,
-                idUser: context.idUser ?? -1,
-                idRequest: context.idRequest ?? -1
+                idUser: context.idUser,
+                idRequest: context.idRequest
             }
         };
         return entry;
     }
+    private static getLogFilePath(): string {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const logDir = path.join(this.logDir, `${year}`, `${month}`);
 
+        if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true });
+        }
+
+        return path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
+    }
+
+    // processing of our 'data' field
+    private static processData(data: DataType): string {
+        // If data is a primitive type, return it as a string
+        if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
+            return data.toString();
+        }
+
+        // If data is an array, join elements with commas
+        if (Array.isArray(data)) {
+            return data.map(item => this.processData(item)).join(', ');
+        }
+
+        // If data is an object, flatten it and convert to a string of key/value pairs
+        if (typeof data === 'object' && data !== null) {
+            const flatObject = this.flattenObject(data);
+            return Object.entries(flatObject)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join(', ');
+        }
+
+        return '';
+    }
+    private static flattenObject(obj: object, prefix = ''): Record<string, string> {
+        return Object.keys(obj).reduce((acc, key) => {
+            const newKey = prefix ? `${prefix}.${key}` : key; // Handle nested keys with dot notation
+            const value = (obj as Record<string, any>)[key];
+
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                Object.assign(acc, this.flattenObject(value, newKey)); // Recursively flatten nested objects
+            } else {
+                acc[newKey] = value.toString(); // Assign non-object values directly
+            }
+
+            return acc;
+        }, {} as Record<string, string>);
+    }
+
+    // helper to get specific color codes for text out in the console
+    private static getTextColorCode(color?: string): string {
+
+        // if nothing provided return closing code
+        if(!color)
+            return '\x1b[0m';
+
+        switch(color.toLowerCase()) {
+            case 'reset':       return '\x1b[0m';
+            case 'bright':      return '\x1b[1m';
+            case 'dim':         return '\x1b[2m';
+            case 'underscore':  return '\x1b[4m';
+            case 'blink':       return '\x1b[5m';
+            case 'reverse':     return '\x1b[7m';
+            case 'hidden':      return '\x1b[8m';
+
+            // colors tied to levels for easy lookup
+            case 'critical':    return '\x1b[35m';
+            case 'error':       return '\x1b[31m';
+            case 'warn':        return '\x1b[33m';
+            case 'info':        return '\x1b[32m';
+            case 'debug':       return '\x1b[37m';
+
+            // text color
+            case 'fg-black':    return '\x1b[30m';
+            case 'fg-red':      return '\x1b[31m';
+            case 'fg-green':    return '\x1b[32m';
+            case 'fg-yellow':   return '\x1b[33m';
+            case 'fg-blue':     return '\x1b[34m';
+            case 'fg-magenta':  return '\x1b[35m';
+            case 'fg-cyan':     return '\x1b[36m';
+            case 'fg-white':    return '\x1b[37m';
+
+            // highlight/background color
+            case 'bg-black':    return '\x1b[40m';
+            case 'bg-red':      return '\x1b[41m';
+            case 'bg-green':    return '\x1b[42m';
+            case 'bg-yellow':   return '\x1b[43m';
+            case 'bg-blue':     return '\x1b[44m';
+            case 'bg-magenta':  return '\x1b[45m';
+            case 'bg-cyan':     return '\x1b[46m';
+            case 'bg-white':    return '\x1b[47m';
+
+            default:
+                return '\x1b[37m';
+        }
+    }
+    //#endregion
+
+    //#region LOG
     // wrappers for each level of log
     public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
@@ -273,8 +313,9 @@ export class Logger {
     public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
     }
+    //#endregion
 
-    // profiling
+    //#region PROFILING
     public static profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): { success: boolean, message: string } {
 
         // make sure we don't have the same
@@ -304,9 +345,10 @@ export class Logger {
         const hours: string = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
         const minutes: string = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
         const seconds: string = String(totalSeconds % 60).padStart(2, '0');
+        const milliseconds: string = String((elapsedMilliseconds % 1000) * 10).padStart(4, '0');
 
         // get our ellapsed time and update our data/message with it
-        profileRequest.logEntry.message += ` {${hours}:${minutes}:${seconds}}`;
+        profileRequest.logEntry.message += ` {${hours}:${minutes}:${seconds}:${milliseconds}}`;
         profileRequest.logEntry.timestamp = new Date().toISOString();
 
         if(profileRequest.logEntry.data)
@@ -318,4 +360,5 @@ export class Logger {
         this.logger.log(profileRequest.logEntry);
         return { success: true, message: 'created profile request' };
     }
+    //#endregion
 }
