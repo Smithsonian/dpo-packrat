@@ -24,6 +24,7 @@ export enum LogSection { // logger section
     eSYS    = 'SYS',   // system/utilities
     eTEST   = 'TEST',  // test code
     eWF     = 'WF',    // workflow
+    eSEC    = 'SEC',   // security
     eNONE   = '*****', // none specified ... don't use this!
 }
 
@@ -112,7 +113,7 @@ export class Logger {
             const customConsoleFormat = format.printf((info) => {
                 const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
                 const requestId: string = (info.context.idRequest && info.context.idRequest>=0) ? `[${String(info.context.idRequest).padStart(5, '0')}]` : '[00000]';
-                const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U---';
+                const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U----';
                 const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
                 const message: string = info.message;
                 const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
