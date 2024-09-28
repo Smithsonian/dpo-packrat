@@ -5,6 +5,8 @@ import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
 
+require('events').EventEmitter.defaultMaxListeners = 500;
+
 export enum LogSection { // logger section
     eAUTH   = 'AUTH',  // authentication
     eCACHE  = 'CACHE', // cache
@@ -48,6 +50,16 @@ interface ProfileRequest {
     startTime: Date,
     logEntry: LogEntry
 }
+export interface LoggerStats {
+    counts: {
+        profile: number,
+        critical: number,
+        error: number,
+        warning: number,
+        info: number,
+        debug: number
+    }
+}
 type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
 
 // Simulate __dirname in ES module scope
@@ -60,7 +72,11 @@ export class Logger {
     private static logDir: string = path.join(__dirname, 'Logs');
     private static environment: 'prod' | 'dev' = 'dev';
     private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
+    private static stats: LoggerStats = { counts: { profile: 0, critical: 0, error: 0, warning: 0, info: 0, debug: 0 } };
 
+    public static getStats(): LoggerStats {
+        return this.stats;
+    }
     public static configure(logDirectory: string, env: 'prod' | 'dev'): { success: boolean; message: string } {
         this.logDir = logDirectory;
         this.environment = env;
@@ -148,7 +164,8 @@ export class Logger {
 
             const fileTransport = new transports.File({
                 filename: this.getLogFilePath(),
-                format: customJsonFormat
+                format: customJsonFormat,
+                // handleExceptions: false // used to disable buffering for higher volume support at risk of errors
             });
 
             const consoleTransport = new transports.Console({
@@ -156,13 +173,15 @@ export class Logger {
                     format.timestamp(),
                     format.colorize(),
                     customConsoleFormat
-                )
+                ),
+                // handleExceptions: false // used to disable buffering for higher volume support at risk of errors
             });
 
             // Use both transports: console in dev mode, and file transport for file logging
             this.logger = createLogger({
                 level: 'perf', // Logging all levels
                 levels: customLevels.levels,
+                // exitOnError: false, // do not exit on exceptions. combines with 'handleExceptions' above
                 transports: env === 'dev' ? [fileTransport, consoleTransport] : [fileTransport]
             });
 
@@ -301,18 +320,23 @@ export class Logger {
     // wrappers for each level of log
     public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
+        this.stats.counts.critical++;
     }
     public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
+        this.stats.counts.error++;
     }
     public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
+        this.stats.counts.warning++;
     }
     public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
+        this.stats.counts.info++;
     }
     public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.logger.log(this.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
+        this.stats.counts.debug++;
     }
     //#endregion
 
@@ -359,6 +383,7 @@ export class Logger {
 
         // log the results
         this.logger.log(profileRequest.logEntry);
+        this.stats.counts.profile++;
         return { success: true, message: 'created profile request' };
     }
     //#endregion

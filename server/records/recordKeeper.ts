@@ -3,7 +3,7 @@
 import { Config } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import * as H from '../utils/helpers';
-import { Logger as LOG, LogSection } from './logger/log';
+import { Logger as LOG, LogSection, LoggerStats } from './logger/log';
 
 /** TODO:
  * - change H.IOResults.error to message and make a requirement
@@ -79,6 +79,12 @@ export class RecordKeeper {
     }
     static profileEnd(label: string): H.IOResults {
         return LOG.profileEnd(label);
+    }
+
+    // stats
+    static logTotalCount(): number {
+        const logStats: LoggerStats = LOG.getStats();
+        return (logStats.counts.critical + logStats.counts.error + logStats.counts.warning + logStats.counts.info + logStats.counts.debug);
     }
     //#endregion
 }
