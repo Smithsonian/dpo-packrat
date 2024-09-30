@@ -93,9 +93,13 @@ export class RecordKeeper {
         return LOG.profileEnd(label);
     }
 
-    // stats
+    // stats and utilities
     static logTotalCount(): number {
         return LOG.getStats().counts.total;
+    }
+    static async logTest(numLogs: number): Promise<H.IOResults > {
+        const result = await LOG.testLogs(numLogs);
+        return convertToIOResults(result);
     }
     //#endregion
 }

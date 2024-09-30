@@ -45,6 +45,7 @@ export interface LoggerStats {
         total: number
     }
 }
+type validLevels = 'crit' | 'error' | 'warn' | 'info' | 'debug' | 'perf';
 interface LoggerContext {
     section: string | null;
     caller: string | null;
@@ -56,7 +57,7 @@ interface LogEntry {
     timestamp: string;
     message: string;
     data?: any;
-    level: string;
+    level: validLevels;
     audit: boolean;
     context: LoggerContext;
 }
@@ -84,6 +85,7 @@ export class Logger {
     private static environment: 'prod' | 'dev' = 'dev';
     private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
     private static stats: LoggerStats = { counts: { profile: 0, critical: 0, error: 0, warning: 0, info: 0, debug: 0, total: 0 } };
+    private static debugMode: boolean = false;
     private static lbIsRunning: boolean = false;
     private static lbQueue: LogEntry[] = [];
     private static lbQueueLocked: boolean = false;
@@ -151,7 +153,7 @@ export class Logger {
             const customConsoleFormat = format.printf((info) => {
                 const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
                 const requestId: string = (info.context.idRequest && info.context.idRequest>=0) ? `[${String(info.context.idRequest).padStart(5, '0')}]` : '[00000]';
-                const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U----';
+                const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U---';
                 const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
                 const message: string = info.message;
                 const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
@@ -227,6 +229,9 @@ export class Logger {
         this.stats.counts.total = (this.stats.counts.critical + this.stats.counts.error + this.stats.counts.warning + this.stats.counts.info + this.stats.counts.debug);
         return this.stats;
     }
+    public static setDebugMode(value: boolean): void {
+        this.debugMode = value;
+    }
 
     //#region UTILS
     private static delay(ms: number): Promise<void> {
@@ -234,7 +239,7 @@ export class Logger {
     }
 
     // build our log entry structure/object
-    private static getLogEntry(level: string, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
+    private static getLogEntry(level: validLevels, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
         const entry: LogEntry = {
             timestamp: new Date().toISOString(),
             message,
@@ -302,6 +307,20 @@ export class Logger {
         }, {} as Record<string, string>);
     }
 
+    // update our stats counter
+    private static updateStats(entry: LogEntry): void {
+        // we do this here so we can track when it actually gets posted if done by the load balancer
+        switch(entry.level) {
+            case 'crit':    this.stats.counts.critical++; break;
+            case 'error':   this.stats.counts.error++; break;
+            case 'warn':    this.stats.counts.warning++; break;
+            case 'info':    this.stats.counts.info++; break;
+            case 'debug':   this.stats.counts.debug++; break;
+            case 'perf':    this.stats.counts.profile++; break;
+        }
+        this.stats.counts.total++;
+    }
+
     // helper to get specific color codes for text out in the console
     private static getTextColorCode(color?: string): string {
 
@@ -349,20 +368,6 @@ export class Logger {
                 return '\x1b[37m';
         }
     }
-
-    // update our stats counter
-    private static updateStats(entry: LogEntry): void {
-        // we do this here so we can track when it actually gets posted if done by the load balancer
-        switch(entry.level) {
-            case 'crit':    this.stats.counts.critical++; break;
-            case 'error':   this.stats.counts.error++; break;
-            case 'warn':    this.stats.counts.warning++; break;
-            case 'info':    this.stats.counts.info++; break;
-            case 'debug':   this.stats.counts.debug++; break;
-            case 'profile': this.stats.counts.profile++; break;
-        }
-    }
-
     //#endregion
 
     //#region LOAD BALANCER
@@ -391,7 +396,7 @@ export class Logger {
             // the flow of logs to watson and ensure a FIFO process
             startTime = new Date().getTime();
             this.updateStats(entry);
-            this.logger.log(entry);
+            await this.postLogToWinston(entry);
 
             // if we want to spread out the requests, do so
             if(delay>0) {
@@ -438,15 +443,19 @@ export class Logger {
                 batchSize = Math.ceil(currentRate / (1000 / interval));
             }
 
-            console.log(`\t Interval update (mode: ${currentRate === burstRate ? 'Burst' : 'Normal'} | batch: ${batchSize} | interval: ${interval} ms)`);
+            // display interval details if in debug mode
+            if(this.debugMode)
+                console.log(`\t Interval update (mode: ${currentRate === burstRate ? 'Burst' : 'Normal'} | batch: ${batchSize} | interval: ${interval} ms)`);
         };
 
         // our main loop for the load balancer
         const loadBalancerLoop = async () => {
             while (this.lbIsRunning===true) {
                 if (this.lbQueue.length === 0) {
-                    console.log('Queue is empty, waiting for logs...');
-                    await this.delay(1000);
+                    if(this.debugMode)
+                        console.log('\tQueue is empty, waiting for logs...');
+
+                    await this.delay(5000);
                     continue;
                 }
 
@@ -474,19 +483,23 @@ export class Logger {
     public static stopLoadBalancer(): void {
         this.lbIsRunning = false;
     }
-    private static postLog(entry: LogEntry) {
+    //#endregion
+
+    //#region LOG
+    private static async postLog(entry: LogEntry): Promise<void> {
         // if we have the load balancer running, queue it up
         // otherwise just send to the logger
         if(this.lbIsRunning===true)
             this.lbQueue.push(entry);
         else {
-            this.updateStats(entry);
-            this.logger.log(entry);
+            await this.postLogToWinston(entry);
         }
     }
-    //#endregion
+    private static async postLogToWinston(entry: LogEntry): Promise<void> {
+        await this.logger.log(entry);
+        this.updateStats(entry);
+    }
 
-    //#region LOG
     // wrappers for each level of log
     public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
         this.postLog(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
@@ -546,10 +559,155 @@ export class Logger {
         else
             profileRequest.logEntry.data = { profiler: elapsedMilliseconds };
 
-        // log the results
-        this.logger.log(profileRequest.logEntry);
+        // log the results and cleanup
+        this.postLog(profileRequest.logEntry);
         this.stats.counts.profile++;
-        return { success: true, message: 'created profile request' };
+        this.requests.delete(key);
+
+        const message: string = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+        return { success: true, message };
+    }
+    //#endregion
+
+    //#region TESTING
+    private static randomLogEntry(index: number): LogEntry {
+        const levels = ['crit', 'error', 'warn', 'info', 'debug'];
+        const sectionMessages: Record<LogSection, string[]> = {
+            [LogSection.eAUTH]: ['User login successful', 'Token expired', 'Password change requested'],
+            [LogSection.eCACHE]: ['Cache miss for key', 'Cache invalidated', 'Cache hit'],
+            [LogSection.eCOLL]: ['Collection loaded', 'Item added to collection', 'Collection view updated'],
+            [LogSection.eCON]: ['Console output redirected', 'System reboot initiated'],
+            [LogSection.eCONF]: ['Configuration file loaded', 'Settings updated'],
+            [LogSection.eDB]: ['Database connection established', 'Query executed successfully', 'Transaction committed'],
+            [LogSection.eEVENT]: ['Event listener triggered', 'Event dispatched', 'Event queued'],
+            [LogSection.eGQL]: ['GraphQL query executed', 'Mutation resolved', 'Subscription updated'],
+            [LogSection.eHTTP]: ['API request received', 'HTTP response sent', 'Error in HTTP request'],
+            [LogSection.eJOB]: ['Job scheduled successfully', 'Job completed', 'Job failed to run'],
+            [LogSection.eMETA]: ['Metadata processed', 'Metadata updated', 'Metadata export successful'],
+            [LogSection.eMIG]: ['Database migration started', 'Migration completed', 'Migration failed'],
+            [LogSection.eNAV]: ['Page navigation successful', 'Navigation route updated', 'Navigation error occurred'],
+            [LogSection.eRPT]: ['Report generated', 'Report export completed', 'Report failed'],
+            [LogSection.eSTR]: ['File upload completed', 'Storage quota exceeded', 'File retrieval successful'],
+            [LogSection.eSYS]: ['System health check passed', 'System restarted', 'Resource usage optimized'],
+            [LogSection.eTEST]: ['Unit tests passed', 'Integration test failed', 'Test suite executed'],
+            [LogSection.eWF]: ['Workflow step approved', 'Task assigned', 'Workflow completed'],
+            [LogSection.eSEC]: ['Encryption successful', 'Unauthorized access attempt', 'Security policy updated'],
+            [LogSection.eNONE]: ['No section assigned']
+        };
+        const sectionCallers: Record<LogSection, string[]> = {
+            [LogSection.eAUTH]: ['AuthService', 'LoginHandler', 'TokenValidator'],
+            [LogSection.eCACHE]: ['CacheManager', 'RedisClient', 'MemoryStore'],
+            [LogSection.eCOLL]: ['CollectionController', 'CollectionView', 'ItemHandler'],
+            [LogSection.eCON]: ['ConsoleOutput', 'ConsoleWriter'],
+            [LogSection.eCONF]: ['ConfigLoader', 'ConfigManager'],
+            [LogSection.eDB]: ['DBConnection', 'QueryRunner', 'TransactionHandler'],
+            [LogSection.eEVENT]: ['EventDispatcher', 'EventListener', 'EventQueue'],
+            [LogSection.eGQL]: ['GraphQLHandler', 'QueryResolver', 'MutationExecutor'],
+            [LogSection.eHTTP]: ['HTTPRequest', 'HTTPResponse', 'APIController'],
+            [LogSection.eJOB]: ['JobScheduler', 'JobRunner'],
+            [LogSection.eMETA]: ['MetadataReader', 'MetadataWriter'],
+            [LogSection.eMIG]: ['MigrationRunner', 'DBMigrator'],
+            [LogSection.eNAV]: ['Navigator', 'BreadcrumbGenerator'],
+            [LogSection.eRPT]: ['ReportBuilder', 'ReportViewer'],
+            [LogSection.eSTR]: ['StorageHandler', 'FileUploader'],
+            [LogSection.eSYS]: ['SystemMonitor', 'SystemUtility'],
+            [LogSection.eTEST]: ['TestRunner', 'TestSuite'],
+            [LogSection.eWF]: ['WorkflowEngine', 'TaskExecutor'],
+            [LogSection.eSEC]: ['SecurityManager', 'EncryptionHandler'],
+            [LogSection.eNONE]: ['UnknownCaller']
+        };
+        const sectionData: Record<LogSection, any> = {
+            [LogSection.eAUTH]: { user: 'john_doe', token: 'abc123', status: 'expired' },
+            [LogSection.eCACHE]: { key: 'cacheKey123', action: 'invalidate', status: 'success' },
+            [LogSection.eCOLL]: { collectionId: 42, itemCount: 100, status: 'loaded' },
+            [LogSection.eCON]: { output: 'System reboot initiated', status: 'in progress' },
+            [LogSection.eCONF]: { configName: 'app.config', modified: true },
+            [LogSection.eDB]: { query: 'SELECT * FROM users', executionTime: '120ms', status: 'success' },
+            [LogSection.eEVENT]: { eventId: 101, type: 'click', target: 'button' },
+            [LogSection.eGQL]: { query: '{ user { id, name } }', responseTime: '50ms' },
+            [LogSection.eHTTP]: { method: 'POST', url: '/api/login', statusCode: 200 },
+            [LogSection.eJOB]: { jobId: 999, type: 'backup', status: 'completed' },
+            [LogSection.eMETA]: { metadataType: 'image', fileSize: '5MB' },
+            [LogSection.eMIG]: { migrationId: 'mig_2024_01', status: 'successful' },
+            [LogSection.eNAV]: { route: '/dashboard', previousRoute: '/login' },
+            [LogSection.eRPT]: { reportId: 34, format: 'PDF', status: 'generated' },
+            [LogSection.eSTR]: { fileId: 'file_12345', action: 'upload', status: 'completed' },
+            [LogSection.eSYS]: { cpuUsage: '75%', memoryUsage: '3GB', uptime: '5h' },
+            [LogSection.eTEST]: { testSuite: 'UnitTests', passed: true },
+            [LogSection.eWF]: { workflowId: 'wf_2001', step: 'approval', status: 'pending' },
+            [LogSection.eSEC]: { operation: 'encrypt', algorithm: 'AES', success: true },
+            [LogSection.eNONE]: {}
+        };
+
+        const randomLevel = levels[Math.floor(Math.random() * levels.length)];
+        const randomSection = Object.values(LogSection)[Math.floor(Math.random() * Object.values(LogSection).length)];
+        const randomCaller = sectionCallers[randomSection][Math.floor(Math.random() * sectionCallers[randomSection].length)];
+        const randomMessage = sectionMessages[randomSection][Math.floor(Math.random() * sectionMessages[randomSection].length)];
+
+        // compose our message
+        const logEntry: LogEntry = {
+            timestamp: new Date().toISOString(),
+            message: randomMessage,
+            level: randomLevel as validLevels,
+            audit: Math.random() < 0.5,
+            context: {
+                section: randomSection,
+                caller: `${String(index).padStart(5,'0')} - `+randomCaller,
+                environment: Math.random() < 0.5 ? 'prod' : 'dev',
+                idUser: Math.random() < 0.5 ? Math.floor(100 + Math.random() * 900) : undefined,
+                idRequest: Math.random() < 0.5 ? Math.floor(Math.random() * 100000) : undefined,
+            }
+        };
+
+        // ensure the error/critical states have expected data
+        if (['error', 'crit'].includes(randomLevel))
+            logEntry.data = { error: 'An arbitrary error occurred', ...sectionData[randomSection], index };
+        else if (Math.random() < 0.5) // Random chance to add 'data' for other levels
+            logEntry.data = { ...sectionData[randomSection], index };
+
+        return logEntry;
+    }
+    public static async testLogs(numLogs: number): Promise<{ success: boolean, message: string }> {
+        // NOTE: given the static assignment this works best when nothing else is feeding logs
+        const loadBalancer: boolean = this.lbIsRunning;
+        const config: LoadBalancerConfig = this.lbConfig;
+
+        // create our profiler
+        // we use a random string in case another test or profile is run to avoid collisisons
+        const profileKey: string = `LogTest_${Math.random().toString(36).substring(2, 6)}`;
+        this.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
+            numLogs,
+            loadBalancer,
+            ...(loadBalancer === true && { config })
+        },'Logger.test');
+
+        // capture the current total count so we can adjust in case other events are going on
+        const startCount: number = this.stats.counts.total;
+        console.log('total logs at start: ',startCount);
+
+        // test our logging
+        for(let i=0; i<numLogs; ++i)
+            this.postLog(this.randomLogEntry(i));
+
+        // cycle through waiting for use to finish posting all logs
+        const timeout = Math.max(numLogs * 20,2000); //assuming max 20ms per log
+        const startTime = Date.now();
+        while ((this.stats.counts.total - startCount) < numLogs) {
+
+            if(this.debugMode)
+                console.log('waiting for logs to post: ',(this.stats.counts.total - startCount) +'|'+numLogs);
+
+            // Check if timeout has been reached
+            if (Date.now() - startTime > timeout) {
+                console.error('Timeout reached while waiting for logs.');
+                break;
+            }
+            await this.delay(1000); // Wait for 1 second before checking again
+        }
+
+        // close our profiler and return results
+        const result = this.profileEnd(profileKey);
+        return { success: true, message: `finished testing ${numLogs} logs. (${result.message})` };
     }
     //#endregion
 }
