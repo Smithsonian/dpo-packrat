@@ -198,7 +198,10 @@ export class Logger {
             const fileTransport = new transports.File({
                 filename: this.getLogFilePath(),
                 format: customJsonFormat,
-                // handleExceptions: false // used to disable buffering for higher volume support at risk of errors
+                // handleExceptions: false  // used to disable buffering for higher volume support at risk of errors
+                maxsize: 150 * 1024 * 1024, // 150 MB in bytes
+                maxFiles: 20,               // Keep a maximum of 20 log files (3GB)
+                tailable: true              // Ensure the log files are named in a "rolling" way
             });
 
             const consoleTransport = new transports.Console({
