@@ -43,6 +43,11 @@ export interface LoggerStats {
         info: number,
         debug: number,
         total: number
+    },
+    metrics: {
+        logRate: number,    // current logs per second
+        logRateAvg: number, // rolling average of log rate
+        logRateMax: number, // the maximum log rate achieved
     }
 }
 type validLevels = 'crit' | 'error' | 'warn' | 'info' | 'debug' | 'perf';
@@ -84,8 +89,12 @@ export class Logger {
     private static logDir: string = path.join(__dirname, 'Logs');
     private static environment: 'prod' | 'dev' = 'dev';
     private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
-    private static stats: LoggerStats = { counts: { profile: 0, critical: 0, error: 0, warning: 0, info: 0, debug: 0, total: 0 } };
+    private static stats: LoggerStats = {
+        counts: { profile: 0, critical: 0, error: 0, warning: 0, info: 0, debug: 0, total: 0 },
+        metrics: { logRate: 0, logRateAvg: 0, logRateMax: 0 }
+    };
     private static debugMode: boolean = false;
+    private static metricsIsRunning: boolean = false;
     private static lbIsRunning: boolean = false;
     private static lbQueue: LogEntry[] = [];
     private static lbQueueLocked: boolean = false;
@@ -215,6 +224,9 @@ export class Logger {
             // start our load balancer if needed
             if(loadBalancer===true)
                 this.startLoadBalancer();
+
+            // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
+            this.trackLogMetrics(5000,10);
         } catch(error) {
             this.stopLoadBalancer();
             return {
@@ -319,6 +331,66 @@ export class Logger {
             case 'perf':    this.stats.counts.profile++; break;
         }
         this.stats.counts.total++;
+    }
+    private static async trackLogMetrics(interval: number, avgSamples: number): Promise<void> {
+
+        // tracking currently only works with the load balancer or we would need to maintain
+        // an additional queue (or take shared approach) for tracking logs moving through
+        if(this.metricsIsRunning===true || this.lbIsRunning===false)
+            return;
+        this.metricsIsRunning = true;
+
+        // make sure our interval and samples are valid
+        interval = Math.max(interval, 1000);
+        avgSamples = Math.max(avgSamples,5);
+
+        const logRates: number[] = [];          // Store log rates to calculate rolling average
+        // const rollingAverageWindow: number = 5; // how many samples in the rolling average
+        const elapsedSeconds: number = interval/1000;
+
+        const lastSample = {
+            timestamp: new Date(),
+            startSize: this.stats.counts.total
+        };
+
+        while(this.metricsIsRunning && this.lbIsRunning) {
+            const currentSize: number = this.stats.counts.total;
+
+            // Ensure no divide-by-zero and that log count is greater than last sample
+            if (currentSize - lastSample.startSize > 0) {
+                const newLogRate: number = (currentSize - lastSample.startSize) / elapsedSeconds;
+
+                // see if we have a new maximum and assign the log rate
+                this.stats.metrics.logRateMax = Math.max(this.stats.metrics.logRate,newLogRate);
+                this.stats.metrics.logRate = newLogRate;
+
+                // Track the log rate to calculate rolling average
+                logRates.push(this.stats.metrics.logRate);
+
+                // Maintain rolling average window size
+                if(logRates.length > avgSamples) {
+                    logRates.shift();  // Remove the oldest rate to keep the window size constant
+                }
+
+                // Calculate rolling average
+                const totalLogRate = logRates.reduce((sum, rate) => sum + rate, 0);
+                this.stats.metrics.logRateAvg = totalLogRate / logRates.length;
+
+            } else {
+                this.stats.metrics.logRate = 0;
+            }
+
+
+            lastSample.timestamp = new Date();
+            lastSample.startSize = currentSize;
+
+            if(this.debugMode===true)
+                console.log(`\tLog metrics update: (${this.stats.metrics.logRate} log/s | avg: ${this.stats.metrics.logRateAvg})`);
+
+            await this.delay(interval);
+        }
+
+        this.metricsIsRunning = false;
     }
 
     // helper to get specific color codes for text out in the console
@@ -661,7 +733,7 @@ export class Logger {
 
         // ensure the error/critical states have expected data
         if (['error', 'crit'].includes(randomLevel))
-            logEntry.data = { error: 'An arbitrary error occurred', ...sectionData[randomSection], index };
+            logEntry.data = { error: 'An error occurred', ...sectionData[randomSection], index };
         else if (Math.random() < 0.5) // Random chance to add 'data' for other levels
             logEntry.data = { ...sectionData[randomSection], index };
 
@@ -690,7 +762,7 @@ export class Logger {
             this.postLog(this.randomLogEntry(i));
 
         // cycle through waiting for use to finish posting all logs
-        const timeout = Math.max(numLogs * 20,2000); //assuming max 20ms per log
+        const timeout = Math.max(numLogs * 20,10000); //assuming max 20ms per log, and wait at least 10s
         const startTime = Date.now();
         while ((this.stats.counts.total - startCount) < numLogs) {
 
@@ -702,12 +774,14 @@ export class Logger {
                 console.error('Timeout reached while waiting for logs.');
                 break;
             }
-            await this.delay(1000); // Wait for 1 second before checking again
+
+            // Wait for 1 second before checking again
+            await this.delay(1000);
         }
 
         // close our profiler and return results
         const result = this.profileEnd(profileKey);
-        return { success: true, message: `finished testing ${numLogs} logs. (${result.message})` };
+        return { success: true, message: `finished testing ${numLogs} logs. (time: ${result.message} | maxRate: ${this.stats.metrics.logRateMax})` };
     }
     //#endregion
 }

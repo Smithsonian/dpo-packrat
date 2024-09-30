@@ -7,7 +7,7 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
     RK.configure(); // 'D:\\Temp\\PackratTemp\\Logs'
 
     // test our logging
-    const numLogs: number = 1;
+    const numLogs: number = 10000;
     const result = await RK.logTest(numLogs);
 
     // return our results
