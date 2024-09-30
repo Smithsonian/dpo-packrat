@@ -436,24 +436,24 @@ const generateRandomLog = (index: number) => {
     const logSection = section as LogSection;
     data['index'] = index;
 
-    console.log(index);
+    // console.log(index);
 
     // Call the corresponding log routine based on the log level
     switch (randomLevel) {
         case 'critical':
-            RK.logCritical(logSection, message, data, caller, audit);
+            RK.logCritical(logSection, message, data, `${String(index).padStart(5,'0')} - `+caller, audit);
             break;
         case 'error':
-            RK.logError(logSection, message, data, caller, audit);
+            RK.logError(logSection, message, data, `${String(index).padStart(5,'0')} - `+caller, audit);
             break;
         case 'warning':
-            RK.logWarning(logSection, message, data, caller, audit);
+            RK.logWarning(logSection, message, data, `${String(index).padStart(5,'0')} - `+caller, audit);
             break;
         case 'info':
-            RK.logInfo(logSection, message, data, caller, audit);
+            RK.logInfo(logSection, message, data, `${String(index).padStart(5,'0')} - `+caller, audit);
             break;
         case 'debug':
-            RK.logDebug(logSection, message, data, caller, audit);
+            RK.logDebug(logSection, message, data, `${String(index).padStart(5,'0')} - `+caller, audit);
             break;
     }
 };
@@ -493,9 +493,14 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
     RK.profile('Playtime', LogSection.eHTTP, 'log tests',undefined,'API.sandbox.play');
 
     // test our logging
-    testLogs(false,10000);
+    const numLogs: number = 100000;
+    testLogs(false,numLogs);
+
+    while(RK.logTotalCount() < numLogs)
+        await H.Helpers.sleep(1000);
 
     // close our profiler
     RK.profileEnd('Playtime');
-    res.status(200).send(H.Helpers.JSONStringify({ message: `Processed ${RK.logTotalCount()} log events` }));
+    // RK.cleanup();
+    res.status(200).send(H.Helpers.JSONStringify({ message: `Processed ${numLogs} log events` }));
 };

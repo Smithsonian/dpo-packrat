@@ -3,7 +3,7 @@
 import { Config } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import * as H from '../utils/helpers';
-import { Logger as LOG, LogSection, LoggerStats } from './logger/log';
+import { Logger as LOG, LogSection } from './logger/log';
 
 /** TODO:
  * - change H.IOResults.error to message and make a requirement
@@ -25,14 +25,26 @@ export class RecordKeeper {
         // get our log path from the config
         const logPath: string = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
 
+        // our default Logger configuration options
+        // base it on the environment variable for our base/target rate
+        const useLoadBalancer: boolean = true;              // do we manage our log output for greater consistency
+        const targetRate: number = Config.log.targetRate;   // targeted logs per second (100-500)
+        const burstRate: number = targetRate * 5;           // target rate when in burst mode and playing catchup
+        const burstThreshold: number = burstRate * 5;       // when queue is bigger than this size, trigger 'burst mode'
+        const staggerLogs: boolean = true;                  // do we spread the logs out during each interval or all at once
+
         // initialize logger sub-system
-        const logResults: H.IOResults = convertToIOResults(LOG.configure(logPath, 'dev'));
+        const logResults = LOG.configure(logPath, 'dev', useLoadBalancer, targetRate, burstRate, burstThreshold, staggerLogs);
         if(logResults.success===false)
-            return logResults;
+            return convertToIOResults(logResults);
+        this.logInfo(LogSection.eSYS, logResults.message,{ path: logPath, useLoadBalancer, targetRate, burstRate, burstThreshold, staggerLogs });
 
         // initialize notify sub-system
         // ...
 
+        return { success: true };
+    }
+    static cleanup(): H.IOResults {
         return { success: true };
     }
 
@@ -83,8 +95,7 @@ export class RecordKeeper {
 
     // stats
     static logTotalCount(): number {
-        const logStats: LoggerStats = LOG.getStats();
-        return (logStats.counts.critical + logStats.counts.error + logStats.counts.warning + logStats.counts.info + logStats.counts.debug);
+        return LOG.getStats().counts.total;
     }
     //#endregion
 }
