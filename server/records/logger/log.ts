@@ -4,12 +4,19 @@
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
+import { RateManager, RateManagerConfig } from '../utils/rateManager';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
 // import { EventEmitter } from 'events';
 // EventEmitter.defaultMaxListeners = 50;
 
+// Simulate __dirname in ES module scope
+// import { fileURLToPath } from 'url';
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+//#region TYPES & INTERFACES
 export enum LogSection { // logger section
     eAUTH   = 'AUTH',  // authentication
     eCACHE  = 'CACHE', // cache
@@ -32,8 +39,6 @@ export enum LogSection { // logger section
     eSEC    = 'SEC',   // security
     eNONE   = '*****', // none specified ... don't use this!
 }
-
-// our types
 export interface LoggerStats {
     counts: {
         profile: number,
@@ -50,6 +55,7 @@ export interface LoggerStats {
         logRateMax: number, // the maximum log rate achieved
     }
 }
+
 type validLevels = 'crit' | 'error' | 'warn' | 'info' | 'debug' | 'perf';
 type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
 
@@ -72,22 +78,11 @@ interface ProfileRequest {
     startTime: Date,
     logEntry: LogEntry
 }
-interface LoadBalancerConfig {
-    targetRate: number,     // targeted logs per second (200-2000)
-    burstRate: number,      // target rate when in burst mode and playing catchup
-    burstThreshold: number, // when queue is bigger than this size, trigger 'burst mode'
-    staggerLogs: boolean,   // do we spread logs out over each interval or submit as a single batch
-    minInterval: number,    // minimum duration for a batch/interval in ms. (higher values use less resources)
-}
 interface LoggerResult {
     success: boolean,
     message: string
 }
-
-// Simulate __dirname in ES module scope
-// import { fileURLToPath } from 'url';
-// const __filename = fileURLToPath(import.meta.url);
-// const __dirname = path.dirname(__filename);
+//#endregion
 
 export class Logger {
     private static logger: any | null = null;
@@ -100,39 +95,42 @@ export class Logger {
     };
     private static debugMode: boolean = false;
     private static metricsIsRunning: boolean = false;
-    private static lbIsRunning: boolean = false;
-    private static lbQueue: LogEntry[] = [];
-    private static lbQueueLocked: boolean = false;
-    private static lbConfig: LoadBalancerConfig = {
-        targetRate: 200,
-        burstRate: 1000,
-        burstThreshold: 3000,
-        staggerLogs: true,
-        minInterval: 100,
-    };
+    private static rateManager: RateManager<LogEntry> | null =  null;
 
-    private static isInitialized(): boolean {
+    //#region PUBLIC
+    private static isActive(): boolean {
         // we're initialized if we have a logger running
         return (this.logger);
     }
-    public static configure(logDirectory: string, env: 'prod' | 'dev', loadBalancer: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number, staggerLogs?: boolean): LoggerResult {
+    public static configure(logDirectory: string, env: 'prod' | 'dev', rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number, staggerLogs?: boolean): LoggerResult {
         // we allow for re-assigning configuration options even if already running
         this.logDir = logDirectory;
         this.environment = env;
-        this.lbConfig.targetRate = targetRate ?? this.lbConfig.targetRate;
-        this.lbConfig.burstRate = burstRate ?? this.lbConfig.burstRate;
-        this.lbConfig.burstThreshold = burstThreshold ?? this.lbConfig.burstThreshold;
-        this.lbConfig.staggerLogs = staggerLogs ?? this.lbConfig.staggerLogs;
 
-        // if our load balancer is already running then we need to restart it so it gets
-        // the current updated values.
-        if(this.lbIsRunning===true) {
-            this.stopLoadBalancer();
-            this.startLoadBalancer();
+        // if we want a rate limiter then we build it
+        if(rateManager===true) {
+            const rmConfig: RateManagerConfig<LogEntry> = {
+                targetRate,
+                burstRate,
+                burstThreshold,
+                staggerLogs,
+                onPost: this.postLogToWinston.bind(this),
+            };
+
+            // if we already have a manager we re-configure it (causes restart). otherwise, we create a new one
+            if(this.rateManager)
+                this.rateManager.setConfig(rmConfig);
+            else {
+                this.rateManager = new RateManager<LogEntry>(rmConfig);
+            }
+        } else if(this.rateManager) {
+            // if we don't want a rate manager but have one, clean it up
+            this.rateManager.stopRateManager();
+            this.rateManager = null;
         }
 
         // if we already have a logger skip creating another one
-        if(this.isInitialized()===true)
+        if(this.isActive()===true)
             return { success: true, message: 'Winston logger already running' };
 
         const customLevels = {
@@ -245,14 +243,17 @@ export class Logger {
             // add our custom colors as well
             addColors(customLevels.colors);
 
-            // start our load balancer if needed
-            if(loadBalancer===true)
-                this.startLoadBalancer();
+            // start our rate manager if needed
+            if(this.rateManager)
+                this.rateManager.startRateManager();
 
             // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
             this.trackLogMetrics(5000,10);
         } catch(error) {
-            this.stopLoadBalancer();
+
+            if(this.rateManager)
+                this.rateManager.stopRateManager();
+
             return {
                 success: false,
                 message: error instanceof Error ? error.message : String(error)
@@ -268,9 +269,10 @@ export class Logger {
     public static setDebugMode(value: boolean): void {
         this.debugMode = value;
     }
+    //#endregion
 
     //#region UTILS
-    private static delay(ms: number): Promise<void> {
+    private static async delay(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
@@ -345,7 +347,7 @@ export class Logger {
 
     // update our stats counter
     private static updateStats(entry: LogEntry): void {
-        // we do this here so we can track when it actually gets posted if done by the load balancer
+        // we do this here so we can track when it actually gets posted if done by the rate manager
         switch(entry.level) {
             case 'crit':    this.stats.counts.critical++; break;
             case 'error':   this.stats.counts.error++; break;
@@ -358,9 +360,8 @@ export class Logger {
     }
     private static async trackLogMetrics(interval: number, avgSamples: number): Promise<void> {
 
-        // tracking currently only works with the load balancer or we would need to maintain
-        // an additional queue (or take shared approach) for tracking logs moving through
-        if(this.metricsIsRunning===true || this.lbIsRunning===false)
+        // if already running, bail
+        if(this.metricsIsRunning===true)
             return;
         this.metricsIsRunning = true;
 
@@ -369,7 +370,6 @@ export class Logger {
         avgSamples = Math.max(avgSamples,5);
 
         const logRates: number[] = [];          // Store log rates to calculate rolling average
-        // const rollingAverageWindow: number = 5; // how many samples in the rolling average
         const elapsedSeconds: number = interval/1000;
 
         const lastSample = {
@@ -377,7 +377,7 @@ export class Logger {
             startSize: this.stats.counts.total
         };
 
-        while(this.metricsIsRunning && this.lbIsRunning) {
+        while(this.metricsIsRunning) {
             const currentSize: number = this.stats.counts.total;
 
             // Ensure no divide-by-zero and that log count is greater than last sample
@@ -403,7 +403,6 @@ export class Logger {
             } else {
                 this.stats.metrics.logRate = 0;
             }
-
 
             lastSample.timestamp = new Date();
             lastSample.startSize = currentSize;
@@ -466,127 +465,12 @@ export class Logger {
     }
     //#endregion
 
-    //#region LOAD BALANCER
-    private static async processBatch(batchSize: number,delay: number): Promise<void> {
-
-        // single the queue is working and we should receive another batch
-        // this should be handled by the interval, but a safety check to avoid
-        // breaking FIFO.
-        if(this.lbQueueLocked===true)
-            return;
-
-        // make sure we don't grab more entries than we have
-        const entriesToGrab: number = (batchSize > this.lbQueue.length) ? this.lbQueue.length : batchSize;
-        if(entriesToGrab===0)
-            return;
-
-        // grab entries from the start of the array to process
-        this.lbQueueLocked = true;
-        const entries: LogEntry[] = this.lbQueue.splice(0,entriesToGrab);
-
-        // cycle through entries processing each with an optional delay to spread things out
-        let startTime: number = 0;
-        let ellapsedTime: number = 0;
-        for(const entry of entries) {
-            // send the log statement to Watson and wait since we want to control
-            // the flow of logs to watson and ensure a FIFO process
-            startTime = new Date().getTime();
-            this.updateStats(entry);
-            await this.postLogToWinston(entry);
-
-            // if we want to spread out the requests, do so
-            if(delay>0) {
-                ellapsedTime = new Date().getTime() - startTime;
-
-                // if the ellapsed time is less than delay
-                let waitTime: number = delay;
-                if(ellapsedTime<delay)
-                    waitTime = delay - ellapsedTime; // wait the remainder of what we would have waited
-                else if(ellapsedTime>delay) {
-                    console.log(`\t log took longer (${ellapsedTime}) than delay (${delay})`);
-                    continue; // already took too long. just keep moving
-                } else
-                    this.delay(waitTime);
-            }
-        }
-
-        this.lbQueueLocked = false;
-    }
-    public static startLoadBalancer(): void {
-        const { targetRate, burstRate, burstThreshold } = this.lbConfig;
-        let interval: number;
-        let batchSize: number;
-        let currentRate: number;
-
-        // utility function for recalculating how fast we should be sending logs
-        const adjustIntervalAndBatchSize = () => {
-            // Determine if we're in burst mode or normal mode
-            if (this.lbQueue.length > burstThreshold) {
-                currentRate = burstRate;  // Burst mode
-            } else {
-                currentRate = targetRate;  // Normal mode
-            }
-
-            // Calculate initial batch size and interval
-            batchSize = Math.ceil(currentRate / 10);  // Base batch size calculation
-            interval = Math.floor(1000 / (currentRate / batchSize));  // Base interval calculation
-
-            // Adjust the interval to respect the minimum interval
-            if (interval < this.lbConfig.minInterval) {
-                interval = this.lbConfig.minInterval;
-
-                // Recalculate batch size to maintain the desired currentRate while ensuring interval >= 100ms
-                batchSize = Math.ceil(currentRate / (1000 / interval));
-            }
-
-            // display interval details if in debug mode
-            if(this.debugMode)
-                console.log(`\t Interval update (mode: ${currentRate === burstRate ? 'Burst' : 'Normal'} | batch: ${batchSize} | interval: ${interval} ms)`);
-        };
-
-        // our main loop for the load balancer
-        const loadBalancerLoop = async () => {
-            while (this.lbIsRunning===true) {
-                if (this.lbQueue.length === 0) {
-                    if(this.debugMode)
-                        console.log('\tQueue is empty, waiting for logs...');
-
-                    await this.delay(5000);
-                    continue;
-                }
-
-                // Adjust interval and batch size
-                adjustIntervalAndBatchSize();
-
-                // figure out if we want a delay between each log sent to lower chance of
-                // overflow with larger batch sizes.
-                const logDelay: number = (this.lbConfig.staggerLogs) ? (interval / batchSize) : 0;
-
-                // process our batch
-                await this.processBatch(batchSize, logDelay);
-
-                // Wait for the next iteration
-                await this.delay(interval);
-            }
-        };
-
-        // Start the load balancer loop if not already running
-        if(this.lbIsRunning===false) {
-            this.lbIsRunning = true;
-            loadBalancerLoop().catch(err => console.error(err));
-        }
-    }
-    public static stopLoadBalancer(): void {
-        this.lbIsRunning = false;
-    }
-    //#endregion
-
     //#region LOG
     private static async postLog(entry: LogEntry): Promise<void> {
-        // if we have the load balancer running, queue it up
+        // if we have the rate manager running, queue it up
         // otherwise just send to the logger
-        if(this.lbIsRunning===true)
-            this.lbQueue.push(entry);
+        if(this.rateManager && this.rateManager.isActive()===true)
+            this.rateManager.add(entry);
         else {
             await this.postLogToWinston(entry);
         }
@@ -598,35 +482,35 @@ export class Logger {
 
     // wrappers for each level of log
     public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isInitialized()===false)
+        if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
     public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isInitialized()===false)
+        if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
     public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isInitialized()===false)
+        if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
     public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isInitialized()===false)
+        if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
     public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isInitialized()===false)
+        if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
@@ -785,21 +669,22 @@ export class Logger {
     }
     public static async testLogs(numLogs: number): Promise<LoggerResult> {
         // NOTE: given the static assignment this works best when nothing else is feeding logs
-        const loadBalancer: boolean = this.lbIsRunning;
-        const config: LoadBalancerConfig = this.lbConfig;
+        const hasRateManager: boolean = this.rateManager?.isActive() ?? false;
+        const config: RateManagerConfig<LogEntry> | null = this.rateManager?.getConfig() ?? null;
 
         // create our profiler
         // we use a random string in case another test or profile is run to avoid collisisons
         const profileKey: string = `LogTest_${Math.random().toString(36).substring(2, 6)}`;
         this.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
             numLogs,
-            loadBalancer,
-            ...(loadBalancer === true && { config })
+            rateManager: hasRateManager,
+            ...(hasRateManager === true && config && {
+                config: (({ onPost: _onPost, onMessage: _onMessage, ...rest }) => rest)(config)  // Exclude onPost and onMessage
+            })
         },'Logger.test');
 
         // capture the current total count so we can adjust in case other events are going on
         const startCount: number = this.stats.counts.total;
-        console.log('total logs at start: ',startCount);
 
         // test our logging
         for(let i=0; i<numLogs; ++i)

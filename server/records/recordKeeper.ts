@@ -27,17 +27,17 @@ export class RecordKeeper {
 
         // our default Logger configuration options
         // base it on the environment variable for our base/target rate
-        const useLoadBalancer: boolean = true;              // do we manage our log output for greater consistency
+        const useRateManager: boolean = true;              // do we manage our log output for greater consistency
         const targetRate: number = Config.log.targetRate;   // targeted logs per second (100-500)
         const burstRate: number = targetRate * 5;           // target rate when in burst mode and playing catchup
         const burstThreshold: number = burstRate * 5;       // when queue is bigger than this size, trigger 'burst mode'
         const staggerLogs: boolean = true;                  // do we spread the logs out during each interval or all at once
 
         // initialize logger sub-system
-        const logResults = LOG.configure(logPath, 'dev', useLoadBalancer, targetRate, burstRate, burstThreshold, staggerLogs);
+        const logResults = LOG.configure(logPath, 'dev', useRateManager, targetRate, burstRate, burstThreshold, staggerLogs);
         if(logResults.success===false)
             return convertToIOResults(logResults);
-        this.logInfo(LogSection.eSYS, logResults.message,{ path: logPath, useLoadBalancer, targetRate, burstRate, burstThreshold, staggerLogs });
+        this.logInfo(LogSection.eSYS, logResults.message,{ path: logPath, useRateManager, targetRate, burstRate, burstThreshold, staggerLogs });
 
         // initialize notify sub-system
         // ...
