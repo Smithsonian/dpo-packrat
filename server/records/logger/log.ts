@@ -51,6 +51,8 @@ export interface LoggerStats {
     }
 }
 type validLevels = 'crit' | 'error' | 'warn' | 'info' | 'debug' | 'perf';
+type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
+
 interface LoggerContext {
     section: string | null;
     caller: string | null;
@@ -77,7 +79,10 @@ interface LoadBalancerConfig {
     staggerLogs: boolean,   // do we spread logs out over each interval or submit as a single batch
     minInterval: number,    // minimum duration for a batch/interval in ms. (higher values use less resources)
 }
-type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
+interface LoggerResult {
+    success: boolean,
+    message: string
+}
 
 // Simulate __dirname in ES module scope
 // import { fileURLToPath } from 'url';
@@ -85,7 +90,7 @@ type DataType = string | number | boolean | object | any[]; // valid types for o
 // const __dirname = path.dirname(__filename);
 
 export class Logger {
-    private static logger: any;
+    private static logger: any | null = null;
     private static logDir: string = path.join(__dirname, 'Logs');
     private static environment: 'prod' | 'dev' = 'dev';
     private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
@@ -106,13 +111,29 @@ export class Logger {
         minInterval: 100,
     };
 
-    public static configure(logDirectory: string, env: 'prod' | 'dev', loadBalancer: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number, staggerLogs?: boolean): { success: boolean; message: string } {
+    private static isInitialized(): boolean {
+        // we're initialized if we have a logger running
+        return (this.logger);
+    }
+    public static configure(logDirectory: string, env: 'prod' | 'dev', loadBalancer: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number, staggerLogs?: boolean): LoggerResult {
+        // we allow for re-assigning configuration options even if already running
         this.logDir = logDirectory;
         this.environment = env;
         this.lbConfig.targetRate = targetRate ?? this.lbConfig.targetRate;
         this.lbConfig.burstRate = burstRate ?? this.lbConfig.burstRate;
         this.lbConfig.burstThreshold = burstThreshold ?? this.lbConfig.burstThreshold;
         this.lbConfig.staggerLogs = staggerLogs ?? this.lbConfig.staggerLogs;
+
+        // if our load balancer is already running then we need to restart it so it gets
+        // the current updated values.
+        if(this.lbIsRunning===true) {
+            this.stopLoadBalancer();
+            this.startLoadBalancer();
+        }
+
+        // if we already have a logger skip creating another one
+        if(this.isInitialized()===true)
+            return { success: true, message: 'Winston logger already running' };
 
         const customLevels = {
             levels: {
@@ -576,25 +597,45 @@ export class Logger {
     }
 
     // wrappers for each level of log
-    public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
+    public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+        if(this.isInitialized()===false)
+            return { success: false, message: 'cannot post log. no Logger. run configure' };
+
         this.postLog(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
+        return { success: true, message: 'posted log message' };
     }
-    public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
+    public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+        if(this.isInitialized()===false)
+            return { success: false, message: 'cannot post log. no Logger. run configure' };
+
         this.postLog(this.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
+        return { success: true, message: 'posted log message' };
     }
-    public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
+    public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+        if(this.isInitialized()===false)
+            return { success: false, message: 'cannot post log. no Logger. run configure' };
+
         this.postLog(this.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
+        return { success: true, message: 'posted log message' };
     }
-    public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
+    public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+        if(this.isInitialized()===false)
+            return { success: false, message: 'cannot post log. no Logger. run configure' };
+
         this.postLog(this.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
+        return { success: true, message: 'posted log message' };
     }
-    public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): void {
+    public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+        if(this.isInitialized()===false)
+            return { success: false, message: 'cannot post log. no Logger. run configure' };
+
         this.postLog(this.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
+        return { success: true, message: 'posted log message' };
     }
     //#endregion
 
     //#region PROFILING
-    public static profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): { success: boolean, message: string } {
+    public static profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): LoggerResult {
 
         // make sure we don't have the same
         if(this.requests.has(key)===true)
@@ -610,7 +651,7 @@ export class Logger {
 
         return { success: true, message: 'created profile request' };
     }
-    public static profileEnd(key: string): { success: boolean, message: string } {
+    public static profileEnd(key: string): LoggerResult {
 
         // get our request and make sure it's valid
         const profileRequest: ProfileRequest | undefined = this.requests.get(key);
@@ -742,7 +783,7 @@ export class Logger {
 
         return logEntry;
     }
-    public static async testLogs(numLogs: number): Promise<{ success: boolean, message: string }> {
+    public static async testLogs(numLogs: number): Promise<LoggerResult> {
         // NOTE: given the static assignment this works best when nothing else is feeding logs
         const loadBalancer: boolean = this.lbIsRunning;
         const config: LoadBalancerConfig = this.lbConfig;
