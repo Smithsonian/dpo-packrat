@@ -579,4 +579,31 @@ export class Helpers {
             return (error as Error).stack || `${label}: No stack trace available`;
         }
     }
+
+    static showAllCharactersWithEscapes(input: string): string {
+        // routine to display all characters in a string. Helpful for debugging
+        // generated strings that may have escape characters, colorization, etc.
+        return input.split('').map(char => {
+            const charCode = char.charCodeAt(0);
+
+            // Handle known control characters
+            switch (charCode) {
+                case 9:
+                    return '\\t'; // Tab character
+                case 10:
+                    return '\\n'; // Newline character
+                case 13:
+                    return '\\r'; // Carriage return
+                case 27:
+                    return '\\x1b'; // Escape character
+                default:
+                    // For characters outside the printable ASCII range, use \xHH for hex representation
+                    if (charCode < 32 || charCode > 126) {
+                        return `\\x${charCode.toString(16).padStart(2, '0')}`; // Escape as \xHH
+                    } else {
+                        return char; // Return printable characters as is
+                    }
+            }
+        }).join('');
+    }
 }
