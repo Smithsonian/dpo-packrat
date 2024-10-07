@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 //#region TYPES & INTERFACES
-interface RateManagerResult {
+export interface RateManagerResult {
     success: boolean,
     message: string,
     data?: any,
@@ -14,8 +14,12 @@ export interface RateManagerConfig<T> {
     burstThreshold?: number, // when queue is bigger than this size, trigger 'burst mode'
     staggerLogs?: boolean,   // do we spread logs out over each interval or submit as a single batch
     minInterval?: number,    // minimum duration for a batch/interval in ms. (higher values use less resources)
-    onPost?: ((entry: T) => Promise<void>),     // function to call when posting an entry
+    onPost?: ((entry: T) => Promise<RateManagerResult>),     // function to call when posting an entry
     onMessage?: (isError: boolean, message: string, data: any) => void, // function to call when there's a message others should know about
+}
+export interface RateManagerEntry {
+    resolve: (value?: RateManagerResult) => void,
+    reject: (reason?: RateManagerResult) => void
 }
 //#endregion
 
@@ -30,8 +34,14 @@ export class RateManager<T> {
         burstThreshold: 3000,
         staggerLogs: true,
         minInterval: 100,
-        onPost: async (entry: T) => { console.log('[Logger] Unconfigured onPost',entry); },
-        onMessage: (isError, message, data) => { console.log('[Logger] Unconfigured onMessage',{ isError, message, data }); }
+        onPost: async (entry: T) => {
+            console.log('[Logger] Unconfigured onPost',entry);
+            return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
+        },
+        onMessage: (isError, message, data) => {
+            console.log('[Logger] Unconfigured onMessage', { isError, message, data });
+            return { isError, message, data };
+        }
     };
 
     constructor(cfg: RateManagerConfig<T>) {

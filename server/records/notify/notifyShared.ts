@@ -21,6 +21,7 @@ export interface NotifyResult {
     data?: any
 }
 export interface NotifyPackage {
+    type: NotifyType,                               // what type of message is this
     message: string,                                // main message for the user
     startDate: Date,                                // when did this job/event happen or start
     endDate?: Date,                                 // when did this job/event end (optional)

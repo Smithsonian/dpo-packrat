@@ -1,9 +1,18 @@
-export { NotifyChannel, NotifyType, NotifyPackage } from './notifyShared';
-
-// Email
+// import { NotifyResult } from './notifyShared';
+import { NotifyResult, NotifyPackage, NotifyChannel, NotifyType } from './notifyShared';
 import { NotifyEmail } from './notifyEmail';
 
-export const sendEmailMessage = NotifyEmail.sendMessage;
-export const sendEmailMessageRaw = NotifyEmail.sendMessageRaw;
+export class Notify {
 
-// slack
+    // email wrappers
+    public static configureEmail(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
+        return NotifyEmail.configure(env,targetRate,burstRate,burstThreshold);
+    }
+    public static sendEmailMessage = NotifyEmail.sendMessage;
+    public static sendEmailMessageRaw = NotifyEmail.sendMessageRaw;
+
+    // slack
+}
+
+// export shared types so they can be accessed via Notify
+export { NotifyPackage, NotifyChannel, NotifyType };

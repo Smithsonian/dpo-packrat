@@ -4,7 +4,7 @@ import { Config } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import * as H from '../utils/helpers';
 import { Logger as LOG, LogSection } from './logger/log';
-import { sendEmailMessage, sendEmailMessageRaw, NotifyChannel, NotifyType, NotifyPackage } from './notify/notify';
+import { Notify as NOTIFY, NotifyChannel, NotifyType, NotifyPackage } from './notify/notify';
 
 /** TODO:
  * - change H.IOResults.error to message and make a requirement
@@ -70,7 +70,8 @@ export class RecordKeeper {
 
         // region CONFIG:NOTIFY
         // get our email addresses from the system. these can be cached because they will be
-        // the same for all users and sessions.
+        // the same for all users and sessions. Uses defaults of 1 email/sec.
+        NOTIFY.configureEmail('dev');
         this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN] = await this.getEmailsFromChannel(NotifyChannel.EMAIL_ADMIN) ?? this.defaultEmail;
         this.notifyChannelConfig[NotifyChannel.EMAIL_ALL] = await this.getEmailsFromChannel(NotifyChannel.EMAIL_ALL) ?? this.defaultEmail;
 
@@ -156,7 +157,7 @@ export class RecordKeeper {
                     return this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN];
 
                 // get ids from Config and then get their emails
-                return ['maslowskiec@si.edu','ericmaslowski@gmail.com'];
+                return ['maslowskiec@si.edu'];
             }
 
             case NotifyChannel.EMAIL_USER: {
@@ -172,6 +173,7 @@ export class RecordKeeper {
 
         // build our package
         const params: NotifyPackage = {
+            type,
             message: subject,
             detailsMessage: body,
             startDate: startDate ?? new Date(),
@@ -180,14 +182,14 @@ export class RecordKeeper {
 
         // send our message out
         this.logInfo(LogSection.eSYS,'sending email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
-        const emailResult = await sendEmailMessage(type,params);
+        const emailResult = await NOTIFY.sendEmailMessage(params);
         this.logInfo(LogSection.eSYS,emailResult.message,emailResult.data,'RecordKeeper.sendEmail',true);
 
         // convert and return the results
         return convertToIOResults(emailResult);
     }
     static async sendEmailRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string): Promise<H.IOResults> {
-        const emailResult = await sendEmailMessageRaw(type, sendTo, subject, textBody, htmlBody);
+        const emailResult = await NOTIFY.sendEmailMessageRaw(type, sendTo, subject, textBody, htmlBody);
         return convertToIOResults(emailResult);
     }
     static async emailTest(): Promise<H.IOResults> {

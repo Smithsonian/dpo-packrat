@@ -80,7 +80,8 @@ interface ProfileRequest {
 }
 interface LoggerResult {
     success: boolean,
-    message: string
+    message: string,
+    data?: any
 }
 //#endregion
 
@@ -475,9 +476,10 @@ export class Logger {
             await this.postLogToWinston(entry);
         }
     }
-    private static async postLogToWinston(entry: LogEntry): Promise<void> {
+    private static async postLogToWinston(entry: LogEntry): Promise<LoggerResult> {
         await this.logger.log(entry);
         this.updateStats(entry);
+        return { success: true, message: 'posted message' };
     }
 
     // wrappers for each level of log
