@@ -1,4 +1,3 @@
-// import { NotifyResult } from './notifyShared';
 import { NotifyResult, NotifyPackage, NotifyChannel, NotifyType } from './notifyShared';
 import { NotifyEmail } from './notifyEmail';
 

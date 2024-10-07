@@ -6,6 +6,7 @@ import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rate
 /**
  * - get error/success messages out allowing caller to wait for results
  * - test routines
+ * - stats (rate, type counts)
  */
 
 // declaring this empty for branding/clarity since it is used
