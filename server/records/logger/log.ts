@@ -481,35 +481,35 @@ export class Logger {
     }
 
     // wrappers for each level of log
-    public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static critical(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
         if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
-    public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static error(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
         if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
-    public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static warning(section: LogSection, message: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
         if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
-    public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static info(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
         if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         this.postLog(this.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
         return { success: true, message: 'posted log message' };
     }
-    public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static debug(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
         if(this.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 

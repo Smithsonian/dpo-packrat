@@ -92,7 +92,7 @@ export class RateManager<T> {
                 if(ellapsedTime<delay)
                     waitTime = delay - ellapsedTime; // wait the remainder of what we would have waited
                 else if(ellapsedTime>delay) {
-                    (this.config.onMessage) && this.config.onMessage(true,'log took longer than delay',{ ellapsedTime, delay });
+                    // (this.config.onMessage) && this.config.onMessage(true,'log took longer than delay',{ ellapsedTime, delay });
                     continue; // already took too long. just keep moving
                 } else
                     this.delay(waitTime);
