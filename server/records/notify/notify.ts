@@ -1,2 +1,9 @@
 export { NotifyChannel, NotifyType, NotifyPackage } from './notifyShared';
-export { sendMessage as sendEmailMessage, sendMessageRaw as sendEmailMessageRaw } from './notifyEmail';
+
+// Email
+import { NotifyEmail } from './notifyEmail';
+
+export const sendEmailMessage = NotifyEmail.sendMessage;
+export const sendEmailMessageRaw = NotifyEmail.sendMessageRaw;
+
+// slack
