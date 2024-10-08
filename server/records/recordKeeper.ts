@@ -2,30 +2,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Config } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
-import * as H from '../utils/helpers';
 import { Logger as LOG, LogSection } from './logger/log';
 import { Notify as NOTIFY, NotifyChannel, NotifyType, NotifyPackage } from './notify/notify';
 
 /** TODO:
- * - change H.IOResults.error to message and make a requirement
+ * - change IOResults.error to message and make a requirement
  */
 
 // utils
-const convertToIOResults = ( result: { success: boolean, message: string, data?: any }): H.IOResults => {
-    // converts standard response from logging and notification systems into Packrat's current
-    // 'results' structure, which has 'error' instead of message.
-    let error: string | undefined = undefined;
-    if(result.success===false && result.data) {
-        if(result.data.error)
-            error = result.data.error;
-        else
-            error = JSON.stringify(result.data);
-    }
+// const convertToIOResults = ( result: { success: boolean, message: string, data?: any }): IOResults => {
+//     // converts standard response from logging and notification systems into Packrat's current
+//     // 'results' structure, which has 'error' instead of message.
+//     let error: string | undefined = undefined;
+//     if(result.success===false && result.data) {
+//         if(result.data.error)
+//             error = result.data.error;
+//         else
+//             error = JSON.stringify(result.data);
+//     }
 
-    const msg: string = result.message + ((error!=undefined) ? ` ${error}` : '');
-    return { success: result.success, error: msg };
+//     const msg: string = result.message + ((error!=undefined) ? ` ${error}` : '');
+//     return { success: result.success, error: msg };
+// };
+
+// temp definition for where IOResults will be
+type IOResults = {
+    success: boolean,
+    message: string,
+    data?: any
 };
-
 type ChannelConfig = {
     [NotifyChannel.SLACK_DEV]: string,
     [NotifyChannel.SLACK_OPS]: string,
@@ -39,7 +44,7 @@ export class RecordKeeper {
     static NotifyChannel = NotifyChannel;
     static NotifyType = NotifyType;
 
-    private static defaultEmail: string[] = ['maslowskiec@si.edu'];
+    private static defaultEmail: string[] = ['packrat@si.edu'];
     private static notifyChannelConfig: ChannelConfig = {
         [NotifyChannel.EMAIL_ADMIN]: [],
         [NotifyChannel.EMAIL_ALL]: [],
@@ -47,10 +52,11 @@ export class RecordKeeper {
         [NotifyChannel.SLACK_OPS]: 'C07NCJE9FJM',    // packrat-ops
     };
 
-    static async configure(): Promise<H.IOResults> {
+    static async configure(): Promise<IOResults> {
 
         //#region CONFIG:LOGGER
         // get our log path from the config
+        const environment: 'prod' | 'dev' = 'dev';
         const logPath: string = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
 
         // our default Logger configuration options
@@ -62,24 +68,28 @@ export class RecordKeeper {
         const staggerLogs: boolean = true;                  // do we spread the logs out during each interval or all at once
 
         // initialize logger sub-system
-        const logResults = LOG.configure(logPath, 'dev', useRateManager, targetRate, burstRate, burstThreshold, staggerLogs);
+        const logResults = LOG.configure(logPath, environment, useRateManager, targetRate, burstRate, burstThreshold, staggerLogs);
         if(logResults.success===false)
-            return convertToIOResults(logResults);
-        this.logInfo(LogSection.eSYS, logResults.message,{ path: logPath, useRateManager, targetRate, burstRate, burstThreshold, staggerLogs });
+            return logResults;
+        this.logInfo(LogSection.eSYS, logResults.message, { environment, path: logPath, useRateManager, targetRate, burstRate, burstThreshold, staggerLogs }, 'Recordkeeper');
         //#endregion
 
-        // region CONFIG:NOTIFY
+        //#region CONFIG:NOTIFY
+        const notifyResults = NOTIFY.configureEmail(environment);
+        if(notifyResults.success===false)
+            return notifyResults;
+        this.logInfo(LogSection.eSYS, notifyResults.message, { environment }, 'Recordkeeper');
+
         // get our email addresses from the system. these can be cached because they will be
         // the same for all users and sessions. Uses defaults of 1 email/sec.
-        NOTIFY.configureEmail('dev');
         this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN] = await this.getEmailsFromChannel(NotifyChannel.EMAIL_ADMIN) ?? this.defaultEmail;
         this.notifyChannelConfig[NotifyChannel.EMAIL_ALL] = await this.getEmailsFromChannel(NotifyChannel.EMAIL_ALL) ?? this.defaultEmail;
-
         //#endregion
-        return { success: true };
+
+        return { success: true, message: 'configured record keeper' };
     }
-    static cleanup(): H.IOResults {
-        return { success: true };
+    static cleanup(): IOResults {
+        return { success: true, message: 'record keeper cleaned up' };
     }
     private static getContext(): { idUser: number, idRequest: number } {
         // get our user and request ids from the local store
@@ -94,35 +104,35 @@ export class RecordKeeper {
 
     //#region LOG
     // Log routines for specific levels
-    static logCritical(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): void {
+    static async logCritical(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
         const { idUser, idRequest } = this.getContext();
-        LOG.critical(sec,message,data,caller,audit,idUser,idRequest);
+        return LOG.critical(sec,message,data,caller,audit,idUser,idRequest);
     }
-    static logError(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): void {
+    static async logError(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
         const { idUser, idRequest } = this.getContext();
-        LOG.error(sec,message,data,caller,audit,idUser,idRequest);
+        return LOG.error(sec,message,data,caller,audit,idUser,idRequest);
     }
-    static logWarning(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): void {
+    static async logWarning(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
         const { idUser, idRequest } = this.getContext();
-        LOG.warning(sec,message,data,caller,audit,idUser,idRequest);
+        return LOG.warning(sec,message,data,caller,audit,idUser,idRequest);
     }
-    static logInfo(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): void {
+    static async logInfo(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
         const { idUser, idRequest } = this.getContext();
-        LOG.info(sec,message,data,caller,audit,idUser,idRequest);
+        return LOG.info(sec,message,data,caller,audit,idUser,idRequest);
     }
-    static logDebug(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): void {
+    static async logDebug(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
         const { idUser, idRequest } = this.getContext();
-        LOG.debug(sec,message,data,caller,audit,idUser,idRequest);
+        return LOG.debug(sec,message,data,caller,audit,idUser,idRequest);
     }
 
     // profiler functions
     // Usage: call 'profile' with a unique label and any needed metadata. This creates/starts a timer.
     //        to stop the timer and log the result, call profileEnd with the same label used to create it.
-    static profile(label: string, sec: LogSection, message: string, data?: any, caller?: string): H.IOResults {
+    static async profile(label: string, sec: LogSection, message: string, data?: any, caller?: string): Promise<IOResults> {
         const { idUser, idRequest } = this.getContext();
         return LOG.profile(label, sec, message, data, caller, idUser, idRequest);
     }
-    static profileEnd(label: string): H.IOResults {
+    static async profileEnd(label: string): Promise<IOResults> {
         return LOG.profileEnd(label);
     }
 
@@ -130,9 +140,8 @@ export class RecordKeeper {
     static logTotalCount(): number {
         return LOG.getStats().counts.total;
     }
-    static async logTest(numLogs: number): Promise<H.IOResults > {
-        const result = await LOG.testLogs(numLogs);
-        return convertToIOResults(result);
+    static async logTest(numLogs: number): Promise<IOResults> {
+        return LOG.testLogs(numLogs);
     }
     //#endregion
 
@@ -157,7 +166,7 @@ export class RecordKeeper {
                     return this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN];
 
                 // get ids from Config and then get their emails
-                return ['maslowskiec@si.edu'];
+                return ['maslowskiec@si.edu','emaslowski@quotient-inc.com'];
             }
 
             case NotifyChannel.EMAIL_USER: {
@@ -169,7 +178,7 @@ export class RecordKeeper {
 
         return undefined;
     }
-    static async sendEmail(type: NotifyType, channel: NotifyChannel, subject: string, body: string, startDate?: Date): Promise<H.IOResults> {
+    static async sendEmail(type: NotifyType, channel: NotifyChannel, subject: string, body: string, startDate?: Date): Promise<IOResults> {
 
         // build our package
         const params: NotifyPackage = {
@@ -180,25 +189,39 @@ export class RecordKeeper {
             sendTo: await this.getEmailsFromChannel(channel)
         };
 
-        // send our message out
+        // send our message out.
+        // we await the result so we can catch and audit the failure
         this.logInfo(LogSection.eSYS,'sending email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
         const emailResult = await NOTIFY.sendEmailMessage(params);
-        this.logInfo(LogSection.eSYS,emailResult.message,emailResult.data,'RecordKeeper.sendEmail',true);
+        if(emailResult.success===false)
+            this.logError(LogSection.eSYS,'failed to send email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
 
-        // convert and return the results
-        return convertToIOResults(emailResult);
+        // return the results
+        return emailResult;
     }
-    static async sendEmailRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string): Promise<H.IOResults> {
+    static async sendEmailRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string): Promise<IOResults> {
+
+        // send our email but also log it for auditing
+        // we wait for results so we can log the failure
+        this.logInfo(LogSection.eSYS,'sending raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
         const emailResult = await NOTIFY.sendEmailMessageRaw(type, sendTo, subject, textBody, htmlBody);
-        return convertToIOResults(emailResult);
+        if(emailResult.success===false)
+            this.logError(LogSection.eSYS,'failed to send raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
+
+        return emailResult;
     }
-    static async emailTest(): Promise<H.IOResults> {
-        const result = await this.sendEmail(NotifyType.JOB_FAILED, NotifyChannel.EMAIL_ADMIN, 'test message', 'test body for email...');
+    static async emailTest(): Promise<IOResults> {
+
+        // this.sendEmail(NotifyType.SYSTEM_ERROR, NotifyChannel.EMAIL_ADMIN, 'Packrat out of disk space!', 'Packrat is running low with only 6% of disk space available. If you have pending items uploaded but not ingested please do so. ');
+        // this.sendEmail(NotifyType.SYSTEM_NOTICE, NotifyChannel.EMAIL_ADMIN, 'Packrat maintenance @ 11pm', 'Packrat will be offline starting at 11pm tonight');
+        // this.sendEmail(NotifyType.JOB_PASSED, NotifyChannel.EMAIL_ADMIN, 'Model ingestion completed', 'Model "Something awesome" was ingested...');
+        // this.sendEmail(NotifyType.JOB_STARTED, NotifyChannel.EMAIL_ADMIN, 'Uploading capture data started', 'Uploading capture data comprised of 456 images for subject "something awesome"...');
+        const result = await this.sendEmail(NotifyType.JOB_FAILED, NotifyChannel.EMAIL_ADMIN, 'Scene generation failed for: Something awesome', 'Voyager scene failed to be created because: no normals...');
 
         if(result.success===true)
-            this.logInfo(LogSection.eTEST,result.error ?? 'NA', undefined, 'RecordKeeper.emailTest',false);
+            this.logInfo(LogSection.eTEST,result.message ?? 'NA', undefined, 'RecordKeeper.emailTest',false);
         else
-            this.logError(LogSection.eTEST,result.error ?? 'Unknown error', undefined, 'RecordKeeper.emailTest');
+            this.logError(LogSection.eTEST,result.message ?? 'Unknown error', undefined, 'RecordKeeper.emailTest');
 
         return result;
     }

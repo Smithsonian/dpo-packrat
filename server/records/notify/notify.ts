@@ -1,16 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NotifyResult, NotifyPackage, NotifyChannel, NotifyType } from './notifyShared';
 import { NotifyEmail } from './notifyEmail';
 
 export class Notify {
 
-    // email wrappers
+    //#region EMAIL
     public static configureEmail(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
         return NotifyEmail.configure(env,targetRate,burstRate,burstThreshold);
     }
-    public static sendEmailMessage = NotifyEmail.sendMessage;
-    public static sendEmailMessageRaw = NotifyEmail.sendMessageRaw;
 
-    // slack
+    // cast the returns to NotifyResult so it's consistent with what is exported
+    public static sendEmailMessage = NotifyEmail.sendMessage as (params: NotifyPackage) => Promise<NotifyResult>;
+    public static sendEmailMessageRaw = NotifyEmail.sendMessageRaw as (type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string) => Promise<NotifyResult>;
+    //#endregion
+
+    //#region SLACK
+    //#endregio
 }
 
 // export shared types so they can be accessed via Notify

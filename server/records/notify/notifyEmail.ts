@@ -25,6 +25,7 @@ interface EmailEntry {
 export class NotifyEmail {
     private static rateManager: RateManager<EmailEntry> | null =  null;
     private static environment: 'prod' | 'dev' = 'dev';
+    private static fromAddress: string = '';
 
     public static isActive(): boolean {
         // we're initialized if we have a logger running
@@ -33,6 +34,7 @@ export class NotifyEmail {
     public static configure(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): EmailResult {
         // we allow for re-assigning configuration options even if already running
         NotifyEmail.environment = env;
+        NotifyEmail.fromAddress = (NotifyEmail.environment==='dev') ? 'packrat@si.edu' : 'packrat@si.edu'; // TODO: 'packrat-dev@si.edu' : 'packrat-noreply@si.edu';
 
         // if we want a rate limiter then we build it
         const rmConfig: RateManagerConfig<EmailEntry> = {
@@ -45,9 +47,8 @@ export class NotifyEmail {
         // if we already have a manager we re-configure it (causes restart). otherwise, we create a new one
         if(NotifyEmail.rateManager)
             NotifyEmail.rateManager.setConfig(rmConfig);
-        else {
+        else
             NotifyEmail.rateManager = new RateManager<EmailEntry>(rmConfig);
-        }
 
         // if we already configured skip creating another one
         if(NotifyEmail.isActive()===true)
@@ -57,7 +58,7 @@ export class NotifyEmail {
         if(NotifyEmail.rateManager)
             NotifyEmail.rateManager.startRateManager();
 
-        return { success: true, message: `(${NotifyEmail.environment}) configured email notifier.` };
+        return { success: true, message: 'configured email notifier.' };
     }
 
     //#region UTILS
@@ -220,99 +221,100 @@ export class NotifyEmail {
         const smtpHost: string = 'smtp.si.edu';
         const smtpPort: number = 25;
 
-        const from: string = 'maslowskiec@si.edu';
+        const from: string = NotifyEmail.fromAddress;
         const boundary: string = '----=_Packrat_Ops_Msg_001';
-
         return new Promise((resolve) => {
-            const serverResponses: { statusCode: number, message: string}[] = [];
-            const client = NET.createConnection(smtpPort,smtpHost, () => {
-                // SMTP dialog
-                client.write('HELO si.edu\r\n');
-                client.write(`MAIL FROM:<${from}>\r\n`);
-                for(const recipient of entry.sendTo)
-                    client.write(`RCPT TO:<${recipient}>\r\n`);
-                client.write('DATA\r\n');
+            try {
+                const serverResponses: { statusCode: number, message: string}[] = [];
+                const client = NET.createConnection(smtpPort,smtpHost, () => {
+                    // SMTP dialog
+                    client.write('HELO si.edu\r\n');
+                    client.write(`MAIL FROM:<${from}>\r\n`);
+                    for(const recipient of entry.sendTo)
+                        client.write(`RCPT TO:<${recipient}>\r\n`);
+                    client.write('DATA\r\n');
 
-                // MIME email body with plain text and HTML parts
-                client.write(`From: ${from}\r\n`);
-                client.write(`To: ${entry.sendTo.join(', ')}\r\n`);
-                client.write(`Subject: ${UTIL.truncateString(entry.subject,60)}\r\n`);
-                client.write('MIME-Version: 1.0\r\n');
-                client.write(`Content-Type: multipart/alternative; boundary="${boundary}"\r\n`);
-                client.write('\r\n');
+                    // MIME email body with plain text and HTML parts
+                    client.write(`From: ${from}\r\n`);
+                    client.write(`To: ${entry.sendTo.join(', ')}\r\n`);
+                    client.write(`Subject: ${UTIL.truncateString(entry.subject,60)}\r\n`);
+                    client.write('MIME-Version: 1.0\r\n');
+                    client.write(`Content-Type: multipart/alternative; boundary="${boundary}"\r\n`);
+                    client.write('\r\n');
 
-                // Plain-text part
-                client.write(`--${boundary}\r\n`);
-                client.write('Content-Type: text/plain; charset="UTF-8"\r\n');
-                client.write('Content-Transfer-Encoding: 7bit\r\n');
-                client.write('\r\n');
-                client.write(`${entry.textBody}\r\n`);
-
-                // HTML part
-                if(entry.htmlBody) {
+                    // Plain-text part
                     client.write(`--${boundary}\r\n`);
-                    client.write('Content-Type: text/html; charset="UTF-8"\r\n');
+                    client.write('Content-Type: text/plain; charset="UTF-8"\r\n');
                     client.write('Content-Transfer-Encoding: 7bit\r\n');
                     client.write('\r\n');
-                    client.write(`${entry.htmlBody}\r\n`);
-                }
+                    client.write(`${entry.textBody}\r\n`);
 
-                // attachments
-                // NOTE: we need to put all images as attachments and then reference by CID
-                // for compatability since GMail removes any base64 embedded images
-                client.write(`--${boundary}\r\n`);
-                client.write('Content-Type: image/png; name="header.png"\r\n');
-                client.write('Content-Disposition: inline; filename="header.png"\r\n');
-                client.write('Content-Transfer-Encoding: base64\r\n');
-                client.write('Content-ID: <0123456789>\r\n');
-                client.write('Content-Location: header.png\r\n');
-                client.write('\r\n');
+                    // HTML part
+                    if(entry.htmlBody) {
+                        client.write(`--${boundary}\r\n`);
+                        client.write('Content-Type: text/html; charset="UTF-8"\r\n');
+                        client.write('Content-Transfer-Encoding: 7bit\r\n');
+                        client.write('\r\n');
+                        client.write(`${entry.htmlBody}\r\n`);
+                    }
 
-                // add our base64 icon from the type
-                const base64Icon: string = NotifyEmail.getMessageIconBase64(entry.type);
-                client.write(`${base64Icon}\r\n`);
+                    // attachments
+                    // NOTE: we need to put all images as attachments and then reference by CID
+                    // for compatability since GMail removes any base64 embedded images
+                    client.write(`--${boundary}\r\n`);
+                    client.write('Content-Type: image/png; name="header.png"\r\n');
+                    client.write('Content-Disposition: inline; filename="header.png"\r\n');
+                    client.write('Content-Transfer-Encoding: base64\r\n');
+                    client.write('Content-ID: <0123456789>\r\n');
+                    client.write('Content-Location: header.png\r\n');
+                    client.write('\r\n');
 
-                // End of message
-                client.write(`--${boundary}--\r\n`);
-                client.write('.\r\n');
-                client.write('QUIT\r\n');
-            });
+                    // add our base64 icon from the type
+                    const base64Icon: string = NotifyEmail.getMessageIconBase64(entry.type);
+                    client.write(`${base64Icon}\r\n`);
 
-            client.on('data', (data) => {
-                // get our data and make sure it's not an error
-                const response = data.toString();
-                serverResponses.push(...NotifyEmail.storeServerResponse(response));
+                    // End of message
+                    client.write(`--${boundary}--\r\n`);
+                    client.write('.\r\n');
+                    client.write('QUIT\r\n');
+                });
 
-                // see if we have an errors in the mix
-                const errors = NotifyEmail.extractErrorFromResponse(serverResponses);
+                client.on('data', (data) => {
+                    // get our data and make sure it's not an error
+                    const response = data.toString();
+                    serverResponses.push(...NotifyEmail.storeServerResponse(response));
 
-                // Handle server responses
-                if (errors.length > 0) {
+                    // see if we have an errors in the mix
+                    const errors = NotifyEmail.extractErrorFromResponse(serverResponses);
+
+                    // Handle server responses
+                    if (errors.length > 0) {
+                        resolve({
+                            success: false,
+                            message: 'failed to send email.',
+                            data: { error: errors }
+                        });
+                    }
+                });
+
+                client.on('end', () => {
+                    // go through our responses and see if it makes sense
+                    if(NotifyEmail.verifyServerResponses(serverResponses)===true)
+                        resolve({ success: true, message: 'email sent' });
+                    else
+                        resolve({ success: false, message: 'failed to send email', data: { error: NotifyEmail.extractErrorFromResponse(serverResponses) } });
+                });
+
+                client.on('error', (err) => {
                     resolve({
                         success: false,
                         message: 'failed to send email.',
-                        data: { error: errors }
+                        data: { error: UTIL.getErrorString(err) }
                     });
-                }
-            });
-
-            client.on('end', () => {
-                // console.log('Connection closed.');
-                // go through our responses and see if it makes sense
-                if(NotifyEmail.verifyServerResponses(serverResponses)===true)
-                    resolve({ success: true, message: 'email sent' });
-                else
-                    resolve({ success: false, message: 'failed to send email', data: { error: NotifyEmail.extractErrorFromResponse(serverResponses) } });
-            });
-
-            client.on('error', (err) => {
-                // console.error('Error:', err);
-                resolve({
-                    success: false,
-                    message: 'failed to send email.',
-                    data: { error: UTIL.getErrorString(err) }
                 });
-            });
+            } catch(error) {
+                resolve({ success: false, message: 'failed to postMessage', data: { error: UTIL.getErrorString(error) } });
+            }
         });
     }
     public static async sendMessageRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string): Promise<EmailResult> {
@@ -329,10 +331,11 @@ export class NotifyEmail {
             htmlBody
         };
 
+        // if we have a manager use it, otherwise, just send directly
         if(NotifyEmail.rateManager && NotifyEmail.rateManager.isActive()===true)
-            NotifyEmail.rateManager.add(entry);
-
-        return { success: true, message: 'added message to be sent' };
+            return NotifyEmail.rateManager.add(entry);
+        else
+            return this.postMessage(entry);
     }
     public static async sendMessage(params: NotifyPackage): Promise<EmailResult> {
 
@@ -345,8 +348,10 @@ export class NotifyEmail {
         const htmlBody: string = NotifyEmail.formatHtmlBody(params);
 
         try {
-            const subject: string = `[Packrat:${getMessagePrefixByType(params.type)}] ${params.message}`;
-            return await NotifyEmail.sendMessageRaw(params.type,params.sendTo,subject,textBody,htmlBody);
+            // figure out our subject and send to raw output
+            // returning the promise so it can be waited on (if needed)
+            const subject: string = `[${getMessagePrefixByType(params.type)}] ${params.message}`;
+            return NotifyEmail.sendMessageRaw(params.type,params.sendTo,subject,textBody,htmlBody);
         } catch (error) {
             return { success: false, message: 'failed to send message', data: { error: UTIL.getErrorString(error) } };
         }

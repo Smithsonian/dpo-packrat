@@ -4,7 +4,7 @@
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-import { RateManager, RateManagerConfig } from '../utils/rateManager';
+import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
@@ -78,11 +78,12 @@ interface ProfileRequest {
     startTime: Date,
     logEntry: LogEntry
 }
-interface LoggerResult {
-    success: boolean,
-    message: string,
-    data?: any
-}
+
+// declaring this empty for branding/clarity since it is used
+// for instances that are not related to the RateManager
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface LoggerResult extends RateManagerResult {}
+
 //#endregion
 
 export class Logger {
@@ -115,7 +116,7 @@ export class Logger {
                 burstRate,
                 burstThreshold,
                 staggerLogs,
-                onPost: Logger.postLogToWinston, //.bind(this),
+                onPost: Logger.postLogToWinston,
             };
 
             // if we already have a manager we re-configure it (causes restart). otherwise, we create a new one
@@ -261,7 +262,7 @@ export class Logger {
             };
         }
 
-        return { success: true, message: `(${env}) configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
+        return { success: true, message: `configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
     }
     public static getStats(): LoggerStats {
         Logger.stats.counts.total = (Logger.stats.counts.critical + Logger.stats.counts.error + Logger.stats.counts.warning + Logger.stats.counts.info + Logger.stats.counts.debug);
@@ -467,61 +468,60 @@ export class Logger {
     //#endregion
 
     //#region LOG
-    private static async postLog(entry: LogEntry): Promise<void> {
+    private static async postLog(entry: LogEntry): Promise<LoggerResult> {
         // if we have the rate manager running, queue it up
         // otherwise just send to the logger
         if(Logger.rateManager && Logger.rateManager.isActive()===true)
-            Logger.rateManager.add(entry);
+            return Logger.rateManager.add(entry);
         else {
-            await Logger.postLogToWinston(entry);
+            return Logger.postLogToWinston(entry);
         }
     }
     private static async postLogToWinston(entry: LogEntry): Promise<LoggerResult> {
-        await Logger.logger.log(entry);
-        Logger.updateStats(entry);
-        return { success: true, message: 'posted message' };
+        // wrapping in a promise to ensure the logger finishes all transports
+        // before moving on.
+        return new Promise<LoggerResult>((resolve)=> {
+            Logger.logger.log(entry);
+            Logger.updateStats(entry);
+            resolve ({ success: true, message: 'posted message' });
+        });
     }
 
     // wrappers for each level of log
-    public static critical(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static async critical(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        Logger.postLog(Logger.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static error(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static async error(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        Logger.postLog(Logger.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static warning(section: LogSection, message: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static async warning(section: LogSection, message: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        Logger.postLog(Logger.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static info(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static async info(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        Logger.postLog(Logger.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static debug(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
+    public static async debug(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        Logger.postLog(Logger.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
     }
     //#endregion
 
     //#region PROFILING
-    public static profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): LoggerResult {
+    public static async profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): Promise<LoggerResult> {
 
         // make sure we don't have the same
         if(Logger.requests.has(key)===true)
@@ -537,7 +537,7 @@ export class Logger {
 
         return { success: true, message: 'created profile request' };
     }
-    public static profileEnd(key: string): LoggerResult {
+    public static async profileEnd(key: string): Promise<LoggerResult> {
 
         // get our request and make sure it's valid
         const profileRequest: ProfileRequest | undefined = Logger.requests.get(key);
@@ -561,13 +561,14 @@ export class Logger {
         else
             profileRequest.logEntry.data = { profiler: elapsedMilliseconds };
 
-        // log the results and cleanup
-        Logger.postLog(profileRequest.logEntry);
+        // log the results and cleanup.
+        // we await so we can cleanup the request
+        const result: LoggerResult = await Logger.postLog(profileRequest.logEntry);
         Logger.stats.counts.profile++;
         Logger.requests.delete(key);
 
-        const message: string = `${hours}:${minutes}:${seconds}:${milliseconds}`;
-        return { success: true, message };
+        result.message = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+        return result;
     }
     //#endregion
 
@@ -677,11 +678,11 @@ export class Logger {
         // create our profiler
         // we use a random string in case another test or profile is run to avoid collisisons
         const profileKey: string = `LogTest_${Math.random().toString(36).substring(2, 6)}`;
-        Logger.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
+        await Logger.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
             numLogs,
             rateManager: hasRateManager,
             ...(hasRateManager === true && config && {
-                config: (({ onPost: _onPost, onMessage: _onMessage, ...rest }) => rest)(config)  // Exclude onPost and onMessage
+                config: (({ onPost: _onPost, ...rest }) => rest)(config)  // Exclude onPost
             })
         },'Logger.test');
 
@@ -710,8 +711,13 @@ export class Logger {
             await Logger.delay(1000);
         }
 
+        // test await/async
+        // console.log('pre');
+        // const t = await Logger.info(LogSection.eTEST, 'await test' );
+        // console.log('post',t);
+
         // close our profiler and return results
-        const result = Logger.profileEnd(profileKey);
+        const result = await Logger.profileEnd(profileKey);
         return { success: true, message: `finished testing ${numLogs} logs. (time: ${result.message} | maxRate: ${Logger.stats.metrics.logRateMax})` };
     }
     //#endregion

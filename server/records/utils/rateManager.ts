@@ -15,17 +15,16 @@ export interface RateManagerConfig<T> {
     staggerLogs?: boolean,   // do we spread logs out over each interval or submit as a single batch
     minInterval?: number,    // minimum duration for a batch/interval in ms. (higher values use less resources)
     onPost?: ((entry: T) => Promise<RateManagerResult>),     // function to call when posting an entry
-    onMessage?: (isError: boolean, message: string, data: any) => void, // function to call when there's a message others should know about
-}
-export interface RateManagerEntry {
-    resolve: (value?: RateManagerResult) => void,
-    reject: (reason?: RateManagerResult) => void
 }
 //#endregion
 
 export class RateManager<T> {
     private isRunning: boolean = false;
-    private queue: T[] = [];
+    private queue: Array <{
+        entry: T,
+        resolve: (value: RateManagerResult) => void
+        // reject: (reason: RateManagerResult) => void
+    }> = [];
     private isQueueLocked: boolean = false;
     private debugMode: boolean = false;
     private config: RateManagerConfig<T> = {
@@ -37,10 +36,6 @@ export class RateManager<T> {
         onPost: async (entry: T) => {
             console.log('[Logger] Unconfigured onPost',entry);
             return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
-        },
-        onMessage: (isError, message, data) => {
-            console.log('[Logger] Unconfigured onMessage', { isError, message, data });
-            return { isError, message, data };
         }
     };
 
@@ -52,7 +47,6 @@ export class RateManager<T> {
             staggerLogs: cfg.staggerLogs ?? this.config.staggerLogs,
             minInterval: cfg.minInterval ?? this.config.minInterval,
             onPost: cfg.onPost ?? this.config.onPost,
-            onMessage: cfg.onMessage ?? this.config.onMessage
         };
     }
     public isActive(): boolean {
@@ -81,7 +75,7 @@ export class RateManager<T> {
 
         // grab entries from the start of the array to process
         this.isQueueLocked = true;
-        const entries: T[] = this.queue.splice(0,entriesToGrab);
+        const entries = this.queue.splice(0,entriesToGrab);
 
         // cycle through entries processing each with an optional delay to spread things out
         let startTime: number = 0;
@@ -91,7 +85,7 @@ export class RateManager<T> {
             // the flow of logs to watson and ensure a FIFO process
             startTime = new Date().getTime();
             if(this.config.onPost)
-                await this.config.onPost(entry);
+                entry.resolve(await this.config.onPost(entry.entry));
 
             // if we want to spread out the requests, do so
             if(delay>0) {
@@ -102,7 +96,6 @@ export class RateManager<T> {
                 if(ellapsedTime<delay)
                     waitTime = delay - ellapsedTime; // wait the remainder of what we would have waited
                 else if(ellapsedTime>delay) {
-                    // (this.config.onMessage) && this.config.onMessage(true,'log took longer than delay',{ ellapsedTime, delay });
                     continue; // already took too long. just keep moving
                 } else
                     this.delay(waitTime);
@@ -143,6 +136,7 @@ export class RateManager<T> {
             }
 
             // display interval details if in debug mode
+            // TODO: send through to logger system/output
             if(this.debugMode)
                 console.log(`\t Interval update (mode: ${currentRate === burstRate ? 'Burst' : 'Normal'} | batch: ${batchSize} | interval: ${interval} ms)`);
         };
@@ -185,9 +179,13 @@ export class RateManager<T> {
         this.isRunning = false;
         return { success: true, message: 'stopped rate manager' };
     }
-    public add(entry: T): RateManagerResult {
-        this.queue.push(entry);
-        return { success: true, message: 'added to queue' };
+    public add(entry: T): Promise<RateManagerResult> {
+        return new Promise((resolve) => {
+            this.queue.push({ entry, resolve });
+            // return { success: true, message: 'added to queue' };
+
+            // TODO: start process queue...
+        });
     }
     //#endregion
 
@@ -200,7 +198,6 @@ export class RateManager<T> {
             staggerLogs: cfg.staggerLogs ?? this.config.staggerLogs,
             minInterval: cfg.minInterval ?? this.config.minInterval,
             onPost: cfg.onPost ?? this.config.onPost,
-            onMessage: cfg.onMessage ?? this.config.onMessage
         };
 
         // if our rate manager is already running then we need to restart it so it gets
