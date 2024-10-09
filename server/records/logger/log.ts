@@ -104,7 +104,7 @@ export class Logger {
         // we're initialized if we have a logger running
         return (Logger.logger);
     }
-    public static configure(logDirectory: string, env: 'prod' | 'dev', rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number, staggerLogs?: boolean): LoggerResult {
+    public static configure(logDirectory: string, env: 'prod' | 'dev', rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number): LoggerResult {
         // we allow for re-assigning configuration options even if already running
         Logger.logDir = logDirectory;
         Logger.environment = env;
@@ -115,7 +115,6 @@ export class Logger {
                 targetRate,
                 burstRate,
                 burstThreshold,
-                staggerLogs,
                 onPost: Logger.postLogToWinston,
             };
 
@@ -127,7 +126,7 @@ export class Logger {
             }
         } else if(Logger.rateManager) {
             // if we don't want a rate manager but have one, clean it up
-            Logger.rateManager.stopRateManager();
+            // Logger.rateManager.stopRateManager();
             Logger.rateManager = null;
         }
 
@@ -246,15 +245,15 @@ export class Logger {
             addColors(customLevels.colors);
 
             // start our rate manager if needed
-            if(Logger.rateManager)
-                Logger.rateManager.startRateManager();
+            // if(Logger.rateManager)
+            //     Logger.rateManager.startRateManager();
 
             // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
             Logger.trackLogMetrics(5000,10);
         } catch(error) {
 
-            if(Logger.rateManager)
-                Logger.rateManager.stopRateManager();
+            // if(Logger.rateManager)
+            //     Logger.rateManager.stopRateManager();
 
             return {
                 success: false,
@@ -471,7 +470,7 @@ export class Logger {
     private static async postLog(entry: LogEntry): Promise<LoggerResult> {
         // if we have the rate manager running, queue it up
         // otherwise just send to the logger
-        if(Logger.rateManager && Logger.rateManager.isActive()===true)
+        if(Logger.rateManager)// && Logger.rateManager.isActive()===true)
             return Logger.rateManager.add(entry);
         else {
             return Logger.postLogToWinston(entry);
@@ -672,7 +671,7 @@ export class Logger {
     }
     public static async testLogs(numLogs: number): Promise<LoggerResult> {
         // NOTE: given the static assignment this works best when nothing else is feeding logs
-        const hasRateManager: boolean = Logger.rateManager?.isActive() ?? false;
+        const hasRateManager: boolean = (Logger.rateManager) ? (Logger.rateManager!=null) : false;
         const config: RateManagerConfig<LogEntry> | null = Logger.rateManager?.getConfig() ?? null;
 
         // create our profiler

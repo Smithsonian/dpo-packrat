@@ -29,7 +29,7 @@ export class NotifyEmail {
 
     public static isActive(): boolean {
         // we're initialized if we have a logger running
-        return (NotifyEmail.rateManager!=null && NotifyEmail.rateManager.isActive());
+        return (NotifyEmail.rateManager!=null);
     }
     public static configure(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): EmailResult {
         // we allow for re-assigning configuration options even if already running
@@ -55,8 +55,8 @@ export class NotifyEmail {
             return { success: true, message: 'email system already running' };
 
         // start our rate manager if needed
-        if(NotifyEmail.rateManager)
-            NotifyEmail.rateManager.startRateManager();
+        // if(NotifyEmail.rateManager)
+        //     NotifyEmail.rateManager.startRateManager();
 
         return { success: true, message: 'configured email notifier.' };
     }
@@ -332,7 +332,7 @@ export class NotifyEmail {
         };
 
         // if we have a manager use it, otherwise, just send directly
-        if(NotifyEmail.rateManager && NotifyEmail.rateManager.isActive()===true)
+        if(NotifyEmail.rateManager)
             return NotifyEmail.rateManager.add(entry);
         else
             return this.postMessage(entry);
