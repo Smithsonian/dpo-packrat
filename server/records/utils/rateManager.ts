@@ -13,25 +13,30 @@ export interface RateManagerConfig<T> {
     burstRate?: number,         // target rate when in burst mode and playing catchup
     burstThreshold?: number,    // when queue is bigger than this size, trigger 'burst mode'
     minInterval?: number,       // minimum duration for a batch/interval in ms. (higher values use less resources)
+    metricsInterval?: number,   // the rate in which metrics (averages) are calculated in ms (default: 5s)
     onPost: ((entry: T) => Promise<RateManagerResult>),     // function to call when posting an entry
 }
-interface RateManagerMetrics {
+export interface RateManagerMetrics {
     counts: {
         processed: number,
         success: number,
         failure: number
     },
+    rates: {
+        current: number,
+        average: number,
+        max: number
+    }
     queueLength: number,    // average queue length
-    rateAverage: number,
-    rateMax: number,
-    timeStart: Date,
-    timeProcessed: Date,
+    startTime: Date,
+    processedTime: Date,
 }
 //#endregion
 
-
 export class RateManager<T> {
     private isRunning: boolean = false;
+    private isMetricsRunning: boolean = false;
+    private debugMode: boolean = false;
     private mode: 'standard' | 'burst' = 'standard';
     private queue: Array <{
         entry: T,
@@ -48,8 +53,9 @@ export class RateManager<T> {
             burstRate: cfg.burstRate ?? 50,
             burstThreshold: cfg.burstThreshold ?? 250,
             minInterval: cfg.minInterval ?? 1000,
+            metricsInterval: cfg.metricsInterval ?? 5000,
             onPost: cfg.onPost ?? (async (entry: T) => {
-                console.log('[Logger] Unconfigured onPost',entry);
+                console.log('[RateManager] Unconfigured onPost',entry);
                 return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
             }),
         };
@@ -60,13 +66,17 @@ export class RateManager<T> {
                 success: 0,
                 failure: 0
             },
+            rates: {
+                current: 0,
+                average: 0,
+                max: 0
+            },
             queueLength: 0,
-            rateAverage: 0,
-            rateMax: 0,
-            timeStart: new Date(),
-            timeProcessed: new Date()
+            startTime: new Date(),
+            processedTime: new Date()
         };
 
+        // set our mode. the manager starts automatically when first entry is received
         this.mode = 'standard';
     }
 
@@ -77,11 +87,29 @@ export class RateManager<T> {
             return this.processQueue();
         });
     }
+
     public setConfig(config: Partial<RateManagerConfig<T>>) {
         this.config = { ...this.config, ...config };
     }
     public getConfig(): RateManagerConfig<T> {
         return this.config;
+    }
+
+    public startManager(): void {
+        // start our queue if needed. used if manager is stopped with entries still in the queue.
+        this.processQueue();
+
+        // start our metrics tracker
+        this.trackRateMetrics(this.config.metricsInterval, 5);
+    }
+    public stopManager(): void {
+        this.isRunning = false;
+        this.isMetricsRunning = false;
+    }
+    public cleanup(): void {
+        this.stopManager();
+        this.queue = [];
+        this.mode = 'standard';
     }
     //#endregion
 
@@ -90,7 +118,7 @@ export class RateManager<T> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
     private calculateAverageProcessingTime(): number {
-        const elapsedTime = (Date.now() - this.metrics.timeStart.getTime()) / 1000;  // Total time in ms
+        const elapsedTime = (Date.now() - this.metrics.startTime.getTime()) / 1000;  // Total time in ms
         const processedEntries = this.metrics.counts.processed || 1;  // Avoid divide by zero
         return (elapsedTime / processedEntries);  // Average time per entry in ms
     }
@@ -132,9 +160,6 @@ export class RateManager<T> {
             // add our delay as calculated, if success
             if(lastResult.data)
                 await this.delay(lastResult.data.delayForRate);
-
-            // store our metrics
-            this.updateMetrics();
         }
 
         // Return the result of the last processed item or batch
@@ -153,10 +178,11 @@ export class RateManager<T> {
         // place to store our accumulated failed messages
         const failedMessages: Array<{ entry: T, reason: string }> = [];
 
-        console.log('process: burst', { idealEntriesPerSecond, processingTimePerEntry, maxEntriesPerBatch, batchSize });
-        const startTime: number = Date.now();
+        if(this.debugMode===true)
+            console.log('[RateManager] process: pre batch', { idealEntriesPerSecond, processingTimePerEntry, maxEntriesPerBatch, batchSize });
 
         // Process each entry in the batch
+        const startTime: number = Date.now();
         await Promise.all(batch.map(async (queueItem) => {
             let attempts = 0;
             let success = false;
@@ -196,7 +222,9 @@ export class RateManager<T> {
         // Calculate the delay required to maintain the burst rate
         const targetTimeForBatch = batchSize / this.config.burstRate;  // Time we expect the batch to take
         const delayForRate = Math.max(0, (targetTimeForBatch - processingTime) * 1000);
-        // console.log('process: burst', { actualRate, delayForRate });
+
+        if(this.debugMode===true)
+            console.log('[RateManager] process: post batch', { actualRate, delayForRate });
 
         // if we had an failed then we return these results
         if (failedMessages.length > 0)
@@ -233,219 +261,68 @@ export class RateManager<T> {
     //#endregion
 
     //#region METRICS
-    private updateMetrics(): void {
-        const currentTime: Date = new Date();
-        const elapsedTime = (currentTime.getTime() - this.metrics.timeStart.getTime()) / 1000;  // Convert ms to seconds
+    private async trackRateMetrics(interval: number, maxSamples: number): Promise<void> {
+        // updating our metrics runs in the background at some interval that makes sense for the system
+        // if already running, bail
+        if(this.isMetricsRunning===true)
+            return;
+        this.isMetricsRunning = true;
 
-        const currentRate = this.metrics.counts.processed / elapsedTime;
+        // make sure our interval and samples are valid
+        interval = Math.max(interval, 1000);
+        maxSamples = Math.max(maxSamples,5);
 
-        this.metrics.rateAverage = (this.metrics.rateAverage * (this.metrics.counts.processed - 1) + currentRate) / this.metrics.counts.processed;
+        // fixed interval duration
+        const elapsedSeconds: number = interval/1000;
 
-        if (currentRate > this.metrics.rateMax)
-            this.metrics.rateMax = currentRate;
+        // storage of our rates
+        const previousRates: number[] = [];
+        const lastSample = {
+            timestamp: new Date(),
+            startSize: this.metrics.counts.processed
+        };
 
-        this.metrics.timeProcessed = currentTime;
+        while(this.isMetricsRunning===true) {
+            const currentSize: number = this.metrics.counts.processed;
+            const currentDiff: number = currentSize - lastSample.startSize;
+
+            // Ensure no divide-by-zero and that count is greater than last sample
+            // if there is no difference then we ignore storing it so we don't skew
+            // our average with idle time. (note: the average is for throughput vs. usage)
+            if (currentSize - lastSample.startSize > 0) {
+                const newLogRate: number = currentDiff / elapsedSeconds;
+
+                // see if we have a new maximum and assign the rate
+                this.metrics.rates.max = Math.max(this.metrics.rates.current,newLogRate);
+                this.metrics.rates.current = newLogRate;
+
+                // Track the rate to calculate rolling average
+                previousRates.push(this.metrics.rates.current);
+
+                // Maintain rolling average window size
+                // Remove the oldest rate to keep the window size constant
+                if(previousRates.length > maxSamples)
+                    previousRates.shift();
+
+                // Calculate rolling average
+                const totalLogRate = previousRates.reduce((sum, rate) => sum + rate, 0);
+                this.metrics.rates.average = totalLogRate / previousRates.length;
+
+            }
+
+            lastSample.timestamp = new Date();
+            lastSample.startSize = currentSize;
+
+            if(this.debugMode===true)
+                console.log(`[RateManager] metrics update: (${this.metrics.rates.current} log/s | avg: ${this.metrics.rates.average})`);
+
+            await this.delay(interval);
+        }
+
+        this.isMetricsRunning = false;
     }
     public getMetrics(): RateManagerMetrics {
         return this.metrics;
     }
     //#endregion
 }
-/*
-export class RateManager<T> {
-    private isRunning: boolean = false;
-    private queue: Array <{
-        entry: T,
-        resolve: (value: RateManagerResult) => void
-        // reject: (reason: RateManagerResult) => void
-    }> = [];
-    private isQueueLocked: boolean = false;
-    private debugMode: boolean = false;
-    private config: RateManagerConfig<T> = {
-        targetRate: 200,
-        burstRate: 1000,
-        burstThreshold: 3000,
-        staggerLogs: true,
-        minInterval: 100,
-        onPost: async (entry: T) => {
-            console.log('[Logger] Unconfigured onPost',entry);
-            return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
-        }
-    };
-
-    constructor(cfg: RateManagerConfig<T>) {
-        this.config = {
-            targetRate: cfg.targetRate ?? this.config.targetRate,
-            burstRate: cfg.burstRate ?? this.config.burstRate,
-            burstThreshold: cfg.burstThreshold ?? this.config.burstThreshold,
-            staggerLogs: cfg.staggerLogs ?? this.config.staggerLogs,
-            minInterval: cfg.minInterval ?? this.config.minInterval,
-            onPost: cfg.onPost ?? this.config.onPost,
-        };
-    }
-    public isActive(): boolean {
-        return this.isRunning;
-    }
-
-    //#region UTILS
-    private async delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-    //#endregion
-
-    //#region QUEUE MANAGEMENT
-    private async processBatch(batchSize: number,delay: number): Promise<void> {
-
-        // single the queue is working and we should receive another batch
-        // this should be handled by the interval, but a safety check to avoid
-        // breaking FIFO.
-        if(this.isQueueLocked===true)
-            return;
-
-        // make sure we don't grab more entries than we have
-        const entriesToGrab: number = (batchSize > this.queue.length) ? this.queue.length : batchSize;
-        if(entriesToGrab===0)
-            return;
-
-        // grab entries from the start of the array to process
-        this.isQueueLocked = true;
-        const entries = this.queue.splice(0,entriesToGrab);
-
-        // cycle through entries processing each with an optional delay to spread things out
-        let startTime: number = 0;
-        let ellapsedTime: number = 0;
-        for(const entry of entries) {
-            // send the log statement to Watson and wait since we want to control
-            // the flow of logs to watson and ensure a FIFO process
-            startTime = new Date().getTime();
-            if(this.config.onPost)
-                entry.resolve(await this.config.onPost(entry.entry));
-
-            // if we want to spread out the requests, do so
-            if(delay>0) {
-                ellapsedTime = new Date().getTime() - startTime;
-
-                // if the ellapsed time is less than delay
-                let waitTime: number = delay;
-                if(ellapsedTime<delay)
-                    waitTime = delay - ellapsedTime; // wait the remainder of what we would have waited
-                else if(ellapsedTime>delay) {
-                    continue; // already took too long. just keep moving
-                } else
-                    this.delay(waitTime);
-            }
-        }
-
-        this.isQueueLocked = false;
-    }
-    public startRateManager(): RateManagerResult {
-        const { targetRate, burstRate, burstThreshold, minInterval } = this.config;
-        let interval: number;
-        let batchSize: number;
-        let currentRate: number;
-
-        // handle undefined
-        if(!targetRate || !burstRate || !burstThreshold || !minInterval)
-            return { success: false, message: 'failed to start. missing configuration', data: { targetRate, burstRate, burstThreshold, minInterval } };
-
-        // utility function for recalculating how fast we should be sending logs
-        const adjustIntervalAndBatchSize = () => {
-            // Determine if we're in burst mode or normal mode
-            if (this.queue.length > burstThreshold) {
-                currentRate = burstRate;  // Burst mode
-            } else {
-                currentRate = targetRate;  // Normal mode
-            }
-
-            // Calculate initial batch size and interval
-            batchSize = Math.ceil(currentRate / 10);  // Base batch size calculation
-            interval = Math.floor(1000 / (currentRate / batchSize));  // Base interval calculation
-
-            // Adjust the interval to respect the minimum interval
-            if (interval < minInterval) {
-                interval = minInterval;
-
-                // Recalculate batch size to maintain the desired currentRate while ensuring interval >= 100ms
-                batchSize = Math.ceil(currentRate / (1000 / interval));
-            }
-
-            // display interval details if in debug mode
-            // TODO: send through to logger system/output
-            if(this.debugMode)
-                console.log(`\t Interval update (mode: ${currentRate === burstRate ? 'Burst' : 'Normal'} | batch: ${batchSize} | interval: ${interval} ms)`);
-        };
-
-        // our main loop for the rate manager
-        const rateManagerLoop = async () => {
-            while (this.isRunning===true) {
-                if (this.queue.length === 0) {
-                    if(this.debugMode)
-                        console.log('\tQueue is empty, waiting for logs...');
-
-                    await this.delay(5000);
-                    continue;
-                }
-
-                // Adjust interval and batch size
-                adjustIntervalAndBatchSize();
-
-                // figure out if we want a delay between each log sent to lower chance of
-                // overflow with larger batch sizes.
-                const logDelay: number = (this.config.staggerLogs) ? (interval / batchSize) : 0;
-
-                // process our batch
-                await this.processBatch(batchSize, logDelay);
-
-                // Wait for the next iteration
-                await this.delay(interval);
-            }
-        };
-
-        // Start the rate manager loop if not already running
-        if(this.isRunning===false) {
-            this.isRunning = true;
-            rateManagerLoop().catch(err => console.error(err));
-        }
-
-        return { success: true, message: 'started rate manager' };
-    }
-    public stopRateManager(): RateManagerResult {
-        this.isRunning = false;
-        return { success: true, message: 'stopped rate manager' };
-    }
-    public add(entry: T): Promise<RateManagerResult> {
-        return new Promise((resolve) => {
-            this.queue.push({ entry, resolve });
-            // return { success: true, message: 'added to queue' };
-
-            // TODO: start process queue...
-        });
-    }
-    //#endregion
-
-    //#region CONFIG
-    public setConfig(cfg: RateManagerConfig<T>): RateManagerResult {
-        this.config = {
-            targetRate: cfg.targetRate ?? this.config.targetRate,
-            burstRate: cfg.burstRate ?? this.config.burstRate,
-            burstThreshold: cfg.burstThreshold ?? this.config.burstThreshold,
-            staggerLogs: cfg.staggerLogs ?? this.config.staggerLogs,
-            minInterval: cfg.minInterval ?? this.config.minInterval,
-            onPost: cfg.onPost ?? this.config.onPost,
-        };
-
-        // if our rate manager is already running then we need to restart it so it gets
-        // the current updated values.
-        if(this.isRunning===true) {
-            this.stopRateManager();
-            this.startRateManager();
-        }
-
-        return { success: true, message: 'updated configuration', data: this.config };
-    }
-    public getConfig(): RateManagerConfig<T> {
-        return this.config;
-    }
-    //#endregion
-}
-    */
