@@ -1,5 +1,5 @@
 import * as NET from 'net';
-import { NotifyPackage, NotifyType, getMessagePrefixByType } from './notifyShared';
+import { NotifyPackage, NotifyType, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
 import * as UTIL from '../utils/utils';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 
@@ -26,6 +26,7 @@ export class NotifyEmail {
     private static rateManager: RateManager<EmailEntry> | null =  null;
     private static environment: 'prod' | 'dev' = 'dev';
     private static fromAddress: string = '';
+    private static useBase64: boolean = false;
 
     public static isActive(): boolean {
         // we're initialized if we have a logger running
@@ -167,8 +168,9 @@ export class NotifyEmail {
         result +=   '<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px;">';
 
         // banner
+        const imageRef: string = (NotifyEmail.useBase64===true) ? 'cid:0123456789' : getMessageIconUrlByType(params.type);
         result += '<div style="text-align: center; margin-bottom: 20px;">';
-        result +=   '<img src="cid:0123456789" style="max-width: 100%; height: auto; border-radius: 5px;">'; // image references specific attachment by CID
+        result +=   `<img src="${imageRef}" style="max-width: 100%; height: auto; border-radius: 5px;">`; // image references specific attachment by CID
         result += '</div>';
 
         // header and subtitle
@@ -208,7 +210,6 @@ export class NotifyEmail {
 
         // close html
         result += '</html>';
-
         return result;
     }
     //#endregion
@@ -261,17 +262,19 @@ export class NotifyEmail {
                     // attachments
                     // NOTE: we need to put all images as attachments and then reference by CID
                     // for compatability since GMail removes any base64 embedded images
-                    client.write(`--${boundary}\r\n`);
-                    client.write('Content-Type: image/png; name="header.png"\r\n');
-                    client.write('Content-Disposition: inline; filename="header.png"\r\n');
-                    client.write('Content-Transfer-Encoding: base64\r\n');
-                    client.write('Content-ID: <0123456789>\r\n');
-                    client.write('Content-Location: header.png\r\n');
-                    client.write('\r\n');
+                    if(NotifyEmail.useBase64===true) {
+                        client.write(`--${boundary}\r\n`);
+                        client.write('Content-Type: image/png; name="header.png"\r\n');
+                        client.write('Content-Disposition: inline; filename="header.png"\r\n');
+                        client.write('Content-Transfer-Encoding: base64\r\n');
+                        client.write('Content-ID: <0123456789>\r\n');
+                        client.write('Content-Location: header.png\r\n');
+                        client.write('\r\n');
 
-                    // add our base64 icon from the type
-                    const base64Icon: string = NotifyEmail.getMessageIconBase64(entry.type);
-                    client.write(`${base64Icon}\r\n`);
+                        // add our base64 icon from the type
+                        const base64Icon: string = NotifyEmail.getMessageIconBase64(entry.type);
+                        client.write(`${base64Icon}\r\n`);
+                    }
 
                     // End of message
                     client.write(`--${boundary}--\r\n`);
@@ -335,7 +338,7 @@ export class NotifyEmail {
         if(NotifyEmail.rateManager)
             return NotifyEmail.rateManager.add(entry);
         else
-            return this.postMessage(entry);
+            return NotifyEmail.postMessage(entry);
     }
     public static async sendMessage(params: NotifyPackage): Promise<EmailResult> {
 

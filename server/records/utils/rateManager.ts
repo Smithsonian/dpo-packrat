@@ -53,7 +53,7 @@ export class RateManager<T> {
             burstRate: cfg.burstRate ?? 50,
             burstThreshold: cfg.burstThreshold ?? 250,
             minInterval: cfg.minInterval ?? 1000,
-            metricsInterval: cfg.metricsInterval ?? 5000,
+            metricsInterval: cfg.metricsInterval ?? 1000,
             onPost: cfg.onPost ?? (async (entry: T) => {
                 console.log('[RateManager] Unconfigured onPost',entry);
                 return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
@@ -78,6 +78,7 @@ export class RateManager<T> {
 
         // set our mode. the manager starts automatically when first entry is received
         this.mode = 'standard';
+        this.trackRateMetrics(this.config.metricsInterval,5);
     }
 
     //#region PUBLIC
@@ -293,7 +294,7 @@ export class RateManager<T> {
                 const newLogRate: number = currentDiff / elapsedSeconds;
 
                 // see if we have a new maximum and assign the rate
-                this.metrics.rates.max = Math.max(this.metrics.rates.current,newLogRate);
+                this.metrics.rates.max = Math.max(this.metrics.rates.max,newLogRate);
                 this.metrics.rates.current = newLogRate;
 
                 // Track the rate to calculate rolling average
@@ -307,14 +308,13 @@ export class RateManager<T> {
                 // Calculate rolling average
                 const totalLogRate = previousRates.reduce((sum, rate) => sum + rate, 0);
                 this.metrics.rates.average = totalLogRate / previousRates.length;
-
             }
 
             lastSample.timestamp = new Date();
             lastSample.startSize = currentSize;
 
             if(this.debugMode===true)
-                console.log(`[RateManager] metrics update: (${this.metrics.rates.current} log/s | avg: ${this.metrics.rates.average})`);
+                console.log(`[RateManager] metrics update: (${currentDiff} entries | current: ${this.metrics.rates.current}/s | avg: ${this.metrics.rates.average}/s | max: ${this.metrics.rates.max}/s)`);
 
             await this.delay(interval);
         }

@@ -717,7 +717,7 @@ export class Logger {
 
         // close our profiler and return results
         const result = await Logger.profileEnd(profileKey);
-        return { success: true, message: `finished testing ${numLogs} logs. (time: ${result.message} | maxRate: ${Logger.stats.metrics.logRateMax})` };
+        return { success: true, message: `finished testing ${numLogs} logs. (time: ${result.message} | maxRate: ${Logger.stats.metrics.logRateMax} | avgRate: ${Logger.rateManager?.getMetrics().rates.average ?? -1})` };
     }
     //#endregion
 }
