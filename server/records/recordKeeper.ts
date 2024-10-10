@@ -209,20 +209,8 @@ export class RecordKeeper {
 
         return emailResult;
     }
-    static async emailTest(): Promise<IOResults> {
-
-        // this.sendEmail(NotifyType.SYSTEM_ERROR, NotifyChannel.EMAIL_ADMIN, 'Packrat out of disk space!', 'Packrat is running low with only 6% of disk space available. If you have pending items uploaded but not ingested please do so. ');
-        // this.sendEmail(NotifyType.SYSTEM_NOTICE, NotifyChannel.EMAIL_ADMIN, 'Packrat maintenance @ 11pm', 'Packrat will be offline starting at 11pm tonight');
-        // this.sendEmail(NotifyType.JOB_PASSED, NotifyChannel.EMAIL_ADMIN, 'Model ingestion completed', 'Model "Something awesome" was ingested...');
-        // this.sendEmail(NotifyType.JOB_STARTED, NotifyChannel.EMAIL_ADMIN, 'Uploading capture data started', 'Uploading capture data comprised of 456 images for subject "something awesome"...');
-        const result = await this.sendEmail(NotifyType.JOB_FAILED, NotifyChannel.EMAIL_ADMIN, 'Scene generation failed for: Something awesome', 'Voyager scene failed to be created because: no normals...');
-
-        if(result.success===true)
-            this.logInfo(LogSection.eTEST,result.message ?? 'NA', undefined, 'RecordKeeper.emailTest',false);
-        else
-            this.logError(LogSection.eTEST,result.message ?? 'Unknown error', undefined, 'RecordKeeper.emailTest');
-
-        return result;
+    static async emailTest(numEmails: number): Promise<IOResults> {
+        return NOTIFY.testEmail(numEmails);
     }
 
     // slack

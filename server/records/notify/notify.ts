@@ -12,6 +12,9 @@ export class Notify {
     // cast the returns to NotifyResult so it's consistent with what is exported
     public static sendEmailMessage = NotifyEmail.sendMessage as (params: NotifyPackage) => Promise<NotifyResult>;
     public static sendEmailMessageRaw = NotifyEmail.sendMessageRaw as (type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string) => Promise<NotifyResult>;
+
+    // testing emails
+    public static testEmail = NotifyEmail.testEmails as (numEmails: number) => Promise<NotifyResult>;
     //#endregion
 
     //#region SLACK

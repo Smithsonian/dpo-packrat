@@ -11,7 +11,7 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
     // const result = await RK.logTest(numLogs);
 
     // test email notifications
-    const result = await RK.emailTest();
+    const result = await RK.emailTest(5);
 
     // return our results
     res.status(200).send(H.Helpers.JSONStringify(result));
