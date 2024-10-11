@@ -4,7 +4,7 @@
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-import { RateManager, RateManagerConfig } from '../utils/rateManager';
+import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
@@ -78,10 +78,12 @@ interface ProfileRequest {
     startTime: Date,
     logEntry: LogEntry
 }
-interface LoggerResult {
-    success: boolean,
-    message: string
-}
+
+// declaring this empty for branding/clarity since it is used
+// for instances that are not related to the RateManager
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+interface LoggerResult extends RateManagerResult {}
+
 //#endregion
 
 export class Logger {
@@ -100,12 +102,12 @@ export class Logger {
     //#region PUBLIC
     private static isActive(): boolean {
         // we're initialized if we have a logger running
-        return (this.logger);
+        return (Logger.logger);
     }
-    public static configure(logDirectory: string, env: 'prod' | 'dev', rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number, staggerLogs?: boolean): LoggerResult {
+    public static configure(logDirectory: string, env: 'prod' | 'dev', rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number): LoggerResult {
         // we allow for re-assigning configuration options even if already running
-        this.logDir = logDirectory;
-        this.environment = env;
+        Logger.logDir = logDirectory;
+        Logger.environment = env;
 
         // if we want a rate limiter then we build it
         if(rateManager===true) {
@@ -113,24 +115,23 @@ export class Logger {
                 targetRate,
                 burstRate,
                 burstThreshold,
-                staggerLogs,
-                onPost: this.postLogToWinston.bind(this),
+                onPost: Logger.postLogToWinston,
             };
 
             // if we already have a manager we re-configure it (causes restart). otherwise, we create a new one
-            if(this.rateManager)
-                this.rateManager.setConfig(rmConfig);
+            if(Logger.rateManager)
+                Logger.rateManager.setConfig(rmConfig);
             else {
-                this.rateManager = new RateManager<LogEntry>(rmConfig);
+                Logger.rateManager = new RateManager<LogEntry>(rmConfig);
             }
-        } else if(this.rateManager) {
+        } else if(Logger.rateManager) {
             // if we don't want a rate manager but have one, clean it up
-            this.rateManager.stopRateManager();
-            this.rateManager = null;
+            // Logger.rateManager.stopRateManager();
+            Logger.rateManager = null;
         }
 
         // if we already have a logger skip creating another one
-        if(this.isActive()===true)
+        if(Logger.isActive()===true)
             return { success: true, message: 'Winston logger already running' };
 
         const customLevels = {
@@ -198,7 +199,7 @@ export class Logger {
                 // Format data fields in parenthesis
                 let dataFields: string = '';
                 if (info.data) {
-                    dataFields = `${this.getTextColorCode('dim')}(${this.processData(info.data)})${this.getTextColorCode()}`;
+                    dataFields = `${Logger.getTextColorCode('dim')}(${Logger.processData(info.data)})${Logger.getTextColorCode()}`;
                 }
 
                 // Build the formatted log message
@@ -210,12 +211,12 @@ export class Logger {
                 logDirectory = path.resolve(__dirname, logDirectory);
             }
 
-            if (!fs.existsSync(this.logDir)) {
-                fs.mkdirSync(this.logDir, { recursive: true });
+            if (!fs.existsSync(Logger.logDir)) {
+                fs.mkdirSync(Logger.logDir, { recursive: true });
             }
 
             const fileTransport = new transports.File({
-                filename: this.getLogFilePath(),
+                filename: Logger.getLogFilePath(),
                 format: customJsonFormat,
                 // handleExceptions: false  // used to disable buffering for higher volume support at risk of errors
                 maxsize: 150 * 1024 * 1024, // 150 MB in bytes
@@ -233,7 +234,7 @@ export class Logger {
             });
 
             // Use both transports: console in dev mode, and file transport for file logging
-            this.logger = createLogger({
+            Logger.logger = createLogger({
                 level: 'perf', // Logging all levels
                 levels: customLevels.levels,
                 transports: env === 'dev' ? [fileTransport, consoleTransport] : [fileTransport],
@@ -244,15 +245,15 @@ export class Logger {
             addColors(customLevels.colors);
 
             // start our rate manager if needed
-            if(this.rateManager)
-                this.rateManager.startRateManager();
+            // if(Logger.rateManager)
+            //     Logger.rateManager.startRateManager();
 
             // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
-            this.trackLogMetrics(5000,10);
+            Logger.trackLogMetrics(5000,10);
         } catch(error) {
 
-            if(this.rateManager)
-                this.rateManager.stopRateManager();
+            // if(Logger.rateManager)
+            //     Logger.rateManager.stopRateManager();
 
             return {
                 success: false,
@@ -260,14 +261,14 @@ export class Logger {
             };
         }
 
-        return { success: true, message: `(${env}) configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
+        return { success: true, message: `configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
     }
     public static getStats(): LoggerStats {
-        this.stats.counts.total = (this.stats.counts.critical + this.stats.counts.error + this.stats.counts.warning + this.stats.counts.info + this.stats.counts.debug);
-        return this.stats;
+        Logger.stats.counts.total = (Logger.stats.counts.critical + Logger.stats.counts.error + Logger.stats.counts.warning + Logger.stats.counts.info + Logger.stats.counts.debug);
+        return Logger.stats;
     }
     public static setDebugMode(value: boolean): void {
-        this.debugMode = value;
+        Logger.debugMode = value;
     }
     //#endregion
 
@@ -287,7 +288,7 @@ export class Logger {
             context: {
                 section: context.section,
                 caller: context.caller ?? null,
-                environment: this.environment,
+                environment: Logger.environment,
                 idUser: context.idUser,
                 idRequest: context.idRequest
             }
@@ -299,7 +300,7 @@ export class Logger {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        const logDir = path.join(this.logDir, `${year}`, `${month}`);
+        const logDir = path.join(Logger.logDir, `${year}`, `${month}`);
 
         if (!fs.existsSync(logDir)) {
             fs.mkdirSync(logDir, { recursive: true });
@@ -317,12 +318,12 @@ export class Logger {
 
         // If data is an array, join elements with commas
         if (Array.isArray(data)) {
-            return data.map(item => this.processData(item)).join(', ');
+            return data.map(item => Logger.processData(item)).join(', ');
         }
 
         // If data is an object, flatten it and convert to a string of key/value pairs
         if (typeof data === 'object' && data !== null) {
-            const flatObject = this.flattenObject(data);
+            const flatObject = Logger.flattenObject(data);
             return Object.entries(flatObject)
                 .map(([key, value]) => `${key}: ${value}`)
                 .join(', ');
@@ -336,7 +337,7 @@ export class Logger {
             const value = (obj as Record<string, any>)[key];
 
             if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                Object.assign(acc, this.flattenObject(value, newKey)); // Recursively flatten nested objects
+                Object.assign(acc, Logger.flattenObject(value, newKey)); // Recursively flatten nested objects
             } else {
                 acc[newKey] = value.toString(); // Assign non-object values directly
             }
@@ -349,21 +350,21 @@ export class Logger {
     private static updateStats(entry: LogEntry): void {
         // we do this here so we can track when it actually gets posted if done by the rate manager
         switch(entry.level) {
-            case 'crit':    this.stats.counts.critical++; break;
-            case 'error':   this.stats.counts.error++; break;
-            case 'warn':    this.stats.counts.warning++; break;
-            case 'info':    this.stats.counts.info++; break;
-            case 'debug':   this.stats.counts.debug++; break;
-            case 'perf':    this.stats.counts.profile++; break;
+            case 'crit':    Logger.stats.counts.critical++; break;
+            case 'error':   Logger.stats.counts.error++; break;
+            case 'warn':    Logger.stats.counts.warning++; break;
+            case 'info':    Logger.stats.counts.info++; break;
+            case 'debug':   Logger.stats.counts.debug++; break;
+            case 'perf':    Logger.stats.counts.profile++; break;
         }
-        this.stats.counts.total++;
+        Logger.stats.counts.total++;
     }
     private static async trackLogMetrics(interval: number, avgSamples: number): Promise<void> {
 
         // if already running, bail
-        if(this.metricsIsRunning===true)
+        if(Logger.metricsIsRunning===true)
             return;
-        this.metricsIsRunning = true;
+        Logger.metricsIsRunning = true;
 
         // make sure our interval and samples are valid
         interval = Math.max(interval, 1000);
@@ -374,22 +375,22 @@ export class Logger {
 
         const lastSample = {
             timestamp: new Date(),
-            startSize: this.stats.counts.total
+            startSize: Logger.stats.counts.total
         };
 
-        while(this.metricsIsRunning) {
-            const currentSize: number = this.stats.counts.total;
+        while(Logger.metricsIsRunning) {
+            const currentSize: number = Logger.stats.counts.total;
 
             // Ensure no divide-by-zero and that log count is greater than last sample
             if (currentSize - lastSample.startSize > 0) {
                 const newLogRate: number = (currentSize - lastSample.startSize) / elapsedSeconds;
 
                 // see if we have a new maximum and assign the log rate
-                this.stats.metrics.logRateMax = Math.max(this.stats.metrics.logRate,newLogRate);
-                this.stats.metrics.logRate = newLogRate;
+                Logger.stats.metrics.logRateMax = Math.max(Logger.stats.metrics.logRate,newLogRate);
+                Logger.stats.metrics.logRate = newLogRate;
 
                 // Track the log rate to calculate rolling average
-                logRates.push(this.stats.metrics.logRate);
+                logRates.push(Logger.stats.metrics.logRate);
 
                 // Maintain rolling average window size
                 if(logRates.length > avgSamples) {
@@ -398,22 +399,22 @@ export class Logger {
 
                 // Calculate rolling average
                 const totalLogRate = logRates.reduce((sum, rate) => sum + rate, 0);
-                this.stats.metrics.logRateAvg = totalLogRate / logRates.length;
+                Logger.stats.metrics.logRateAvg = totalLogRate / logRates.length;
 
             } else {
-                this.stats.metrics.logRate = 0;
+                Logger.stats.metrics.logRate = 0;
             }
 
             lastSample.timestamp = new Date();
             lastSample.startSize = currentSize;
 
-            if(this.debugMode===true)
-                console.log(`\tLog metrics update: (${this.stats.metrics.logRate} log/s | avg: ${this.stats.metrics.logRateAvg})`);
+            if(Logger.debugMode===true)
+                console.log(`\tLog metrics update: (${Logger.stats.metrics.logRate} log/s | avg: ${Logger.stats.metrics.logRateAvg})`);
 
-            await this.delay(interval);
+            await Logger.delay(interval);
         }
 
-        this.metricsIsRunning = false;
+        Logger.metricsIsRunning = false;
     }
 
     // helper to get specific color codes for text out in the console
@@ -466,79 +467,79 @@ export class Logger {
     //#endregion
 
     //#region LOG
-    private static async postLog(entry: LogEntry): Promise<void> {
+    private static async postLog(entry: LogEntry): Promise<LoggerResult> {
         // if we have the rate manager running, queue it up
         // otherwise just send to the logger
-        if(this.rateManager && this.rateManager.isActive()===true)
-            this.rateManager.add(entry);
+        if(Logger.rateManager)// && Logger.rateManager.isActive()===true)
+            return Logger.rateManager.add(entry);
         else {
-            await this.postLogToWinston(entry);
+            return Logger.postLogToWinston(entry);
         }
     }
-    private static async postLogToWinston(entry: LogEntry): Promise<void> {
-        await this.logger.log(entry);
-        this.updateStats(entry);
+    private static async postLogToWinston(entry: LogEntry): Promise<LoggerResult> {
+        // wrapping in a promise to ensure the logger finishes all transports
+        // before moving on.
+        return new Promise<LoggerResult>((resolve)=> {
+            Logger.logger.log(entry);
+            Logger.updateStats(entry);
+            resolve ({ success: true, message: 'posted message' });
+        });
     }
 
     // wrappers for each level of log
-    public static critical(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isActive()===false)
+    public static async critical(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+        if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        this.postLog(this.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static error(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isActive()===false)
+    public static async error(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+        if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        this.postLog(this.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static warning(section: LogSection, message: string, data: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isActive()===false)
+    public static async warning(section: LogSection, message: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+        if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        this.postLog(this.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static info(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isActive()===false)
+    public static async info(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+        if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        this.postLog(this.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
     }
-    public static debug(section: LogSection, message: string, data: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): LoggerResult {
-        if(this.isActive()===false)
+    public static async debug(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+        if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        this.postLog(this.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
-        return { success: true, message: 'posted log message' };
+        return Logger.postLog(Logger.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
     }
     //#endregion
 
     //#region PROFILING
-    public static profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): LoggerResult {
+    public static async profile(key: string, section: LogSection, message: string, data?: any, caller?: string, idUser?: number, idRequest?: number): Promise<LoggerResult> {
 
         // make sure we don't have the same
-        if(this.requests.has(key)===true)
+        if(Logger.requests.has(key)===true)
             return { success: false, message: 'profile request key already created.' };
 
         // otherwise, create our request entry for performance level
-        const logEntry: LogEntry = this.getLogEntry('perf', message, data, false, { section, caller, idUser, idRequest } );
+        const logEntry: LogEntry = Logger.getLogEntry('perf', message, data, false, { section, caller, idUser, idRequest } );
         const profileRequest: ProfileRequest = {
             startTime: new Date(),
             logEntry,
         };
-        this.requests.set(key,profileRequest);
+        Logger.requests.set(key,profileRequest);
 
         return { success: true, message: 'created profile request' };
     }
-    public static profileEnd(key: string): LoggerResult {
+    public static async profileEnd(key: string): Promise<LoggerResult> {
 
         // get our request and make sure it's valid
-        const profileRequest: ProfileRequest | undefined = this.requests.get(key);
+        const profileRequest: ProfileRequest | undefined = Logger.requests.get(key);
         if(!profileRequest)
             return { success: false, message: 'cannot find profile request' };
 
@@ -559,13 +560,14 @@ export class Logger {
         else
             profileRequest.logEntry.data = { profiler: elapsedMilliseconds };
 
-        // log the results and cleanup
-        this.postLog(profileRequest.logEntry);
-        this.stats.counts.profile++;
-        this.requests.delete(key);
+        // log the results and cleanup.
+        // we await so we can cleanup the request
+        const result: LoggerResult = await Logger.postLog(profileRequest.logEntry);
+        Logger.stats.counts.profile++;
+        Logger.requests.delete(key);
 
-        const message: string = `${hours}:${minutes}:${seconds}:${milliseconds}`;
-        return { success: true, message };
+        result.message = `${hours}:${minutes}:${seconds}:${milliseconds}`;
+        return result;
     }
     //#endregion
 
@@ -669,34 +671,34 @@ export class Logger {
     }
     public static async testLogs(numLogs: number): Promise<LoggerResult> {
         // NOTE: given the static assignment this works best when nothing else is feeding logs
-        const hasRateManager: boolean = this.rateManager?.isActive() ?? false;
-        const config: RateManagerConfig<LogEntry> | null = this.rateManager?.getConfig() ?? null;
+        const hasRateManager: boolean = (Logger.rateManager) ? (Logger.rateManager!=null) : false;
+        const config: RateManagerConfig<LogEntry> | null = Logger.rateManager?.getConfig() ?? null;
 
         // create our profiler
         // we use a random string in case another test or profile is run to avoid collisisons
         const profileKey: string = `LogTest_${Math.random().toString(36).substring(2, 6)}`;
-        this.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
+        await Logger.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
             numLogs,
             rateManager: hasRateManager,
             ...(hasRateManager === true && config && {
-                config: (({ onPost: _onPost, onMessage: _onMessage, ...rest }) => rest)(config)  // Exclude onPost and onMessage
+                config: (({ onPost: _onPost, ...rest }) => rest)(config)  // Exclude onPost
             })
         },'Logger.test');
 
         // capture the current total count so we can adjust in case other events are going on
-        const startCount: number = this.stats.counts.total;
+        const startCount: number = Logger.stats.counts.total;
 
         // test our logging
         for(let i=0; i<numLogs; ++i)
-            this.postLog(this.randomLogEntry(i));
+            Logger.postLog(Logger.randomLogEntry(i));
 
         // cycle through waiting for use to finish posting all logs
         const timeout = Math.max(numLogs * 20,10000); //assuming max 20ms per log, and wait at least 10s
         const startTime = Date.now();
-        while ((this.stats.counts.total - startCount) < numLogs) {
+        while ((Logger.stats.counts.total - startCount) < numLogs) {
 
-            if(this.debugMode)
-                console.log('waiting for logs to post: ',(this.stats.counts.total - startCount) +'|'+numLogs);
+            if(Logger.debugMode)
+                console.log('waiting for logs to post: ',(Logger.stats.counts.total - startCount) +'|'+numLogs);
 
             // Check if timeout has been reached
             if (Date.now() - startTime > timeout) {
@@ -705,12 +707,17 @@ export class Logger {
             }
 
             // Wait for 1 second before checking again
-            await this.delay(1000);
+            await Logger.delay(1000);
         }
 
+        // test await/async
+        // console.log('pre');
+        // const t = await Logger.info(LogSection.eTEST, 'await test' );
+        // console.log('post',t);
+
         // close our profiler and return results
-        const result = this.profileEnd(profileKey);
-        return { success: true, message: `finished testing ${numLogs} logs. (time: ${result.message} | maxRate: ${this.stats.metrics.logRateMax})` };
+        const result = await Logger.profileEnd(profileKey);
+        return { success: true, message: `finished testing ${numLogs} logs. (time: ${result.message} | maxRate: ${Logger.stats.metrics.logRateMax} | avgRate: ${Logger.rateManager?.getMetrics().rates.average ?? -1})` };
     }
     //#endregion
 }

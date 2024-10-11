@@ -4,12 +4,15 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export const play = async (_req: Request, res: Response): Promise<void> => {
 
-    RK.configure(); // 'D:\\Temp\\PackratTemp\\Logs'
+    await RK.configure();
 
     // test our logging
-    const numLogs: number = 1000;
-    const result = await RK.logTest(numLogs);
+    // const numLogs: number = 1000;
+    // const result = await RK.logTest(numLogs);
+
+    // test email notifications
+    const result = await RK.emailTest(5);
 
     // return our results
-    res.status(200).send(H.Helpers.JSONStringify({ message: result.error }));
+    res.status(200).send(H.Helpers.JSONStringify(result));
 };
