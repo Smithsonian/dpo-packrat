@@ -4,12 +4,6 @@ import * as UTIL from '../utils/utils';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 import { Logger as LOG, LogSection } from '../logger/log';
 
-/**
- * - get error/success messages out allowing caller to wait for results
- * - test routines
- * - stats (rate, type counts)
- */
-
 // declaring this empty for branding/clarity since it is used
 // for instances that are not related to the RateManager
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
