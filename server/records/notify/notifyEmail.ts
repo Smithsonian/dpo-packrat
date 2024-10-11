@@ -156,7 +156,7 @@ export class NotifyEmail {
         result +=   '<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 10px;">';
 
         // banner
-        const imageRef: string = (NotifyEmail.useBase64===true) ? 'cid:0123456789' : getMessageIconUrlByType(params.type);
+        const imageRef: string = (NotifyEmail.useBase64===true) ? 'cid:0123456789' : getMessageIconUrlByType(params.type,'email');
         result += '<div style="text-align: center; margin-bottom: 20px;">';
         result +=   `<img src="${imageRef}" style="max-width: 100%; height: auto; border-radius: 5px;">`; // image references specific attachment by CID
         result += '</div>';

@@ -30,27 +30,12 @@ export interface NotifyPackage {
     sendTo?: string[],                              // where are we sending the message. for Slack it is a user slack ID. for email it is the 'to' email address
 }
 
-export const getMessageIconUrlByType = (type: NotifyType): string => {
-
-    switch(type) {
-        case NotifyType.SYSTEM_ERROR:
-            return 'https://egofarms.com/packrat/fire-solid.png';
-        case NotifyType.SYSTEM_NOTICE:
-            return 'https://egofarms.com/packrat/alarm-on.png';
-
-        case NotifyType.JOB_FAILED:
-            return 'https://egofarms.com/packrat/attack.png';
-        case NotifyType.JOB_PASSED:
-            return 'https://egofarms.com/packrat/award-ribbon.png';
-        case NotifyType.JOB_STARTED:
-            return 'https://egofarms.com/packrat/coffee.png';
-
-        case NotifyType.SECURITY_NOTICE:
-            return 'https://egofarms.com/packrat/privacy-shield-solid.png';
-
-        default:
-            return 'https://egofarms.com/packrat/gear-solid.png';
-    }
+export const getMessageIconUrlByType = (type: NotifyType, system: 'email' | 'slack'): string => {
+    // build our filename based on the type
+    const host: string = 'https://egofarms.com/packrat';
+    const typeStr: string = NotifyType[type];
+    const filename: string = `${host}/icon_${system}_${typeStr.toLowerCase()}.png`;
+    return filename;
 };
 export const getMessagePrefixByType = (type: NotifyType): string => {
 
