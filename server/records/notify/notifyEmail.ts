@@ -11,6 +11,7 @@ export interface EmailResult extends RateManagerResult {}
 
 interface EmailEntry {
     type: NotifyType,
+    from: string,
     sendTo: string[],
     subject: string,
     textBody: string,
@@ -30,7 +31,7 @@ export class NotifyEmail {
     public static configure(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): EmailResult {
         // we allow for re-assigning configuration options even if already running
         NotifyEmail.environment = env;
-        NotifyEmail.fromAddress = (NotifyEmail.environment==='dev') ? 'packrat@si.edu' : 'packrat@si.edu'; // TODO: 'packrat-dev@si.edu' : 'packrat-noreply@si.edu';
+        NotifyEmail.fromAddress = (NotifyEmail.environment==='dev') ? 'packrat-dev@si.edu' : 'packrat-noreply@si.edu';
 
         // if we want a rate limiter then we build it
         const rmConfig: RateManagerConfig<EmailEntry> = {
@@ -45,14 +46,6 @@ export class NotifyEmail {
             NotifyEmail.rateManager.setConfig(rmConfig);
         else
             NotifyEmail.rateManager = new RateManager<EmailEntry>(rmConfig);
-
-        // if we already configured skip creating another one
-        if(NotifyEmail.isActive()===true)
-            return { success: true, message: 'email system already running' };
-
-        // start our rate manager if needed
-        // if(NotifyEmail.rateManager)
-        //     NotifyEmail.rateManager.startRateManager();
 
         return { success: true, message: 'configured email notifier.' };
     }
@@ -217,7 +210,7 @@ export class NotifyEmail {
         const smtpHost: string = 'smtp.si.edu';
         const smtpPort: number = 25;
 
-        const from: string = NotifyEmail.fromAddress;
+        const from: string = entry.from;
         const boundary: string = '----=_Packrat_Ops_Msg_001';
         return new Promise((resolve) => {
             try {
@@ -315,7 +308,7 @@ export class NotifyEmail {
             }
         });
     }
-    public static async sendMessageRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string): Promise<EmailResult> {
+    public static async sendMessageRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string, from?: string): Promise<EmailResult> {
 
         // get our email addresses if needed
         if(sendTo.length<=0)
@@ -323,6 +316,7 @@ export class NotifyEmail {
 
         const entry: EmailEntry = {
             type,
+            from: from ?? NotifyEmail.fromAddress,
             sendTo,
             subject,
             textBody,
@@ -335,7 +329,7 @@ export class NotifyEmail {
         else
             return NotifyEmail.postMessage(entry);
     }
-    public static async sendMessage(params: NotifyPackage): Promise<EmailResult> {
+    public static async sendMessage(params: NotifyPackage, from?: string): Promise<EmailResult> {
 
         // if we have sendTo address(es) then we ignore the channel
         if(!params.sendTo)
@@ -349,7 +343,7 @@ export class NotifyEmail {
             // figure out our subject and send to raw output
             // returning the promise so it can be waited on (if needed)
             const subject: string = `[${getMessagePrefixByType(params.type)}] ${params.message}`;
-            return NotifyEmail.sendMessageRaw(params.type,params.sendTo,subject,textBody,htmlBody);
+            return NotifyEmail.sendMessageRaw(params.type,params.sendTo,subject,textBody,htmlBody,from);
         } catch (error) {
             return { success: false, message: 'failed to send message', data: { error: UTIL.getErrorString(error) } };
         }
