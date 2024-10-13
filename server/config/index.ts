@@ -111,6 +111,9 @@ export type ConfigType = {
     navigation: {
         type: NAVIGATION_TYPE;
     },
+    slack: {
+        apiKey: string;
+    },
     storage: {
         type: STORAGE_TYPE;
         rootRepository: string;
@@ -202,6 +205,9 @@ export const Config: ConfigType = {
     },
     navigation: {
         type: NAVIGATION_TYPE.SOLR,
+    },
+    slack: {
+        apiKey: process.env.PACKRAT_SLACK_KEY ? process.env.PACKRAT_SLACK_KEY: 'undefined',
     },
     storage: {
         type: STORAGE_TYPE.LOCAL,

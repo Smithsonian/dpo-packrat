@@ -84,7 +84,7 @@ export class RecordKeeper {
         this.notifyGroupConfig.emailAll = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ALL) ?? this.defaultEmail;
 
         // configure slack
-        const slackResults = NOTIFY.configureSlack(environment);
+        const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey);
         if(slackResults.success===false)
             return slackResults;
         this.logInfo(LogSection.eSYS, slackResults.message, { environment }, 'Recordkeeper');

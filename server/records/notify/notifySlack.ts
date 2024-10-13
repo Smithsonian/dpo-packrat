@@ -33,14 +33,16 @@ export enum SlackChannel {
 export class NotifySlack {
     private static rateManager: RateManager<SlackEntry> | null =  null;
     private static defaultChannel: SlackChannel = SlackChannel.PACKRAT_DEV;
+    private static apiKey: string;
 
     public static isActive(): boolean {
         // we're initialized if we have a logger running
         return (NotifySlack.rateManager!=null);
     }
-    public static configure(env: 'dev' | 'prod', targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
+    public static configure(env: 'dev' | 'prod', apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
 
         NotifySlack.defaultChannel = (env=='dev') ? SlackChannel.PACKRAT_DEV : SlackChannel.PACKRAT_OPS;
+        NotifySlack.apiKey = apiKey;
 
         // if we want a rate limiter then we build it
         const rmConfig: RateManagerConfig<SlackEntry> = {
@@ -62,7 +64,7 @@ export class NotifySlack {
     //#region UTILS
     private static formatHeaders(): any {
         // we need to sign all requests to the API by including our key in the headers
-        const slackToken = 'undefined_secret';
+        const slackToken = NotifySlack.apiKey;
         return {
             headers: {
                 'Authorization': `Bearer ${slackToken}`,

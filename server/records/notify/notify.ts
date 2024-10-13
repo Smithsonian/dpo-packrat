@@ -19,8 +19,8 @@ export class Notify {
     //#endregion
 
     //#region SLACK
-    public static configureSlack(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
-        return NotifySlack.configure(env,targetRate,burstRate,burstThreshold);
+    public static configureSlack(env: 'prod' | 'dev', apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
+        return NotifySlack.configure(env,apiKey,targetRate,burstRate,burstThreshold);
     }
 
     // cast the returns to NotifyResult so it's consistent with what is exported
