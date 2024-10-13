@@ -3,6 +3,7 @@
 /**
  * TODO
  * - support multiple user mentions
+  * - collapsible details for messages (send second reply to first message with details)
  */
 import axios, { AxiosResponse } from 'axios';
 import { NotifyPackage, NotifyType, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
@@ -62,16 +63,6 @@ export class NotifySlack {
     }
 
     //#region UTILS
-    private static formatHeaders(): any {
-        // we need to sign all requests to the API by including our key in the headers
-        const slackToken = NotifySlack.apiKey;
-        return {
-            headers: {
-                'Authorization': `Bearer ${slackToken}`,
-                'Content-Type': 'application/json; charset=utf-8',
-            }
-        };
-    }
     public static async cleanChannel(channel?: SlackChannel): Promise<SlackResult> {
 
         const getMessagesByChannel = async (channel: SlackChannel): Promise<SlackResult> => {
@@ -126,6 +117,16 @@ export class NotifySlack {
     //#endregion
 
     //#region FORMATTING
+    private static formatHeaders(): any {
+        // we need to sign all requests to the API by including our key in the headers
+        const slackToken = NotifySlack.apiKey;
+        return {
+            headers: {
+                'Authorization': `Bearer ${slackToken}`,
+                'Content-Type': 'application/json; charset=utf-8',
+            }
+        };
+    }
     private static formatBlocks(params: NotifyPackage): any {
         const msgPrefix: string = getMessagePrefixByType(params.type);
         const duration: string | undefined = (params.endDate) ? UTIL.getDurationString(params.startDate,params.endDate) : undefined;
@@ -155,14 +156,30 @@ export class NotifySlack {
             },
         ];
 
+        // figure out what style we want given the message type
+        let buttonStyle: string = 'default';
+        if(NotifyType[params.type].includes('ERROR') || NotifyType[params.type].includes('FAILED'))
+            buttonStyle = 'danger';
+        else if(NotifyType[params.type].includes('PASSED'))
+            buttonStyle = 'primary';
+
         // if we have a link add it to the end as a link
         if(params.detailsLink) {
             blocks.push({
-                type: 'section',
-                text: {
-                    type: 'mrkdwn',
-                    text: `<${params.detailsLink.url}|${params.detailsLink.label}>`
-                }
+                type: 'actions',
+                elements: [
+                    {
+                        type: 'button',
+                        text: {
+                            type: 'plain_text',
+                            text: params.detailsLink.label,
+                            emoji: true
+                        },
+                        style: buttonStyle,
+                        url: params.detailsLink.url,
+                        action_id: 'button_click'
+                    }
+                ]
             });
         }
 
