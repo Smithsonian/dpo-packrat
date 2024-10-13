@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NotifyResult, NotifyPackage, NotifyChannel, NotifyType } from './notifyShared';
+import { NotifyResult, NotifyPackage, NotifyUserGroup, NotifyType } from './notifyShared';
 import { NotifyEmail } from './notifyEmail';
+import { NotifySlack, SlackChannel } from './notifySlack';
 
 export class Notify {
 
@@ -18,8 +19,16 @@ export class Notify {
     //#endregion
 
     //#region SLACK
-    //#endregio
+    public static configureSlack(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
+        return NotifySlack.configure(env,targetRate,burstRate,burstThreshold);
+    }
+
+    // cast the returns to NotifyResult so it's consistent with what is exported
+    // NOTE: not exporting raw variant currently due to the specialized knowledge of blocks required for it to work
+    public static sendSlackMessage = NotifySlack.sendMessage as (params: NotifyPackage, channel?: SlackChannel) => Promise<NotifyResult>;
+    public static cleanSlackChannel = NotifySlack.cleanChannel as (channel?: SlackChannel) => Promise<NotifyResult>;
+    //#endregion
 }
 
 // export shared types so they can be accessed via Notify
-export { NotifyPackage, NotifyChannel, NotifyType };
+export { NotifyPackage, NotifyUserGroup, NotifyType, SlackChannel };

@@ -202,7 +202,7 @@ export class NotifyEmail {
     }
     //#endregion
 
-    //#region PUBLIC
+    //#region SENDING
     private static async postMessage(entry: EmailEntry): Promise<EmailResult> {
 
         // get our SMTP parameters from config

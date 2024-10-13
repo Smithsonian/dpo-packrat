@@ -3,11 +3,7 @@
 import { Config } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection } from './logger/log';
-import { Notify as NOTIFY, NotifyChannel, NotifyType, NotifyPackage } from './notify/notify';
-
-/** TODO:
- * - change IOResults.error to message and make a requirement
- */
+import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
 
 // utils
 // const convertToIOResults = ( result: { success: boolean, message: string, data?: any }): IOResults => {
@@ -31,25 +27,27 @@ type IOResults = {
     message: string,
     data?: any
 };
-type ChannelConfig = {
-    [NotifyChannel.SLACK_DEV]: string,
-    [NotifyChannel.SLACK_OPS]: string,
-    [NotifyChannel.EMAIL_ADMIN]: string[],
-    [NotifyChannel.EMAIL_ALL]: string[],
+
+// cache for individual group IDs and emails
+type GroupConfig = {
+    emailAdmin:    string[],
+    emailAll:      string[],
+    slackAdmin:    string[] | undefined,
+    slackAll:      string[] | undefined,
 };
 
 export class RecordKeeper {
 
     static LogSection = LogSection;
-    static NotifyChannel = NotifyChannel;
+    static NotifyGroup = NotifyUserGroup;
     static NotifyType = NotifyType;
 
     private static defaultEmail: string[] = ['packrat@si.edu'];
-    private static notifyChannelConfig: ChannelConfig = {
-        [NotifyChannel.EMAIL_ADMIN]: [],
-        [NotifyChannel.EMAIL_ALL]: [],
-        [NotifyChannel.SLACK_DEV]: 'C07MKBKGNTZ',    // packrat-dev
-        [NotifyChannel.SLACK_OPS]: 'C07NCJE9FJM',    // packrat-ops
+    private static notifyGroupConfig: GroupConfig = {
+        emailAdmin: [],
+        emailAll: [],
+        slackAdmin: undefined,
+        slackAll: undefined,
     };
 
     static async configure(): Promise<IOResults> {
@@ -74,15 +72,27 @@ export class RecordKeeper {
         //#endregion
 
         //#region CONFIG:NOTIFY
-        const notifyResults = NOTIFY.configureEmail(environment);
-        if(notifyResults.success===false)
-            return notifyResults;
-        this.logInfo(LogSection.eSYS, notifyResults.message, { environment }, 'Recordkeeper');
+        // configure email
+        const emailResults = NOTIFY.configureEmail(environment);
+        if(emailResults.success===false)
+            return emailResults;
+        this.logInfo(LogSection.eSYS, emailResults.message, { environment }, 'Recordkeeper');
 
         // get our email addresses from the system. these can be cached because they will be
-        // the same for all users and sessions. Uses defaults of 1 email/sec.
-        this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN] = await this.getEmailsFromChannel(NotifyChannel.EMAIL_ADMIN) ?? this.defaultEmail;
-        this.notifyChannelConfig[NotifyChannel.EMAIL_ALL] = await this.getEmailsFromChannel(NotifyChannel.EMAIL_ALL) ?? this.defaultEmail;
+        // the same for all users and sessions.
+        this.notifyGroupConfig.emailAdmin = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ADMIN) ?? this.defaultEmail;
+        this.notifyGroupConfig.emailAll = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ALL) ?? this.defaultEmail;
+
+        // configure slack
+        const slackResults = NOTIFY.configureSlack(environment);
+        if(slackResults.success===false)
+            return slackResults;
+        this.logInfo(LogSection.eSYS, slackResults.message, { environment }, 'Recordkeeper');
+
+        // get our slack addresses from the system. they are cached as they will be the same
+        // for all users and sessions.
+        this.notifyGroupConfig.slackAdmin = await this.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ADMIN);
+        this.notifyGroupConfig.slackAll = await this.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ALL);
         //#endregion
 
         return { success: true, message: 'configured record keeper' };
@@ -146,29 +156,29 @@ export class RecordKeeper {
 
     //#region NOTIFY
     // emails
-    private static async getEmailsFromChannel(channel: NotifyChannel, forceUpdate: boolean = false): Promise<string[] | undefined> {
+    private static async getEmailsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
 
-        switch(channel) {
+        switch(group) {
 
-            case NotifyChannel.EMAIL_ALL: {
+            case NotifyUserGroup.EMAIL_ALL: {
                 // see if we already initialized this
-                if(this.notifyChannelConfig[NotifyChannel.EMAIL_ALL].length>0 && forceUpdate===true)
-                    return this.notifyChannelConfig[NotifyChannel.EMAIL_ALL];
+                if(this.notifyGroupConfig.emailAll.length>0 && forceUpdate===true)
+                    return this.notifyGroupConfig.emailAll;
 
                 // otherwise, grab all active Users from DB and their emails
                 return ['eric@egofarms.com'];
             }
 
-            case NotifyChannel.EMAIL_ADMIN: {
+            case NotifyUserGroup.EMAIL_ADMIN: {
                 // see if we already initialized this
-                if(this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN].length>0 && forceUpdate===true)
-                    return this.notifyChannelConfig[NotifyChannel.EMAIL_ADMIN];
+                if(this.notifyGroupConfig.emailAdmin.length>0 && forceUpdate===true)
+                    return this.notifyGroupConfig.emailAdmin;
 
                 // get ids from Config and then get their emails
                 return ['maslowskiec@si.edu','emaslowski@quotient-inc.com'];
             }
 
-            case NotifyChannel.EMAIL_USER: {
+            case NotifyUserGroup.EMAIL_USER: {
                 // const { idUser } = this.getContext();
                 // TODO: from current user id
                 return ['ericmaslowski@gmail.com'];
@@ -177,7 +187,7 @@ export class RecordKeeper {
 
         return undefined;
     }
-    static async sendEmail(type: NotifyType, channel: NotifyChannel, subject: string, body: string, startDate?: Date): Promise<IOResults> {
+    static async sendEmail(type: NotifyType, group: NotifyUserGroup, subject: string, body: string, startDate?: Date, endDate?: Date, link?: { url: string, label: string }): Promise<IOResults> {
 
         // build our package
         const params: NotifyPackage = {
@@ -185,7 +195,9 @@ export class RecordKeeper {
             message: subject,
             detailsMessage: body,
             startDate: startDate ?? new Date(),
-            sendTo: await this.getEmailsFromChannel(channel)
+            endDate,
+            detailsLink: link,
+            sendTo: await this.getEmailsFromGroup(group)
         };
 
         // send our message out.
@@ -213,8 +225,71 @@ export class RecordKeeper {
         return NOTIFY.testEmail(numEmails);
     }
 
+    /**
+     * - work out user experience with RK so it makes sense
+     * - test message sending and group cleanup
+     * - update icons
+     */
+
     // slack
-    // sendSlackMessage(...)
-    // sendSlackMessageRaw(...)
+    private static async getSlackIDsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
+        switch(group) {
+
+            case NotifyUserGroup.SLACK_ALL: {
+                // see if we already initialized this
+                if(this.notifyGroupConfig.slackAll && this.notifyGroupConfig.slackAll.length>0 && forceUpdate===true)
+                    return this.notifyGroupConfig.slackAll;
+
+                // otherwise, grab all active Users from DB and their emails
+                return ['everyone'];
+            }
+
+            case NotifyUserGroup.SLACK_ADMIN: {
+                // see if we already initialized this
+                if(this.notifyGroupConfig.slackAdmin && this.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
+                    return this.notifyGroupConfig.slackAdmin;
+
+                // get ids from Config and then get their emails
+                return ['ericmaslowski'];
+            }
+
+            case NotifyUserGroup.SLACK_USER: {
+                // const { idUser } = this.getContext();
+                // TODO: from current user id
+                return ['undefined'];
+            }
+        }
+
+        return undefined;
+    }
+    static async sendSlack(type: NotifyType, group: NotifyUserGroup, subject: string, body: string, startDate?: Date, endDate?: Date, link?: { url: string, label: string }): Promise<IOResults> {
+        // build our package
+        const params: NotifyPackage = {
+            type,
+            message: subject,
+            detailsMessage: body,
+            startDate: startDate ?? new Date(),
+            endDate,
+            detailsLink: link,
+            sendTo: await RecordKeeper.getSlackIDsFromGroup(group)
+        };
+
+        // send our message out.
+        // we await the result so we can catch the failure.
+        RecordKeeper.logDebug(LogSection.eSYS,'sending slack message',{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+        const slackResult = await NOTIFY.sendSlackMessage(params, SlackChannel.PACKRAT_OPS);
+        if(slackResult.success===false)
+            RecordKeeper.logError(LogSection.eSYS,'failed to send slack message',{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+
+        // return the results
+        return slackResult;
+    }
+    private static async cleanSlackChannel(channel?: SlackChannel): Promise<IOResults> {
+        return await NOTIFY.cleanSlackChannel(channel);
+    }
+    static async slackTest(numMessages: number): Promise<IOResults> {
+        await RecordKeeper.cleanSlackChannel(SlackChannel.PACKRAT_OPS);
+        return await RecordKeeper.sendSlack(NotifyType.JOB_PASSED,NotifyUserGroup.SLACK_ADMIN,`Test message: ${numMessages}`,'some longer message on why it failed', new Date());
+    }
     //#endregion
 }
