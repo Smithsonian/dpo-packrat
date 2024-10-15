@@ -53,3 +53,24 @@ export const getMessagePrefixByType = (type: NotifyType): string => {
         default: return 'N/A';
     }
 };
+export const getMessageCategoryByType = (type: NotifyType): string => {
+    switch(type) {
+        case NotifyType.SYSTEM_ERROR:
+        case NotifyType.SYSTEM_NOTICE: return 'System';
+
+        case NotifyType.JOB_FAILED:
+        case NotifyType.JOB_PASSED:
+        case NotifyType.JOB_STARTED: return 'Job';
+
+        case NotifyType.SECURITY_NOTICE: return 'Security';
+
+        default: return 'N/A';
+    }
+};
+export const getTypeString = (type: NotifyType): string => {
+    const typeString: string = NotifyType[type];
+    return typeString
+        .toLowerCase()                           // Convert the string to lowercase
+        .replace(/_/g, ' ')                      // Replace underscores with spaces
+        .replace(/\b\w/g, char => char.toUpperCase());  // Capitalize the first letter of each word
+};

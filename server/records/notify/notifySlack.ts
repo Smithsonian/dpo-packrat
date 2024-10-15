@@ -6,7 +6,7 @@
   * - collapsible details for messages (send second reply to first message with details)
  */
 import axios, { AxiosResponse } from 'axios';
-import { NotifyPackage, NotifyType, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
+import { NotifyPackage, NotifyType, getTypeString, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
 import * as UTIL from '../utils/utils';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 
@@ -18,10 +18,11 @@ export interface SlackResult extends RateManagerResult {}
 
 interface SlackEntry {
     type: NotifyType,
-    channel: string,    // ID of the slack channel
-    iconUrl: string     // what icon to use for the message
-    subject: string,    // the main subject line. often truncated to 60 chars
-    blocks: Array<any>, // blocks array holds the message structure
+    channel: string,        // ID of the slack channel
+    iconUrl: string         // what icon to use for the message
+    subject: string,        // the main subject line. often truncated to 60 chars
+    blocks: Array<any>,     // blocks array holds the message structure
+    details: Array<any>,    // blocks for message details
 }
 
 export enum SlackChannel {
@@ -84,6 +85,25 @@ export class NotifySlack {
                 return { success: false, message: 'failed to fetch slack messages', data: { error: UTIL.getErrorString(error), channel } };
             }
         };
+        const getRepliesByMessage = async (channel: SlackChannel, ts: string): Promise<SlackResult> => {
+            try {
+                const response = await axios.get('https://slack.com/api/conversations.replies', {
+                    ...NotifySlack.formatHeaders(),
+                    params: {
+                        channel,
+                        ts,  // Pass the message timestamp to get its replies
+                    }
+                });
+
+                if (response.data.ok)
+                    return { success: true, message: 'got slack replies', data: { replies: response.data.messages } };
+                else
+                    return { success: false, message: 'failed to fetch slack replies', data: { error: response.data.error, channel } };
+
+            } catch (error) {
+                return { success: false, message: 'failed to fetch slack replies', data: { error: UTIL.getErrorString(error), channel } };
+            }
+        };
         const deleteMessage = async (channel: SlackChannel, ts: string): Promise<SlackResult> => {
             try {
                 const response = await axios.post('https://slack.com/api/chat.delete', {
@@ -108,11 +128,23 @@ export class NotifySlack {
             return { success: true, message: 'no slack messages for channel', data: { channel } };
 
         for (const message of msgResult.data.messages) {
-            if (message.ts)
+            if (message.ts) {
+                // Check for any replies (thread messages) associated with this message
+                const replyResult: SlackResult = await getRepliesByMessage(channel, message.ts);
+                if (replyResult.success && replyResult.data.replies.length > 1) {
+                    // Delete all the replies before deleting the main message
+                    for (const reply of replyResult.data.replies) {
+                        if (reply.ts !== message.ts) {  // Avoid deleting the original message here
+                            await deleteMessage(channel, reply.ts);
+                        }
+                    }
+                }
+                // Now delete the original message
                 await deleteMessage(channel, message.ts);
+            }
         }
 
-        return { success: true, message: 'deleted slack messages from channel', data: { channel, count: msgResult.data.messages.length } };
+        return { success: true, message: 'deleted slack messages & replies from channel', data: { channel, count: msgResult.data.messages.length } };
     }
     //#endregion
 
@@ -127,34 +159,37 @@ export class NotifySlack {
             }
         };
     }
-    private static formatBlocks(params: NotifyPackage): any {
-        const msgPrefix: string = getMessagePrefixByType(params.type);
+    private static formatBlocks(params: NotifyPackage): { main: any, details: any } {
+        // return two blocks. The first is for the main message and the other is a reply to its thread.
+        // we do this to keep the main thread clean, but still offer details to the user that are helpful
+
+        // const msgPrefix: string = getMessagePrefixByType(params.type);
         const duration: string | undefined = (params.endDate) ? UTIL.getDurationString(params.startDate,params.endDate) : undefined;
 
         // build our blocks based on the package received
-        const blocks: Array<any> = [
+        const mainBlocks: Array<any> = [
             {
                 type: 'section',
                 text: {
                     type: 'mrkdwn',
-                    text: `[${msgPrefix}] ${UTIL.truncateString(params.message,60)} ${(params.detailsLink) ? `(<${params.detailsLink.url}|${params.detailsLink.label}>)` : '' }`
+                    text: `${UTIL.truncateString(params.message,60)} ${(params.detailsLink) ? `(<${params.detailsLink.url}|${params.detailsLink.label}>)` : '' }`
                 }
-            },
-            {
-                type: 'section',
-                expand: false,
-                fields: [
-                    {
-                        type: 'mrkdwn',
-                        text: `*Started:* ${UTIL.getFormattedDate(params.startDate)}${ (duration) ? '\n*Duration:* '+duration : ''}${ (params.sendTo && params.sendTo.length>0) ? '\n*Who:* '+ ((params.sendTo.length>0) ? `<@${params.sendTo[0]}>` : 'NA') : '' }`
-                    },
-                    {
-                        type: 'mrkdwn',
-                        text: `${ (params.detailsMessage) ? '\n*Details:* '+params.detailsMessage : '' }`
-                    }
-                ]
-            },
+            }
         ];
+        const detailsBlocks: Array<any> = [{
+            type: 'section',
+            expand: false,
+            fields: [
+                {
+                    type: 'mrkdwn',
+                    text: `*Started:* ${UTIL.getFormattedDate(params.startDate)}${ (duration) ? '\n*Duration:* '+duration : ''}${ (params.sendTo && params.sendTo.length>0) ? '\n*Who:* '+ ((params.sendTo.length>0) ? `<@${params.sendTo[0]}>` : 'NA') : '' }`
+                },
+                {
+                    type: 'mrkdwn',
+                    text: `${ (params.detailsMessage) ? '\n*Details:* '+params.detailsMessage : '' }`
+                }
+            ]
+        }];
 
         // figure out what style we want given the message type
         let buttonStyle: string = 'default';
@@ -165,7 +200,7 @@ export class NotifySlack {
 
         // if we have a link add it to the end as a link
         if(params.detailsLink) {
-            blocks.push({
+            detailsBlocks.push({
                 type: 'actions',
                 elements: [
                     {
@@ -183,28 +218,43 @@ export class NotifySlack {
             });
         }
 
-        return blocks;
+        return { main: mainBlocks, details: detailsBlocks };
     }
     //#endregion
 
     //#region SENDING
     private static async postMessage(entry: SlackEntry): Promise<SlackResult> {
         try {
+            // get our headers
+            const slackHeaders: any = NotifySlack.formatHeaders();
+
             // build our body for the message to be send
-            const slackBody = {
+            const slackBody: any = {
                 icon_url: entry.iconUrl,
-                username: 'Packrat'+UTIL.getRandomWhitespace()+'.', // need random whitespace so icon always shows
+                username: `${getTypeString(entry.type).replace(' ',': ')}${UTIL.getRandomWhitespace()+'.'}`, //`Packrat: ${getMessageCategoryByType(entry.type)}`+UTIL.getRandomWhitespace()+'.', // need random whitespace so icon always shows
                 channel: entry.channel,
                 text: entry.subject,
                 blocks: entry.blocks,
             };
 
-            const response: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, NotifySlack.formatHeaders());
-            if(response.data.ok===false)
-                return { success: false, message: 'failed to send slack message', data: { error: response.data?.error } };
-            else
-                return { success: true, message: 'slack message sent' };
+            // send the main message and wait for it to return
+            const mainResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
+            if(mainResponse.data.ok===false)
+                return { success: false, message: 'failed to send slack message', data: { error: mainResponse.data?.error } };
 
+            // grab our timestamp to use it for a reply response w/ details and update body
+            slackBody.thread_ts = mainResponse.data.ts;
+            slackBody.text = 'Context';
+            slackBody.blocks = entry.details;
+            slackBody.username = 'Context';
+
+            // send our reply and wait
+            const detailsResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
+            if(detailsResponse.data.ok===false)
+                return { success: false, message: 'failed to send slack message details', data: { error: mainResponse.data?.error } };
+
+            // success
+            return { success: true, message: 'slack message sent' };
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 // If error is an AxiosError, handle it accordingly
@@ -217,7 +267,7 @@ export class NotifySlack {
             }
         }
     }
-    private static async sendMessageRaw(type: NotifyType, subject: string, blocks: Array<any>, iconUrl?: string, channel?: SlackChannel): Promise<SlackResult> {
+    private static async sendMessageRaw(type: NotifyType, subject: string, blocks: Array<any>, details: Array<any>, iconUrl?: string, channel?: SlackChannel): Promise<SlackResult> {
 
         const entry: SlackEntry = {
             type,
@@ -225,6 +275,7 @@ export class NotifySlack {
             iconUrl: iconUrl ?? getMessageIconUrlByType(type,'slack'),
             subject,
             blocks,
+            details,
         };
 
         // if we have a manager use it, otherwise, just send directly
@@ -236,10 +287,10 @@ export class NotifySlack {
     public static async sendMessage(params: NotifyPackage, channel?: SlackChannel): Promise<SlackResult> {
 
         const subject: string = UTIL.truncateString(`[${getMessagePrefixByType(params.type)}] ${params.message}`,60);
-        const blocks: Array<any> = NotifySlack.formatBlocks(params);
+        const { main, details } = NotifySlack.formatBlocks(params);
 
         // send the message via raw. icon will be determined from the type
-        return NotifySlack.sendMessageRaw(params.type,subject,blocks,undefined,channel);
+        return NotifySlack.sendMessageRaw(params.type,subject,main,details,undefined,channel);
     }
     //#endregion
 

@@ -279,7 +279,7 @@ export class RecordKeeper {
         RecordKeeper.logDebug(LogSection.eSYS,'sending slack message',{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
         const slackResult = await NOTIFY.sendSlackMessage(params, SlackChannel.PACKRAT_OPS);
         if(slackResult.success===false)
-            RecordKeeper.logError(LogSection.eSYS,'failed to send slack message',{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+            RecordKeeper.logError(LogSection.eSYS,'failed to send slack message',{ error: slackResult.data.error, sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
 
         // return the results
         return slackResult;
@@ -291,11 +291,11 @@ export class RecordKeeper {
         await RecordKeeper.cleanSlackChannel(SlackChannel.PACKRAT_OPS);
 
         await RecordKeeper.sendSlack(NotifyType.JOB_STARTED,NotifyUserGroup.SLACK_ADMIN,'Started ingestion: Awesome Model','Awesome model is on its way to being ingested to the system. you will be notified when it finishes', new Date());
-        await RecordKeeper.sendSlack(NotifyType.JOB_PASSED,NotifyUserGroup.SLACK_ADMIN,'Awesome Model finished ingestion!','There were no issues ingesting the model and a Voyager scene was created. It is not safe, secure, and ready for QC', new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Goto Scene' });
-        await RecordKeeper.sendSlack(NotifyType.JOB_FAILED,NotifyUserGroup.SLACK_ADMIN,'Ingestion failed for Awesome Model','The model submitted is lacking normals and could not have a Voyager scene generated. Update the model and re-generate the scene', new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Goto Model' });
+        await RecordKeeper.sendSlack(NotifyType.JOB_PASSED,NotifyUserGroup.SLACK_ADMIN,'Awesome Model finished ingestion!','There were no issues ingesting the model and a Voyager scene was created. It is now safe, secure, and ready for QC', new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Scene' });
+        await RecordKeeper.sendSlack(NotifyType.JOB_FAILED,NotifyUserGroup.SLACK_ADMIN,'Ingestion failed for Awesome Model','The model submitted is lacking normals and could not have a Voyager scene generated. Update the model and re-generate the scene', new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Model' });
         await RecordKeeper.sendSlack(NotifyType.SECURITY_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Unauthorized access attempt','user (5) tried to access files from another Unit.', new Date());
         await RecordKeeper.sendSlack(NotifyType.SYSTEM_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Packrat will be offline this weekend','To run some standard maintenance, Packrat will be offline this weekend. Any jobs running will be stopped.', new Date());
-        await RecordKeeper.sendSlack(NotifyType.SYSTEM_ERROR,NotifyUserGroup.SLACK_ADMIN,'Packrat disk usage is at 10%!','Packrat has only 10% of disk space available for jobs.', new Date());
+        await RecordKeeper.sendSlack(NotifyType.SYSTEM_ERROR,NotifyUserGroup.SLACK_ADMIN,'Packrat disk usage is at 90%!','Packrat has only 10% of disk space available for jobs.', new Date());
 
         return { success: true, message: `${numMessages} messages sent` };
     }
