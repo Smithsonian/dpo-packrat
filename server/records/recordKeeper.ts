@@ -37,17 +37,20 @@ export class RecordKeeper {
 
     static async configure(): Promise<IOResults> {
 
+        let targetRate: number = Config.log.targetRate;   // targeted posts per second (100-500)
+        let burstRate: number = targetRate * 5;           // target rate when in burst mode and playing catchup
+        let burstThreshold: number = burstRate;           // when queue is bigger than this size, trigger 'burst mode'
+
         //#region CONFIG:LOGGER
         // get our log path from the config
         const environment: ENVIRONMENT_TYPE = Config.environment.type;
         const logPath: string = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
 
         // our default Logger configuration options
-        // base it on the environment variable for our base/target rate
-        const useRateManager: boolean = true;               // do we manage our log output for greater consistency
-        const targetRate: number = Config.log.targetRate;   // targeted logs per second (100-500)
-        const burstRate: number = targetRate * 5;           // target rate when in burst mode and playing catchup
-        const burstThreshold: number = burstRate;           // when queue is bigger than this size, trigger 'burst mode'
+        const useRateManager: boolean = true;             // do we manage our log output for greater consistency
+        targetRate = Config.log.targetRate;   // 100-500/sec
+        burstRate = targetRate * 2;
+        burstThreshold = burstRate;
 
         // initialize logger sub-system
         const logResults = LOG.configure(logPath, environment, useRateManager, targetRate, burstRate, burstThreshold);
@@ -56,23 +59,29 @@ export class RecordKeeper {
         this.logInfo(LogSection.eSYS, logResults.message, { environment, path: logPath, useRateManager, targetRate, burstRate, burstThreshold }, 'Recordkeeper');
         //#endregion
 
-        //#region CONFIG:NOTIFY
-        // configure email
-        const emailResults = NOTIFY.configureEmail(Config.environment.type);
+        //#region CONFIG:NOTIFY:EMAIL
+        targetRate = 1;   // sending too many triggers spam filters on network, delays are acceptable
+        burstRate = 5;
+        burstThreshold = 10;
+
+        const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
         if(emailResults.success===false)
             return emailResults;
-        this.logInfo(LogSection.eSYS, emailResults.message, { environment }, 'Recordkeeper');
+        this.logInfo(LogSection.eSYS, emailResults.message, { environment, ...emailResults.data }, 'Recordkeeper');
 
         // get our email addresses from the system. these can be cached because they will be
         // the same for all users and sessions.
         this.notifyGroupConfig.emailAdmin = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ADMIN) ?? this.defaultEmail;
         this.notifyGroupConfig.emailAll = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ALL) ?? this.defaultEmail;
+        //#endregion
 
-        // configure slack
-        const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey);
+        //#region CONFIG:NOTIFY:SLACK
+        // Slack API limits throughput to 1 message/sec. Not using burst mode here
+        targetRate = 1;
+        const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,targetRate);
         if(slackResults.success===false)
             return slackResults;
-        this.logInfo(LogSection.eSYS, slackResults.message, { environment }, 'Recordkeeper');
+        this.logInfo(LogSection.eSYS, slackResults.message, { environment, ...slackResults.data }, 'Recordkeeper');
 
         // get our slack addresses from the system. they are cached as they will be the same
         // for all users and sessions.
@@ -217,7 +226,7 @@ export class RecordKeeper {
 
         // send our message out.
         // we await the result so we can catch and audit the failure
-        this.logInfo(LogSection.eSYS,'sending email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
+        this.logDebug(LogSection.eSYS,'sending email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
         const emailResult = await NOTIFY.sendEmailMessage(params);
         if(emailResult.success===false)
             this.logError(LogSection.eSYS,'failed to send email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
@@ -229,7 +238,7 @@ export class RecordKeeper {
 
         // send our email but also log it for auditing
         // we wait for results so we can log the failure
-        this.logInfo(LogSection.eSYS,'sending raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
+        this.logDebug(LogSection.eSYS,'sending raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
         const emailResult = await NOTIFY.sendEmailMessageRaw(type, sendTo, subject, textBody, htmlBody);
         if(emailResult.success===false)
             this.logError(LogSection.eSYS,'failed to send raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
@@ -308,15 +317,6 @@ export class RecordKeeper {
             await RecordKeeper.clearSlackChannel(channel);
 
         return NOTIFY.testSlack(numMessages,channel);
-
-        // await RecordKeeper.sendSlack(NotifyType.JOB_STARTED,NotifyUserGroup.SLACK_ADMIN,'Started ingestion: Awesome Model','Awesome model is on its way to being ingested to the system. you will be notified when it finishes', channel, new Date());
-        // await RecordKeeper.sendSlack(NotifyType.JOB_PASSED,NotifyUserGroup.SLACK_ADMIN,'Awesome Model finished ingestion!','There were no issues ingesting the model and a Voyager scene was created. It is now safe, secure, and ready for QC', channel, new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Scene' });
-        // await RecordKeeper.sendSlack(NotifyType.JOB_FAILED,NotifyUserGroup.SLACK_ADMIN,'Ingestion failed for Awesome Model','The model submitted is lacking normals and could not have a Voyager scene generated. Update the model and re-generate the scene', channel, new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Model' });
-        // await RecordKeeper.sendSlack(NotifyType.SECURITY_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Unauthorized access attempt','user (5) tried to access files from another Unit.', channel, new Date());
-        // await RecordKeeper.sendSlack(NotifyType.SYSTEM_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Packrat will be offline this weekend','To run some standard maintenance, Packrat will be offline this weekend. Any jobs running will be stopped.', channel, new Date());
-        // await RecordKeeper.sendSlack(NotifyType.SYSTEM_ERROR,NotifyUserGroup.SLACK_ADMIN,'Packrat disk usage is at 90%!','Packrat has only 10% of disk space available for jobs.', channel, new Date());
-
-        // return { success: true, message: `${numMessages} messages sent` };
     }
     //#endregion
 }

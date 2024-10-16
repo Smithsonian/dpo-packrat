@@ -327,12 +327,14 @@ export class Logger {
     private static flattenObject(obj: object, prefix = ''): Record<string, string> {
         return Object.keys(obj).reduce((acc, key) => {
             const newKey = prefix ? `${prefix}.${key}` : key; // Handle nested keys with dot notation
-            const value = (obj as Record<string, any>)[key];
+            let value = (obj as Record<string, any>)[key];
 
-            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            if (typeof value === 'object' && value !== null && value !== undefined && !Array.isArray(value)) {
                 Object.assign(acc, Logger.flattenObject(value, newKey)); // Recursively flatten nested objects
             } else {
-                acc[newKey] = value.toString(); // Assign non-object values directly
+                if(newKey==='error' && !value)
+                    value = 'undefined error';
+                acc[newKey] = value?.toString(); // Assign non-object values directly
             }
 
             return acc;

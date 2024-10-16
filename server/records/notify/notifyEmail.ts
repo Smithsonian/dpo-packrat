@@ -48,7 +48,7 @@ export class NotifyEmail {
         else
             NotifyEmail.rateManager = new RateManager<EmailEntry>(rmConfig);
 
-        return { success: true, message: 'configured email notifier.' };
+        return { success: true, message: 'configured email notifier.', data: (({ onPost: _onPost, ...rest }) => rest)(rmConfig) };
     }
 
     //#region UTILS

@@ -83,9 +83,14 @@ export class RateManager<T> {
 
     //#region PUBLIC
     public async add(entry: T): Promise<RateManagerResult> {
+        // create a new promise that is resovled when it actually posts
+        // call processQueue to start it
         return new Promise((resolve) => {
             this.queue.push({ entry, resolve });
-            return this.processQueue();
+
+            // make sure the queue is running
+            if(this.isRunning===false)
+                this.processQueue();
         });
     }
 
@@ -143,9 +148,9 @@ export class RateManager<T> {
         console.warn('Switched to normal mode');
     }
 
-    private async processQueue(): Promise<RateManagerResult> {
+    private async processQueue(): Promise<void> {
         if(this.isRunning===true)
-            return { success: true, message: ' already running' };
+            return;
 
         let lastResult: RateManagerResult = { success: true, message: 'Queue processed successfully' };
 
@@ -160,17 +165,16 @@ export class RateManager<T> {
 
             // add our delay as calculated, if success
             if(lastResult.data)
-                await this.delay(lastResult.data.delayForRate);
+                await this.delay(Math.max(0, lastResult.data.delayForRate));
         }
 
         // Return the result of the last processed item or batch
         this.isRunning = false;
-        return lastResult;
     }
     private async processAtBurstRate(): Promise<RateManagerResult> {
         // Calculate dynamic batch size based on burst rate and throughput
         const idealEntriesPerSecond = this.config.burstRate;
-        const processingTimePerEntry = this.calculateAverageProcessingTime();
+        const processingTimePerEntry = Math.max(this.calculateAverageProcessingTime(),0.001);
         const maxEntriesPerBatch = Math.max(1,Math.floor(1 / processingTimePerEntry));
 
         const batchSize = Math.min(this.queue.length, Math.min(maxEntriesPerBatch, idealEntriesPerSecond));
@@ -199,7 +203,7 @@ export class RateManager<T> {
                     success = true;
                 } else if (attempts < 3) {
                     // Delay before retrying (small delay between retries)
-                    await this.delay(500);  // Adjust delay as needed (500ms here)
+                    await this.delay(500);
                 } else {
                     // Max retries reached, resolve as failed and add to failedMessages
                     queueItem.resolve(result);
@@ -237,7 +241,7 @@ export class RateManager<T> {
         // bump an entry off the list
         const entry = this.queue.shift();
         if (!entry)
-            return { success: false, message: 'No entry found to process' };
+            return { success: true, message: 'No entry found to process' };
 
         // post/process our entry and resolve its promise when done
         const startTime: number = Date.now();
@@ -253,9 +257,9 @@ export class RateManager<T> {
 
         // figure out how long things took
         // calculate delay to maintain the target rate
-        const processingTime = (Date.now() - startTime);
+        const processingTime = Date.now() - startTime;
         const actualRate = 1 / processingTime;
-        const delayForRate = 1000 / this.config.targetRate;
+        const delayForRate = Math.max(0, (1000 / this.config.targetRate));
 
         return { success: true, message: 'processed entry', data: { processingTime, actualRate, delayForRate } };
     }

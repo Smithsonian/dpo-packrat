@@ -31,7 +31,7 @@ export interface NotifyPackage {
     sendTo?: string[],                              // where are we sending the message. for Slack it is a user slack ID. for email it is the 'to' email address
 }
 
-export const randomNotifyPackage = (index: number): NotifyPackage => {
+export const randomNotifyPackage = (index: number, system: 'email' | 'slack'): NotifyPackage => {
 
     const getRandomInt= (min: number, max: number): number => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -120,7 +120,7 @@ export const randomNotifyPackage = (index: number): NotifyPackage => {
         endDate,
         detailsLink: Math.random() > 0.5 ? details[getRandomInt(0, details.length - 1)] : undefined,
         detailsMessage: detailsMessages[getRandomInt(0, detailsMessages.length - 1)],
-        sendTo: ['emaslowski@quotient-inc.com']
+        sendTo: (system==='email') ? ['emaslowski@quotient-inc.com'] : ['ericmaslowski']
     };
 };
 

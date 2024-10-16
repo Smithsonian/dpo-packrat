@@ -53,9 +53,9 @@ export class NotifySlack {
 
         // if we want a rate limiter then we build it
         const rmConfig: RateManagerConfig<SlackEntry> = {
-            targetRate: targetRate ?? 1,
-            burstRate: burstRate ?? 5,
-            burstThreshold: burstThreshold ?? 25,
+            targetRate: targetRate ?? 1,    // Slack API limits messages to 1/sec
+            burstRate: burstRate ?? 1,
+            burstThreshold: burstThreshold ?? Number.MAX_SAFE_INTEGER, // never enter burst mode
             onPost: NotifySlack.postMessage,
         };
 
@@ -65,29 +65,46 @@ export class NotifySlack {
         else
             NotifySlack.rateManager = new RateManager<SlackEntry>(rmConfig);
 
-        return { success: true, message: 'configured Slack notifier.' };
+        return { success: true, message: 'configured Slack notifier.', data:  (({ onPost: _onPost, ...rest }) => rest)(rmConfig) };
     }
 
     //#region UTILS
     public static async clearChannel(channel?: SlackChannel): Promise<SlackResult> {
 
-        const getMessagesByChannel = async (channel: SlackChannel): Promise<SlackResult> => {
-            // TODO: check for valid channel
+        const getMessagesByChannel = async (channel: SlackChannel, cursor?: string): Promise<SlackResult> => {
             try {
                 const response = await axios.get('https://slack.com/api/conversations.history', {
                     ...NotifySlack.formatHeaders(),
                     params: {
                         channel,
+                        limit: 100,  // Max messages per Slack request
+                        cursor,      // For pagination
                     }
                 });
 
-                if (response.data.ok)
-                    return { success: true, message: 'got slack messages', data: { channel, count: response.data.messages.length, messages: response.data.messages } }; // Return the list of messages
-                else
-                    return { success: false, message: 'failed to fetch slack messages', data: { error: response.data.error, channel } };
-
+                if (response.data.ok) {
+                    return {
+                        success: true,
+                        message: 'got slack messages',
+                        data: {
+                            channel,
+                            messages: response.data.messages,
+                            nextCursor: response.data.response_metadata?.next_cursor,
+                        }
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: 'failed to fetch slack messages',
+                        data: { error: response.data.error, channel }
+                    };
+                }
             } catch (error) {
-                return { success: false, message: 'failed to fetch slack messages', data: { error: UTIL.getErrorString(error), channel } };
+                return {
+                    success: false,
+                    message: 'failed to fetch slack messages',
+                    data: { error: UTIL.getErrorString(error), channel }
+                };
             }
         };
         const getRepliesByMessage = async (channel: SlackChannel, ts: string): Promise<SlackResult> => {
@@ -96,17 +113,30 @@ export class NotifySlack {
                     ...NotifySlack.formatHeaders(),
                     params: {
                         channel,
-                        ts,  // Pass the message timestamp to get its replies
+                        ts,  // Message timestamp for fetching replies
+                        limit: 100,
                     }
                 });
 
-                if (response.data.ok)
-                    return { success: true, message: 'got slack replies', data: { replies: response.data.messages } };
-                else
-                    return { success: false, message: 'failed to fetch slack replies', data: { error: response.data.error, channel } };
-
+                if (response.data.ok) {
+                    return {
+                        success: true,
+                        message: 'got slack replies',
+                        data: { replies: response.data.messages }
+                    };
+                } else {
+                    return {
+                        success: false,
+                        message: 'failed to fetch slack replies',
+                        data: { error: response.data.error, channel }
+                    };
+                }
             } catch (error) {
-                return { success: false, message: 'failed to fetch slack replies', data: { error: UTIL.getErrorString(error), channel } };
+                return {
+                    success: false,
+                    message: 'failed to fetch slack replies',
+                    data: { error: UTIL.getErrorString(error), channel }
+                };
             }
         };
         const deleteMessage = async (channel: SlackChannel, ts: string): Promise<SlackResult> => {
@@ -126,30 +156,46 @@ export class NotifySlack {
         };
 
         channel = channel ?? NotifySlack.defaultChannel;
-        const msgResult: SlackResult = await getMessagesByChannel(channel);
-        if(msgResult.success===false)
-            return msgResult;
-        else if(msgResult.data.messages.length<=0)
-            return { success: true, message: 'no slack messages for channel', data: { channel } };
+        let cursor: string | undefined = undefined;
+        let iteration = 0;
+        let totalDeleted = 0;
+        const maxIterations = 5;
 
-        for (const message of msgResult.data.messages) {
-            if (message.ts) {
-                // Check for any replies (thread messages) associated with this message
-                const replyResult: SlackResult = await getRepliesByMessage(channel, message.ts);
-                if (replyResult.success && replyResult.data.replies.length > 1) {
-                    // Delete all the replies before deleting the main message
-                    for (const reply of replyResult.data.replies) {
-                        if (reply.ts !== message.ts) {  // Avoid deleting the original message here
-                            await deleteMessage(channel, reply.ts);
+        // Fetch and delete messages with their replies, capped at 5 iterations
+        while (iteration < maxIterations) {
+            const msgResult: SlackResult = await getMessagesByChannel(channel, cursor);
+
+            if (!msgResult.success) return msgResult;
+
+            const messages = msgResult.data.messages;
+            if (messages.length === 0) break;  // No more messages to process
+
+            for (const message of messages) {
+                if (message.ts) {
+                    // Fetch and delete replies (thread messages) first
+                    const replyResult = await getRepliesByMessage(channel, message.ts);
+                    if (replyResult.success) {
+                        for (const reply of replyResult.data.replies) {
+                            if (reply.ts !== message.ts) {  // Avoid deleting the original message in this loop
+                                const deleteReplyResult = await deleteMessage(channel, reply.ts);
+                                if (deleteReplyResult.success) totalDeleted++;
+                            }
                         }
                     }
+
+                    // Delete the original message after its replies are deleted
+                    const deleteResult = await deleteMessage(channel, message.ts);
+                    if (deleteResult.success) totalDeleted++;
                 }
-                // Now delete the original message
-                await deleteMessage(channel, message.ts);
             }
+
+            cursor = msgResult.data.nextCursor;
+            iteration++;
+
+            if (!cursor) break;  // Exit if no more messages are left to fetch
         }
 
-        return { success: true, message: 'deleted slack messages & replies from channel', data: { channel, count: msgResult.data.messages.length } };
+        return { success: true, message: 'deleted slack messages & replies from channel', data: { channel, count: totalDeleted } };
     }
     //#endregion
 
@@ -177,7 +223,7 @@ export class NotifySlack {
                 type: 'section',
                 text: {
                     type: 'mrkdwn',
-                    text: `${UTIL.truncateString(params.message,60)} ${(params.detailsLink) ? `(<${params.detailsLink.url}|${params.detailsLink.label}>)` : '' }`
+                    text: `${params.message} ${(params.detailsLink) ? `(<${params.detailsLink.url}|${params.detailsLink.label}>)` : '' }`
                 }
             }
         ];
@@ -197,7 +243,7 @@ export class NotifySlack {
         }];
 
         // figure out what style we want given the message type
-        let buttonStyle: string = 'default';
+        let buttonStyle: string | undefined = undefined; //'default';
         if(NotifyType[params.type].includes('ERROR') || NotifyType[params.type].includes('FAILED'))
             buttonStyle = 'danger';
         else if(NotifyType[params.type].includes('PASSED'))
@@ -229,6 +275,7 @@ export class NotifySlack {
 
     //#region SENDING
     private static async postMessage(entry: SlackEntry): Promise<SlackResult> {
+        console.log('post slack message');
         try {
             // get our headers
             const slackHeaders: any = NotifySlack.formatHeaders();
@@ -244,8 +291,10 @@ export class NotifySlack {
 
             // send the main message and wait for it to return
             const mainResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
-            if(mainResponse.data.ok===false)
+            if(mainResponse.data.ok===false) {
+                console.log('failed slack: ',mainResponse);
                 return { success: false, message: 'failed to send slack message', data: { error: mainResponse.data?.error } };
+            }
 
             // grab our timestamp to use it for a reply response w/ details and update body
             slackBody.thread_ts = mainResponse.data.ts;
@@ -256,14 +305,14 @@ export class NotifySlack {
             // send our reply and wait
             const detailsResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(detailsResponse.data.ok===false)
-                return { success: false, message: 'failed to send slack message details', data: { error: mainResponse.data?.error } };
+                return { success: false, message: 'failed to send slack message details', data: { error: `Slack - ${detailsResponse.data?.error}` } };
 
             // success
             return { success: true, message: 'slack message sent' };
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 // If error is an AxiosError, handle it accordingly
-                return { success: false, message: 'failed to send slack message (axios)', data: { error: error.response?.data } };
+                return { success: false, message: 'failed to send slack message (axios)', data: { error: error.response?.data.error, rate: NotifySlack.rateManager?.getMetrics().rates.current } };
             } else if (error instanceof Error) {
                 // Handle other types of errors (JavaScript errors)
                 return { success: false, message: 'failed to send slack message', data: { error: UTIL.getErrorString(error) } };

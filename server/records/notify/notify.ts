@@ -35,14 +35,31 @@ export class Notify {
             })
         },'Notify.testEmails');
 
-        // test our emails
-        for(let i=0; i<numEmails; ++i)
-            await NotifyEmail.sendMessage(randomNotifyPackage(i));
+        // test our slack
+        const errors: string[] = [];
+        const promises: Promise<NotifyResult>[] = [];
+
+        for(let i=0; i<numEmails; ++i) {
+            const emailPackage: NotifyPackage = randomNotifyPackage(i, 'email');
+            LOG.debug(LogSection.eSYS, 'sending email message', { type: NotifyType[emailPackage.type], sendTo: emailPackage.sendTo?.join(',') }, 'Notify.testEmail');
+
+            const promise = NotifyEmail.sendMessage(emailPackage)
+                .then((status) => {
+                    if (!status.success) {
+                        LOG.error(LogSection.eSYS, status.message, status.data, 'Notify.testEmail');
+                        errors.push(`${i}: ${status.message} - ${status.data?.error || 'unknown error'}`);
+                    }
+                    return status;
+                });
+
+            promises.push(promise);
+        }
+        await Promise.allSettled(promises);
 
         // close our profiler and return results
         const metrics = rateManager?.getMetrics();
         const result = await LOG.profileEnd(profileKey);
-        return { success: true, message: `finished testing ${numEmails} emails.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average } };
+        return { success: (errors.length<=0), message: `finished testing ${numEmails} email messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average, errors: (errors.length>0) ? errors?.join(' | ') : null } };
     }
     //#endregion
 
@@ -74,14 +91,31 @@ export class Notify {
             })
         },'Notify.testSlack');
 
-        // test our emails
-        for(let i=0; i<numMessages; ++i)
-            await NotifySlack.sendMessage(randomNotifyPackage(i),channel);
+        // test our slack
+        const errors: string[] = [];
+        const promises: Promise<NotifyResult>[] = [];
+
+        for(let i=0; i<numMessages; ++i) {
+            const slackPackage: NotifyPackage = randomNotifyPackage(i, 'slack');
+            LOG.debug(LogSection.eSYS, 'sending slack message', { channel, type: NotifyType[slackPackage.type], sendTo: slackPackage.sendTo?.join(',') }, 'Notify.testSlack');
+
+            const promise = NotifySlack.sendMessage(slackPackage, channel)
+                .then((status) => {
+                    if (!status.success) {
+                        LOG.error(LogSection.eSYS, status.message, status.data, 'Notify.testSlack');
+                        errors.push(`${i}: ${status.message} - ${status.data?.error || 'unknown error'}`);
+                    }
+                    return status;
+                });
+
+            promises.push(promise);
+        }
+        await Promise.allSettled(promises);
 
         // close our profiler and return results
         const metrics = rateManager?.getMetrics();
         const result = await LOG.profileEnd(profileKey);
-        return { success: true, message: `finished testing ${numMessages} slack messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average } };
+        return { success: (errors.length<=0), message: `finished testing ${numMessages} slack messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average, errors: (errors.length>0) ? errors?.join(' | ') : null } };
     }
     //#endregion
 }
