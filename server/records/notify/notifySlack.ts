@@ -43,6 +43,9 @@ export class NotifySlack {
         // we're initialized if we have a logger running
         return (NotifySlack.rateManager!=null);
     }
+    public static getRateManager(): RateManager<SlackEntry> | null {
+        return NotifySlack.rateManager;
+    }
     public static configure(env: ENVIRONMENT_TYPE, apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
 
         NotifySlack.defaultChannel = (env && env===ENVIRONMENT_TYPE.PRODUCTION) ? SlackChannel.PACKRAT_OPS: SlackChannel.PACKRAT_DEV;
@@ -66,7 +69,7 @@ export class NotifySlack {
     }
 
     //#region UTILS
-    public static async cleanChannel(channel?: SlackChannel): Promise<SlackResult> {
+    public static async clearChannel(channel?: SlackChannel): Promise<SlackResult> {
 
         const getMessagesByChannel = async (channel: SlackChannel): Promise<SlackResult> => {
             // TODO: check for valid channel
@@ -230,7 +233,7 @@ export class NotifySlack {
             // get our headers
             const slackHeaders: any = NotifySlack.formatHeaders();
 
-            // build our body for the message to be send
+            // build our body for the message to be sent
             const slackBody: any = {
                 icon_url: entry.iconUrl,
                 username: `${getTypeString(entry.type).replace(' ',': ')}${UTIL.getRandomWhitespace()+'.'}`, //`Packrat: ${getMessageCategoryByType(entry.type)}`+UTIL.getRandomWhitespace()+'.', // need random whitespace so icon always shows
@@ -294,8 +297,5 @@ export class NotifySlack {
         // send the message via raw. icon will be determined from the type
         return NotifySlack.sendMessageRaw(params.type,subject,main,details,undefined,channel);
     }
-    //#endregion
-
-    //#region TESTING
     //#endregion
 }

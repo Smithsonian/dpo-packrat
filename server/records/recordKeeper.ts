@@ -25,6 +25,7 @@ export class RecordKeeper {
     static LogSection = LogSection;
     static NotifyGroup = NotifyUserGroup;
     static NotifyType = NotifyType;
+    static SlackChannel = SlackChannel;
 
     private static defaultEmail: string[] = ['packrat@si.edu'];
     private static notifyGroupConfig: GroupConfig = {
@@ -239,11 +240,6 @@ export class RecordKeeper {
         return NOTIFY.testEmail(numEmails);
     }
 
-    /**
-     * - work out user experience with RK so it makes sense
-     * - test message sending and group cleanup
-     */
-
     // slack
     private static async getSlackIDsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
         switch(group) {
@@ -297,21 +293,30 @@ export class RecordKeeper {
         // return the results
         return slackResult;
     }
-    private static async cleanSlackChannel(channel?: SlackChannel): Promise<IOResults> {
-        return await NOTIFY.cleanSlackChannel(channel);
+    private static async clearSlackChannel(channel?: SlackChannel): Promise<IOResults> {
+        const clearResult = await NOTIFY.clearSlackChannel(channel);
+        if(clearResult.success===false)
+            RecordKeeper.logDebug(LogSection.eSYS, 'failed to clear Slack channel', { error: clearResult.data.error }, 'RecordKeeper.clearSlackChannel' );
+        else
+            RecordKeeper.logDebug(LogSection.eSYS, 'cleared Slack channel', { channel: clearResult.data.channel, count: clearResult.data.count }, 'RecordKeeper.clearSlackChannel');
+
+        return clearResult;
     }
-    static async slackTest(numMessages: number, channel?: SlackChannel): Promise<IOResults> {
+    static async slackTest(numMessages: number, clearChannel: boolean=true, channel?: SlackChannel): Promise<IOResults> {
         channel = channel ?? SlackChannel.PACKRAT_DEV;
-        await RecordKeeper.cleanSlackChannel(SlackChannel.PACKRAT_OPS);
+        if(clearChannel)
+            await RecordKeeper.clearSlackChannel(channel);
 
-        await RecordKeeper.sendSlack(NotifyType.JOB_STARTED,NotifyUserGroup.SLACK_ADMIN,'Started ingestion: Awesome Model','Awesome model is on its way to being ingested to the system. you will be notified when it finishes', channel, new Date());
-        await RecordKeeper.sendSlack(NotifyType.JOB_PASSED,NotifyUserGroup.SLACK_ADMIN,'Awesome Model finished ingestion!','There were no issues ingesting the model and a Voyager scene was created. It is now safe, secure, and ready for QC', channel, new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Scene' });
-        await RecordKeeper.sendSlack(NotifyType.JOB_FAILED,NotifyUserGroup.SLACK_ADMIN,'Ingestion failed for Awesome Model','The model submitted is lacking normals and could not have a Voyager scene generated. Update the model and re-generate the scene', channel, new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Model' });
-        await RecordKeeper.sendSlack(NotifyType.SECURITY_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Unauthorized access attempt','user (5) tried to access files from another Unit.', channel, new Date());
-        await RecordKeeper.sendSlack(NotifyType.SYSTEM_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Packrat will be offline this weekend','To run some standard maintenance, Packrat will be offline this weekend. Any jobs running will be stopped.', channel, new Date());
-        await RecordKeeper.sendSlack(NotifyType.SYSTEM_ERROR,NotifyUserGroup.SLACK_ADMIN,'Packrat disk usage is at 90%!','Packrat has only 10% of disk space available for jobs.', channel, new Date());
+        return NOTIFY.testSlack(numMessages,channel);
 
-        return { success: true, message: `${numMessages} messages sent` };
+        // await RecordKeeper.sendSlack(NotifyType.JOB_STARTED,NotifyUserGroup.SLACK_ADMIN,'Started ingestion: Awesome Model','Awesome model is on its way to being ingested to the system. you will be notified when it finishes', channel, new Date());
+        // await RecordKeeper.sendSlack(NotifyType.JOB_PASSED,NotifyUserGroup.SLACK_ADMIN,'Awesome Model finished ingestion!','There were no issues ingesting the model and a Voyager scene was created. It is now safe, secure, and ready for QC', channel, new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Scene' });
+        // await RecordKeeper.sendSlack(NotifyType.JOB_FAILED,NotifyUserGroup.SLACK_ADMIN,'Ingestion failed for Awesome Model','The model submitted is lacking normals and could not have a Voyager scene generated. Update the model and re-generate the scene', channel, new Date(), undefined, { url: 'https://packrat.si.edu', label: 'Model' });
+        // await RecordKeeper.sendSlack(NotifyType.SECURITY_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Unauthorized access attempt','user (5) tried to access files from another Unit.', channel, new Date());
+        // await RecordKeeper.sendSlack(NotifyType.SYSTEM_NOTICE,NotifyUserGroup.SLACK_ADMIN,'Packrat will be offline this weekend','To run some standard maintenance, Packrat will be offline this weekend. Any jobs running will be stopped.', channel, new Date());
+        // await RecordKeeper.sendSlack(NotifyType.SYSTEM_ERROR,NotifyUserGroup.SLACK_ADMIN,'Packrat disk usage is at 90%!','Packrat has only 10% of disk space available for jobs.', channel, new Date());
+
+        // return { success: true, message: `${numMessages} messages sent` };
     }
     //#endregion
 }
