@@ -5,6 +5,7 @@ import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
+import { ENVIRONMENT_TYPE } from '../../config';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
@@ -62,7 +63,7 @@ type DataType = string | number | boolean | object | any[]; // valid types for o
 interface LoggerContext {
     section: string | null;
     caller: string | null;
-    environment: 'prod' | 'dev';
+    environment: 'production' | 'development';
     idUser: number | undefined;
     idRequest: number | undefined;
 }
@@ -89,7 +90,7 @@ interface LoggerResult extends RateManagerResult {}
 export class Logger {
     private static logger: any | null = null;
     private static logDir: string = path.join(__dirname, 'Logs');
-    private static environment: 'prod' | 'dev' = 'dev';
+    private static environment: ENVIRONMENT_TYPE = ENVIRONMENT_TYPE.DEVELOPMENT;
     private static requests: Map<string, ProfileRequest> = new Map<string, ProfileRequest>();
     private static stats: LoggerStats = {
         counts: { profile: 0, critical: 0, error: 0, warning: 0, info: 0, debug: 0, total: 0 },
@@ -104,10 +105,10 @@ export class Logger {
         // we're initialized if we have a logger running
         return (Logger.logger);
     }
-    public static configure(logDirectory: string, env: 'prod' | 'dev', rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number): LoggerResult {
+    public static configure(logDirectory: string, environment: ENVIRONMENT_TYPE, rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number): LoggerResult {
         // we allow for re-assigning configuration options even if already running
         Logger.logDir = logDirectory;
-        Logger.environment = env;
+        Logger.environment = environment;
 
         // if we want a rate limiter then we build it
         if(rateManager===true) {
@@ -237,31 +238,23 @@ export class Logger {
             Logger.logger = createLogger({
                 level: 'perf', // Logging all levels
                 levels: customLevels.levels,
-                transports: env === 'dev' ? [fileTransport, consoleTransport] : [fileTransport],
+                transports: environment===ENVIRONMENT_TYPE.DEVELOPMENT ? [fileTransport, consoleTransport] : [fileTransport],
                 // exitOnError: false, // do not exit on exceptions. combines with 'handleExceptions' above
             });
 
             // add our custom colors as well
             addColors(customLevels.colors);
 
-            // start our rate manager if needed
-            // if(Logger.rateManager)
-            //     Logger.rateManager.startRateManager();
-
             // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
             Logger.trackLogMetrics(5000,10);
         } catch(error) {
-
-            // if(Logger.rateManager)
-            //     Logger.rateManager.stopRateManager();
-
             return {
                 success: false,
                 message: error instanceof Error ? error.message : String(error)
             };
         }
 
-        return { success: true, message: `configured Logger. Sending to file ${(env==='dev') ? 'and console' : ''}` };
+        return { success: true, message: `configured Logger. Sending to file ${(environment===ENVIRONMENT_TYPE.DEVELOPMENT) ? 'and console' : ''}` };
     }
     public static getStats(): LoggerStats {
         Logger.stats.counts.total = (Logger.stats.counts.critical + Logger.stats.counts.error + Logger.stats.counts.warning + Logger.stats.counts.info + Logger.stats.counts.debug);
@@ -655,7 +648,7 @@ export class Logger {
             context: {
                 section: randomSection,
                 caller: `${String(index).padStart(5,'0')} - `+randomCaller,
-                environment: Math.random() < 0.5 ? 'prod' : 'dev',
+                environment: Math.random() < 0.5 ? 'production' : 'development',
                 idUser: Math.random() < 0.5 ? Math.floor(100 + Math.random() * 900) : undefined,
                 idRequest: Math.random() < 0.5 ? Math.floor(Math.random() * 100000) : undefined,
             }

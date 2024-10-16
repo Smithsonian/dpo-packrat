@@ -2,11 +2,13 @@
 import { NotifyResult, NotifyPackage, NotifyUserGroup, NotifyType } from './notifyShared';
 import { NotifyEmail } from './notifyEmail';
 import { NotifySlack, SlackChannel } from './notifySlack';
+import { ENVIRONMENT_TYPE } from '../../config';
 
 export class Notify {
+    // wrapper class for email and slack notifications to unify types and methods
 
     //#region EMAIL
-    public static configureEmail(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
+    public static configureEmail(env: ENVIRONMENT_TYPE, targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
         return NotifyEmail.configure(env,targetRate,burstRate,burstThreshold);
     }
 
@@ -19,7 +21,7 @@ export class Notify {
     //#endregion
 
     //#region SLACK
-    public static configureSlack(env: 'prod' | 'dev', apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
+    public static configureSlack(env: ENVIRONMENT_TYPE, apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
         return NotifySlack.configure(env,apiKey,targetRate,burstRate,burstThreshold);
     }
 

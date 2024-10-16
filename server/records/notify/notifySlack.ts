@@ -6,9 +6,11 @@
   * - collapsible details for messages (send second reply to first message with details)
  */
 import axios, { AxiosResponse } from 'axios';
-import { NotifyPackage, NotifyType, getTypeString, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
 import * as UTIL from '../utils/utils';
+import { ENVIRONMENT_TYPE } from '../../config';
+import { NotifyPackage, NotifyType, getTypeString, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
+// import { Logger as LOG, LogSection } from '../logger/log';
 
 //#region TYPES & INTERFACES
 // declaring this empty for branding/clarity since it is used
@@ -41,9 +43,9 @@ export class NotifySlack {
         // we're initialized if we have a logger running
         return (NotifySlack.rateManager!=null);
     }
-    public static configure(env: 'dev' | 'prod', apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
+    public static configure(env: ENVIRONMENT_TYPE, apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
 
-        NotifySlack.defaultChannel = (env=='dev') ? SlackChannel.PACKRAT_DEV : SlackChannel.PACKRAT_OPS;
+        NotifySlack.defaultChannel = (env && env===ENVIRONMENT_TYPE.PRODUCTION) ? SlackChannel.PACKRAT_OPS: SlackChannel.PACKRAT_DEV;
         NotifySlack.apiKey = apiKey;
 
         // if we want a rate limiter then we build it

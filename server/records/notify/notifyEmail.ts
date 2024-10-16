@@ -1,6 +1,7 @@
 import * as NET from 'net';
-import { NotifyPackage, NotifyType, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
 import * as UTIL from '../utils/utils';
+import { ENVIRONMENT_TYPE } from '../../config';
+import { NotifyPackage, NotifyType, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 import { Logger as LOG, LogSection } from '../logger/log';
 
@@ -20,7 +21,6 @@ interface EmailEntry {
 
 export class NotifyEmail {
     private static rateManager: RateManager<EmailEntry> | null =  null;
-    private static environment: 'prod' | 'dev' = 'dev';
     private static fromAddress: string = '';
     private static useBase64: boolean = false;
 
@@ -28,10 +28,9 @@ export class NotifyEmail {
         // we're initialized if we have a logger running
         return (NotifyEmail.rateManager!=null);
     }
-    public static configure(env: 'prod' | 'dev', targetRate?: number, burstRate?: number, burstThreshold?: number): EmailResult {
+    public static configure(env?: ENVIRONMENT_TYPE, targetRate?: number, burstRate?: number, burstThreshold?: number): EmailResult {
         // we allow for re-assigning configuration options even if already running
-        NotifyEmail.environment = env;
-        NotifyEmail.fromAddress = (NotifyEmail.environment==='dev') ? 'packrat-dev@si.edu' : 'packrat-noreply@si.edu';
+        NotifyEmail.fromAddress = (env && env===ENVIRONMENT_TYPE.PRODUCTION) ? 'packrat-noreply@si.edu' : 'packrat-dev@si.edu';
 
         // if we want a rate limiter then we build it
         const rmConfig: RateManagerConfig<EmailEntry> = {
