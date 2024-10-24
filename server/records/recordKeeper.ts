@@ -35,7 +35,7 @@ export class RecordKeeper {
         slackAll: undefined,
     };
 
-    static async configure(): Promise<IOResults> {
+    static async initialize(): Promise<IOResults> {
 
         let targetRate: number = Config.log.targetRate;   // targeted posts per second (100-500)
         let burstRate: number = targetRate * 5;           // target rate when in burst mode and playing catchup

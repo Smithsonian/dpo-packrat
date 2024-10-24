@@ -13,6 +13,7 @@ import { SvxReader } from '../../../utils/parser';
 // import * as sharp from 'sharp';
 import sharp from 'sharp';
 import * as path from 'path';
+import { RecordKeeper } from '../../../records/recordKeeper';
 
 // This Workflow represents an upload action, typically initiated by a user.
 // The workflow itself performs no actual upload work (upload is performed in the graphQl uploadData routine)
@@ -106,7 +107,12 @@ export class WorkflowUpload implements WF.IWorkflow {
             let fileRes: H.IOResults = { success: true };
             if (isModel) {
                 // if we're a model, zipped or not, validate the entire file/collection as is:
+                const perfKey: string = RSR.fileName + H.Helpers.randomSlug();
+                RecordKeeper.profile(perfKey, RecordKeeper.LogSection.eWF,'validating Model',{ filename: RSR.fileName },'WorkflowUpload.validateFiles');
+
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
+
+                RecordKeeper.profileEnd(perfKey);
             } else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') { // not a zip
                 // we are not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
@@ -128,15 +134,21 @@ export class WorkflowUpload implements WF.IWorkflow {
                 if (!zipRes.success)
                     return this.handleError(`WorkflowUpload.validateFiles unable to unzip asset version ${RSR.fileName}: ${zipRes.error}`);
 
+                RecordKeeper.profile(filePath, RecordKeeper.LogSection.eWF,'validating CaptureData',{ filename: filePath },'WorkflowUpload.validateFiles');
+
                 const files: string[] = await ZS.getJustFiles(null);
                 if (!files || files.length === 0)
                     return this.handleError('Zip file is unexpectedly empty');
                 for (const fileName of files) {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
-                    if (!readStream)
+                    if (!readStream) {
+                        RecordKeeper.profileEnd(filePath);
                         return this.handleError(`WorkflowUpload.validateFiles unable to fetch read stream for ${fileName} in zip of asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`);
+                    }
                     await this.validateFile(fileName, readStream, true, idSystemObject, asset);
                 }
+
+                RecordKeeper.profileEnd(filePath);
             }
 
             if (fileRes.success) {
@@ -216,6 +228,7 @@ export class WorkflowUpload implements WF.IWorkflow {
             !fromZip ? undefined : readStream, this.workflowParams.idProject, this.workflowParams.idUserInitiator);
         if (!results.success)
             return this.handleError(results.error ?? '');
+
         this.appendToWFReport(`Upload validated ${fileName}${results.error ? ': ' + results.error : ''}`);
         return results;
     }

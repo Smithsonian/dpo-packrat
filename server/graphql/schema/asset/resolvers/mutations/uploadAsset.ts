@@ -14,6 +14,7 @@ import { ASL, ASR, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper } from '../../../../../records/recordKeeper';
 
 interface ApolloFile {
     filename: string;
@@ -48,6 +49,8 @@ class UploadAssetWorker extends ResolverBase {
 
     async upload(): Promise<UploadAssetResult> {
         // entry point for file upload requests coming from the client
+
+        // get our local store and wait for the upload to finish
         this.LS = await ASL.getOrCreateStore();
         const UAR: UploadAssetResult = await this.uploadWorker();
 
@@ -59,6 +62,7 @@ class UploadAssetWorker extends ResolverBase {
             await this.appendToWFReport('<b>Upload succeeded</b>');
         else
             await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
+
         return UAR;
     }
 
@@ -102,9 +106,14 @@ class UploadAssetWorker extends ResolverBase {
             return { status: UploadStatus.Failed, error: 'Unable to retrieve asset type vocabulary' };
         }
 
+        // generate a key and start performance measuring
+        const perfKey: string = filename+'_'+H.Helpers.randomSlug();
+        RecordKeeper.profile(perfKey,RecordKeeper.LogSection.eHTTP,'uploading file', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+
         try {
             // write our incoming stream of bytes to a file in local storage (staging)
             // TODO: use ASR.bind(async () =>< {});
+
             const fileStream = createReadStream();
             const stream = fileStream.pipe(writeStream);
             LOG.info(`UploadAssetWorker.uploadWorker writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
@@ -112,16 +121,19 @@ class UploadAssetWorker extends ResolverBase {
             return new Promise(resolve => {
                 fileStream.on('error', ASR.bind((error) => {
                     LOG.error('uploadAsset', LOG.LS.eGQL, error);
+                    RecordKeeper.profileEnd(perfKey);
                     stream.emit('error', error);
                 }));
 
                 stream.on('finish', ASR.bind(async () => {
+                    RecordKeeper.profileEnd(perfKey);
                     resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
                 }));
 
                 stream.on('error', ASR.bind(async (error) => {
                     await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
+                    RecordKeeper.profileEnd(perfKey);
                     resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
                 }));
 
@@ -129,6 +141,7 @@ class UploadAssetWorker extends ResolverBase {
             });
         } catch (error) {
             LOG.error('uploadAsset', LOG.LS.eGQL, error);
+            RecordKeeper.profileEnd(perfKey);
             return { status: UploadStatus.Failed, error: 'Upload failed' };
         }
     }

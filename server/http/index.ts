@@ -5,6 +5,7 @@ import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
 import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
+import { RecordKeeper } from '../records/recordKeeper';
 import { UsageMonitor } from '../utils/osStats';
 
 import { logtest } from './routes/logtest';
@@ -53,6 +54,14 @@ export class HttpServer {
     }
 
     private async initializeServer(): Promise<boolean> {
+
+        // initialize our RecordKeeper (logs, notification, etc.)
+        const rkResult: H.IOResults = await RecordKeeper.initialize();
+        if(rkResult.success===false) {
+            console.error('Failed to initialize RecordKeeper',rkResult.error);
+            return false;
+        }
+
         LOG.info('**************************', LOG.LS.eSYS);
         LOG.info('Packrat Server Initialized', LOG.LS.eSYS);
 

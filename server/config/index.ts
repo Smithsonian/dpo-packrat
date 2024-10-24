@@ -126,7 +126,7 @@ export type ConfigType = {
 
 const oneDay            = 24 * 60 * 60;
 // const fifteenMinutes    =  1 * 15 * 60;
-const threeHours        =  3 * 60 * 60;
+// const threeHours        =  3 * 60 * 60;
 const debugSessionTimeout = false;
 
 export const Config: ConfigType = {
@@ -136,7 +136,7 @@ export const Config: ConfigType = {
     auth: {
         type: process.env.PACKRAT_AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
         session: {
-            maxAge: !debugSessionTimeout ? (((process.env.NODE_ENV === 'production') ? threeHours : oneDay) * 1000) : 8000,     // expiration time 3 hours, in milliseconds (HACK: revert to 15min with updated Auth support)
+            maxAge: !debugSessionTimeout ? (((process.env.NODE_ENV === 'production') ? oneDay : oneDay) * 1000) : 8000,     // expiration time 3 hours, in milliseconds (HACK: revert to 15min with updated Auth support)
             checkPeriod: oneDay                                                                                                 // prune expired entries every 24 hours
         },
         ldap: {

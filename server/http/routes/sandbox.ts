@@ -5,7 +5,7 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export const play = async (_req: Request, res: Response): Promise<void> => {
 
-    await RK.configure();
+    await RK.initialize();
 
     // test our logging
     // const numLogs: number = 1000;

@@ -25,6 +25,7 @@ import { PublishScene } from '../../../../../collections/impl/PublishScene';
 import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
 import { eSystemObjectType } from '@dpo-packrat/common';
+import { RecordKeeper } from '../../../../../records/recordKeeper';
 
 type ModelInfo = {
     model: IngestModelInput;
@@ -97,8 +98,11 @@ class IngestDataWorker extends ResolverBase {
     }
 
     async ingest(): Promise<IngestDataResult> {
-        const IDR: IngestDataResult = await this.ingestWorker();
+        // entry point for ingesting data into the system from client
+        const perfKey: string = H.Helpers.randomSlug();
+        RecordKeeper.profile(perfKey,RecordKeeper.LogSection.eHTTP,'ingesting', this.input, 'GraphQL.ingestData.ingest');
 
+        const IDR: IngestDataResult = await this.ingestWorker();
         if (this.workflowHelper?.workflow)
             await this.workflowHelper.workflow.updateStatus(IDR.success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
 
@@ -106,6 +110,8 @@ class IngestDataWorker extends ResolverBase {
             await this.appendToWFReport('<b>Ingest validation succeeded</b>');
         else
             await this.appendToWFReport(`<b>Ingest validation failed</b>: ${IDR.message}`);
+
+        RecordKeeper.profileEnd(perfKey);
         return IDR;
     }
 
