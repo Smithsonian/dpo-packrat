@@ -122,13 +122,17 @@ class UploadAssetWorker extends ResolverBase {
             // and make sure that if there's an error we handle it before returning
             return await new Promise(resolve => {
                 let totalBytes: number = 0;
+                let lastOutput: number = Date.now();
 
                 // consume our data removing from buffer. If the response stream's buffer fills up, it tells the server to stop sending data
                 // (this is handled at the TCP layer). So we need to read the data via the handler so more data from the server is transferred
                 // until some point in which there is no more data. Only once the server has no more data to send will you get an end events.
                 fileStream.on('data', (chunk) => {
                     totalBytes += chunk.length;
-                    console.log(`Received ${chunk.length} bytes. Total: ${totalBytes} bytes`);
+                    if(Date.now()-lastOutput > 10000) {
+                        console.log(`[${filename}] Received ${chunk.length} bytes. Total: ${totalBytes} bytes`);
+                        lastOutput = Date.now();
+                    }
                 });
 
                 fileStream.on('error', ASR.bind(async (error) => {
