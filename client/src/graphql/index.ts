@@ -152,7 +152,8 @@ function configureApolloClient(): ApolloClient<NormalizedCacheObject> {
     const uploadLink = createUploadLink({
         uri,
         credentials: 'include',
-        fetch: apolloFetch
+        fetch: apolloFetch,
+        headers: { 'Apollo-Require-Preflight': 'true' }
     });
 
     const client = new PRApolloClient({

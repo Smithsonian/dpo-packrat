@@ -44,6 +44,11 @@ export type IOStatus = {
     data?: any;
 };
 
+export enum TestMethod {
+    CONSISTENCY = 'consistency',
+    THROUGHPUT = 'throughput'
+}
+
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
         if (!Array.isArray(input1) || ! Array.isArray(input2) || input1.length !== input2.length)

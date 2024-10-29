@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
+import { TestMethod } from '../utils/helpers';
 import { Logger as LOG, LogSection } from './logger/log';
 import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
 
@@ -143,8 +144,8 @@ export class RecordKeeper {
     static logTotalCount(): number {
         return LOG.getStats().counts.total;
     }
-    static async logTest(numLogs: number): Promise<IOResults> {
-        return LOG.testLogs(numLogs);
+    static async logTest(numLogs: number, method?: TestMethod): Promise<IOResults> {
+        return LOG.testLogs(numLogs, method);
     }
     //#endregion
 
@@ -296,8 +297,11 @@ export class RecordKeeper {
         // we await the result so we can catch the failure.
         RecordKeeper.logDebug(LogSection.eSYS,'sending slack message',{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
         const slackResult = await NOTIFY.sendSlackMessage(params,channel);
-        if(slackResult.success===false)
-            RecordKeeper.logError(LogSection.eSYS,'failed to send slack message',{ error: slackResult.data.error, sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+        if(slackResult.success===false) {
+            const data = { error: slackResult.data.error, sendTo: params.sendTo };
+            if(slackResult.data.channel) { data['channel'] = slackResult.data.channel; }
+            RecordKeeper.logError(LogSection.eSYS,'failed to send slack message',data,'RecordKeeper.sendSlack',false);
+        }
 
         // return the results
         return slackResult;

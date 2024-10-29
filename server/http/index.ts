@@ -91,8 +91,12 @@ export class HttpServer {
         // First step is to modify the request body as needed. We do this first
         // because the express.json() 3rd party library breaks any context created
         // by the AsyncLocalStore as it waits for the request/body to arrive.
-        this.app.use(HttpServer.bodyProcessorExclusions, express.json() as RequestHandler); // do not extract webdav PUT bodies into request.body element
-        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }) as RequestHandler);
+        //
+        // limiting the maximum JSON payload size to avoid issues with Express trying
+        // to parse very large JSON requests. Set to the maximum chunk size for uploads.
+        // note: this should not be necessary due to use of multipart/form, but is a precaution
+        this.app.use(HttpServer.bodyProcessorExclusions, express.json({ limit: '100mb' }) as RequestHandler); // do not extract webdav PUT bodies into request.body element
+        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100mb' }) as RequestHandler);
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
@@ -150,9 +154,10 @@ export class HttpServer {
 
         // if we're not testing then open up server on the correct port
         if (process.env.NODE_ENV !== 'test') {
-            this.app.listen(Config.http.port, () => {
+            const server = this.app.listen(Config.http.port, () => {
                 LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
             });
+            server.timeout = 6 * 60 * 60 * 1000; // 21,600,000ms = 6hrs
         }
 
         // only gets here if no other route is satisfied
@@ -228,4 +233,10 @@ process.on('uncaughtException', (err) => {
     // Once we've installed a process monitor in staging & production, like PM2, change this to
     // exit with a non-zero exit code
     // process.exit(1);
+});
+
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // LOG.error('*** UNCAUGHT REJECTION ***', LOG.LS.eSYS, err);
 });

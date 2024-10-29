@@ -108,7 +108,7 @@ class UploadAssetWorker extends ResolverBase {
 
         // generate a key and start performance measuring
         const perfKey: string = filename+'_'+H.Helpers.randomSlug();
-        RecordKeeper.profile(perfKey,RecordKeeper.LogSection.eHTTP,'uploading file', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+        await RecordKeeper.profile(perfKey,RecordKeeper.LogSection.eHTTP,'uploading file', { filename }, 'GraphQL.uploadAsset.uploadWorker');
 
         try {
             // write our incoming stream of bytes to a file in local storage (staging)
@@ -118,30 +118,53 @@ class UploadAssetWorker extends ResolverBase {
             const stream = fileStream.pipe(writeStream);
             LOG.info(`UploadAssetWorker.uploadWorker writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
 
-            return new Promise(resolve => {
-                fileStream.on('error', ASR.bind((error) => {
-                    LOG.error('uploadAsset', LOG.LS.eGQL, error);
-                    RecordKeeper.profileEnd(perfKey);
-                    stream.emit('error', error);
+            // we await the return as fix for lost connections on large uploads
+            // and make sure that if there's an error we handle it before returning
+            return await new Promise(resolve => {
+                let totalBytes: number = 0;
+
+                // consume our data removing from buffer. If the response stream's buffer fills up, it tells the server to stop sending data
+                // (this is handled at the TCP layer). So we need to read the data via the handler so more data from the server is transferred
+                // until some point in which there is no more data. Only once the server has no more data to send will you get an end events.
+                fileStream.on('data', (chunk) => {
+                    totalBytes += chunk.length;
+                    console.log(`Received ${chunk.length} bytes. Total: ${totalBytes} bytes`);
+                });
+
+                fileStream.on('error', ASR.bind(async (error) => {
+                    console.log('upload filestream error',filename, error);
+                    // LOG.error('uploadAsset', LOG.LS.eGQL, error);
+                    await RecordKeeper.profileEnd(perfKey);
+                    await RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error}\n${filename}`);
+                    if(stream.emit('error', error)===false)
+                        resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
+                    else
+                        resolve({ status: UploadStatus.Complete });
                 }));
 
                 stream.on('finish', ASR.bind(async () => {
-                    RecordKeeper.profileEnd(perfKey);
+                    console.log('upload stream finish',filename);
+                    await RecordKeeper.profileEnd(perfKey);
+                    await RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_PASSED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset finished upload',filename);
                     resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
                 }));
 
                 stream.on('error', ASR.bind(async (error) => {
-                    await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
+                    console.log('upload stream error',filename, error);
+                    // await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
-                    RecordKeeper.profileEnd(perfKey);
+                    await RecordKeeper.profileEnd(perfKey);
+                    await RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error.message}\n${filename}`);
                     resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
                 }));
 
                 // stream.on('close', async () => { });
             });
         } catch (error) {
-            LOG.error('uploadAsset', LOG.LS.eGQL, error);
-            RecordKeeper.profileEnd(perfKey);
+            console.log('upload other error', filename, error);
+            // LOG.error('uploadAsset', LOG.LS.eGQL, error);
+            await RecordKeeper.profileEnd(perfKey);
+            await RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset error',`${error}\n${filename}`);
             return { status: UploadStatus.Failed, error: 'Upload failed' };
         }
     }

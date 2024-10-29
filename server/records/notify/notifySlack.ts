@@ -275,7 +275,6 @@ export class NotifySlack {
 
     //#region SENDING
     private static async postMessage(entry: SlackEntry): Promise<SlackResult> {
-        console.log('post slack message');
         try {
             // get our headers
             const slackHeaders: any = NotifySlack.formatHeaders();
@@ -292,8 +291,8 @@ export class NotifySlack {
             // send the main message and wait for it to return
             const mainResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(mainResponse.data.ok===false) {
-                console.log('failed slack: ',mainResponse);
-                return { success: false, message: 'failed to send slack message', data: { error: mainResponse.data?.error } };
+                // console.log('failed slack: ',mainResponse);
+                return { success: false, message: 'failed to send slack message', data: { error: mainResponse.data?.error, channel: entry.channel } };
             }
 
             // grab our timestamp to use it for a reply response w/ details and update body
@@ -305,19 +304,19 @@ export class NotifySlack {
             // send our reply and wait
             const detailsResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(detailsResponse.data.ok===false)
-                return { success: false, message: 'failed to send slack message details', data: { error: `Slack - ${detailsResponse.data?.error}` } };
+                return { success: false, message: 'failed to send slack message details', data: { error: `Slack - ${detailsResponse.data?.error}`, channel: entry.channel } };
 
             // success
             return { success: true, message: 'slack message sent' };
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 // If error is an AxiosError, handle it accordingly
-                return { success: false, message: 'failed to send slack message (axios)', data: { error: error.response?.data.error, rate: NotifySlack.rateManager?.getMetrics().rates.current } };
+                return { success: false, message: 'failed to send slack message (axios)', data: { error: error.response?.data.error, channel: entry.channel, rate: NotifySlack.rateManager?.getMetrics().rates.current } };
             } else if (error instanceof Error) {
                 // Handle other types of errors (JavaScript errors)
-                return { success: false, message: 'failed to send slack message', data: { error: UTIL.getErrorString(error) } };
+                return { success: false, message: 'failed to send slack message', data: { error: UTIL.getErrorString(error), channel: entry.channel } };
             } else {
-                return { success: false, message: 'failed to send slack message (unknown)', data: { error: UTIL.getErrorString(error) } };
+                return { success: false, message: 'failed to send slack message (unknown)', data: { error: UTIL.getErrorString(error), channel: entry.channel } };
             }
         }
     }

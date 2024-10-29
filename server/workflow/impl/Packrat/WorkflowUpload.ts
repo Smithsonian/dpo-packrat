@@ -108,11 +108,11 @@ export class WorkflowUpload implements WF.IWorkflow {
             if (isModel) {
                 // if we're a model, zipped or not, validate the entire file/collection as is:
                 const perfKey: string = RSR.fileName + H.Helpers.randomSlug();
-                RecordKeeper.profile(perfKey, RecordKeeper.LogSection.eWF,'validating Model',{ filename: RSR.fileName },'WorkflowUpload.validateFiles');
+                await RecordKeeper.profile(perfKey, RecordKeeper.LogSection.eWF,'validating Model',{ filename: RSR.fileName },'WorkflowUpload.validateFiles');
 
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
 
-                RecordKeeper.profileEnd(perfKey);
+                await RecordKeeper.profileEnd(perfKey);
             } else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') { // not a zip
                 // we are not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
@@ -134,7 +134,7 @@ export class WorkflowUpload implements WF.IWorkflow {
                 if (!zipRes.success)
                     return this.handleError(`WorkflowUpload.validateFiles unable to unzip asset version ${RSR.fileName}: ${zipRes.error}`);
 
-                RecordKeeper.profile(filePath, RecordKeeper.LogSection.eWF,'validating CaptureData',{ filename: filePath },'WorkflowUpload.validateFiles');
+                await RecordKeeper.profile(filePath, RecordKeeper.LogSection.eWF,'validating CaptureData',{ filename: filePath },'WorkflowUpload.validateFiles');
 
                 const files: string[] = await ZS.getJustFiles(null);
                 if (!files || files.length === 0)
@@ -142,13 +142,13 @@ export class WorkflowUpload implements WF.IWorkflow {
                 for (const fileName of files) {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
                     if (!readStream) {
-                        RecordKeeper.profileEnd(filePath);
+                        await RecordKeeper.profileEnd(filePath);
                         return this.handleError(`WorkflowUpload.validateFiles unable to fetch read stream for ${fileName} in zip of asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`);
                     }
                     await this.validateFile(fileName, readStream, true, idSystemObject, asset);
                 }
 
-                RecordKeeper.profileEnd(filePath);
+                await RecordKeeper.profileEnd(filePath);
             }
 
             if (fileRes.success) {

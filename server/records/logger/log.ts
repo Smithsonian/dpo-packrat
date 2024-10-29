@@ -664,7 +664,7 @@ export class Logger {
 
         return logEntry;
     }
-    public static async testLogs(numLogs: number): Promise<LoggerResult> {
+    public static async testLogs(numLogs: number, method: 'consistency' | 'throughput' = 'throughput'): Promise<LoggerResult> {
         // NOTE: given the static assignment this works best when nothing else is feeding logs
         const hasRateManager: boolean = (Logger.rateManager) ? (Logger.rateManager!=null) : false;
         const config: RateManagerConfig<LogEntry> | null = Logger.rateManager?.getConfig() ?? null;
@@ -672,7 +672,7 @@ export class Logger {
         // create our profiler
         // we use a random string in case another test or profile is run to avoid collisisons
         const profileKey: string = `LogTest_${Math.random().toString(36).substring(2, 6)}`;
-        await Logger.profile(profileKey, LogSection.eHTTP, `Log test: ${new Date().toLocaleString()}`, {
+        await Logger.profile(profileKey, LogSection.eHTTP, `Log ${method} test: ${new Date().toLocaleString()}`, {
             numLogs,
             rateManager: hasRateManager,
             ...(hasRateManager === true && config && {
@@ -684,8 +684,33 @@ export class Logger {
         const startCount: number = Logger.stats.counts.total;
 
         // test our logging
-        for(let i=0; i<numLogs; ++i)
-            Logger.postLog(Logger.randomLogEntry(i));
+        switch(method) {
+            case 'throughput': {
+                // testing for rapid queuing of logs
+                for(let i=0; i<numLogs; ++i)
+                    Logger.postLog(Logger.randomLogEntry(i));
+            } break;
+
+            case 'consistency': {
+                // testing for a log post at consistent intervals
+                const interval = 2;
+                for (let i = 0; i < numLogs; i++) {
+                    const now = new Date();
+                    const nextTick = new Date(now.getTime() + interval * 1000);
+                    nextTick.setMilliseconds(0); // Reset ms to 0
+                    nextTick.setSeconds(Math.ceil(nextTick.getSeconds() / interval) * interval); // Align to next interval
+
+                    // Calculate wait time
+                    const waitTime = nextTick.getTime() - Date.now();
+
+                    // Wait for the next 10s interval
+                    if (waitTime > 0)
+                        await new Promise(resolve => setTimeout(resolve, waitTime));
+
+                    Logger.postLog(Logger.randomLogEntry(i)); // Post the log
+                }
+            } break;
+        }
 
         // cycle through waiting for use to finish posting all logs
         const timeout = Math.max(numLogs * 20,10000); //assuming max 20ms per log, and wait at least 10s
