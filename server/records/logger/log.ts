@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Notes
+ * - if writing to file creates delays then can attempt creating a Stream transport
+ *   that sends to stdout, which in turn is piped to a file.
+ */
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -113,6 +118,7 @@ export class Logger {
         // if we want a rate limiter then we build it
         if(rateManager===true) {
             const rmConfig: RateManagerConfig<LogEntry> = {
+                rateLimited: false, // get to as close to real-time as possible
                 targetRate,
                 burstRate,
                 burstThreshold,
@@ -216,13 +222,25 @@ export class Logger {
                 fs.mkdirSync(Logger.logDir, { recursive: true });
             }
 
+            // our file transport for sending logs to a file
             const fileTransport = new transports.File({
                 filename: Logger.getLogFilePath(),
                 format: customJsonFormat,
-                // handleExceptions: false  // used to disable buffering for higher volume support at risk of errors
+                handleExceptions: true,     // use 'false' to disable buffering for higher volume support at risk of errors
                 maxsize: 150 * 1024 * 1024, // 150 MB in bytes
                 maxFiles: 20,               // Keep a maximum of 20 log files (3GB)
-                tailable: true              // Ensure the log files are named in a "rolling" way
+                tailable: true,             // Ensure the log files are named in a "rolling" way
+                options: { highWaterMark: 64 * 1024 } // increase our watermark to help relieve buffer backpressure on heavy loads
+            });
+            fileTransport.on('error', (err) => {
+                console.error('Logging error:', err);
+
+                // Attempt to recreate the log file if it's missing
+                if (!fs.existsSync(Logger.getLogFilePath())) {
+                    fs.writeFileSync(Logger.getLogFilePath(), '', { flag: 'w' });
+                    if(Logger.debugMode)
+                        console.log('Log file was recreated after deletion.');
+                }
             });
 
             const consoleTransport = new transports.Console({
@@ -239,7 +257,7 @@ export class Logger {
                 level: 'perf', // Logging all levels
                 levels: customLevels.levels,
                 transports: environment===ENVIRONMENT_TYPE.DEVELOPMENT ? [fileTransport, consoleTransport] : [fileTransport],
-                // exitOnError: false, // do not exit on exceptions. combines with 'handleExceptions' above
+                exitOnError: false, // do not exit on exceptions. combines with 'handleExceptions' above
             });
 
             // add our custom colors as well

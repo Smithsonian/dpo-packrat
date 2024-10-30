@@ -9,6 +9,7 @@ export interface RateManagerResult {
     data?: any,
 }
 export interface RateManagerConfig<T> {
+    rateLimited?: boolean,      // do we introduce delays to hit the target rate. this allows for balancing resource use. 'false' runs faster but always sequentially
     targetRate?: number,        // targeted logs per second (200-2000)
     burstRate?: number,         // target rate when in burst mode and playing catchup
     burstThreshold?: number,    // when queue is bigger than this size, trigger 'burst mode'
@@ -49,6 +50,7 @@ export class RateManager<T> {
         // merge our configs with what the user provided
         // we use partial to gaurantee that the properties have values
         this.config = {
+            rateLimited: cfg.rateLimited ?? false,
             targetRate: cfg.targetRate ?? 10,
             burstRate: cfg.burstRate ?? 50,
             burstThreshold: cfg.burstThreshold ?? 250,
@@ -164,7 +166,7 @@ export class RateManager<T> {
                 lastResult = await this.processAtTargetRate();
 
             // add our delay as calculated, if success
-            if(lastResult.data)
+            if(lastResult.data && this.config.rateLimited===true)
                 await this.delay(Math.max(0, lastResult.data.delayForRate));
         }
 
@@ -197,7 +199,7 @@ export class RateManager<T> {
                 attempts++;
                 result = await this.config.onPost(queueItem.entry);
 
-                if (result.success) {
+                if (result.success===true) {
                     // Resolve the promise as successful
                     queueItem.resolve(result);
                     success = true;
