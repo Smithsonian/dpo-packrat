@@ -134,7 +134,7 @@ class UploadAssetWorker extends ResolverBase {
                 // until some point in which there is no more data. Only once the server has no more data to send will you get an end events.
                 fileStream.on('data', (chunk) => {
                     totalBytes += chunk.length;
-                    if(Date.now()-lastOutput > 100) {
+                    if(Date.now()-lastOutput > 10000) {
                         RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,`Received ${chunk.length} bytes. Total: ${totalBytes} bytes`, { filename }, 'GraphQL.uploadAsset.uploadWorker');
                         lastOutput = Date.now();
                     }
@@ -150,13 +150,13 @@ class UploadAssetWorker extends ResolverBase {
                         resolve({ status: UploadStatus.Complete });
                 }));
 
+                // DBEUG: track when the buffers are drained releasing back pressure
                 // fileStream.on('drain', () => {
                 //     RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload filestream drained', { filename }, 'GraphQL.uploadAsset.uploadWorker');
                 // });
-
-                stream.on('drain', () => {
-                    RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload stream drained', { filename }, 'GraphQL.uploadAsset.uploadWorker');
-                });
+                // stream.on('drain', () => {
+                //     RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload stream drained', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                // });
 
                 stream.on('finish', ASR.bind(async () => {
                     RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload stream finished', { filename }, 'GraphQL.uploadAsset.uploadWorker');
@@ -167,7 +167,7 @@ class UploadAssetWorker extends ResolverBase {
 
                 stream.on('error', ASR.bind(async (error) => {
                     RecordKeeper.logError(RecordKeeper.LogSection.eGQL,'upload stream error', { filename, error }, 'GraphQL.uploadAsset.uploadWorker');
-                    // await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
+                    await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
                     RecordKeeper.profileEnd(perfKey);
                     RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error.message}\n${filename}`);
