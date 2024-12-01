@@ -17,11 +17,14 @@ import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper } from '../../../../../records/recordKeeper';
 
+interface StreamOptions {
+    highWaterMark?: number;  // the buffer size and should range between 64kb and 1024kb depending on disk & network I/O.
+}
 interface ApolloFile {
     filename: string;
     mimetype: string;
     encoding: string;
-    createReadStream: (options?: any) => ReadStream;
+    createReadStream: (options?: StreamOptions) => ReadStream;
 }
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
@@ -117,62 +120,89 @@ class UploadAssetWorker extends ResolverBase {
 
         try {
             // write our incoming stream of bytes to a file in local storage (staging)
-            // TODO: use ASR.bind(async () =>< {});
-            const fileStream = createReadStream({ highWaterMark: 64 * 1024 });
+            // Note: highWatermark sets the buffer size and should range between 64kb and 1024kb
+            // depending on disk & network I/O.
+            const fileStream = createReadStream({ highWaterMark: 512 * 1024 });
 
-            RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'writing stream to Staging', { filename, stream: fileStream.readable }, 'GraphQL.uploadAsset.uploadWorker');
-            const stream = fileStream.pipe(writeStream);
+            RecordKeeper.logInfo(RecordKeeper.LogSection.eGQL,'writing stream to Staging', { filename, stream: fileStream.readable }, 'GraphQL.uploadAsset.uploadWorker');
+            // const stream = fileStream.pipe(writeStream);
 
             // we await the return as fix for lost connections on large uploads
             // and make sure that if there's an error we handle it before returning
             return await new Promise(resolve => {
                 let totalBytes: number = 0;
                 let lastOutput: number = Date.now();
+                let bufferSaturated: boolean = false;
 
                 // consume our data removing from buffer. If the response stream's buffer fills up, it tells the server to stop sending data
                 // (this is handled at the TCP layer). So we need to read the data via the handler so more data from the server is transferred
                 // until some point in which there is no more data. Only once the server has no more data to send will you get an end events.
-                fileStream.on('data', (chunk) => {
+                fileStream.on('data', ASR.bind(async (chunk) => {
+                    // DEBUG: track our progress
                     totalBytes += chunk.length;
-                    if(Date.now()-lastOutput > 10000) {
-                        RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,`Received ${chunk.length} bytes. Total: ${totalBytes} bytes`, { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                    if(Date.now()-lastOutput > 100) {
+                        await RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,`Received ${chunk.length} bytes. Total: ${totalBytes} bytes`, { filename }, 'GraphQL.uploadAsset.uploadWorker');
                         lastOutput = Date.now();
                     }
-                });
+
+                    // write our data out. if it fails then we're over-saturated and need to drain
+                    const canContinue = writeStream.write(chunk);
+                    if (!canContinue) {
+                        bufferSaturated = true; // Mark that the buffer became full
+                        fileStream.pause(); // Pause reading until the drain event
+                        // RecordKeeper.logWarning(RecordKeeper.LogSection.eGQL,'upload write stream buffer is saturated, waiting for drain...', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                    }
+                }));
 
                 fileStream.on('error', ASR.bind(async (error) => {
                     RecordKeeper.logError(RecordKeeper.LogSection.eGQL,'upload filestream error', { filename, error }, 'GraphQL.uploadAsset.uploadWorker');
                     RecordKeeper.profileEnd(perfKey);
-                    RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error}\n${filename}`);
-                    if(stream.emit('error', error)===false)
+                    // RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error}\n${filename}`);
+
+                    // send the error to our writeStream as well to tell it to stop
+                    if(writeStream.emit('error', error)===false)
                         resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
                     else
                         resolve({ status: UploadStatus.Complete });
                 }));
 
-                // DBEUG: track when the buffers are drained releasing back pressure
+                fileStream.on('end', () => {
+                    RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload filestream ended', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                    writeStream.end();
+                    // force end of writeStream? no, because it could still be writing
+                });
+
+                // DEBUG: track when the buffers are drained releasing back pressure
                 // fileStream.on('drain', () => {
                 //     RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload filestream drained', { filename }, 'GraphQL.uploadAsset.uploadWorker');
                 // });
-                // stream.on('drain', () => {
-                //     RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload stream drained', { filename }, 'GraphQL.uploadAsset.uploadWorker');
-                // });
+                writeStream.on('drain', () => {
+                    if (bufferSaturated===true) {
+                        // RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload write stream drained. resuming transfer', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                        bufferSaturated = false; // Reset the saturation flag
+                        fileStream.resume(); // Resume reading from the stream
+                    }
+                });
 
-                stream.on('finish', ASR.bind(async () => {
-                    RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload stream finished', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                writeStream.on('finish', ASR.bind(async () => {
+                    RecordKeeper.logInfo(RecordKeeper.LogSection.eGQL,'upload stream finished', { filename }, 'GraphQL.uploadAsset.uploadWorker');
                     RecordKeeper.profileEnd(perfKey);
-                    RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_PASSED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset finished upload',filename);
+                    // RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_PASSED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset finished upload',filename);
                     resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
                 }));
 
-                stream.on('error', ASR.bind(async (error) => {
+                writeStream.on('error', ASR.bind(async (error) => {
                     RecordKeeper.logError(RecordKeeper.LogSection.eGQL,'upload stream error', { filename, error }, 'GraphQL.uploadAsset.uploadWorker');
                     await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
                     await storage.discardWriteStream({ storageKey });
                     RecordKeeper.profileEnd(perfKey);
-                    RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error.message}\n${filename}`);
+                    // RecordKeeper.sendSlack(RecordKeeper.NotifyType.JOB_FAILED,RecordKeeper.NotifyGroup.SLACK_ADMIN,'uploadAsset failed',`${error.message}\n${filename}`);
                     resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
                 }));
+
+                writeStream.on('close', () => {
+                    RecordKeeper.logDebug(RecordKeeper.LogSection.eGQL,'upload write stream closed', { filename }, 'GraphQL.uploadAsset.uploadWorker');
+                });
 
                 // stream.on('close', async () => { });
             });

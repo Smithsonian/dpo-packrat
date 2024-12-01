@@ -10,7 +10,9 @@
     "outDir": "build",
     "declaration": true,
     "skipLibCheck": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "diagnostics": true,
+    "extendedDiagnostics": true
   },
   "include": [
     "**/*",
