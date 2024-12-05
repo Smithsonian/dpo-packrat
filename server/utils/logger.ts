@@ -106,7 +106,7 @@ function configureLogger(logPath: string | null): void {
                 if (idUser)
                     userID = (idUser < 1000) ? ('000' + (idUser % 1000)).slice(-3) : idUser.toString();
 
-                const logSection: string = loggerSectionName(info.eLS);
+                const logSection: string = loggerSectionName(info.eLS as LS);
                 const stack: string = info.stack ? `\n${info.stack}` : '';
                 return `${info.timestamp} [${reqID}] U${userID} ${logSection} ${info.level}: ${info.message}${stack}`;
             })
