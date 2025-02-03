@@ -580,7 +580,7 @@ export class Helpers {
         }
     }
 
-    static cleanExpressRequest(req: any): any {
+    static cleanExpressRequest(req: any, includeBody: boolean = true, reduceHeaders: boolean = false): any {
         // returns a JSON object holding properties that can be easily used with console.log.
         // feeding a standard Request to console causes a stack overflow due to circular dependencies.
         if (!req || typeof req !== 'object') {
@@ -595,7 +595,8 @@ export class Helpers {
             };
         }
 
-        return {
+        // extract meaningful info from request ignoring cyclic dependencies
+        const result = {
             method: req.method || 'UNKNOWN',
             url: req.url || 'UNKNOWN',
             headers: req.headers && typeof req.headers === 'object' ? req.headers : {},
@@ -604,6 +605,31 @@ export class Helpers {
             body: req.body && typeof req.body === 'object' ? req.body : {},
             ip: req.ip || 'UNKNOWN',
         };
+
+        // include the body or not
+        if(includeBody===false)
+            delete result.body;
+
+        // if we want to reduce our headers, include only core fields
+        if(reduceHeaders===true) {
+            const allowedHeaders = [
+                'host',
+                'keep-alive',
+                'content-length',
+                'content-type',
+                'origin',
+                'referer',
+            ];
+
+            result.headers = allowedHeaders.reduce((filtered, key) => {
+                if (result.headers.hasOwnProperty(key)) {
+                filtered[key] = result.headers[key];
+                }
+                return filtered;
+            }, {});
+        }
+
+        return result;
     }
 
     static showAllCharactersWithEscapes(input: string): string {

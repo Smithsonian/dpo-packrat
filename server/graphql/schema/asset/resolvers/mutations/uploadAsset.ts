@@ -14,8 +14,6 @@ import { ASL, ASR, LocalStore } from '../../../../../utils/localStore';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
-import { Config } from '../../../../../config';
-// import { createWriteStream, unlink } from "fs";
 
 interface StreamOptions {
     highWaterMark?: number;  // the buffer size and should range between 64kb and 1024kb depending on disk & network I/O.
@@ -37,68 +35,14 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     // 
     // NOTE: getting the ReadStream does NOT mean the file has been fully written to disk yet. For very
     // large files this can fall out of sync causing dropped connections/streams. It is especially sensitive
-    // to concurrent large uploads and disk, memory, or network I/O bottlenecks.
-    
-    // const { createReadStream, filename } = await args.file;
-    // const stream = createReadStream();
-    // const storedFileUrl = `${Config.storage.rootStaging}/tmp/${filename}`; //new URL(storedFileName, UPLOAD_DIRECTORY_URL);
-    
-    // let uploadResult: UploadAssetResult = {
-    //     status: UploadStatus.Complete
-    // }
-
-    console.log(`root staging: ${Config.storage.rootStaging}`);
-    // console.log('Memory Usage (Before):', process.memoryUsage());
-    // await new Promise((resolve, reject) => {
-    //     // Create a stream to which the upload will be written.
-    //     const writeStream = createWriteStream(storedFileUrl);
-
-    //     const thresholdOffset: number = 10*1024*1024;
-    //     let totalBytes: number = 0;
-    //     let nextThreshold: number = thresholdOffset;
-
-    //     stream.on('data', (chunk) => {
-    //         totalBytes += chunk.length;
-    //         if(totalBytes>=nextThreshold) {
-    //             console.log(`Transferred ${totalBytes} from tmp to staging`);
-    //             nextThreshold += thresholdOffset;
-    //         }
-    //       });
-
-    //     // When the upload is fully written, resolve the promise.
-    //     writeStream.on("finish", () => {
-    //         console.log('write stream: finished');
-    //         resolve;
-    //     });
-    
-    //     // If there's an error writing the file, remove the partially written file
-    //     // and reject the promise.
-    //     writeStream.on("error", (error) => {
-    //         uploadResult.status = UploadStatus.Failed;
-    //         uploadResult.error = error.message;
-    //         console.log(`write stream: error (${error.message})`);
-    //         unlink(storedFileUrl, () => {
-    //             reject(error);
-    //         });
-    //     });
-    
-    //     // In Node.js <= v13, errors are not automatically propagated between piped
-    //     // streams. If there is an error receiving the upload, destroy the write
-    //     // stream with the corresponding error.
-    //     stream.on("error", (error) => {
-    //         console.log(`stream: error (${error.message})`);
-    //         writeStream.destroy(error);
-    //     });
-    
-    //     // Pipe the upload into the write stream.
-    //     stream.pipe(writeStream);
-    // });
-    
+    // to concurrent large uploads and disk, memory, or network I/O bottlenecks.   
+    const memoryBefore = process.memoryUsage();
     const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type, args.idSOAttachment);
     const workerResult = await uploadAssetWorker.upload();
-    console.log('Memory Usage (After):', process.memoryUsage());
-    console.log('post upload result ',workerResult);
-    return workerResult; //uploadResult;
+    const memoryAfter = process.memoryUsage();
+    
+    LOG.info(`UploadAssetWorker.uploadAsset: Post upload result (rss: ${memoryBefore.rss-memoryAfter.rss} | heap: ${memoryBefore.heapUsed-memoryAfter.heapUsed})\n${H.Helpers.JSONStringify(workerResult)}`,LOG.LS.eGQL);
+    return workerResult;
 }
 
 class UploadAssetWorker extends ResolverBase {
@@ -120,7 +64,7 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     async upload(): Promise<UploadAssetResult> {
-        LOG.info('UploadAssetWorker.upload: upload starting...',LOG.LS.eGQL);
+        LOG.info(`UploadAssetWorker.upload: upload starting...(${this.apolloFile.filename})`,LOG.LS.eGQL);
         
         // entry point for file upload requests coming from the client
         this.LS = await ASL.getOrCreateStore();
@@ -141,7 +85,7 @@ class UploadAssetWorker extends ResolverBase {
 
     private async uploadWorker(): Promise<UploadAssetResult> {
         // creates a WorkflowReport for the upload request allowing for asynchronous handling
-        LOG.info(`UploadAssetWorker.uploadWorker: upload worker starting...(${this.apolloFile.filename})`,LOG.LS.eGQL);
+        LOG.info(`UploadAssetWorker.uploadWorker: upload worker starting...(${this.apolloFile.filename})`,LOG.LS.eDEBUG);
 
         const { filename, createReadStream } = this.apolloFile;
         const url: string = `/ingestion/uploads/${filename}`;
@@ -174,7 +118,7 @@ class UploadAssetWorker extends ResolverBase {
         // get a write stream for us to store the incoming stream
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
         if (!WSResult.success || !WSResult.writeStream || !WSResult.storageKey) {
-            LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
+            LOG.error(`UploadAssetWorker.uploadWorker: unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
         const { writeStream, storageKey } = WSResult;
@@ -191,7 +135,6 @@ class UploadAssetWorker extends ResolverBase {
             const stream = fileStream.pipe(writeStream);
             LOG.info(`UploadAssetWorker.uploadWorker: writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
 
-            console.log('>>>> uploadAsset: pre Promise');
             return await new Promise((resolve) => {
                 let isResolved = false;
                 const safeResolve = (value) => {
@@ -232,7 +175,7 @@ class UploadAssetWorker extends ResolverBase {
                 stream.on('data', (chunk) => {
                     totalBytes += chunk.length;
                     if(totalBytes>=nextThreshold) {
-                        console.log(`Transferred ${totalBytes} from tmp to staging`);
+                        LOG.info(`UploadAssetWorker.uploadWorker: Transferred ${totalBytes} from tmp to staging (${url})`,LOG.LS.eDEBUG);
                         nextThreshold += thresholdOffset;
                     }
                 });
@@ -338,12 +281,12 @@ class UploadAssetWorker extends ResolverBase {
                 DateCreated: new Date()
             };
 
-            LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker committing new asset version (assetVersion: ${H.Helpers.JSONStringify(ASCNAVI)})`,LOG.LS.eDEBUG);
+            LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker: committing new asset version (assetVersion: ${H.Helpers.JSONStringify(ASCNAVI)})`,LOG.LS.eDEBUG);
             commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
         }
 
         if (!commitResult.success) {
-            LOG.error(`uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`, LOG.LS.eGQL);
+            LOG.error(`UploadAssetWorker.uploadWorkerOnFinishWorker: AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`, LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: commitResult.error };
         }
         // commitResult.assets; commitResult.assetVersions; <-- These have been created
@@ -381,7 +324,7 @@ class UploadAssetWorker extends ResolverBase {
                 const href: string = H.Helpers.computeHref(path, assetVersion.FileName);
                 await this.appendToWFReport(`Uploaded asset: ${href}`);
             } else
-                LOG.error(`uploadAsset createWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                LOG.error(`UploadAssetWorker.createUploadWorkflow: unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
         }
 
         const wfParams: WF.WorkflowParameters = {
@@ -393,7 +336,7 @@ class UploadAssetWorker extends ResolverBase {
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
         if (!workflow) {
-            const error: string = `uploadAsset createWorkflow unable to create Upload workflow: ${JSON.stringify(wfParams)}`;
+            const error: string = `UploadAssetWorker.createUploadWorkflow: unable to create Upload workflow: ${JSON.stringify(wfParams)}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
@@ -403,7 +346,7 @@ class UploadAssetWorker extends ResolverBase {
         if (!results.success) {
             for (const assetVersion of assetVersions)
                 await UploadAssetWorker.retireFailedUpload(assetVersion);
-            LOG.error(`uploadAsset createWorkflow Upload workflow failed: ${results.error}`, LOG.LS.eGQL);
+            LOG.error(`UploadAssetWorker.createUploadWorkflow: Upload workflow failed: ${results.error}`, LOG.LS.eGQL);
             return results;
         }
 
@@ -417,7 +360,7 @@ class UploadAssetWorker extends ResolverBase {
     private static async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
-            const error: string = `uploadAsset post-upload workflow error handler failed to discard uploaded asset: ${ASR.error}`;
+            const error: string = `UploadAssetWorker.createUploadWorkflow: post-upload workflow error handler failed to discard uploaded asset: ${ASR.error}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }

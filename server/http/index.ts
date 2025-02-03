@@ -81,24 +81,6 @@ export class HttpServer {
     static bodyProcessorExclusions: RegExp = /^\/(?!webdav).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
        
-        this.app.use((req, _res, next) => {
-            const startBytes = req.socket.bytesRead;
-            const reqCache: Request = req;
-
-            console.log(`[REQUEST START] ${req.method} ${req.originalUrl} (Content-Length: ${req.headers['content-length'] || 'unknown'})`);
-        
-            req.on('end', () => {
-                const totalBytes = req.socket.bytesRead - startBytes;
-                console.log(`[REQUEST END] ${req.method} ${req.originalUrl} - Body Size: ${totalBytes} bytes`);
-            });
-
-            req.on('close', ()=>{
-                console.log('[REQUEST CLOSE]',H.Helpers.cleanExpressRequest(reqCache));
-            });
-        
-            next();
-        });
-
         // First step is to modify the request body as needed. We do this first
         // because the express.json() 3rd party library breaks any context created
         // by the AsyncLocalStore as it waits for the request/body to arrive.
@@ -107,15 +89,37 @@ export class HttpServer {
         // to parse very large JSON requests. Set to the maximum chunk size for uploads.
         // note: this should not be necessary due to use of multipart/form, but is a precaution
         this.app.use(HttpServer.bodyProcessorExclusions, (req, _res, next)=>{
-            if (req.originalUrl.startsWith('/graphql')) {
-                console.log('skipping json parse. GraphQL');
-                return next(); // Skip express.json() for GraphQL
-            }
+            // if (req.originalUrl.startsWith('/graphql')) {
+            //     LOG.info('HTTP.index: skipping json parse because GraphQL',LOG.LS.eDEBUG);
+            //     return next(); // Skip express.json() for GraphQL
+            // }
 
             // do not extract webdav PUT bodies into request.body element
             express.json({ limit: '100MB' })(req, _res, next); // as RequestHandler;
         });
         this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100MB' }) as RequestHandler);
+
+        // early stage request debugging middleware
+        this.app.use((req, _res, next) => {
+            // move routine higher if debugging potential issues with the JSON body.
+            // placed here so GraphQL details are available (from the the body)            
+            const startBytes = req.socket.bytesRead;
+            const reqCache: Request = req;
+
+            LOG.info(`[REQUEST START] ${req.method} ${req.originalUrl} (Content-Length: ${req.headers['content-length'] || 'unknown'})`,LOG.LS.eDEBUG);
+            LOG.info(`[REQUEST START] ${H.Helpers.JSONStringify(H.Helpers.cleanExpressRequest(reqCache,true,true))}`,LOG.LS.eDEBUG);
+
+            req.on('end', () => {
+                const totalBytes = req.socket.bytesRead - startBytes;
+                LOG.info(`[REQUEST END] ${req.method} ${req.originalUrl} (body: ${totalBytes} bytes)`,LOG.LS.eDEBUG);
+            });
+
+            req.on('close', ()=>{
+                LOG.info(`[REQUEST CLOSE]  ${req.method} ${req.originalUrl}`,LOG.LS.eDEBUG);
+            });
+        
+            next();
+        });
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
@@ -233,24 +237,6 @@ export class HttpServer {
     //         ASL.checkLocalStore(label);
     //         next();
     //     };
-    // }
-    // private static printRequest(req: Request, label: string = 'Request'): void {
-    //     if(!req) {
-    //         console.log('nothing');
-    //     }
-    //     LOG.info(`${label}: ${H.Helpers.JSONStringify({
-    //         // headers: req.headers,
-    //         // body: req.body,
-    //         query: req.query,
-    //         params: req.params,
-    //         url: req.url,
-    //         method: req.method,
-    //         ip: req.ip,
-    //         path: req.path,
-    //         sid: req.cookies?.connect?.sid ?? undefined,
-    //         // cookies: req.cookies,
-    //         user: req.user
-    //     })}`,LOG.LS.eDEBUG);
     // }
 }
 
