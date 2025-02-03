@@ -53,9 +53,10 @@ const SAMLRedirectPath: string = '/saml/idp/profile/redirectorpost/sso';
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     let sentToLogin: boolean = false;
 
-    console.log(`[PACKRAT:ERROR] Network: ${JSON.stringify(networkError)}`);
+    // console.log('[PACKRAT:ERROR] apollo processRequest: ',networkError,graphQLErrors);
 
     if (graphQLErrors) {
+        console.log('[PACKRAT:ERROR] apollo processRequest: graphql errors ', graphQLErrors);
         graphQLErrors.forEach(({ message, locations, path }) => {
             console.log(`[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}`);
             if (message.includes(authenticationFailureMessage)) {
@@ -68,7 +69,9 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         });
     }
 
-    if (networkError) {
+    if (networkError) { 
+        console.log('[PACKRAT:ERROR] apollo processRequest: network errors ', networkError);
+
         if (!sentToLogin) {
             let redirectToLogin: boolean = false;
 
@@ -177,6 +180,8 @@ interface IApolloUploader {
 
 async function apolloUploader(options: IApolloUploader): Promise<any> {
     const { mutation, variables, useUpload, refetchQueries, onProgress, onCancel } = options;
+
+    console.log('[PACKRAT] apolloUploader',options);
 
     // console.log('apolloUploader apolloClient.mutate');
     return await apolloClient.mutate({

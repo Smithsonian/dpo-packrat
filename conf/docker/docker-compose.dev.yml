@@ -13,6 +13,10 @@ services:
             - ../../conf/nginx/nginx-dev.conf:/etc/nginx/nginx.conf
         ports:
             - $PACKRAT_PROXY_PORT:80
+        environment:
+            - NGINX_PROXY_READ_TIMEOUT=86400
+            - NGINX_PROXY_CONNECT_TIMEOUT=86400
+            - NGINX_PROXY_SEND_TIMEOUT=86400
 
     packrat-client:
         container_name: packrat-client
@@ -78,6 +82,7 @@ services:
             - SHARP_IGNORE_GLOBAL_LIBVIPS=1
             - npm_config_arch=x64
             - npm_config_platform=linux
+            - SERVER_TIMEOUT=0 # Disable server timeout
         volumes:
             - ../../package.json:/app/package.json
             - ../../server:/app/server

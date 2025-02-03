@@ -214,6 +214,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         const attachmentFile = pendingAttachments.get(idSystemObject) as IngestionFile;
         const file = isUpdate ? updateFile : isAttachment ? attachmentFile : getFile(id, pending);
 
+        console.log(`[PACKRAT] startUpload (${updateFile?.file?.name ?? 'na'}, ${updateFile?.file?.size ?? '-1'})`);
+
         if (file) {
             if (isUpdate) {
                 file.progress = 0;
@@ -275,6 +277,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     cancelUpload: (id: FileId): void => {
         const { pending } = get();
         const file = getFile(id, pending);
+        
+        console.log(`[PACKRAT] cancelUpload (${file?.name ?? 'undefined'})`);
 
         if (file) {
             if (file.status === FileUploadStatus.UPLOADING) {
@@ -343,6 +347,9 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
     //This is the uploading for the Processed Files
     startUploadTransfer: async (ingestionFile: IngestionFile, references?: UploadReferences) => {
+
+        console.log(`[PACKRAT] startUploadTransfer (${ingestionFile.file.name})`);
+
         const { pending } = get();
         const { id, file, type } = ingestionFile;
         try {
@@ -350,8 +357,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 // registered with Apollo xhr.upload.onprogress callback and triggers
                 // PROGRESS event at every 10 steps so the UX can properly update.
                 const { loaded, total } = event;
+
+                if (total === 0) {
+                    console.warn('[PACKRAT] ProgressEvent total is zero. Unable to calculate progress.');
+                    return;
+                }
+
                 const progress = Math.floor((loaded / total) * 100);
-                const updateProgress = (progress % 10) === 0;
+                const updateProgress = (progress % 5) === 0;
 
                 if (updateProgress) {
                     const progressEvent: UploadProgressEvent = {
@@ -359,6 +372,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                         progress
                     };
                     // console.log(`[PACKRAT] startUploadTransfer.onProgress fire event (event: ${progressEvent} | pending: ${JSON.stringify(pending)})`);
+                    console.log('[PACKRAT] upload onProgress',event);
                     UploadEvents.dispatch(UploadEventType.PROGRESS, progressEvent);
                 }
             };
@@ -372,10 +386,11 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 // console.log(`[PACKRAT] startUploadTransfer.onCancel fire event (event: ${cancelEvent} | pending: ${JSON.stringify(pending)})`);
                 UploadEvents.dispatch(UploadEventType.SET_CANCELLED, cancelEvent);
             };
-            const onFailed = () => {
+            const onFailed = (error: ErrorEvent) => {
                 // registered with Apollo xhr.upload.onerror and triggers a failed event
                 const failedEvent: UploadFailedEvent = {
-                    id,
+                    id, 
+                    message: error.message || 'Unknown Error'
                 };
 
                 // console.error(`[PACKRAT] startUploadTransfer.onFailed fire event (event: ${error})`);
@@ -391,6 +406,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 const { getVocabularyId } = useVocabularyStore.getState();
                 uploadAssetInputs.type = getVocabularyId(eVocabularyID.eAssetAssetTypeAttachment) ?? 0;
             }
+
+            console.log(`[PACKRAT] uploading file '${file?.name ?? 'na'}' of size: ${file?.size ?? '-1'}`);
 
             const { data } = await apolloUploader({
                 mutation: UploadAssetDocument,
@@ -414,14 +431,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     toast.success(`Upload finished for ${file.name}`);
                 } else if (status === UploadStatus.Failed) {
                     console.log(`[PACKRAT] startUploadTransfer upload failed (id: ${id} | file: ${(file)?file['path']:'na'} | error: ${error})`);
-                    const failedEvent: UploadFailedEvent = { id };
+                    const failedEvent: UploadFailedEvent = { id, message: error || 'Unknown error' };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
                     const errorMessage = error || `Upload failed for ${file.name}`;
                     toast.error(errorMessage);
                 } else if (status === UploadStatus.Noauth) {
                     console.log(`[PACKRAT:ERROR] startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, user not authenticated`);
-                    const failedEvent: UploadFailedEvent = { id };
+                    const failedEvent: UploadFailedEvent = { id, message: error || 'Unknown error' };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
                     global.alert('The Packrat user is no longer authenticated. Please login.');
@@ -436,7 +453,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             if (file) {
                 if (file.status !== FileUploadStatus.CANCELLED) {
                     console.log(`[PACKRAT:ERROR] startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, exception ${message}`);
-                    const failedEvent: UploadFailedEvent = { id };
+                    const failedEvent: UploadFailedEvent = { id, message: 'cancelled'  };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
                 }
             }
@@ -515,6 +532,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         // });
         // console.log(`[PACKRAT] onProgressEvent (options: ${JSON.stringify(options)} | pending: ${JSON.stringify(statusPending)})`);
 
+        console.log(`[PACKRAT] onProgress (${progress})`);
+
         // handles updates and attachments if a SystemObject id is provided
         if (options?.idSystemObject) {
             const isAttachment = options.references.idSOAttachment;
@@ -572,6 +591,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         // });
         // console.log(`[PACKRAT] onCancelledEvent (pending: ${JSON.stringify(statusPending)})`);
 
+        console.log(`[PACKRAT] onCancel (id: ${id})`);
+
         // handles updates and attachments
         if (options?.idSystemObject) {
             const isAttachment = options.references.idSOAttachment;
@@ -620,6 +641,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         //     };
         // });
         // console.log(`[PACKRAT] onFailedEvent (pending: ${JSON.stringify(statusPending)})`);
+        console.log(`[PACKRAT] onFailed (id: ${id})`);
 
         // handles updates and attachments
         if (options?.idSystemObject) {
@@ -699,6 +721,8 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         }
     },
     reset: (): void => {
+        console.log('[PACKRAT] reset');
+
         const { completed, /*pending*/ } = get();
         const unselectFiles = (file: IngestionFile): IngestionFile => ({
             ...file,
@@ -721,6 +745,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         set({ completed: [ ...updatedCompleted ], loading: false });
     },
     resetSpecialPending: (uploadType: eIngestionMode) => {
+        console.log('[PACKRAT] reset special');
         if (uploadType === eIngestionMode.eAttach) set({ pendingAttachments: new Map() });
         if (uploadType === eIngestionMode.eUpdate) set({ pendingUpdates: new Map() });
     }
