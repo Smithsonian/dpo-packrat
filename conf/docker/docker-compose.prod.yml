@@ -11,6 +11,10 @@ services:
             target: proxy
         ports:
             - $PACKRAT_PROXY_PORT:80
+        environment:
+            - NGINX_PROXY_READ_TIMEOUT=86400
+            - NGINX_PROXY_CONNECT_TIMEOUT=86400
+            - NGINX_PROXY_SEND_TIMEOUT=86400
 
     packrat-client:
         container_name: packrat-client

@@ -15,17 +15,34 @@ import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
 
+interface StreamOptions {
+    highWaterMark?: number;  // the buffer size and should range between 64kb and 1024kb depending on disk & network I/O.
+}
 interface ApolloFile {
     filename: string;
     mimetype: string;
     encoding: string;
-    createReadStream: () => ReadStream;
+    createReadStream: (options?: StreamOptions) => ReadStream;
 }
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
+    LOG.info(`GraphQL.uploadAsset: request received for upload (${H.Helpers.JSONStringify(args)})`,LOG.LS.eGQL);
     const { user } = context;
+
+    // using GraphQL and graphql-upload middleware the client sends a multi-part/form upload (stream)
+    // this stream is written to a temporary location on disk by the middleware. args.file returns a
+    // Promise that resolves to the files metadata and a routine to get a ReadStream to the temporary file
+    //
+    // NOTE: getting the ReadStream does NOT mean the file has been fully written to disk yet. For very
+    // large files this can fall out of sync causing dropped connections/streams. It is especially sensitive
+    // to concurrent large uploads and disk, memory, or network I/O bottlenecks.
+    const memoryBefore = process.memoryUsage();
     const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type, args.idSOAttachment);
-    return await uploadAssetWorker.upload();
+    const workerResult = await uploadAssetWorker.upload();
+    const memoryAfter = process.memoryUsage();
+
+    LOG.info(`UploadAssetWorker.uploadAsset: Post upload result (rss: ${memoryBefore.rss-memoryAfter.rss} | heap: ${memoryBefore.heapUsed-memoryAfter.heapUsed})\n${H.Helpers.JSONStringify(workerResult)}`,LOG.LS.eGQL);
+    return workerResult;
 }
 
 class UploadAssetWorker extends ResolverBase {
@@ -47,6 +64,8 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     async upload(): Promise<UploadAssetResult> {
+        LOG.info(`UploadAssetWorker.upload: upload starting...(${this.apolloFile.filename})`,LOG.LS.eGQL);
+
         // entry point for file upload requests coming from the client
         this.LS = await ASL.getOrCreateStore();
         const UAR: UploadAssetResult = await this.uploadWorker();
@@ -59,15 +78,22 @@ class UploadAssetWorker extends ResolverBase {
             await this.appendToWFReport('<b>Upload succeeded</b>');
         else
             await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
+
+        LOG.info(`UploadAssetWorker.upload: upload finished (${H.Helpers.JSONStringify(UAR)})`,LOG.LS.eGQL);
         return UAR;
     }
 
     private async uploadWorker(): Promise<UploadAssetResult> {
         // creates a WorkflowReport for the upload request allowing for asynchronous handling
+        LOG.info(`UploadAssetWorker.uploadWorker: upload worker starting...(${this.apolloFile.filename})`,LOG.LS.eDEBUG);
 
         const { filename, createReadStream } = this.apolloFile;
-        AuditFactory.audit({ url: `/ingestion/uploads/${filename}`, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
-
+        const url: string = `/ingestion/uploads/${filename}`;
+        const auditResult: boolean = await AuditFactory.audit({ url, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
+        if(auditResult===false) {
+            LOG.error(`uploadAsset failed audit. (url: ${url}, user: ${this.user}, asset: ${this.idAsset})`, LOG.LS.eGQL);
+            return { status: UploadStatus.Failed, error: 'Failed property audit' };
+        }
         if (!this.user) {
             LOG.error('uploadAsset unable to retrieve user context', LOG.LS.eGQL);
             return { status: UploadStatus.Noauth, error: 'User not authenticated' };
@@ -92,7 +118,7 @@ class UploadAssetWorker extends ResolverBase {
         // get a write stream for us to store the incoming stream
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
         if (!WSResult.success || !WSResult.writeStream || !WSResult.storageKey) {
-            LOG.error(`uploadAsset unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
+            LOG.error(`UploadAssetWorker.uploadWorker: unable to retrieve IStorage.writeStream(): ${WSResult.error}`, LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
         const { writeStream, storageKey } = WSResult;
@@ -105,37 +131,80 @@ class UploadAssetWorker extends ResolverBase {
         try {
             // write our incoming stream of bytes to a file in local storage (staging)
             // TODO: use ASR.bind(async () =>< {});
-            const fileStream = createReadStream();
+            const fileStream = createReadStream({ highWaterMark: 1024 * 1024 });
             const stream = fileStream.pipe(writeStream);
-            LOG.info(`UploadAssetWorker.uploadWorker writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
+            LOG.info(`UploadAssetWorker.uploadWorker: writing stream to Staging (filename: ${filename} | streamPath: ${fileStream.path})`,LOG.LS.eDEBUG);
 
-            return new Promise(resolve => {
-                fileStream.on('error', ASR.bind((error) => {
-                    LOG.error('uploadAsset', LOG.LS.eGQL, error);
-                    stream.emit('error', error);
-                }));
+            return await new Promise((resolve) => {
+                let isResolved = false;
+                const safeResolve = (value) => {
+                    // make sure Promise resolves only one and avoid multiple calls
+                    if (!isResolved) {
+                        isResolved = true;
+                        console.log('>>>> uploadAsset: on resolved');
+                        resolve(value);
+                    }
+                };
 
-                stream.on('finish', ASR.bind(async () => {
-                    resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
-                }));
-
-                stream.on('error', ASR.bind(async (error) => {
-                    await this.appendToWFReport(`uploadAsset Upload failed (${error.message})`, true, true);
+                // file (read) stream callbacks. taking bytes transfered from the buffer
+                fileStream.once('error', ASR.bind(async (error) => {
+                    LOG.error('UploadAssetWorker.uploadWorker: fileStream error', LOG.LS.eGQL, error);
+                    await this.appendToWFReport(`FileStream error: ${error.message}`, true, true);
                     await storage.discardWriteStream({ storageKey });
-                    resolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
+                    safeResolve({ status: UploadStatus.Failed, error: `FileStream error: ${error.message}` });
+                    // stream.emit('error', error);
                 }));
+                fileStream.once('end', () => {
+                    LOG.info('UploadAssetWorker.uploadWorker: fileStream has finished emitting data.', LOG.LS.eDEBUG);
+                });
+                fileStream.once('close', () => {
+                    LOG.info('UploadAssetWorker.uploadWorker: fileStream closed.', LOG.LS.eDEBUG);
+                });
+                fileStream.on('pipe', (dest) => {
+                    LOG.info(`UploadAssetWorker.uploadWorker: fileStream piped to ${dest.constructor.name}.`, LOG.LS.eDEBUG);
+                });
+                fileStream.on('unpipe', (dest) => {
+                    LOG.info(`UploadAssetWorker.uploadWorker: fileStream unpiped from ${dest.constructor.name}.`, LOG.LS.eDEBUG);
+                });
 
-                // stream.on('close', async () => { });
+                // (write) stream callbacks for storing the transferred bytes to disk
+                const thresholdOffset: number = 10*1024*1024;
+                let totalBytes: number = 0;
+                let nextThreshold: number = thresholdOffset;
+
+                stream.on('data', (chunk) => {
+                    totalBytes += chunk.length;
+                    if(totalBytes>=nextThreshold) {
+                        LOG.info(`UploadAssetWorker.uploadWorker: Transferred ${totalBytes} from tmp to staging (${url})`,LOG.LS.eDEBUG);
+                        nextThreshold += thresholdOffset;
+                    }
+                });
+                stream.once('finish', ASR.bind(async () => {
+                    // resolve(this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
+                    safeResolve(await this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
+                }));
+                stream.once('error', ASR.bind(async (error) => {
+                    LOG.error('UploadAssetWorker.uploadWorker: writeStream error', LOG.LS.eGQL, error);
+                    await this.appendToWFReport(`UploadAssetWorker.uploadWorker: upload failed (${error.message})`, true, true);
+                    await storage.discardWriteStream({ storageKey });
+                    safeResolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
+                }));
+                stream.once('close', () => {
+                    LOG.info('UploadAssetWorker.uploadWorker: stream closed successfully.', LOG.LS.eDEBUG);
+                });
+                // stream.on('drain', () => {
+                //     LOG.info('UploadAssetWorker.uploadWorker: stream drained.',LOG.LS.eDEBUG);
+                // });
             });
         } catch (error) {
-            LOG.error('uploadAsset', LOG.LS.eGQL, error);
+            LOG.error('UploadAssetWorker.uploadWorker: error writing stream to staging', LOG.LS.eGQL, error);
             return { status: UploadStatus.Failed, error: 'Upload failed' };
         }
     }
 
     private async uploadWorkerOnFinish(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
 
-        LOG.info(`UploadAssetWorker.uploadWorkerOnFinish upload finished (storageKey: ${storageKey} | filename: ${filename} | idVocabulary: ${idVocabulary})`,LOG.LS.eDEBUG);
+        LOG.info(`UploadAssetWorker.uploadWorkerOnFinish: upload finished (storageKey: ${storageKey} | filename: ${filename} | idVocabulary: ${idVocabulary})`,LOG.LS.eDEBUG);
 
         // grab our local storage and log context in case it's lost
         const LSLocal: LocalStore | undefined = ASL.getStore();
@@ -157,6 +226,8 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorkerOnFinishWorker(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
+        LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker: finishing worker and adding new assets (storageKey: ${storageKey})`,LOG.LS.eDEBUG);
+
         const idUser: number = this.user!.idUser; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const opInfo: STORE.OperationInfo | null = await STORE.AssetStorageAdapter.computeOperationInfo(idUser,
             this.idAsset
@@ -210,12 +281,12 @@ class UploadAssetWorker extends ResolverBase {
                 DateCreated: new Date()
             };
 
-            LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker committing new asset version (assetVersion: ${H.Helpers.JSONStringify(ASCNAVI)})`,LOG.LS.eDEBUG);
+            LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker: committing new asset version (assetVersion: ${H.Helpers.JSONStringify(ASCNAVI)})`,LOG.LS.eDEBUG);
             commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
         }
 
         if (!commitResult.success) {
-            LOG.error(`uploadAsset AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`, LOG.LS.eGQL);
+            LOG.error(`UploadAssetWorker.uploadWorkerOnFinishWorker: AssetStorageAdapter.commitNewAsset() failed: ${commitResult.error}`, LOG.LS.eGQL);
             return { status: UploadStatus.Failed, error: commitResult.error };
         }
         // commitResult.assets; commitResult.assetVersions; <-- These have been created
@@ -253,7 +324,7 @@ class UploadAssetWorker extends ResolverBase {
                 const href: string = H.Helpers.computeHref(path, assetVersion.FileName);
                 await this.appendToWFReport(`Uploaded asset: ${href}`);
             } else
-                LOG.error(`uploadAsset createWorkflow unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                LOG.error(`UploadAssetWorker.createUploadWorkflow: unable to locate system object for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
         }
 
         const wfParams: WF.WorkflowParameters = {
@@ -265,7 +336,7 @@ class UploadAssetWorker extends ResolverBase {
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
         if (!workflow) {
-            const error: string = `uploadAsset createWorkflow unable to create Upload workflow: ${JSON.stringify(wfParams)}`;
+            const error: string = `UploadAssetWorker.createUploadWorkflow: unable to create Upload workflow: ${JSON.stringify(wfParams)}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }
@@ -275,7 +346,7 @@ class UploadAssetWorker extends ResolverBase {
         if (!results.success) {
             for (const assetVersion of assetVersions)
                 await UploadAssetWorker.retireFailedUpload(assetVersion);
-            LOG.error(`uploadAsset createWorkflow Upload workflow failed: ${results.error}`, LOG.LS.eGQL);
+            LOG.error(`UploadAssetWorker.createUploadWorkflow: Upload workflow failed: ${results.error}`, LOG.LS.eGQL);
             return results;
         }
 
@@ -289,7 +360,7 @@ class UploadAssetWorker extends ResolverBase {
     private static async retireFailedUpload(assetVersion: DBAPI.AssetVersion): Promise<H.IOResults> {
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
-            const error: string = `uploadAsset post-upload workflow error handler failed to discard uploaded asset: ${ASR.error}`;
+            const error: string = `UploadAssetWorker.createUploadWorkflow: post-upload workflow error handler failed to discard uploaded asset: ${ASR.error}`;
             LOG.error(error, LOG.LS.eGQL);
             return { success: false, error };
         }

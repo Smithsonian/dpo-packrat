@@ -579,4 +579,83 @@ export class Helpers {
             return (error as Error).stack || `${label}: No stack trace available`;
         }
     }
+
+    static cleanExpressRequest(req: any, includeBody: boolean = true, reduceHeaders: boolean = false): any {
+        // returns a JSON object holding properties that can be easily used with console.log.
+        // feeding a standard Request to console causes a stack overflow due to circular dependencies.
+        if (!req || typeof req !== 'object') {
+            return {
+                method: 'UNKNOWN',
+                url: 'UNKNOWN',
+                headers: {},
+                params: {},
+                query: {},
+                body: {},
+                ip: 'UNKNOWN',
+            };
+        }
+
+        // extract meaningful info from request ignoring cyclic dependencies
+        const result = {
+            method: req.method || 'UNKNOWN',
+            url: req.url || 'UNKNOWN',
+            headers: req.headers && typeof req.headers === 'object' ? req.headers : {},
+            params: req.params && typeof req.params === 'object' ? req.params : {},
+            query: req.query && typeof req.query === 'object' ? req.query : {},
+            body: req.body && typeof req.body === 'object' ? req.body : {},
+            ip: req.ip || 'UNKNOWN',
+        };
+
+        // include the body or not
+        if(includeBody===false)
+            delete result.body;
+
+        // if we want to reduce our headers, include only core fields
+        if(reduceHeaders===true) {
+            const allowedHeaders = [
+                'host',
+                'keep-alive',
+                'content-length',
+                'content-type',
+                'origin',
+                'referer',
+            ];
+
+            result.headers = allowedHeaders.reduce((filtered, key) => {
+                if (Object.prototype.hasOwnProperty.call(result, key)) {
+                    filtered[key] = result.headers[key];
+                }
+                return filtered;
+            }, {});
+        }
+
+        return result;
+    }
+
+    static showAllCharactersWithEscapes(input: string): string {
+        // routine to display all characters in a string. Helpful for debugging
+        // generated strings that may have escape characters, colorization, etc.
+        return input.split('').map(char => {
+            const charCode = char.charCodeAt(0);
+
+            // Handle known control characters
+            switch (charCode) {
+                case 9:
+                    return '\\t'; // Tab character
+                case 10:
+                    return '\\n'; // Newline character
+                case 13:
+                    return '\\r'; // Carriage return
+                case 27:
+                    return '\\x1b'; // Escape character
+                default:
+                    // For characters outside the printable ASCII range, use \xHH for hex representation
+                    if (charCode < 32 || charCode > 126) {
+                        return `\\x${charCode.toString(16).padStart(2, '0')}`; // Escape as \xHH
+                    } else {
+                        return char; // Return printable characters as is
+                    }
+            }
+        }).join('');
+    }
 }

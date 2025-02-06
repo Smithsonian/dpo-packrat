@@ -19,6 +19,7 @@ export type UploadSetCancelEvent = {
 
 export type UploadFailedEvent = {
     id: FileId;
+    message: string;
 };
 
 export type UploadCompleteEvent = {
@@ -26,7 +27,7 @@ export type UploadCompleteEvent = {
 };
 
 
-export type UploadEventData = UploadProgressEvent | UploadFailedEvent;
+export type UploadEventData = UploadProgressEvent | UploadFailedEvent | UploadCompleteEvent;
 
 class UploadEvents {
     static subscribe(event: UploadEventType, listener: EventListenerOrEventListenerObject): void {

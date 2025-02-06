@@ -99,8 +99,7 @@
   },
   "volta": {
     "node": "18.9.0",
-    "yarn": "1.22.19"
+    "yarn": "1.22.10"
   },
-  "main": "index.js",
-  "author": "Natasha Johnson"
+  "main": "index.js"
 }

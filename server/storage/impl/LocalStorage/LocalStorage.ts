@@ -65,7 +65,8 @@ export class LocalStorage implements STORE.IStorage {
         retValue.storageHash = fileHash;
 
         try {
-            retValue.readStream = fs.createReadStream(filePath);
+            // set our watermark level higher (64kb) to reduce potential backpressure
+            retValue.readStream = fs.createReadStream(filePath, { highWaterMark: 1024 * 1024 });
             retValue.fileName = fileName;
             retValue.success = true;
             retValue.error = '';
@@ -111,7 +112,8 @@ export class LocalStorage implements STORE.IStorage {
 
         LOG.info(`LocalStorage.writeStream writing to disk (res: ${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
         try {
-            retValue.writeStream = fs.createWriteStream(res.locationPrivate);
+            // set our watermark level higher (1MB) to reduce potential backpressure
+            retValue.writeStream = fs.createWriteStream(res.locationPrivate, { highWaterMark: 1024 * 1024 });
             retValue.storageKey = res.locationPublic;
             retValue.success = true;
             retValue.error = '';

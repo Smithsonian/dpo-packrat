@@ -97,7 +97,7 @@
     "ts-node": "^10.9.1",
     "uuid": "9.0.0",
     "webdav": "4.11.0",
-    "webdav-server": "https://github.com/Smithsonian/npm-WebDAV-Server.git",
+    "webdav-server": "git+https://github.com/Smithsonian/npm-WebDAV-Server.git#bd8843e",
     "winston": "3.8.2",
     "winston-daily-rotate-file": "4.7.1"
   },
@@ -135,6 +135,6 @@
   },
   "volta": {
     "node": "18.9.0",
-    "yarn": "1.22.19"
+    "yarn": "1.22.10"
   }
 }

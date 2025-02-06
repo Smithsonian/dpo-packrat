@@ -8,7 +8,7 @@ import { Config } from '../config';
 import { ASL, LocalStore } from './localStore';
 
 let logger: winston.Logger;
-let ending: boolean = false;
+// let ending: boolean = false;
 export enum LS { // logger section
     eAUDIT, // audit
     eAUTH,  // authentication
@@ -46,7 +46,7 @@ export function error(message: string | undefined, eLogSection: LS, obj: any | n
 }
 
 export function end(): void {
-    ending = true;
+    // ending = true;
     logger.end();
 }
 
@@ -106,7 +106,7 @@ function configureLogger(logPath: string | null): void {
                 if (idUser)
                     userID = (idUser < 1000) ? ('000' + (idUser % 1000)).slice(-3) : idUser.toString();
 
-                const logSection: string = loggerSectionName(info.eLS);
+                const logSection: string = loggerSectionName(info.eLS as LS);
                 const stack: string = info.stack ? `\n${info.stack}` : '';
                 return `${info.timestamp} [${reqID}] U${userID} ${logSection} ${info.level}: ${info.message}${stack}`;
             })
@@ -140,41 +140,41 @@ function configureLogger(logPath: string | null): void {
     }
 
     // Replace console debug/info/log/warn/error with our own versions:
-    const _debug = console.debug;
-    const _info = console.info;
-    const _log = console.log;
-    const _warn = console.warn;
-    const _error = console.error;
+    // const _debug = console.debug;
+    // const _info = console.info;
+    // const _log = console.log;
+    // const _warn = console.warn;
+    // const _error = console.error;
 
-    console.debug = function(...args) {
-        if (!ending)
-            info(`console.debug: ${handleConsoleArgs(args)}`, LS.eCON);
-        return _debug.apply(console, args);
-    };
+    // console.debug = function(...args) {
+    //     if (!ending)
+    //         info(`console.debug: ${handleConsoleArgs(args)}`, LS.eCON);
+    //     return _debug.apply(console, args);
+    // };
 
-    console.info = function(...args) {
-        if (!ending)
-            info(`console.info: ${handleConsoleArgs(args)}`, LS.eCON);
-        return _info.apply(console, args);
-    };
+    // console.info = function(...args) {
+    //     if (!ending)
+    //         info(`console.info: ${handleConsoleArgs(args)}`, LS.eCON);
+    //     return _info.apply(console, args);
+    // };
 
-    console.log = function(...args) {
-        if (!ending)
-            info(`console.log: ${handleConsoleArgs(args)}`, LS.eCON);
-        return _log.apply(console, args);
-    };
+    // console.log = function(...args) {
+    //     if (!ending)
+    //         info(`console.log: ${handleConsoleArgs(args)}`, LS.eCON);
+    //     return _log.apply(console, args);
+    // };
 
-    console.warn = function(...args) {
-        if (!ending)
-            info(`console.warn: ${handleConsoleArgs(args)}`, LS.eCON);
-        return _warn.apply(console, args);
-    };
+    // console.warn = function(...args) {
+    //     if (!ending)
+    //         info(`console.warn: ${handleConsoleArgs(args)}`, LS.eCON);
+    //     return _warn.apply(console, args);
+    // };
 
-    console.error = function(...args) {
-        if (!ending)
-            error(`console.error: ${handleConsoleArgs(args)}`, LS.eCON);
-        return _error.apply(console, args);
-    };
+    // console.error = function(...args) {
+    //     if (!ending)
+    //         error(`console.error: ${handleConsoleArgs(args)}`, LS.eCON);
+    //     return _error.apply(console, args);
+    // };
 
     // The following approach does not work. More thought and investigation is needed here
     // Observe writes to stdout and stderr; forward to our log
@@ -185,26 +185,26 @@ function configureLogger(logPath: string | null): void {
     info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);
 }
 
-function handleConsoleArgs(args): string {
-    if (typeof(args) === 'string')
-        return args;
-    if (!Array.isArray(args))
-        return JSON.stringify(args, null, 0);
+// function handleConsoleArgs(args): string {
+//     if (typeof(args) === 'string')
+//         return args;
+//     if (!Array.isArray(args))
+//         return JSON.stringify(args, null, 0);
 
-    let first: boolean = true;
-    let value: string = '';
-    for (const arg of args) {
-        if (first)
-            first = false;
-        else
-            value += ', ';
+//     let first: boolean = true;
+//     let value: string = '';
+//     for (const arg of args) {
+//         if (first)
+//             first = false;
+//         else
+//             value += ', ';
 
-        if (typeof(arg) === 'string')
-            value += arg;
-        else
-            value += JSON.stringify(arg);
-    }
-    return value;
-}
+//         if (typeof(arg) === 'string')
+//             value += arg;
+//         else
+//             value += JSON.stringify(arg);
+//     }
+//     return value;
+// }
 
 configureLogger(null);

@@ -16,6 +16,8 @@ import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 import { getCookResource } from './routes/resources';
 
+import { play } from './routes/sandbox';
+
 import { generateDownloads } from './routes/api/generateDownloads';
 import { getProjects, getProjectScenes } from './routes/api/project';
 
@@ -26,6 +28,7 @@ import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 import { generateScene } from './routes/api/generateVoyagerScene';
+import * as path from 'path';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -77,11 +80,23 @@ export class HttpServer {
 
     static bodyProcessorExclusions: RegExp = /^\/(?!webdav).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
+
         // First step is to modify the request body as needed. We do this first
         // because the express.json() 3rd party library breaks any context created
         // by the AsyncLocalStore as it waits for the request/body to arrive.
-        this.app.use(HttpServer.bodyProcessorExclusions, express.json() as RequestHandler); // do not extract webdav PUT bodies into request.body element
-        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true }) as RequestHandler);
+        //
+        // limiting the maximum JSON payload size to avoid issues with Express trying
+        // to parse very large JSON requests. Set to the maximum chunk size for uploads.
+        // note: this should not be necessary due to use of multipart/form, but is a precaution
+        // note: cannot skip graphql for uploads since body holds details about the request being made
+        this.app.use(HttpServer.bodyProcessorExclusions, (req, _res, next)=>{
+            // do not extract webdav PUT bodies into request.body element
+            express.json({ limit: '100MB' })(req, _res, next); // as RequestHandler;
+        });
+        this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100MB' }) as RequestHandler);
+
+        // early stage request debugging middleware
+        // this.app.use(HttpServer.logRequestDetailed);
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
@@ -101,7 +116,12 @@ export class HttpServer {
 
         // authentication and graphQL endpoints
         this.app.use('/auth', AuthRouter);
-        this.app.use('/graphql', graphqlUploadExpress());
+        this.app.use('/graphql', graphqlUploadExpress({
+            maxFileSize: 30 * 1024 * 1024 * 1024, // 30 GB
+            maxFiles: 10,
+            tmpdir: path.join(Config.storage.rootStaging,'tmp'),
+            debug: true,
+        }));
 
         // start our ApolloServer
         const server = new ApolloServer(ApolloServerOptions);
@@ -131,14 +151,22 @@ export class HttpServer {
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);
 
+        // sandbox playground
+        this.app.get('/api/sandbox/play',play);
+
         // if we're here then we handle any errors that may have surfaced
         this.app.use(errorhandler); // keep last
 
         // if we're not testing then open up server on the correct port
         if (process.env.NODE_ENV !== 'test') {
-            this.app.listen(Config.http.port, () => {
+            const server = this.app.listen(Config.http.port, () => {
                 LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
             });
+
+            // Set keep-alive parameters on the server
+            server.timeout = 60 * 60 * 1000; // 1hr
+            server.keepAliveTimeout = 6000 * 1000; //600000; // 10 minutes
+            server.headersTimeout = 6100 * 1000;   //610000;  // Slightly larger than keepAliveTimeout
         }
 
         // only gets here if no other route is satisfied
@@ -157,7 +185,6 @@ export class HttpServer {
 
     // utility routines and middleware
     private static logRequest(req: Request, _res, next): void {
-        // TODO: more detailed information about the request
         // figure out who is calling this
         const user = req['user'];
         const idUser = user ? user['idUser'] : undefined;
@@ -177,33 +204,36 @@ export class HttpServer {
             } else
                 query = `Unknown GraphQL: ${query}|${req.path}`;
         }
-        LOG.info(`New ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
+        LOG.info(`[REQUEST] ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
         next();
     }
+    // private static logRequestDetailed(req: Request, _res, next): void {
+    //     // move routine higher if debugging potential issues with the JSON body.
+    //     // placed here so GraphQL details are available (from the the body)
+    //     const startBytes = req.socket.bytesRead;
+    //     const reqCache: Request = req;
+
+    //     LOG.info(`[REQUEST START] ${req.method} ${req.originalUrl} (Content-Length: ${req.headers['content-length'] || 'unknown'})`,LOG.LS.eDEBUG);
+    //     LOG.info(`[REQUEST START] ${H.Helpers.JSONStringify(H.Helpers.cleanExpressRequest(reqCache,true,true))}`,LOG.LS.eDEBUG);
+
+    //     req.on('end', () => {
+    //         const totalBytes = req.socket.bytesRead - startBytes;
+    //         LOG.info(`[REQUEST END] ${req.method} ${req.originalUrl} (body: ${totalBytes} bytes)`,LOG.LS.eDEBUG);
+    //     });
+
+    //     req.on('close', ()=>{
+    //         LOG.info(`[REQUEST CLOSE]  ${req.method} ${req.originalUrl}`,LOG.LS.eDEBUG);
+    //     });
+
+    //     next();
+    // };
+
     // private static checkLocalStore(label: string) {
     //     return function (_req, _res, next) {
     //         //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
     //         ASL.checkLocalStore(label);
     //         next();
     //     };
-    // }
-    // private static printRequest(req: Request, label: string = 'Request'): void {
-    //     if(!req) {
-    //         console.log('nothing');
-    //     }
-    //     LOG.info(`${label}: ${H.Helpers.JSONStringify({
-    //         // headers: req.headers,
-    //         // body: req.body,
-    //         query: req.query,
-    //         params: req.params,
-    //         url: req.url,
-    //         method: req.method,
-    //         ip: req.ip,
-    //         path: req.path,
-    //         sid: req.cookies?.connect?.sid ?? undefined,
-    //         // cookies: req.cookies,
-    //         user: req.user
-    //     })}`,LOG.LS.eDEBUG);
     // }
 }
 
@@ -214,4 +244,10 @@ process.on('uncaughtException', (err) => {
     // Once we've installed a process monitor in staging & production, like PM2, change this to
     // exit with a non-zero exit code
     // process.exit(1);
+});
+
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // LOG.error('*** UNCAUGHT REJECTION ***', LOG.LS.eSYS, reason);
 });

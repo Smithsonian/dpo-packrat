@@ -260,6 +260,7 @@ class GraphQLApi {
     }
 
     async uploadAsset(input: UploadAssetInput, context: Context): Promise<UploadAssetResult> {
+        console.log(`>>>> graphql uploadAsset (${JSON.stringify(input)} | ${JSON.stringify(context)})`);
         const operationName = 'uploadAsset';
         const variables = input;
         return this.graphqlRequest({

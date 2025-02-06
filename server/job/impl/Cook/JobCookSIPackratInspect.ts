@@ -553,6 +553,9 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     }
 
     static async extractFromAssetVersion(idAssetVersion: number, sourceMeshFile?: string | undefined): Promise<JobCookSIPackratInspectOutput | null> {
+
+        // grab the JobRun from the upload/inspection of the provided mesh file. This
+        // is used to extract additional material properties from the returned Cook report
         const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(idAssetVersion, sourceMeshFile);
         if (!jobRun)
             return null;
@@ -705,6 +708,8 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             this.sourceMeshStream = undefined;
 
         this.parameters = parameters;
+
+        console.log(`>>>> Inspect: constructor (${H.Helpers.JSONStringify(parameters)})`);
     }
 
     async cleanupJob(): Promise<H.IOResults> {

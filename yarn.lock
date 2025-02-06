@@ -20568,9 +20568,9 @@ webcrypto-core@^1.7.7:
     pvtsutils "^1.3.2"
     tslib "^2.4.0"
 
-"webdav-server@https://github.com/Smithsonian/npm-WebDAV-Server.git":
+"webdav-server@git+https://github.com/Smithsonian/npm-WebDAV-Server.git#bd8843e":
   version "2.7.3"
-  resolved "https://github.com/Smithsonian/npm-WebDAV-Server.git#f5511fc4bc6a56f9c7eb7f08f51e85a045e20d68"
+  resolved "git+https://github.com/Smithsonian/npm-WebDAV-Server.git#bd8843eb46793e2f0b18c3559831ce5808663c08"
   dependencies:
     mime-types "^2.1.34"
     tmp-promise "^3.0.3"
