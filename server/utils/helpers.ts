@@ -580,6 +580,58 @@ export class Helpers {
         }
     }
 
+    static cleanExpressRequest(req: any, includeBody: boolean = true, reduceHeaders: boolean = false): any {
+        // returns a JSON object holding properties that can be easily used with console.log.
+        // feeding a standard Request to console causes a stack overflow due to circular dependencies.
+        if (!req || typeof req !== 'object') {
+            return {
+                method: 'UNKNOWN',
+                url: 'UNKNOWN',
+                headers: {},
+                params: {},
+                query: {},
+                body: {},
+                ip: 'UNKNOWN',
+            };
+        }
+
+        // extract meaningful info from request ignoring cyclic dependencies
+        const result = {
+            method: req.method || 'UNKNOWN',
+            url: req.url || 'UNKNOWN',
+            headers: req.headers && typeof req.headers === 'object' ? req.headers : {},
+            params: req.params && typeof req.params === 'object' ? req.params : {},
+            query: req.query && typeof req.query === 'object' ? req.query : {},
+            body: req.body && typeof req.body === 'object' ? req.body : {},
+            ip: req.ip || 'UNKNOWN',
+        };
+
+        // include the body or not
+        if(includeBody===false)
+            delete result.body;
+
+        // if we want to reduce our headers, include only core fields
+        if(reduceHeaders===true) {
+            const allowedHeaders = [
+                'host',
+                'keep-alive',
+                'content-length',
+                'content-type',
+                'origin',
+                'referer',
+            ];
+
+            result.headers = allowedHeaders.reduce((filtered, key) => {
+                if (Object.prototype.hasOwnProperty.call(result, key)) {
+                    filtered[key] = result.headers[key];
+                }
+                return filtered;
+            }, {});
+        }
+
+        return result;
+    }
+
     static showAllCharactersWithEscapes(input: string): string {
         // routine to display all characters in a string. Helpful for debugging
         // generated strings that may have escape characters, colorization, etc.
