@@ -622,8 +622,8 @@ export class Helpers {
             ];
 
             result.headers = allowedHeaders.reduce((filtered, key) => {
-                if (result.headers.hasOwnProperty(key)) {
-                filtered[key] = result.headers[key];
+                if (Object.prototype.hasOwnProperty.call(result, key)) {
+                    filtered[key] = result.headers[key];
                 }
                 return filtered;
             }, {});

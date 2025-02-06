@@ -109,7 +109,7 @@ export class LocalStorage implements STORE.IStorage {
             retValue.error = res.ioResults.error;
             return retValue;
         }
-        
+
         LOG.info(`LocalStorage.writeStream writing to disk (res: ${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
         try {
             // set our watermark level higher (1MB) to reduce potential backpressure

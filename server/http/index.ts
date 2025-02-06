@@ -80,7 +80,7 @@ export class HttpServer {
 
     static bodyProcessorExclusions: RegExp = /^\/(?!webdav).*$/;
     private async configureMiddlewareAndRoutes(): Promise<boolean> {
-       
+
         // First step is to modify the request body as needed. We do this first
         // because the express.json() 3rd party library breaks any context created
         // by the AsyncLocalStore as it waits for the request/body to arrive.
@@ -209,7 +209,7 @@ export class HttpServer {
     }
     // private static logRequestDetailed(req: Request, _res, next): void {
     //     // move routine higher if debugging potential issues with the JSON body.
-    //     // placed here so GraphQL details are available (from the the body)            
+    //     // placed here so GraphQL details are available (from the the body)
     //     const startBytes = req.socket.bytesRead;
     //     const reqCache: Request = req;
 
@@ -224,10 +224,10 @@ export class HttpServer {
     //     req.on('close', ()=>{
     //         LOG.info(`[REQUEST CLOSE]  ${req.method} ${req.originalUrl}`,LOG.LS.eDEBUG);
     //     });
-    
+
     //     next();
     // };
-    
+
     // private static checkLocalStore(label: string) {
     //     return function (_req, _res, next) {
     //         //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);

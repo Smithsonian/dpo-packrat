@@ -277,7 +277,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     cancelUpload: (id: FileId): void => {
         const { pending } = get();
         const file = getFile(id, pending);
-        
+
         console.log(`[PACKRAT] cancelUpload (${file?.name ?? 'undefined'})`);
 
         if (file) {
@@ -389,7 +389,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
             const onFailed = (error: ErrorEvent) => {
                 // registered with Apollo xhr.upload.onerror and triggers a failed event
                 const failedEvent: UploadFailedEvent = {
-                    id, 
+                    id,
                     message: error.message || 'Unknown Error'
                 };
 

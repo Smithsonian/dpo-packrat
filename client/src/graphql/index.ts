@@ -67,7 +67,7 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         });
     }
 
-    if (networkError) { 
+    if (networkError) {
         console.log('[PACKRAT:ERROR] apollo processRequest: network errors ', networkError);
 
         if (!sentToLogin) {

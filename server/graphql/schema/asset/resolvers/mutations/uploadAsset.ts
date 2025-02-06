@@ -30,17 +30,17 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     const { user } = context;
 
     // using GraphQL and graphql-upload middleware the client sends a multi-part/form upload (stream)
-    // this stream is written to a temporary location on disk by the middleware. args.file returns a 
+    // this stream is written to a temporary location on disk by the middleware. args.file returns a
     // Promise that resolves to the files metadata and a routine to get a ReadStream to the temporary file
-    // 
+    //
     // NOTE: getting the ReadStream does NOT mean the file has been fully written to disk yet. For very
     // large files this can fall out of sync causing dropped connections/streams. It is especially sensitive
-    // to concurrent large uploads and disk, memory, or network I/O bottlenecks.   
+    // to concurrent large uploads and disk, memory, or network I/O bottlenecks.
     const memoryBefore = process.memoryUsage();
     const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, await args.file, args.idAsset, args.type, args.idSOAttachment);
     const workerResult = await uploadAssetWorker.upload();
     const memoryAfter = process.memoryUsage();
-    
+
     LOG.info(`UploadAssetWorker.uploadAsset: Post upload result (rss: ${memoryBefore.rss-memoryAfter.rss} | heap: ${memoryBefore.heapUsed-memoryAfter.heapUsed})\n${H.Helpers.JSONStringify(workerResult)}`,LOG.LS.eGQL);
     return workerResult;
 }
@@ -65,7 +65,7 @@ class UploadAssetWorker extends ResolverBase {
 
     async upload(): Promise<UploadAssetResult> {
         LOG.info(`UploadAssetWorker.upload: upload starting...(${this.apolloFile.filename})`,LOG.LS.eGQL);
-        
+
         // entry point for file upload requests coming from the client
         this.LS = await ASL.getOrCreateStore();
         const UAR: UploadAssetResult = await this.uploadWorker();
@@ -227,7 +227,7 @@ class UploadAssetWorker extends ResolverBase {
 
     private async uploadWorkerOnFinishWorker(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
         LOG.info(`UploadAssetWorker.uploadWorkerOnFinishWorker: finishing worker and adding new assets (storageKey: ${storageKey})`,LOG.LS.eDEBUG);
-       
+
         const idUser: number = this.user!.idUser; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const opInfo: STORE.OperationInfo | null = await STORE.AssetStorageAdapter.computeOperationInfo(idUser,
             this.idAsset

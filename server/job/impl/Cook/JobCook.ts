@@ -272,7 +272,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 try {
                     LOG.info(`JobCook [${this.name()}] creating job: ${requestUrl} body ${JSON.stringify(jobCookPostBody, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
                     const axiosResponse: AxiosResponse<any> | null = await axios.post(encodeURI(requestUrl), jobCookPostBody);
-                    
+
                     console.log(`>>>> Inspect: JobCook: create job axios response (${H.Helpers.JSONStringify(axiosResponse)})`);
 
                     if (axiosResponse?.status === 201) {
@@ -317,7 +317,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 try {
                     LOG.info(`JobCook [${this.name()}] starting job: ${requestUrl}`, LOG.LS.eJOB);
                     const axiosResponse = await axios.patch(encodeURI(requestUrl));
-                    
+
                     console.log(`>>>> Inspect: JobCook: start job axios response (${H.Helpers.JSONStringify(axiosResponse)})`);
 
                     if (axiosResponse.status >= 200 && axiosResponse.status <= 299) {
@@ -392,7 +392,7 @@ export abstract class JobCook<T> extends JobPackrat {
         const requestUrl: string = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/report`;
         try {
             const axiosResponse = await axios.get(encodeURI(requestUrl));
-            
+
             console.log(`>>>> Inspect: JobCook: polling job axios response (${H.Helpers.JSONStringify(axiosResponse)})`);
 
             if (axiosResponse.status < 200 || axiosResponse.status > 299) {
@@ -401,7 +401,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 if (pollNumber > 1)
                     LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: ${error}`, LOG.LS.eJOB);
                 return { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
-            }           
+            }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
             // write to the log for the first 10 polling cycles, then every 5th one after that
