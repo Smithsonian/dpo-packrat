@@ -106,9 +106,13 @@ export type ConfigType = {
     },
     log: {
         root: string;
+        targetRate: number;
     },
     navigation: {
         type: NAVIGATION_TYPE;
+    },
+    slack: {
+        apiKey: string;
     },
     storage: {
         type: STORAGE_TYPE;
@@ -196,10 +200,14 @@ export const Config: ConfigType = {
         smtpAuthPassword: process.env.PACKRAT_SMTP_AUTHPASSWORD ? process.env.PACKRAT_SMTP_AUTHPASSWORD : /* istanbul ignore next */ undefined,
     },
     log: {
-        root: process.env.PACKRAT_LOG_ROOT ? process.env.PACKRAT_LOG_ROOT : /* istanbul ignore next */ './var/logs'
+        root: process.env.PACKRAT_LOG_ROOT ? process.env.PACKRAT_LOG_ROOT : /* istanbul ignore next */ './var/logs',
+        targetRate: process.env.PACKRAT_LOG_RATE ? parseInt(process.env.PACKRAT_LOG_RATE) : 100
     },
     navigation: {
         type: NAVIGATION_TYPE.SOLR,
+    },
+    slack: {
+        apiKey: process.env.PACKRAT_SLACK_KEY ? process.env.PACKRAT_SLACK_KEY: 'undefined',
     },
     storage: {
         type: STORAGE_TYPE.LOCAL,

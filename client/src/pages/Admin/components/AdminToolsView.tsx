@@ -438,7 +438,7 @@ const SelectScenesTable = <T extends DBReference>({ onUpdateSelection, data, col
                         { (data && Array.isArray(data)) ?
                             stableSort(data, getComparator(order, orderBy))
                                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row, index) => {
+                                .map((row: T, index: number) => {
                                     const isItemSelected = isSelected(row);
                                     const labelId = `table-checkbox-${index}`;
 
