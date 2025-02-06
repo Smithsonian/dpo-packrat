@@ -53,8 +53,6 @@ const SAMLRedirectPath: string = '/saml/idp/profile/redirectorpost/sso';
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     let sentToLogin: boolean = false;
 
-    // console.log('[PACKRAT:ERROR] apollo processRequest: ',networkError,graphQLErrors);
-
     if (graphQLErrors) {
         console.log('[PACKRAT:ERROR] apollo processRequest: graphql errors ', graphQLErrors);
         graphQLErrors.forEach(({ message, locations, path }) => {

@@ -88,38 +88,15 @@ export class HttpServer {
         // limiting the maximum JSON payload size to avoid issues with Express trying
         // to parse very large JSON requests. Set to the maximum chunk size for uploads.
         // note: this should not be necessary due to use of multipart/form, but is a precaution
+        // note: cannot skip graphql for uploads since body holds details about the request being made
         this.app.use(HttpServer.bodyProcessorExclusions, (req, _res, next)=>{
-            // if (req.originalUrl.startsWith('/graphql')) {
-            //     LOG.info('HTTP.index: skipping json parse because GraphQL',LOG.LS.eDEBUG);
-            //     return next(); // Skip express.json() for GraphQL
-            // }
-
             // do not extract webdav PUT bodies into request.body element
             express.json({ limit: '100MB' })(req, _res, next); // as RequestHandler;
         });
         this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100MB' }) as RequestHandler);
 
         // early stage request debugging middleware
-        this.app.use((req, _res, next) => {
-            // move routine higher if debugging potential issues with the JSON body.
-            // placed here so GraphQL details are available (from the the body)            
-            const startBytes = req.socket.bytesRead;
-            const reqCache: Request = req;
-
-            LOG.info(`[REQUEST START] ${req.method} ${req.originalUrl} (Content-Length: ${req.headers['content-length'] || 'unknown'})`,LOG.LS.eDEBUG);
-            LOG.info(`[REQUEST START] ${H.Helpers.JSONStringify(H.Helpers.cleanExpressRequest(reqCache,true,true))}`,LOG.LS.eDEBUG);
-
-            req.on('end', () => {
-                const totalBytes = req.socket.bytesRead - startBytes;
-                LOG.info(`[REQUEST END] ${req.method} ${req.originalUrl} (body: ${totalBytes} bytes)`,LOG.LS.eDEBUG);
-            });
-
-            req.on('close', ()=>{
-                LOG.info(`[REQUEST CLOSE]  ${req.method} ${req.originalUrl}`,LOG.LS.eDEBUG);
-            });
-        
-            next();
-        });
+        // this.app.use(HttpServer.logRequestDetailed);
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
@@ -208,7 +185,6 @@ export class HttpServer {
 
     // utility routines and middleware
     private static logRequest(req: Request, _res, next): void {
-        // TODO: more detailed information about the request
         // figure out who is calling this
         const user = req['user'];
         const idUser = user ? user['idUser'] : undefined;
@@ -228,9 +204,30 @@ export class HttpServer {
             } else
                 query = `Unknown GraphQL: ${query}|${req.path}`;
         }
-        LOG.info(`New ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
+        LOG.info(`[REQUEST] ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
         next();
     }
+    // private static logRequestDetailed(req: Request, _res, next): void {
+    //     // move routine higher if debugging potential issues with the JSON body.
+    //     // placed here so GraphQL details are available (from the the body)            
+    //     const startBytes = req.socket.bytesRead;
+    //     const reqCache: Request = req;
+
+    //     LOG.info(`[REQUEST START] ${req.method} ${req.originalUrl} (Content-Length: ${req.headers['content-length'] || 'unknown'})`,LOG.LS.eDEBUG);
+    //     LOG.info(`[REQUEST START] ${H.Helpers.JSONStringify(H.Helpers.cleanExpressRequest(reqCache,true,true))}`,LOG.LS.eDEBUG);
+
+    //     req.on('end', () => {
+    //         const totalBytes = req.socket.bytesRead - startBytes;
+    //         LOG.info(`[REQUEST END] ${req.method} ${req.originalUrl} (body: ${totalBytes} bytes)`,LOG.LS.eDEBUG);
+    //     });
+
+    //     req.on('close', ()=>{
+    //         LOG.info(`[REQUEST CLOSE]  ${req.method} ${req.originalUrl}`,LOG.LS.eDEBUG);
+    //     });
+    
+    //     next();
+    // };
+    
     // private static checkLocalStore(label: string) {
     //     return function (_req, _res, next) {
     //         //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);
