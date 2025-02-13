@@ -329,7 +329,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // if we have merged reports (legacy inspection) use it, otherwise use the 'inspect-mesh' stage
         // const mergeReport: any = steps ? steps['merge-reports'] : undefined;
         const mergeReport: any = steps?.['merged-reports'] ?? steps?.['inspect-mesh'];
-        
+
         // extract meaningful sections of the report for analysis
         const inspection: any = mergeReport?.result?.inspection;
         const meshes: any[] | undefined = inspection?.meshes;
@@ -875,7 +875,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 
     protected async verifyRequest(): Promise<JobIOResults> {
-        const superResult:JobIOResults = await super.verifyRequest();
+        const superResult: JobIOResults = await super.verifyRequest();
         if(superResult.success===false) {
             this.appendToReportAndLog(`[CookJob:Inspection] request is invalid. ${superResult.error} (${this.parameters.sourceMeshFile})`);
             return superResult;
@@ -902,12 +902,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // make sure we have logs. we use 'inspect-mesh' even for legacy since legacy 'merged-reports'
         // does not consolidate the log messages.
         if(!cookJobReport.steps['inspect-mesh'] || !cookJobReport.steps['inspect-mesh'].log) {
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects`);
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects');
             return { success: false, error: 'missing log objects in Cook report', allowRetry: false };
         }
         const logs = cookJobReport.steps['inspect-mesh'].log;
 
-        const superResult:JobIOResults = await super.verifyResponse(cookJobReport);
+        const superResult: JobIOResults = await super.verifyResponse(cookJobReport);
         if(superResult.success===false) {
             // check for known issues and improve error message returned
             if(superResult.error?.includes('Tool Blender: terminated with code: 1')===true) {
@@ -923,35 +923,35 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // check for ZIP processing errors
         if(logContains(logs,'Error: Unsupported file type: .zip')===true) {
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.`);
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.');
             return { success: false, error: 'Zip package incomplete or corrupt.', allowRetry: false };
         }
-        
+
         // check for missing material
         if(logContains(logs,'OBJ import: cannot read from MTL file')===true) {
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. Referenced material not found.`);
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Referenced material not found.');
             return { success: false, error: 'Referenced material not found.', allowRetry: false };
         }
-        
+
         // get our 'root' for properties supporting legacy and modern inspection reports for stats
         const inspectionRoot: any = cookJobReport.steps?.['merged-reports'] ?? cookJobReport.steps?.['inspect-mesh']?.result?.inspection;
 
         // get our geometry results
         if (!inspectionRoot?.meshes) {
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. Missing meshes in inspection result.`);
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Missing meshes in inspection result.');
             return { success: false, error: 'Missing meshes in Cook report', allowRetry: false };
         }
 
         // check for invalid bounding box
         const sizeSum = inspectionRoot.scene.geometry.size.reduce((acc, num) => acc + num, 0);
         if(sizeSum <= 0) {
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. Mesh size is zero.`);
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh size is zero.');
             return { success: false, error: 'Invalid mesh. Size is zero.', allowRetry: false };
         }
 
         // check for invalid geometry counts
         if(inspectionRoot.scene.statistics.numFaces<=0 || inspectionRoot.scene.statistics.numVertices<=0 || inspectionRoot.scene.statistics.numEdges<=0 || inspectionRoot.scene.statistics.numTriangles<=0 || logContains(logs,'Invalid vertex index')===true) {
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.`);
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
 
@@ -959,7 +959,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         if(inspectionRoot.scene.statistics.numLinkedTextures > 0 || inspectionRoot.scene.statistics.numEmbeddedTextures > 0) {
             // NOTE: just looking at first mesh. multi-model inspection will need special handling
             if(inspectionRoot.meshes[0].statistics.hasTexCoords===false) {
-                this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.`);
+                this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.');
                 return { success: false, error: 'Invalid mesh. Missing UVs for included texture.', allowRetry: false };
             }
         }

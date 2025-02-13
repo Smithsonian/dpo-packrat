@@ -256,7 +256,7 @@ export abstract class JobCook<T> extends JobPackrat {
         if(verifyResult.success===false) {
             LOG.info(`JobCook [${this.name()}] failed verification: ${verifyResult.error}`, LOG.LS.eJOB);
             this.recordFailure(`JobCook [${this.name()}] failed verification: ${verifyResult.error}`,verifyResult.error);
-            return { success: false, error: verifyResult.error, allowRetry: false }
+            return { success: false, error: verifyResult.error, allowRetry: false };
         }
 
         const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
@@ -433,7 +433,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     return { success: false, allowRetry: false, connectFailure: false, otherCookError: false, error: cookJobReport['error'] };
                 }
                 case 'done': {
-                    const verifyResult: JobIOResults = await this.verifyResponse(cookJobReport); 
+                    const verifyResult: JobIOResults = await this.verifyResponse(cookJobReport);
                     if(verifyResult.success===true) {
                         this.recordSuccess(JSON.stringify(cookJobReport));
                         return { ...verifyResult, connectFailure: false, otherCookError: false };
@@ -443,7 +443,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     }
                 }
                 case 'error': {
-                    const verifyResult: JobIOResults = await this.verifyResponse(cookJobReport); 
+                    const verifyResult: JobIOResults = await this.verifyResponse(cookJobReport);
                     this.recordFailure(JSON.stringify(cookJobReport),verifyResult.error);
                     return { ...verifyResult, connectFailure: false, otherCookError: false };
                 }
