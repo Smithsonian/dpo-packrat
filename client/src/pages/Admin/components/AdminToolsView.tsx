@@ -731,8 +731,8 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
         // Helper function for cleaning strings for CSV export
         const sanitizeForCSV = (value: string): string => {
-            if (typeof value !== "string") return "";
-            
+            if (typeof value !== 'string') return '';
+
             // Escape double quotes by doubling them
             const escapedValue = value.replace(/"/g, '""');
 
