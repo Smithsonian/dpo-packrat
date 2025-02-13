@@ -141,7 +141,6 @@ class UploadAssetWorker extends ResolverBase {
                     // make sure Promise resolves only one and avoid multiple calls
                     if (!isResolved) {
                         isResolved = true;
-                        console.log('>>>> uploadAsset: on resolved');
                         resolve(value);
                     }
                 };
@@ -159,12 +158,6 @@ class UploadAssetWorker extends ResolverBase {
                 });
                 fileStream.once('close', () => {
                     LOG.info('UploadAssetWorker.uploadWorker: fileStream closed.', LOG.LS.eDEBUG);
-                });
-                fileStream.on('pipe', (dest) => {
-                    LOG.info(`UploadAssetWorker.uploadWorker: fileStream piped to ${dest.constructor.name}.`, LOG.LS.eDEBUG);
-                });
-                fileStream.on('unpipe', (dest) => {
-                    LOG.info(`UploadAssetWorker.uploadWorker: fileStream unpiped from ${dest.constructor.name}.`, LOG.LS.eDEBUG);
                 });
 
                 // (write) stream callbacks for storing the transferred bytes to disk
