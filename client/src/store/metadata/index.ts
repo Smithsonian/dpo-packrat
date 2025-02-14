@@ -513,7 +513,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 case 'bmp':
                 case 'png':
                 case 'jpg':
-                case 'jpeg':  
+                case 'jpeg':
                 case 'processed':
                 case 'colcor':
                 case 'converted':
