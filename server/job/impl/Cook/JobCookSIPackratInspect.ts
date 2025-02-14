@@ -930,7 +930,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // get our 'root' for properties supporting legacy and modern inspection reports for stats
         const inspectionRoot: any = cookJobReport.steps?.['merged-reports'] ?? cookJobReport.steps?.['inspect-mesh']?.result?.inspection;
-        
+
         // check for missing material
         if(inspectionRoot?.scene?.materials?.length>0) {
             const errors: string[] = inspectionRoot.scene.materials
