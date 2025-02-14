@@ -927,14 +927,22 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             return { success: false, error: 'Zip package incomplete or corrupt.', allowRetry: false };
         }
 
-        // check for missing material
-        if(logContains(logs,'OBJ import: cannot read from MTL file')===true) {
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Referenced material not found.');
-            return { success: false, error: 'Referenced material not found.', allowRetry: false };
-        }
-
         // get our 'root' for properties supporting legacy and modern inspection reports for stats
         const inspectionRoot: any = cookJobReport.steps?.['merged-reports'] ?? cookJobReport.steps?.['inspect-mesh']?.result?.inspection;
+
+        // check for missing material
+        if(inspectionRoot.materials.length>0) {
+
+            const errors: string[] = inspectionRoot.materials
+                .filter(m => m.error)   // Keep only items that have an error
+                .map(m => m.error);     // extract the error
+
+            if(errors.length>0) {
+                const errorMsg = errors.join(' | ');
+                this.appendToReportAndLog(`[CookJob:Inspection] response is invalid: ${errorMsg}`);
+                return { success: false, error: errorMsg, allowRetry: false };
+            }
+        }
 
         // get our geometry results
         if (!inspectionRoot?.meshes) {
