@@ -907,6 +907,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
         const logs = cookJobReport.steps['inspect-mesh'].log;
 
+        // make sure our base/super routine doesn't have anything to report
         const superResult: JobIOResults = await super.verifyResponse(cookJobReport);
         if(superResult.success===false) {
             // check for known issues and improve error message returned
@@ -929,13 +930,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // get our 'root' for properties supporting legacy and modern inspection reports for stats
         const inspectionRoot: any = cookJobReport.steps?.['merged-reports'] ?? cookJobReport.steps?.['inspect-mesh']?.result?.inspection;
-
+        
         // check for missing material
-        if(inspectionRoot.materials.length>0) {
-
-            const errors: string[] = inspectionRoot.materials
+        if(inspectionRoot?.scene?.materials?.length>0) {
+            const errors: string[] = inspectionRoot.scene.materials
                 .filter(m => m.error)   // Keep only items that have an error
-                .map(m => m.error);     // extract the error
+                .map(m => 'material ' + m.error);     // extract the error
 
             if(errors.length>0) {
                 const errorMsg = errors.join(' | ');
