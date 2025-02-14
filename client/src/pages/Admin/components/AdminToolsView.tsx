@@ -729,6 +729,21 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         // Helper function to handle null or undefined values and return 'N/A' as default
         const handleNull = (value) => value != null ? value : 'N/A';
 
+        // Helper function for cleaning strings for CSV export
+        const sanitizeForCSV = (value: string): string => {
+            if (typeof value !== 'string') return '';
+
+            // Escape double quotes by doubling them
+            const escapedValue = value.replace(/"/g, '""');
+
+            // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
+            if (/[",\n\r]/.test(escapedValue)) {
+                return `"${escapedValue}"`;
+            }
+
+            return escapedValue;
+        };
+
         // Create CSV headers (clean names)
         const headers = [
             'ID',
@@ -759,16 +774,16 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         const rows = projectScenes.map(scene => {
             return [
                 handleNull(scene.id),
-                handleNull(scene.name),
+                handleNull(sanitizeForCSV(scene.name)),
                 handleNull(scene.publishedState),
                 // formatDate(scene.datePublished),
                 scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
                 // handleNull(scene.project?.id),
-                handleNull(scene.project?.name),
+                handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
-                handleNull(scene.subject?.name),
+                handleNull(sanitizeForCSV(scene.subject?.name)),
                 // handleNull(scene.mediaGroup?.id),
-                handleNull(scene.mediaGroup?.name),
+                handleNull(sanitizeForCSV(scene.mediaGroup?.name)),
                 formatDate(scene.dateCreated),
                 // handleNull(scene.derivatives.models?.status),
                 // handleNull(scene.derivatives.models?.items?.length),
