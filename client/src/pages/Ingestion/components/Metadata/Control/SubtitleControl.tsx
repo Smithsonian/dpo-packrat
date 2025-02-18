@@ -83,7 +83,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             return (
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name1:</Typography>
+                        <Typography className={classes.text}>Name:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
@@ -98,7 +98,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                 <>
                     <TableRow>
                         <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                            <Typography className={classes.text}>Name2:</Typography>
+                            <Typography className={classes.text}>Name:</Typography>
                         </TableCell>
                         <TableCell className={classes.cell} style={{ height: 24 }}>
                             <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
@@ -129,7 +129,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             return (
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name3:</Typography>
+                        <Typography className={classes.text}>Name:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <DebounceInput
@@ -150,7 +150,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             <>
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name4:</Typography>
+                        <Typography className={classes.text}>Name:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
