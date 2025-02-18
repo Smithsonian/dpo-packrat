@@ -137,7 +137,7 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
         .test('not-empty-or-brackets', 'Must select at least one Dataset Use', value => {
             return (value !== '') && (value !== '[]'); // indices into Vocabulary: alignment, reconstruction, texture generation
         }),
-    });
+});
 
 export const photogrammetryFieldsSchema = photogrammetryFieldsSchemaUpdate.shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
