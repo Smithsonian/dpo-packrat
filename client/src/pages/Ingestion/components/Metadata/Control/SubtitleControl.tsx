@@ -57,7 +57,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 
 function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
     const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme, hasError } = props;
-    const classes = useStyles({ hasError, hasPrimaryTheme }); 
+    const classes = useStyles({ hasError, hasPrimaryTheme });
     const selectedSubtitle = subtitles.find(subtitle => subtitle.selected === true)?.value;
     const selectedSubtitlesName = selectedSubtitle ? `: ${selectedSubtitle}` : '';
     const sortedSubtitles: SubtitleFields = subtitles.sort((a, b) => a.subtitleOption - b.subtitleOption);
