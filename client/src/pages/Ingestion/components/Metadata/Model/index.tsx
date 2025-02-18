@@ -413,7 +413,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
-                                                    value={model.creationMethod}
+                                                    value={model.creationMethod ?? ''}
                                                     name='creationMethod'
                                                     onChange={setIdField}
                                                     disableUnderline
@@ -430,7 +430,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
-                                                    value={model.modality}
+                                                    value={model.modality ?? ''}
                                                     name='modality'
                                                     onChange={setIdField}
                                                     disableUnderline
@@ -445,7 +445,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
-                                                    value={model.units}
+                                                    value={model.units ?? ''}
                                                     name='units'
                                                     onChange={setIdField}
                                                     disableUnderline
@@ -460,7 +460,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
-                                                    value={model.purpose}
+                                                    value={model.purpose ?? ''}
                                                     name='purpose'
                                                     onChange={setIdField}
                                                     disableUnderline
@@ -475,7 +475,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
-                                                    value={model.modelFileType}
+                                                    value={model.modelFileType ?? ''}
                                                     name='modelFileType'
                                                     onChange={setIdField}
                                                     disableUnderline
@@ -491,7 +491,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>To enable, <u><b>Units</b></u> must be set to mm, cm, m, in, ft, or yd, <u><b>Purpose</b></u> must be set to Master, and <u><b>Model File Type</b></u> must be set to obj, ply, stl, x3d, wrl, dae, or fbx</span>}>
                                                     <Select
-                                                        value={String(!model.skipSceneGenerate)}
+                                                        value={String(!model.skipSceneGenerate) ?? ''}
                                                         name='skipSceneGenerate'
                                                         onChange={setSceneGenerate}
                                                         disableUnderline
