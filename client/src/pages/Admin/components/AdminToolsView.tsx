@@ -586,18 +586,26 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                 return;
             }
 
-            setProjectList(response.data);
+            // add 'all' to end of list and store
+            const allProject: Project = { idProject: -1, Name: 'All Projects (Expensive!)', Description: 'All projects on Packrat (Expensive!)' };
+            const projects: Project[] = [allProject, ...response.data];
+            setProjectList(projects);
             // console.log('[Packrat:DEBUG] getProjectList: ',response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project list: ${error}`);
         }
     }, []);
     const getProjectScenes = useCallback(async (project?: Project) => {
+
+        // if project is empty (i.e. first run), bail
+        if(!project || project?.Name.length===0)
+            return;
+
         try {
-            console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - STARTED`);
-            const response: RequestResponse = await API.getProjectScenes(project ? project.idProject : -1);
+            console.log(`[Packrat] getting scenes for project (${project.Name}) - STARTED`,project);
+            const response: RequestResponse = await API.getProjectScenes(project.idProject);
             if(response.success === false) {
-                console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project ? project.Name : 'all'} | message: ${response.message})`);
+                console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project.Name} | message: ${response.message})`);
                 setProjectScenes([]);
                 return;
             }
@@ -616,7 +624,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             });
 
             // console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
-            console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - FINISHED [${response.data.length}]`);
+            console.log(`[Packrat] getting scenes for project (${project.Name}) - FINISHED [${response.data.length}]`);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
