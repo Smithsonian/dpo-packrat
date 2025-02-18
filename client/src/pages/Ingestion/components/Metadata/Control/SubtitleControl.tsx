@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SubtitleFields, eSubtitleOption } from '../../../../../store/metadata/metadata.types';
 import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, fade } from '@material-ui/core';
 import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
@@ -57,11 +57,25 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 
 function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
     const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme, hasError } = props;
-    const classes = useStyles({ hasError, hasPrimaryTheme });
+    const classes = useStyles({ hasError, hasPrimaryTheme }); 
     const selectedSubtitle = subtitles.find(subtitle => subtitle.selected === true)?.value;
     const selectedSubtitlesName = selectedSubtitle ? `: ${selectedSubtitle}` : '';
     const sortedSubtitles: SubtitleFields = subtitles.sort((a, b) => a.subtitleOption - b.subtitleOption);
 
+    const hasInitialized = useRef(false);
+
+    useEffect(() => {
+        // auto-select the subtitle if it exists on first load/render
+        if(hasInitialized.current===true)
+            return;
+        hasInitialized.current = true;
+
+        const subtitle = sortedSubtitles.find(sub => sub.value.length > 0);
+        if(subtitle && subtitle.selected===false) {
+            onSelectSubtitle(subtitle.id);
+        }
+
+    },[sortedSubtitles,onSelectSubtitle]);
 
     const renderSubtitleOptions = (subtitles: SubtitleFields): React.ReactElement => {
         // Case: forced
@@ -69,7 +83,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             return (
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name:</Typography>
+                        <Typography className={classes.text}>Name1:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
@@ -84,7 +98,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                 <>
                     <TableRow>
                         <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                            <Typography className={classes.text}>Name:</Typography>
+                            <Typography className={classes.text}>Name2:</Typography>
                         </TableCell>
                         <TableCell className={classes.cell} style={{ height: 24 }}>
                             <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
@@ -115,7 +129,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             return (
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name:</Typography>
+                        <Typography className={classes.text}>Name3:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <DebounceInput
@@ -136,7 +150,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
             <>
                 <TableRow>
                     <TableCell className={clsx(classes.labelCell, classes.cell)}>
-                        <Typography className={classes.text}>Name:</Typography>
+                        <Typography className={classes.text}>Name4:</Typography>
                     </TableCell>
                     <TableCell className={classes.cell} style={{ height: 24 }}>
                         <Typography className={classes.text}>{`${objectName}${selectedSubtitlesName}`}</Typography>
