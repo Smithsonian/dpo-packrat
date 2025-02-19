@@ -917,6 +917,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 else
                     superResult.error = 'Unknown Blender error. Check report.';
             }
+            if(superResult.error?.includes('Tool MeshSmith: terminated with code: 1')===true) {
+                if(logContains(logs,'Invalid vertex index')===true)
+                    superResult.error = 'Invalid mesh. Missing vertices/faces.';
+                else
+                    superResult.error = 'Unknown MeshSmith error. Check report.';
+            }
 
             this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. ${superResult.error}`);
             return superResult;
@@ -959,6 +965,10 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // check for invalid geometry counts
         if(inspectionRoot.scene.statistics.numFaces<=0 || inspectionRoot.scene.statistics.numVertices<=0 || inspectionRoot.scene.statistics.numEdges<=0 || inspectionRoot.scene.statistics.numTriangles<=0 || logContains(logs,'Invalid vertex index')===true) {
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
+            return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
+        }
+        if(logContains(logs,'Invalid vertex index')===true) {
             this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
