@@ -494,9 +494,44 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             let variantType = getInitialEntry(eVocabularySetID.eCaptureDataFileVariantType);
             const variantTypes = getEntries(eVocabularySetID.eCaptureDataFileVariantType);
 
-            if (folder.search('raw') !== -1) variantType = variantTypes[0].idVocabulary;
-            if (folder.search('processed') !== -1) variantType = variantTypes[1].idVocabulary;
-            if (folder.search('camera') !== -1) variantType = variantTypes[2].idVocabulary;
+            const variantRaw = variantTypes[0].idVocabulary;
+            const variantProcessed = variantTypes[1].idVocabulary;
+            const variantCamera = variantTypes[2].idVocabulary;
+            const variantMask = variantTypes[3].idVocabulary;
+
+            switch (folder) {
+                case 'raw':
+                case 'cr2':
+                case 'cr3':
+                case 'dng':
+                case 'arw':
+                case 'camdng':
+                    variantType = variantRaw; break;
+
+                case 'tif':
+                case 'tiff':
+                case 'bmp':
+                case 'png':
+                case 'jpg':
+                case 'jpeg':
+                case 'processed':
+                case 'colcor':
+                case 'converted':
+                    variantType = variantProcessed; break;
+
+                case 'from camera':
+                case 'fromcamera':
+                case 'camerajpg':
+                case 'camera':
+                    variantType = variantCamera; break;
+
+                case 'masks':
+                case 'mask':
+                    variantType = variantMask; break;
+
+                default:
+                    console.log(`[Packrat: Warning] cannot find matching variant for: ${folder}`);
+            }
 
             return  {
                 id: index,
@@ -504,7 +539,6 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 variantType
             };
         });
-
         return stateFolders;
     },
     updateMetadataFolders: async (): Promise<void> => {

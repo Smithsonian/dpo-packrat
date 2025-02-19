@@ -586,18 +586,26 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
                 return;
             }
 
-            setProjectList(response.data);
+            // add 'all' to end of list and store
+            const allProject: Project = { idProject: -1, Name: 'All Projects (Expensive!)', Description: 'All projects on Packrat (Expensive!)' };
+            const projects: Project[] = [allProject, ...response.data];
+            setProjectList(projects);
             // console.log('[Packrat:DEBUG] getProjectList: ',response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project list: ${error}`);
         }
     }, []);
     const getProjectScenes = useCallback(async (project?: Project) => {
+
+        // if project is empty (i.e. first run), bail
+        if(!project || project?.Name.length===0)
+            return;
+
         try {
-            console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - STARTED`);
-            const response: RequestResponse = await API.getProjectScenes(project ? project.idProject : -1);
+            console.log(`[Packrat] getting scenes for project (${project.Name}) - STARTED`,project);
+            const response: RequestResponse = await API.getProjectScenes(project.idProject);
             if(response.success === false) {
-                console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project ? project.Name : 'all'} | message: ${response.message})`);
+                console.log(`[Packrat:ERROR] cannot get project scenes list. (project: ${project.Name} | message: ${response.message})`);
                 setProjectScenes([]);
                 return;
             }
@@ -616,7 +624,7 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
             });
 
             // console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
-            console.log(`[Packrat] getting scenes for project (${project ? project.Name:'all'}) - FINISHED [${response.data.length}]`);
+            console.log(`[Packrat] getting scenes for project (${project.Name}) - FINISHED [${response.data.length}]`);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
@@ -729,6 +737,21 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         // Helper function to handle null or undefined values and return 'N/A' as default
         const handleNull = (value) => value != null ? value : 'N/A';
 
+        // Helper function for cleaning strings for CSV export
+        const sanitizeForCSV = (value: string): string => {
+            if (typeof value !== 'string') return '';
+
+            // Escape double quotes by doubling them
+            const escapedValue = value.replace(/"/g, '""');
+
+            // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
+            if (/[",\n\r]/.test(escapedValue)) {
+                return `"${escapedValue}"`;
+            }
+
+            return escapedValue;
+        };
+
         // Create CSV headers (clean names)
         const headers = [
             'ID',
@@ -759,16 +782,16 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
         const rows = projectScenes.map(scene => {
             return [
                 handleNull(scene.id),
-                handleNull(scene.name),
+                handleNull(sanitizeForCSV(scene.name)),
                 handleNull(scene.publishedState),
                 // formatDate(scene.datePublished),
                 scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
                 // handleNull(scene.project?.id),
-                handleNull(scene.project?.name),
+                handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
-                handleNull(scene.subject?.name),
+                handleNull(sanitizeForCSV(scene.subject?.name)),
                 // handleNull(scene.mediaGroup?.id),
-                handleNull(scene.mediaGroup?.name),
+                handleNull(sanitizeForCSV(scene.mediaGroup?.name)),
                 formatDate(scene.dateCreated),
                 // handleNull(scene.derivatives.models?.status),
                 // handleNull(scene.derivatives.models?.items?.length),
