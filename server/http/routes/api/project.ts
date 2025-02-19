@@ -130,9 +130,11 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     timestamp = Date.now();
 
     // cycle through scenes building results, and removing any that are null
-    const buildScenePromises = scenes.map(scene => buildProjectSceneDef(scene, project));
-    const builtScenes = await Promise.all(buildScenePromises);
-    const result: SceneSummary[] = builtScenes.filter((scene): scene is SceneSummary => scene !== null);
+    // const buildScenePromises = scenes.map(scene => buildProjectSceneDef(scene, project));
+    // const builtScenes = await Promise.all(buildScenePromises);
+    // const result: SceneSummary[] = builtScenes.filter((scene): scene is SceneSummary => scene !== null);
+    const concurrencyLimit = 5; // Adjust based on server load
+    const result: SceneSummary[] = await processScenesWithLimit(scenes, project, concurrencyLimit);
 
     // initial scene gathering status output
     const dataSize: number = JSON.stringify(scenes).length;
@@ -592,5 +594,33 @@ const resolvePublishedState = (state: COMMON.ePublishedState): string => {
         default:
             return 'Unknown State';
     }
+};
+const processScenesWithLimit = async (
+    scenes: DBAPI.Scene[],
+    project: DBAPI.Project | null,
+    concurrency: number
+): Promise<SceneSummary[]> => {
+    const results: SceneSummary[] = [];
+    let index = 0;
+
+    // Worker function to process scenes with rate limiting
+    const worker = async () => {
+        while (index < scenes.length) {
+            const sceneIndex = index++; // Assign the next scene to process
+            const scene = scenes[sceneIndex];
+
+            try {
+                const result = await buildProjectSceneDef(scene, project);
+                if (result) results.push(result);
+            } catch (error) {
+                LOG.error(`Failed to process scene ${scene.idScene}: ${error}`, LOG.LS.eDB);
+            }
+        }
+    };
+
+    // Create `concurrency` number of workers running in parallel
+    await Promise.all(Array.from({ length: concurrency }, worker));
+
+    return results;
 };
 //#endregion

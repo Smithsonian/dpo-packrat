@@ -504,14 +504,42 @@ export class Helpers {
         return parseFloat(input.toFixed(precision));
     }
 
-    /** parses a string as JSON */
-    static JSONParse(input: string): any {
-        try {
-            return { json: JSON.parse(input) };
-        } catch(error) {
-            LOG.error(`JSON Failure: ${this.JSONStringify(error)}`,LOG.LS.eSYS);
-            return undefined;
+    static JSONParse(input: any): any {
+        if(typeof(input) === 'string') {
+            try {
+                const json = JSON.parse(input);
+                return json;
+            } catch(error) {
+                const message = error instanceof Error ? error.message : String(error);
+                LOG.error(`JSON Failure: ${this.JSONStringify(message)}`,LOG.LS.eSYS);
+                return undefined;
+            }
         }
+        return input;
+    }
+    static safeJSONParse(input: any): any {
+        if(typeof(input)==='string') {
+            try {
+                // Pre-process large numbers in the raw JSON string
+                const processedJson = this.JSONRemoveLargeNumbers(input);
+                if(processedJson==='')
+                    throw new Error('failed to process large numbers');
+
+                // Parse the cleaned JSON string with a reviver
+                const json = JSON.parse(processedJson, (_key, value) => {
+                    if (typeof value === 'string' && !isNaN(Number(value))) {
+                        return Number(value); // Convert back to number after parsing
+                    }
+                    return value;
+                });
+                return json;
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                LOG.error(`JSONParse Failure: ${message}`,LOG.LS.eSYS);
+                return undefined;
+            }
+        }
+        return input;
     }
 
     static JSONStringify(obj: any): string {
@@ -544,6 +572,28 @@ export class Helpers {
                 return undefined;
         }
         return Helpers.saferStringify(key, value);
+    }
+
+    static JSONRemoveLargeNumbers(jsonString: string): string {
+        try {
+            const result = jsonString.replace(/-?\d+\.\d+e[+-]?\d+/gi, (match) => {
+                const num = Number(match);
+                // console.log(`🔹 Replacing: ${match} -> ${num}`);
+
+                if (isNaN(num))
+                    return match; // Leave it untouched if it's not a valid number
+
+                // Clamp extreme values and wrap them in quotes for later processing
+                return num > Number.MAX_VALUE ? `"${Number.MAX_VALUE}"`
+                    : num < -Number.MAX_VALUE ? `"${-Number.MAX_VALUE}"`
+                        : `"${num}"`; // Convert number to string to reprocess later
+            });
+            return result;
+        } catch(error) {
+            const message = error instanceof Error ? error.message : String(error);
+            LOG.error(`JSON number processing failed: ${this.JSONStringify(message)}`,LOG.LS.eSYS);
+            return '';
+        }
     }
 
     /* c.f. https://coderwall.com/p/ostduq/escape-html-with-javascript */
@@ -657,5 +707,18 @@ export class Helpers {
                     }
             }
         }).join('');
+    }
+
+    static clampNumber(value: number): number {
+        // clamp numbers to accepted ranges
+        if (Number.isInteger(value)) {
+            // For integers: Clamp between MIN_SAFE_INTEGER and MAX_SAFE_INTEGER
+            return Math.max(Number.MIN_SAFE_INTEGER, Math.min(value, Number.MAX_SAFE_INTEGER));
+        } else {
+            // For floats: Clamp within Number.MAX_VALUE and MIN_VALUE (avoid Infinity)
+            if (value > Number.MAX_VALUE) return Number.MAX_VALUE;
+            if (value < -Number.MAX_VALUE) return -Number.MAX_VALUE;
+            return value; // Return valid float as-is
+        }
     }
 }

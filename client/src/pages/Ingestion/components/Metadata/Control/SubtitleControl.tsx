@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { SubtitleFields, eSubtitleOption } from '../../../../../store/metadata/metadata.types';
 import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, fade } from '@material-ui/core';
 import { RiCheckboxBlankCircleLine, RiRecordCircleFill } from 'react-icons/ri';
@@ -62,6 +62,20 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
     const selectedSubtitlesName = selectedSubtitle ? `: ${selectedSubtitle}` : '';
     const sortedSubtitles: SubtitleFields = subtitles.sort((a, b) => a.subtitleOption - b.subtitleOption);
 
+    const hasInitialized = useRef(false);
+
+    useEffect(() => {
+        // auto-select the subtitle if it exists on first load/render
+        if(hasInitialized.current===true)
+            return;
+        hasInitialized.current = true;
+
+        const subtitle = sortedSubtitles.find(sub => sub.value.length > 0);
+        if(subtitle && subtitle.selected===false) {
+            onSelectSubtitle(subtitle.id);
+        }
+
+    },[sortedSubtitles,onSelectSubtitle]);
 
     const renderSubtitleOptions = (subtitles: SubtitleFields): React.ReactElement => {
         // Case: forced
