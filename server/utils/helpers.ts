@@ -574,19 +574,19 @@ export class Helpers {
         return Helpers.saferStringify(key, value);
     }
 
-    static JSONRemoveLargeNumbers(jsonString: string): string {           
+    static JSONRemoveLargeNumbers(jsonString: string): string {
         try {
             const result = jsonString.replace(/-?\d+\.\d+e[+-]?\d+/gi, (match) => {
                 const num = Number(match);
                 // console.log(`🔹 Replacing: ${match} -> ${num}`);
-        
+
                 if (isNaN(num))
                     return match; // Leave it untouched if it's not a valid number
-        
+
                 // Clamp extreme values and wrap them in quotes for later processing
                 return num > Number.MAX_VALUE ? `"${Number.MAX_VALUE}"`
-                     : num < -Number.MAX_VALUE ? `"${-Number.MAX_VALUE}"`
-                     : `"${num}"`; // Convert number to string to reprocess later
+                    : num < -Number.MAX_VALUE ? `"${-Number.MAX_VALUE}"`
+                        : `"${num}"`; // Convert number to string to reprocess later
             });
             return result;
         } catch(error) {
