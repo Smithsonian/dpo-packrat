@@ -338,7 +338,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                 photogrammetry.datasetType === 6 &&
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                        <Typography className={tableClasses.labelText}>Dataset Use</Typography>
+                                        <Typography className={tableClasses.labelText}>Dataset Use*</Typography>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
                                         <Select
@@ -390,7 +390,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
                             <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
-                                    <Typography className={tableClasses.labelText}>Name</Typography>
+                                    <Typography className={tableClasses.labelText}>Name*</Typography>
                                 </TableCell>
                                 <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
                                     <DebounceInput
@@ -428,7 +428,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             <TableRow className={tableClasses.tableRow} style={{ ...errorFieldStyling(errors.photogrammetry.dateCaptured) }}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>
-                                        Date Captured
+                                        Date Captured*
                                     </Typography>
                                 </TableCell>
                                 <TableCell className={tableClasses.tableCell}>

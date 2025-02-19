@@ -404,13 +404,13 @@ function Model(props: ModelProps): React.ReactElement {
                                 <Table className={tableClasses.table}>
                                     <TableBody>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created*</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} dateHeight='22px' />
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.creationMethod || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method*</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.creationMethod ?? ''}
@@ -427,7 +427,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modality || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality*</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.modality ?? ''}
@@ -442,7 +442,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.units || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units*</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.units ?? ''}
@@ -457,7 +457,7 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.purpose || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose*</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.purpose ?? ''}
