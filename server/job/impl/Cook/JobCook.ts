@@ -409,9 +409,17 @@ export abstract class JobCook<T> extends JobPackrat {
                 return { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
             }
 
+            // Cook may return a string vs. JSON in the event that there is invalid values (e.g. large numbers)
+            // or anything that would make JSON.parse fail. To catch the large numbers we preprocess the JSON
+            // and then convert the numerical values so they pass JSON.parse.
+            let cookJobReport = H.Helpers.safeJSONParse(axiosResponse.data);
+            if(!cookJobReport) {
+                LOG.error(`JobCook [${this.name()}] polling [${pollNumber}] get ${requestUrl} failed: Invalid response data`, LOG.LS.eJOB);
+                return { success: false, allowRetry: false, connectFailure: false, otherCookError: false };
+            }
+
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
             // write to the log for the first 10 polling cycles, then every 5th one after that
-            const cookJobReport = axiosResponse.data;
             if (pollNumber <= 10 || ((pollNumber % 5) == 0))
                 LOG.info(`JobCook [${this.name()}] polling [${pollNumber}], state: ${cookJobReport['state']}: ${requestUrl}`, LOG.LS.eJOB);
 
