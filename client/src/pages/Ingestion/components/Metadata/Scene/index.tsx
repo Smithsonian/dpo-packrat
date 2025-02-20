@@ -36,10 +36,11 @@ interface SceneProps {
     readonly metadataIndex: number;
     setInvalidMetadataStep: (valid: boolean) => void;
     fieldErrors?: FieldErrors;
+    readonly ingestionLoading: boolean;
 }
 
 function Scene(props: SceneProps): React.ReactElement {
-    const { metadataIndex, setInvalidMetadataStep, fieldErrors } = props;
+    const { metadataIndex, setInvalidMetadataStep, fieldErrors, ingestionLoading } = props;
     const classes = useStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
     const { scene, file } = metadata;
@@ -278,6 +279,7 @@ function Scene(props: SceneProps): React.ReactElement {
                         name='updateNotes'
                         onChange={setNameField}
                         placeholder='Update notes...'
+                        disabled={ingestionLoading}
                     />
                 </Box>
             )}
@@ -290,6 +292,7 @@ function Scene(props: SceneProps): React.ReactElement {
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
                     identifierName='Scene'
+                    disabled={ingestionLoading}
                 />
             </Box>
             {!idAsset && (
@@ -301,6 +304,7 @@ function Scene(props: SceneProps): React.ReactElement {
                             onAdd={openSourceObjectModal}
                             onRemove={onRemoveSourceObject}
                             relationshipLanguage='Parents'
+                            disabled={ingestionLoading}
                         />
                     </Box>
                     <Box mb={2}>
@@ -310,6 +314,7 @@ function Scene(props: SceneProps): React.ReactElement {
                             onAdd={openDerivedObjectModal}
                             onRemove={onRemoveDerivedObject}
                             relationshipLanguage='Children'
+                            disabled={ingestionLoading}
                         />
                     </Box>
                     <ReferenceModels referenceModels={referenceModels} idAssetVersion={Number(idAssetVersion)} />
@@ -323,6 +328,7 @@ function Scene(props: SceneProps): React.ReactElement {
                             onUpdateCustomSubtitle={onUpdateCustomSubtitle}
                             hasPrimaryTheme
                             hasError={fieldErrors?.scene.subtitles ?? false}
+                            disabled={ingestionLoading}
                         />
                     </Box>
                 </Fragment>
@@ -334,6 +340,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 posedAndQCd={scene.posedAndQCd}
                 canBeQCd={scene.canBeQCd}
                 EdanUUID={scene.EdanUUID}
+                disabled={ingestionLoading}
             />
 
             <ObjectSelectModal
