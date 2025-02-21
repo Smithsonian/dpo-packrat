@@ -443,18 +443,22 @@ export abstract class JobCook<T> extends JobPackrat {
                 case 'done': {
                     const verifyResult: JobIOResults = await this.verifyResponse(cookJobReport);
                     if(verifyResult.success===true) {
-                        this.recordSuccess(JSON.stringify(cookJobReport));
+                        await this.recordSuccess(JSON.stringify(cookJobReport));
                         return { ...verifyResult, connectFailure: false, otherCookError: false };
                     } else {
-                        this.recordFailure(JSON.stringify(cookJobReport),verifyResult.error);
+                        await this.recordFailure(JSON.stringify(cookJobReport),verifyResult.error);
                         return { ...verifyResult, connectFailure: false, otherCookError: false };
                     }
                 }
                 case 'error': {
                     const verifyResult: JobIOResults = await this.verifyResponse(cookJobReport);
-                    this.recordFailure(JSON.stringify(cookJobReport),verifyResult.error);
+                    await this.recordFailure(JSON.stringify(cookJobReport),verifyResult.error);
                     return { ...verifyResult, connectFailure: false, otherCookError: false };
                 }
+                default: {
+                    LOG.info(`JobCook.pollingCallback: unsupported state: ${cookJobReport['state']}`,LOG.LS.eDEBUG);
+                    LOG.info(`JobCook.pollingCallback: polling job axios response (${H.Helpers.JSONStringify(axiosResponse)})`,LOG.LS.eDEBUG);
+                }                    
             }
             // LOG.info(`JobCook.pollingCallback: job ${cookJobReport['state']} report\n${H.Helpers.JSONStringify(cookJobReport)}`,LOG.LS.eDEBUG);
 
@@ -480,7 +484,7 @@ export abstract class JobCook<T> extends JobPackrat {
         }
 
         // we made it here so the job appears successful
-        return { success: true };
+        return { success: true, allowRetry: false };
     }
 
     protected async fetchFile(fileName: string): Promise<STORE.ReadStreamResult> {
