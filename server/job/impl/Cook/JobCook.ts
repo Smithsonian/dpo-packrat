@@ -458,7 +458,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 default: {
                     LOG.info(`JobCook.pollingCallback: unsupported state: ${cookJobReport['state']}`,LOG.LS.eDEBUG);
                     LOG.info(`JobCook.pollingCallback: polling job axios response (${H.Helpers.JSONStringify(axiosResponse)})`,LOG.LS.eDEBUG);
-                }                    
+                }
             }
             // LOG.info(`JobCook.pollingCallback: job ${cookJobReport['state']} report\n${H.Helpers.JSONStringify(cookJobReport)}`,LOG.LS.eDEBUG);
 
