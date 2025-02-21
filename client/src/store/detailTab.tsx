@@ -632,7 +632,8 @@ const schemaCD = yup.object().shape({
 });
 
 const schemaModel = yup.object().shape({
-    dateCreated: yup.date().max(Date(), 'Date Created cannot be set in the future')
+    // ignore time from date comparison to avoid timezone issues
+    dateCreated: yup.date().max(new Date(new Date().setHours(0, 0, 0, 0)), 'Date Created cannot be set in the future')
 });
 
 const schemaItemAndSubject = yup.object().shape({
