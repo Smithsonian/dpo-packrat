@@ -75,10 +75,11 @@ interface SceneDataProps {
     canBeQCd: boolean;
     idAssetVersion?: number;
     setCheckboxField: ({ target }: { target: EventTarget }) => void;
+    disabled?: boolean;
 }
 
 function SceneDataForm(props: SceneDataProps): React.ReactElement {
-    const { sceneData, setCheckboxField, approvedForPublication, posedAndQCd, canBeQCd, EdanUUID } = props;
+    const { sceneData, setCheckboxField, approvedForPublication, posedAndQCd, canBeQCd, EdanUUID, disabled } = props;
     const classes = useStyles();
     if (!sceneData)
         return <Box></Box>;
@@ -103,6 +104,7 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
                                 title='approvedForPublication-input'
                                 size='small'
                                 color='primary'
+                                disabled={disabled}
                             />
                         </TableCell>
                     </TableRow>
@@ -119,7 +121,7 @@ function SceneDataForm(props: SceneDataProps): React.ReactElement {
                                     name='posedAndQCd'
                                     onChange={setCheckboxField}
                                     checked={posedAndQCd}
-                                    disabled={!canBeQCd}
+                                    disabled={!canBeQCd || disabled}
                                     size='small'
                                     color='primary'
                                 />

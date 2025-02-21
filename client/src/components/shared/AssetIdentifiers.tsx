@@ -43,13 +43,14 @@ interface AssetIdentifiersProps {
     subjectView?: boolean;
     onUpdateIdIdentifierPreferred?: (id: number) => void;
     identifierName: string;
+    disabled?: boolean;
 }
 
 function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
 
     //Props - types defined in interface
     const { systemCreated, identifiers, onSystemCreatedChange, onAddIdentifer, onUpdateIdentifer, onRemoveIdentifer,
-        subjectView, onUpdateIdIdentifierPreferred, identifierName } = props;
+        subjectView, onUpdateIdIdentifierPreferred, identifierName, disabled } = props;
 
     //Component styling
     const classes = useStyles();
@@ -106,6 +107,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                             checked={systemCreated}
                             color='primary'
                             onChange={onSystemCreatedChange}
+                            disabled={disabled}
                         />
                         <Typography className={classes.systemCreatedText} variant='body1'>
                             System will create an identifier
@@ -122,6 +124,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                             onClick={() => {
                                 addIdentifer(getEntries(eVocabularySetID.eIdentifierIdentifierType)[0].idVocabulary);
                             }}
+                            disabled={disabled}
                         >
                             Add
                         </Button>
@@ -136,6 +139,7 @@ function AssetIdentifiers(props: AssetIdentifiersProps): React.ReactElement {
                         onUpdate={updateIdentifierFields}
                         subjectView={subjectView}
                         onUpdateIdIdentifierPreferred={onUpdateIdIdentifierPreferred}
+                        disabled={disabled}
                     />
                 )}
             </FieldType>

@@ -104,11 +104,12 @@ const useStyles = makeStyles(({ palette }) => ({
 
 interface ModelProps {
     readonly metadataIndex: number;
-    fieldErrors?: FieldErrors
+    fieldErrors?: FieldErrors;
+    readonly ingestionLoading: boolean;
 }
 
 function Model(props: ModelProps): React.ReactElement {
-    const { metadataIndex, fieldErrors } = props;
+    const { metadataIndex, fieldErrors, ingestionLoading } = props;
     const classes = useStyles();
     const tableClasses = useTableStyles();
     const metadata = useMetadataStore(state => state.metadatas[metadataIndex]);
@@ -339,7 +340,14 @@ function Model(props: ModelProps): React.ReactElement {
             <Box className={classes.container}>
                 {idAsset && (
                     <Box mb={2}>
-                        <TextArea label='Update Notes' value={model.updateNotes} name='updateNotes' onChange={setNameField} placeholder='Update notes...' />
+                        <TextArea
+                            label='Update Notes'
+                            value={model.updateNotes}
+                            name='updateNotes'
+                            onChange={setNameField}
+                            placeholder='Update notes...'
+                            disabled={ingestionLoading}
+                        />
                     </Box>
                 )}
 
@@ -353,6 +361,7 @@ function Model(props: ModelProps): React.ReactElement {
                         onUpdateIdentifer={onIdentifersChange}
                         onRemoveIdentifer={onIdentifersChange}
                         identifierName='Model'
+                        disabled={ingestionLoading}
                     />
                 </Box>
 
@@ -365,6 +374,7 @@ function Model(props: ModelProps): React.ReactElement {
                                 onAdd={openSourceObjectModal}
                                 onRemove={onRemoveSourceObject}
                                 relationshipLanguage='Parents'
+                                disabled={ingestionLoading}
                             />
                         </Box>
                         <Box className={ classes.ingestContainer } >
@@ -374,10 +384,13 @@ function Model(props: ModelProps): React.ReactElement {
                                 onAdd={openDerivedObjectModal}
                                 onRemove={onRemoveDerivedObject}
                                 relationshipLanguage='Children'
+                                disabled={ingestionLoading}
                             />
                         </Box>
                         <Box mb={2}>
-                            <AssetFilesTable files={assetFiles} />
+                            <AssetFilesTable
+                                files={assetFiles}
+                            />
                         </Box>
                     </React.Fragment>
                 )}
@@ -392,6 +405,7 @@ function Model(props: ModelProps): React.ReactElement {
                                     onUpdateCustomSubtitle={onUpdateCustomSubtitle}
                                     hasPrimaryTheme={false}
                                     hasError={fieldErrors?.model.subtitles ?? false}
+                                    disabled={ingestionLoading}
                                 />
                             </Box>
                         </>
@@ -419,6 +433,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                    disabled={ingestionLoading}
                                                 >
 
                                                     {/* Grabs the dropdown options for SELECT */}
@@ -436,6 +451,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                    disabled={ingestionLoading}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelModality).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -451,6 +467,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                    disabled={ingestionLoading}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelUnits).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -466,6 +483,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                    disabled={ingestionLoading}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelPurpose).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -481,6 +499,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                    disabled={ingestionLoading}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelFileType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                                 </Select>
@@ -495,7 +514,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                         name='skipSceneGenerate'
                                                         onChange={setSceneGenerate}
                                                         disableUnderline
-                                                        disabled={sceneGenerateDisabled}
+                                                        disabled={sceneGenerateDisabled || ingestionLoading}
                                                         className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                     >

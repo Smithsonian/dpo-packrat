@@ -23,10 +23,11 @@ import { getNullableSelectEntries } from '../../../../../utils/controls';
 
 interface PhotogrammetryProps {
     readonly metadataIndex: number;
+    readonly ingestionLoading: boolean;
 }
 
 function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
-    const { metadataIndex } = props;
+    const { metadataIndex, ingestionLoading } = props;
     const tableClasses = useTableStyles();
 
     const useStyles = makeStyles(({ palette }) => ({
@@ -275,6 +276,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                         name='updateNotes'
                         onChange={setNameField}
                         placeholder='Update notes...'
+                        disabled={ingestionLoading}
                     />
                 </Box>
             )}
@@ -287,6 +289,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     onUpdateIdentifer={onIdentifersChange}
                     onRemoveIdentifer={onIdentifersChange}
                     identifierName='Capture Data'
+                    disabled={ingestionLoading}
                 />
             </Box>
             {!idAsset && (
@@ -298,6 +301,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             onAdd={openSourceObjectModal}
                             onRemove={onRemoveSourceObject}
                             relationshipLanguage='Source Objects For This Ingest'
+                            disabled={ingestionLoading}
                         />
                     </Box>
                     <Box  className={ classes.ingestContainer } >
@@ -307,6 +311,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             onAdd={openDerivedObjectModal}
                             onRemove={onRemoveDerivedObject}
                             relationshipLanguage='Objects Derived From This Ingest'
+                            disabled={ingestionLoading}
                         />
                     </Box>
                 </React.Fragment>
@@ -328,6 +333,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(tableClasses.select, classes.fieldSizing)}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        disabled={ingestionLoading}
                                     >
                                         {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
                                     </Select>
@@ -360,6 +366,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                                     })}
                                                 </div>);
                                             }}
+                                            disabled={ingestionLoading}
                                         >
                                             { getEntries(eVocabularySetID.eCaptureDataDatasetUse)
                                                 .map(({ idVocabulary, Term }, index) =>
@@ -384,6 +391,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         name='datasetFieldId'
                                         onChange={setIdField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -401,6 +409,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         name='name'
                                         onChange={setNameField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -421,6 +430,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         forceNotifyByEnter={false}
                                         debounceTimeout={400}
                                         style={{ width: '100%', minHeight: '4rem', textAlign: 'left', padding: '5px' }}
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -436,6 +446,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         value={photogrammetry.dateCaptured}
                                         onChange={(_, value) => setDateField('dateCaptured', value)}
                                         dateHeight='22px'
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -460,6 +471,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(tableClasses.select, classes.fieldSizing)}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        disabled={ingestionLoading}
                                     >
                                         {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataItemPositionType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
@@ -478,6 +490,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         name='itemPositionFieldId'
                                         onChange={setIdField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -494,6 +507,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         name='itemArrangementFieldId'
                                         onChange={setIdField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -515,6 +529,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(tableClasses.select, classes.fieldSizing)}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        disabled={ingestionLoading}
                                     >
                                         {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataFocusType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
@@ -532,6 +547,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(tableClasses.select, classes.fieldSizing)}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        disabled={ingestionLoading}
                                     >
                                         {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataLightSourceType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
@@ -549,6 +565,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(tableClasses.select, classes.fieldSizing)}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        disabled={ingestionLoading}
                                     >
                                         {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataBackgroundRemovalMethod), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
@@ -572,6 +589,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disableUnderline
                                         className={clsx(tableClasses.select, classes.fieldSizing)}
                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        disabled={ingestionLoading}
                                     >
                                         {getNullableSelectEntries(getEntries(eVocabularySetID.eCaptureDataClusterType), 'idVocabulary', 'Term').map(({ value, label }, index) => <MenuItem key={index} value={value}>{label}</MenuItem>)}
                                     </Select>
@@ -590,6 +608,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         name='clusterGeometryFieldId'
                                         onChange={setIdField}
                                         className={clsx(tableClasses.input, classes.fieldSizing)}
+                                        disabled={ingestionLoading}
                                     />
                                 </TableCell>
                             </TableRow>
@@ -619,6 +638,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                     originalFolders={[...photogrammetry.folders]}
                     options={getEntries(eVocabularySetID.eCaptureDataFileVariantType)}
                     onUpdate={updateFolderVariant}
+                    disabled={ingestionLoading}
                 />
             </Box>
 

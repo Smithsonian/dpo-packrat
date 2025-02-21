@@ -62,7 +62,16 @@ const useStyles = makeStyles(({ palette }) => createStyles({
     breadcrumbs: {
         marginBottom: 10,
         color: palette.primary.dark
-    }
+    },
+    ingestNotice: {
+        padding: 2,
+        textAlign: 'center',
+        color: palette.secondary.contrastText,
+        backgroundColor: palette.secondary.main,
+        borderRadius: '2rem',
+        border: `1px solid ${palette.secondary.dark}`,
+        marginTop: '1rem'
+    },
 }));
 
 type QueryParams = {
@@ -222,15 +231,15 @@ function Metadata(): React.ReactElement {
 
     const getMetadataComponent = (metadataIndex: number): React.ReactNode => {
         if (assetType.photogrammetry) {
-            return <Photogrammetry metadataIndex={metadataIndex} />;
+            return <Photogrammetry metadataIndex={metadataIndex} ingestionLoading={ingestionLoading} />;
         }
 
         if (assetType.scene) {
-            return <Scene metadataIndex={metadataIndex} setInvalidMetadataStep={setInvalidMetadataStep} fieldErrors={fieldErrors} />;
+            return <Scene metadataIndex={metadataIndex} setInvalidMetadataStep={setInvalidMetadataStep} fieldErrors={fieldErrors} ingestionLoading={ingestionLoading} />;
         }
 
         if (assetType.model) {
-            return <Model metadataIndex={metadataIndex} fieldErrors={fieldErrors} />;
+            return <Model metadataIndex={metadataIndex} fieldErrors={fieldErrors} ingestionLoading={ingestionLoading} />;
         }
 
         if (assetType.attachment) {
@@ -256,6 +265,13 @@ function Metadata(): React.ReactElement {
             <Box className={classes.content}>
                 {calculateBreadcrumbPath()}
                 {getMetadataComponent(metadataIndex)}
+                { ingestionLoading && (
+                    <Box className={classes.ingestNotice}>
+                        <Typography style={{ margin: '5px 0px 2px 0px;' }}>
+                            <strong>Ingesting:</strong> Please do not leave this page until finished.
+                        </Typography>
+                    </Box>
+                )}
             </Box>
             <SidebarBottomNavigator
                 rightLoading={ingestionLoading}

@@ -14,6 +14,7 @@ interface SubtitleControlProps {
     onUpdateCustomSubtitle: (event: React.ChangeEvent<HTMLInputElement>, id: number) => void;
     hasPrimaryTheme: boolean;
     hasError: boolean;
+    disabled?: boolean;
 }
 
 const useStyles = makeStyles(({ palette, typography }) => ({
@@ -56,7 +57,7 @@ const useStyles = makeStyles(({ palette, typography }) => ({
 }));
 
 function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
-    const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme, hasError } = props;
+    const { objectName, subtitles, onUpdateCustomSubtitle, onSelectSubtitle, hasPrimaryTheme, hasError, disabled } = props;
     const classes = useStyles({ hasError, hasPrimaryTheme });
     const selectedSubtitle = subtitles.find(subtitle => subtitle.selected === true)?.value;
     const selectedSubtitlesName = selectedSubtitle ? `: ${selectedSubtitle}` : '';
@@ -116,6 +117,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                 className={classes.input}
                                 debounceTimeout={400}
                                 title={`subtitle-input-${value}`}
+                                disabled={disabled}
                             />
                         </TableCell>
                     </TableRow>
@@ -139,6 +141,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                             className={classes.input}
                             debounceTimeout={400}
                             title={`subtitle-input-${value}`}
+                            disabled={disabled}
                         />
                     </TableCell>
                 </TableRow>
@@ -177,6 +180,7 @@ function SubtitleControl(props: SubtitleControlProps): React.ReactElement {
                                                 className={classes.input}
                                                 debounceTimeout={400}
                                                 title={`subtitle-input-${value}`}
+                                                disabled={disabled}
                                             />
                                         )}
                                     </div>
