@@ -378,7 +378,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                 </TableRow>
                             }
 
-                            <TableRow className={tableClasses.tableRow}>
+                            {/* <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Dataset Field ID</Typography>
                                 </TableCell>
@@ -394,7 +394,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disabled={ingestionLoading}
                                     />
                                 </TableCell>
-                            </TableRow>
+                            </TableRow> */}
 
                             <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
@@ -477,7 +477,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </Select>
                                 </TableCell>
                             </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
+                            {/* <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Item Position Field ID</Typography>
                                 </TableCell>
@@ -493,8 +493,8 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disabled={ingestionLoading}
                                     />
                                 </TableCell>
-                            </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
+                            </TableRow> */}
+                            {/* <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Item Arrangement Field ID</Typography>
                                 </TableCell>
@@ -510,7 +510,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disabled={ingestionLoading}
                                     />
                                 </TableCell>
-                            </TableRow>
+                            </TableRow> */}
                             <TableRow className={tableClasses.tableRow}>
                                 {/* Spacer */}
                                 <TableCell className={tableClasses.tableCell}>
@@ -595,7 +595,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                     </Select>
                                 </TableCell>
                             </TableRow>
-                            <TableRow className={tableClasses.tableRow}>
+                            {/* <TableRow className={tableClasses.tableRow}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Cluster Geometry Field ID</Typography>
                                 </TableCell>
@@ -611,7 +611,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         disabled={ingestionLoading}
                                     />
                                 </TableCell>
-                            </TableRow>
+                            </TableRow> */}
                             <TableRow className={tableClasses.tableRow} style={{ height: '26px' }}>
                                 <TableCell className={tableClasses.tableCell}>
                                     <Typography className={tableClasses.labelText}>Camera Settings Uniform</Typography>
