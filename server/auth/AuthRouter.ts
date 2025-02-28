@@ -20,7 +20,7 @@ AuthRouter.post('/login', (request: Request, response: Response, next: NextFunct
 
 AuthRouter.get('/logout', (request: Request, response: Response) => {
     request['logout'](err => {
-        LOG.error('Auth logout', LOG.LS.eSYS, err);
+        LOG.info(`AuthRouter.post: User logged out ${err ? '('+err+')': ''}`, LOG.LS.eSYS);
     });
     response.send({ success: true });
 });
