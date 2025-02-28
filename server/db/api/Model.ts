@@ -235,15 +235,15 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         if (!idSystemObject)
             return null;
         try {
-            const scenes: Model[] | null =  DBC.CopyArray<ModelBase, Model>(
+            const models: Model[] | null =  DBC.CopyArray<ModelBase, Model>(
                 await DBC.DBConnection.prisma.$queryRaw<Model[]>`
                 SELECT * FROM Model AS mdl
                 JOIN SystemObject AS so ON (mdl.idModel = so.idModel)
                 WHERE so.idSystemObject = ${idSystemObject};`, Model);
 
-            // if we have scenes just return the first one, else null
-            if(scenes)
-                return scenes[0];
+            // if we have models just return the first one, else null
+            if(models)
+                return models[0];
 
             return null;
         } catch (error) /* istanbul ignore next */ {
