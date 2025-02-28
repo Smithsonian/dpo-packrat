@@ -236,7 +236,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
 
     // build our summary for CaptureData. Returned items represents a singler list of all datasets
     const captureData: AssetList | null = await buildSummaryCaptureData(idModels);
-    
+
     // build our data structure to return
     const result: SceneSummary = {
         id: sceneSO.idSystemObject,
@@ -379,7 +379,7 @@ const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | 
             // asset so we must pull one of the images and use its information.
             // if we don't have an asset or assetVersion then we throw an error (9)invalid captuire data set)
             const assetSO: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(cdSO?.fetchID());
-            if(!assetSO || assetSO.length===0) { hasError=true; continue; } 
+            if(!assetSO || assetSO.length===0) { hasError=true; continue; }
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(assetSO[0].idAsset);
             if(!assetVersion) { hasError=true; continue; }
 
@@ -392,15 +392,15 @@ const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | 
                 downloadable: false,
                 quality: 'Highest' ,            // assuming the best quality
                 usage: 'Source:CaptureData',    // TODO: extract dataset usage metadata
-                dateCreated: assetVersion.DateCreated,        
-                creator: {                      
+                dateCreated: assetVersion.DateCreated,
+                creator: {
                     idUser: user?.idUser ?? -1,
                     email: user?.EmailAddress ?? 'undefined',
                     name: user?.Name ?? 'unknown',
                 },
-            }
+            };
 
-            // add to list 
+            // add to list
             result.items.push(asset);
         }
     }
@@ -414,7 +414,7 @@ const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | 
         result.status = 'Missing';
 
     return result;
-}
+};
 
 const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary | null> => {
 
@@ -529,19 +529,19 @@ const getStatusCoreModels = (models: AssetSummary[]): string => {
 
     // required combinations needed (e.g. by Voyager)
     const requiredCombinations = [
-        { usage: "Web", quality: "Thumb" },
-        { usage: "Web", quality: "Low" },
-        { usage: "Web", quality: "Medium" },
-        { usage: "Web", quality: "High" },
-        { usage: "Web|AR", quality: "Low" }
+        { usage: 'Web', quality: 'Thumb' },
+        { usage: 'Web', quality: 'Low' },
+        { usage: 'Web', quality: 'Medium' },
+        { usage: 'Web', quality: 'High' },
+        { usage: 'Web|AR', quality: 'Low' }
     ];
 
     // make sure every combination above is accounted for
     // TODO: return array of missing combinations for better error handling/reporting
     return requiredCombinations.every(({ usage, quality }) =>
         models.some(obj =>
-            obj.quality === quality && 
-            (obj.usage === usage || (usage === "Web|AR" && (obj.usage === "Web" || obj.usage === "AR")))
+            obj.quality === quality &&
+            (obj.usage === usage || (usage === 'Web|AR' && (obj.usage === 'Web' || obj.usage === 'AR')))
         )
     ) ? 'Good':'Missing';
 };
