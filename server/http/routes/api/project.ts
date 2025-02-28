@@ -34,7 +34,7 @@ type AssetSummary = DBReference & {
     },
 };
 type AssetList = {
-    status: string,
+    status: string,                 // Missing, Error, Good, SysError
     items: AssetSummary[];
 };
 type SceneSummary = DBReference & {
@@ -226,9 +226,17 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         return null;
     }
 
-    // get capture data reference(s)
-    // TODO...
+    // the id we get for master model is the idSystemObject so we need to get an array
+    // of idModel to find the capture data
+    const idModels: number[] = [];
+    for(let i=0; i<masterModels.items.length; i++) {
+        const model: DBAPI.Model | null = await DBAPI.Model.fetchBySystemObject(masterModels.items[i].id);
+        if(model) idModels.push(model.idModel);
+    }
 
+    // build our summary for CaptureData. Returned items represents a singler list of all datasets
+    const captureData: AssetList | null = await buildSummaryCaptureData(idModels);
+    
     // build our data structure to return
     const result: SceneSummary = {
         id: sceneSO.idSystemObject,
@@ -254,7 +262,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         sources:
             {
                 models: masterModels,
-                captureData: { status: '', items: [] },
+                captureData: captureData ?? { status: 'Missing', items: [] },
             },
     };
 
@@ -275,6 +283,10 @@ const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ 
     });
     const summaries = await Promise.all(buildSummaries);
 
+    // our various lists derived from the main model/scene
+    // models: basic models for Voyager
+    // downloads: models that are flagged for download on the website
+    // ar: models specific to AR. includes Voyager and download versions
     const models: AssetList = { status: '', items: [] };
     const downloads: AssetList = { status: '', items: [] };
     const ar: AssetList = { status: '', items: [] };
@@ -289,23 +301,19 @@ const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ 
                 downloads.items.push(item.summary);
 
             // if we are an AR model
-            if(item.summary.usage==='AR')
+            if(item.summary.usage.includes('AR'))
                 ar.items.push(item.summary);
         }
     });
 
+    // see if we have the minimum models for Voyager
+    models.status = getStatusCoreModels(models.items);
+
     // get download status
     downloads.status = getStatusDownload(downloads.items);
 
+    // get AR model status
     ar.status = getStatusARModels(ar.items);
-
-    // figure out our status for models
-    if(downloads.status.includes('Error') || ar.status.includes('Error'))
-        models.status = 'Error';
-    else if(downloads.status.includes('Missing') || ar.status.includes('Missing'))
-        models.status = 'Missing';
-    else
-        models.status = 'Good';
 
     return { models, downloads, ar };
 };
@@ -345,7 +353,70 @@ const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | nu
 
     return result;
 };
-const buildAssetSummaryFromModel = async (idModel: number, fromAsset: boolean = true): Promise<AssetSummary | null> => {
+const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | null> => {
+    // TODO: separate master models so each has a status and list
+    // of capture data associated with it
+    const result: AssetList = { status: 'Missing', items: [] };
+
+    // cycle through master models
+    let hasError: boolean = false;
+    for(let i=0; i<idModels.length; i++) {
+
+        // get any CaptureData associated with the provided master model
+        const captureData: DBAPI.CaptureData[] | null = await DBAPI.CaptureData.fecthFromModel(idModels[i]);
+        if(!captureData)
+            return result;
+
+        // build items
+        for(let i=0; i<captureData.length; i++) {
+
+            // get our system object id
+            const cdSO = await captureData[i].fetchSystemObject();
+            if(!cdSO) { continue; }
+
+            // get the asset and asset version for access to creator and date info
+            // only using first asset since there is no explicit access to the original 'zip'
+            // asset so we must pull one of the images and use its information.
+            // if we don't have an asset or assetVersion then we throw an error (9)invalid captuire data set)
+            const assetSO: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(cdSO?.fetchID());
+            if(!assetSO || assetSO.length===0) { hasError=true; continue; } 
+            const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(assetSO[0].idAsset);
+            if(!assetVersion) { hasError=true; continue; }
+
+            // get our user/creator of this asset
+            const user: DBAPI.User | null = await DBAPI.User.fetch(assetVersion.idUserCreator);
+
+            const asset: AssetSummary = {
+                id: cdSO.idSystemObject,
+                name: captureData[i].Name,
+                downloadable: false,
+                quality: 'Highest' ,            // assuming the best quality
+                usage: 'Source:CaptureData',    // TODO: extract dataset usage metadata
+                dateCreated: assetVersion.DateCreated,        
+                creator: {                      
+                    idUser: user?.idUser ?? -1,
+                    email: user?.EmailAddress ?? 'undefined',
+                    name: user?.Name ?? 'unknown',
+                },
+            }
+
+            // add to list 
+            result.items.push(asset);
+        }
+    }
+
+    // update our status for the group of capture data
+    if(hasError===true)
+        result.status = 'Error';
+    else if(result.items.length>0)
+        result.status = 'Good';
+    else
+        result.status = 'Missing';
+
+    return result;
+}
+
+const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary | null> => {
 
     // get our actual model so we can get the date created
     const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
@@ -354,9 +425,16 @@ const buildAssetSummaryFromModel = async (idModel: number, fromAsset: boolean = 
         return null;
     }
 
+    // get our system object id for the model (just using original)
+    const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+    if(!modelSO) {
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+        return null;
+    }
+
     const result: AssetSummary = {
-        id: -1,
-        name: 'undefined',
+        id: modelSO.idSystemObject,
+        name: model.Name,
         quality: 'Highest',
         usage: 'Source',
         downloadable: false,
@@ -364,59 +442,34 @@ const buildAssetSummaryFromModel = async (idModel: number, fromAsset: boolean = 
         creator: { idUser: -1, name: '', email: '' },
     };
 
-    if(fromAsset===true) {
-        // get our asset for the model
-        const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model.idModel);
-        if(!modelAsset || modelAsset.length===0) {
-            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset from model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
-            return null;
-        } else if(modelAsset.length>1)
-            LOG.info(`API.Project.buildAssetSummaryFromModel more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDB);
+    // get our asset for the model
+    // NOTE: there will often be 3+ for a single model (ex. obj, mtl, jpg)
+    const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model.idModel);
+    if(!modelAsset || modelAsset.length===0) {
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset from model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+        return null;
+    } else if(modelAsset.length>1)
+        LOG.info(`API.Project.buildAssetSummaryFromModel more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDEBUG);
 
-        // get our latest asset version
-        const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
-        if(!modelAssetVer) {
-            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
-            return null;
-        }
-
-        // get our user who created the current version of the asset
-        const modelCreator: DBAPI.User | null = await DBAPI.User.fetch(modelAssetVer.idUserCreator);
-        if(!modelCreator)
-            LOG.error(`API.Project.buildAssetSummaryFromModel did not find creator account attached to this model (idModel: ${model.idModel} | idAsset: ${modelAssetVer.idAsset} | idUserCreator: ${modelAssetVer.idUserCreator})`,LOG.LS.eDB);
-
-        // determine who created this asset (if possible)
-        result.creator = {
-            idUser: modelCreator?.idUser ?? -1,
-            name: modelCreator?.Name ?? 'unknown',
-            email: modelCreator?.EmailAddress ?? 'undefined',
-        };
-
-        // find the one that is geometry or zip
-        // ...
-
-        // get our system object id for the model
-        const modelSO: DBAPI.SystemObject | null = await modelAsset[0].fetchSystemObject();
-        if(!modelSO) {
-            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
-            return null;
-        }
-
-        result.id = modelSO.idSystemObject;
-        result.name = modelAsset[0].FileName;
-        result.dateCreated = modelAssetVer.DateCreated;
-    } else {
-        // get our system object id for the model
-        const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
-        if(!modelSO) {
-            LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
-            return null;
-        }
-
-        result.id = modelSO.idSystemObject;
-        result.name = model.Name;
-        result.dateCreated = model.DateCreated;
+    // get our latest asset version
+    const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
+    if(!modelAssetVer) {
+        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
+        return null;
     }
+
+    // get our user who created the current version of the asset
+    const modelCreator: DBAPI.User | null = await DBAPI.User.fetch(modelAssetVer.idUserCreator);
+    if(!modelCreator)
+        LOG.error(`API.Project.buildAssetSummaryFromModel did not find creator account attached to this model (idModel: ${model.idModel} | idAsset: ${modelAssetVer.idAsset} | idUserCreator: ${modelAssetVer.idUserCreator})`,LOG.LS.eDB);
+
+    // determine who created this asset (if possible)
+    result.creator = {
+        idUser: modelCreator?.idUser ?? -1,
+        name: modelCreator?.Name ?? 'unknown',
+        email: modelCreator?.EmailAddress ?? 'undefined',
+    };
+    result.dateCreated = modelAssetVer.DateCreated;
 
     return result;
 };
@@ -472,6 +525,26 @@ const isAuthorized = async (req: Request): Promise<H.IOResults> => {
 const getElapseSeconds = (startTime: number, endTime: number): number => {
     return (endTime - startTime)/1000;
 };
+const getStatusCoreModels = (models: AssetSummary[]): string => {
+
+    // required combinations needed (e.g. by Voyager)
+    const requiredCombinations = [
+        { usage: "Web", quality: "Thumb" },
+        { usage: "Web", quality: "Low" },
+        { usage: "Web", quality: "Medium" },
+        { usage: "Web", quality: "High" },
+        { usage: "Web|AR", quality: "Low" }
+    ];
+
+    // make sure every combination above is accounted for
+    // TODO: return array of missing combinations for better error handling/reporting
+    return requiredCombinations.every(({ usage, quality }) =>
+        models.some(obj =>
+            obj.quality === quality && 
+            (obj.usage === usage || (usage === "Web|AR" && (obj.usage === "Web" || obj.usage === "AR")))
+        )
+    ) ? 'Good':'Missing';
+};
 const getStatusDownload = (downloads: AssetSummary[]): string => {
 
     // if we have less than 6 downloads we're missing some
@@ -490,8 +563,6 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
     return 'Good';
 };
 const getStatusARModels = (models: AssetSummary[]): string => {
-
-    // console.log('AR models',models);
 
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     let nonDownloadableCount: number = 0;
@@ -565,7 +636,7 @@ const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
                         {
                             // check quality to see if AR or not
                             if(MSX.Quality?.toLowerCase()==='ar')
-                                assetUsage = 'AR';
+                                assetUsage = 'Web|AR'; // include both
                             else
                                 assetUsage = 'Web';
                         } break;
@@ -581,6 +652,7 @@ const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
     let assetQuality: string = 'Undefined';
     if(MSX.Quality) {
         switch(MSX.Quality.toLocaleLowerCase()) {
+            case 'thumb':   assetQuality = 'Thumb'; break;
             case 'low':     assetQuality = 'Low'; break;
             case 'medium':  assetQuality = 'Medium'; break;
             case 'high':    assetQuality = 'High'; break;
