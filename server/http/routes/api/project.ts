@@ -27,6 +27,11 @@ type AssetSummary = DBReference & {
     quality: string,
     usage: string,                  // how is this asset used. (e.g. Web, Native, AR, Master)
     dateCreated: Date,
+    creator: {                      // who created the asset
+        idUser: number,
+        email: string,
+        name: string,
+    },
 };
 type AssetList = {
     status: string,
@@ -253,11 +258,10 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             },
     };
 
-    LOG.info(`API.Project.buildProjectSceneDef built scene summary (${(Date.now()-startTime)/1000}s): ${H.Helpers.JSONStringify(result)}`,LOG.LS.eDEBUG);
+    LOG.info(`API.Project.buildProjectSceneDef built scene summary (name: ${result.name} | time: ${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
     return result;
 };
 const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ models: AssetList, downloads: AssetList, ar: AssetList }  | null> => {
-    console.log(H.Helpers.JSONStringify(MSXs));
 
     // build up all of our summaries and wait for them to finish
     const buildSummaries = MSXs.map(async (MSX) => {
@@ -356,7 +360,8 @@ const buildAssetSummaryFromModel = async (idModel: number, fromAsset: boolean = 
         quality: 'Highest',
         usage: 'Source',
         downloadable: false,
-        dateCreated: new Date()
+        dateCreated: new Date(),
+        creator: { idUser: -1, name: '', email: '' },
     };
 
     if(fromAsset===true) {
@@ -374,6 +379,18 @@ const buildAssetSummaryFromModel = async (idModel: number, fromAsset: boolean = 
             LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
             return null;
         }
+
+        // get our user who created the current version of the asset
+        const modelCreator: DBAPI.User | null = await DBAPI.User.fetch(modelAssetVer.idUserCreator);
+        if(!modelCreator)
+            LOG.error(`API.Project.buildAssetSummaryFromModel did not find creator account attached to this model (idModel: ${model.idModel} | idAsset: ${modelAssetVer.idAsset} | idUserCreator: ${modelAssetVer.idUserCreator})`,LOG.LS.eDB);
+
+        // determine who created this asset (if possible)
+        result.creator = {
+            idUser: modelCreator?.idUser ?? -1,
+            name: modelCreator?.Name ?? 'unknown',
+            email: modelCreator?.EmailAddress ?? 'undefined',
+        };
 
         // find the one that is geometry or zip
         // ...
@@ -474,7 +491,7 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
 };
 const getStatusARModels = (models: AssetSummary[]): string => {
 
-    console.log('AR models',models);
+    // console.log('AR models',models);
 
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     let nonDownloadableCount: number = 0;
