@@ -311,7 +311,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 </TableRow>
                             }
 
-                            <TableRow className={classes.tableRow}>
+                            {/* <TableRow className={classes.tableRow}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                     <Typography className={classes.labelText}>Dataset Field ID</Typography>
                                 </TableCell>
@@ -329,7 +329,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetFieldId')) }}
                                     />
                                 </TableCell>
-                            </TableRow>
+                            </TableRow> */}
 
                             <TableRow className={classes.tableRow}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
@@ -395,7 +395,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     </Select>
                                 </TableCell>
                             </TableRow>
-                            <TableRow className={classes.tableRow}>
+                            {/* <TableRow className={classes.tableRow}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                     <Typography className={classes.labelText}>Item Position Field ID</Typography>
                                 </TableCell>
@@ -412,8 +412,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'itemPositionFieldId')) }}
                                     />
                                 </TableCell>
-                            </TableRow>
-                            <TableRow className={classes.tableRow}>
+                            </TableRow> */}
+                            {/* <TableRow className={classes.tableRow}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                     <Typography className={classes.labelText}>Item Arrangement Field ID</Typography>
                                 </TableCell>
@@ -430,7 +430,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'itemArrangementFieldId')) }}
                                     />
                                 </TableCell>
-                            </TableRow>
+                            </TableRow> */}
 
                             <TableRow className={classes.tableRow}>
                                 {/* Spacer */}
@@ -523,7 +523,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     </Select>
                                 </TableCell>
                             </TableRow>
-                            <TableRow className={classes.tableRow}>
+                            {/* <TableRow className={classes.tableRow}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                     <Typography className={classes.labelText}>Cluster Geometry Field ID</Typography>
                                 </TableCell>
@@ -540,7 +540,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'clusterGeometryFieldId')) }}
                                     />
                                 </TableCell>
-                            </TableRow>
+                            </TableRow> */}
                             <TableRow className={classes.tableRow} style={{ height: '26px' }}>
                                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                     <Typography className={classes.labelText}>Camera Settings Uniform</Typography>

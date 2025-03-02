@@ -300,7 +300,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             relatedObjects={photogrammetry.sourceObjects}
                             onAdd={openSourceObjectModal}
                             onRemove={onRemoveSourceObject}
-                            relationshipLanguage='Source Objects For This Ingest'
+                            relationshipLanguage='Parents'
                             disabled={ingestionLoading}
                         />
                     </Box>
@@ -310,7 +310,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                             relatedObjects={photogrammetry.derivedObjects}
                             onAdd={openDerivedObjectModal}
                             onRemove={onRemoveDerivedObject}
-                            relationshipLanguage='Objects Derived From This Ingest'
+                            relationshipLanguage='Children'
                             disabled={ingestionLoading}
                         />
                     </Box>
