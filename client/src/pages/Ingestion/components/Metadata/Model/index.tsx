@@ -512,18 +512,18 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Tooltip>
                                             </TableCell>
                                             <TableCell className={tableClasses.tableCell}>
-                                                    <Select
-                                                        value={String(!model.skipSceneGenerate) ?? ''}
-                                                        name='skipSceneGenerate'
-                                                        onChange={setSceneGenerate}
-                                                        disableUnderline
-                                                        disabled={sceneGenerateDisabled || ingestionLoading}
-                                                        className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
-                                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                                    >
-                                                        <MenuItem value='true'>True</MenuItem>
-                                                        <MenuItem value='false'>False</MenuItem>
-                                                    </Select>
+                                                <Select
+                                                    value={String(!model.skipSceneGenerate) ?? ''}
+                                                    name='skipSceneGenerate'
+                                                    onChange={setSceneGenerate}
+                                                    disableUnderline
+                                                    disabled={sceneGenerateDisabled || ingestionLoading}
+                                                    className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                >
+                                                    <MenuItem value='true'>True</MenuItem>
+                                                    <MenuItem value='false'>False</MenuItem>
+                                                </Select>
                                             </TableCell>
                                         </TableRow>
                                     </TableBody>
