@@ -105,7 +105,6 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
         return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
     }
 
-    console.log('a');
     return generateResponse(true,`Generating Downloads for: ${scene.Name}`,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
 };
 const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloadsResponse> => {

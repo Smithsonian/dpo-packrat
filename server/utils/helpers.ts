@@ -44,16 +44,28 @@ export type IOStatus = {
     data?: any;
 };
 
+export type OpResult = {
+    success: boolean,
+    message: string,
+    data?: any,
+};
+
 export enum ProcessState {
     UNDEFINED = 'undefined',
     WAITING = 'waiting',        // in a waiting to be staged/queued
-    PENDING = 'pending',        // was initialized and pending execution    
+    PENDING = 'pending',        // was initialized and pending execution
     ACTIVE = 'active',          // is working
     PROCESSING = 'processing',  // finished core work and finalizing
     COMPLETED = 'completed',    // finished successfully
     FAILED = 'failed',          // error anywhere during process
     CANCELLED = 'cancelled'     // was the process cancelled by the user
-};
+}
+
+export enum ProcessStatus {
+    UNDEFINED = 'undefined',
+    GOOD = 'good',
+    ERROR = 'error',
+}
 
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
@@ -80,6 +92,10 @@ export class Helpers {
     // Adapted from https://github.com/npm/unique-filename/blob/master/index.js
     static randomFilename(filepath: string, prefix: string): string {
         return path.join(filepath, (prefix ? prefix + '-' : '') + Helpers.randomSlug());
+    }
+
+    static generateGUID(): string {
+        return crypto.randomUUID();
     }
 
     // Adapted from https://github.com/sindresorhus/filename-reserved-regex/blob/master/index.js
