@@ -44,6 +44,17 @@ export type IOStatus = {
     data?: any;
 };
 
+export enum ProcessState {
+    UNDEFINED = 'undefined',
+    WAITING = 'waiting',        // in a waiting to be staged/queued
+    PENDING = 'pending',        // was initialized and pending execution    
+    ACTIVE = 'active',          // is working
+    PROCESSING = 'processing',  // finished core work and finalizing
+    COMPLETED = 'completed',    // finished successfully
+    FAILED = 'failed',          // error anywhere during process
+    CANCELLED = 'cancelled'     // was the process cancelled by the user
+};
+
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
         if (!Array.isArray(input1) || ! Array.isArray(input2) || input1.length !== input2.length)
