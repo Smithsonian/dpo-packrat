@@ -104,6 +104,27 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return null;
         }
     }
+    static async fecthFromModel(idModel: number): Promise<CaptureData[] | null> {
+
+        if (!idModel)
+            return null;
+        try {
+            return DBC.CopyArray<CaptureDataBase, CaptureData>(
+                await DBC.DBConnection.prisma.$queryRaw<CaptureData[]>`
+                SELECT DISTINCT cd.*
+                FROM Model AS m
+                JOIN SystemObject AS mSO ON (mSO.idModel=m.idModel)
+                JOIN SystemObjectXref AS mSOX ON (mSOX.idSystemObjectDerived=mSO.idSystemObject)
+                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject=mSOX.idSystemObjectMaster AND cdSO.idCaptureData IS NOT NULL)
+                JOIN CaptureData AS cd ON (cd.idCaptureData=cdSO.idCaptureData)
+                WHERE m.idModel=${idModel};`, CaptureData);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.CaptureData.fetchFromModel', LOG.LS.eDB, error);
+            return null;
+        }
+
+        return null;
+    }
 
     static async fetchFromXref(idCaptureDataGroup: number): Promise<CaptureData[] | null> {
         if (!idCaptureDataGroup)

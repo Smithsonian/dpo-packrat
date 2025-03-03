@@ -527,6 +527,11 @@ type AssetSummary = DBReference & {
     quality: string,
     usage: string,
     dateCreated: Date,
+    creator: {                      // who created the asset
+        idUser: number,
+        email: string,
+        name: string,
+    },
 };
 type AssetList = {
     status: string,
@@ -754,55 +759,45 @@ const AdminToolsBatchGeneration = (): React.ReactElement => {
 
         // Create CSV headers (clean names)
         const headers = [
+            'Date Created',
+            'Creator',
             'ID',
             'Scene Name',
+            'Reviewed',
             'Published',
             // 'Date Published',
-            'Reviewed',
+            'Downloads',
+            'Master Model',
+            'AR',
+            'Capture Data',
             // 'Project ID',
             'Project',
             // 'Subject ID',
             'Subject',
             // 'Media Group ID',
             'Media Group',
-            'Date Created',
-            // 'Models Status',
-            // 'Models Items Count',
-            'Downloads',
-            // 'Downloads Items Count',
-            'AR',
-            // 'AR Items Count',
-            'Master Model',
-            // 'Source Models Items Count',
-            'Capture Data',
-            // 'Source Capture Data Items Count'
         ];
 
         // Build CSV rows
         const rows = projectScenes.map(scene => {
             return [
+                formatDate(scene.dateCreated),
+                handleNull(scene.sources.models?.items?.[0]?.creator?.name),
                 handleNull(scene.id),
                 handleNull(sanitizeForCSV(scene.name)),
+                scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
                 handleNull(scene.publishedState),
                 // formatDate(scene.datePublished),
-                scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
+                handleNull(scene.derivatives.downloads?.status),
+                handleNull(scene.sources.models?.status),
+                handleNull(scene.derivatives.ar?.status),
+                handleNull(scene.sources.captureData?.status),
                 // handleNull(scene.project?.id),
                 handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
                 handleNull(sanitizeForCSV(scene.subject?.name)),
                 // handleNull(scene.mediaGroup?.id),
                 handleNull(sanitizeForCSV(scene.mediaGroup?.name)),
-                formatDate(scene.dateCreated),
-                // handleNull(scene.derivatives.models?.status),
-                // handleNull(scene.derivatives.models?.items?.length),
-                handleNull(scene.derivatives.downloads?.status),
-                // handleNull(scene.derivatives.downloads?.items?.length),
-                handleNull(scene.derivatives.ar?.status),
-                // handleNull(scene.derivatives.ar?.items?.length),
-                handleNull(scene.sources.models?.status),
-                // handleNull(scene.sources.models?.items?.length),
-                handleNull(scene.sources.captureData?.status),
-                // handleNull(scene.sources.captureData?.items?.length)
             ].join(',');  // Join the row values with commas
         });
 
