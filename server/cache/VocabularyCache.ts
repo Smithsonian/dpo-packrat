@@ -603,7 +603,6 @@ export class VocabularyCache {
 
     static async mapPhotogrammetryVariantType(variantType: string): Promise<Vocabulary | undefined> {
         const variant = variantType.toLowerCase().replace(/_/g, '');
-        console.log('>>>> variant result: ',variant);
 
         let eVocabID: COMMON.eVocabularyID;
         switch (variant) {
@@ -630,7 +629,7 @@ export class VocabularyCache {
             case 'mask':        eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks; break;
             default: return undefined;
         }
-        console.log('>>>> variant result: ',variant,eVocabID,VocabularyCache.vocabularyByEnum(eVocabID));
+        LOG.info(`variant result (${variant} | ${eVocabID} | ${VocabularyCache.vocabularyByEnum(eVocabID)}`,LOG.LS.eDEBUG);
         return await VocabularyCache.vocabularyByEnum(eVocabID);
     }
 
