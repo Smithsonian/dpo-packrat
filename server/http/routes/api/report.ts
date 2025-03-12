@@ -85,6 +85,72 @@ const generateResponse = (success: boolean, message: string, guid: string, state
         data: result,
     };
 };
+const formatAnalysisForCSV = (report: AssetAnalysisResult[]): string => {
+    // Helper function to format date to a string or default 'N/A'
+    const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
+
+    // Helper function to handle null or undefined values and return 'N/A' as default
+    const handleNull = (value) => value != null ? value : 'N/A';
+
+    // Helper function for cleaning strings for CSV export
+    const sanitizeForCSV = (value: string): string => {
+        if (typeof value !== 'string') return '';
+
+        // Escape double quotes by doubling them
+        const escapedValue = value.replace(/"/g, '""');
+
+        // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
+        if (/[",\n\r]/.test(escapedValue)) {
+            return `"${escapedValue}"`;
+        }
+
+        return escapedValue;
+    };
+
+    // Create CSV headers (clean names)
+    const headers = [
+        'Asset ID',
+        'File Name',
+        'File Size',
+        'Type',
+        'Version',
+        'Date Created',
+        'Creator',
+        'Ingested',
+        'Storage Test',
+        'File Exists',
+        'Size Match',
+        'Storage Key'
+    ];
+
+    // Build CSV rows
+    const rows: string[] = [];
+    for (const asset of report) {
+        for (const version of asset.versions) {
+            // Initialize a new row inside the loop to ensure each version is separate
+            const row: string[] = [
+                handleNull(asset.asset.id),
+                sanitizeForCSV(asset.asset.fileName),
+                handleNull(version.fileSize),
+                sanitizeForCSV(asset.asset.type),
+                handleNull(version.version),
+                handleNull(formatDate(version.dateCreated)),
+                handleNull(version.idUserCreator),
+                handleNull(version.ingested),
+                handleNull(asset.asset.validation.storageTest?.success),
+                handleNull(version.validation.fileExists?.success),
+                handleNull(version.validation.sizeMatches?.success),
+                sanitizeForCSV(asset.asset.storageKey)
+            ];
+
+            rows.push(row.join(','));
+        }
+    }
+
+    // Combine headers and rows into CSV format
+    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    return csvContent;
+};
 
 const getAssetSummary = async (idAssets: number[] = []): Promise<AssetDataSummary[] | null> => {
 
@@ -134,7 +200,7 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetDataSummar
     return result;
 };
 
-const analyzeAsset = async (asset: AssetDataSummary): Promise<AssetAnalysisResult | null> => {
+const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisResult | null> => {
 
     const analyzeAssetTypes = [
         133,    // capture data file
@@ -285,7 +351,7 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     let hasError: boolean = false;
     const report: AssetAnalysisResult[] = [];
     for(let i=0; i<assets.length; i++) {
-        const validationResult: AssetAnalysisResult | null = await analyzeAsset(assets[i]);
+        const validationResult: AssetAnalysisResult | null = await getAssetAnalysis(assets[i]);
         if(!validationResult) {
             LOG.error(`API.reportAssetFiles: error validating asset: (${assets[i].asset.idAsset}:${assets[i].asset.FileName})`,LOG.LS.eHTTP);
             hasError = true;
@@ -295,12 +361,15 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
         report.push(validationResult);
     }
 
+    // format for CSV
+    const csvContent: string = formatAnalysisForCSV(report);
+
     const result: ReportResponse = {
         guid,
         state: (hasError===true) ? H.ProcessState.FAILED : H.ProcessState.COMPLETED,
         user: { id: -1, name: 'N/A', email: 'N/A' },
         type: ReportType.ASSET_FILE,
-        report
+        report: csvContent
     };
 
     // create our combined response and return info to client

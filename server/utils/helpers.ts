@@ -494,6 +494,25 @@ export class Helpers {
         return `${year}-${month}-${day}`;
     }
 
+    static convertFileSizeToString(numBytes: number, format: 'TB' | 'GB' | 'MB' | 'KB', label: boolean = true): string {
+        if (numBytes < 0)
+            return 'Error: -1';
+
+        const units = {
+            TB: 1e12, // 1 Terabyte = 10^12 bytes
+            GB: 1e9,  // 1 Gigabyte = 10^9 bytes
+            MB: 1e6,  // 1 Megabyte = 10^6 bytes
+            KB: 1e3   // 1 Kilobyte = 10^3 bytes
+        };
+
+        if (!(format in units))
+            return `Invalid: ${format}`;
+
+        const converted = numBytes / units[format];
+        const result = converted.toFixed(2)+((label===true)?` ${format}`:'');
+        return result;
+    }
+
     static safeNumber(value: any): number | null {
         if (value == null)
             return null;
