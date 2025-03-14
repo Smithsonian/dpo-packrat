@@ -85,6 +85,11 @@ export default class API {
         return this.request(`${API_ROUTES.PROJECTS}/${idProject}/scenes`, { method: 'GET' });
     }
 
+    // validation
+    static async validateAssets(): Promise<RequestResponse> {
+        return { success: true, message: 'mock' };
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
