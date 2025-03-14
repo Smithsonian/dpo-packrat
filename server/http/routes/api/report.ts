@@ -420,7 +420,7 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     const tempReportFilePath = path.join(Config.storage.rootStaging,'tmp','reports');
     H.Helpers.createDirectory(tempReportFilePath);
     fs.writeFileSync(path.join(tempReportFilePath,`report_asset_files_${(new Date).toISOString().split('T')[0]}.csv`), csvContent, 'utf-8');
-    
+
     console.log('CSV file written successfully.');
     console.log(`>>>> validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`);
 

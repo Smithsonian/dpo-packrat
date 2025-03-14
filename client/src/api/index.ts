@@ -88,7 +88,7 @@ export default class API {
 
     // validation
     static async getReport(type: string): Promise<RequestResponse> {
-        return this.request(`${API_ROUTES.REPORT}/${type}`, { method: 'GET' });;
+        return this.request(`${API_ROUTES.REPORT}/${type}`, { method: 'GET' });
     }
 
     // general routines

@@ -96,7 +96,7 @@ const ToolsAssetValidation = (): React.ReactElement => {
         onResetSelection();
 
         // notify the user/log
-        toast.success(`Pulled validation report.`);
+        toast.success('Pulled validation report.');
         console.log(`[Packrat] Pulled ${opName} validation report`,validationResults);
         return;
     };
@@ -216,7 +216,7 @@ const ToolsAssetValidation = (): React.ReactElement => {
                     className={classes.btn}
                     onClick={onProcessOperation}
                     disableElevation
-                    disabled={true}
+                    disabled
                 >
                     Run
                 </Button>
