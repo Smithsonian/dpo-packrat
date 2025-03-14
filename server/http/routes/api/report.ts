@@ -238,7 +238,7 @@ const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisR
 
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
     if(!storage) {
-        console.log('ERROR: cannot get storage interface');
+        LOG.error('API.report.getAssetAnalysis cannot get storage interface',LOG.LS.eHTTP);
         return null;
     }
 
@@ -323,6 +323,7 @@ const processAssetsWithLimit = async (assets: AssetDataSummary[]): Promise<{ rep
     const BATCH_SIZE = 5;
     let hasError = false;
     const report: AssetAnalysisResult[] = [];
+    let currentIndex = 0;
 
     // Generator to yield batches of assets
     async function* batchGenerator() {
@@ -332,11 +333,12 @@ const processAssetsWithLimit = async (assets: AssetDataSummary[]): Promise<{ rep
     }
 
     for await (const batch of batchGenerator()) {
-        console.log(`Processing batch (${batch.length} items)`);
+        LOG.info(`API.report.processAssetWithLimit: Processing batch (${batch.length} items)`,LOG.LS.eDEBUG);
 
         const results = await Promise.all(
             batch.map(async (asset) => {
-                console.log(`Analyzing asset: ${asset.asset.FileName}`);
+                LOG.info(`[${currentIndex}/${assets.length}] API.report.processAssetWithLimit: analyzing asset (${asset.asset.FileName})`,LOG.LS.eDEBUG);
+                currentIndex++;
                 try {
                     const validationResult = await getAssetAnalysis(asset);
                     if (!validationResult) {
@@ -419,11 +421,13 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     // store result to temp location
     const tempReportFilePath = path.join(Config.storage.rootStaging,'tmp','reports');
     H.Helpers.createDirectory(tempReportFilePath);
-    fs.writeFileSync(path.join(tempReportFilePath,`report_asset_files_${(new Date).toISOString().split('T')[0]}.csv`), csvContent, 'utf-8');
+    const fullPath = path.join(tempReportFilePath,`report_asset_files_${(new Date).toISOString().split('T')[0]}.csv`);
+    fs.writeFileSync(fullPath, csvContent, 'utf-8');
 
-    console.log('CSV file written successfully.');
-    console.log(`>>>> validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`);
+    LOG.info(`API.reportAssetFiles: validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`,LOG.LS.eDEBUG);
+    LOG.info(`API.reportAssetFiles: CSV file written successfully (${fullPath})`,LOG.LS.eDEBUG);
 
     // create our combined response and return info to client
+    result.report = `validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s (${tempReportFilePath})`;
     res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: result }));
 }

@@ -29,6 +29,13 @@ const ToolsAssetValidation = (): React.ReactElement => {
         MODELS = 1,
     }
 
+    const getServerLink = (): string => {
+        const { protocol, host } = window.location;
+        const realHost = host.includes('localhost:3000') ? 'localhost:4000' : (host+'/server');
+        const result = `${protocol}//${realHost}/api/report/asset-files`;
+        console.log(result);
+        return result;
+    };
     // get data
     // const getValidationResults = async () => {
     //     const operationName: string = ValidationOperations[operation].toLocaleLowerCase();
@@ -222,7 +229,7 @@ const ToolsAssetValidation = (): React.ReactElement => {
                 </Button>
                 <Button
                     className={classes.btn}
-                    onClick={() => window.open('http://localhost:4000/api/report/asset-files', '_blank')}
+                    onClick={() => window.open(getServerLink(), '_blank')}
                     disableElevation
                 >
                     Server
