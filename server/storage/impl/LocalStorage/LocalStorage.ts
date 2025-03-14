@@ -81,6 +81,15 @@ export class LocalStorage implements STORE.IStorage {
     async stagingFileName(storageKey: string): Promise<string> {
         return path.join(this.ocflRoot.computeLocationStagingRoot(), storageKey);
     }
+    async repositoryFileName(storageKey: string, version?: number): Promise<string> {
+        let result: string = path.join(this.ocflRoot.computeLocationObjectRoot(storageKey));
+
+        // if a 'version' was provided then we return the root to that version content
+        if(version)
+            result = path.join(result,`v${version}`,'content');
+
+        return result;
+    }
 
     /**
      * Files are placed in staging storage for all content. This storage is local due to these facts:

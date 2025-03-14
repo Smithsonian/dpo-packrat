@@ -44,6 +44,29 @@ export type IOStatus = {
     data?: any;
 };
 
+export type OpResult = {
+    success: boolean,
+    message: string,
+    data?: any,
+};
+
+export enum ProcessState {
+    UNDEFINED = 'undefined',
+    WAITING = 'waiting',        // in a waiting to be staged/queued
+    PENDING = 'pending',        // was initialized and pending execution
+    ACTIVE = 'active',          // is working
+    PROCESSING = 'processing',  // finished core work and finalizing
+    COMPLETED = 'completed',    // finished successfully
+    FAILED = 'failed',          // error anywhere during process
+    CANCELLED = 'cancelled'     // was the process cancelled by the user
+}
+
+export enum ProcessStatus {
+    UNDEFINED = 'undefined',
+    GOOD = 'good',
+    ERROR = 'error',
+}
+
 export class Helpers {
     static arraysEqual(input1: any, input2: any): boolean {
         if (!Array.isArray(input1) || ! Array.isArray(input2) || input1.length !== input2.length)
@@ -69,6 +92,10 @@ export class Helpers {
     // Adapted from https://github.com/npm/unique-filename/blob/master/index.js
     static randomFilename(filepath: string, prefix: string): string {
         return path.join(filepath, (prefix ? prefix + '-' : '') + Helpers.randomSlug());
+    }
+
+    static generateGUID(): string {
+        return crypto.randomUUID();
     }
 
     // Adapted from https://github.com/sindresorhus/filename-reserved-regex/blob/master/index.js
@@ -465,6 +492,25 @@ export class Helpers {
         const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    }
+
+    static convertFileSizeToString(numBytes: number, format: 'TB' | 'GB' | 'MB' | 'KB', label: boolean = true): string {
+        if (numBytes < 0)
+            return 'Error: -1';
+
+        const units = {
+            TB: 1e12, // 1 Terabyte = 10^12 bytes
+            GB: 1e9,  // 1 Gigabyte = 10^9 bytes
+            MB: 1e6,  // 1 Megabyte = 10^6 bytes
+            KB: 1e3   // 1 Kilobyte = 10^3 bytes
+        };
+
+        if (!(format in units))
+            return `Invalid: ${format}`;
+
+        const converted = numBytes / units[format];
+        const result = converted.toFixed(2)+((label===true)?` ${format}`:'');
+        return result;
     }
 
     static safeNumber(value: any): number | null {

@@ -19,7 +19,9 @@ import { getCookResource } from './routes/resources';
 import { play } from './routes/sandbox';
 
 import { generateDownloads } from './routes/api/generateDownloads';
+import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
+import { reportAssetFiles } from './routes/api/report';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -27,7 +29,6 @@ import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
-import { generateScene } from './routes/api/generateVoyagerScene';
 import * as path from 'path';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
@@ -143,15 +144,14 @@ export class HttpServer {
         this.app.get('/api/project',getProjects);                   // get basic listing info for all projects
         this.app.get('/api/project/:id/scenes',getProjectScenes);   // get all scenes for a specific project
 
-        // this.app.get('/api/scene');                  // get basic info for all scenes
-        // this.app.get('/api/scene/details/:id');      // ...
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);
 
-        // sandbox playground
+        this.app.get('/api/report/asset-files', reportAssetFiles);
+
         this.app.get('/api/sandbox/play',play);
 
         // if we're here then we handle any errors that may have surfaced

@@ -259,7 +259,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                         callback(new Error(error));
                         return;
                     }
-                    LOG.info(`${logPrefix} failed to compute resource, adding`, LOG.LS.eHTTP);
+                    LOG.info(`${logPrefix} failed to compute resource, adding (${pathS})`, LOG.LS.eHTTP);
 
                     const utcMS: number = (new Date()).getTime();
                     resource = new FileSystemResource(webdav.ResourceType.File, 0, '', utcMS, utcMS);

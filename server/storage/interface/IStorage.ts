@@ -133,6 +133,9 @@ export interface IStorage {
     /** Provides access to staged files by filename */
     stagingFileName(storageKey: string): Promise<string>;
 
+    /** Provides access to ingested files by filename */
+    repositoryFileName(storageKey: string, version?: number): Promise<string>;
+
     /**
      * Provides a Writable stream used to stream data into the storage system.
      * Files are always streamed to a random location within the "staging" area.

@@ -328,7 +328,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         // if we have merged reports (legacy inspection) use it, otherwise use the 'inspect-mesh' stage
         // const mergeReport: any = steps ? steps['merge-reports'] : undefined;
-        const mergeReport: any = steps?.['merged-reports'] ?? steps?.['inspect-mesh'];
+        const mergeReport: any = steps?.['merge-reports'] ?? steps?.['inspect-mesh'];
 
         // extract meaningful sections of the report for analysis
         const inspection: any = mergeReport?.result?.inspection;
