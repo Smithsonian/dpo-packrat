@@ -11,6 +11,7 @@ enum API_ROUTES {
     GEN_DOWNLOADS = 'api/scene/gen-downloads',
     GEN_SCENE = 'api/workflow/gen-scene',
     PROJECTS = 'api/project',
+    REPORT = 'api/report'
 }
 
 export type AuthResponseType = {
@@ -83,6 +84,11 @@ export default class API {
     }
     static async getProjectScenes(idProject: number): Promise<RequestResponse> {
         return this.request(`${API_ROUTES.PROJECTS}/${idProject}/scenes`, { method: 'GET' });
+    }
+
+    // validation
+    static async getReport(type: string): Promise<RequestResponse> {
+        return this.request(`${API_ROUTES.REPORT}/${type}`, { method: 'GET' });
     }
 
     // general routines
