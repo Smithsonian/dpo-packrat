@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from 'fs';
 import * as path from 'path';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as STORE from '../../../storage/interface';
+import { Config } from '../../../config';
 
 // import * as COMMON from '@dpo-packrat/common';
 // import * as COL from '../../../collections/interface';
@@ -199,7 +201,6 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetDataSummar
     }
     return result;
 };
-
 const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisResult | null> => {
 
     const analyzeAssetTypes = [
@@ -315,11 +316,52 @@ const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisR
         }
     }
 
-    console.log('result: ',result);
+    // console.log('result: ',result);
     return result;
+};
+const processAssetsWithLimit = async (assets: AssetDataSummary[]): Promise<{ report: AssetAnalysisResult[], hasError: boolean }> => {
+    const BATCH_SIZE = 5;
+    let hasError = false;
+    const report: AssetAnalysisResult[] = [];
+
+    // Generator to yield batches of assets
+    async function* batchGenerator() {
+        for (let i = 0; i < assets.length; i += BATCH_SIZE) {
+            yield assets.slice(i, i + BATCH_SIZE);
+        }
+    }
+
+    for await (const batch of batchGenerator()) {
+        console.log(`Processing batch (${batch.length} items)`);
+
+        const results = await Promise.all(
+            batch.map(async (asset) => {
+                console.log(`Analyzing asset: ${asset.asset.FileName}`);
+                try {
+                    const validationResult = await getAssetAnalysis(asset);
+                    if (!validationResult) {
+                        LOG.error(`Error validating asset: (${asset.asset.idAsset}:${asset.asset.FileName})`, LOG.LS.eHTTP);
+                        hasError = true;
+                        return null;
+                    }
+                    return validationResult;
+                } catch (error) {
+                    LOG.error(`Unexpected error validating asset: (${asset.asset.idAsset}:${asset.asset.FileName}) - ${error}`, LOG.LS.eHTTP);
+                    hasError = true;
+                    return null;
+                }
+            })
+        );
+
+        report.push(...results.filter((result): result is AssetAnalysisResult => result !== null));
+    }
+
+    return { report, hasError };
 };
 
 export async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
+
+    const startTime = Date.now();
 
     // make sure we're authenticated (i.e. see if request has a 'user' object)
     // if (!isAuthenticated(req)) {
@@ -348,18 +390,20 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     }
 
     // cycle through validating assets/versions appending to report
-    let hasError: boolean = false;
-    const report: AssetAnalysisResult[] = [];
-    for(let i=0; i<assets.length; i++) {
-        const validationResult: AssetAnalysisResult | null = await getAssetAnalysis(assets[i]);
-        if(!validationResult) {
-            LOG.error(`API.reportAssetFiles: error validating asset: (${assets[i].asset.idAsset}:${assets[i].asset.FileName})`,LOG.LS.eHTTP);
-            hasError = true;
-            continue;
-        }
+    // let hasError: boolean = false;
+    // const report: AssetAnalysisResult[] = [];
+    // for(let i=0; i<assets.length; i++) {
+    //     console.log(`[${i}] analyzing asset: ${assets[i].asset.FileName}`);
+    //     const validationResult: AssetAnalysisResult | null = await getAssetAnalysis(assets[i]);
+    //     if(!validationResult) {
+    //         LOG.error(`API.reportAssetFiles: error validating asset: (${assets[i].asset.idAsset}:${assets[i].asset.FileName})`,LOG.LS.eHTTP);
+    //         hasError = true;
+    //         continue;
+    //     }
 
-        report.push(validationResult);
-    }
+    //     report.push(validationResult);
+    // }
+    const { report, hasError } = await processAssetsWithLimit(assets);
 
     // format for CSV
     const csvContent: string = formatAnalysisForCSV(report);
@@ -369,8 +413,16 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
         state: (hasError===true) ? H.ProcessState.FAILED : H.ProcessState.COMPLETED,
         user: { id: -1, name: 'N/A', email: 'N/A' },
         type: ReportType.ASSET_FILE,
-        report: csvContent
+        report: '', //csvContent
     };
+
+    // store result to temp location
+    const tempReportFilePath = path.join(Config.storage.rootStaging,'tmp','reports');
+    H.Helpers.createDirectory(tempReportFilePath);
+    fs.writeFileSync(path.join(tempReportFilePath,`report_asset_files_${(new Date).toISOString().split('T')[0]}.csv`), csvContent, 'utf-8');
+    
+    console.log('CSV file written successfully.');
+    console.log(`>>>> validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`);
 
     // create our combined response and return info to client
     res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: result }));

@@ -49,6 +49,9 @@ export type SceneSummary = DBReference & {
         captureData: AssetList,
     }
 };
+export type ValidationSummary = DBReference & {
+
+};
 
 export const useStyles = makeStyles(({ palette }) => ({
     btn: {

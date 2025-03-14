@@ -11,6 +11,7 @@ enum API_ROUTES {
     GEN_DOWNLOADS = 'api/scene/gen-downloads',
     GEN_SCENE = 'api/workflow/gen-scene',
     PROJECTS = 'api/project',
+    REPORT = 'api/report'
 }
 
 export type AuthResponseType = {
@@ -86,8 +87,8 @@ export default class API {
     }
 
     // validation
-    static async validateAssets(): Promise<RequestResponse> {
-        return { success: true, message: 'mock' };
+    static async getReport(type: string): Promise<RequestResponse> {
+        return this.request(`${API_ROUTES.REPORT}/${type}`, { method: 'GET' });;
     }
 
     // general routines

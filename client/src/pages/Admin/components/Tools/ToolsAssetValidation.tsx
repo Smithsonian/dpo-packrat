@@ -1,10 +1,10 @@
 import API, { RequestResponse } from '../../../../api';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, Tooltip, Paper, Input } from '@material-ui/core';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
-import { SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
+import { ValidationSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
 
 // styles
@@ -15,11 +15,11 @@ const ToolsAssetValidation = (): React.ReactElement => {
     const tableClasses = useTableStyles();
 
     const [operation, setOperation] = useState<number>(0);
-    const [selectedList, setSelectedList] = useState<SceneSummary[]>([]);
+    const [selectedList, setSelectedList] = useState<ValidationSummary[]>([]);
     const [isListValid, setIsListValid] = useState<boolean>(false);
-    const [validationResults, setValidationResults] = useState<SceneSummary[]>([]);
+    const [validationResults, setValidationResults] = useState<ValidationSummary[]>([]);
     const [resetSelection, setResetSelection] = useState<boolean>(false);
-    const [resultNameFilter, setSceneNameFilter] = useState('');
+    const [resultNameFilter, setResultNameFilter] = useState('');
 
     enum ValidationOperations {
         ASSETS = 0,
@@ -27,12 +27,13 @@ const ToolsAssetValidation = (): React.ReactElement => {
     }
 
     // get data
-    const getValidationResults = useCallback(async () => {
+    const getValidationResults = async () => {
         const operationName: string = ValidationOperations[operation].toLocaleLowerCase();
 
         try {
+            // create a report on asset files and their state
             console.log(`[Packrat] validating ${operationName} - STARTED`);
-            const response: RequestResponse = await API.validateAssets();
+            const response: RequestResponse = await API.getReport('asset-files');
             if(response.success === false) {
                 console.log(`[Packrat:ERROR] cannot get validation results. (op: ${operationName} | message: ${response.message})`);
                 setValidationResults([]);
@@ -40,101 +41,60 @@ const ToolsAssetValidation = (): React.ReactElement => {
             }
 
             // cycle through data converting as needed
-            const { protocol, host } = window.location;
-            response.data.forEach(obj => {
+            // const { protocol, host } = window.location;
+            // response.data.forEach(obj => {
                 // stored ISO strings to Date objects
-                obj.dateCreated = new Date(obj.dateCreated as string);
-                obj.datePublished = new Date(obj.datePublished as string);
+                // obj.dateCreated = new Date(obj.dateCreated as string);
 
                 // inject hyperlinks for the scene details page
                 // link ties to 'name' field so need to set property to prefix of 'name_'
-                obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
-            });
+                // obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
+            // });
 
-            console.log(`[Packrat] validation ${operationName} - FINISHED [${response.data.length}]`);
+            console.log(`[Packrat] validation ${operationName} - FINISHED [${response.data.length}]`,response,selectedList);
             setValidationResults(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching ${operationName} validation results: ${error}`);
         }
-    }, []);
+    };
     const getColumnHeader = (): ColumnHeader[] => {
         return [
             { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
-            { key: 'name', label: 'Scene', align: 'center', tooltip: 'Name of the scene', link: true },
-            { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
-            { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
-            { key: 'derivatives.downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
-            { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
+            { key: 'filename', label: 'File Name', align: 'center', tooltip: 'Asset filename' }, //, link: true },
+            { key: 'filesize', label: 'File Size', align: 'center', tooltip: 'Size of asset in database' },
+            { key: 'type', label: 'Type', align: 'center', tooltip: 'What type of asset is it' },
+            { key: 'version', label: 'Version', align: 'center', tooltip: 'What version are we on' },
+            { key: 'test_exists', label: 'File Exists', align: 'center', tooltip: 'Can file be found on disk' },
+            { key: 'test_storage', label: 'Storage Test', align: 'center', tooltip: 'Storage test results' },
+            { key: 'test_size', label: 'Size Test', align: 'center', tooltip: 'Does DB size match what is on disk' },
+            // { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
+            // { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
+            // { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
             // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
-            // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
         ];
     };
 
     // handle changes
     const handleOperationChange = (event) => {
         setOperation(event.target.value);
+
+        // TODO: invalidate the results (if any)
     };
     const onProcessOperation = async () => {
+        const opName: string = ValidationOperations[operation].toLocaleLowerCase();
+        console.log(`[Packrat] pulling ${opName} validation report. this may take awhile...`);
 
-        if(selectedList.length===0) {
-            toast.error('Cannot submit job. Nothing selected.');
-            return;
-        }
-        console.log(`[Packrat] Starting ${ValidationOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+        // make request to get report/job id so it can be polled
+        await getValidationResults();
 
-        // // get our list of scene idSystemObject
-        // const sceneIDs: number[] = selectedList.map((scene)=>scene.id);
+        // cycle through pulling latest report, updating the progress bar, etc.
 
-        // // build request to server
-        // const response: RequestResponse = await API.generateDownloads(sceneIDs,false,republishScenes);
-        // if(response.success === false) {
-
-        //     // make sure we have data and responses
-        //     if(!response.data || !Array.isArray(response.data)) {
-        //         console.log(`[Packrat:ERROR] cannot run ${BatchOperations[operation]}. invalid response data.`,response);
-        //         toast.error(`${BatchOperations[operation]} failed. Got unexpected data from server.`);
-        //         return;
-        //     }
-
-        //     // get our unique error messages
-        //     const uniqueMessages = Array.from(
-        //         new Set(
-        //             response.data
-        //                 .filter(response => !response.success && response.message)  // Ensure there is a message
-        //                 .map(response => `${response.id}: ${response.message}`)     // Extract the messages
-        //         )
-        //     );
-        //     const toastErrorMsg: string = (uniqueMessages.length>1) ? 'Check the console.' : uniqueMessages[0];
-
-        //     // see if we have nuance to the response (i.e. some failed/some passed)
-        //     const allFailed: boolean = response.data.every( response => response.succcess===false );
-        //     if(allFailed===true) {
-        //         const errorMsg: string = (response.data.length>1)
-        //             ? `All ${response.data.length} scenes failed during ${BatchOperations[operation]} run.`
-        //             : `${BatchOperations[operation]} cannot run. ${uniqueMessages[0]}`;
-
-        //         console.log(`[Packrat:ERROR] ${errorMsg}`,response.data);
-        //         toast.error(`${BatchOperations[operation]} failed. (${toastErrorMsg})`);
-        //         return;
-        //     }
-
-        //     // only some failed so we need to handle this
-        //     const failedCount: number = response.data.filter(response => !response.success).length;
-        //     console.log(`[Packrat:ERROR] ${response.data.length}/${selectedList.length} scenes failed. (${uniqueMessages.join(' |')})`,response.data);
-        //     toast.warn(`${BatchOperations[operation]} had issues. ${failedCount} scenes failed. (${toastErrorMsg})`);
-
-        //     // we bail early so the selection is maintained on failure
-        //     // TODO: deselect those that were successful.
-        //     return false;
-        // }
-
-        // // clear selection on succcess
+        // clear selection on succcess
         onResetSelection();
 
-        const sceneIDs = [];
         // notify the user/log
-        toast.success(`Generating Downloads for ${sceneIDs.length} scenes. Check the workflow tab for progress.`);
-        console.log(`[Packrat] Submitted ${ValidationOperations[operation]} batch operation for ${selectedList.length} items: `,selectedList);
+        toast.success(`Pulled validation report.`);
+        console.log(`[Packrat] Pulled ${opName} validation report`,validationResults);
         return;
     };
     const onUpdatedSelection = (selection) => {
@@ -148,7 +108,7 @@ const ToolsAssetValidation = (): React.ReactElement => {
     };
     const onExportTableDataToCSV = (): boolean => {
         // Helper function to format date to a string or default 'N/A'
-        const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
+        // const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
 
         // Helper function to handle null or undefined values and return 'N/A' as default
         const handleNull = (value) => value != null ? value : 'N/A';
@@ -170,45 +130,45 @@ const ToolsAssetValidation = (): React.ReactElement => {
 
         // Create CSV headers (clean names)
         const headers = [
-            'Date Created',
-            'Creator',
+            // 'Date Created',
+            // 'Creator',
             'ID',
-            'Scene Name',
-            'Reviewed',
-            'Published',
+            'Name',
+            // 'Reviewed',
+            // 'Published',
             // 'Date Published',
-            'Downloads',
-            'Master Model',
-            'AR',
-            'Capture Data',
+            // 'Downloads',
+            // 'Master Model',
+            // 'AR',
+            // 'Capture Data',
             // 'Project ID',
-            'Project',
+            // 'Project',
             // 'Subject ID',
-            'Subject',
+            // 'Subject',
             // 'Media Group ID',
-            'Media Group',
+            // 'Media Group',
         ];
 
         // Build CSV rows
-        const rows = validationResults.map(scene => {
+        const rows = validationResults.map(asset => {
             return [
-                formatDate(scene.dateCreated),
-                handleNull(scene.sources.models?.items?.[0]?.creator?.name),
-                handleNull(scene.id),
-                handleNull(sanitizeForCSV(scene.name)),
-                scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
-                handleNull(scene.publishedState),
+                // formatDate(scene.dateCreated),
+                // handleNull(scene.sources.models?.items?.[0]?.creator?.name),
+                handleNull(asset.id),
+                handleNull(sanitizeForCSV(asset.name)),
+                // scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
+                // handleNull(scene.publishedState),
                 // formatDate(scene.datePublished),
-                handleNull(scene.derivatives.downloads?.status),
-                handleNull(scene.sources.models?.status),
-                handleNull(scene.derivatives.ar?.status),
-                handleNull(scene.sources.captureData?.status),
+                // handleNull(scene.derivatives.downloads?.status),
+                // handleNull(scene.sources.models?.status),
+                // handleNull(scene.derivatives.ar?.status),
+                // handleNull(scene.sources.captureData?.status),
                 // handleNull(scene.project?.id),
-                handleNull(sanitizeForCSV(scene.project?.name)),
+                // handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
-                handleNull(sanitizeForCSV(scene.subject?.name)),
+                // handleNull(sanitizeForCSV(scene.subject?.name)),
                 // handleNull(scene.mediaGroup?.id),
-                handleNull(sanitizeForCSV(scene.mediaGroup?.name)),
+                // handleNull(sanitizeForCSV(scene.mediaGroup?.name)),
             ].join(',');  // Join the row values with commas
         });
 
@@ -239,21 +199,12 @@ const ToolsAssetValidation = (): React.ReactElement => {
         });
     }, [validationResults, resultNameFilter]);
 
-    // mounting/alteration routines
-    useEffect(() => {
-        // propogate our list of validation results
-        getValidationResults();
-    }, [getValidationResults]);
-
     // JSX
     return (
         <>
             <Box style={{ paddingLeft: '1rem' }}>
                 <Typography variant='body2' gutterBottom>
-                    This tool allows you to batch download and generate scenes with ease.
-                </Typography>
-                <Typography variant='body1' color='error' gutterBottom>
-                    Please remember, the process is limited to <strong>10 items</strong> at a time to prevent overloading the system.
+                    This tool provides validation reports for different aspects of the system.
                 </Typography>
             </Box>
 
@@ -266,8 +217,8 @@ const ToolsAssetValidation = (): React.ReactElement => {
                             </TableCell>
                             <TableCell className={tableClasses.tableCell}>
                                 <Select
-                                    labelId='batch-generation-op'
-                                    id='batch-generation-op'
+                                    labelId='validation-op'
+                                    id='validation-op'
                                     value={operation}
                                     label='Operation'
                                     onChange={handleOperationChange}
@@ -275,8 +226,8 @@ const ToolsAssetValidation = (): React.ReactElement => {
                                     className={clsx(tableClasses.select, classes.fieldSizing)}
                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                 >
-                                    <MenuItem value={0}>Downloads</MenuItem>
-                                    <MenuItem value={1} disabled>Voyager Scenes</MenuItem>
+                                    <MenuItem value={0}>Assets</MenuItem>
+                                    <MenuItem value={1} disabled>Relationships</MenuItem>
                                 </Select>
                             </TableCell>
                         </TableRow>
@@ -285,15 +236,15 @@ const ToolsAssetValidation = (): React.ReactElement => {
 
                         <TableRow className={tableClasses.tableRow}>
                             <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Tooltip title={'Filters the list by any scenes containing the entered text. (Case Insensitive)'}>
-                                    <Typography className={tableClasses.labelText}>Filter: Scene Name</Typography>
+                                <Tooltip title={'Filters the list by any results containing the entered text. (Case Insensitive)'}>
+                                    <Typography className={tableClasses.labelText}>Filter: Name</Typography>
                                 </Tooltip>
                             </TableCell>
                             <TableCell className={tableClasses.tableCell}>
                                 <Input
                                     type='text'
                                     value={resultNameFilter}
-                                    onChange={(e)=>setSceneNameFilter(e.target.value)}
+                                    onChange={(e)=>setResultNameFilter(e.target.value)}
                                     placeholder='Search by name'
                                     disableUnderline
                                     className={clsx(tableClasses.select, classes.fieldSizing)}
@@ -305,7 +256,7 @@ const ToolsAssetValidation = (): React.ReactElement => {
                 </Table>
             </TableContainer>
 
-            <DataTableSelect<SceneSummary>
+            <DataTableSelect<ValidationSummary>
                 onUpdateSelection={onUpdatedSelection}
                 data={filteredValidationResults}
                 columns={getColumnHeader()}
@@ -316,15 +267,23 @@ const ToolsAssetValidation = (): React.ReactElement => {
                 <Button
                     className={classes.btn}
                     onClick={onProcessOperation}
-                    disabled={!isListValid}
                     disableElevation
+                    disabled={true}
                 >
                     Run
                 </Button>
                 <Button
                     className={classes.btn}
+                    onClick={() => window.open('http://localhost:4000/api/report/asset-files', '_blank')}
+                    disableElevation
+                >
+                    Server
+                </Button>
+                <Button
+                    className={classes.btn}
                     onClick={onExportTableDataToCSV}
                     disableElevation
+                    disabled={!isListValid}
                 >
                     CSV
                 </Button>

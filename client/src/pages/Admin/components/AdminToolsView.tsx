@@ -15,6 +15,7 @@ import { useUserStore } from '../../../store';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import ToolsBatchGeneration from './Tools/ToolsBatchGeneration';
+import ToolsAssetValidation from './Tools/ToolsAssetValidation';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -130,11 +131,11 @@ function AdminToolsView(): React.ReactElement {
                             {/* Asset Validation Section */}
                             <Box>
                                 <IconButton className={classes.collapseHeader} onClick={() => toggleSection('assetValidation')}>
-                                    Asset Validation
+                                    Validation
                                     {openSections.assetValidation ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                                 </IconButton>
                                 <Collapse in={openSections.assetValidation} className={classes.collapseContainer}>
-                                    <p>Asset Validation</p>
+                                    <ToolsAssetValidation />
                                 </Collapse>
                             </Box>
                         </>
