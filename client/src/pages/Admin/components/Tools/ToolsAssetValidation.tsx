@@ -1,25 +1,28 @@
-import API, { RequestResponse } from '../../../../api';
+// import API, { RequestResponse } from '../../../../api';
 
-import React, { useState, useMemo } from 'react';
-import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, Tooltip, Paper, Input } from '@material-ui/core';
-import clsx from 'clsx';
+import React, { useState } from 'react';
+// import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, TableCell, TableRow, TableBody, Tooltip, Paper, Input } from '@material-ui/core';
+import { Box, Typography, Button } from '@material-ui/core';
+// import clsx from 'clsx';
 import { toast } from 'react-toastify';
-import { ValidationSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
-import { DataTableSelect } from '../shared/DataTableSelect';
+import { ValidationSummary, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
+// import { DataTableSelect } from '../shared/DataTableSelect';
 
 // styles
-import { useStyles as useTableStyles } from '../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
+// import { useStyles as useTableStyles } from '../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 
 const ToolsAssetValidation = (): React.ReactElement => {
     const classes = useToolsStyles();
-    const tableClasses = useTableStyles();
+    // const tableClasses = useTableStyles();
 
-    const [operation, setOperation] = useState<number>(0);
-    const [selectedList, setSelectedList] = useState<ValidationSummary[]>([]);
-    const [isListValid, setIsListValid] = useState<boolean>(false);
-    const [validationResults, setValidationResults] = useState<ValidationSummary[]>([]);
-    const [resetSelection, setResetSelection] = useState<boolean>(false);
-    const [resultNameFilter, setResultNameFilter] = useState('');
+    const operation = 'asset';
+    const isListValid = false;
+    // const [operation, setOperation] = useState<number>(0);
+    // const [selectedList, setSelectedList] = useState<ValidationSummary[]>([]);
+    // const [isListValid, setIsListValid] = useState<boolean>(false);
+    const [validationResults] = useState<ValidationSummary[]>([]);
+    // const [resetSelection, setResetSelection] = useState<boolean>(false);
+    // const [resultNameFilter, setResultNameFilter] = useState('');
 
     enum ValidationOperations {
         ASSETS = 0,
@@ -27,65 +30,65 @@ const ToolsAssetValidation = (): React.ReactElement => {
     }
 
     // get data
-    const getValidationResults = async () => {
-        const operationName: string = ValidationOperations[operation].toLocaleLowerCase();
+    // const getValidationResults = async () => {
+    //     const operationName: string = ValidationOperations[operation].toLocaleLowerCase();
 
-        try {
-            // create a report on asset files and their state
-            console.log(`[Packrat] validating ${operationName} - STARTED`);
-            const response: RequestResponse = await API.getReport('asset-files');
-            if(response.success === false) {
-                console.log(`[Packrat:ERROR] cannot get validation results. (op: ${operationName} | message: ${response.message})`);
-                setValidationResults([]);
-                return;
-            }
+    //     try {
+    //         // create a report on asset files and their state
+    //         console.log(`[Packrat] validating ${operationName} - STARTED`);
+    //         const response: RequestResponse = await API.getReport('asset-files');
+    //         if(response.success === false) {
+    //             console.log(`[Packrat:ERROR] cannot get validation results. (op: ${operationName} | message: ${response.message})`);
+    //             setValidationResults([]);
+    //             return;
+    //         }
 
-            // cycle through data converting as needed
-            // const { protocol, host } = window.location;
-            // response.data.forEach(obj => {
-                // stored ISO strings to Date objects
-                // obj.dateCreated = new Date(obj.dateCreated as string);
+    //         // cycle through data converting as needed
+    //         // const { protocol, host } = window.location;
+    //         // response.data.forEach(obj => {
+    //             // stored ISO strings to Date objects
+    //             // obj.dateCreated = new Date(obj.dateCreated as string);
 
-                // inject hyperlinks for the scene details page
-                // link ties to 'name' field so need to set property to prefix of 'name_'
-                // obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
-            // });
+    //             // inject hyperlinks for the scene details page
+    //             // link ties to 'name' field so need to set property to prefix of 'name_'
+    //             // obj['name_link'] = `${protocol}//${host}/repository/details/${obj.id}`;
+    //         // });
 
-            console.log(`[Packrat] validation ${operationName} - FINISHED [${response.data.length}]`,response,selectedList);
-            setValidationResults(response.data);
-        } catch(error) {
-            console.error(`[Packrat:ERROR] Unexpected error fetching ${operationName} validation results: ${error}`);
-        }
-    };
-    const getColumnHeader = (): ColumnHeader[] => {
-        return [
-            { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
-            { key: 'filename', label: 'File Name', align: 'center', tooltip: 'Asset filename' }, //, link: true },
-            { key: 'filesize', label: 'File Size', align: 'center', tooltip: 'Size of asset in database' },
-            { key: 'type', label: 'Type', align: 'center', tooltip: 'What type of asset is it' },
-            { key: 'version', label: 'Version', align: 'center', tooltip: 'What version are we on' },
-            { key: 'test_exists', label: 'File Exists', align: 'center', tooltip: 'Can file be found on disk' },
-            { key: 'test_storage', label: 'Storage Test', align: 'center', tooltip: 'Storage test results' },
-            { key: 'test_size', label: 'Size Test', align: 'center', tooltip: 'Does DB size match what is on disk' },
-            // { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
-            // { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
-            // { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
-            // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
-        ];
-    };
+    //         console.log(`[Packrat] validation ${operationName} - FINISHED [${response.data.length}]`,response,selectedList);
+    //         setValidationResults(response.data);
+    //     } catch(error) {
+    //         console.error(`[Packrat:ERROR] Unexpected error fetching ${operationName} validation results: ${error}`);
+    //     }
+    // };
+    // const getColumnHeader = (): ColumnHeader[] => {
+    //     return [
+    //         { key: 'id', label: 'ID', align: 'center', tooltip: 'idSystemObject for the scene' },
+    //         { key: 'filename', label: 'File Name', align: 'center', tooltip: 'Asset filename' }, //, link: true },
+    //         { key: 'filesize', label: 'File Size', align: 'center', tooltip: 'Size of asset in database' },
+    //         { key: 'type', label: 'Type', align: 'center', tooltip: 'What type of asset is it' },
+    //         { key: 'version', label: 'Version', align: 'center', tooltip: 'What version are we on' },
+    //         { key: 'test_exists', label: 'File Exists', align: 'center', tooltip: 'Can file be found on disk' },
+    //         { key: 'test_storage', label: 'Storage Test', align: 'center', tooltip: 'Storage test results' },
+    //         { key: 'test_size', label: 'Size Test', align: 'center', tooltip: 'Does DB size match what is on disk' },
+    //         // { key: 'mediaGroup.name', label: 'Media Group', align: 'center', tooltip: 'What MediaGroup the scene belongs to. Includes the the subtitle (if any).' },
+    //         // { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
+    //         // { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
+    //         // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
+    //     ];
+    // };
 
     // handle changes
-    const handleOperationChange = (event) => {
-        setOperation(event.target.value);
+    // const handleOperationChange = (event) => {
+    //     setOperation(event.target.value);
 
-        // TODO: invalidate the results (if any)
-    };
+    //     // TODO: invalidate the results (if any)
+    // };
     const onProcessOperation = async () => {
         const opName: string = ValidationOperations[operation].toLocaleLowerCase();
         console.log(`[Packrat] pulling ${opName} validation report. this may take awhile...`);
 
         // make request to get report/job id so it can be polled
-        await getValidationResults();
+        // await getValidationResults();
 
         // cycle through pulling latest report, updating the progress bar, etc.
 
@@ -97,14 +100,14 @@ const ToolsAssetValidation = (): React.ReactElement => {
         console.log(`[Packrat] Pulled ${opName} validation report`,validationResults);
         return;
     };
-    const onUpdatedSelection = (selection) => {
-        setSelectedList(selection);
-        setIsListValid(selection.length>0);
-    };
+    // const onUpdatedSelection = (selection) => {
+    //     setSelectedList(selection);
+    //     setIsListValid(selection.length>0);
+    // };
     const onResetSelection = () => {
         // quickly signal we want to reset the list and then set the value back to false
-        setResetSelection(true);
-        setTimeout(() => setResetSelection(false), 1); // set flag back so it doesn't keep resetting it
+        // setResetSelection(true);
+        // setTimeout(() => setResetSelection(false), 1); // set flag back so it doesn't keep resetting it
     };
     const onExportTableDataToCSV = (): boolean => {
         // Helper function to format date to a string or default 'N/A'
@@ -190,78 +193,23 @@ const ToolsAssetValidation = (): React.ReactElement => {
 
         return true;
     };
-    const filteredValidationResults = useMemo(() => {
-        const filterPattern: string = resultNameFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-        return validationResults.filter(row => {
-            const sceneName: string = row.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-            // console.log(`[Packrat:Debug] sceneName: ${sceneName} | filter: ${filterPattern}`);
-            return sceneName.includes(filterPattern);
-        });
-    }, [validationResults, resultNameFilter]);
+    // const filteredValidationResults = useMemo(() => {
+    //     const filterPattern: string = resultNameFilter.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    //     return validationResults.filter(row => {
+    //         const sceneName: string = row.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    //         // console.log(`[Packrat:Debug] sceneName: ${sceneName} | filter: ${filterPattern}`);
+    //         return sceneName.includes(filterPattern);
+    //     });
+    // }, [validationResults, resultNameFilter]);
 
     // JSX
     return (
         <>
             <Box style={{ paddingLeft: '1rem' }}>
                 <Typography variant='body2' gutterBottom>
-                    This tool provides validation reports for different aspects of the system.
+                    This tool provides validation reports for different aspects of the system. UX and customization to come.
                 </Typography>
             </Box>
-
-            <TableContainer component={Paper} elevation={0} style={{ overflow: 'hidden', marginTop: '2rem' }}>
-                <Table className={tableClasses.table}>
-                    <TableBody>
-                        <TableRow className={tableClasses.tableRow}>
-                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Typography className={tableClasses.labelText}>Operation Type</Typography>
-                            </TableCell>
-                            <TableCell className={tableClasses.tableCell}>
-                                <Select
-                                    labelId='validation-op'
-                                    id='validation-op'
-                                    value={operation}
-                                    label='Operation'
-                                    onChange={handleOperationChange}
-                                    disableUnderline
-                                    className={clsx(tableClasses.select, classes.fieldSizing)}
-                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                >
-                                    <MenuItem value={0}>Assets</MenuItem>
-                                    <MenuItem value={1} disabled>Relationships</MenuItem>
-                                </Select>
-                            </TableCell>
-                        </TableRow>
-
-                        <TableRow style={{ height: '1rem' }} />
-
-                        <TableRow className={tableClasses.tableRow}>
-                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Tooltip title={'Filters the list by any results containing the entered text. (Case Insensitive)'}>
-                                    <Typography className={tableClasses.labelText}>Filter: Name</Typography>
-                                </Tooltip>
-                            </TableCell>
-                            <TableCell className={tableClasses.tableCell}>
-                                <Input
-                                    type='text'
-                                    value={resultNameFilter}
-                                    onChange={(e)=>setResultNameFilter(e.target.value)}
-                                    placeholder='Search by name'
-                                    disableUnderline
-                                    className={clsx(tableClasses.select, classes.fieldSizing)}
-                                    style={{ width: '300px', paddingLeft: '5px' }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </TableContainer>
-
-            <DataTableSelect<ValidationSummary>
-                onUpdateSelection={onUpdatedSelection}
-                data={filteredValidationResults}
-                columns={getColumnHeader()}
-                resetSelection={resetSelection}
-            />
 
             <Box style={{ display: 'flex', justifyContent: 'center' }}>
                 <Button
