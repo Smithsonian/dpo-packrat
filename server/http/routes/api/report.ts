@@ -30,7 +30,7 @@ type ReportResponse = {
     report: any,
 };
 type AssetParent = {
-    type: 'undefined' | 'scene' | 'model' | 'capture_data',
+    type: 'undefined' | 'scene' | 'model' | 'capture_data' | 'unsupported',
     idSystemObject: number,
 };
 type AssetSummary = {
@@ -204,87 +204,42 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
     let items: DBAPI.Item[] | null = null;
     const parent: AssetParent = { type: 'undefined', idSystemObject: -1 };
 
-    // get our media group/items
-    // handle different paths depending on asset type
-    // TODO: use vocabulary enums
-    switch(summary.asset.idVAssetType) {
-        case 133: { // Capture Data File
-            parent.type = 'capture_data';
+    // get asset's source system object (i.e. what the asset belongs to)
+    const sourceSO: DBAPI.SystemObject | null = await summary.asset.fetchSourceSystemObject();
+    if(!sourceSO) {
+        LOG.info(`API.report.getAssetContext: cannot get context. no source SystemObject. likely floating asset. (${summary.asset.idAsset}:${summary.asset.FileName})`,LOG.LS.eHTTP);
+        return { units, projects, subjects, items, parent };
+    }
+    parent.idSystemObject = sourceSO.idSystemObject;
 
-            const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetchBySystemObject(summary.asset.idSystemObject ?? -1);
-            if(captureData) {
-                // get our id
-                const cdSO: DBAPI.SystemObject | null = await captureData.fetchSystemObject();
-                if(cdSO) parent.idSystemObject = cdSO.idSystemObject;
-
-                // grab connected items
-                items = await DBAPI.Item.fetchMasterFromCaptureDatas([captureData.idCaptureData]);
-                if(!items || items.length===0) {
-                    LOG.error(`API.report.getAssetContext: cannot find media group for asset's parent capture data (idAsset: ${summary.asset.idAsset} | idCaptureData: ${captureData.idCaptureData})`,LOG.LS.eHTTP);
-                    items = null;
-                }
-            } else {
-                LOG.error(`API.report.getAssetContext: cannot find capture data for asset (idAsset: ${summary.asset.idAsset})`,LOG.LS.eHTTP);
-            }
-        } break;
-
-        case 135:   // Model Geometry File
-        case 136:   // Model UV Map File
-        case 141: { // Other (Model Mtl file)
-
-            parent.type = 'model';
-
-            const model: DBAPI.Model | null = await DBAPI.Model.fetchBySystemObject(summary.asset.idSystemObject ?? -1);
-            if(model) {
-                // get our id
-                const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
-                if(modelSO) parent.idSystemObject = modelSO.idSystemObject;
-
-                items = await DBAPI.Item.fetchMasterFromModels([model.idModel]);
-                if(!items || items.length===0) {
-                    // we might be a derivative and need to see if our parent is a scene or different model
-                    
-
-                    // otherwise, fail
-                    LOG.error(`API.report.getAssetContext: cannot find media group for asset's parent model (asset: ${summary.asset.idAsset}:${summary.asset.FileName} | model: ${model.idModel}:${model.Name})`,LOG.LS.eHTTP);
-                    items = null;
-                }
-            } else {
-                LOG.error(`API.report.getAssetContext: cannot find model for asset (${summary.asset.idAsset}:${summary.asset.FileName})`,LOG.LS.eHTTP);
-            }
-        } break;
-
-        case 137: { // Voyager Scene File
-            parent.type = 'scene';
-
-            const scene: DBAPI.Scene | null = await DBAPI.Scene.fetchBySystemObject(summary.asset.idSystemObject ?? -1);
-            if(scene) {
-
-                // get our id
-                const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
-                if(sceneSO) parent.idSystemObject = sceneSO.idSystemObject;
-
-                items = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
-                if(!items || items.length===0) {
-                    LOG.error(`API.report.getAssetContext: cannot find media group for asset's parent scene (idAsset: ${summary.asset.idAsset} | idModel: ${scene.idScene})`,LOG.LS.eHTTP);
-                    items = null;
-                }
-            } else {
-                LOG.error(`API.report.getAssetContext: cannot find scene for asset (idAsset: ${summary.asset.idAsset})`,LOG.LS.eHTTP);
-            }
-        } break;
-
-        case 126:   // Capture Data: Photogrammetry
-        case 134: { // Model super-struct
-            LOG.info(`API.report.getAssetContext: attempting for unattached asset type (id: ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
-        } break;
+    // get all SystemObjects that have the asset's source as a child
+    // this will allow us to confirm the type of asset we are working with
+    // since Model's currently use multiple AssetTypes including generic 'Other'
+    // NOTE: still press on even if asset type mismatch, but throw error
+    // TODO: use vocabulary enums. currently they map to different values (e.g. Scene = 53 and not 137)
+    if(sourceSO.idScene) {
+        if(summary.asset.idVAssetType!==137)
+            LOG.error(`API.report.getAssetContext: asset type mismatch (scene | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        parent.type = 'scene';
+    } else if(sourceSO.idModel) {
+        if(summary.asset.idVAssetType!==135 && summary.asset.idVAssetType!==136 && summary.asset.idVAssetType!==141)
+            LOG.error(`API.report.getAssetContext: asset type mismatch (model | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        parent.type = 'model';
+    } else if(sourceSO.idCaptureData) {
+        if(summary.asset.idVAssetType!==133)
+            LOG.error(`API.report.getAssetContext: asset type mismatch (capture data | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        parent.type = 'capture_data';
+    } else {
+        LOG.error(`API.report.getAssetContext: unsupported asset type (${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        parent.type = 'unsupported';
+        return { units, projects, subjects, items, parent };
     }
 
-
-    // if no items then we have an isolated/floating object that needs to be reported
+    // get any master Items
+    items = await DBAPI.Item.fetchMasterFromSystemObject(sourceSO.idSystemObject);
     if(!items || items.length===0) {
         // all other context is null since we have no way to get to it
-        LOG.error(`API.report.getAssetContext: no MediaGroup found for asset (${summary.asset.idAsset}:${summary.asset.FileName})`,LOG.LS.eHTTP);
+        LOG.error(`API.report.getAssetContext: no MediaGroup found for asset (${summary.asset.idAsset}:${summary.asset.FileName} | source: ${summary.asset.idSystemObject})`,LOG.LS.eHTTP);
         return { units, projects, subjects, items, parent };
     }
 
@@ -608,12 +563,12 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     };
 
     // store result to temp location
-    const tempReportFilePath = path.join(Config.storage.rootStaging,'tmp','reports');
+    const tempReportFilePath = path.join(Config.storage.rootStaging,'reports');
+    const reportFileName = `report_asset_files_${(new Date).toISOString().split('T')[0]}`;
     H.Helpers.createDirectory(tempReportFilePath);
-    const fullPath = path.join(tempReportFilePath,`report_asset_files_${(new Date).toISOString().split('T')[0]}.csv`);
+    const fullPath = path.join(tempReportFilePath,reportFileName+'.csv');
     fs.writeFileSync(fullPath, csvContent, 'utf-8');
-
-    fs.writeFileSync(tempReportFilePath+'/audit.json',JSON.stringify(report), 'utf-8');
+    fs.writeFileSync(tempReportFilePath+'/'+reportFileName+'.json',JSON.stringify(report), 'utf-8');
 
     LOG.info(`API.reportAssetFiles: validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`,LOG.LS.eDEBUG);
     LOG.info(`API.reportAssetFiles: CSV file written successfully (${fullPath})`,LOG.LS.eDEBUG);
