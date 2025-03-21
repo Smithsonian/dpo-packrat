@@ -364,4 +364,59 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return null;
         }
     }
+
+    /**
+     * Computes the array of items that are connected to the provided SystemObject.
+     * Items are connected to system objects; we recursively examine those system objects are in a 'master'
+     * relationship to the provided system object. A common use case is finding the Item for an asset's
+     * source, which may require traversing up the tree several layers. (e.g. asset->model->master model->item)
+     */
+    static async fetchMasterFromSystemObject(sourceId: number,depth: number = 0,maxDepth: number = 4): Promise<Item[]> {
+        // Stop if we exceed the maximum depth
+        if (depth >= maxDepth)
+            return [];
+
+        // get our current masters for this system object
+        const masters = await SystemObject.fetchMasterFromXref(sourceId);
+        if (!masters || masters.length === 0) return [];
+
+        // filter out any that don't have idITtem values
+        const seen = new Set<number>();
+        const validMasters = masters.filter(
+            (m): m is SystemObject & { idItem: number } => {
+                if (m.idItem != null && !seen.has(m.idItem)) {
+                    seen.add(m.idItem);
+                    return true;
+                }
+                return false;
+            }
+        );
+
+        // if we have found items, then we grab the actual Item object
+        if (validMasters.length > 0) {
+            const items = await Promise.all(
+                validMasters.map((m) => Item.fetch(m.idItem))
+            );
+            return items.filter((i): i is Item => i !== null);
+        }
+
+        // If no valid masters at this level, continue recursion.
+        let results: Item[] = [];
+        for (const master of masters) {
+            const subResults = await this.fetchMasterFromSystemObject(master.idSystemObject, depth + 1, maxDepth);
+            results = results.concat(subResults);
+        }
+
+        // Globally deduplicate results by idItem.
+        const globalSeen = new Set<number>();
+        const uniqueResults = results.filter(item => {
+            if (globalSeen.has(item.idItem)) {
+                return false;
+            } else {
+                globalSeen.add(item.idItem);
+                return true;
+            }
+        });
+        return uniqueResults;
+    }
 }

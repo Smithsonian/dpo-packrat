@@ -18,11 +18,7 @@ type ProjectResponse = {
     message?: string,           // errors from the request|workflow to put in console or display to user
     data?
 };
-type DBReference = {
-    id: number,     // system object id
-    name: string,   // name of object
-};
-type AssetSummary = DBReference & {
+type AssetSummary = DBAPI.DBReference & {
     downloadable: boolean,
     quality: string,
     usage: string,                  // how is this asset used. (e.g. Web, Native, AR, Master)
@@ -37,13 +33,13 @@ type AssetList = {
     status: string,                 // Missing, Error, Good, SysError
     items: AssetSummary[];
 };
-type SceneSummary = DBReference & {
+type SceneSummary = DBAPI.DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
-    project: DBReference,
-    subject: DBReference,
-    mediaGroup: DBReference,
+    project: DBAPI.DBReference,
+    subject: DBAPI.DBReference,
+    mediaGroup: DBAPI.DBReference,
     dateCreated: Date,
     derivatives:    {
         models: AssetList,          // holds all derivative models
