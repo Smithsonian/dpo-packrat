@@ -585,8 +585,8 @@ async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
 //#endregion
 
 //#region REPORTS
-export async function createReport(req:Request, res: Response): Promise<void> {
-    
+export async function createReport(req: Request, res: Response): Promise<void> {
+
     const reportType = req.params.type.toLocaleLowerCase();
 
     switch(reportType) {
@@ -595,7 +595,7 @@ export async function createReport(req:Request, res: Response): Promise<void> {
         }
 
         default: {
-            const error = `API.report.createReport: unsupported report type (${req.params.type})`
+            const error = `API.report.createReport: unsupported report type (${req.params.type})`;
             LOG.error(`API.report.createReport: ${error}`,LOG.LS.eHTTP);
             res.status(200).send(JSON.stringify({ success: false, message: error }));
             return;

@@ -88,10 +88,10 @@ export default class API {
 
     // validation reports
     static async getReport(type: 'asset-files', date: Date, format: 'csv' | 'json', inline: boolean = false): Promise<RequestResponse> {
-        
+
         const reportDate: string = date.toISOString().split('T')[0];
 
-        let uri: string = `${API_ROUTES.REPORT}/${type}/${reportDate}/${format}`;
+        const uri: string = `${API_ROUTES.REPORT}/${type}/${reportDate}/${format}`;
         if(inline===true)
             return this.request(uri+'?inline', { method: 'GET' });
 
@@ -103,11 +103,11 @@ export default class API {
         };
     }
     static async getReportList(type: 'asset-files'): Promise<RequestResponse> {
-        let uri: string = `${API_ROUTES.REPORT}/${type}`;
+        const uri: string = `${API_ROUTES.REPORT}/${type}`;
         return this.request(uri, { method: 'GET' });
     }
     static async createReport(type: 'asset-files'): Promise<RequestResponse> {
-        let uri: string = `${API_ROUTES.REPORT}/${type}`;
+        const uri: string = `${API_ROUTES.REPORT}/${type}`;
         return this.request(uri, { method: 'POST' });
     }
 
