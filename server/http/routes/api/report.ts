@@ -17,6 +17,7 @@ import { Config } from '../../../config';
 
 import { Request, Response } from 'express';
 
+//#region TYPES & ENUM
 enum ReportType {
     ASSET_FILE = 'asset_file',
     SCENE_STATUS = 'scene_status',
@@ -86,7 +87,9 @@ type AnalysisAssetResult = {
     error: string[],
     asset: AnalysisAssetSummary,
 };
+//#endregion
 
+//#region UTILS
 const generateResponse = (success: boolean, message: string, guid: string, state: H.ProcessState, report?: any): H.OpResult => {
 
     const result: ReportResponse = {
@@ -103,92 +106,9 @@ const generateResponse = (success: boolean, message: string, guid: string, state
         data: result,
     };
 };
-const formatAnalysisForCSV = (report: AnalysisAssetResult[]): string => {
-    // Helper function to format date to a string or default 'N/A'
-    const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
+//#endregion
 
-    // Helper function to handle null or undefined values and return 'N/A' as default
-    const handleNull = (value) => value != null ? value : 'N/A';
-
-    // Helper function for cleaning strings for CSV export
-    const sanitizeForCSV = (value: string): string => {
-        if (typeof value !== 'string') return '';
-
-        // Escape double quotes by doubling them
-        const escapedValue = value.replace(/"/g, '""');
-
-        // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
-        if (/[",\n\r]/.test(escapedValue)) {
-            return `"${escapedValue}"`;
-        }
-
-        return escapedValue;
-    };
-
-    // Create CSV headers (clean names)
-    const headers = [
-        'ID',
-        'File Name',
-        'File Size',
-        'Type',
-        'Versions',
-        'Date Created',
-        'Creator',
-        'Ingested',
-        'Storage Test',
-        'File Exists',
-        'Size Match',
-        'Storage Key',
-        'Unit',
-        'Project',
-        'Subject',
-        'MediaGroup',
-        'Parent Type',
-        'Parent ID',
-    ];
-
-    // Build CSV rows
-    const rows: string[] = [];
-    for (const summary of report) {
-
-        // build up our lists of units, subjects, projects, etc.
-        const units: string = !summary.asset.context.unit ? 'NA' : summary.asset.context.unit?.map(s=>s.name).join(', ');
-        const projects: string = !summary.asset.context.project ? 'NA' : summary.asset.context.project?.map(s=>s.name).join(', ');
-        const subjects: string = !summary.asset.context.subject ? 'NA' : summary.asset.context.subject?.map(s=>s.name).join(', ');
-        const mediaGroups: string = !summary.asset.context.mediaGroup ? 'NA' : summary.asset.context.mediaGroup?.map(s=>s.name).join(', ');
-
-        for (const version of summary.asset.versions) {
-            // Initialize a new row inside the loop to ensure each version is separate
-            const row: string[] = [
-                handleNull(summary.asset.id),
-                sanitizeForCSV(summary.asset.fileName),
-                handleNull(version.fileSize),
-                sanitizeForCSV(summary.asset.type),
-                handleNull(summary.asset.versions.length),
-                handleNull(formatDate(version.dateCreated)),
-                sanitizeForCSV(version.creator.name),
-                handleNull(version.ingested),
-                handleNull(summary.asset.validation.storageTest?.success),
-                handleNull(version.validation.fileExists?.success),
-                handleNull(version.validation.sizeMatches?.success),
-                sanitizeForCSV(summary.asset.storageKey),
-                sanitizeForCSV(units),
-                sanitizeForCSV(projects),
-                sanitizeForCSV(subjects),
-                sanitizeForCSV(mediaGroups),
-                sanitizeForCSV(summary.asset.parent.type),
-                handleNull(summary.asset.parent.idSystemObject),
-            ];
-
-            rows.push(row.join(','));
-        }
-    }
-
-    // Combine headers and rows into CSV format
-    const csvContent = [headers.join(','), ...rows].join('\r\n');
-    return csvContent;
-};
-
+//#region ASSET ANALYSIS
 const getAssetContext = async (summary: AssetSummary): Promise<{
     units: DBAPI.Unit[] | null,
     projects: DBAPI.Project[] | null,
@@ -321,7 +241,6 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetSummary[] 
     }
     return result;
 };
-
 const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetResult | null> => {
 
     const analyzeAssetTypes = [
@@ -477,7 +396,7 @@ const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetRes
     // console.log('result: ',result);
     return result;
 };
-const processAssetsWithLimit = async (assets: AssetSummary[]): Promise<{ report: AnalysisAssetResult[], hasError: boolean }> => {
+const processAssetAnalysis = async (assets: AssetSummary[]): Promise<{ report: AnalysisAssetResult[], hasError: boolean }> => {
     const BATCH_SIZE = 5;
     let hasError = false;
     const report: AnalysisAssetResult[] = [];
@@ -518,8 +437,93 @@ const processAssetsWithLimit = async (assets: AssetSummary[]): Promise<{ report:
 
     return { report, hasError };
 };
+const formatAssetAnalysisForCSV = (report: AnalysisAssetResult[]): string => {
+    // Helper function to format date to a string or default 'N/A'
+    const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
 
-export async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
+    // Helper function to handle null or undefined values and return 'N/A' as default
+    const handleNull = (value) => value != null ? value : 'N/A';
+
+    // Helper function for cleaning strings for CSV export
+    const sanitizeForCSV = (value: string): string => {
+        if (typeof value !== 'string') return '';
+
+        // Escape double quotes by doubling them
+        const escapedValue = value.replace(/"/g, '""');
+
+        // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
+        if (/[",\n\r]/.test(escapedValue)) {
+            return `"${escapedValue}"`;
+        }
+
+        return escapedValue;
+    };
+
+    // Create CSV headers (clean names)
+    const headers = [
+        'ID',
+        'File Name',
+        'File Size',
+        'Type',
+        'Versions',
+        'Date Created',
+        'Creator',
+        'Ingested',
+        'Storage Test',
+        'File Exists',
+        'Size Match',
+        'Storage Key',
+        'Unit',
+        'Project',
+        'Subject',
+        'MediaGroup',
+        'Parent Type',
+        'Parent ID',
+    ];
+
+    // Build CSV rows
+    const rows: string[] = [];
+    for (const summary of report) {
+
+        // build up our lists of units, subjects, projects, etc.
+        const units: string = !summary.asset.context.unit ? 'NA' : summary.asset.context.unit?.map(s=>s.name).join(', ');
+        const projects: string = !summary.asset.context.project ? 'NA' : summary.asset.context.project?.map(s=>s.name).join(', ');
+        const subjects: string = !summary.asset.context.subject ? 'NA' : summary.asset.context.subject?.map(s=>s.name).join(', ');
+        const mediaGroups: string = !summary.asset.context.mediaGroup ? 'NA' : summary.asset.context.mediaGroup?.map(s=>s.name).join(', ');
+
+        for (const version of summary.asset.versions) {
+            // Initialize a new row inside the loop to ensure each version is separate
+            const row: string[] = [
+                handleNull(summary.asset.id),
+                sanitizeForCSV(summary.asset.fileName),
+                handleNull(version.fileSize),
+                sanitizeForCSV(summary.asset.type),
+                handleNull(summary.asset.versions.length),
+                handleNull(formatDate(version.dateCreated)),
+                sanitizeForCSV(version.creator.name),
+                handleNull(version.ingested),
+                handleNull(summary.asset.validation.storageTest?.success),
+                handleNull(version.validation.fileExists?.success),
+                handleNull(version.validation.sizeMatches?.success),
+                sanitizeForCSV(summary.asset.storageKey),
+                sanitizeForCSV(units),
+                sanitizeForCSV(projects),
+                sanitizeForCSV(subjects),
+                sanitizeForCSV(mediaGroups),
+                sanitizeForCSV(summary.asset.parent.type),
+                handleNull(summary.asset.parent.idSystemObject),
+            ];
+
+            rows.push(row.join(','));
+        }
+    }
+
+    // Combine headers and rows into CSV format
+    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    return csvContent;
+};
+
+async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
 
     const startTime = Date.now();
 
@@ -548,10 +552,10 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
         res.status(200).send(JSON.stringify(generateResponse(false, 'cannot get assets from system', guid, H.ProcessState.FAILED)));
         return;
     }
-    const { report, hasError } = await processAssetsWithLimit(assets);
+    const { report, hasError } = await processAssetAnalysis(assets);
 
     // format for CSV
-    const csvContent: string = formatAnalysisForCSV(report);
+    const csvContent: string = formatAssetAnalysisForCSV(report);
 
     // final output
     const result: ReportResponse = {
@@ -564,11 +568,12 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
 
     // store result to temp location
     const tempReportFilePath = path.join(Config.storage.rootStaging,'reports');
-    const reportFileName = `report_asset_files_${(new Date).toISOString().split('T')[0]}`;
+    const reportFileName = `report_asset-files_${(new Date).toISOString().split('T')[0]}`;
+    const fullPath = path.join(tempReportFilePath,reportFileName);
+
     H.Helpers.createDirectory(tempReportFilePath);
-    const fullPath = path.join(tempReportFilePath,reportFileName+'.csv');
-    fs.writeFileSync(fullPath, csvContent, 'utf-8');
-    fs.writeFileSync(tempReportFilePath+'/'+reportFileName+'.json',JSON.stringify(report), 'utf-8');
+    fs.writeFileSync(fullPath+'.csv', csvContent, 'utf-8');
+    fs.writeFileSync(fullPath+'.json',JSON.stringify(report), 'utf-8');
 
     LOG.info(`API.reportAssetFiles: validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`,LOG.LS.eDEBUG);
     LOG.info(`API.reportAssetFiles: CSV file written successfully (${fullPath})`,LOG.LS.eDEBUG);
@@ -577,3 +582,119 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     result.report = `validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s (${tempReportFilePath})`;
     res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: result }));
 }
+//#endregion
+
+//#region REPORTS
+export async function createReport(req:Request, res: Response): Promise<void> {
+    
+    const reportType = req.params.type.toLocaleLowerCase();
+
+    switch(reportType) {
+        case 'asset-files': {
+            return await reportAssetFiles(req,res);
+        }
+
+        default: {
+            const error = `API.report.createReport: unsupported report type (${req.params.type})`
+            LOG.error(`API.report.createReport: ${error}`,LOG.LS.eHTTP);
+            res.status(200).send(JSON.stringify({ success: false, message: error }));
+            return;
+        }
+    }
+}
+export async function getReportList(req: Request, res: Response): Promise<void> {
+
+    try {
+        const reportType = req.params.type;
+        const reportsDir = path.join(Config.storage.rootStaging, 'reports');
+
+        // Use the promise-based version of fs.readdir to await the file list.
+        const files = await fs.promises.readdir(reportsDir);
+
+        // Build a regex to match filenames in the format:
+        // report_<type>_<YYYY-MM-DD>.<extension>
+        // where extension is csv or json.
+        const regex = new RegExp(`^report_${reportType}_(\\d{4}-\\d{2}-\\d{2})\\.(csv|json)$`);
+
+        const reports = files.reduce((acc: any[], file: string) => {
+            const match = file.match(regex);
+            if (match) {
+                const date = match[1];
+                const format = match[2];
+
+                // Create a filename without the extension.
+                const filenameWithoutExtension = `report_${reportType}_${date}`;
+                acc.push({ fileName: filenameWithoutExtension, format, date });
+            }
+            return acc;
+        }, []);
+
+        res.status(200).json({
+            success: true,
+            message: 'report list generated',
+            data: { type: reportType, reports }
+        });
+    } catch (err) {
+        LOG.error('API.report.getReportList: error reading reports directory.', LOG.LS.eHTTP, err);
+        res.status(500).json({ success: false, message: 'Error reading reports directory' });
+    }
+}
+export async function getReportFile(req: Request, res: Response): Promise<void> {
+
+    // return a specific report of given type. returns 404 if not available.
+    // intended to be used with getReportList() to see what is available.
+    //
+    // api/report/<type>/<date>/<format>
+    //
+    // type = 'asset-files'
+    // date = YYYY-MM-DD (ex. 2025-03-20)
+    // format = csv | json
+
+    try {
+        // Extract parameters from URL: type, date, and format.
+        const reportType = req.params.type; // No conversion; e.g., 'asset-files'
+        const date = req.params.date;
+        const format = req.params.format.toLowerCase();
+
+        // Construct the filename using the format: report_<type>_<date>.<extension>
+        const filename = `report_${reportType}_${date}.${format}`;
+
+        // Build the full path to the report file.
+        const filePath = path.join(Config.storage.rootStaging, 'reports', filename);
+
+        // Verify that the file exists.
+        await fs.promises.access(filePath, fs.constants.F_OK);
+
+        // Check for an optional query parameter "inline".
+        // Default behavior (if flag is not set) is to trigger a file download.
+        const inline = req.query.inline;
+        if (inline && inline === 'true') {
+            // Send the file inline as part of the response body.
+            if (format === 'csv') {
+                res.setHeader('Content-Type', 'text/csv');
+            } else if (format === 'json') {
+                res.setHeader('Content-Type', 'application/json');
+            }
+            return res.sendFile(filePath, (err) => {
+                if (err) {
+                    LOG.error('API.report.getReport: error sending file inline.', LOG.LS.eHTTP, err);
+                    res.status(200).json({ success: false, message: 'Error sending report inline' });
+                }
+            });
+        } else {
+            // Default behavior: trigger a file download.
+            return res.download(filePath, filename, (err) => {
+                if (err) {
+                    LOG.error('API.report.getReport: error triggering download.', LOG.LS.eHTTP, err);
+                    res.status(200).json({ success: false, message: 'Error downloading report' });
+                }
+            });
+        }
+    } catch (err) {
+        // If the file doesn't exist or another error occurs, return a "report not available" message.
+        res.status(404).send(JSON.stringify({ success: false, message: 'Report not available' }));
+    }
+
+    res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: '' }));
+}
+//#endregion

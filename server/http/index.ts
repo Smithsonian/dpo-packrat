@@ -21,7 +21,7 @@ import { play } from './routes/sandbox';
 import { generateDownloads } from './routes/api/generateDownloads';
 import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
-import { reportAssetFiles } from './routes/api/report';
+import { createReport, getReportList, getReportFile } from './routes/api/report';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -150,7 +150,9 @@ export class HttpServer {
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);
 
-        this.app.get('/api/report/asset-files', reportAssetFiles);
+        this.app.post('/api/report/:type', createReport);               // run report creation for asset-files
+        this.app.get('/api/report/:type/:date/:format',getReportFile);  // get a specific report file
+        this.app.get('/api/report/:type',getReportList);                // get a list of reports for the given type
 
         this.app.get('/api/sandbox/play',play);
 
