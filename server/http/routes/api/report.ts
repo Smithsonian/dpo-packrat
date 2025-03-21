@@ -29,46 +29,62 @@ type ReportResponse = {
     user: { id: number, name: string, email: string },
     report: any,
 };
-
-type AssetDataSummary = {
+type AssetParent = {
+    type: 'undefined' | 'scene' | 'model' | 'capture_data',
+    idSystemObject: number,
+};
+type AssetSummary = {
     error: { process: string, message: string }[],
     asset: DBAPI.Asset,
     versions: DBAPI.AssetVersion[],
-    unit: DBAPI.Unit | null,
-    subject: DBAPI.Subject | null,
-    mediaGroup: DBAPI.Item | null,
-    parent: {
-        type: 'scene' | 'model' | 'capture_data',
-        idSystemObject: number,
-    } | null,
+    context: {
+        unit: DBAPI.Unit[] | null,
+        project: DBAPI.Project[] | null,
+        subject: DBAPI.Subject[] | null,
+        item: DBAPI.Item[] | null,
+    },
+    parent: AssetParent | null,
 };
-type AssetVersionDataSummary = {
+
+type AnalysisAssetSummary = {
+    id: number,
+    rootPath: string,
+    fileName: string,
+    storageKey: string,
+    type: string,
+    versions: AnalysisAssetVersionSummary[],
+    context: AssetAnalysisContextSummary,
+    parent: AssetParent,
+    validation: {
+        storageTest: H.OpResult | null,
+    }
+};
+type AnalysisAssetVersionSummary = {
     dateCreated: Date,
     filePath: string,
     fileSize: number,
     version: number,
-    idUserCreator: number,
+    creator: {
+        id: number,
+        name: string,
+        email: string
+    },
     ingested: boolean,
     validation: {
         fileExists: H.OpResult | null,
         sizeMatches: H.OpResult | null,
     }
 };
-
-type AssetAnalysisResult = {
+type AssetAnalysisContextSummary = {
+    unit: DBAPI.DBReference[] | null,
+    project: DBAPI.DBReference[] | null,
+    subject: DBAPI.DBReference[] | null,
+    mediaGroup: DBAPI.DBReference[] | null,
+};
+type AnalysisAssetResult = {
     status: H.ProcessStatus,
     error: string[],
-    asset: {
-        id: number,
-        rootPath: string,
-        fileName: string,
-        storageKey: string,
-        type: string,
-        validation: {
-            storageTest: H.OpResult | null,
-        }
-    },
-    versions: AssetVersionDataSummary[],
+    asset: AnalysisAssetSummary,
 };
 
 const generateResponse = (success: boolean, message: string, guid: string, state: H.ProcessState, report?: any): H.OpResult => {
@@ -87,7 +103,7 @@ const generateResponse = (success: boolean, message: string, guid: string, state
         data: result,
     };
 };
-const formatAnalysisForCSV = (report: AssetAnalysisResult[]): string => {
+const formatAnalysisForCSV = (report: AnalysisAssetResult[]): string => {
     // Helper function to format date to a string or default 'N/A'
     const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
 
@@ -111,38 +127,57 @@ const formatAnalysisForCSV = (report: AssetAnalysisResult[]): string => {
 
     // Create CSV headers (clean names)
     const headers = [
-        'Asset ID',
+        'ID',
         'File Name',
         'File Size',
         'Type',
-        'Version',
+        'Versions',
         'Date Created',
         'Creator',
         'Ingested',
         'Storage Test',
         'File Exists',
         'Size Match',
-        'Storage Key'
+        'Storage Key',
+        'Unit',
+        'Project',
+        'Subject',
+        'MediaGroup',
+        'Parent Type',
+        'Parent ID',
     ];
 
     // Build CSV rows
     const rows: string[] = [];
-    for (const asset of report) {
-        for (const version of asset.versions) {
+    for (const summary of report) {
+
+        // build up our lists of units, subjects, projects, etc.
+        const units: string = !summary.asset.context.unit ? 'NA' : summary.asset.context.unit?.map(s=>s.name).join(', ');
+        const projects: string = !summary.asset.context.project ? 'NA' : summary.asset.context.project?.map(s=>s.name).join(', ');
+        const subjects: string = !summary.asset.context.subject ? 'NA' : summary.asset.context.subject?.map(s=>s.name).join(', ');
+        const mediaGroups: string = !summary.asset.context.mediaGroup ? 'NA' : summary.asset.context.mediaGroup?.map(s=>s.name).join(', ');
+
+        for (const version of summary.asset.versions) {
             // Initialize a new row inside the loop to ensure each version is separate
             const row: string[] = [
-                handleNull(asset.asset.id),
-                sanitizeForCSV(asset.asset.fileName),
+                handleNull(summary.asset.id),
+                sanitizeForCSV(summary.asset.fileName),
                 handleNull(version.fileSize),
-                sanitizeForCSV(asset.asset.type),
-                handleNull(version.version),
+                sanitizeForCSV(summary.asset.type),
+                handleNull(summary.asset.versions.length),
                 handleNull(formatDate(version.dateCreated)),
-                handleNull(version.idUserCreator),
+                sanitizeForCSV(version.creator.name),
                 handleNull(version.ingested),
-                handleNull(asset.asset.validation.storageTest?.success),
+                handleNull(summary.asset.validation.storageTest?.success),
                 handleNull(version.validation.fileExists?.success),
                 handleNull(version.validation.sizeMatches?.success),
-                sanitizeForCSV(asset.asset.storageKey)
+                sanitizeForCSV(summary.asset.storageKey),
+                sanitizeForCSV(units),
+                sanitizeForCSV(projects),
+                sanitizeForCSV(subjects),
+                sanitizeForCSV(mediaGroups),
+                sanitizeForCSV(summary.asset.parent.type),
+                handleNull(summary.asset.parent.idSystemObject),
             ];
 
             rows.push(row.join(','));
@@ -154,7 +189,132 @@ const formatAnalysisForCSV = (report: AssetAnalysisResult[]): string => {
     return csvContent;
 };
 
-const getAssetSummary = async (idAssets: number[] = []): Promise<AssetDataSummary[] | null> => {
+const getAssetContext = async (summary: AssetSummary): Promise<{
+    units: DBAPI.Unit[] | null,
+    projects: DBAPI.Project[] | null,
+    subjects: DBAPI.Subject[] | null,
+    items: DBAPI.Item[] | null,
+    parent: AssetParent | null
+}> => {
+
+    // set our defaults
+    let units: DBAPI.Unit[] | null = null;
+    let projects: DBAPI.Project[] | null = null;
+    let subjects: DBAPI.Subject[] | null = null;
+    let items: DBAPI.Item[] | null = null;
+    const parent: AssetParent = { type: 'undefined', idSystemObject: -1 };
+
+    // get our media group/items
+    // handle different paths depending on asset type
+    // TODO: use vocabulary enums
+    switch(summary.asset.idVAssetType) {
+        case 133: { // Capture Data File
+            parent.type = 'capture_data';
+
+            const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetchBySystemObject(summary.asset.idSystemObject ?? -1);
+            if(captureData) {
+                // get our id
+                const cdSO: DBAPI.SystemObject | null = await captureData.fetchSystemObject();
+                if(cdSO) parent.idSystemObject = cdSO.idSystemObject;
+
+                // grab connected items
+                items = await DBAPI.Item.fetchMasterFromCaptureDatas([captureData.idCaptureData]);
+                if(!items || items.length===0) {
+                    LOG.error(`API.report.getAssetContext: cannot find media group for asset's parent capture data (idAsset: ${summary.asset.idAsset} | idCaptureData: ${captureData.idCaptureData})`,LOG.LS.eHTTP);
+                    items = null;
+                }
+            } else {
+                LOG.error(`API.report.getAssetContext: cannot find capture data for asset (idAsset: ${summary.asset.idAsset})`,LOG.LS.eHTTP);
+            }
+        } break;
+
+        case 135:   // Model Geometry File
+        case 136:   // Model UV Map File
+        case 141: { // Other (Model Mtl file)
+
+            parent.type = 'model';
+
+            const model: DBAPI.Model | null = await DBAPI.Model.fetchBySystemObject(summary.asset.idSystemObject ?? -1);
+            if(model) {
+                // get our id
+                const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+                if(modelSO) parent.idSystemObject = modelSO.idSystemObject;
+
+                items = await DBAPI.Item.fetchMasterFromModels([model.idModel]);
+                if(!items || items.length===0) {
+                    // we might be a derivative and need to see if our parent is a scene or different model
+                    
+
+                    // otherwise, fail
+                    LOG.error(`API.report.getAssetContext: cannot find media group for asset's parent model (asset: ${summary.asset.idAsset}:${summary.asset.FileName} | model: ${model.idModel}:${model.Name})`,LOG.LS.eHTTP);
+                    items = null;
+                }
+            } else {
+                LOG.error(`API.report.getAssetContext: cannot find model for asset (${summary.asset.idAsset}:${summary.asset.FileName})`,LOG.LS.eHTTP);
+            }
+        } break;
+
+        case 137: { // Voyager Scene File
+            parent.type = 'scene';
+
+            const scene: DBAPI.Scene | null = await DBAPI.Scene.fetchBySystemObject(summary.asset.idSystemObject ?? -1);
+            if(scene) {
+
+                // get our id
+                const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
+                if(sceneSO) parent.idSystemObject = sceneSO.idSystemObject;
+
+                items = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
+                if(!items || items.length===0) {
+                    LOG.error(`API.report.getAssetContext: cannot find media group for asset's parent scene (idAsset: ${summary.asset.idAsset} | idModel: ${scene.idScene})`,LOG.LS.eHTTP);
+                    items = null;
+                }
+            } else {
+                LOG.error(`API.report.getAssetContext: cannot find scene for asset (idAsset: ${summary.asset.idAsset})`,LOG.LS.eHTTP);
+            }
+        } break;
+
+        case 126:   // Capture Data: Photogrammetry
+        case 134: { // Model super-struct
+            LOG.info(`API.report.getAssetContext: attempting for unattached asset type (id: ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        } break;
+    }
+
+
+    // if no items then we have an isolated/floating object that needs to be reported
+    if(!items || items.length===0) {
+        // all other context is null since we have no way to get to it
+        LOG.error(`API.report.getAssetContext: no MediaGroup found for asset (${summary.asset.idAsset}:${summary.asset.FileName})`,LOG.LS.eHTTP);
+        return { units, projects, subjects, items, parent };
+    }
+
+    // get subject
+    const itemIDs: number[] = items.map(mg=>mg.idItem);
+    subjects = await DBAPI.Subject.fetchMasterFromItems(itemIDs);
+    if(!subjects || subjects.length===0)
+        LOG.error(`API.report.getAssetContext: no Subject found for asset (idAsset: ${summary.asset.idAsset} | idItem: ${itemIDs.join(', ')})`,LOG.LS.eHTTP);
+
+    // projects
+    projects = await DBAPI.Project.fetchMasterFromItems(itemIDs);
+    if(!projects || projects.length===0)
+        LOG.error(`API.report.getAssetContext: no Projects found for asset (idAsset: ${summary.asset.idAsset} | idItem: ${itemIDs.join(', ')})`,LOG.LS.eHTTP);
+    else
+        summary.context.project = projects;
+
+    // get unit
+    if(subjects) {
+        units = [];
+        for (const sub of subjects) {
+            const unit = await DBAPI.Unit.fetch(sub.idUnit);
+            if(unit) units.push(unit);
+        }
+    }
+
+    return { units, projects, subjects, items, parent };
+};
+const getAssetSummary = async (idAssets: number[] = []): Promise<AssetSummary[] | null> => {
+
+    // collect all needed data for analysis and output
 
     // get all of our assets in the database
     let assets: DBAPI.Asset[] | null = null;
@@ -171,15 +331,18 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetDataSummar
 
     // cycle through assets getting our versions, context, and relationships
     // goal is to collect as much as possible logging what aspects failed
-    const result: AssetDataSummary[] | null = [];
+    const result: AssetSummary[] | null = [];
     for(let i=0; i<assets.length; i++) {
-        const summary: AssetDataSummary = {
+        const summary: AssetSummary = {
             error: [],
             asset: assets[i],
             versions: [],
-            unit: null,
-            subject: null,
-            mediaGroup: null,
+            context: {
+                unit: null,
+                project: null,
+                subject: null,
+                item: null,
+            },
             parent: null
         };
 
@@ -191,17 +354,20 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetDataSummar
         }
 
         // get our context (unit, subject, media group)
-        // ...
-
-        // get our relationships (e.g. parent model, scene, or capture data)
-        // ...
+        const { units, projects, subjects, items, parent } = await getAssetContext(summary);
+        summary.context.unit = units;
+        summary.context.project = projects;
+        summary.context.subject = subjects;
+        summary.context.item = items;
+        summary.parent = parent;
 
         // store in our results
         result.push(summary);
     }
     return result;
 };
-const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisResult | null> => {
+
+const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetResult | null> => {
 
     const analyzeAssetTypes = [
         133,    // capture data file
@@ -211,31 +377,39 @@ const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisR
         141,    // other: material file
     ];
 
-    const result: AssetAnalysisResult = {
+    // get our system object for the asset
+    const assetSO: DBAPI.SystemObject | null = await summary.asset.fetchSystemObject();
+    if(!assetSO) {
+        LOG.error(`API.report.getAssetAnalysis: cannot analyze asset. no SystemObject (${summary.asset.idAsset})`,LOG.LS.eHTTP);
+        return null;
+    }
+
+    const result: AnalysisAssetResult = {
         // general status
-        status: (asset.error.length > 0) ? H.ProcessStatus.ERROR : H.ProcessStatus.GOOD,
-        error: (asset.error.length > 0) ? asset.error.map(item => `${item.process}:${item.message}`) : [],
+        status: (summary.error.length > 0) ? H.ProcessStatus.ERROR : H.ProcessStatus.GOOD,
+        error: (summary.error.length > 0) ? summary.error.map(item => `${item.process}:${item.message}`) : [],
         // asset info
         asset: {
-            id: asset.asset.idSystemObject ?? -1,
-            fileName: asset.asset.FileName,
+            id: assetSO.idSystemObject,
+            fileName: summary.asset.FileName,
             rootPath: '',
-            storageKey: asset.asset.StorageKey ?? '',
+            storageKey: summary.asset.StorageKey ?? '',
             type: '',
+            versions: [],
+            parent: { type: 'undefined', idSystemObject: -1 },
+            context: { unit: null, subject: null, project: null, mediaGroup: null },
             validation: {
                 storageTest: null,
             }
         },
-        // versions
-        versions: [],
-        // context
     };
 
     // get our type and check
-    const assetType: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(asset.asset.idVAssetType);
-    const needsFile: boolean = analyzeAssetTypes.includes(asset.asset.idVAssetType);
-    result.asset.type = assetType?.Term ?? `Unsupported: ${asset.asset.idVAssetType}`;
+    const assetType: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(summary.asset.idVAssetType);
+    const needsFile: boolean = analyzeAssetTypes.includes(summary.asset.idVAssetType);
+    result.asset.type = assetType?.Term ?? `Unsupported: ${summary.asset.idVAssetType}`;
 
+    // grab an instance of our storage factory for OCFL tests/checks
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
     if(!storage) {
         LOG.error('API.report.getAssetAnalysis cannot get storage interface',LOG.LS.eHTTP);
@@ -244,28 +418,57 @@ const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisR
 
     // if we don't need a file then we're likely residual staging data
     // so don't check for file integrity. (e.g. zip package reference)
-    if(needsFile===true && !!asset.asset.StorageKey?.length) {
+    if(needsFile===true && !!summary.asset.StorageKey?.length) {
 
         // get our actual path on the repository
-        result.asset.rootPath = await storage.repositoryFileName(asset.asset.StorageKey);
+        result.asset.rootPath = await storage.repositoryFileName(summary.asset.StorageKey);
 
         // Storage factory validation (compares files/paths)
-        const storageValidationResult: STORE.ValidateAssetResult = await storage.validateAsset(asset.asset.StorageKey);
+        const storageValidationResult: STORE.ValidateAssetResult = await storage.validateAsset(summary.asset.StorageKey);
         result.asset.validation.storageTest = {
             success: storageValidationResult.success,
             message: storageValidationResult.success ? '' : storageValidationResult.error ?? 'undefined'
         };
 
-        // cycle through versions getting each from disk, checking size, etc. (future: hash for comparison)
-        for(let i=0; i<asset.versions.length; i++) {
-            const version: DBAPI.AssetVersion = asset.versions[i];
+        // build our contexts
+        result.asset.context.unit = (!summary.context.unit) ? null : summary.context.unit.map(u => {
+            // TODO: get system object ids
+            return { id: u.idUnit, name: u.Name };
+        });
+        result.asset.context.project = (!summary.context.project) ? null : summary.context.project.map(p => {
+            // TODO: get system object ids
+            return { id: p.idProject, name: p.Name };
+        });
+        result.asset.context.subject = (!summary.context.subject) ? null : summary.context.subject.map(s => {
+            // TODO: get system object ids
+            return { id: s.idSubject, name: s.Name };
+        });
+        result.asset.context.mediaGroup = (!summary.context.item) ? null : summary.context.item.map(i => {
+            // TODO: get system object ids
+            return { id: i.idItem, name: i.Name };
+        });
 
-            const versionResult: AssetVersionDataSummary = {
+        if(summary.parent)
+            result.asset.parent = summary.parent;
+
+        // cycle through versions getting each from disk, checking size, etc.
+        // TODO: hash for comparison
+        for(let i=0; i<summary.versions.length; i++) {
+            const version: DBAPI.AssetVersion = summary.versions[i];
+
+            // get user/creator info
+            const user: DBAPI.User | null = await DBAPI.User.fetch(version.idUserCreator);
+
+            const versionResult: AnalysisAssetVersionSummary = {
                 dateCreated: version.DateCreated,
                 filePath: '',
                 fileSize: Number(version.StorageSize),
                 ingested: version.Ingested ?? false,
-                idUserCreator: version.idUserCreator,
+                creator: {
+                    id: user?.idUser ?? -1,
+                    name: user?.Name ?? '',
+                    email: user?.EmailAddress ?? ''
+                },
                 version: version.Version,
                 validation: {
                     fileExists: null,
@@ -312,17 +515,17 @@ const getAssetAnalysis = async (asset: AssetDataSummary): Promise<AssetAnalysisR
             // TODO: hash comparison
             // versionResult.validation.hashMatches = false;
 
-            result.versions.push(versionResult);
+            result.asset.versions.push(versionResult);
         }
     }
 
     // console.log('result: ',result);
     return result;
 };
-const processAssetsWithLimit = async (assets: AssetDataSummary[]): Promise<{ report: AssetAnalysisResult[], hasError: boolean }> => {
+const processAssetsWithLimit = async (assets: AssetSummary[]): Promise<{ report: AnalysisAssetResult[], hasError: boolean }> => {
     const BATCH_SIZE = 5;
     let hasError = false;
-    const report: AssetAnalysisResult[] = [];
+    const report: AnalysisAssetResult[] = [];
     let currentIndex = 0;
 
     // Generator to yield batches of assets
@@ -355,7 +558,7 @@ const processAssetsWithLimit = async (assets: AssetDataSummary[]): Promise<{ rep
             })
         );
 
-        report.push(...results.filter((result): result is AssetAnalysisResult => result !== null));
+        report.push(...results.filter((result): result is AnalysisAssetResult => result !== null));
     }
 
     return { report, hasError };
@@ -384,32 +587,18 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     const guid: string = H.Helpers.generateGUID();
 
     // get data about each of our assets in the system
-    const assets: AssetDataSummary[] | null = await getAssetSummary();
+    const assets: AssetSummary[] | null = await getAssetSummary();
     if(!assets || assets.length===0) {
         LOG.error('API.reportAssetFiles: cannot get assets from system',LOG.LS.eHTTP);
         res.status(200).send(JSON.stringify(generateResponse(false, 'cannot get assets from system', guid, H.ProcessState.FAILED)));
         return;
     }
-
-    // cycle through validating assets/versions appending to report
-    // let hasError: boolean = false;
-    // const report: AssetAnalysisResult[] = [];
-    // for(let i=0; i<assets.length; i++) {
-    //     console.log(`[${i}] analyzing asset: ${assets[i].asset.FileName}`);
-    //     const validationResult: AssetAnalysisResult | null = await getAssetAnalysis(assets[i]);
-    //     if(!validationResult) {
-    //         LOG.error(`API.reportAssetFiles: error validating asset: (${assets[i].asset.idAsset}:${assets[i].asset.FileName})`,LOG.LS.eHTTP);
-    //         hasError = true;
-    //         continue;
-    //     }
-
-    //     report.push(validationResult);
-    // }
     const { report, hasError } = await processAssetsWithLimit(assets);
 
     // format for CSV
     const csvContent: string = formatAnalysisForCSV(report);
 
+    // final output
     const result: ReportResponse = {
         guid,
         state: (hasError===true) ? H.ProcessState.FAILED : H.ProcessState.COMPLETED,
@@ -423,6 +612,8 @@ export async function reportAssetFiles(_req: Request, res: Response): Promise<vo
     H.Helpers.createDirectory(tempReportFilePath);
     const fullPath = path.join(tempReportFilePath,`report_asset_files_${(new Date).toISOString().split('T')[0]}.csv`);
     fs.writeFileSync(fullPath, csvContent, 'utf-8');
+
+    fs.writeFileSync(tempReportFilePath+'/audit.json',JSON.stringify(report), 'utf-8');
 
     LOG.info(`API.reportAssetFiles: validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`,LOG.LS.eDEBUG);
     LOG.info(`API.reportAssetFiles: CSV file written successfully (${fullPath})`,LOG.LS.eDEBUG);
