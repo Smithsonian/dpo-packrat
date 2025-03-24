@@ -63,7 +63,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
 
         try {
             setIsLoadingData(true);
-            
+
             console.log(`[Packrat] getting scenes for project (${project.Name}) - STARTED`,project);
             const response: RequestResponse = await API.getProjectScenes(project.idProject);
             if(response.success === false) {
