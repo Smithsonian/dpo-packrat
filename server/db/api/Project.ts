@@ -129,6 +129,30 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
     }
 
     /**
+     * Computes the array of projects that are connected to any of the specified Items.
+     * Projects are connected to system objects; we examine those system objects which are in a *master* relationship
+     * to system objects connected to any of the specified Items.
+     * @param idItems Array of idItems
+     */
+    static async fetchMasterFromItems(idItems: number[]): Promise<Project[] | null> {
+        if (!idItems || idItems.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
+                JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectMaster)
+                JOIN SystemObject AS IOS ON (SOX.idSystemObjectDerived = IOS.idSystemObject AND IOS.idItem IS NOT NULL)
+                WHERE IOS.idItem IN (${Prisma.join(idItems)})`, Project);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.Project.fetchMasterFromItems', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
+    /**
      * Computes the array of projects that are connected to any of the specified project documentation.
      * @param idProjectDocumentations Array of ProjectDocumentation.idProjectDocumentation
      */

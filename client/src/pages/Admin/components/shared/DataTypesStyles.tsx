@@ -20,6 +20,7 @@ export type AssetSummary = DBReference & {
     quality: string,
     usage: string,
     dateCreated: Date,
+    dateModified: Date,
     creator: {                      // who created the asset
         idUser: number,
         email: string,
@@ -38,6 +39,7 @@ export type SceneSummary = DBReference & {
     subject: DBReference,
     mediaGroup: DBReference,
     dateCreated: Date,
+    dateModified: Date,
     downloads: AssetList,
     derivatives:    {
         models: AssetList,          // holds all derivative models

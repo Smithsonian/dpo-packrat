@@ -131,7 +131,7 @@ function AdminToolsView(): React.ReactElement {
                             {/* Asset Validation Section */}
                             <Box>
                                 <IconButton className={classes.collapseHeader} onClick={() => toggleSection('assetValidation')}>
-                                    Validation
+                                    Validation: Assets
                                     {openSections.assetValidation ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
                                 </IconButton>
                                 <Collapse in={openSections.assetValidation} className={classes.collapseContainer}>

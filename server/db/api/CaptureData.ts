@@ -92,6 +92,26 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
         }
     }
 
+    static async fetchBySystemObject(idSystemObject: number): Promise<CaptureData | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            const captureData: CaptureData[] | null =  DBC.CopyArray<CaptureDataBase, CaptureData>(
+                await DBC.DBConnection.prisma.$queryRaw<CaptureData[]>`
+                SELECT * FROM CaptureData AS cd
+                JOIN SystemObject AS so ON (cd.idCaptureData = so.idCaptureData)
+                WHERE so.idSystemObject = ${idSystemObject};`, CaptureData);
+
+            // if we have multiple capture data just return the first one, else null
+            if(captureData)
+                return captureData[0];
+
+            return null;
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.CaptureData.fetchBySystemObject', LOG.LS.eDB, error);
+            return null;
+        }
+    }
     static async fetchFromCaptureDataPhoto(idCaptureDataPhoto: number): Promise<CaptureData | null> {
         if (!idCaptureDataPhoto)
             return null;

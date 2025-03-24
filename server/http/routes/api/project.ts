@@ -18,15 +18,12 @@ type ProjectResponse = {
     message?: string,           // errors from the request|workflow to put in console or display to user
     data?
 };
-type DBReference = {
-    id: number,     // system object id
-    name: string,   // name of object
-};
-type AssetSummary = DBReference & {
+type AssetSummary = DBAPI.DBReference & {
     downloadable: boolean,
     quality: string,
     usage: string,                  // how is this asset used. (e.g. Web, Native, AR, Master)
     dateCreated: Date,
+    dateModified: Date,
     creator: {                      // who created the asset
         idUser: number,
         email: string,
@@ -37,14 +34,15 @@ type AssetList = {
     status: string,                 // Missing, Error, Good, SysError
     items: AssetSummary[];
 };
-type SceneSummary = DBReference & {
+type SceneSummary = DBAPI.DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
-    project: DBReference,
-    subject: DBReference,
-    mediaGroup: DBReference,
+    project: DBAPI.DBReference,
+    subject: DBAPI.DBReference,
+    mediaGroup: DBAPI.DBReference,
     dateCreated: Date,
+    dateModified: Date,
     derivatives:    {
         models: AssetList,          // holds all derivative models
         downloads: AssetList,       // specific models for download
@@ -162,10 +160,26 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         LOG.error(`API.Project.buildProjectSceneDef failed to get scene (${scene.idScene}) SystemObject`,LOG.LS.eDB);
         return null;
     }
-    const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(sceneSO.idSystemObject);
-    if(!sceneSOV) {
+
+    // get all system object versions which represent changes to the
+    // scene. We do this to get the earliest and current states of the scene
+    const sceneSOVs: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(sceneSO.idSystemObject);
+    if(!sceneSOVs || sceneSOVs.length===0) {
         LOG.error(`API.Project.buildProjectSceneDef failed to get SystemObjectVersion (${sceneSO.idSystemObject}) for scene (idScene: ${scene.idScene})`,LOG.LS.eDB);
         return null;
+    }
+
+    // get earliest and latest
+    let sceneVersionFirst: DBAPI.SystemObjectVersion | null = null;
+    let sceneVersionLast: DBAPI.SystemObjectVersion | null = null;
+    for(const version of sceneSOVs) {
+        const date = new Date(version.DateCreated);
+        if (!sceneVersionFirst?.DateCreated || date < sceneVersionFirst.DateCreated) {
+            sceneVersionFirst = version;
+        }
+        if (!sceneVersionLast?.DateCreated || date > sceneVersionLast.DateCreated) {
+            sceneVersionLast = version;
+        }
     }
 
     // get our item
@@ -241,8 +255,9 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     const result: SceneSummary = {
         id: sceneSO.idSystemObject,
         name: scene.Name,
-        dateCreated: sceneSOV.DateCreated,
-        publishedState: resolvePublishedState(sceneSOV.PublishedState),
+        dateCreated: sceneVersionFirst?.DateCreated ?? new Date(0),
+        dateModified: sceneVersionLast?.DateCreated ?? new Date(0),
+        publishedState: resolvePublishedState(sceneVersionLast?.PublishedState ?? COMMON.ePublishedState.eNotPublished),
         datePublished: new Date(0), // does it exist? store epoch to signal error
         isReviewed: scene.PosedAndQCd as boolean,
 
@@ -390,9 +405,10 @@ const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | 
                 id: cdSO.idSystemObject,
                 name: captureData[i].Name,
                 downloadable: false,
-                quality: 'Highest' ,            // assuming the best quality
-                usage: 'Source:CaptureData',    // TODO: extract dataset usage metadata
-                dateCreated: assetVersion.DateCreated,
+                quality: 'Highest' ,                        // assuming the best quality
+                usage: 'Source:CaptureData',                // TODO: extract dataset usage metadata
+                dateCreated: captureData[i].DateCaptured,   // when was the capture dataset captured/created
+                dateModified: assetVersion.DateCreated,     // when was the latest asset version created/modified
                 creator: {
                     idUser: user?.idUser ?? -1,
                     email: user?.EmailAddress ?? 'undefined',
@@ -439,6 +455,7 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
         usage: 'Source',
         downloadable: false,
         dateCreated: new Date(),
+        dateModified: new Date(),
         creator: { idUser: -1, name: '', email: '' },
     };
 
@@ -469,7 +486,8 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
         name: modelCreator?.Name ?? 'unknown',
         email: modelCreator?.EmailAddress ?? 'undefined',
     };
-    result.dateCreated = modelAssetVer.DateCreated;
+    result.dateCreated = model.DateCreated;             // when was model created
+    result.dateModified = modelAssetVer.DateCreated;    // when was the latest asset version created/modified
 
     return result;
 };

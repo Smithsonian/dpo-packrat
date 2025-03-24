@@ -86,9 +86,29 @@ export default class API {
         return this.request(`${API_ROUTES.PROJECTS}/${idProject}/scenes`, { method: 'GET' });
     }
 
-    // validation
-    static async getReport(type: string): Promise<RequestResponse> {
-        return this.request(`${API_ROUTES.REPORT}/${type}`, { method: 'GET' });
+    // validation reports
+    static async getReport(type: 'asset-files', date: Date, format: 'csv' | 'json', inline: boolean = false): Promise<RequestResponse> {
+
+        const reportDate: string = date.toISOString().split('T')[0];
+
+        const uri: string = `${API_ROUTES.REPORT}/${type}/${reportDate}/${format}`;
+        if(inline===true)
+            return this.request(uri+'?inline', { method: 'GET' });
+
+        window.location.href = `${API.serverEndpoint()}/${uri}`;
+        return {
+            success: true,
+            message: 'Download triggered',
+            originalUrl: uri
+        };
+    }
+    static async getReportList(type: 'asset-files'): Promise<RequestResponse> {
+        const uri: string = `${API_ROUTES.REPORT}/${type}`;
+        return this.request(uri, { method: 'GET' });
+    }
+    static async createReport(type: 'asset-files'): Promise<RequestResponse> {
+        const uri: string = `${API_ROUTES.REPORT}/${type}`;
+        return this.request(uri, { method: 'POST' });
     }
 
     // general routines

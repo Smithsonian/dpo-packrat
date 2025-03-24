@@ -73,3 +73,11 @@ export * from './api/composite/ObjectGraphDataEntry';
 export * from './api/composite/SceneConstellation';
 export * from './api/composite/SubjectUnitIdentifier';
 export * from './api/composite/WorkflowListResult';
+
+/** Shared types and enums */
+
+// minimal representation of a DB object used for reports to identify/list object
+export type DBReference = {
+    id: number,     // system object id
+    name: string,   // name of object
+};

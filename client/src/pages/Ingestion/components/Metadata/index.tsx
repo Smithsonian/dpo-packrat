@@ -267,7 +267,7 @@ function Metadata(): React.ReactElement {
                 {getMetadataComponent(metadataIndex)}
                 { ingestionLoading && (
                     <Box className={classes.ingestNotice}>
-                        <Typography style={{ margin: '5px 0px 2px 0px;' }}>
+                        <Typography style={{ margin: '5px 0px 2px 0px' }}>
                             <strong>Ingesting:</strong> Please do not leave this page until finished.
                         </Typography>
                     </Box>
