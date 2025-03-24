@@ -1,6 +1,6 @@
 // import API, { RequestResponse } from '../../../../api';
 import React, { useEffect } from 'react';
-import { Box, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Tooltip, Checkbox } from '@material-ui/core';
+import { Box, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Tooltip, Checkbox, Typography, LinearProgress } from '@material-ui/core';
 import { DBReference, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 
 // styles
@@ -11,8 +11,9 @@ export type SelectTableProps<T> = {
     data: Array<T>;
     columns: ColumnHeader[];
     resetSelection?: boolean;
+    isLoading?: boolean;
 };
-export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data, columns, resetSelection }: SelectTableProps<T>): React.ReactElement => {
+export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data, columns, resetSelection, isLoading }: SelectTableProps<T>): React.ReactElement => {
 
     type Order = 'asc' | 'desc';
 
@@ -210,130 +211,155 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
     // JSX
     return (
         <Box style={{ marginTop: '2rem', marginBottom: '2rem' }}>
-            <TableContainer>
-                <Table
-                    className={tableClasses.table}
-                    aria-labelledby='tableTitle'
-                    size='small'
-                    aria-label='enhanced table'
-                >
-                    <TableHead>
-                        <TableRow>
-                            <TableCell padding='checkbox'>
-                                <Checkbox
-                                    indeterminate={selected.length > 0 && selected.length < data.length}
-                                    checked={data.length > 0 && selected.length === data.length}
-                                    onChange={handleRowSelectAll}
-                                    inputProps={{ 'aria-label': 'select all items' }}
-                                />
-                            </TableCell>
-                            { columns.map((columnHeading) => (
-                                <Tooltip key={columnHeading.key} title={columnHeading.tooltip ?? columnHeading.key} disableHoverListener={!columnHeading.tooltip}>
-                                    <TableCell
-                                        align={columnHeading.align ?? 'center'}
-                                        padding='none'
-                                        component='th'
-                                        sortDirection={orderBy === columnHeading.key ? order : false}
-                                    >
-                                        <TableSortLabel
-                                            active={orderBy === columnHeading.key}
-                                            direction={orderBy === columnHeading.key ? order : 'asc'}
-                                            onClick={createSortHandler(columnHeading.key)}
+            <>
+                <TableContainer>
+                    <Table
+                        className={tableClasses.table}
+                        aria-labelledby='tableTitle'
+                        size='small'
+                        aria-label='enhanced table'
+                    >
+                        <TableHead>
+                            <TableRow>
+                                <TableCell padding='checkbox'>
+                                    <Checkbox
+                                        indeterminate={selected.length > 0 && selected.length < data.length}
+                                        checked={data.length > 0 && selected.length === data.length}
+                                        onChange={handleRowSelectAll}
+                                        inputProps={{ 'aria-label': 'select all items' }}
+                                    />
+                                </TableCell>
+                                { columns.map((columnHeading) => (
+                                    <Tooltip key={columnHeading.key} title={columnHeading.tooltip ?? columnHeading.key} disableHoverListener={!columnHeading.tooltip}>
+                                        <TableCell
+                                            align={columnHeading.align ?? 'center'}
+                                            padding='none'
+                                            component='th'
+                                            sortDirection={orderBy === columnHeading.key ? order : false}
                                         >
-                                            {columnHeading.label}
-                                            {orderBy === columnHeading.key ? (
-                                                <span className={classes.visuallyHidden}>
-                                                    {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
-                                                </span>
-                                            ) : null}
-                                        </TableSortLabel>
-                                    </TableCell>
-                                </Tooltip>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-
-                    <TableBody>
-                        { (data && Array.isArray(data)) ?
-                            stableSort(data, getComparator(order, orderBy))
-                                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                                .map((row: T, index: number) => {
-                                    const isItemSelected = isSelected(row);
-                                    const labelId = `table-checkbox-${index}`;
-
-                                    return (
-                                        <TableRow
-                                            hover
-                                            onClick={(event) => handleRowSelect(event, row)}
-                                            role='checkbox'
-                                            aria-checked={isItemSelected}
-                                            tabIndex={-1}
-                                            key={row.id}
-                                            selected={isItemSelected}
-                                        >
-                                            <TableCell padding='checkbox'>
-                                                <Checkbox
-                                                    checked={isItemSelected}
-                                                    inputProps={{ 'aria-labelledby': labelId }}
-                                                />
-                                            </TableCell>
-                                            <TableCell component='th' id={labelId} scope='row' padding='none'>
-                                                {row.id}
-                                            </TableCell>
-                                            {columns.map((column) => (
-                                                // we do 'id' above so we can flag the entire row for accessibility
-                                                (column.key!=='id') && (
-                                                    <Tooltip
-                                                        key={column.key}
-                                                        title={resolveProperty(row,column.key)}
-                                                    >
-                                                        <TableCell
-                                                            align={column.align ?? 'center'}
-                                                            style={{  whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: '10rem', }}
-                                                        >
-                                                            { (column.link && column.link===true) ? (
-                                                                (() => {
-                                                                    // if our link has a # we just skip adding the href so we don't
-                                                                    // reload page on click or go to different unrelated page
-                                                                    const link = resolveProperty(row, `${column.key}_link`);
-                                                                    const displayText = resolveProperty(row, column.key);
-                                                                    return link.includes('#') ? (
-                                                                        displayText
-                                                                    ) : (
-                                                                        <a href={link} target='_blank' rel='noopener noreferrer' onClick={handleElementClick}>
-                                                                            {displayText}
-                                                                        </a>
-                                                                    );
-                                                                })()
-                                                            ) : (
-                                                                resolveProperty(row, column.key)
-                                                            )}
-                                                        </TableCell>
-                                                    </Tooltip>
-                                                )
-                                            ))}
-                                        </TableRow>
-                                    );
-                                }):
-                            <></>}
-
-                        {emptyRows > 0 && (
-                            <TableRow style={{ height: 33 * emptyRows }}>
-                                <TableCell colSpan={6} />
+                                            <TableSortLabel
+                                                active={orderBy === columnHeading.key}
+                                                direction={orderBy === columnHeading.key ? order : 'asc'}
+                                                onClick={createSortHandler(columnHeading.key)}
+                                            >
+                                                {columnHeading.label}
+                                                {orderBy === columnHeading.key ? (
+                                                    <span className={classes.visuallyHidden}>
+                                                        {order === 'desc' ? 'sorted descending' : 'sorted ascending'}
+                                                    </span>
+                                                ) : null}
+                                            </TableSortLabel>
+                                        </TableCell>
+                                    </Tooltip>
+                                ))}
                             </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[5, 10, 25, (data.length>25)?data.length:100].filter(option => option <= data.length)} // include options based on total count and one option to view all
-                component='div'
-                count={data.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onChangePage={handleChangePage}
-                onChangeRowsPerPage={handleChangeRowsPerPage}
-            />
+                        </TableHead>
+
+                        <TableBody>
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell colSpan={columns.length + 1}>
+                                        <Box
+                                            display='flex'
+                                            flexDirection='column'
+                                            justifyContent='center'
+                                            alignItems='center'
+                                            height={33 * emptyRows}
+                                            width='100%'
+                                        >
+                                            <Typography variant='body1' gutterBottom>Loading...</Typography>
+                                            <Box width='20%'>
+                                                <LinearProgress />
+                                            </Box>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                <>
+                                    {data && Array.isArray(data) && stableSort(data, getComparator(order, orderBy))
+                                        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                                        .map((row: T, index: number) => {
+                                            const isItemSelected = isSelected(row);
+                                            const labelId = `table-checkbox-${index}`;
+                                            return (
+                                                <TableRow
+                                                    hover
+                                                    onClick={(event) => handleRowSelect(event, row)}
+                                                    role='checkbox'
+                                                    aria-checked={isItemSelected}
+                                                    tabIndex={-1}
+                                                    key={row.id}
+                                                    selected={isItemSelected}
+                                                >
+                                                    <TableCell padding='checkbox'>
+                                                        <Checkbox
+                                                            checked={isItemSelected}
+                                                            inputProps={{ 'aria-labelledby': labelId }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell component='th' id={labelId} scope='row' padding='none'>
+                                                        {row.id}
+                                                    </TableCell>
+                                                    {columns.map((column) => (
+                                                        column.key !== 'id' && (
+                                                            <Tooltip
+                                                                key={column.key}
+                                                                title={resolveProperty(row, column.key)}
+                                                            >
+                                                                <TableCell
+                                                                    align={column.align ?? 'center'}
+                                                                    style={{
+                                                                        whiteSpace: 'nowrap',
+                                                                        textOverflow: 'ellipsis',
+                                                                        overflow: 'hidden',
+                                                                        maxWidth: '10rem',
+                                                                    }}
+                                                                >
+                                                                    {column.link ? (() => {
+                                                                        const link = resolveProperty(row, `${column.key}_link`);
+                                                                        const displayText = resolveProperty(row, column.key);
+                                                                        return link.includes('#') ? (
+                                                                            displayText
+                                                                        ) : (
+                                                                            <a
+                                                                                href={link}
+                                                                                target='_blank'
+                                                                                rel='noopener noreferrer'
+                                                                                onClick={handleElementClick}
+                                                                            >
+                                                                                {displayText}
+                                                                            </a>
+                                                                        );
+                                                                    })() : resolveProperty(row, column.key)}
+                                                                </TableCell>
+                                                            </Tooltip>
+                                                        )
+                                                    ))}
+                                                </TableRow>
+                                            );
+                                        })
+                                    }
+
+                                    {emptyRows > 0 && (
+                                        <TableRow style={{ height: 33 * emptyRows }}>
+                                            <TableCell colSpan={columns.length + 1} />
+                                        </TableRow>
+                                    )}
+                                </>
+                            )}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+                <TablePagination
+                    rowsPerPageOptions={[5, 10, 25, (data.length>25)?data.length:100].filter(option => option <= data.length)} // include options based on total count and one option to view all
+                    component='div'
+                    count={data.length}
+                    rowsPerPage={rowsPerPage}
+                    page={page}
+                    onChangePage={handleChangePage}
+                    onChangeRowsPerPage={handleChangeRowsPerPage}
+                />
+            </>
         </Box>
     );
 };
