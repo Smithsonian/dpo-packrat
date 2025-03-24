@@ -18,6 +18,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
     const [operation, setOperation] = useState<number>(0);
     const [selectedList, setSelectedList] = useState<SceneSummary[]>([]);
     const [isListValid, setIsListValid] = useState<boolean>(false);
+    const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
     const [projectList, setProjectList] = useState<Project[]>([]);
     const [projectScenes, setProjectScenes] = useState<SceneSummary[]>([]);
     const [projectSelected, setProjectSelected] = useState<Project|undefined>(undefined);
@@ -61,6 +62,8 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             return;
 
         try {
+            setIsLoadingData(true);
+            
             console.log(`[Packrat] getting scenes for project (${project.Name}) - STARTED`,project);
             const response: RequestResponse = await API.getProjectScenes(project.idProject);
             if(response.success === false) {
@@ -103,6 +106,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
 
             // console.log('[Packrat:DEBUG] getProjectScenes: ',response.data);
             console.log(`[Packrat] getting scenes for project (${project.Name}) - FINISHED [${response.data.length}]`);
+            setIsLoadingData(false);
             setProjectScenes(response.data);
         } catch(error) {
             console.error(`[Packrat:ERROR] Unexpected error fetching project scenes: ${error}`);
@@ -465,6 +469,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 data={filteredProjectScenes}
                 columns={getColumnHeader()}
                 resetSelection={resetSelection}
+                isLoading={isLoadingData}
             />
 
             <Box style={{ display: 'flex', justifyContent: 'center' }}>
@@ -487,6 +492,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                     className={classes.btn}
                     onClick={onExportTableDataToCSV}
                     disableElevation
+                    disabled={projectScenes.length===0}
                 >
                     CSV
                 </Button>
