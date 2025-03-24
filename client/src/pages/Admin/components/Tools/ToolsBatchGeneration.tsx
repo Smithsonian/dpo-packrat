@@ -5,7 +5,7 @@ import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, Table
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
-import { SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
+import { AssetList, SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
 
 // styles
@@ -69,13 +69,32 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 return;
             }
 
-            // cycle through data converting as needed
+            // cycle through data converting as needed for convenience
             const { protocol, host } = window.location;
             response.data.forEach(obj => {
                 // stored ISO strings to Date objects
                 obj.dateCreated = new Date(obj.dateCreated as string);
+                obj.dateModified = new Date(obj.dateModified as string);
+
                 // obj.dateGenDownloads = new Date(obj.dateGenDownloads as string);
                 obj.datePublished = new Date(obj.datePublished as string);
+
+                // format our capture data and master model dates
+                if(obj.sources.captureData.items) {
+                    for(let i=0; i<obj.sources.captureData.items.length; i++) {
+                        obj.sources.captureData.items[i].dateCreated = new Date(obj.sources.captureData.items[i].dateCreated as string);
+                        obj.sources.captureData.items[i].dateModified = new Date(obj.sources.captureData.items[i].dateModified as string);
+                    }
+                }
+                if(obj.sources.models.items) {
+                    for(let i=0; i<obj.sources.models.items.length; i++) {
+                        obj.sources.models.items[i].dateCreated = new Date(obj.sources.models.items[i].dateCreated as string);
+                        obj.sources.models.items[i].dateModified = new Date(obj.sources.models.items[i].dateModified as string);
+                    }
+                }
+
+                // NOTE: all other dates (e.g. derivatives) are left as strings
+                // and needs to be converted prior to use.
 
                 // inject hyperlinks for the scene details page
                 // link ties to 'name' field so need to set property to prefix of 'name_'
@@ -211,9 +230,44 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             return escapedValue;
         };
 
+        // Helper function to extract date created/modified from scene assets/properties
+        const extractDates = (scene: SceneSummary): { dateCreated: Date, dateModified: Date } => {
+
+            // start with scene dates
+            let dateCreated: Date = scene.dateCreated;
+            let dateModified: Date = scene.dateModified;
+
+            // adjust based on capture data sources
+            for(const cd of scene.sources.captureData.items){
+                if(cd.dateCreated < dateCreated)
+                    dateCreated = cd.dateCreated;
+                if(cd.dateModified > dateModified)
+                    dateModified = cd.dateModified;
+            }
+
+            // adjust based on master model sources
+            for(const model of scene.sources.models.items){
+                if(model.dateCreated < dateCreated)
+                    dateCreated = model.dateCreated;
+                if(model.dateModified > dateModified)
+                    dateModified = model.dateModified;
+            }
+
+            return { dateCreated, dateModified };
+        };
+
+        // Helper to get capture data value
+        const getCaptureDataValue = (cd: AssetList): string => {
+            const status: string = cd.status;
+            const count: number = cd.items?.length ?? 0;
+
+            return (status.toLowerCase()==='good') ? `${status} (${count})` : status;
+        };
+
         // Create CSV headers (clean names)
         const headers = [
             'Date Created',
+            'Date Modified',
             'Creator',
             'ID',
             'Scene Name',
@@ -234,8 +288,12 @@ const ToolsBatchGeneration = (): React.ReactElement => {
 
         // Build CSV rows
         const rows = projectScenes.map(scene => {
+            // get first/last dates
+            const { dateCreated, dateModified } = extractDates(scene);
+
             return [
-                formatDate(scene.dateCreated),
+                formatDate(dateCreated),
+                formatDate(dateModified),
                 handleNull(scene.sources.models?.items?.[0]?.creator?.name),
                 handleNull(scene.id),
                 handleNull(sanitizeForCSV(scene.name)),
@@ -245,7 +303,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 handleNull(scene.derivatives.downloads?.status),
                 handleNull(scene.sources.models?.status),
                 handleNull(scene.derivatives.ar?.status),
-                handleNull(scene.sources.captureData?.status),
+                handleNull(getCaptureDataValue(scene.sources.captureData)),
                 // handleNull(scene.project?.id),
                 handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
