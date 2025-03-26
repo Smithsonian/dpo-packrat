@@ -423,7 +423,7 @@ const processAssetAnalysis = async (): Promise<boolean> => {
         fs.unlinkSync(basePath+'.json');
     fileCheck = await H.Helpers.fileOrDirExists(basePath+'.csv');
     if(fileCheck.success===true)
-        fs.unlinkSync(basePath+'.csv')
+        fs.unlinkSync(basePath+'.csv');
 
     // open a stream and set it up to read the assets data line by line
     const sourceStream = fs.createReadStream(basePath+'.assets', { encoding: 'utf-8' });
@@ -434,7 +434,7 @@ const processAssetAnalysis = async (): Promise<boolean> => {
 
     // set up write stream for JSON output of asset's analysis
     const jsonStream = fs.createWriteStream(basePath + '.json', { flags: 'a' });
-    jsonStream.write('{ \"assets\": [\n');
+    jsonStream.write('{ "assets": [\n');
 
     // setup write stream for CSV output of asset's analysis
     // and write out headers
