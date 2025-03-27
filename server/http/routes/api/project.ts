@@ -49,8 +49,8 @@ type SceneSummary = DBAPI.DBReference & {
         ar: AssetList,              // models specific to AR
     },
     sources: {
-        models: AssetList,
-        captureData: AssetList,
+        models: { linked: AssetList, expected: number },
+        captureData: { linked: AssetList, expected: number },
     }
 };
 
@@ -248,8 +248,13 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         if(model) idModels.push(model.idModel);
     }
 
+    // get the number of master models from the Subject in case it's not linked to the scene
+    const masterModelsExpected: number | null = await getMasterModelsFromItems([item.idItem]);
+
     // build our summary for CaptureData. Returned items represents a singler list of all datasets
+    // also, get the number of CaptureData for the Subject as it may differ
     const captureData: AssetList | null = await buildSummaryCaptureData(idModels);
+    const captureDataExpected: number | null = await getCaptureDataFromItems([item.idItem]);
 
     // build our data structure to return
     const result: SceneSummary = {
@@ -276,8 +281,14 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             },
         sources:
             {
-                models: masterModels,
-                captureData: captureData ?? { status: 'Missing', items: [] },
+                models: {
+                    linked: masterModels ?? { status: 'Missing', items: [] },
+                    expected: masterModelsExpected ?? -1
+                },
+                captureData: {
+                    linked: captureData ?? { status: 'Missing', items: [] },
+                    expected: captureDataExpected ?? -1
+                }
             },
     };
 
@@ -505,6 +516,25 @@ const buildAssetSummaryFromMSX = async (msx: DBAPI.ModelSceneXref): Promise<Asse
     assetSummary.quality = quality;
     assetSummary.downloadable = downloadable;
     return assetSummary;
+};
+
+const getMasterModelsFromItems = async (idItems: number[]): Promise<number | null> => {
+    // get all master models from the items
+    const masterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchDerivedFromItems(idItems);
+    if(!masterModels) return null;
+
+    // confirm they are all master models (purpose = 45)
+    const count: number = masterModels.filter(model => model.idVPurpose === 45).length;
+
+    // return our count
+    return count ?? null;
+};
+const getCaptureDataFromItems = async (idItems: number[]): Promise<number | null> => {
+    // get all capture data from the items
+    const captureData: DBAPI.CaptureData[] | null = await DBAPI.CaptureData.fetchDerivedFromItems(idItems);
+
+    // return our count
+    return captureData?.length ?? null;
 };
 //#endregion
 
