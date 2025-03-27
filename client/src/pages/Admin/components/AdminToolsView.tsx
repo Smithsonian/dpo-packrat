@@ -88,6 +88,7 @@ function AdminToolsView(): React.ReactElement {
         async function isUserAuthorized() {
             const authorizedUsers: number[] = [
                 2,  // Jon Blundell
+                3,  // Vincent Rossi
                 4,  // Jamie Cope
                 5,  // Eric Maslowski
                 6,  // Megan Dattoria

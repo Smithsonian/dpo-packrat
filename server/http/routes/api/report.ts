@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import fs from 'fs';
+import readline from 'readline';
 import * as path from 'path';
 import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
@@ -22,6 +23,10 @@ enum ReportType {
     ASSET_FILE = 'asset_file',
     SCENE_STATUS = 'scene_status',
 }
+type ReportLocation = {
+    path: string,
+    fileName: string
+};
 
 type ReportResponse = {
     guid: string,
@@ -87,7 +92,7 @@ type AnalysisAssetResult = {
     error: string[],
     asset: AnalysisAssetSummary,
 };
-//#endregion
+// #endregion
 
 //#region UTILS
 const generateResponse = (success: boolean, message: string, guid: string, state: H.ProcessState, report?: any): H.OpResult => {
@@ -139,18 +144,18 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
     // TODO: use vocabulary enums. currently they map to different values (e.g. Scene = 53 and not 137)
     if(sourceSO.idScene) {
         if(summary.asset.idVAssetType!==137)
-            LOG.error(`API.report.getAssetContext: asset type mismatch (scene | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+            LOG.error(`API.report.getAssetContext: asset type mismatch (scene: ${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
         parent.type = 'scene';
     } else if(sourceSO.idModel) {
         if(summary.asset.idVAssetType!==135 && summary.asset.idVAssetType!==136 && summary.asset.idVAssetType!==141)
-            LOG.error(`API.report.getAssetContext: asset type mismatch (model | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+            LOG.error(`API.report.getAssetContext: asset type mismatch (model: ${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
         parent.type = 'model';
     } else if(sourceSO.idCaptureData) {
         if(summary.asset.idVAssetType!==133)
-            LOG.error(`API.report.getAssetContext: asset type mismatch (capture data | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+            LOG.error(`API.report.getAssetContext: asset type mismatch (capture data: ${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
         parent.type = 'capture_data';
     } else {
-        LOG.error(`API.report.getAssetContext: unsupported asset type (${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        LOG.error(`API.report.getAssetContext: unsupported asset type (${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
         parent.type = 'unsupported';
         return { units, projects, subjects, items, parent };
     }
@@ -187,7 +192,7 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
 
     return { units, projects, subjects, items, parent };
 };
-const getAssetSummary = async (idAssets: number[] = []): Promise<AssetSummary[] | null> => {
+const getAssetSummary = async (idAssets: number[] = []): Promise<number> => {
 
     // collect all needed data for analysis and output
 
@@ -197,16 +202,19 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetSummary[] 
         assets = await DBAPI.Asset.fetchAll();
         if(!assets || assets.length===0) {
             LOG.error('API.getAssetSummary: no assets found', LOG.LS.eHTTP);
-            return null;
+            return -1;
         }
     } else {
         LOG.info(`API.getAssetSummary: not supporting specific idAsset queries yet (${idAssets.join(', ')})`,LOG.LS.eDEBUG);
-        return null;
+        return -1;
     }
+
+    // our full path for storing the results and open stream
+    const fullPath: string = path.join(reportLocation.path,reportLocation.fileName);
+    const writeStream = fs.createWriteStream(fullPath + '.assets', { flags: 'a' });
 
     // cycle through assets getting our versions, context, and relationships
     // goal is to collect as much as possible logging what aspects failed
-    const result: AssetSummary[] | null = [];
     for(let i=0; i<assets.length; i++) {
         const summary: AssetSummary = {
             error: [],
@@ -237,11 +245,14 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<AssetSummary[] 
         summary.parent = parent;
 
         // store in our results
-        result.push(summary);
+        writeStream.write(JSON.stringify(summary) + '\n');
     }
-    return result;
+
+    // cleanup and return number of assets
+    writeStream.end();
+    return assets.length;
 };
-const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetResult | null> => {
+const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | null> => {
 
     const analyzeAssetTypes = [
         133,    // capture data file
@@ -252,7 +263,7 @@ const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetRes
     ];
 
     // get our system object for the asset
-    const assetSO: DBAPI.SystemObject | null = await summary.asset.fetchSystemObject();
+    const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(summary.asset.idAsset);
     if(!assetSO) {
         LOG.error(`API.report.getAssetAnalysis: cannot analyze asset. no SystemObject (${summary.asset.idAsset})`,LOG.LS.eHTTP);
         return null;
@@ -283,7 +294,7 @@ const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetRes
     const needsFile: boolean = analyzeAssetTypes.includes(summary.asset.idVAssetType);
     result.asset.type = assetType?.Term ?? `Unsupported: ${summary.asset.idVAssetType}`;
 
-    // grab an instance of our storage factory for OCFL tests/checks
+    // // grab an instance of our storage factory for OCFL tests/checks
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
     if(!storage) {
         LOG.error('API.report.getAssetAnalysis cannot get storage interface',LOG.LS.eHTTP);
@@ -396,71 +407,39 @@ const getAssetAnalysis = async (summary: AssetSummary): Promise<AnalysisAssetRes
     // console.log('result: ',result);
     return result;
 };
-const processAssetAnalysis = async (assets: AssetSummary[]): Promise<{ report: AnalysisAssetResult[], hasError: boolean }> => {
-    const BATCH_SIZE = 5;
-    let hasError = false;
-    const report: AnalysisAssetResult[] = [];
-    let currentIndex = 0;
+const processAssetAnalysis = async (): Promise<boolean> => {
 
-    // Generator to yield batches of assets
-    async function* batchGenerator() {
-        for (let i = 0; i < assets.length; i += BATCH_SIZE) {
-            yield assets.slice(i, i + BATCH_SIZE);
-        }
+    // make sure we have our assets file
+    const basePath: string = path.join(reportLocation.path,reportLocation.fileName);
+    let fileCheck = await H.Helpers.fileOrDirExists(basePath+'.assets');
+    if(fileCheck.success===false) {
+        LOG.error(`processAssetAnalysis: assets file does not exist. (${basePath+'.assets'})`,LOG.LS.eHTTP);
+        return false;
     }
 
-    for await (const batch of batchGenerator()) {
-        LOG.info(`API.report.processAssetWithLimit: Processing batch (${batch.length} items)`,LOG.LS.eDEBUG);
+    // see if we already have json/csv files and delete them
+    fileCheck = await H.Helpers.fileOrDirExists(basePath+'.json');
+    if(fileCheck.success===true)
+        fs.unlinkSync(basePath+'.json');
+    fileCheck = await H.Helpers.fileOrDirExists(basePath+'.csv');
+    if(fileCheck.success===true)
+        fs.unlinkSync(basePath+'.csv');
 
-        const results = await Promise.all(
-            batch.map(async (asset) => {
-                LOG.info(`[${currentIndex}/${assets.length}] API.report.processAssetWithLimit: analyzing asset (${asset.asset.FileName})`,LOG.LS.eDEBUG);
-                currentIndex++;
-                try {
-                    const validationResult = await getAssetAnalysis(asset);
-                    if (!validationResult) {
-                        LOG.error(`Error validating asset: (${asset.asset.idAsset}:${asset.asset.FileName})`, LOG.LS.eHTTP);
-                        hasError = true;
-                        return null;
-                    }
-                    return validationResult;
-                } catch (error) {
-                    LOG.error(`Unexpected error validating asset: (${asset.asset.idAsset}:${asset.asset.FileName}) - ${error}`, LOG.LS.eHTTP);
-                    hasError = true;
-                    return null;
-                }
-            })
-        );
+    // open a stream and set it up to read the assets data line by line
+    const sourceStream = fs.createReadStream(basePath+'.assets', { encoding: 'utf-8' });
+    const rl = readline.createInterface({
+        input: sourceStream,
+        crlfDelay: Infinity, // handles \r\n and \n
+    });
 
-        report.push(...results.filter((result): result is AnalysisAssetResult => result !== null));
-    }
+    // set up write stream for JSON output of asset's analysis
+    const jsonStream = fs.createWriteStream(basePath + '.json', { flags: 'a' });
+    jsonStream.write('{ "assets": [\n');
 
-    return { report, hasError };
-};
-const formatAssetAnalysisForCSV = (report: AnalysisAssetResult[]): string => {
-    // Helper function to format date to a string or default 'N/A'
-    const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
-
-    // Helper function to handle null or undefined values and return 'N/A' as default
-    const handleNull = (value) => value != null ? value : 'N/A';
-
-    // Helper function for cleaning strings for CSV export
-    const sanitizeForCSV = (value: string): string => {
-        if (typeof value !== 'string') return '';
-
-        // Escape double quotes by doubling them
-        const escapedValue = value.replace(/"/g, '""');
-
-        // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
-        if (/[",\n\r]/.test(escapedValue)) {
-            return `"${escapedValue}"`;
-        }
-
-        return escapedValue;
-    };
-
-    // Create CSV headers (clean names)
-    const headers = [
+    // setup write stream for CSV output of asset's analysis
+    // and write out headers
+    const csvStream = fs.createWriteStream(basePath + '.csv', { flags: 'a' });
+    csvStream.write([
         'ID',
         'File Name',
         'File Size',
@@ -479,48 +458,123 @@ const formatAssetAnalysisForCSV = (report: AnalysisAssetResult[]): string => {
         'MediaGroup',
         'Parent Type',
         'Parent ID',
-    ];
+    ].join(',')+'\r\n');
 
-    // Build CSV rows
-    const rows: string[] = [];
-    for (const summary of report) {
+    // cycle through line parsing each and then processing them
+    let index: number = 0;
+    for await (const line of rl) {
+        if (!line.trim()) continue; // skip empty lines
+        try {
+            LOG.info(`[${index}] API.report: processing asset analysis`,LOG.LS.eDEBUG);
+            index++;
 
-        // build up our lists of units, subjects, projects, etc.
-        const units: string = !summary.asset.context.unit ? 'NA' : summary.asset.context.unit?.map(s=>s.name).join(', ');
-        const projects: string = !summary.asset.context.project ? 'NA' : summary.asset.context.project?.map(s=>s.name).join(', ');
-        const subjects: string = !summary.asset.context.subject ? 'NA' : summary.asset.context.subject?.map(s=>s.name).join(', ');
-        const mediaGroups: string = !summary.asset.context.mediaGroup ? 'NA' : summary.asset.context.mediaGroup?.map(s=>s.name).join(', ');
+            const obj = JSON.parse(line);
+            const result: AnalysisAssetResult | null = await getAssetAnalysis(obj);
+            if(!result) {
+                LOG.error(`API.report: Failed to analyze asset: ${obj.asset.idAsset}`,LOG.LS.eHTTP);
+                continue;
+            }
 
-        for (const version of summary.asset.versions) {
-            // Initialize a new row inside the loop to ensure each version is separate
-            const row: string[] = [
-                handleNull(summary.asset.id),
-                sanitizeForCSV(summary.asset.fileName),
-                handleNull(version.fileSize),
-                sanitizeForCSV(summary.asset.type),
-                handleNull(summary.asset.versions.length),
-                handleNull(formatDate(version.dateCreated)),
-                sanitizeForCSV(version.creator.name),
-                handleNull(version.ingested),
-                handleNull(summary.asset.validation.storageTest?.success),
-                handleNull(version.validation.fileExists?.success),
-                handleNull(version.validation.sizeMatches?.success),
-                sanitizeForCSV(summary.asset.storageKey),
-                sanitizeForCSV(units),
-                sanitizeForCSV(projects),
-                sanitizeForCSV(subjects),
-                sanitizeForCSV(mediaGroups),
-                sanitizeForCSV(summary.asset.parent.type),
-                handleNull(summary.asset.parent.idSystemObject),
-            ];
+            // write to json report file
+            jsonStream.write(JSON.stringify(result)+',\n');
 
-            rows.push(row.join(','));
+            // format for CSV output and write out
+            const csvRow: string  | null = formatAssetAnalysisForCSV(result);
+            if(csvRow)
+                csvStream.write(csvRow);
+        } catch (err) {
+            LOG.error('API.report: Error parsing asset line',LOG.LS.eHTTP,err);
         }
     }
 
-    // Combine headers and rows into CSV format
-    const csvContent = [headers.join(','), ...rows].join('\r\n');
-    return csvContent;
+    // cleanup streams and temp files
+    sourceStream.close();
+    fs.unlinkSync(basePath+'.assets');
+    jsonStream.write(']}');
+    jsonStream.end();
+    csvStream.end();
+
+    return true;
+};
+const formatAssetAnalysisForCSV = (summary: AnalysisAssetResult): string | null => {
+    // Helper function to format date to a string or default 'N/A'
+    const formatDate = (date) => date ? new Date(date).toISOString().split('T')[0] : 'N/A';
+
+    // Helper function to handle null or undefined values and return 'N/A' as default
+    const handleNull = (value) => value != null ? value : 'N/A';
+
+    // Helper function for cleaning strings for CSV export
+    const sanitizeForCSV = (value: string): string => {
+        if (typeof value !== 'string') return '';
+
+        // Escape double quotes by doubling them
+        const escapedValue = value.replace(/"/g, '""');
+
+        // If the value contains a comma, double quote, newline, or carriage return, wrap it in quotes
+        if (/[",\n\r]/.test(escapedValue))
+            return `"${escapedValue}"`;
+
+        return escapedValue;
+    };
+
+    // Reference: CSV headers
+    // const headers = [
+    //     'ID',
+    //     'File Name',
+    //     'File Size',
+    //     'Type',
+    //     'Versions',
+    //     'Date Created',
+    //     'Creator',
+    //     'Ingested',
+    //     'Storage Test',
+    //     'File Exists',
+    //     'Size Match',
+    //     'Storage Key',
+    //     'Unit',
+    //     'Project',
+    //     'Subject',
+    //     'MediaGroup',
+    //     'Parent Type',
+    //     'Parent ID',
+    // ];
+
+    // Build CSV rows
+    // build up our lists of units, subjects, projects, etc.
+    const units: string = !summary.asset.context.unit ? 'NA' : summary.asset.context.unit?.map(s=>s.name).join(', ');
+    const projects: string = !summary.asset.context.project ? 'NA' : summary.asset.context.project?.map(s=>s.name).join(', ');
+    const subjects: string = !summary.asset.context.subject ? 'NA' : summary.asset.context.subject?.map(s=>s.name).join(', ');
+    const mediaGroups: string = !summary.asset.context.mediaGroup ? 'NA' : summary.asset.context.mediaGroup?.map(s=>s.name).join(', ');
+
+    const rows: string[] = [];
+    for (const version of summary.asset.versions) {
+        // Initialize a new row inside the loop to ensure each version is separate
+        const row: string[] = [
+            handleNull(summary.asset.id),
+            sanitizeForCSV(summary.asset.fileName),
+            handleNull(version.fileSize),
+            sanitizeForCSV(summary.asset.type),
+            handleNull(summary.asset.versions.length),
+            handleNull(formatDate(version.dateCreated)),
+            sanitizeForCSV(version.creator.name),
+            handleNull(version.ingested),
+            handleNull(summary.asset.validation.storageTest?.success),
+            handleNull(version.validation.fileExists?.success),
+            handleNull(version.validation.sizeMatches?.success),
+            sanitizeForCSV(summary.asset.storageKey),
+            sanitizeForCSV(units),
+            sanitizeForCSV(projects),
+            sanitizeForCSV(subjects),
+            sanitizeForCSV(mediaGroups),
+            sanitizeForCSV(summary.asset.parent.type),
+            handleNull(summary.asset.parent.idSystemObject),
+        ];
+
+        rows.push(row.join(',')+'\r\n');
+    }
+
+    // Combine rows into CSV format
+    return (rows.length>0) ? rows.join('\r\n') : null;
 };
 
 async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
@@ -545,50 +599,48 @@ async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
 
     const guid: string = H.Helpers.generateGUID();
 
-    // get data about each of our assets in the system
-    const assets: AssetSummary[] | null = await getAssetSummary();
-    if(!assets || assets.length===0) {
+    // get data about each of our assets in the system. empty arguments will
+    // process all assets. results stored with 'assets' extension
+    const assetsResult: number = await getAssetSummary();
+    if(assetsResult<=0) {
         LOG.error('API.reportAssetFiles: cannot get assets from system',LOG.LS.eHTTP);
         res.status(200).send(JSON.stringify(generateResponse(false, 'cannot get assets from system', guid, H.ProcessState.FAILED)));
         return;
     }
-    const { report, hasError } = await processAssetAnalysis(assets);
 
-    // format for CSV
-    const csvContent: string = formatAssetAnalysisForCSV(report);
+    // cycle through all assets and anlyze them writing to the final report
+    const processResult: boolean = await processAssetAnalysis();
 
     // final output
     const result: ReportResponse = {
         guid,
-        state: (hasError===true) ? H.ProcessState.FAILED : H.ProcessState.COMPLETED,
+        state: (processResult===true) ? H.ProcessState.FAILED : H.ProcessState.COMPLETED,
         user: { id: -1, name: 'N/A', email: 'N/A' },
         type: ReportType.ASSET_FILE,
         report: '', //csvContent
     };
 
-    // store result to temp location
-    const tempReportFilePath = path.join(Config.storage.rootStaging,'reports');
-    const reportFileName = `report_asset-files_${(new Date).toISOString().split('T')[0]}`;
-    const fullPath = path.join(tempReportFilePath,reportFileName);
-
-    H.Helpers.createDirectory(tempReportFilePath);
-    fs.writeFileSync(fullPath+'.csv', csvContent, 'utf-8');
-    fs.writeFileSync(fullPath+'.json',JSON.stringify(report), 'utf-8');
-
-    LOG.info(`API.reportAssetFiles: validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s`,LOG.LS.eDEBUG);
-    LOG.info(`API.reportAssetFiles: CSV file written successfully (${fullPath})`,LOG.LS.eDEBUG);
+    // log output messages
+    LOG.info(`API.reportAssetFiles: validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${reportLocation.path}|${reportLocation.fileName})`,LOG.LS.eDEBUG);
 
     // create our combined response and return info to client
-    result.report = `validated ${assets.length} assets in ${(Date.now()-startTime)/1000}s (${tempReportFilePath})`;
+    result.report = `validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${reportLocation.path})`;
     res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: result }));
 }
 //#endregion
 
 //#region REPORTS
+const reportLocation: ReportLocation = { path: '', fileName: '' };
 export async function createReport(req: Request, res: Response): Promise<void> {
 
     const reportType = req.params.type.toLocaleLowerCase();
 
+    // figure out our paths
+    reportLocation.path = path.join(Config.storage.rootStaging,'reports');
+    reportLocation.fileName = `report_asset-files_${(new Date).toISOString().split('T')[0]}`;
+    H.Helpers.createDirectory(reportLocation.path);
+
+    // handle the report type
     switch(reportType) {
         case 'asset-files': {
             return await reportAssetFiles(req,res);
