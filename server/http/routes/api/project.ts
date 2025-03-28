@@ -33,6 +33,7 @@ type AssetSummary = DBAPI.DBReference & {
 type AssetList = {
     status: string,                 // Missing, Error, Good, SysError
     items: AssetSummary[];
+    expected?: number;               // how many items may be expected or found elsewhere
 };
 type SceneSummary = DBAPI.DBReference & {
     publishedState: string,
@@ -49,8 +50,8 @@ type SceneSummary = DBAPI.DBReference & {
         ar: AssetList,              // models specific to AR
     },
     sources: {
-        models: { linked: AssetList, expected: number },
-        captureData: { linked: AssetList, expected: number },
+        models: AssetList,
+        captureData: AssetList,
     }
 };
 
@@ -249,13 +250,18 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     }
 
     // get the number of master models from the Subject in case it's not linked to the scene
-    const masterModelsExpected: number | null = await getMasterModelsFromItems([item.idItem]);
+    if(masterModels)
+        masterModels.expected = await getMasterModelsFromItems([item.idItem]) ?? 0;
 
     // build our summary for CaptureData. Returned items represents a singler list of all datasets
     // also, get the number of CaptureData for the Subject as it may differ
     const captureData: AssetList | null = await buildSummaryCaptureData(idModels);
-    const captureDataExpected: number | null = await getCaptureDataFromItems([item.idItem]);
-
+    if(captureData) {
+        // update our status based on capture data availability
+        captureData.expected = await getCaptureDataFromItems([item.idItem]) ?? 0;
+        captureData.status = getStatusCaptureData(captureData);
+    }
+    
     // build our data structure to return
     const result: SceneSummary = {
         id: sceneSO.idSystemObject,
@@ -281,14 +287,8 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             },
         sources:
             {
-                models: {
-                    linked: masterModels ?? { status: 'Missing', items: [] },
-                    expected: masterModelsExpected ?? -1
-                },
-                captureData: {
-                    linked: captureData ?? { status: 'Missing', items: [] },
-                    expected: captureDataExpected ?? -1
-                }
+                models: masterModels ?? { status: 'Missing', items: [] },
+                captureData: captureData ?? { status: 'Missing', items: [], expected: 0 },
             },
     };
 
@@ -382,7 +382,7 @@ const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | nu
 const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | null> => {
     // TODO: separate master models so each has a status and list
     // of capture data associated with it
-    const result: AssetList = { status: 'Missing', items: [] };
+    const result: AssetList = { status: 'Missing', items: [], expected: 0 };
 
     // cycle through master models
     let hasError: boolean = false;
@@ -648,6 +648,27 @@ const getStatusARModels = (models: AssetSummary[]): string => {
     LOG.error(`API.Project.getStatusARModels counts (native: ${downloadableCount} | web: ${nonDownloadableCount})`,LOG.LS.eHTTP);
     return 'Unexpected';
 };
+const getStatusCaptureData = (cd: AssetList): string => {
+    
+    // if we have an error then return it as a system level error
+    if(cd.status==='Error')
+        return 'SysError';
+
+    // extract the count and expected
+    const count: number = cd.items?.length ?? 0;
+    const expected: number = cd.expected ?? 0;
+
+    if (count === 0 && expected <= 0)
+        return 'Missing';                       // nothing linked to the master model or item
+    else if(expected > 0 && count < expected)
+        return 'Error';                         // linking error. more linked to item than master model
+    else if(count === expected)
+        return 'Good';                          // everything linked correctly
+    else if(count > expected)
+        return 'Error';                         // model should not have a dataset, but does (e.g. CAD)
+    else
+        return 'Unknown';                       // unknown fallback
+}
 const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
 
     const voyagerUsageTypes: string[] = [
