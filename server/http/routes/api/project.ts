@@ -261,7 +261,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
         captureData.expected = await getCaptureDataFromItems([item.idItem]) ?? 0;
         captureData.status = getStatusCaptureData(captureData);
     }
-    
+
     // build our data structure to return
     const result: SceneSummary = {
         id: sceneSO.idSystemObject,
@@ -649,7 +649,7 @@ const getStatusARModels = (models: AssetSummary[]): string => {
     return 'Unexpected';
 };
 const getStatusCaptureData = (cd: AssetList): string => {
-    
+
     // if we have an error then return it as a system level error
     if(cd.status==='Error')
         return 'SysError';
@@ -668,7 +668,7 @@ const getStatusCaptureData = (cd: AssetList): string => {
         return 'Error';                         // model should not have a dataset, but does (e.g. CAD)
     else
         return 'Unknown';                       // unknown fallback
-}
+};
 const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
 
     const voyagerUsageTypes: string[] = [

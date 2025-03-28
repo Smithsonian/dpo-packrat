@@ -120,8 +120,8 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
             { key: 'derivatives.downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
             { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
-            { key: 'derivatives.ar.status', label: 'AR', align: 'center', tooltip:'Are the AR models (Good), missing downloadable native formats (NativeAR), or missing Voyager AR support (WebAR)'},
-            { key: 'sources.captureData.status', label: 'Capture Data', align: 'center', tooltip: 'Is capture data linked correctly (Good), entirely (Missing), or incorrectly linked (Error). Download CSV for details'},
+            { key: 'derivatives.ar.status', label: 'AR', align: 'center', tooltip: 'Are the AR models (Good), missing downloadable native formats (NativeAR), or missing Voyager AR support (WebAR)' },
+            { key: 'sources.captureData.status', label: 'Capture Data', align: 'center', tooltip: 'Is capture data linked correctly (Good), entirely (Missing), or incorrectly linked (Error). Download CSV for details' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
         ];
     };
