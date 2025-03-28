@@ -23,10 +23,6 @@ enum ReportType {
     ASSET_FILE = 'asset_file',
     SCENE_STATUS = 'scene_status',
 }
-type ReportLocation = {
-    path: string,
-    fileName: string
-};
 
 type ReportResponse = {
     guid: string,
@@ -62,7 +58,7 @@ type AnalysisAssetSummary = {
     context: AssetAnalysisContextSummary,
     parent: AssetParent,
     validation: {
-        storageTest: H.OpResult | null,
+        hashMatch: H.OpResult | null,
     }
 };
 type AnalysisAssetVersionSummary = {
@@ -192,7 +188,7 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
 
     return { units, projects, subjects, items, parent };
 };
-const getAssetSummary = async (idAssets: number[] = []): Promise<number> => {
+const getAssetSummary = async (idAssets: number[] = [], basePath: string): Promise<number> => {
 
     // collect all needed data for analysis and output
 
@@ -210,8 +206,7 @@ const getAssetSummary = async (idAssets: number[] = []): Promise<number> => {
     }
 
     // our full path for storing the results and open stream
-    const fullPath: string = path.join(reportLocation.path,reportLocation.fileName);
-    const writeStream = fs.createWriteStream(fullPath + '.assets', { flags: 'a' });
+    const writeStream = fs.createWriteStream(basePath + '.assets', { flags: 'a' });
 
     // cycle through assets getting our versions, context, and relationships
     // goal is to collect as much as possible logging what aspects failed
@@ -284,7 +279,7 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
             parent: { type: 'undefined', idSystemObject: -1 },
             context: { unit: null, subject: null, project: null, mediaGroup: null },
             validation: {
-                storageTest: null,
+                hashMatch: null,
             }
         },
     };
@@ -310,7 +305,7 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
 
         // Storage factory validation (compares files/paths)
         const storageValidationResult: STORE.ValidateAssetResult = await storage.validateAsset(summary.asset.StorageKey);
-        result.asset.validation.storageTest = {
+        result.asset.validation.hashMatch = {
             success: storageValidationResult.success,
             message: storageValidationResult.success ? '' : storageValidationResult.error ?? 'undefined'
         };
@@ -407,10 +402,11 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
     // console.log('result: ',result);
     return result;
 };
-const processAssetAnalysis = async (): Promise<boolean> => {
+const processAssetAnalysis = async (basePath: string, totalAssets: number): Promise<boolean> => {
+
+    LOG.info(`API.report: processing ${totalAssets} assets`,LOG.LS.eHTTP);
 
     // make sure we have our assets file
-    const basePath: string = path.join(reportLocation.path,reportLocation.fileName);
     let fileCheck = await H.Helpers.fileOrDirExists(basePath+'.assets');
     if(fileCheck.success===false) {
         LOG.error(`processAssetAnalysis: assets file does not exist. (${basePath+'.assets'})`,LOG.LS.eHTTP);
@@ -448,7 +444,7 @@ const processAssetAnalysis = async (): Promise<boolean> => {
         'Date Created',
         'Creator',
         'Ingested',
-        'Storage Test',
+        'Hash Match',
         'File Exists',
         'Size Match',
         'Storage Key',
@@ -462,16 +458,15 @@ const processAssetAnalysis = async (): Promise<boolean> => {
 
     // cycle through line parsing each and then processing them
     let index: number = 0;
+    let startTime: number = Date.now();
     for await (const line of rl) {
         if (!line.trim()) continue; // skip empty lines
         try {
-            LOG.info(`[${index}] API.report: processing asset analysis`,LOG.LS.eDEBUG);
-            index++;
-
+            startTime = Date.now();
             const obj = JSON.parse(line);
             const result: AnalysisAssetResult | null = await getAssetAnalysis(obj);
             if(!result) {
-                LOG.error(`API.report: Failed to analyze asset: ${obj.asset.idAsset}`,LOG.LS.eHTTP);
+                LOG.error(`[${index++}/${totalAssets}] API.report: Failed to analyze asset: ${obj.asset.idAsset}`,LOG.LS.eHTTP);
                 continue;
             }
 
@@ -482,6 +477,10 @@ const processAssetAnalysis = async (): Promise<boolean> => {
             const csvRow: string  | null = formatAssetAnalysisForCSV(result);
             if(csvRow)
                 csvStream.write(csvRow);
+
+            // status output
+            LOG.info(`[${index}/${totalAssets}] API.report: processed asset analysis (${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
+            index++;
         } catch (err) {
             LOG.error('API.report: Error parsing asset line',LOG.LS.eHTTP,err);
         }
@@ -527,7 +526,7 @@ const formatAssetAnalysisForCSV = (summary: AnalysisAssetResult): string | null 
     //     'Date Created',
     //     'Creator',
     //     'Ingested',
-    //     'Storage Test',
+    //     'Hash Match',
     //     'File Exists',
     //     'Size Match',
     //     'Storage Key',
@@ -554,11 +553,11 @@ const formatAssetAnalysisForCSV = (summary: AnalysisAssetResult): string | null 
             sanitizeForCSV(summary.asset.fileName),
             handleNull(version.fileSize),
             sanitizeForCSV(summary.asset.type),
-            handleNull(summary.asset.versions.length),
+            handleNull(version.version),
             handleNull(formatDate(version.dateCreated)),
             sanitizeForCSV(version.creator.name),
             handleNull(version.ingested),
-            handleNull(summary.asset.validation.storageTest?.success),
+            handleNull(summary.asset.validation.hashMatch?.success),
             handleNull(version.validation.fileExists?.success),
             handleNull(version.validation.sizeMatches?.success),
             sanitizeForCSV(summary.asset.storageKey),
@@ -577,7 +576,7 @@ const formatAssetAnalysisForCSV = (summary: AnalysisAssetResult): string | null 
     return (rows.length>0) ? rows.join('\r\n') : null;
 };
 
-async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
+async function reportAssetFiles(_req: Request, res: Response, basePath: string): Promise<void> {
 
     const startTime = Date.now();
 
@@ -601,7 +600,7 @@ async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
 
     // get data about each of our assets in the system. empty arguments will
     // process all assets. results stored with 'assets' extension
-    const assetsResult: number = await getAssetSummary();
+    const assetsResult: number = await getAssetSummary([],basePath);
     if(assetsResult<=0) {
         LOG.error('API.reportAssetFiles: cannot get assets from system',LOG.LS.eHTTP);
         res.status(200).send(JSON.stringify(generateResponse(false, 'cannot get assets from system', guid, H.ProcessState.FAILED)));
@@ -609,7 +608,7 @@ async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
     }
 
     // cycle through all assets and anlyze them writing to the final report
-    const processResult: boolean = await processAssetAnalysis();
+    const processResult: boolean = await processAssetAnalysis(basePath,assetsResult);
 
     // final output
     const result: ReportResponse = {
@@ -621,29 +620,29 @@ async function reportAssetFiles(_req: Request, res: Response): Promise<void> {
     };
 
     // log output messages
-    LOG.info(`API.reportAssetFiles: validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${reportLocation.path}|${reportLocation.fileName})`,LOG.LS.eDEBUG);
+    LOG.info(`API.reportAssetFiles: validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${basePath})`,LOG.LS.eDEBUG);
 
     // create our combined response and return info to client
-    result.report = `validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${reportLocation.path})`;
+    result.report = `validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${basePath})`;
     res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: result }));
 }
 //#endregion
 
 //#region REPORTS
-const reportLocation: ReportLocation = { path: '', fileName: '' };
 export async function createReport(req: Request, res: Response): Promise<void> {
 
     const reportType = req.params.type.toLocaleLowerCase();
 
     // figure out our paths
-    reportLocation.path = path.join(Config.storage.rootStaging,'reports');
-    reportLocation.fileName = `report_asset-files_${(new Date).toISOString().split('T')[0]}`;
-    H.Helpers.createDirectory(reportLocation.path);
+    const reportPath = path.join(Config.storage.rootStaging,'reports');
+    const reportFileName = `report_asset-files_${(new Date).toISOString().split('T')[0]}`;
+    const basePath = path.join(reportPath,reportFileName);
+    H.Helpers.createDirectory(basePath);
 
     // handle the report type
     switch(reportType) {
         case 'asset-files': {
-            return await reportAssetFiles(req,res);
+            return await reportAssetFiles(req,res,basePath);
         }
 
         default: {

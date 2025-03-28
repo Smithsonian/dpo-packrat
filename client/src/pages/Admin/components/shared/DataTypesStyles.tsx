@@ -47,8 +47,8 @@ export type SceneSummary = DBReference & {
         ar: AssetList,              // models specific to AR
     },
     sources: {
-        models: AssetList,
-        captureData: AssetList,
+        models: { linked: AssetList, expected: number },
+        captureData: { linked: AssetList, expected: number }
     }
 };
 export type ValidationSummary = DBReference & {

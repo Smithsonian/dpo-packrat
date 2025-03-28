@@ -83,16 +83,16 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 obj.datePublished = new Date(obj.datePublished as string);
 
                 // format our capture data and master model dates
-                if(obj.sources.captureData.items) {
-                    for(let i=0; i<obj.sources.captureData.items.length; i++) {
-                        obj.sources.captureData.items[i].dateCreated = new Date(obj.sources.captureData.items[i].dateCreated as string);
-                        obj.sources.captureData.items[i].dateModified = new Date(obj.sources.captureData.items[i].dateModified as string);
+                if(obj.sources.captureData.linked.items) {
+                    for(let i=0; i<obj.sources.captureData.linked.items.length; i++) {
+                        obj.sources.captureData.linked.items[i].dateCreated = new Date(obj.sources.captureData.linked.items[i].dateCreated as string);
+                        obj.sources.captureData.linked.items[i].dateModified = new Date(obj.sources.captureData.linked.items[i].dateModified as string);
                     }
                 }
-                if(obj.sources.models.items) {
-                    for(let i=0; i<obj.sources.models.items.length; i++) {
-                        obj.sources.models.items[i].dateCreated = new Date(obj.sources.models.items[i].dateCreated as string);
-                        obj.sources.models.items[i].dateModified = new Date(obj.sources.models.items[i].dateModified as string);
+                if(obj.sources.models.linked.items) {
+                    for(let i=0; i<obj.sources.models.linked.items.length; i++) {
+                        obj.sources.models.linked.items[i].dateCreated = new Date(obj.sources.models.linked.items[i].dateCreated as string);
+                        obj.sources.models.linked.items[i].dateModified = new Date(obj.sources.models.linked.items[i].dateModified as string);
                     }
                 }
 
@@ -242,7 +242,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             let dateModified: Date = scene.dateModified;
 
             // adjust based on capture data sources
-            for(const cd of scene.sources.captureData.items){
+            for(const cd of scene.sources.captureData.linked.items){
                 if(cd.dateCreated < dateCreated)
                     dateCreated = cd.dateCreated;
                 if(cd.dateModified > dateModified)
@@ -250,7 +250,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             }
 
             // adjust based on master model sources
-            for(const model of scene.sources.models.items){
+            for(const model of scene.sources.models.linked.items){
                 if(model.dateCreated < dateCreated)
                     dateCreated = model.dateCreated;
                 if(model.dateModified > dateModified)
@@ -261,11 +261,19 @@ const ToolsBatchGeneration = (): React.ReactElement => {
         };
 
         // Helper to get capture data value
-        const getCaptureDataValue = (cd: AssetList): string => {
-            const status: string = cd.status;
+        const getCaptureDataValue = (cd: AssetList,expected: number): string => {
             const count: number = cd.items?.length ?? 0;
 
-            return (status.toLowerCase()==='good') ? `${status} (${count})` : status;
+            if (count === 0 && expected <= 0)
+                return 'Missing';                               // nothing linked to the master model or item
+            else if(expected > 0 && count < expected)
+                return `Error: ${count}/${expected}`;           // linking error. more linked to item than master model
+            else if(count === expected)
+                return `Good: ${count}/${expected}`;            // everything linked correctly
+            else if(count > expected)
+                return `SysError: ${count}/${expected}`;        // shouldn't happen. more linked to master model than item
+            else
+                return `Unknown: ${count}/${expected}`;         // unknown fallback
         };
 
         // Create CSV headers (clean names)
@@ -298,16 +306,16 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             return [
                 formatDate(dateCreated),
                 formatDate(dateModified),
-                handleNull(scene.sources.models?.items?.[0]?.creator?.name),
+                handleNull(scene.sources.models?.linked.items?.[0]?.creator?.name),
                 handleNull(scene.id),
                 handleNull(sanitizeForCSV(scene.name)),
                 scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
                 handleNull(scene.publishedState),
                 // formatDate(scene.datePublished),
                 handleNull(scene.derivatives.downloads?.status),
-                handleNull(scene.sources.models?.status),
+                handleNull(scene.sources.models?.linked.status),
                 handleNull(scene.derivatives.ar?.status),
-                handleNull(getCaptureDataValue(scene.sources.captureData)),
+                handleNull(getCaptureDataValue(scene.sources.captureData.linked,scene.sources.captureData.expected)),
                 // handleNull(scene.project?.id),
                 handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
