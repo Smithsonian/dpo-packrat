@@ -5,7 +5,7 @@ import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, Table
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
-import { AssetList, SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
+import { SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
 
 // styles
@@ -83,16 +83,16 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 obj.datePublished = new Date(obj.datePublished as string);
 
                 // format our capture data and master model dates
-                if(obj.sources.captureData.linked.items) {
-                    for(let i=0; i<obj.sources.captureData.linked.items.length; i++) {
-                        obj.sources.captureData.linked.items[i].dateCreated = new Date(obj.sources.captureData.linked.items[i].dateCreated as string);
-                        obj.sources.captureData.linked.items[i].dateModified = new Date(obj.sources.captureData.linked.items[i].dateModified as string);
+                if(obj.sources.captureData.items) {
+                    for(let i=0; i<obj.sources.captureData.items.length; i++) {
+                        obj.sources.captureData.items[i].dateCreated = new Date(obj.sources.captureData.items[i].dateCreated as string);
+                        obj.sources.captureData.items[i].dateModified = new Date(obj.sources.captureData.items[i].dateModified as string);
                     }
                 }
-                if(obj.sources.models.linked.items) {
-                    for(let i=0; i<obj.sources.models.linked.items.length; i++) {
-                        obj.sources.models.linked.items[i].dateCreated = new Date(obj.sources.models.linked.items[i].dateCreated as string);
-                        obj.sources.models.linked.items[i].dateModified = new Date(obj.sources.models.linked.items[i].dateModified as string);
+                if(obj.sources.models.items) {
+                    for(let i=0; i<obj.sources.models.items.length; i++) {
+                        obj.sources.models.items[i].dateCreated = new Date(obj.sources.models.items[i].dateCreated as string);
+                        obj.sources.models.items[i].dateModified = new Date(obj.sources.models.items[i].dateModified as string);
                     }
                 }
 
@@ -120,7 +120,8 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
             { key: 'derivatives.downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
             { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
-            // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
+            { key: 'derivatives.ar.status', label: 'AR', align: 'center', tooltip: 'Are the AR models (Good), missing downloadable native formats (NativeAR), or missing Voyager AR support (WebAR)' },
+            { key: 'sources.captureData.status', label: 'Capture Data', align: 'center', tooltip: 'Is capture data linked correctly (Good), entirely (Missing), or incorrectly linked (Error). Download CSV for details' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
         ];
     };
@@ -242,7 +243,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             let dateModified: Date = scene.dateModified;
 
             // adjust based on capture data sources
-            for(const cd of scene.sources.captureData.linked.items){
+            for(const cd of scene.sources.captureData.items){
                 if(cd.dateCreated < dateCreated)
                     dateCreated = cd.dateCreated;
                 if(cd.dateModified > dateModified)
@@ -250,7 +251,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             }
 
             // adjust based on master model sources
-            for(const model of scene.sources.models.linked.items){
+            for(const model of scene.sources.models.items){
                 if(model.dateCreated < dateCreated)
                     dateCreated = model.dateCreated;
                 if(model.dateModified > dateModified)
@@ -261,8 +262,8 @@ const ToolsBatchGeneration = (): React.ReactElement => {
         };
 
         // Helper to get capture data value
-        const getCaptureDataValue = (cd: AssetList,expected: number): string => {
-            const count: number = cd.items?.length ?? 0;
+        const getCaptureDataValue = (count: number, expected: number): string => {
+            // const count: number = cd.items?.length ?? 0;
 
             if (count === 0 && expected <= 0)
                 return 'Missing';                               // nothing linked to the master model or item
@@ -271,7 +272,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             else if(count === expected)
                 return `Good: ${count}/${expected}`;            // everything linked correctly
             else if(count > expected)
-                return `SysError: ${count}/${expected}`;        // shouldn't happen. more linked to master model than item
+                return `Error: ${count}/${expected}`;           // model should not have a dataset, but does (e.g. CAD)
             else
                 return `Unknown: ${count}/${expected}`;         // unknown fallback
         };
@@ -306,16 +307,16 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             return [
                 formatDate(dateCreated),
                 formatDate(dateModified),
-                handleNull(scene.sources.models?.linked.items?.[0]?.creator?.name),
+                handleNull(scene.sources.models?.items?.[0]?.creator?.name),
                 handleNull(scene.id),
                 handleNull(sanitizeForCSV(scene.name)),
                 scene.isReviewed != null ? (scene.isReviewed ? 'Yes' : 'No') : 'N/A',
                 handleNull(scene.publishedState),
                 // formatDate(scene.datePublished),
                 handleNull(scene.derivatives.downloads?.status),
-                handleNull(scene.sources.models?.linked.status),
+                handleNull(scene.sources.models?.status),
                 handleNull(scene.derivatives.ar?.status),
-                handleNull(getCaptureDataValue(scene.sources.captureData.linked,scene.sources.captureData.expected)),
+                handleNull(getCaptureDataValue(scene.sources.captureData.items.length ?? 0,scene.sources.captureData.expected ?? 0)),
                 // handleNull(scene.project?.id),
                 handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
