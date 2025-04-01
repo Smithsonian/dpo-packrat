@@ -140,4 +140,40 @@ export class WorkflowUtil {
         }
         return { success: true };
     }
+
+    static async getWorkflowTimestamps(idWorkflow: number): Promise<{ startDate: Date, endDate: Date }> {
+
+        // get workflow
+        const workflow: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(idWorkflow);
+        if(!workflow)
+            return { startDate: new Date(0), endDate: new Date(0) };
+
+        // if set, then grab all workflows from set
+        // otherwise, return what we have
+        if(!workflow.idWorkflowSet)
+            return { startDate: workflow.DateInitiated, endDate: workflow.DateUpdated };
+
+        // get our set and all workflows from it
+        const workflows: DBAPI.Workflow[] | null = await DBAPI.Workflow.fetchFromWorkflowSet(workflow.idWorkflowSet);
+        if(!workflows || workflows.length===0)
+            return { startDate: workflow.DateInitiated, endDate: workflow.DateUpdated };
+
+        const { startDate, endDate } = workflows.reduce(
+            (acc, item) => {
+                const initialized = new Date(item.DateInitiated);
+                const updated = new Date(item.DateUpdated);
+        
+                if (initialized < acc.startDate) acc.startDate = initialized;
+                if (updated > acc.endDate) acc.endDate = updated;
+        
+                return acc;
+            },
+            {
+                startDate: new Date(workflows[0].DateInitiated),
+                endDate: new Date(workflows[0].DateUpdated),
+            }
+        );
+
+        return { startDate, endDate };
+    }
 }

@@ -132,6 +132,18 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
         }
     }
 
+    static async fetchByIDs(idUsers: number[]): Promise<User[] | null> {
+        if (idUsers.length == 0)
+            return null;
+
+        try {
+            return DBC.CopyArray<UserBase, User>(await DBC.DBConnection.prisma.user.findMany({ where: { idUser: { in: idUsers, }, }, }), User);
+        } catch (error) /* istanbul ignore next */ {
+            LOG.error('DBAPI.User.fetchByIDs', LOG.LS.eDB, error);
+            return null;
+        }
+    }
+
     static async fetchUserList(search: string, eStatus: eUserStatus): Promise<User[] | null> {
         try {
             const Active: boolean = (eStatus == eUserStatus.eActive);

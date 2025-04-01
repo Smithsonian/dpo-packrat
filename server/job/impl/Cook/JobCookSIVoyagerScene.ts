@@ -20,6 +20,7 @@ import * as path from 'path';
 import { Readable } from 'stream';
 import { ModelHierarchy, NameHelpers } from '../../../utils/nameHelpers';
 import { IngestTitle } from '../../../types/graphql';
+import { RecordKeeper } from '../../../records/recordKeeper';
 
 export type JobCookSIVoyagerSceneMetaDataFile = {
     edanRecordId: string;
@@ -448,6 +449,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             }
         }
 
+        // signal success
         return { success: true };
     }
 
@@ -529,6 +531,88 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
         }
         return JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile;
+    }
+
+    protected async recordSuccess(output: string): Promise<boolean> {
+        // TODO: 
+        // - links for source model details
+        // - button goes to report
+
+        const updated: boolean = await super.recordSuccess(output);
+        if(updated) {
+
+            // attempt to get our report either from the WorkflowSet (preferred) or the
+            // individual Workflow.
+            const detailsMessage: string = `
+                <b>Scene Name</b>: ${this.parameterHelper?.sceneName ?? 'NA'}</br>
+                <b>Source Model</b>: ${this.parameterHelper?.SOModelSource.idSystemObject}</br></br>
+                <b>Unit</b>: ${this.parameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
+                <b>Subject</b>: ${this.parameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
+                <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
+            `;
+
+            RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'scene generation completed',
+                undefined,
+                'Job.VoyagerScene.recordSuccess'
+            )
+
+            // build our URL
+            const url: string = (this.parameterHelper) ? 
+                RouteBuilder.RepositoryDetails(this.parameterHelper.SOModelSource.idSystemObject,eHrefMode.ePrependClientURL) :
+                Config.http.clientUrl +'/workflow';
+
+            // send email out            
+            await RecordKeeper.sendEmail(
+                RecordKeeper.NotifyType.JOB_PASSED,
+                RecordKeeper.NotifyGroup.EMAIL_USER,
+                `Scene Generation Finished`,
+                detailsMessage,
+                this._dbJobRun.DateStart ?? new Date(),
+                this._dbJobRun.DateEnd ?? undefined,
+                (url.length>0) ? { url, label: 'Details' } : undefined
+            );
+        }
+        return updated;
+    }
+    protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
+        // TODO: 
+        // - links for source model details
+        // - button goes to report
+
+        const updated: boolean = await super.recordFailure(output, errorMsg);
+        if(updated) {
+
+            // get our context for the message
+            const detailsMessage: string = `
+                <b>Error: ${this._dbJobRun.Error}</b></br></br>
+                <b>Scene Name</b>: ${this.parameterHelper?.sceneName ?? 'NA'}</br>
+                <b>Source Model</b>: ${this.parameterHelper?.SOModelSource.idSystemObject}</br></br>
+                <b>Unit</b>: ${this.parameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
+                <b>Subject</b>: ${this.parameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
+                <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
+            `;
+
+            RecordKeeper.logError(RecordKeeper.LogSection.eWF,'scene generation failed',
+                undefined,
+                'Job.VoyagerScene.recordFailure'
+            )
+
+            // build our URL
+            // const url: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+            const url: string = Config.http.clientUrl +'/workflow';
+            
+            // send email out            
+            await RecordKeeper.sendEmail(
+                RecordKeeper.NotifyType.JOB_FAILED,
+                RecordKeeper.NotifyGroup.EMAIL_USER,
+                `Scene Generation Failed`,
+                detailsMessage,
+                this._dbJobRun.DateStart ?? new Date(),
+                this._dbJobRun.DateEnd ?? undefined,
+                (url.length>0) ? { url, label: 'Details' } : undefined
+            );
+        }
+        return updated;
     }
 
     // private async logError(errorBase: string): Promise<H.IOResults> {

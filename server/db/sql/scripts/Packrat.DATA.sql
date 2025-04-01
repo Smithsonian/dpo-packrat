@@ -413,7 +413,7 @@ INSERT INTO Project (idProject, Name) VALUES (107, 'Vz And Hop Migration'); INSE
 INSERT INTO Project (idProject, Name) VALUES (108, 'Slippers'); INSERT INTO SystemObject (idProject, Retired) VALUES (108, 0);
 INSERT INTO Project (idProject, Name) VALUES (109, 'Molina Gallery'); INSERT INTO SystemObject (idProject, Retired) VALUES (109, 0);
 
-INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Tyson', 'tysonj@si.edu', '', 1, NOW());
+-- INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Tyson', 'tysonj@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jon Blundell', 'blundellj@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Vince Rossi', 'rossiv@si.edu', '', 1, NOW());
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated) VALUES ('Jamie Cope', 'copeg@si.edu', '', 1, NOW());

@@ -15,6 +15,7 @@ import * as H from '../../../utils/helpers';
 import { PublishScene } from '../../../collections/impl/PublishScene';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
+import { RecordKeeper } from '../../../records/recordKeeper';
 
 // scene speecific
 import { SvxReader } from '../../../utils/parser';
@@ -438,6 +439,90 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             default:
                 return '';
         }
+    }
+
+    protected async recordSuccess(output: string): Promise<boolean> {
+        // TODO: 
+        // - links for source model details
+        // - button goes to report
+
+        const updated: boolean = await super.recordSuccess(output);
+        if(updated) {
+
+            // attempt to get our report either from the WorkflowSet (preferred) or the
+            // individual Workflow.
+            const detailsMessage: string = `
+                <b>Scene Name</b>: ${this.sceneParameterHelper?.sceneName ?? 'NA'}</br>
+                <b>Source Model</b>: ${this.sceneParameterHelper?.SOModelSource.idSystemObject}</br></br>
+                <b>Unit</b>: ${this.sceneParameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
+                <b>Subject</b>: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
+                <b>Project</b>: ${this.sceneParameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
+            `;
+
+            console.log(this.sceneParameterHelper?.OG);
+
+            RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'download generation completed',
+                undefined,
+                'Job.GenerateDownloads.recordSuccess'
+            )
+
+            // build our URL
+            const url: string = (this.sceneParameterHelper) ? 
+                RouteBuilder.RepositoryDetails(this.sceneParameterHelper.SOModelSource.idSystemObject,eHrefMode.ePrependClientURL) :
+                Config.http.clientUrl +'/workflow';
+
+            // send email out            
+            await RecordKeeper.sendEmail(
+                RecordKeeper.NotifyType.JOB_PASSED,
+                RecordKeeper.NotifyGroup.EMAIL_USER,
+                `Download Generation Finished`,
+                detailsMessage,
+                this._dbJobRun.DateStart ?? new Date(),
+                this._dbJobRun.DateEnd ?? undefined,
+                (url.length>0) ? { url, label: 'Details' } : undefined
+            );
+        }
+        return updated;
+    }
+    protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
+        // TODO: 
+        // - links for source model details
+        // - button goes to report
+
+        const updated: boolean = await super.recordFailure(output, errorMsg);
+        if(updated) {
+
+            // get our context for the message
+            const detailsMessage: string = `
+                <b>Error: ${this._dbJobRun.Error}</b></br></br>
+                <b>Scene Name</b>: ${this.sceneParameterHelper?.sceneName ?? 'NA'}</br>
+                <b>Source Model</b>: ${this.sceneParameterHelper?.SOModelSource.idSystemObject}</br></br>
+                <b>Unit</b>: ${this.sceneParameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
+                <b>Subject</b>: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
+                <b>Project</b>: ${this.sceneParameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
+            `;
+
+            RecordKeeper.logError(RecordKeeper.LogSection.eWF,'download generation failed',
+                undefined,
+                'Job.DownloadGeneration.recordFailure'
+            )
+
+            // build our URL
+            // const url: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+            const url: string = Config.http.clientUrl +'/workflow';
+            
+            // send email out            
+            await RecordKeeper.sendEmail(
+                RecordKeeper.NotifyType.JOB_FAILED,
+                RecordKeeper.NotifyGroup.EMAIL_USER,
+                `Download Generation Failed`,
+                detailsMessage,
+                this._dbJobRun.DateStart ?? new Date(),
+                this._dbJobRun.DateEnd ?? undefined,
+                (url.length>0) ? { url, label: 'Details' } : undefined
+            );
+        }
+        return updated;
     }
 
     //------------------------------------------------------------------------------

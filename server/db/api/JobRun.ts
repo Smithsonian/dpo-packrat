@@ -9,7 +9,7 @@ import * as H from '../../utils/helpers';
 export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
     idJobRun!: number;
     idJob!: number;
-    Status!: number;    // defined in common/constantss.ts (ln. 403)
+    Status!: number;    // defined in common/constants.ts (ln. 409)
     Result!: boolean | null;
     DateStart!: Date | null;
     DateEnd!: Date | null;
