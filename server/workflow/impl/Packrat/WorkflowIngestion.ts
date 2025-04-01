@@ -54,10 +54,10 @@ export class WorkflowIngestion implements WF.IWorkflow {
         const success: boolean = await workflowStep.update();
 
         RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status',
-            { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow, step:this.workflowData.workflowSet },
+            { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow, step: this.workflowData.workflowSet },
             'WorkflowUpload.updateStatus'
         );
-        
+
         // if we're not updated or not finished then just return
         if(updated!==true || workflowComplete!==true)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
@@ -82,7 +82,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
         const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
-          
+
         RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status steps',
             { workflowSteps },
             'WorkflowUpload.updateStatus'
@@ -104,8 +104,8 @@ export class WorkflowIngestion implements WF.IWorkflow {
         const { startDate, endDate } = workflowSteps.reduce((acc, { DateCreated, DateCompleted }) => ({
             startDate: acc.startDate < DateCreated ? acc.startDate : DateCreated,
             endDate: (!DateCompleted || acc.endDate > DateCompleted) ? acc.endDate : DateCompleted,
-          }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
-                  
+        }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
+
         // get our report to inject in the message
         // use first workflow since it will hold everything for the set
         let detailsMessage: string = '';
@@ -113,14 +113,14 @@ export class WorkflowIngestion implements WF.IWorkflow {
         if(workflowReport && workflowReport.length>0) {
             detailsMessage = workflowReport[0].Data;
         }
-        
+
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/ingestion/uploads';
                 await RecordKeeper.sendEmail(
                     RecordKeeper.NotifyType.JOB_PASSED,
                     RecordKeeper.NotifyGroup.EMAIL_USER,
-                    `Ingestion Finished`,
+                    'Ingestion Finished',
                     detailsMessage,
                     startDate,
                     endDate,
@@ -133,7 +133,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
                 await RecordKeeper.sendEmail(
                     RecordKeeper.NotifyType.JOB_FAILED,
                     RecordKeeper.NotifyGroup.EMAIL_USER,
-                    `Ingestion Failed`,
+                    'Ingestion Failed',
                     detailsMessage,
                     startDate,
                     endDate,

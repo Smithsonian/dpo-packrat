@@ -534,7 +534,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     }
 
     protected async recordSuccess(output: string): Promise<boolean> {
-        // TODO: 
+        // TODO:
         // - links for source model details
         // - button goes to report
 
@@ -554,18 +554,18 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'scene generation completed',
                 undefined,
                 'Job.VoyagerScene.recordSuccess'
-            )
+            );
 
             // build our URL
-            const url: string = (this.parameterHelper) ? 
+            const url: string = (this.parameterHelper) ?
                 RouteBuilder.RepositoryDetails(this.parameterHelper.SOModelSource.idSystemObject,eHrefMode.ePrependClientURL) :
                 Config.http.clientUrl +'/workflow';
 
-            // send email out            
+            // send email out
             await RecordKeeper.sendEmail(
                 RecordKeeper.NotifyType.JOB_PASSED,
                 RecordKeeper.NotifyGroup.EMAIL_USER,
-                `Scene Generation Finished`,
+                'Scene Generation Finished',
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,
@@ -575,7 +575,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         return updated;
     }
     protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
-        // TODO: 
+        // TODO:
         // - links for source model details
         // - button goes to report
 
@@ -595,17 +595,17 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RecordKeeper.logError(RecordKeeper.LogSection.eWF,'scene generation failed',
                 undefined,
                 'Job.VoyagerScene.recordFailure'
-            )
+            );
 
             // build our URL
             // const url: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
             const url: string = Config.http.clientUrl +'/workflow';
-            
-            // send email out            
+
+            // send email out
             await RecordKeeper.sendEmail(
                 RecordKeeper.NotifyType.JOB_FAILED,
                 RecordKeeper.NotifyGroup.EMAIL_USER,
-                `Scene Generation Failed`,
+                'Scene Generation Failed',
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,

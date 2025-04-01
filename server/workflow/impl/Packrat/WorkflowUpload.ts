@@ -59,7 +59,6 @@ export class WorkflowUpload implements WF.IWorkflow {
             || eStatus === COMMON.eWorkflowJobRunStatus.eError
             || eStatus === COMMON.eWorkflowJobRunStatus.eCancelled);
 
-        
 
         // get our step for the current workflow
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
@@ -101,7 +100,7 @@ export class WorkflowUpload implements WF.IWorkflow {
         const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
-        
+
         RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status steps',
             { workflowSteps },
             'WorkflowUpload.updateStatus'
@@ -123,8 +122,8 @@ export class WorkflowUpload implements WF.IWorkflow {
         const { startDate, endDate } = workflowSteps.reduce((acc, { DateCreated, DateCompleted }) => ({
             startDate: acc.startDate < DateCreated ? acc.startDate : DateCreated,
             endDate: (!DateCompleted || acc.endDate > DateCompleted) ? acc.endDate : DateCompleted,
-          }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
-                  
+        }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
+
         // get our report to inject in the message
         // use first workflow since it will hold everything for the set
         let detailsMessage: string = '';
@@ -132,14 +131,14 @@ export class WorkflowUpload implements WF.IWorkflow {
         if(workflowReport && workflowReport.length>0) {
             detailsMessage = workflowReport[0].Data;
         }
-        
+
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/ingestion/uploads';
                 await RecordKeeper.sendEmail(
                     RecordKeeper.NotifyType.JOB_PASSED,
                     RecordKeeper.NotifyGroup.EMAIL_USER,
-                    `Upload and Inspection Finished`,
+                    'Upload and Inspection Finished',
                     detailsMessage,
                     startDate,
                     endDate,
@@ -152,7 +151,7 @@ export class WorkflowUpload implements WF.IWorkflow {
                 await RecordKeeper.sendEmail(
                     RecordKeeper.NotifyType.JOB_FAILED,
                     RecordKeeper.NotifyGroup.EMAIL_USER,
-                    `Upload and Inspection Failed`,
+                    'Upload and Inspection Failed',
                     detailsMessage,
                     startDate,
                     endDate,

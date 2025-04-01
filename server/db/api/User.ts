@@ -18,8 +18,8 @@ export class User extends DBC.DBObject<UserBase> implements UserBase {
     Active!: boolean;
     DateActivated!: Date;
     DateDisabled!: Date | null;
-    WorkflowNotificationTime!: Date | null;
-    EmailSettings!: number | null;
+    WorkflowNotificationTime!: Date | null; // null = None | Date exists means a property other than none
+    EmailSettings!: number | null;          // if above is !Null then 0 = Daily & 1 = Immediate
 
     private ActiveOrig!: boolean;
 

@@ -162,10 +162,10 @@ export class WorkflowUtil {
             (acc, item) => {
                 const initialized = new Date(item.DateInitiated);
                 const updated = new Date(item.DateUpdated);
-        
+
                 if (initialized < acc.startDate) acc.startDate = initialized;
                 if (updated > acc.endDate) acc.endDate = updated;
-        
+
                 return acc;
             },
             {

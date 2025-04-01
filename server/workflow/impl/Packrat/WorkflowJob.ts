@@ -201,7 +201,7 @@ export class WorkflowJob implements WF.IWorkflow {
 
         if (!workflowStep)
             return { success: false, workflowComplete, error: 'Missing WorkflowStep' };
-        
+
         const updated: boolean = (eStatus!==workflowStep?.getState());
         workflowStep.setState(eStatus);
         const success: boolean = await workflowStep.update();
@@ -235,7 +235,7 @@ export class WorkflowJob implements WF.IWorkflow {
         const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
-          
+
         RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status steps',
             { workflowSteps },
             'WorkflowUpload.updateStatus'
@@ -256,8 +256,8 @@ export class WorkflowJob implements WF.IWorkflow {
         const { startDate, endDate } = workflowSteps.reduce((acc, { DateCreated, DateCompleted }) => ({
             startDate: acc.startDate < DateCreated ? acc.startDate : DateCreated,
             endDate: (!DateCompleted || acc.endDate > DateCompleted) ? acc.endDate : DateCompleted,
-          }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
-                  
+        }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
+
         // get our report to inject in the message
         // use first workflow since it will hold everything for the set
         let detailsMessage: string = '';
@@ -265,7 +265,7 @@ export class WorkflowJob implements WF.IWorkflow {
         if(workflowReport && workflowReport.length>0) {
             detailsMessage = workflowReport[0].Data;
         }
-        
+
         // extract the workflow type
         const workflowTypeV: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(workflows[0].idVWorkflowType);
         const workflowType: string = workflowTypeV?.Term ?? 'Unknown Job';
