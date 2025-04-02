@@ -162,5 +162,5 @@ export interface ISpotLightProps extends IPointLightProps
 }
 
 export interface IHemisphereLightProps {
-    ground :ColorRGB;
+    ground: ColorRGB;
 }
