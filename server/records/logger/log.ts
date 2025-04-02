@@ -463,6 +463,12 @@ export class Logger {
 
     //#region LOG
     private static async postLog(entry: LogEntry): Promise<LoggerResult> {
+        // see if we're configured/active
+        if(Logger.isActive()===false || Logger.logger===null) {
+            console.error('Logger.postLog: failed to post. No logger...\n',entry);
+            return { success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` };
+        }
+
         // if we have the rate manager running, queue it up
         // otherwise just send to the logger
         if(Logger.rateManager)// && Logger.rateManager.isActive()===true)
@@ -475,6 +481,12 @@ export class Logger {
         // wrapping in a promise to ensure the logger finishes all transports
         // before moving on.
         return new Promise<LoggerResult>((resolve)=> {
+            if(Logger.isActive()===false || Logger.logger===null) {
+                console.error('Logger.postLogToWinston: failed to post. No logger...\n',entry);
+                resolve({ success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` });
+                return;
+            }
+
             Logger.logger.log(entry);
             Logger.updateStats(entry);
             resolve ({ success: true, message: 'posted message' });
