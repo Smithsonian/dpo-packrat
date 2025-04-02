@@ -475,6 +475,11 @@ export class Logger {
         // wrapping in a promise to ensure the logger finishes all transports
         // before moving on.
         return new Promise<LoggerResult>((resolve)=> {
+            if(Logger.isActive()===false) {
+                resolve({ success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` });
+                return;
+            }
+
             Logger.logger.log(entry);
             Logger.updateStats(entry);
             resolve ({ success: true, message: 'posted message' });

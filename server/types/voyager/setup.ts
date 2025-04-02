@@ -1,7 +1,7 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style, @typescript-eslint/no-explicit-any */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 3/5/2024. It was then modified,
+ * This was imported from Voyager's source/client/schema on 4/2/2025. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -32,8 +32,8 @@ export enum EShaderMode { Default, Clay, XRay, Normals, Wireframe }
 export type TBackgroundStyle = "Solid" | "LinearGradient" | "RadialGradient";
 export enum EBackgroundStyle { Solid, LinearGradient, RadialGradient }
 
-export type TNavigationType = "Orbit" | "Walk";
-export enum ENavigationType { Orbit, Walk }
+export type TNavigationType = "Orbit" | "Fly" | "Walk";
+export enum ENavigationType { Orbit, Fly, Walk }
 
 export type TReaderPosition = "Overlay" | "Left" | "Right";
 export enum EReaderPosition { Overlay, Left, Right }
@@ -132,6 +132,7 @@ export interface IFloor
     color: number[];
     opacity: number;
     receiveShadow: boolean;
+    autoSize: boolean;
 }
 
 export interface IGrid
@@ -158,10 +159,10 @@ export interface IAudio
 export interface ITape
 {
     enabled: boolean;
-    /*startPosition: number[];
-    startDirection: number[];
-    endPosition: number[];
-    endDirection: number[];*/
+    startPosition?: number[];
+    startDirection?: number[];
+    endPosition?: number[];
+    endDirection?: number[];
 }
 
 export interface ISlicer
@@ -203,6 +204,7 @@ export interface ITourStep
 {
     title: string;
     titles?: Dictionary<string>;
+    altTexts?: Dictionary<string>;
     id: string;
 }
 

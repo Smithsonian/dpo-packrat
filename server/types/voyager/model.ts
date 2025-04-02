@@ -1,7 +1,7 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 3/5/2024. It was then modified,
+ * This was imported from Voyager's source/client/schema on 4/2/2025. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -25,7 +25,7 @@
 // import { Dictionary } from "@ff/core/types";
 // import { ColorRGBA, EUnitType, TUnitType, Vector3, Vector4 } from "./common";
 type Dictionary<T> = Record<string, T>;
-import { ColorRGBA, /*EUnitType,*/ TUnitType, Vector3, Vector4 } from "./common";
+import { ColorRGB, TUnitType, Vector3, QuaternionTuple } from "./common";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +60,7 @@ export interface IModel
     overlayMap?: number;
     shadowSide?: TSideType;
     translation?: Vector3;
-    rotation?: Vector4;
+    rotation?: QuaternionTuple;
     boundingBox?: IBoundingBox;
     material?: IPBRMaterialSettings;
     annotations?: IAnnotation[];
@@ -141,7 +141,7 @@ export interface IAsset
 
 export interface IPBRMaterialSettings
 {
-    color?: ColorRGBA
+    color?: ColorRGB
     opacity?: number;
     hiddenOpacity?: number;
     roughness?: number;
@@ -150,6 +150,7 @@ export interface IPBRMaterialSettings
     //emissiveFactor?: ColorRGB;
     //alphaMode?: any; // TODO
     //alphaCutoff?: number;
+    transparent?: boolean;
     doubleSided?: boolean;
     normalSpace?: TNormalSpaceType;
 }
