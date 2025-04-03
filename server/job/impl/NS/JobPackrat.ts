@@ -128,7 +128,7 @@ export abstract class JobPackrat implements JOB.IJob {
             await this.updateEngines(true); // was: don't block
     }
 
-    protected async recordCreated(): Promise<void> {
+    protected async recordCreated(): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() == COMMON.eWorkflowJobRunStatus.eUnitialized);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Created`);
@@ -137,9 +137,10 @@ export abstract class JobPackrat implements JOB.IJob {
             await this._dbJobRun.update();
             await this.updateEngines(true); // was: don't block
         }
+        return updated;
     }
 
-    protected async recordWaiting(): Promise<void> {
+    protected async recordWaiting(): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eWaiting);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Waiting`);
@@ -147,9 +148,10 @@ export abstract class JobPackrat implements JOB.IJob {
             await this._dbJobRun.update();
             await this.updateEngines(true); // was: don't block
         }
+        return updated;
     }
 
-    protected async recordStart(idJob: string): Promise<void> {
+    protected async recordStart(idJob: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eRunning);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Starting (CookJobId: ${idJob})`);
@@ -158,9 +160,10 @@ export abstract class JobPackrat implements JOB.IJob {
             await this._dbJobRun.update();
             await this.updateEngines(true); // was: don't block
         }
+        return updated;
     }
 
-    protected async recordSuccess(output: string): Promise<void> {
+    protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eDone);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Success`);
@@ -179,9 +182,10 @@ export abstract class JobPackrat implements JOB.IJob {
 
             await this.updateEngines(true, true); // was: don't block
         }
+        return updated;
     }
 
-    protected async recordFailure(output: string | null, errorMsg?: string): Promise<void> {
+    protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eError);
         if (updated) {
             this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true);
@@ -196,15 +200,17 @@ export abstract class JobPackrat implements JOB.IJob {
             // make sure we attach our report if there is one
             if (this._report) {
                 const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
-                const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
+                const hrefDownload: string  = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
                 await this._report.append(`${hrefDownload}<br/>\n`);
             }
 
             await this.updateEngines(true, true); // was: don't block
         }
+
+        return updated;
     }
 
-    protected async recordCancel(output: string | null, errorMsg?: string): Promise<void> {
+    protected async recordCancel(output: string | null, errorMsg?: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eCancelled);
         if (!updated) {
             if (errorMsg) {
@@ -229,6 +235,8 @@ export abstract class JobPackrat implements JOB.IJob {
 
             await this.updateEngines(true, true); // was: don't block
         }
+
+        return updated;
     }
 
     protected async logError(errorMessage: string, addToReport: boolean = true): Promise<H.IOResults> {
@@ -237,6 +245,13 @@ export abstract class JobPackrat implements JOB.IJob {
         if(addToReport == true)
             await this.appendToReportAndLog(error, true);
         return { success: false, error: errorMessage };
+    }
+
+    protected getReportDownloadPath(): string {
+        return RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
+    }
+    protected getJobStartEndDates(): { start: Date, end: Date | null } {
+        return { start: this._dbJobRun.DateStart ?? new Date(), end: this._dbJobRun.DateEnd };
     }
     // #endregion
 }

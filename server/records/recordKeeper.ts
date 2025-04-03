@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import * as DBAPI from '../db';
 import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection } from './logger/log';
@@ -63,6 +64,9 @@ export class RecordKeeper {
         targetRate = 1;   // sending too many triggers spam filters on network, delays are acceptable
         burstRate = 5;
         burstThreshold = 10;
+
+        // update our default email to always 'dev' since something went wrong
+        RecordKeeper.defaultEmail = ['packrat-dev@si.edu'];
 
         const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
         if(emailResults.success===false)
@@ -189,23 +193,50 @@ export class RecordKeeper {
                 if(this.notifyGroupConfig.emailAll.length>0 && forceUpdate===true)
                     return this.notifyGroupConfig.emailAll;
 
+                // fetch all users
+                const allUsers: DBAPI.User[] | null = await DBAPI.User.fetchUserList('',DBAPI.eUserStatus.eActive);
+                if(!allUsers || allUsers.length===0)
+                    return this.defaultEmail;
+
+                // build array of email addresses but only for those active
+                const allEmails: string[] = allUsers.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
+                this.notifyGroupConfig.emailAll = [...allEmails];
+
                 // otherwise, grab all active Users from DB and their emails
-                return ['eric@egofarms.com'];
+                return this.notifyGroupConfig.emailAll;
             }
 
             case NotifyUserGroup.EMAIL_ADMIN: {
+
                 // see if we already initialized this
                 if(this.notifyGroupConfig.emailAdmin.length>0 && forceUpdate===true)
                     return this.notifyGroupConfig.emailAdmin;
 
+                // grab all admin users
+                const adminIDs: number[] = Config.auth.users.admin;
+                const adminUsers: DBAPI.User[] | null = await DBAPI.User.fetchByIDs(adminIDs);
+                if(!adminUsers || adminUsers.length===0)
+                    return this.defaultEmail;
+
+                // build array of email addresses but only for those active
+                const adminEmails: string[] = adminUsers.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
+                this.notifyGroupConfig.emailAdmin = [...adminEmails];
+
                 // get ids from Config and then get their emails
-                return ['maslowskiec@si.edu','emaslowski@quotient-inc.com'];
+                return this.notifyGroupConfig.emailAdmin;
             }
 
             case NotifyUserGroup.EMAIL_USER: {
-                // const { idUser } = this.getContext();
-                // TODO: from current user id
-                return ['ericmaslowski@gmail.com'];
+                const { idUser } = this.getContext();
+                const user: DBAPI.User | null = await DBAPI.User.fetch(idUser);
+
+                // if no notification settings or user, nothing so email not sent
+                if(!user || !user.WorkflowNotificationTime) {
+                    this.logCritical(LogSection.eSYS,'email user not found',{ idUser, user },'RecordKeeper.getEmailsFromGroup');
+                    return [];
+                }
+
+                return [user.EmailAddress];
             }
         }
 
@@ -219,10 +250,16 @@ export class RecordKeeper {
             message: subject,
             detailsMessage: body,
             startDate: startDate ?? new Date(),
-            endDate,
-            detailsLink: link,
             sendTo: await this.getEmailsFromGroup(group)
         };
+
+        // our optional elements
+        if(endDate) params.endDate = endDate;
+        if(link) params.detailsLink = link;
+
+        // if sendTo is empty, don't send message
+        if(!params.sendTo || params.sendTo.length===0)
+            return { success: false, message: 'cannot send email. no user to send to.' };
 
         // send our message out.
         // we await the result so we can catch and audit the failure
@@ -235,6 +272,10 @@ export class RecordKeeper {
         return emailResult;
     }
     static async sendEmailRaw(type: NotifyType, sendTo: string[], subject: string, textBody: string, htmlBody?: string): Promise<IOResults> {
+
+        // if sendTo is empty, don't send message
+        if(!sendTo || sendTo.length===0)
+            return { success: false, message: 'cannot send raw email. no user to send to.' };
 
         // send our email but also log it for auditing
         // we wait for results so we can log the failure

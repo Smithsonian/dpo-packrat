@@ -29,7 +29,8 @@ export type AssetSummary = DBReference & {
 };
 export type AssetList = {
     status: string,
-    items: AssetSummary[];
+    items: AssetSummary[],
+    expected?: number,
 };
 export type SceneSummary = DBReference & {
     publishedState: string,
@@ -48,7 +49,7 @@ export type SceneSummary = DBReference & {
     },
     sources: {
         models: AssetList,
-        captureData: AssetList,
+        captureData: AssetList
     }
 };
 export type ValidationSummary = DBReference & {

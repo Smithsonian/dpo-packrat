@@ -13,7 +13,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
     idJobRun!: number | null;
     idUserOwner!: number | null;
     idVWorkflowStepType!: number;
-    State!: number;
+    State!: number;     // defined in common/constants.ts (ln. 409)
     DateCreated!: Date;
     DateCompleted!: Date | null;
 

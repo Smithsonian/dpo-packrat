@@ -5,7 +5,7 @@ import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, Table
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
-import { AssetList, SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
+import { SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
 
 // styles
@@ -120,7 +120,8 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             { key: 'subject.name', label: 'Subject', align: 'center', tooltip: 'The official subject name for the object' },
             { key: 'derivatives.downloads.status', label: 'Downloads', align: 'center', tooltip: 'Are downloads in good standing (GOOD), available but contain errors (ERROR), or are not available (MISSING).' },
             { key: 'publishedState', label: 'Published', align: 'center', tooltip: 'Is the scene published and with what accessibility' },
-            // { key: 'datePublished', label: 'Published (Date)', align: 'center' },
+            { key: 'derivatives.ar.status', label: 'AR', align: 'center', tooltip: 'Are the AR models (Good), missing downloadable native formats (NativeAR), or missing Voyager AR support (WebAR)' },
+            { key: 'sources.captureData.status', label: 'Capture Data', align: 'center', tooltip: 'Is capture data linked correctly (Good), entirely (Missing), or incorrectly linked (Error). Download CSV for details' },
             // { key: 'isReviewed', label: 'Reviewed', align: 'center' }
         ];
     };
@@ -261,11 +262,19 @@ const ToolsBatchGeneration = (): React.ReactElement => {
         };
 
         // Helper to get capture data value
-        const getCaptureDataValue = (cd: AssetList): string => {
-            const status: string = cd.status;
-            const count: number = cd.items?.length ?? 0;
+        const getCaptureDataValue = (count: number, expected: number): string => {
+            // const count: number = cd.items?.length ?? 0;
 
-            return (status.toLowerCase()==='good') ? `${status} (${count})` : status;
+            if (count === 0 && expected <= 0)
+                return 'Missing';                               // nothing linked to the master model or item
+            else if(expected > 0 && count < expected)
+                return `Error: ${count}/${expected}`;           // linking error. more linked to item than master model
+            else if(count === expected)
+                return `Good: ${count}/${expected}`;            // everything linked correctly
+            else if(count > expected)
+                return `Error: ${count}/${expected}`;           // model should not have a dataset, but does (e.g. CAD)
+            else
+                return `Unknown: ${count}/${expected}`;         // unknown fallback
         };
 
         // Create CSV headers (clean names)
@@ -307,7 +316,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 handleNull(scene.derivatives.downloads?.status),
                 handleNull(scene.sources.models?.status),
                 handleNull(scene.derivatives.ar?.status),
-                handleNull(getCaptureDataValue(scene.sources.captureData)),
+                handleNull(getCaptureDataValue(scene.sources.captureData.items.length ?? 0,scene.sources.captureData.expected ?? 0)),
                 // handleNull(scene.project?.id),
                 handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),

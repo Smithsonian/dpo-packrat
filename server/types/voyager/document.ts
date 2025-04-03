@@ -1,7 +1,7 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 1/24/2024. It was then modified,
+ * This was imported from Voyager's source/client/schema on 4/2/2025. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -26,7 +26,7 @@
 type Index = number;
 
 // import { EUnitType, TUnitType, Vector3, Quaternion, Matrix4, ColorRGB } from "./common";
-import { TUnitType, Vector3, Quaternion, Matrix4, ColorRGB } from "./common";
+import { TUnitType, Vector3, Matrix4, ColorRGB, QuaternionTuple } from "./common";
 import { IMeta } from "./meta";
 import { IModel } from "./model";
 import { ISetup } from "./setup";
@@ -36,7 +36,7 @@ import { ISetup } from "./setup";
 // export { EUnitType, TUnitType, Vector3, Quaternion, Matrix4, ColorRGB };
 
 export type TCameraType = "perspective" | "orthographic";
-export type TLightType = "ambient" | "directional" | "point" | "spot" | "hemisphere";
+export type TLightType = "ambient" | "directional" | "point" | "spot" | "hemisphere"| "rect";
 
 /**
  * Encapsulates a node tree representing a renderable scene.
@@ -84,7 +84,7 @@ export interface INode
 
     matrix?: Matrix4;
     translation?: Vector3;
-    rotation?: Quaternion;
+    rotation?: QuaternionTuple;
     scale?: Vector3;
 
     camera?: Index;
@@ -140,6 +140,7 @@ export interface ILight
 
     point?: IPointLightProps;
     spot?: ISpotLightProps;
+    hemisphere?: IHemisphereLightProps;
 }
 
 /**
@@ -158,4 +159,8 @@ export interface ISpotLightProps extends IPointLightProps
 {
     angle: number;
     penumbra: number;
+}
+
+export interface IHemisphereLightProps {
+    ground: ColorRGB;
 }

@@ -401,22 +401,22 @@ export class OCFLObject {
 
         // Confirm directory exists
         ioResults = await H.Helpers.fileOrDirExists(dest);
-        if (!ioResults.success)
+        if (ioResults.success===false)
             return ioResults;
 
         // Confirm namaste exists and is valid
         dest = path.join(this._objectRoot, ST.OCFLStorageObjectNamasteFilename);
         ioResults = await H.Helpers.fileOrDirExists(dest);
-        if (!ioResults.success)
+        if (ioResults.success===false)
             return ioResults;
 
         ioResults = await H.Helpers.filesMatch(dest, path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageObjectNamasteFilename));
-        if (!ioResults.success)
+        if (ioResults.success===false)
             return ioResults;
 
         // Confirm root inventory exists
         let invResults = await INV.OCFLInventory.readFromDisk(this);
-        if (!invResults.success || !invResults.ocflInventory) {
+        if (invResults.success===false || !invResults.ocflInventory) {
             ioResults.success = false;
             ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}`;
             return ioResults;
@@ -432,7 +432,7 @@ export class OCFLObject {
             return ioResults;
         }
         ioResults = await ocflInventoryRoot.validate(this, true);
-        if (!ioResults.success) {
+        if (ioResults.success===false) {
             LOG.error(ioResults.error, LOG.LS.eSTR);
             return ioResults;
         }
@@ -440,7 +440,7 @@ export class OCFLObject {
         // Validate each inventory
         for (let version: number = 1; version <= maxVersion; version++) {
             invResults = await INV.OCFLInventory.readFromDiskVersion(this, version);
-            if (!invResults.success || !invResults.ocflInventory) {
+            if (invResults.success===false || !invResults.ocflInventory) {
                 ioResults.success = false;
                 ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}, version ${version}`;
                 LOG.error(ioResults.error, LOG.LS.eSTR);
@@ -450,7 +450,7 @@ export class OCFLObject {
             const ocflInventory: INV.OCFLInventory = invResults.ocflInventory;
             ioResults = await ocflInventory.validate(this, false);
             /* istanbul ignore next */
-            if (!ioResults.success) {
+            if (ioResults.success===false) {
                 LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
@@ -509,14 +509,14 @@ export class OCFLObject {
 
             ioResults = await H.Helpers.fileOrDirExists(fileName);
             /* istanbul ignore if */
-            if (!ioResults.success) {
+            if (ioResults.success===false) {
                 LOG.error(ioResults.error, LOG.LS.eSTR);
                 return ioResults;
             }
 
             const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(fileName, ST.OCFLDigestAlgorithm);
             /* istanbul ignore if */
-            if (!hashResults.success) {
+            if (hashResults.success===false) {
                 LOG.error(hashResults.error, LOG.LS.eSTR);
                 return hashResults;
             }

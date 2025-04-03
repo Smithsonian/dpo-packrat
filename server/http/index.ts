@@ -6,6 +6,7 @@ import { Config } from '../config';
 import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
 import { UsageMonitor } from '../utils/osStats';
+import { RecordKeeper } from '../records/recordKeeper';
 
 import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
@@ -76,6 +77,15 @@ export class HttpServer {
             const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
             monitor.start();
         }
+
+        // initialize notification system
+        const notifyResult: H.IOResults = await RecordKeeper.configure();
+        if(notifyResult.success===false)
+            LOG.error(`FAILED to configure Notification system. no notices will be sent (${notifyResult.error})`,LOG.LS.eSYS);
+        else
+            LOG.info(`Notification system is running: ${Config.environment.type}`,LOG.LS.eSYS);
+
+        // return our response
         return res;
     }
 
