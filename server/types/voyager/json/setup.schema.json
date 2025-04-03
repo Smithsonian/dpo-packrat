@@ -85,7 +85,7 @@
                 "type": {
                     "type": "string",
                     "enum": [
-                        "Orbit", "Walk"
+                        "Orbit", "Fly", "Walk"
                     ]
                 },
                 "enabled": {
@@ -153,6 +153,9 @@
                     "type": "number"
                 },
                 "receiveShadow": {
+                    "type": "boolean"
+                },
+                "autoSize": {
                     "type": "boolean"
                 }
             }

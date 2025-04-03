@@ -6,8 +6,10 @@ import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
+import { Config } from '../../../config';
 import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
+import { RecordKeeper } from '../../../records/recordKeeper';
 import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 
 export class WorkflowJobParameters {
@@ -199,8 +201,103 @@ export class WorkflowJob implements WF.IWorkflow {
 
         if (!workflowStep)
             return { success: false, workflowComplete, error: 'Missing WorkflowStep' };
+
+        const updated: boolean = (eStatus!==workflowStep?.getState());
         workflowStep.setState(eStatus);
         const success: boolean = await workflowStep.update();
+
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status',
+            { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow },
+            'WorkflowUpload.updateStatus'
+        );
+
+        // if we're not updated or not finished then just return
+        if(updated!==true || workflowComplete!==true)
+            return { success, workflowComplete, error: success ? '' : 'Database Error' };
+
+        // get all workflows connected to same workflow set
+        // NOTE: may not get all workflows since the Set doesn't know the total
+        // steps until everything finishes. Going to pause a moment to give DB a chance
+        await H.Helpers.sleep(3000);
+        const workflowSet: number = this.workflowData.workflow?.idWorkflowSet ?? -1;
+        const workflows: DBAPI.Workflow[] | null = await DBAPI.Workflow.fetchFromWorkflowSet(workflowSet);
+        if(!workflows || workflows.length===0) {
+            LOG.info(`No workflows found from set (${this.workflowData.workflow?.idWorkflowSet})`,LOG.LS.eWF);
+            return { success, workflowComplete, error: success ? '' : 'Database Error' };
+        }
+
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status workflows',
+            { workflowSet, workflows },
+            'WorkflowUpload.updateStatus'
+        );
+
+        // Get all steps from the workflows
+        const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
+        if(!workflowSteps || workflowSteps.length===0)
+            return { success, workflowComplete, error: success ? '' : 'Database Error' };
+
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status steps',
+            { workflowSteps },
+            'WorkflowUpload.updateStatus'
+        );
+
+        // see if any are still going, if so return
+        const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status still running',
+            { stillRunning },
+            'WorkflowUpload.updateStatus'
+        );
+        if(stillRunning===true) {
+            LOG.info(`Workflow set still running (${this.workflowData.workflow?.idWorkflow} | ${workflowSet})`,LOG.LS.eWF);
+            return { success, workflowComplete, error: success ? '' : 'Database Error' };
+        }
+
+        // extract the start/end dates for the set
+        const { startDate, endDate } = workflowSteps.reduce((acc, { DateCreated, DateCompleted }) => ({
+            startDate: acc.startDate < DateCreated ? acc.startDate : DateCreated,
+            endDate: (!DateCompleted || acc.endDate > DateCompleted) ? acc.endDate : DateCompleted,
+        }), { startDate: workflowSteps[0].DateCreated, endDate: workflowSteps[0].DateCompleted || workflowSteps[0].DateCreated });
+
+        // get our report to inject in the message
+        // use first workflow since it will hold everything for the set
+        let detailsMessage: string = '';
+        const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflowSet(workflowSet);
+        if(workflowReport && workflowReport.length>0) {
+            detailsMessage = workflowReport[0].Data;
+        }
+
+        // extract the workflow type
+        const workflowTypeV: DBAPI.Vocabulary | null = await DBAPI.Vocabulary.fetch(workflows[0].idVWorkflowType);
+        const workflowType: string = workflowTypeV?.Term ?? 'Unknown Job';
+
+        switch(eStatus) {
+            case COMMON.eWorkflowJobRunStatus.eDone: {
+                const url: string = Config.http.clientUrl +'/workflow';
+                await RecordKeeper.sendEmail(
+                    RecordKeeper.NotifyType.JOB_PASSED,
+                    RecordKeeper.NotifyGroup.EMAIL_USER,
+                    `${workflowType} Finished`,
+                    detailsMessage,
+                    startDate,
+                    endDate,
+                    (url.length>0) ? { url, label: 'Uploads' } : undefined
+                );
+            } break;
+
+            case COMMON.eWorkflowJobRunStatus.eError: {
+                const url: string = Config.http.clientUrl +'/workflow';
+                await RecordKeeper.sendEmail(
+                    RecordKeeper.NotifyType.JOB_FAILED,
+                    RecordKeeper.NotifyGroup.EMAIL_USER,
+                    `${workflowType} Failed`,
+                    detailsMessage,
+                    startDate,
+                    endDate,
+                    (url.length>0) ? { url, label: 'Reports' } : undefined
+                );
+            } break;
+        }
+
         return { success, workflowComplete, error: success ? '' : 'Database Error' };
     }
 
