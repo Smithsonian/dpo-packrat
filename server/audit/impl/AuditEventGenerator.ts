@@ -10,7 +10,7 @@ import { Audit } from '@prisma/client';
 //** Audit.idSystemObject is not populated here, to avoid using CACHE.SystemObjectCache */
 export class AuditEventGenerator {
     static setEventEngine(eventEngine: EVENT.IEventEngine): void {
-        LOG.info('AuditEventGenerator.setEventEngine called', LOG.LS.eAUDIT);
+        // LOG.info('AuditEventGenerator.setEventEngine called', LOG.LS.eAUDIT);
         AuditEventGenerator.eventEngine = eventEngine;
     }
     private static eventEngine: EVENT.IEventEngine | null = null;   // don't import EventFactory to avoid circular dependencies

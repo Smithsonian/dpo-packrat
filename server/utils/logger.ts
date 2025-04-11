@@ -181,8 +181,8 @@ function configureLogger(logPath: string | null): void {
     // process.stdout.on('data', data => { info(`stdout: ${JSON.stringify(data)}`, LS.eCON); });
     // process.stderr.on('data', data => { error(`stderr: ${JSON.stringify(data)}`, LS.eCON); });
 
-    info('**************************', LS.eSYS);
-    info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);
+    // info('**************************', LS.eSYS);
+    // info(`Writing logs to ${path.resolve(logPath)}`, LS.eSYS);
 }
 
 // function handleConsoleArgs(args): string {

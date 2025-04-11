@@ -71,7 +71,7 @@ export class WorkflowUpload implements WF.IWorkflow {
         workflowStep.setState(eStatus);
         const success: boolean = await workflowStep.update();
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status',
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow update',undefined,
             { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow, set: this.workflowData.workflowSet },
             'WorkflowUpload.updateStatus'
         );
@@ -91,7 +91,7 @@ export class WorkflowUpload implements WF.IWorkflow {
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status workflows',
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow update',undefined,
             { workflows, workflowSet },
             'WorkflowUpload.updateStatus'
         );
@@ -101,14 +101,14 @@ export class WorkflowUpload implements WF.IWorkflow {
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status steps',
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow step update', undefined,
             { workflowSteps },
             'WorkflowUpload.updateStatus'
         );
 
         // see if any are still going, if so return
         const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'is running',
+        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow step update','still running',
             { stillRunning },
             'WorkflowUpload.updateStatus'
         );

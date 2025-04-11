@@ -6,40 +6,19 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
 import { ENVIRONMENT_TYPE } from '../../config';
+import { LogLevel, LogSection } from './logTypes';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
 // import { EventEmitter } from 'events';
 // EventEmitter.defaultMaxListeners = 50;
 
-// Simulate __dirname in ES module scope
+// Simulate __dirname in ES module scope. Needed when running outside of Packrat
 // import { fileURLToPath } from 'url';
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
 
 //#region TYPES & INTERFACES
-export enum LogSection { // logger section
-    eAUTH   = 'AUTH',  // authentication
-    eCACHE  = 'CACHE', // cache
-    eCOLL   = 'COL',   // collections
-    eCON    = 'CON',   // console-redirected messages
-    eCONF   = 'CFG',   // config
-    eDB     = 'DB',    // database
-    eEVENT  = 'EVENT', // event
-    eGQL    = 'GQL',   // graphql
-    eHTTP   = 'HTTP',  // http
-    eJOB    = 'JOB',   // job
-    eMETA   = 'META',  // metadata
-    eMIG    = 'MIG',   // migration
-    eNAV    = 'NAV',   // navigation
-    eRPT    = 'RPT',   // report
-    eSTR    = 'STORE', // storage
-    eSYS    = 'SYS',   // system/utilities
-    eTEST   = 'TEST',  // test code
-    eWF     = 'WF',    // workflow
-    eSEC    = 'SEC',   // security
-    eNONE   = '*****', // none specified ... don't use this!
-}
 export interface LoggerStats {
     counts: {
         profile: number,
@@ -57,7 +36,6 @@ export interface LoggerStats {
     }
 }
 
-type validLevels = 'crit' | 'error' | 'warn' | 'info' | 'debug' | 'perf';
 type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
 
 interface LoggerContext {
@@ -71,7 +49,7 @@ interface LogEntry {
     timestamp: string;
     message: string;
     data?: any;
-    level: validLevels;
+    level: LogLevel;
     audit: boolean;
     context: LoggerContext;
 }
@@ -271,11 +249,17 @@ export class Logger {
     }
 
     // build our log entry structure/object
-    private static getLogEntry(level: validLevels, message: string, data: any, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
+    private static getLogEntry(level: LogLevel, message: string, reason: string,  data: any | undefined, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
+        // create our data structure wrapping in reason if it exists
+        const hasReason = reason && reason.trim().length > 0;
+        const combinedData = hasReason
+            ? { reason, ...(data ?? {}) }
+            : data;
+
         const entry: LogEntry = {
             timestamp: new Date().toISOString(),
             message,
-            data,
+            data: combinedData,
             level,
             audit,
             context: {
@@ -494,35 +478,35 @@ export class Logger {
     }
 
     // wrappers for each level of log
-    public static async critical(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async critical(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry('crit', message, data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.CRITICAL, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
-    public static async error(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async error(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry('error', message, data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.ERROR, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
-    public static async warning(section: LogSection, message: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async warning(section: LogSection, message: string, reason?: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry('warn', message, data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.WARNING, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
-    public static async info(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async info(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry('info', message, data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.INFO, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
-    public static async debug(section: LogSection, message: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async debug(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry('debug', message, data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.DEBUG, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
     //#endregion
 
@@ -534,7 +518,8 @@ export class Logger {
             return { success: false, message: 'profile request key already created.' };
 
         // otherwise, create our request entry for performance level
-        const logEntry: LogEntry = Logger.getLogEntry('perf', message, data, false, { section, caller, idUser, idRequest } );
+        // pass in empty 'reason' string since message and data carries main information
+        const logEntry: LogEntry = Logger.getLogEntry(LogLevel.PERFORMANCE, message, '', data, false, { section, caller, idUser, idRequest } );
         const profileRequest: ProfileRequest = {
             startTime: new Date(),
             logEntry,
@@ -657,7 +642,7 @@ export class Logger {
         const logEntry: LogEntry = {
             timestamp: new Date().toISOString(),
             message: randomMessage,
-            level: randomLevel as validLevels,
+            level: randomLevel as LogLevel,
             audit: Math.random() < 0.5,
             context: {
                 section: randomSection,
@@ -728,3 +713,5 @@ export class Logger {
     }
     //#endregion
 }
+
+export { LogSection, LogLevel };

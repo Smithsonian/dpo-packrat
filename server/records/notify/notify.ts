@@ -41,12 +41,12 @@ export class Notify {
 
         for(let i=0; i<numEmails; ++i) {
             const emailPackage: NotifyPackage = randomNotifyPackage(i, 'email');
-            LOG.debug(LogSection.eSYS, 'sending email message', { type: NotifyType[emailPackage.type], sendTo: emailPackage.sendTo?.join(',') }, 'Notify.testEmail');
+            LOG.debug(LogSection.eSYS, 'sending email attempt', undefined, { type: NotifyType[emailPackage.type], sendTo: emailPackage.sendTo?.join(',') }, 'Notify.testEmail');
 
             const promise = NotifyEmail.sendMessage(emailPackage)
                 .then((status) => {
                     if (!status.success) {
-                        LOG.error(LogSection.eSYS, status.message, status.data, 'Notify.testEmail');
+                        LOG.error(LogSection.eSYS, 'sending email failed', status.message, status.data, 'Notify.testEmail');
                         errors.push(`${i}: ${status.message} - ${status.data?.error || 'unknown error'}`);
                     }
                     return status;
@@ -97,12 +97,12 @@ export class Notify {
 
         for(let i=0; i<numMessages; ++i) {
             const slackPackage: NotifyPackage = randomNotifyPackage(i, 'slack');
-            LOG.debug(LogSection.eSYS, 'sending slack message', { channel, type: NotifyType[slackPackage.type], sendTo: slackPackage.sendTo?.join(',') }, 'Notify.testSlack');
+            LOG.debug(LogSection.eSYS, 'sending slack attempt', undefined, { channel, type: NotifyType[slackPackage.type], sendTo: slackPackage.sendTo?.join(',') }, 'Notify.testSlack');
 
             const promise = NotifySlack.sendMessage(slackPackage, channel)
                 .then((status) => {
                     if (!status.success) {
-                        LOG.error(LogSection.eSYS, status.message, status.data, 'Notify.testSlack');
+                        LOG.error(LogSection.eSYS, 'sending slack failed', status.message, status.data, 'Notify.testSlack');
                         errors.push(`${i}: ${status.message} - ${status.data?.error || 'unknown error'}`);
                     }
                     return status;

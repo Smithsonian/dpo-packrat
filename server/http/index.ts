@@ -6,7 +6,7 @@ import { Config } from '../config';
 import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
 import { UsageMonitor } from '../utils/osStats';
-import { RecordKeeper } from '../records/recordKeeper';
+import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
 import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
@@ -31,6 +31,7 @@ import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 import * as path from 'path';
+import { IEventEngine } from '../event/interface';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -50,42 +51,65 @@ export class HttpServer {
     static async getInstance(): Promise<HttpServer | null> {
         if (!HttpServer._singleton) {
             HttpServer._singleton = new HttpServer();
-            await HttpServer._singleton.initializeServer();
+            await HttpServer._singleton.HttpServer();
         }
         return HttpServer._singleton;
     }
 
-    private async initializeServer(): Promise<boolean> {
-        LOG.info('**************************', LOG.LS.eSYS);
-        LOG.info('Packrat Server Initialized', LOG.LS.eSYS);
+    private async HttpServer(): Promise<boolean> {
+        // initialize logging and notification system
+        const loggerResult: IOResults = await RK.initialize(RK.SubSystem.LOGGER);
+        if(loggerResult.success===false) {
+            RK.logFallback(RK.LogSection.eSYS,'system failed: Logger',loggerResult.message,loggerResult.data,'HttpServer');
+            RK.logFallback(RK.LogSection.eSYS,'server failed','No logging available');
+            return false;
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Logger',undefined,loggerResult.data,'HttpServer');
 
         // get our webDAV server
         this.WDSV = await WebDAVServer.server();
-        if (this.WDSV) {
-            LOG.info('initialized WebDAV Server', LOG.LS.eSYS);
-        } else {
-            LOG.error('Failed to initialize WebDAV server', LOG.LS.eSYS);
+        if (!this.WDSV) {
+            RK.logCritical(RK.LogSection.eSYS,'system failed: WebDAV server','failed to initialize WebDAV server',undefined,'HttpServer');
+            RK.logCritical(RK.LogSection.eSYS,'server failed','No WebDAV server');
             return false;
         }
+        RK.logInfo(RK.LogSection.eSYS,'system started: WebDAV server',undefined,undefined,'HttpServer');
 
         // configure our routes/endpoints
         const res: boolean = await this.configureMiddlewareAndRoutes();
+        if (res===false) {
+            RK.logCritical(RK.LogSection.eSYS,'system failed: Middleware and Routes', 'failed to initialize Express middleware and routes',undefined,'HttpServer');
+            RK.logCritical(RK.LogSection.eSYS,'server failed','No Middleware or Routes');
+            return false;
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Middleware and Routes',undefined,undefined,'HttpServer');
 
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
-        EventFactory.getInstance();
+        const eventEngine: IEventEngine | null = await EventFactory.getInstance();
+        const eventResult: IOResults = await eventEngine?.initialize() ?? { success: false, message: 'no engine instance' };
+        if (eventResult.success===false) {
+            RK.logCritical(RK.LogSection.eSYS,'system failed: Event Engine', `failed to initialize EventEngine. ${eventResult.message}}`,undefined,'HttpServer');
+            RK.logCritical(RK.LogSection.eSYS,'server failed','No Event Engine');
+            return false;
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Event Engine',undefined,eventResult.data,'HttpServer');
+
+        // start monitoring
         if (monitorCPU) {
             const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
             monitor.start();
+            RK.logInfo(RK.LogSection.eSYS,'system started: Usage Monitoring',undefined,{ frequency: 1000, samples: monitorVerboseSamples },'HttpServer');
         }
 
-        // initialize notification system
-        const notifyResult: H.IOResults = await RecordKeeper.configure();
-        if(notifyResult.success===false)
-            LOG.error(`FAILED to configure Notification system. no notices will be sent (${notifyResult.error})`,LOG.LS.eSYS);
-        else
-            LOG.info(`Notification system is running: ${Config.environment.type}`,LOG.LS.eSYS);
+        // initialize notifications
+        const notifyResult: IOResults = await RK.initialize(RK.SubSystem.NOTIFY_EMAIL);
+        if(notifyResult.success===false) {
+            RK.logError(RK.LogSection.eSYS,'system failed: Email Notifications',notifyResult.message,notifyResult.data,'HttpServer');
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyResult.data,'HttpServer');
 
         // return our response
+        RK.logInfo(RK.LogSection.eSYS,'Packrat server running...',undefined,{ environment: Config.environment.type, port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
         return res;
     }
 
@@ -172,7 +196,8 @@ export class HttpServer {
         // if we're not testing then open up server on the correct port
         if (process.env.NODE_ENV !== 'test') {
             const server = this.app.listen(Config.http.port, () => {
-                LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
+                // LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
+                RK.logInfo(RK.LogSection.eSYS,'system started: Express server',undefined,{ port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
             });
 
             // Set keep-alive parameters on the server
