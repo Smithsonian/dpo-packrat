@@ -1,14 +1,14 @@
-import * as LOG from '../../utils/logger';
 import { IAuth, VerifyUserResult } from '../interface';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 class LocalAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
         if (password !== email) {
-            LOG.error(`LocalAuth.verifyUser invalid password for ${email}`, LOG.LS.eAUTH);
+            RK.logDebug(RK.LogSection.eAUTH,'verify user failed','invalid password',{ email },'LocalAuth');
             return { success: false, error: 'Invalid password for user' };
         }
 
-        LOG.info(`LocalAuth.verifyUser successful login for ${email}`, LOG.LS.eAUTH);
+        RK.logDebug(RK.LogSection.eAUTH,'verify user success',undefined,{ email },'LocalAuth');
         return { success: true };
     }
 }

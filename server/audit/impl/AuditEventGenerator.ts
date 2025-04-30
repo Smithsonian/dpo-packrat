@@ -11,7 +11,6 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 //** Audit.idSystemObject is not populated here, to avoid using CACHE.SystemObjectCache */
 export class AuditEventGenerator {
     static setEventEngine(eventEngine: EVENT.IEventEngine): void {
-        // LOG.info('AuditEventGenerator.setEventEngine called', LOG.LS.eAUDIT);
         AuditEventGenerator.eventEngine = eventEngine;
     }
     private static eventEngine: EVENT.IEventEngine | null = null;   // don't import EventFactory to avoid circular dependencies
@@ -71,7 +70,6 @@ export class AuditEventGenerator {
             this.eventProducer.send(eventTopic, [data]);
             return true;
         } else {
-            // LOG.error('AuditEventGenerator.audit unable to fetch event producer', LOG.LS.eEVENT);
             RK.logError(RK.LogSection.eEVENT,'audit event failed','unable to fetch event producer',{ objectID: oID, key },'AuditEventGenerator');
             return false;
         }

@@ -21,13 +21,13 @@ export enum LogSection { // logger section
     eJOB    = 'JOB',   // job
     eMETA   = 'META',  // metadata
     eMIG    = 'MIG',   // migration
-    eNAV    = 'NAV',   // navigation
+    eNAV    = 'NAV',   // navigation/search
     eRPT    = 'RPT',   // report
+    eSEC    = 'SEC',   // security
     eSTR    = 'STORE', // storage
     eSYS    = 'SYS',   // system/utilities
     eTEST   = 'TEST',  // test code
     eWF     = 'WF',    // workflow
-    eSEC    = 'SEC',   // security
     eNONE   = '*****', // none specified ... don't use this!
 }
 

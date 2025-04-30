@@ -3,7 +3,6 @@ import { ApolloServerOptions, computeGQLQuery } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
-// import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
 import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
@@ -130,7 +129,7 @@ export class HttpServer {
         });
         this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100MB' }) as RequestHandler);
 
-        // early stage request debugging middleware
+        // DEBUG: early stage request debugging middleware
         // this.app.use(HttpServer.logRequestDetailed);
 
         // get our cookie and auth system rolling. We do this here so we can extract
@@ -196,7 +195,6 @@ export class HttpServer {
         // if we're not testing then open up server on the correct port
         if (process.env.NODE_ENV !== 'test') {
             const server = this.app.listen(Config.http.port, () => {
-                // LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
                 RK.logInfo(RK.LogSection.eSYS,'system started: Express server',undefined,{ port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
             });
 
@@ -212,11 +210,10 @@ export class HttpServer {
 
     // creates a LocalStore populated with the next requestID
     private static assignLocalStore(req: Request, _res, next): void {
-        const user = req['user'];
-        const idUser = user ? user['idUser'] : undefined;
-        ASL.run(new LocalStore(true, idUser), () => {
-            // LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
-            RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ user, idUser },'HttpServer');
+        const { id } = H.Helpers.getUserDetailsFromRequest(req); 
+
+        ASL.run(new LocalStore(true, id), () => {
+            // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id, name },'HttpServer');
             next();
         });
     }
@@ -224,8 +221,7 @@ export class HttpServer {
     // utility routines and middleware
     private static logRequest(req: Request, _res, next): void {
         // figure out who is calling this
-        const user = req['user'];
-        const idUser = user ? user['idUser'] : undefined;
+        const { id, ip } = H.Helpers.getUserDetailsFromRequest(req);
 
         // our method (GET, POST, ...)
         let method = req.method.toUpperCase();
@@ -242,8 +238,8 @@ export class HttpServer {
             } else
                 query = `Unknown GraphQL: ${query}|${req.path}`;
         }
-        // LOG.info(`[REQUEST] ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
-        RK.logInfo(RK.LogSection.eHTTP,`request made`,undefined,{ method, query, idUser, queryParams },'HttpServer',true);
+        
+        RK.logInfo(RK.LogSection.eHTTP,`request made`,undefined,{ method, query, idUser: id, source: ip, queryParams },'HttpServer',true);
         next();
     }
     // private static logRequestDetailed(req: Request, _res, next): void {
@@ -277,7 +273,6 @@ export class HttpServer {
 }
 
 process.on('uncaughtException', (err) => {
-    // LOG.error('*** UNCAUGHT EXCEPTION ***', LOG.LS.eSYS, err);
     RK.logCritical(RK.LogSection.eSYS,'uncaught exception',err.message,undefined,'HttpServer');
 
     // For the time being, we prevent Node from exiting.
@@ -288,7 +283,5 @@ process.on('uncaughtException', (err) => {
 
 // Catch unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-    // console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     RK.logCritical(RK.LogSection.eSYS,'unhandled rejection','a Promise reject was not handled', { promise, reason },'HttpServer');
-    // LOG.error('*** UNCAUGHT REJECTION ***', LOG.LS.eSYS, reason);
 });

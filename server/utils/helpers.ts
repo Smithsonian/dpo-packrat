@@ -11,6 +11,7 @@ import * as crypto from 'crypto';
 
 import * as LOG from './logger';
 import { Readable, Writable } from 'stream';
+import { Request } from 'express';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -766,5 +767,101 @@ export class Helpers {
             if (value < -Number.MAX_VALUE) return -Number.MAX_VALUE;
             return value; // Return valid float as-is
         }
+    }
+
+    static removeEmptyFields<T extends Record<string, any>>(input: T): Partial<T> {
+        const output: Partial<T> = {};
+    
+        for (const [key, value] of Object.entries(input)) {
+            if (
+                value === null ||
+                value === undefined ||
+                (typeof value === 'string' && value.trim() === '') ||
+                (Array.isArray(value) && value.length === 0)
+            ) {
+                continue; // Skip empty fields
+            }
+    
+            output[key as keyof T] = value;
+        }
+    
+        return output;
+    }
+
+    // errors
+    static getErrorString = (error: any) => {
+        // Check if the error is an instance of Error and has a message
+        if (error instanceof Error) {
+            // check if has code too and append to message
+            if('code' in error && error.code === 'ENOENT')
+                return `${error.code}: ${error.message}`;
+            return error.message;
+        }
+
+        // Handle common GraphQL error format
+        if (error?.errors && Array.isArray(error.errors)) {
+            // Return the first error message in the GraphQL errors array, or join all messages
+            return error.errors.map((e: any) => e.message || "Unknown error").join("; ");
+        }
+
+        // Handle Prisma errors (e.g., PrismaClientKnownRequestError)
+        if (error?.meta && error?.message) {
+            return `Prisma error: ${error.message}`;
+        }
+
+        // Handle Solr errors (Solr may have nested messages under responseHeader or error)
+        if (error?.responseHeader || error?.error) {
+            return error?.error?.msg || error?.error?.message || "Unknown Solr error";
+        }
+
+        // Fallback to a string representation of the error
+        return String(error);
+    };
+    static getNetworkError = (code: string, status: number) => {
+        let message = '';
+
+        switch(code) {
+            case 'ECONNABORTED': 	message = 'request timed out'; break;
+            case 'ENOTFOUND':		message = 'server hostname not found'; break;
+            case 'EAI_AGAIN':		message = 'DNS lookup error'; break;
+            case 'ECONNREFUSED':	message = 'connection refused'; break; 	 // if server is offline, but coming back online
+            case 'ETIMEDOUT':		message = 'connection timed out'; break;
+            case 'ENETUNREACH':		message = 'local network issue'; break;
+            case 'ECONNRESET': 		message = 'host closed connection'; break; // remote host forced the connection closed
+            case 'EPIPE':			message = 'attempt to write to closed connection'; break;
+            case 'ERR_NETWORK':
+            case 'ENETDOWN':		message = 'network is down'; break;
+
+            default:
+                return { success: false, message: 'unretryable network error', data: { error: code, status, retry: false }};
+        }
+
+        if(status >= 500 && status < 600)
+            message += `(${status})`;
+
+        return { success: true, message, data: { retry: true } };
+    }
+
+    // Express
+    static getUserDetailsFromRequest = (req: Request): { id: number | null, name: string, email: string, isActive: boolean, ip: string } => {
+        // helper routine to extract meaningful user information from a request (if it exists)
+        const user = req.user as {
+            id?: number | string;
+            idUser?: number | string;
+            Name?: string;
+            EmailAddress?: string;
+            Active?: boolean | string;
+        } || null;
+        if(!user)
+            return { id: null, name: '', email: '', isActive: false, ip: '0.0.0.0' };
+    
+        
+        const id = Number(user.id ?? user.idUser ?? null);
+        const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || req.socket.remoteAddress || '0.0.0.0';
+        const name: string = user.Name ?? '';
+        const email: string = user.EmailAddress ?? '';
+        const isActive: boolean = user.Active === true || user.Active === 'true';
+    
+        return { id, name, email, isActive, ip: (ip==='::1') ? '127.0.0.1' : ip };
     }
 }

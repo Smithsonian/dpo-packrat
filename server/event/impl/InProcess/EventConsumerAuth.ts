@@ -3,7 +3,7 @@ import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class EventConsumerAuth extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -14,7 +14,7 @@ export class EventConsumerAuth extends EventConsumer {
         // inform audit interface of authentication event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
-                LOG.error(`EventConsumerAuth.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unknown key',{ key: dataItem.key },'EventConsumerAuth');
                 continue;
             }
 
@@ -24,11 +24,11 @@ export class EventConsumerAuth extends EventConsumer {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
-                    LOG.info(`EventConsumerAuth.eventWorker Login idUser ${audit.idUser} ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'succeeded' : 'failed'}`, LOG.LS.eEVENT);
+                    RK.logDebug(RK.LogSection.eEVENT,`login event ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'success' : 'failed'}`,undefined,audit.Data,'EventConsumerAuth');
                 } break;
 
                 default:
-                    LOG.error(`EventConsumerAuth.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                    RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unsupported key',{ key: dataItem.key },'EventConsumerAuth');
                     break;
             }
         }

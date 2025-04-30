@@ -289,24 +289,26 @@ export class Logger {
     // processing of our 'data' field
     private static processData(data: DataType): string {
         // If data is a primitive type, return it as a string
+        let result: string;
+
         if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
-            return data.toString();
+            result = data.toString();
         }
-
-        // If data is an array, join elements with commas
-        if (Array.isArray(data)) {
-            return data.map(item => Logger.processData(item)).join(', ');
+        else if (Array.isArray(data)) {
+            result = data.map(item => Logger.processData(item)).join(', ');
         }
-
-        // If data is an object, flatten it and convert to a string of key/value pairs
-        if (typeof data === 'object' && data !== null) {
+        else if (typeof data === 'object' && data !== null) {
             const flatObject = Logger.flattenObject(data);
-            return Object.entries(flatObject)
+            result = Object.entries(flatObject)
                 .map(([key, value]) => `${key}: ${value}`)
                 .join(', ');
         }
+        else {
+            result = '';
+        }
 
-        return '';
+        // Truncate to 160 characters with ellipsis if needed
+        return result.length > 160 ? result.slice(0, 157) + '...' : result;
     }
     private static flattenObject(obj: object, prefix = ''): Record<string, string> {
         return Object.keys(obj).reduce((acc, key) => {

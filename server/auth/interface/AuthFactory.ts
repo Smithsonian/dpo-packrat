@@ -3,9 +3,10 @@ import { LocalAuth, LDAPAuth } from '../impl';
 import { Config, AUTH_TYPE } from '../../config';
 import { ASL, LocalStore } from '../../utils/localStore';
 import * as DBAPI from '../../db';
-import * as LOG from '../../utils/logger';
+// import * as LOG from '../../utils/logger';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export type VerifiedUser = {
     user: DBAPI.User | null;
@@ -27,12 +28,13 @@ class AuthFactory {
     }
 
     static async verifyUser(email: string, password: string): Promise<VerifiedUser> {
-        LOG.info(`AuthFactory.verifyUser verifying... ${email}`,LOG.LS.eAUTH);
+        // RK.logDebug(RK.LogSection.eAUTH,'verifying user',undefined,email,'AuthFactory');
 
         const auth: IAuth = AuthFactory.getInstance();
         const verifyRes: VerifyUserResult = await auth.verifyUser(email, password);
         if (!verifyRes.success) {
             AuditFactory.audit({ email, error: verifyRes.error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
+            RK.logError(RK.LogSection.eAUTH,'user login failed',verifyRes.error ?? 'undefined',{ email },'AuthFactory',true);
             return { user: null, error: verifyRes.error };
         }
 
@@ -40,14 +42,14 @@ class AuthFactory {
         if (!users || users.length == 0) {
             const error: string = `${email} is not a Packrat user`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            LOG.error(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','not a Packrat user',{email},'AuthFactory',true);
             return { user: null, error };
         }
 
         if (users.length > 1) {
             const error: string = `Multiple users exist for ${email}`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            LOG.error(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','multiple users exist',{email},'AuthFactory',true);
             return { user: null, error };
         }
 
@@ -55,7 +57,7 @@ class AuthFactory {
         if (!user.Active) {
             const error: string = `${email} is not active in Packrat`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            LOG.info(`AuthFactory.verifyUser: ${error}`, LOG.LS.eAUTH);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','user account disabled',{ id: user.idUser, name: user.Name, email },'AuthFactory',true);
             return { user: null, error };
         }
 
@@ -63,7 +65,7 @@ class AuthFactory {
         const LS: LocalStore = await ASL.getOrCreateStore();
         LS.idUser = user.idUser;
 
-        LOG.info(`AuthFactory.verifyUser ${email} successfully authenticated`, LOG.LS.eAUTH);
+        RK.logInfo(RK.LogSection.eAUTH,'user login success',undefined,{ id: user.idUser, name: user.Name, email },'AuthFactory');
         AuditFactory.audit({ email }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthLogin);
 
         return { user };
