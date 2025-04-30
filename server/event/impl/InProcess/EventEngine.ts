@@ -20,12 +20,17 @@ export class EventEngine implements EVENT.IEventEngine {
 
     async initialize(): Promise<IOResults> {
         RK.logDebug(RK.LogSection.eEVENT,'system initialize','wiring default consumers',{ consumers: 'DB, Auth, Publish, HTTP' },'EventEngine');
-        await this.createConsumer(EVENT.eEventTopic.eDB);
-        await this.createConsumer(EVENT.eEventTopic.eAuth);
-        await this.createConsumer(EVENT.eEventTopic.ePublish);
-        await this.createConsumer(EVENT.eEventTopic.eHTTP);
 
-        return { success: true, message: 'EventEngine initialized', data: { consumers: 'DB, Auth, Publish, HTTP' }}
+        const createdConsumers: string[] = [];
+        await this.createConsumer(EVENT.eEventTopic.eDB) && createdConsumers.push('DB');
+        await this.createConsumer(EVENT.eEventTopic.eAuth) && createdConsumers.push('Auth');
+        await this.createConsumer(EVENT.eEventTopic.ePublish) && createdConsumers.push('Publish');
+        await this.createConsumer(EVENT.eEventTopic.eHTTP) && createdConsumers.push('HTTP');
+
+        if(createdConsumers.length===4)
+            return { success: true, message: 'EventEngine initialized', data: { consumers: createdConsumers.join(', ') }};
+        else
+            return { success: false, message: 'EventEngine failed to initialize', data: { consumers: createdConsumers.join(', ') }};
     }
 
     async createProducer(): Promise<EVENT.IEventProducer | null> {

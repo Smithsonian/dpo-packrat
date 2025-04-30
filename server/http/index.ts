@@ -3,7 +3,7 @@ import { ApolloServerOptions, computeGQLQuery } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
-import * as LOG from '../utils/logger';
+// import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
 import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
@@ -94,7 +94,7 @@ export class HttpServer {
         }
         RK.logInfo(RK.LogSection.eSYS,'system started: Event Engine',undefined,eventResult.data,'HttpServer');
 
-        // start monitoring
+        // start usage monitoring
         if (monitorCPU) {
             const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
             monitor.start();
@@ -215,7 +215,8 @@ export class HttpServer {
         const user = req['user'];
         const idUser = user ? user['idUser'] : undefined;
         ASL.run(new LocalStore(true, idUser), () => {
-            LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
+            // LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
+            RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ user, idUser },'HttpServer');
             next();
         });
     }
@@ -241,7 +242,8 @@ export class HttpServer {
             } else
                 query = `Unknown GraphQL: ${query}|${req.path}`;
         }
-        LOG.info(`[REQUEST] ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
+        // LOG.info(`[REQUEST] ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
+        RK.logInfo(RK.LogSection.eHTTP,`request made`,undefined,{ method, query, idUser, queryParams },'HttpServer',true);
         next();
     }
     // private static logRequestDetailed(req: Request, _res, next): void {
@@ -275,7 +277,8 @@ export class HttpServer {
 }
 
 process.on('uncaughtException', (err) => {
-    LOG.error('*** UNCAUGHT EXCEPTION ***', LOG.LS.eSYS, err);
+    // LOG.error('*** UNCAUGHT EXCEPTION ***', LOG.LS.eSYS, err);
+    RK.logCritical(RK.LogSection.eSYS,'uncaught exception',err.message,undefined,'HttpServer');
 
     // For the time being, we prevent Node from exiting.
     // Once we've installed a process monitor in staging & production, like PM2, change this to
@@ -285,6 +288,7 @@ process.on('uncaughtException', (err) => {
 
 // Catch unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    // console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    RK.logCritical(RK.LogSection.eSYS,'unhandled rejection','a Promise reject was not handled', { promise, reason },'HttpServer');
     // LOG.error('*** UNCAUGHT REJECTION ***', LOG.LS.eSYS, reason);
 });

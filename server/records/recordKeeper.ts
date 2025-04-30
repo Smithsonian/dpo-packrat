@@ -169,6 +169,10 @@ export class RecordKeeper {
         const { idUser, idRequest } = RecordKeeper.getContext();
         return LOG.debug(sec,message,reason,data,caller,audit,idUser,idRequest);
     }
+    static async logPerformance(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest);
+    }
 
     // profiler functions
     // Usage: call 'profile' with a unique label and any needed metadata. This creates/starts a timer.

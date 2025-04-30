@@ -508,6 +508,12 @@ export class Logger {
 
         return Logger.postLog(Logger.getLogEntry(LogLevel.DEBUG, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
+    public static async performance(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+        if(Logger.isActive()===false)
+            return { success: false, message: 'cannot post log. no Logger. run configure' };
+
+        return Logger.postLog(Logger.getLogEntry(LogLevel.PERFORMANCE, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+    }
     //#endregion
 
     //#region PROFILING
