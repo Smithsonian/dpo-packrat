@@ -6,7 +6,6 @@ import { EventConsumerDB } from './EventConsumerDB';
 import { EventConsumerPublish } from './EventConsumerPublish';
 import { EventConsumerHTTP } from './EventConsumerHTTP';
 import { IEventData } from '../../interface';
-// import * as LOG from '../../../utils/logger';
 import { RecordKeeper as RK, IOResults } from '../../../records/recordKeeper';
 // import * as H from '../../../utils/helpers';
 

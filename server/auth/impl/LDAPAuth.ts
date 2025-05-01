@@ -10,10 +10,16 @@ import os from 'os';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 // import fs from 'fs';
 
+/**
+ * LDAPS (Active Directory) implementation of authentication. This checks for the user against
+ * the Active Directory user list and the password. AuthFactory will then determine if the user
+ * is valid within Packrat.
+ */
 type UserSearchResult = {
     success: boolean;
     error?: string | null;
     DN: string | null;
+    data?: any;
 };
 
 class LDAPAuth implements IAuth {
@@ -24,25 +30,26 @@ class LDAPAuth implements IAuth {
         try {
             let res: VerifyUserResult = await this.fetchClient();
             if (!res.success) {
-                RK.logError(RK.LogSection.eAUTH,'verify user failed','cannot fetch client',{ response: H.Helpers.getErrorString(res.error), email },'LDAPAuth');
-                return res;
+                RK.logError(RK.LogSection.eAUTH,'verify user failed','cannot fetch client',{ response: H.Helpers.getErrorString(res.error), email, auth: res.data.type },'LDAPAuth');
+                return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server }};
             }
 
             // Step 2: Bind Packrat Service Account
             res = await this.bindService();
             if (!res.success)
-                return res;
+                return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server }};
 
             // Step 3: Search for passed user by email
             const resUserSearch: UserSearchResult = await this.searchForUser(this._ldapConfig, email);
             if (!resUserSearch.success|| !resUserSearch.DN)
-                return resUserSearch;
+                return { ...resUserSearch, data: { auth: 'ldaps', server: this._ldapConfig.server, }};
 
             //Step 4: If user is found, bind on their credentials
-            return await this.bindUser(resUserSearch.DN, email, password);
+            res = await this.bindUser(resUserSearch.DN, password);
+            return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server }};
         } catch (error) {
             RK.logError(RK.LogSection.eAUTH,'verify user failed',H.Helpers.getErrorString(error),email,'LDAPAuth');
-            return { success: false, error: JSON.stringify(error) };
+            return { success: false, error: JSON.stringify(error), data: { auth: 'ldaps', server: this._ldapConfig.server }};
         }
     }
 
@@ -160,28 +167,28 @@ class LDAPAuth implements IAuth {
         return new Promise<UserSearchResult>(function(resolve) {
             client.search(ldapConfig.DC, searchOptions, (err: any, res: LDAP.SearchCallbackResponse): void => {
                 if (err) {
-                    const error: string = `Unable to locate ${email}`;
-                    RK.logError(RK.LogSection.eAUTH,'user search failed',H.Helpers.getErrorString(err),undefined,'LDAPAuth');
-                    resolve({ success: false, error, DN: null });
+                    // const error: string = `Unable to locate ${email}`;
+                    // RK.logError(RK.LogSection.eAUTH,'user search failed',H.Helpers.getErrorString(err),undefined,'LDAPAuth');
+                    resolve({ success: false, error: H.Helpers.getErrorString(err), DN: null });
                 }
 
                 res.on('searchEntry', (entry: any) => {
-                    RK.logDebug(RK.LogSection.eAUTH,'user search success',undefined,{ email, objectName: entry.objectName },'LDAPAuth');
+                    // RK.logDebug(RK.LogSection.eAUTH,'user search success',undefined,{ email, objectName: entry.objectName },'LDAPAuth');
                     searchComplete = true;
                     resolve({ success: true, DN: entry.objectName });
                 });
 
                 res.on('error', (err: any) => {
-                    const error: string = `Unable to locate ${email}`;
-                    RK.logError(RK.LogSection.eAUTH,'user search failed',`cannot locate user - ${H.Helpers.getErrorString(err)}`,email,'LDAPAuth');
-                    resolve({ success: false, error, DN: null });
+                    // const error: string = `unable to locate user`; // ${email}`;
+                    // RK.logError(RK.LogSection.eAUTH,'user search failed',`cannot locate user - ${H.Helpers.getErrorString(err)}`,email,'LDAPAuth');
+                    resolve({ success: false, error: H.Helpers.getErrorString(err), DN: null });
                 });
 
                 res.on('end', (result: any) => {
                     if (!searchComplete) {
                         result;
-                        const error: string = `Unable to locate ${email}`;
-                        RK.logError(RK.LogSection.eAUTH,'user search failed','cannot locate user end',email,'LDAPAuth');
+                        const error: string = `unable to locate user`; // ${email}`;
+                        // RK.logError(RK.LogSection.eAUTH,'user search failed','cannot locate user end',email,'LDAPAuth');
                         resolve({ success: false, error, DN: null });
                     }
                 });
@@ -189,17 +196,18 @@ class LDAPAuth implements IAuth {
         });
     }
 
-    private async bindUser(DN: string, email: string, password: string): Promise<VerifyUserResult> {
+    private async bindUser(DN: string, password: string): Promise<VerifyUserResult> {
         if (!this._client)
             return { success: false, error: 'LDAPClient is null' };
+
         const client: LDAP.Client = this._client;
         return new Promise<VerifyUserResult>(function(resolve) {
             client.bind(DN, password, (err: any): void => {
                 if (err) {
                     err;
-                    const error: string = `Invalid password for ${email}`;
-                    RK.logError(RK.LogSection.eAUTH,'LDAP bind user failed','invalid password',email,'LDAPAuth');
-                    resolve({ success: false, error });
+                    // const error: string = `invalid password for ${email}`;
+                    // RK.logError(RK.LogSection.eAUTH,'LDAP bind user failed','invalid password',email,'LDAPAuth');
+                    resolve({ success: false, error: 'invalid password' });
                 } else
                     resolve({ success: true });
             });

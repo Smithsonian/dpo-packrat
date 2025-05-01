@@ -3,6 +3,15 @@ import { passport } from './framework';
 import * as H from '../utils/helpers';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 
+/**
+ * Routes incoming requests/endpoints for login/logout to PassportJS for authentication
+ * which in turn calls AuthFactory to create a Local/LDAPS implementation of IAuth.
+ * 
+ * Note: passport only returns the user and error with user or error being null depending
+ * on the error state. Thus, logging and auditing occurs inside AuthFactory where more
+ * details are available. Here we just provide contextual IP adress for the request.
+ */
+
 const AuthRouter: Router = express.Router();
 
 AuthRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {

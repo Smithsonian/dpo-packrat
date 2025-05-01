@@ -1,8 +1,9 @@
-import * as LOG from '../utils/logger';
+// import * as LOG from '../utils/logger';
 // import * as H from '../utils/helpers';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 export class LicenseCache {
     private static singleton: LicenseCache | null = null;
@@ -35,10 +36,9 @@ export class LicenseCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.info('CACHE LicenseCache.flushInternalWorker() start', LOG.LS.eCACHE );
         const LicenseFetch: DBAPI.License[] | null = await DBAPI.License.fetchAll(); /* istanbul ignore next */
         if (!LicenseFetch) {
-            LOG.error('LicenseCache.flushInternalWorker unable to fetch Licenses', LOG.LS.eCACHE );
+            RK.logError(RK.LogSection.eCACHE,'flush internal cache failed','unable to fetch licenses',undefined,'LicenseCache');
             return false;
         }
         // LOG.info(`LicenseCache LicenseFetch=\n${JSON.stringify(LicenseFetch, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);
@@ -53,7 +53,7 @@ export class LicenseCache {
             }
         }
         // LOG.info(`LicenseCache publishedStateMap=\n${JSON.stringify(this.publishedStateMap, H.Helpers.saferStringify)}`, LOG.LS.eCACHE);
-        LOG.info('CACHE LicenseCache.flushInternalWorker() done', LOG.LS.eCACHE);
+        RK.logDebug(RK.LogSection.eCACHE,'flush internal cache success',undefined,{ licenses: LicenseFetch.map(i => i.Name) },'LicenseCache');
         return true;
     }
 
@@ -92,7 +92,7 @@ export class LicenseCache {
         const OGD: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eDescendents, 32, OGD); /* istanbul ignore if */
         if (!await OG.fetch()) {
-            LOG.error(`LicenseCache unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eCACHE,'clear assignment failed','unable to fetch object graph',{ idSystemObject },'LicenseCache');
             return false;
         }
 
@@ -100,17 +100,21 @@ export class LicenseCache {
             // LOG.info(`LicenseCache.clearAssignmentInternal(${idSystemObject}) cleared ${idSODescendant}`, LOG.LS.eCACHE);
             this.licenseResolverMap.delete(idSODescendant);
         }
+
+        RK.logDebug(RK.LogSection.eCACHE,'clear assignment success',undefined,{ idSystemObject },'LicenseCache');
         return true;
     }
 
     private async setAssignmentInternal(idSystemObject: number, licenseResolver: DBAPI.LicenseResolver): Promise<boolean> {
         // LOG.info(`LicenseCache.setAssignmentInternal(${idSystemObject})`, LOG.LS.eCACHE); /* istanbul ignore if */
         // Compute object graph of descendants; remove assignment from each
-        if (!await this.clearAssignmentInternal(idSystemObject))
+        if (!await this.clearAssignmentInternal(idSystemObject)) {
+            RK.logError(RK.LogSection.eCACHE,'set assignment failed','cannot clear assignment',{ idSystemObject },'LicenseCache');
             return false;
+        }
 
         // Record assignment
-        // LOG.info(`LicenseCache.setAssignmentInternal(${idSystemObject}) stored ${JSON.stringify(licenseResolver)}`, LOG.LS.eCACHE);
+        RK.logDebug(RK.LogSection.eCACHE,'set assignment success',undefined,{ idSystemObject, licenseResolver },'LicenseCache');
         this.licenseResolverMap.set(idSystemObject, licenseResolver);
         return true;
     }

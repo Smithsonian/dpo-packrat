@@ -3,6 +3,7 @@ import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
+import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class EventConsumerAuth extends EventConsumer {
@@ -24,7 +25,8 @@ export class EventConsumerAuth extends EventConsumer {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
-                    RK.logDebug(RK.LogSection.eEVENT,`login event ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'success' : 'failed'}`,undefined,audit.Data,'EventConsumerAuth');
+
+                    RK.logDebug(RK.LogSection.eEVENT,`login event ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'success' : 'failed'}`,undefined,this.parseAuditData(audit.Data),'EventConsumerAuth');
                 } break;
 
                 default:
@@ -33,4 +35,33 @@ export class EventConsumerAuth extends EventConsumer {
             }
         }
     }
+
+    private parseAuditData(data: string | null): Record<string, any> | null {
+        if (!data) return null;
+    
+        try {
+            const parsed = H.Helpers.JSONParse(data);
+    
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                let result: Record<string, any> = {};
+    
+                if ('error' in parsed) {
+                    result.reason = parsed.error;
+                    delete parsed.error;
+                }
+    
+                // Add remaining properties
+                for (const [key, value] of Object.entries(parsed)) {
+                    result[key] = value;
+                }
+    
+                return result;
+            }
+        } catch {
+            return { reason: 'Invalid JSON in audit.Data' };
+        }
+    
+        return null;
+    }
+    
 }
