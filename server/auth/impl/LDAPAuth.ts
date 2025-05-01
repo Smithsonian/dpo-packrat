@@ -31,25 +31,25 @@ class LDAPAuth implements IAuth {
             let res: VerifyUserResult = await this.fetchClient();
             if (!res.success) {
                 RK.logError(RK.LogSection.eAUTH,'verify user failed','cannot fetch client',{ response: H.Helpers.getErrorString(res.error), email, auth: res.data.type },'LDAPAuth');
-                return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server }};
+                return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
             }
 
             // Step 2: Bind Packrat Service Account
             res = await this.bindService();
             if (!res.success)
-                return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server }};
+                return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
 
             // Step 3: Search for passed user by email
             const resUserSearch: UserSearchResult = await this.searchForUser(this._ldapConfig, email);
             if (!resUserSearch.success|| !resUserSearch.DN)
-                return { ...resUserSearch, data: { auth: 'ldaps', server: this._ldapConfig.server, }};
+                return { ...resUserSearch, data: { auth: 'ldaps', server: this._ldapConfig.server, } };
 
             //Step 4: If user is found, bind on their credentials
             res = await this.bindUser(resUserSearch.DN, password);
-            return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server }};
+            return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
         } catch (error) {
             RK.logError(RK.LogSection.eAUTH,'verify user failed',H.Helpers.getErrorString(error),email,'LDAPAuth');
-            return { success: false, error: JSON.stringify(error), data: { auth: 'ldaps', server: this._ldapConfig.server }};
+            return { success: false, error: JSON.stringify(error), data: { auth: 'ldaps', server: this._ldapConfig.server } };
         }
     }
 
@@ -187,7 +187,7 @@ class LDAPAuth implements IAuth {
                 res.on('end', (result: any) => {
                     if (!searchComplete) {
                         result;
-                        const error: string = `unable to locate user`; // ${email}`;
+                        const error: string = 'unable to locate user'; // ${email}`;
                         // RK.logError(RK.LogSection.eAUTH,'user search failed','cannot locate user end',email,'LDAPAuth');
                         resolve({ success: false, error, DN: null });
                     }

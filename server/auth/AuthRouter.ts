@@ -6,7 +6,7 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 /**
  * Routes incoming requests/endpoints for login/logout to PassportJS for authentication
  * which in turn calls AuthFactory to create a Local/LDAPS implementation of IAuth.
- * 
+ *
  * Note: passport only returns the user and error with user or error being null depending
  * on the error state. Thus, logging and auditing occurs inside AuthFactory where more
  * details are available. Here we just provide contextual IP adress for the request.
@@ -15,7 +15,7 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 const AuthRouter: Router = express.Router();
 
 AuthRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
-    
+
     passport.authenticate('local', (error, user) => {
         const { ip } = H.Helpers.getUserDetailsFromRequest(req);
 
@@ -36,9 +36,9 @@ AuthRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
 });
 
 AuthRouter.get('/logout', (req: Request, res: Response) => {
-    
+
     const { id, ip } = H.Helpers.getUserDetailsFromRequest(req);
-    
+
     req['logout'](err => {
         if(err) {
             RK.logDebug(RK.LogSection.eAUTH,'user logout failed',err,{ idUser: id, ip },'AuthRouter',true);
@@ -47,7 +47,7 @@ AuthRouter.get('/logout', (req: Request, res: Response) => {
             RK.logDebug(RK.LogSection.eAUTH,'user logout success',undefined,{ idUser: id, ip },'AuthRouter',true);
             res.send({ success: true });
         }
-    });   
+    });
 });
 
 export default AuthRouter;

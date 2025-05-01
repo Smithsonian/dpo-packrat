@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as EVENT from '../../interface';
 import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
@@ -38,30 +39,30 @@ export class EventConsumerAuth extends EventConsumer {
 
     private parseAuditData(data: string | null): Record<string, any> | null {
         if (!data) return null;
-    
+
         try {
             const parsed = H.Helpers.JSONParse(data);
-    
+
             if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-                let result: Record<string, any> = {};
-    
+                const result: Record<string, any> = {};
+
                 if ('error' in parsed) {
                     result.reason = parsed.error;
                     delete parsed.error;
                 }
-    
+
                 // Add remaining properties
                 for (const [key, value] of Object.entries(parsed)) {
                     result[key] = value;
                 }
-    
+
                 return result;
             }
         } catch {
             return { reason: 'Invalid JSON in audit.Data' };
         }
-    
+
         return null;
     }
-    
+
 }

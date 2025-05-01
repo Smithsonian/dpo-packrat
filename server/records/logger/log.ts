@@ -293,17 +293,14 @@ export class Logger {
 
         if (typeof data === 'string' || typeof data === 'number' || typeof data === 'boolean') {
             result = data.toString();
-        }
-        else if (Array.isArray(data)) {
+        } else if (Array.isArray(data)) {
             result = data.map(item => Logger.processData(item)).join(', ');
-        }
-        else if (typeof data === 'object' && data !== null) {
+        } else if (typeof data === 'object' && data !== null) {
             const flatObject = Logger.flattenObject(data);
             result = Object.entries(flatObject)
                 .map(([key, value]) => `${key}: ${value}`)
                 .join(', ');
-        }
-        else {
+        } else {
             result = '';
         }
 
@@ -578,7 +575,7 @@ export class Logger {
         // update our data
         if (!profile.logEntry.data || typeof profile.logEntry.data !== 'object') {
             profile.logEntry.data = {};
-        }    
+        }
         profile.logEntry.data = {
             ...profile.logEntry.data,
             ...data

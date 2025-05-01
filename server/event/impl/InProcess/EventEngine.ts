@@ -26,9 +26,9 @@ export class EventEngine implements EVENT.IEventEngine {
         await this.createConsumer(EVENT.eEventTopic.eHTTP) && createdConsumers.push('HTTP');
 
         if(createdConsumers.length===4)
-            return { success: true, message: 'EventEngine initialized', data: { consumers: createdConsumers.join(', ') }};
+            return { success: true, message: 'EventEngine initialized', data: { consumers: createdConsumers.join(', ') } };
         else
-            return { success: false, message: 'EventEngine failed to initialize', data: { consumers: createdConsumers.join(', ') }};
+            return { success: false, message: 'EventEngine failed to initialize', data: { consumers: createdConsumers.join(', ') } };
     }
 
     async createProducer(): Promise<EVENT.IEventProducer | null> {
@@ -62,7 +62,7 @@ export class EventEngine implements EVENT.IEventEngine {
             RK.logError(RK.LogSection.eEVENT,'create event consumer failed',registerResult.message,{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
             return null;
         }
-        
+
         RK.logDebug(RK.LogSection.eEVENT,'create event consumer success',undefined,{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
         return consumer;
     }
@@ -81,7 +81,7 @@ export class EventEngine implements EVENT.IEventEngine {
 
     async unregisterConsumer(eTopic: EVENT.eEventTopic, consumer: EventConsumer): Promise<void> {
         RK.logDebug(RK.LogSection.eEVENT,'unregister event consumer',undefined,{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
-        
+
         const consumerSet: Set<EventConsumer> | undefined = this.consumerMap.get(eTopic);
         if (consumerSet)
             consumerSet.delete(consumer);

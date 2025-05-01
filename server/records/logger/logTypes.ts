@@ -42,10 +42,10 @@ export enum LogSection { // logger section
  * sending email <attempt|success|failed>
  * sending slack <attempt|success|failed>
  * clear slack channel <success|failed>
- * 
+ *
  * workflow <success|failed|started|update>
  * workflow steps <update>
- * 
+ *
  * create event <consumer|producer><success|failed>
  * register event <consumer><success|failed>
  * unregister event <consumer>

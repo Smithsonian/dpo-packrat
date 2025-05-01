@@ -771,7 +771,7 @@ export class Helpers {
 
     static removeEmptyFields<T extends Record<string, any>>(input: T): Partial<T> {
         const output: Partial<T> = {};
-    
+
         for (const [key, value] of Object.entries(input)) {
             if (
                 value === null ||
@@ -781,10 +781,10 @@ export class Helpers {
             ) {
                 continue; // Skip empty fields
             }
-    
+
             output[key as keyof T] = value;
         }
-    
+
         return output;
     }
 
@@ -801,7 +801,7 @@ export class Helpers {
         // Handle common GraphQL error format
         if (error?.errors && Array.isArray(error.errors)) {
             // Return the first error message in the GraphQL errors array, or join all messages
-            return error.errors.map((e: any) => e.message || "Unknown error").join("; ");
+            return error.errors.map((e: any) => e.message || 'Unknown error').join('; ');
         }
 
         // Handle Prisma errors (e.g., PrismaClientKnownRequestError)
@@ -811,7 +811,7 @@ export class Helpers {
 
         // Handle Solr errors (Solr may have nested messages under responseHeader or error)
         if (error?.responseHeader || error?.error) {
-            return error?.error?.msg || error?.error?.message || "Unknown Solr error";
+            return error?.error?.msg || error?.error?.message || 'Unknown Solr error';
         }
 
         // Fallback to a string representation of the error
@@ -833,14 +833,14 @@ export class Helpers {
             case 'ENETDOWN':		message = 'network is down'; break;
 
             default:
-                return { success: false, message: 'unretryable network error', data: { error: code, status, retry: false }};
+                return { success: false, message: 'unretryable network error', data: { error: code, status, retry: false } };
         }
 
         if(status >= 500 && status < 600)
             message += `(${status})`;
 
         return { success: true, message, data: { retry: true } };
-    }
+    };
 
     // Express
     static getUserDetailsFromRequest = (req: Request): { id: number | null, name: string, email: string, isActive: boolean, ip: string } => {
@@ -854,14 +854,14 @@ export class Helpers {
         } || null;
         if(!user)
             return { id: null, name: '', email: '', isActive: false, ip: '0.0.0.0' };
-    
-        
+
+
         const id = Number(user.id ?? user.idUser ?? null);
         const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || req.socket.remoteAddress || '0.0.0.0';
         const name: string = user.Name ?? '';
         const email: string = user.EmailAddress ?? '';
         const isActive: boolean = user.Active === true || user.Active === 'true';
-    
+
         return { id, name, email, isActive, ip: (ip==='::1') ? '127.0.0.1' : ip };
-    }
+    };
 }

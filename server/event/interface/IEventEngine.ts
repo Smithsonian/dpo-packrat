@@ -11,7 +11,7 @@ export interface IEventData<Key, Value> {
 
 export interface IEventEngine {
     initialize(): Promise<IOResults>;
-    
+
     createProducer(): Promise<IEventProducer | null>;
     createConsumer(): Promise<IEventConsumer | null>;
     /** Registers consumer for eTopic */

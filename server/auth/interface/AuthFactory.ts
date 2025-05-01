@@ -45,7 +45,7 @@ class AuthFactory {
         if (!users || users.length == 0) {
             const error: string = `${email} is not a Packrat user`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            RK.logError(RK.LogSection.eAUTH,'user login failed','not a Packrat user',{email, ...verifyRes.data },'AuthFactory',true);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','not a Packrat user',{ email, ...verifyRes.data },'AuthFactory',true);
             return { user: null, error };
         }
 

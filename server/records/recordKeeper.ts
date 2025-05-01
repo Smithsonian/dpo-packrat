@@ -42,7 +42,7 @@ export class RecordKeeper {
         slackAdmin: undefined,
         slackAll: undefined,
     };
-    private static systemConfig: { logger: boolean, notify_email: boolean, notify_slack: boolean } = { logger: false, notify_email: false, notify_slack: false };
+    private static systemConfig: { logger: boolean, notifyEmail: boolean, notifySlack: boolean } = { logger: false, notifyEmail: false, notifySlack: false };
 
     static async initialize(system: SubSystem): Promise<IOResults> {
 
@@ -72,7 +72,7 @@ export class RecordKeeper {
             }
 
             RecordKeeper.systemConfig.logger = true;
-            return { success: true, message: 'Logger initialized ', data: { path: logPath, useRateManager, targetRate, burstRate, burstThreshold }};
+            return { success: true, message: 'Logger initialized ', data: { path: logPath, useRateManager, targetRate, burstRate, burstThreshold } };
         }
         //#endregion
 
@@ -81,7 +81,7 @@ export class RecordKeeper {
             targetRate = 1;   // sending too many triggers spam filters on network, delays are acceptable
             burstRate = 5;
             burstThreshold = 10;
-    
+
             // update our default email to always 'dev' since something went wrong
             RecordKeeper.defaultEmail = ['packrat-dev@si.edu'];
 
@@ -90,7 +90,7 @@ export class RecordKeeper {
             const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
             if(emailResults.success===false) {
                 RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'Recordkeeper');
-                RecordKeeper.systemConfig.notify_email = false;
+                RecordKeeper.systemConfig.notifyEmail = false;
                 return emailResults;
             }
             // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', emailResults.message, { environment, ...emailResults.data }, 'Recordkeeper');
@@ -100,8 +100,8 @@ export class RecordKeeper {
             RecordKeeper.notifyGroupConfig.emailAdmin = await RecordKeeper.getEmailsFromGroup(NotifyUserGroup.EMAIL_ADMIN) ?? RecordKeeper.defaultEmail;
             RecordKeeper.notifyGroupConfig.emailAll = await RecordKeeper.getEmailsFromGroup(NotifyUserGroup.EMAIL_ALL) ?? RecordKeeper.defaultEmail;
 
-            RecordKeeper.systemConfig.notify_email = true;
-            return { success: true, message: 'Email notifications configured', data: { targetRate, burstRate, burstThreshold }};
+            RecordKeeper.systemConfig.notifyEmail = true;
+            return { success: true, message: 'Email notifications configured', data: { targetRate, burstRate, burstThreshold } };
         }
         //#endregion
 
@@ -115,7 +115,7 @@ export class RecordKeeper {
             const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,targetRate);
             if(slackResults.success===false) {
                 RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'Recordkeeper');
-                RecordKeeper.systemConfig.notify_slack = false;
+                RecordKeeper.systemConfig.notifySlack = false;
                 return slackResults;
             }
             // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', slackResults.message, { environment, ...slackResults.data }, 'Recordkeeper');
@@ -125,8 +125,8 @@ export class RecordKeeper {
             RecordKeeper.notifyGroupConfig.slackAdmin = await RecordKeeper.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ADMIN);
             RecordKeeper.notifyGroupConfig.slackAll = await RecordKeeper.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ALL);
 
-            RecordKeeper.systemConfig.notify_slack = true;
-            return { success: true, message: 'Slack notifications configured', data: { targetRate, burstRate, burstThreshold }};
+            RecordKeeper.systemConfig.notifySlack = true;
+            return { success: true, message: 'Slack notifications configured', data: { targetRate, burstRate, burstThreshold } };
         }
         //#endregion
 

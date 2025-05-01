@@ -210,7 +210,7 @@ export class HttpServer {
 
     // creates a LocalStore populated with the next requestID
     private static assignLocalStore(req: Request, _res, next): void {
-        const { id } = H.Helpers.getUserDetailsFromRequest(req); 
+        const { id } = H.Helpers.getUserDetailsFromRequest(req);
 
         ASL.run(new LocalStore(true, id), () => {
             // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id, name },'HttpServer');
@@ -238,8 +238,8 @@ export class HttpServer {
             } else
                 query = `Unknown GraphQL: ${query}|${req.path}`;
         }
-        
-        RK.logInfo(RK.LogSection.eHTTP,`request made`,undefined,{ method, query, idUser: id, source: ip, queryParams },'HttpServer',true);
+
+        RK.logInfo(RK.LogSection.eHTTP,'request made',undefined,{ method, query, idUser: id, source: ip, queryParams },'HttpServer',true);
         next();
     }
     // private static logRequestDetailed(req: Request, _res, next): void {

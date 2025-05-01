@@ -210,7 +210,7 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     private async uploadWorkerOnFinish(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
-       
+
         // grab our local storage and log context in case it's lost
         const LSLocal: LocalStore | undefined = ASL.getStore();
         ASL.checkLocalStore('UploadAssetVersion.uploadWorkerOnFinish',true);
@@ -289,7 +289,7 @@ class UploadAssetWorker extends ResolverBase {
                 opInfo,
                 DateCreated: new Date()
             };
-            
+
             RK.logDebug(RK.LogSection.eGQL,'asset version commit success',undefined,{ file: this.apolloFile.filename, path: ASCNAVI.FilePath, storageKey: ASCNAVI.storageKey, idVAssetType: ASCNAVI.asset.idAsset, idSOAttachment: ASCNAVI.idSOAttachment, },'UploadAssetWorker');
             commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
         }
@@ -357,7 +357,7 @@ class UploadAssetWorker extends ResolverBase {
             return { success: false, error };
         }
         const workflowObj: DBAPI.Workflow | null = await workflow.getWorkflowObject();
-        
+
         const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
         const results: H.IOResults = workflow ? await workflow.waitForCompletion(1 * 60 * 60 * 1000) : { success: true }; // 1 hour
         if (!results.success) {
