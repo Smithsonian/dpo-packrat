@@ -184,6 +184,9 @@ export class RecordKeeper {
     static async profileEnd(label: string): Promise<IOResults> {
         return LOG.profileEnd(label);
     }
+    static async profileUpdate(label: string, data: any): Promise<IOResults> {
+        return LOG.profileUpdate(label, data);
+    }
 
     // stats and utilities
     static logFallback(sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {

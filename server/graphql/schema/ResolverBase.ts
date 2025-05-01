@@ -14,8 +14,8 @@ export class ResolverBase {
     private buffer: string = '';
 
     protected async appendToWFReport(content: string, log?: boolean | undefined, error?: boolean | undefined): Promise<H.IOResults> {
-        if (log) {
-            if (error)
+        if (log && log===true) {
+            if (error && error==true)
                 LOG.error(content, LOG.LS.eGQL);
             else
                 LOG.info(content, LOG.LS.eGQL);

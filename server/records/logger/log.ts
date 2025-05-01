@@ -569,6 +569,23 @@ export class Logger {
         result.message = `${hours}:${minutes}:${seconds}:${milliseconds}`;
         return result;
     }
+    public static async profileUpdate(key: string, data: any): Promise<LoggerResult> {
+        // get our request and make sure it's valid
+        const profile: ProfileRequest | undefined = Logger.requests.get(key);
+        if(!profile)
+            return { success: false, message: 'cannot find profile request' };
+
+        // update our data
+        if (!profile.logEntry.data || typeof profile.logEntry.data !== 'object') {
+            profile.logEntry.data = {};
+        }    
+        profile.logEntry.data = {
+            ...profile.logEntry.data,
+            ...data
+        };
+
+        return { success: true, message: 'updated profile request' };
+    }
     //#endregion
 
     //#region TESTING
