@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import path from 'path';
-import * as DBAPI from '../db';
+import { User, eUserStatus } from '../db/api/User';
 import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection  } from './logger/log';
@@ -242,7 +242,7 @@ export class RecordKeeper {
                     return RecordKeeper.notifyGroupConfig.emailAll;
 
                 // fetch all users
-                const allUsers: DBAPI.User[] | null = await DBAPI.User.fetchUserList('',DBAPI.eUserStatus.eActive);
+                const allUsers: User[] | null = await User.fetchUserList('',eUserStatus.eActive);
                 if(!allUsers || allUsers.length===0)
                     return RecordKeeper.defaultEmail;
 
@@ -262,7 +262,7 @@ export class RecordKeeper {
 
                 // grab all admin users
                 const adminIDs: number[] = Config.auth.users.admin;
-                const adminUsers: DBAPI.User[] | null = await DBAPI.User.fetchByIDs(adminIDs);
+                const adminUsers: User[] | null = await User.fetchByIDs(adminIDs);
                 if(!adminUsers || adminUsers.length===0)
                     return RecordKeeper.defaultEmail;
 
@@ -276,7 +276,7 @@ export class RecordKeeper {
 
             case NotifyUserGroup.EMAIL_USER: {
                 const { idUser } = RecordKeeper.getContext();
-                const user: DBAPI.User | null = await DBAPI.User.fetch(idUser);
+                const user: User | null = await User.fetch(idUser);
 
                 // if no notification settings or user, nothing so email not sent
                 if(!user || !user.WorkflowNotificationTime) {
@@ -411,4 +411,23 @@ export class RecordKeeper {
         return NOTIFY.testSlack(numMessages,channel);
     }
     //#endregion
+
+    // utility
+    static convertResults(src: any, message?: string, data?: any): IOResults {
+        if(!src)
+            return { success: false, message: 'invalid conversion', data: src };
+
+        const result: IOResults = { success: false, message: message ?? '', data };
+        if(src.success)
+            result.success = src.success;
+        else
+            return { success: false, message: 'invalid format conversion.', data: src };
+
+        // if we have an error message prepend it to the data property
+        if(src.error)
+            result.data = { reason: src.error, ...data };
+
+        console.log('>>>> convert results: ', src, result);
+        return result;
+    }
 }

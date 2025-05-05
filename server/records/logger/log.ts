@@ -448,7 +448,7 @@ export class Logger {
     private static async postLog(entry: LogEntry): Promise<LoggerResult> {
         // see if we're configured/active
         if(Logger.isActive()===false || Logger.logger===null) {
-            console.error('Logger.postLog: failed to post. No logger...\n',entry);
+            console.error('Logger.postLog: failed to post. No logger...\n',entry,Logger.isActive(),Logger.logger);
             return { success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` };
         }
 

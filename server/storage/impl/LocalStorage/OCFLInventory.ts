@@ -7,7 +7,8 @@ import { OperationInfo } from '../../interface/IStorage';
 import { OCFLObject, OCFLPathAndHash } from './OCFLObject';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
-import * as LOG from '../../../utils/logger';
+// import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export type OCFLInventoryManifestEntry = {
     hash: string;
@@ -27,7 +28,8 @@ export class OCFLInventoryManifest {
 
     addContent(fileName: string, hash: string): void {
         hash = hash.toLowerCase();
-        // LOG.info(`OCFLInventoryManifest.addContent ${fileName}: ${hash}`, LOG.LS.eSTR);
+        RK.logDebug(RK.LogSection.eSTR,'add content',undefined,{ fileName, hash },'OCFLInventory');
+
 
         // Look for fileName in existing data
         const fileMap: Map<string, string> = this.getFileMap();
@@ -45,8 +47,9 @@ export class OCFLInventoryManifest {
     }
 
     removeContent(fileName: string, hash: string): boolean {
-        // LOG.info(`OCFLInventoryManifest.removeContent ${fileName}: ${hash}`, LOG.LS.eSTR);
         hash = hash.toLowerCase();
+        RK.logDebug(RK.LogSection.eSTR,'remove content',undefined,{ fileName, hash },'OCFLInventory');
+
         if (!this[hash])    // if we can't find this hash
             return false;   // error
 
@@ -257,13 +260,13 @@ export class OCFLInventoryVersions {
 
         /* istanbul ignore if */
         if (!inventoryVersion || !inventoryVersion.state) {
-            LOG.info(`OCFLInventory.getHashForFilename could not get inventory version or state. (${fileName}:${version})`,LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'file hash failed','cannot get inventory version or state',{ fileName, version },'OCFLInventory');
             return '';
         }
 
         const result: string = inventoryVersion.state.getHashForFilename(fileName);
         if(result.length<=0)
-            LOG.info(`OCFLInventory.getHashForFilename could not get hash for filename. (${fileName}:${version})`,LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'file hash failed','cannot get hash for filename',{ fileName, version },'OCFLInventory');
         return result;
     }
 
@@ -396,18 +399,24 @@ export class OCFLInventory implements OCFLInventoryType {
         const inventoryFilename: string = OCFLInventory.inventoryFilePath(ocflObject, isRootInventory ? 0 : this.headVersion);
         results = await H.Helpers.fileOrDirExists(inventoryFilename);
         /* istanbul ignore if */
-        if (!results.success)
+        if (!results.success) {
+            RK.logError(RK.LogSection.eSTR,'validate failed','inventory file does not exist',{ inventoryFilename },'OCFLInventory');
             return results;
+        }
 
         const digestFilename: string = OCFLInventory.inventoryDigestPath(ocflObject, isRootInventory ? 0 : this.headVersion);
         results = await H.Helpers.fileOrDirExists(digestFilename);
-        if (!results.success)
+        if (!results.success) {
+            RK.logError(RK.LogSection.eSTR,'validate failed','digest file does not exist',{ digestFilename, inventoryFilename },'OCFLInventory');
             return results;
+        }
 
         let hashResults: H.HashResults = await H.Helpers.computeHashFromFile(inventoryFilename, ST.OCFLDigestAlgorithm);
         /* istanbul ignore if */
-        if (!hashResults.success)
+        if (!hashResults.success) {
+            RK.logError(RK.LogSection.eSTR,'validate failed','failed to compute hash',{ digestFilename, inventoryFilename },'OCFLInventory');
             return hashResults;
+        }
 
         try {
             const digestContentsExpected: string = OCFLInventory.digestContents(hashResults.hash);
@@ -415,12 +424,14 @@ export class OCFLInventory implements OCFLInventoryType {
             if (digestContentsExpected != digestContents) {
                 results.success = false;
                 results.error = `Inventory digest ${digestFilename} did not have expected contents`;
+                RK.logError(RK.LogSection.eSTR,'validate failed','inventory digest did not have expected contents',{ digestFilename, inventoryFilename },'OCFLInventory');
                 return results;
             }
         } catch (error) /* istanbul ignore next */ {
             results.success = false;
             results.error = `OCFLInventory.validate failed to read digestFile ${digestFilename}: ${error}`;
-            LOG.error(results.error, LOG.LS.eSTR, error);
+            // LOG.error(results.error, LOG.LS.eSTR, error);
+            RK.logError(RK.LogSection.eSTR,'validate failed','failed to read digest file',{ digestFilename, inventoryFilename },'OCFLInventory');
             return results;
         }
 
@@ -429,16 +440,20 @@ export class OCFLInventory implements OCFLInventoryType {
             for (const fileName of manifestEntry.files) {
                 const filePath: string = path.join(ocflObject.objectRoot, fileName);
                 hashResults = await H.Helpers.computeHashFromFile(filePath, ST.OCFLDigestAlgorithm);
-                if (!hashResults.success)
+                if (!hashResults.success) {
+                    RK.logError(RK.LogSection.eSTR,'validate failed',`hash computing error: ${hashResults.error}`,{ digestFilename, inventoryFilename },'OCFLInventory');
                     return hashResults;
+                }
                 if (hashResults.hash != manifestEntry.hash) {
                     results.success = false;
                     results.error = `OCFLInventory.validate found a different hash for ${filePath}; expected ${manifestEntry.hash}; found ${hashResults.hash}`;
+                    RK.logError(RK.LogSection.eSTR,'validate failed','hash mismatch',{ filePath, expected: manifestEntry.hash, observed: hashResults.hash },'OCFLInventory');
                 }
             }
         }
 
         // LOG.info('OCFLInventory.validate done', LOG.LS.eSTR);
+        RK.logDebug(RK.LogSection.eSTR,'validate success',undefined,{ digestFilename, inventoryFilename },'OCFLInventory');
         results.success = true;
         return results;
     }
@@ -472,7 +487,8 @@ export class OCFLInventory implements OCFLInventoryType {
 
             return { success: true };
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('OCFLInventory.writeToDesk', LOG.LS.eSTR, error);
+            // LOG.error('OCFLInventory.writeToDesk', LOG.LS.eSTR, error);
+            RK.logError(RK.LogSection.eSTR,'write to disk failed',H.Helpers.getErrorString(error),{ destination: dest, version, hash: hashResults.hash },'OCFLInventory');
             return {
                 success: false,
                 error: JSON.stringify(error)
@@ -512,7 +528,7 @@ export class OCFLInventory implements OCFLInventoryType {
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
-            LOG.error(retValue.error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'read from disk failed',retValue.error,{ destination: dest },'OCFLInventory');
             return retValue;
         }
 
@@ -521,10 +537,9 @@ export class OCFLInventory implements OCFLInventoryType {
             retValue.ocflInventory.revive(JSON.parse(await fs.readFile(dest, { encoding: 'utf8' })));
             retValue.success = true;
         } catch (error) {
-            LOG.error('OCFLInventory.readFromDisk', LOG.LS.eSTR, error);
             retValue.success = false;
             retValue.error = JSON.stringify(error);
-            // LOG.error(retValue.error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'read from disk failed',H.Helpers.getErrorString(error),{ destination: dest },'OCFLInventory');
         }
 
         // LOG.info(`OCFLInventory.readFromDiskWorker ${dest} done`, LOG.LS.eSTR);
