@@ -182,4 +182,25 @@ export class User extends DBObject<UserBase> implements UserBase {
             return null;
         }
     }
+
+    static async fetchEmailsByIDs(userIDs: number[] = [], eStatus: eUserStatus = eUserStatus.eActive): Promise<string[] | null> {
+
+        let users: User[] | null = [];
+
+        // if no users provided then we grab all of them
+        if(!userIDs || userIDs.length==0)
+            users = await User.fetchUserList('',eStatus);
+        else
+            users = await User.fetchByIDs(userIDs);
+
+        // make sure we have something to return
+        if(!users || users.length===0)
+            return null;
+
+        // build array of email addresses but only for those active
+        const emails: string[] = users.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
+        return emails;
+    }
+
+
 }

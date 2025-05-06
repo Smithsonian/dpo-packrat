@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import path from 'path';
-import { User, eUserStatus } from '../db/api/User';
 import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection  } from './logger/log';
@@ -95,10 +94,9 @@ export class RecordKeeper {
             }
             // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', emailResults.message, { environment, ...emailResults.data }, 'Recordkeeper');
 
-            // get our email addresses from the system. these can be cached because they will be
-            // the same for all users and sessions.
-            RecordKeeper.notifyGroupConfig.emailAdmin = await RecordKeeper.getEmailsFromGroup(NotifyUserGroup.EMAIL_ADMIN) ?? RecordKeeper.defaultEmail;
-            RecordKeeper.notifyGroupConfig.emailAll = await RecordKeeper.getEmailsFromGroup(NotifyUserGroup.EMAIL_ALL) ?? RecordKeeper.defaultEmail;
+            //initialize our group emails to the default. expecting them to be set externally during system initialization
+            RecordKeeper.notifyGroupConfig.emailAdmin = RecordKeeper.defaultEmail;
+            RecordKeeper.notifyGroupConfig.emailAll = RecordKeeper.defaultEmail;
 
             RecordKeeper.systemConfig.notifyEmail = true;
             return { success: true, message: 'Email notifications configured', data: { targetRate, burstRate, burstThreshold } };
@@ -136,15 +134,15 @@ export class RecordKeeper {
     static cleanup(): IOResults {
         return { success: true, message: 'record keeper cleaned up' };
     }
-    private static getContext(): { idUser: number, idRequest: number } {
+    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null } {
         // get our user and request ids from the local store
         // TEST: does it maintain store context since static and not async
         const LS: LocalStore | undefined = ASL?.getStore();
         if(!LS)
-            return { idUser: -1, idRequest: -1 };
+            return { idUser: -1, idRequest: -1, userEmail: null };
 
         // if no user, return an error id. otherwise, return what we got
-        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest };
+        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail };
     }
 
     //#region LOG
@@ -232,6 +230,20 @@ export class RecordKeeper {
     }
 
     // emails
+    static async setEmailsForGroup(group: NotifyUserGroup, emails: string[]): Promise<IOResults> {
+
+        switch(group) {
+            case NotifyUserGroup.EMAIL_ALL: {
+                RecordKeeper.notifyGroupConfig.emailAll = (emails.length>0) ? [...emails] : RecordKeeper.defaultEmail;
+            } break;
+
+            case NotifyUserGroup.EMAIL_ADMIN: {
+                RecordKeeper.notifyGroupConfig.emailAdmin = (emails.length>0) ? [...emails] : RecordKeeper.defaultEmail;
+            } break;
+        }
+
+        return { success: true, message: `${emails.length} emails set for group: ${this.NotifyGroup[group]}` };
+    }
     private static async getEmailsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
 
         switch(group) {
@@ -240,18 +252,8 @@ export class RecordKeeper {
                 // see if we already initialized this
                 if(RecordKeeper.notifyGroupConfig.emailAll.length>0 && forceUpdate===true)
                     return RecordKeeper.notifyGroupConfig.emailAll;
-
-                // fetch all users
-                const allUsers: User[] | null = await User.fetchUserList('',eUserStatus.eActive);
-                if(!allUsers || allUsers.length===0)
+                else
                     return RecordKeeper.defaultEmail;
-
-                // build array of email addresses but only for those active
-                const allEmails: string[] = allUsers.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
-                RecordKeeper.notifyGroupConfig.emailAll = [...allEmails];
-
-                // otherwise, grab all active Users from DB and their emails
-                return RecordKeeper.notifyGroupConfig.emailAll;
             }
 
             case NotifyUserGroup.EMAIL_ADMIN: {
@@ -259,32 +261,20 @@ export class RecordKeeper {
                 // see if we already initialized this
                 if(RecordKeeper.notifyGroupConfig.emailAdmin.length>0 && forceUpdate===true)
                     return RecordKeeper.notifyGroupConfig.emailAdmin;
-
-                // grab all admin users
-                const adminIDs: number[] = Config.auth.users.admin;
-                const adminUsers: User[] | null = await User.fetchByIDs(adminIDs);
-                if(!adminUsers || adminUsers.length===0)
+                else
                     return RecordKeeper.defaultEmail;
-
-                // build array of email addresses but only for those active
-                const adminEmails: string[] = adminUsers.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
-                RecordKeeper.notifyGroupConfig.emailAdmin = [...adminEmails];
-
-                // get ids from Config and then get their emails
-                return RecordKeeper.notifyGroupConfig.emailAdmin;
             }
 
             case NotifyUserGroup.EMAIL_USER: {
-                const { idUser } = RecordKeeper.getContext();
-                const user: User | null = await User.fetch(idUser);
+                const { idUser, userEmail } = RecordKeeper.getContext();
 
                 // if no notification settings or user, nothing so email not sent
-                if(!user || !user.WorkflowNotificationTime) {
-                    RecordKeeper.logError(LogSection.eSYS,'get user failed','cannot get user with ID for email notification', { idUser, user },'RecordKeeper.getEmailsFromGroup');
-                    return [];
+                if(!idUser || !userEmail) {
+                    RecordKeeper.logError(LogSection.eSYS,'get user failed','user or email does not exist', { idUser, userEmail },'RecordKeeper.getEmailsFromGroup');
+                    return RecordKeeper.defaultEmail;
                 }
 
-                return [user.EmailAddress];
+                return [userEmail];
             }
         }
 

@@ -43,9 +43,9 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
     executeSearch('65665', false, true, 18, 2, 10, COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, false);
 
     test('queryCollection rejects or escapes SQL injection', async () => {
-        const query = "1 = 1; DROP DATABASE Packrat";
+        const query = '1 = 1; DROP DATABASE Packrat';
         const result = await ICollection.queryCollection(query, 10, 0, null);
-    
+
         // Should not throw, and should not return anything dangerous
         expect(result).toBeTruthy();
         expect(result?.records?.length ?? 0).toBe(0);

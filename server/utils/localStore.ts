@@ -6,6 +6,8 @@ import * as H from './helpers';
 export class LocalStore {
     idRequest: number;
     idUser: number | null; // User.idUser
+    userEmail: string | null;
+    userNotify: boolean;
     private idWorkflow: number[];
     private idWorkflowStep?: number | undefined;
     private idWorkflowReport?: number | undefined;
@@ -22,6 +24,13 @@ export class LocalStore {
         this.idRequest = (getNextID) ? LocalStore.getIDRequestNext() : (idRequest ?? 0);
         this.idUser = (typeof(idUser) === 'number') ? idUser : null;
         this.idWorkflow = [];
+        this.userEmail = null;
+        this.userNotify = false;
+    }
+
+    setUserNotify(email: string, doNotify: boolean = false): void {
+        this.userEmail = email;
+        this.userNotify = doNotify;
     }
 
     getWorkflowID(): number | undefined {

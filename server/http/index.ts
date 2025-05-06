@@ -4,6 +4,7 @@ import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
 import * as H from '../utils/helpers';
+import { User } from '../db/api/User';
 import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
@@ -105,6 +106,9 @@ export class HttpServer {
         if(notifyResult.success===false) {
             RK.logError(RK.LogSection.eSYS,'system failed: Email Notifications',notifyResult.message,notifyResult.data,'HttpServer');
         }
+        // set our email groups, pulling from the database
+        RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ALL, await User.fetchEmailsByIDs() ?? []);
+        RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
         RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyResult.data,'HttpServer');
 
         // return our response
@@ -209,11 +213,30 @@ export class HttpServer {
     }
 
     // creates a LocalStore populated with the next requestID
-    private static assignLocalStore(req: Request, _res, next): void {
+    private static async assignLocalStore(req: Request, _res, next): Promise<void> {
         const { id } = H.Helpers.getUserDetailsFromRequest(req);
 
-        ASL.run(new LocalStore(true, id), () => {
-            // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id, name },'HttpServer');
+        // create our new store
+        const LS: LocalStore = new LocalStore(true, id);
+
+        // if we have an id then get the email and store it
+        // we do this here because RecordKeeper needs the user email for notifications
+        // but cannot include any DB calls to avoid cyclic redundancy (Audit and Event)
+        if(id) {
+            const user: User | null = await User.fetch(id);
+            if(user) {
+                const doNotify: boolean = user.Active && (user.WorkflowNotificationTime!=null);
+                if(user && user.EmailAddress.length>0)
+                    LS.setUserNotify(user.EmailAddress,doNotify);
+            } else {
+                RK.logError(RK.LogSection.eSYS,'creating new LocalStore failed','cannot get user from ID',{ idUser: id },'HttpServer');
+            }
+        }
+
+
+        // run the store for this user
+        ASL.run(LS, () => {
+            RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id },'HttpServer');
             next();
         });
     }
