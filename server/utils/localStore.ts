@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncLocalStorage, AsyncResource } from 'async_hooks';
-import * as LOG from './logger';
 import * as H from './helpers';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 export class LocalStore {
     idRequest: number;
@@ -16,7 +16,7 @@ export class LocalStore {
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
-        // LOG.info(`LocalStore.getIDRequestNext incrementing ID. (${LocalStore.idRequestNext}->${LocalStore.idRequestNext+1})`,LOG.LS.eDEBUG);
+        // RK.logDebug(RK.LogSection.eSYS,'incrementing ID',undefined,{ idRequest: LocalStore.idRequestNext, idRequestNew: LocalStore.idRequestNext+1 },'AsyncLocalStore');
         return ++LocalStore.idRequestNext;
     }
 
@@ -80,11 +80,10 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
         let LS: LocalStore | undefined = this.getStore();
         if (LS) {
             if(logUse===true)
-                LOG.info(`AsyncLocalStore.getOrCreateStore using existing store (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
-                // LOG.info(`\t ${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
+                RK.logDebug(RK.LogSection.eSYS,'using existing LocalStore',undefined,{ idRequest: LS.idRequest, idUser: LS.idUser },'AsyncLocalStore');
 
             if(!LS.idUser && idUser) {
-                LOG.error(`AsyncLocalStore.getOrCreateStore adding missing user id (idRequest: ${LS.idRequest} | idUser: ${LS.idUser})`,LOG.LS.eDEBUG);
+                RK.logDebug(RK.LogSection.eSYS,'adding missing user id',undefined,{ idRequest: LS.idRequest, idUser: LS.idUser },'AsyncLocalStore');
                 LS.idUser = idUser;
             }
             return LS;
@@ -93,8 +92,7 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
         return new Promise<LocalStore>((resolve) => {
             LS = new LocalStore(true, idUser);
             if(logUse===true)
-                LOG.error(`AsyncLocalStore.getOrCreateStore creating a new store. lost context? (idRequest: ${LS.idRequest} | idUser: ${idUser})`,LOG.LS.eSYS);
-                // LOG.error(`\t${H.Helpers.getStackTrace('AsyncLocalStore.getOrCreateStore')}`,LOG.LS.eDEBUG);
+                RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore','no context found',{ idRequest: LS.idRequest, idUser: LS.idUser },'AsyncLocalStore');
             this.run(LS, () => { resolve(LS!); }); // eslint-disable-line @typescript-eslint/no-non-null-assertion
         });
     }
@@ -109,11 +107,11 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
         // if we don't have a source, get from the current store
         src = src ?? this.getStore();
         if(!src) {
-            LOG.error('AsyncLocalStore.clone no source store found',LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'clone LocalStore failed','no source store found',undefined,'AsyncLocalStore');
             return null;
         }
 
-        LOG.info(`AsyncLocalStore.clone from existing LocalStore (idRequest: ${src.idRequest} | idUser: ${src.idUser})`,LOG.LS.eSYS);
+        RK.logDebug(RK.LogSection.eSYS,'clone LocalStore',undefined,{ idRequest: src.idRequest, idUser: src.idUser },'AsyncLocalStore');
 
         // create our new LocalStore and pass in our callback function
         const LS: LocalStore = new LocalStore(false, src.idUser, src.idRequest);
@@ -123,11 +121,11 @@ export class AsyncLocalStore extends AsyncLocalStorage<LocalStore> {
 
     checkLocalStore(label: string = 'LocalStore', logUndefined: boolean = false): void {
         label = `LocalStore [check: ${label}]`;
-        LOG.info(`${label} (${H.Helpers.JSONStringify(this.getStore())})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eSYS,'check LocalStore',undefined,{ ...this.getStore() },'AsyncLocalStore');
 
         // if we don't have a store then dump the trace so we know where it came from
         if(!this.getStore() && logUndefined===true)
-            LOG.info(`\t ${H.Helpers.getStackTrace(label)}`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eSYS,'check LocalStore failed',undefined,{ trace: H.Helpers.getStackTrace(label) },'AsyncLocalStore');
     }
 }
 

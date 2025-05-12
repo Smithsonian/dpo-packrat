@@ -788,6 +788,12 @@ export class Helpers {
         return output;
     }
 
+    static extractProperties(obj: any): any {
+        return Object.fromEntries(
+            Object.entries(obj).filter(([_, v]) => typeof v !== 'function')
+        );
+    }
+
     // errors
     static getErrorString = (error: any) => {
         // Check if the error is an instance of Error and has a message

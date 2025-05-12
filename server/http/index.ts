@@ -236,7 +236,7 @@ export class HttpServer {
 
         // run the store for this user
         ASL.run(LS, () => {
-            RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id },'HttpServer');
+            // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id },'HttpServer');
             next();
         });
     }
