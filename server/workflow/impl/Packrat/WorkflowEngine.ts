@@ -5,7 +5,6 @@ import { WorkflowJob } from './WorkflowJob';
 import { WorkflowIngestion } from './WorkflowIngestion';
 import { WorkflowUpload } from './WorkflowUpload';
 import * as COOK from '../../../job/impl/Cook';
-import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
@@ -16,6 +15,7 @@ import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
 import path from 'path';
 import * as L from 'lodash';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 type AssetAndVersionResult = {
     success: boolean;
@@ -52,18 +52,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (!workflowParams.eWorkflowType) {
-            LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create workflow failed','called without workflow type',{ ...workflowParams },'WorkflowEngine');
             return null;
         }
 
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
 
         const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
-            LOG.error(`WorkflowEngine.create failed to fetch workflow implementation ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create workflow failed','failed to fetch workflow implementation',{ type: COMMON.eVocabularyID[workflowParams.eWorkflowType] },'WorkflowEngine');
             return null;
         }
         if (WFC.workflow)
@@ -71,15 +70,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
-            LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create workflow failed','failed to start',{ type: COMMON.eVocabularyID[workflowParams.eWorkflowType] },'WorkflowEngine');
             return null;
         }
-        LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+
+        RK.logInfo(RK.LogSection.eWF,'create workflow success', undefined,{ ...workflowParams },'WorkflowEngine');
         return workflow;
     }
 
     async jobUpdated(idJobRun: number): Promise<boolean> {
-        LOG.info(`WorkflowEngine.jobUpdated: ${idJobRun}`, LOG.LS.eWF);
 
         const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(idJobRun);
         if (!jobRun)
@@ -92,14 +91,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const workflowStep of workflowSteps) {
             const WFC: DBAPI.WorkflowConstellation | null = await DBAPI.WorkflowConstellation.fetch(workflowStep.idWorkflow);
             if (!WFC || !WFC.workflow) {
-                LOG.error(`WorkflowEngine.jobUpdated (${idJobRun}) skipping orphan workflow step ${JSON.stringify(workflowStep)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'job update failed','skipping orphan workflow step',{idJobRun, workflowStep },'WorkflowEngine');
                 continue;
             }
 
             // lookup workflow object and forward "updated" event
             const workflow: WF.IWorkflow | undefined = this.workflowMap.get(WFC.workflow.idWorkflow);
             if (!workflow) {
-                LOG.error(`WorkflowEngine.jobUpdated(${idJobRun}) unable to locate workflow ${WFC.workflow.idWorkflow}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'job update failed','unable to locate workflow',{ idJobRun, workflowStep, idWorkflow: WFC.workflow.idWorkflow },'WorkflowEngine');
                 continue;
             }
 
@@ -107,25 +106,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             if (updateRes.workflowComplete) {
                 this.workflowMap.delete(WFC.workflow.idWorkflow);
                 await this.unsetActiveWorkflowStep(true);
-                LOG.info(`WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`, LOG.LS.eWF);
+                RK.logInfo(RK.LogSection.eWF,'job update done',undefined,{ idJobRun, idWorkflow: WFC.workflow.idWorkflow },'WorkflowEngine');
             }
             result = updateRes.success && result;
         }
+
         return result;
     }
 
     async event(eWorkflowEvent: COMMON.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
-        LOG.info(`WorkflowEngine.event ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+
+        RK.logInfo(RK.LogSection.eWF,'event',undefined,{ eventType: COMMON.eVocabularyID[eWorkflowEvent], parameters: workflowParams?.parameters },'WorkflowEngine');
         const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, COMMON.eVocabularySetID.eWorkflowEvent);
         if (!idVWorkflowEvent) {
-            LOG.error(`WorkflowEngine.event called with invalid workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'event failed','called with invalid workflow event type',{ eventType: COMMON.eVocabularyID[eWorkflowEvent] },'WorkflowEngine');
             return null;
         }
 
         switch (eWorkflowEvent) {
             case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
             default:
-                LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'event failed','called with unhandled workflow event type',{ eventType: COMMON.eVocabularyID[eWorkflowEvent] },'WorkflowEngine');
                 return null;
         }
     }
@@ -163,40 +164,41 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // grab our scene from the DB
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
         if(!scene) {
-            LOG.error(`API.generateDownloads failed. cannot find Scene. (idScene:${idScene})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot find scene',{ idScene },'WorkflowEngine');
             return { success: false, message: 'cannot find scene' };
         }
 
         // get our system object
         const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
         if(!sceneSO) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid without SystemObject. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','scene is invalid without SystemObject',{ idScene },'WorkflowEngine');
             return { success: false, message: 'cannot get SystemObject', data: { isValid: false } };
         }
 
         // get our information about the scene
         const CSIR: ComputeSceneInfoResult | null = await this.computeSceneInfo(scene.idScene,sceneSO.idSystemObject);
         if(!CSIR || !CSIR.idScene || CSIR.exitEarly==true) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot compute scene info',{ idScene },'WorkflowEngine');
             return { success: false, message: 'cannot compute scene info', data: { isValid: false } };
         }
-        LOG.info(`WorkflowEngine.generateDownloads verify scene (idScene:${CSIR.idScene} | sceneFile: ${CSIR.assetSVX?.FileName} | idModel: ${CSIR.idModel} | modelFile: ${CSIR.assetVersionGeometry?.FileName})`,LOG.LS.eDEBUG);
+        
+        RK.logDebug(RK.LogSection.eWF,'generate downloads','verify scene',{ idScene: CSIR.idScene, sceneFile: CSIR.assetSVX?.FileName, idModel: CSIR.idModel, modelFile: CSIR.assetVersionGeometry?.FileName },'WorkflowEngine');
 
         // make sure we have a voyager scene
         if(!CSIR.assetSVX) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. No voyager scene found (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','no voyager scene found',{ idScene },'WorkflowEngine');
             return { success: false, message: 'no voyager scene found', data: { isValid: false } };
         }
 
         // make sure we have a master model
         if(!CSIR.assetVersionGeometry || !CSIR.idModel) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. No master model found (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','no master model found',{ idScene },'WorkflowEngine');
             return { success: false, message: 'no master model found', data: { isValid: false } };
         }
 
         // make sure we can run the recipe (valid scene, not running, etc)
         if(scene.PosedAndQCd === false) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','scene is not posed or reviewed',{ idScene },'WorkflowEngine');
             return { success: false, message: 'not posed, licensed, or QC', data: { isValid: false } };
         }
         const isValid: boolean = true;
@@ -206,7 +208,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // make sure we don't have any jobs running. >0 if a running job was found.
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(8,scene.idScene);
         if(!activeJobs) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. cannot determine if job is running. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot determine if job is running',{ idScene },'WorkflowEngine');
             return { success: false, message: 'failed to get active jobs from DB', data: { isValid: false } };
         }
 
@@ -222,9 +224,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 idWorkflowReport = workflowReport[0].idWorkflowReport;
                 idWorkflow = workflowReport[0].idWorkflow;
             } else
-                LOG.info(`WorkflowEngine.generateDownloads unable to get workflowReport (idScene: ${scene.idScene} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+                RK.logWarning(RK.LogSection.eWF,'generate downloads','unable to get workflowReport',{ idScene: scene.idScene, idJobRun: activeJobs[0].idJobRun },'WorkflowEngine');
 
-            LOG.info(`WorkflowEngine.generateDownloads did not start. Job already running (idScene: ${scene.idScene} | activeJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'generate downloads','did not start. job already running',{ idScene: scene.idScene, activeJobRun: idActiveJobRun.join(',') },'WorkflowEngine');
             return { success: false, message: 'Job already running', data: { isValid: true, activeJobs, idWorkflow, idWorkflowReport } };
         }
         //#endregion
@@ -232,14 +234,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         //#region get system objects to act on
         const SOGeometry: DBAPI.SystemObject| null = await CSIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry file systemobject from ${JSON.stringify(CSIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to compute geometry file systemobject',{ assetVersionGeometry: CSIR.assetVersionGeometry },'WorkflowEngine');
             return { success: false, message: 'cannot get SystemObject for geometry file', data: { isValid: false, activeJobs } };
         }
         const idSystemObject: number[] = [SOGeometry.idSystemObject];
 
         const SOSVX: DBAPI.SystemObject| null = CSIR.assetSVX ? await CSIR.assetSVX.fetchSystemObject() : null;
         if (!SOSVX) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute scene file systemobject from ${JSON.stringify(CSIR.assetSVX, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to compute scene file systemobject',{ assetSVX: CSIR.assetSVX },'WorkflowEngine');
             return { success: false, message: 'cannot get SystemObject for voyager scene file', data: { isValid: false, activeJobs } };
         }
         idSystemObject.push(SOSVX.idSystemObject);
@@ -255,12 +257,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         // build our base names
         const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
-        LOG.info(`WorkflowEngine.generateDownloads compute names (sceneBaseName: ${sceneBaseName} | modelBaseName: ${modelBaseName})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eWF,'generate downloads','compute names',{ sceneBaseName: sceneBaseName, modelBaseName: modelBaseName },'WorkflowEngine');
 
         // #region build our scene parameters
         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CSIR.idModel);
         if(parameterHelper==null) {
-            LOG.error(`WorkflowEngine.generateDownloads cannot create workflow parameters\n(CSIR:${H.Helpers.JSONStringify(CSIR)})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot create workflow parameters',{ CSIR },'WorkflowEngine');
             return { success: false, message: 'cannot create workflow parameters', data: { isValid, activeJobs } };
         }
 
@@ -274,7 +276,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // if no project found then have integrity issue and should not make things by creating additional assets
         const sceneProjects: DBAPI.Project[] | null = await DBAPI.Project.fetchFromScene(scene.idScene);
         if(!sceneProjects || sceneProjects.length!=1) {
-            LOG.error(`WorkflowEngine.generateDownloads cannot find project for scene. (idScene: ${scene.idScene})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot find project for scene',{ idScene: scene.idScene },'WorkflowEngine');
             return { success: false, message: `cannot create workflow if scene does not have a Project (${scene.idScene})`, data: { isValid, activeJobs } };
         }
 
@@ -286,7 +288,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idUserInitiator: workflowParams.idUserInitiator,
             parameters: jobParamSIGenerateDownloads,
         };
-        LOG.info(`WorkflowEngine.generateDownloads generating downloads... (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eDEBUG);
+        
+        RK.logDebug(RK.LogSection.eWF,'generate downloads','started',{ ...wfParamSIGenerateDownloads },'WorkflowEngine');
         //#endregion
 
         const doCreate: boolean = true;
@@ -294,26 +297,24 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // create our workflow
             const wf: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
             if (!wf) {
-                LOG.error(`WorkflowEngine.generateDownloads unable to create Cook si-generate-downloads workflow: ${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to create Cook si-generate-downloads workflow',{ ...wfParamSIGenerateDownloads },'WorkflowEngine');
                 return { success: false, message: 'cannot create downloads workflow', data: { isValid, activeJobs } };
             }
 
             // get our Workflow object from the database
             const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
             if(!workflow) {
-                LOG.error(`WorkflowEngine.generateDownloads unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to get DB object for workflow',{ ...wfParamSIGenerateDownloads },'WorkflowEngine');
                 return { success: false, message: 'cannot get worfklow object', data: { isValid, activeJobs } };
             }
-            LOG.info(`WorkflowEngine.generateDownloads retrieved workflow (${workflow.idWorkflow} | ${workflow.idWorkflowSet})`,LOG.LS.eDEBUG);
 
             // get our workflow report for the new workflow
             const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
             if(!workflowReport || workflowReport.length <= 0) {
-                LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to get workflow report',{ ...wfParamSIGenerateDownloads },'WorkflowEngine');
                 return { success: false, message: 'cannot get workflow report object', data: { isValid, activeJobs } };
             }
-            LOG.info(`WorkflowEngine.generateDownloads retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
-            LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eWF,'generate downloads','retrieved workflow report',{ idWorkflowReport: workflowReport[0].idWorkflowReport },'WorkflowEngine');
 
             // return success
             return { success: true, message: 'generating downloads', data: { isValid, activeJobs, workflow, workflowReport } };

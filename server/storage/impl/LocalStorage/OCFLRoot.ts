@@ -1,8 +1,6 @@
 import * as path from 'path';
-//import * as STORE from '../../interface';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
-// import * as LOG from '../../../utils/logger';
 import * as OO from './OCFLObject';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
@@ -67,8 +65,6 @@ export class OCFLRoot {
     async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
         this.storageRootRepo = rootRepository;  // root of OCFL repository
         this.storageRootStaging = rootStaging;  // root of staging area
-        // LOG.info(`OCFL Storage initialization: Repo Root    = ${this.storageRootRepo}`, LOG.LS.eSTR);
-        // LOG.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`, LOG.LS.eSTR);
         RK.logInfo(RK.LogSection.eSTR,'OCFL initialize failed',undefined,{ rootRepository, rootStaging },'OCFLRoot');
 
         let ioResults: H.IOResults;

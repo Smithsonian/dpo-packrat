@@ -6,7 +6,6 @@ import { OperationInfo } from '../../interface/IStorage';
 import * as INV from './OCFLInventory';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
-// import * as LOG from '../../../utils/logger';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export type OCFLObjectInitResults = {
@@ -278,7 +277,6 @@ export class OCFLObject {
         // copy old file to new file in new version
         const fullPathSource: string = path.join(this._objectRoot, contentPathSource);
         const fullPathDest: string = this.fileLocationExplicit(fileNameNew, version);
-        // LOG.info(`Copying ${fullPathSource} to ${fullPathDest}`, LOG.LS.eSTR);
         results = await H.Helpers.copyFile(fullPathSource, fullPathDest, false);
         /* istanbul ignore next */
         if (!results.success)
@@ -286,11 +284,9 @@ export class OCFLObject {
 
         // record copied, renamed file
         const contentPathDest: string = path.join(OCFLObject.versionContentPartialPath(version), fileNameNew);
-        // LOG.info(`Calling OFCLInventory.addContent for ${fileNameNew} at ${contentPathDest}`, LOG.LS.eSTR);
         this._ocflInventory.addContent(contentPathDest, fileNameNew, hash);
 
         // remove old file from inventory, if we're changing names (reinstate uses this code, with fileNameOld === fileNameNew)
-        // LOG.info(`Calling OFCLInventory.removeContent for ${fileNameOld} at ${contentPathSource}`, LOG.LS.eSTR);
         /* istanbul ignore next */
         if (fileNameOld != fileNameNew && !this._ocflInventory.removeContent(contentPathSource, fileNameOld, hash))
             return {
@@ -491,7 +487,6 @@ export class OCFLObject {
             const relName: string = path.relative(this._objectRoot, fileName);
             const baseName: string = path.basename(fileName);
             if (verbose)
-                // LOG.info(`Examining ${fileName}; relName ${relName}; basename ${baseName}`, LOG.LS.eSTR);
                 RK.logDebug(RK.LogSection.eSTR,'validate object','Root inventory does not match head inventory',{ storageKey: this._storageKey },'OCFLObject');
 
             // Skip Inventory, Inventory Digest, and Namaste file
@@ -671,7 +666,6 @@ export class OCFLObject {
             const destFolder: string = this.versionRoot(version);
             const retValue: H.IOResults = await H.Helpers.removeDirectory(destFolder, true);
             if (!retValue.success)
-                // LOG.error(`OCFLObject.rollbackVersion failed to remove directory ${destFolder}: ${retValue.error}`, LOG.LS.eSTR);
                 RK.logError(RK.LogSection.eSTR,'rollback failed',`remove directory error: ${retValue.error}`,{ storageKey: this._storageKey, destination: destFolder },'OCFLObject');
         }
         /* istanbul ignore next */

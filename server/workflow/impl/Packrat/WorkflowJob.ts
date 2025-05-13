@@ -7,9 +7,8 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { Config } from '../../../config';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
-import { RecordKeeper } from '../../../records/recordKeeper';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 
 export class WorkflowJobParameters {
@@ -48,19 +47,22 @@ export class WorkflowJob implements WF.IWorkflow {
         this.workflowData = workflowData;
     }
 
-    async start(): Promise<H.IOResults> {
-        if (!await this.extractParameters())
-            return { success: false, error: 'Invalid Job Parameters' };
+    protected getWorkflowContext(): { idWorkflow: number | undefined } {
+        return { idWorkflow: this.workflowData.workflow?.idWorkflow }
+    }
 
-        if (!this.workflowJobParameters)
+    async start(): Promise<H.IOResults> {
+        if (!await this.extractParameters() || !this.workflowJobParameters) {
+            RK.logError(RK.LogSection.eWF,'workflow job start failed','invalid job parameters', { ...this.getWorkflowContext() },'WorkflowJob');
             return { success: false, error: 'Invalid Job Parameters' };
+        }
 
         // fetch workflow report
         if (!this.workflowReport) {
             this.workflowReport = await REP.ReportFactory.getReport();
             if (!this.workflowReport) {
-                const error: string = 'WorkflowJob.start unable to create/fetch workflow report';
-                LOG.error(error, LOG.LS.eWF);
+                const error: string = 'unable to create/fetch workflow report';
+                RK.logError(RK.LogSection.eWF,'workflow job start failed',error, { ...this.getWorkflowContext() },'WorkflowJob');
                 // return { success: false, error };
             }
         }
@@ -69,8 +71,8 @@ export class WorkflowJob implements WF.IWorkflow {
         // expect job to update WorkflowStep
         const jobEngine: JOB.IJobEngine | null = await JOB.JobFactory.getInstance();
         if (!jobEngine) {
-            const error: string = 'WorkflowJob.start unable to fetch JobEngine';
-            LOG.error(error, LOG.LS.eWF);
+            const error: string = 'unable to fetch JobEngine';
+            RK.logError(RK.LogSection.eWF,'workflow job start failed',error, { ...this.getWorkflowContext() },'WorkflowJob');
             return { success: false, error };
         }
 
@@ -82,24 +84,24 @@ export class WorkflowJob implements WF.IWorkflow {
             parameters: this.workflowJobParameters.cookJobParameters,
             frequency: null               // null means create but don't run
         };
-        LOG.info(`WorkflowJob.start jobCreationParameters (${H.Helpers.JSONStringify(jobCreationParameters)})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eWF,'workflow job start','job creation parameters', { ...this.getWorkflowContext(), ...jobCreationParameters },'WorkflowJob');
 
         // create our job, but don't start it so we can hook it up to the WorkflowStep first
         // this is done to ensure the Job can reference the associated WorkflowStep.
         const job: JOB.IJob | null = await jobEngine.create(jobCreationParameters);
         if (!job) {
-            const error: string = `WorkflowJob.start unable to start job ${jobCreationParameters.eJobType
-                ? COMMON.eVocabularyID[jobCreationParameters.eJobType] : 'undefined'}`;
-            LOG.error(error, LOG.LS.eWF);
+            const error: string = `unable to start job ${jobCreationParameters.eJobType
+                ? COMMON.eVocabularyID[jobCreationParameters.eJobType] : 'unknown error'}`;
+            RK.logError(RK.LogSection.eWF,'workflow job start failed',`create job: ${error}`, { ...this.getWorkflowContext() },'WorkflowJob');
             return { success: false, error };
         }
 
         // link WorkflowStep to JobRun
         const jobRunDB: DBAPI.JobRun | null = await job.dbJobRun();
         if (!jobRunDB) {
-            const error: string = `WorkflowJob.start unable to fetch JobRun DB ${jobCreationParameters.eJobType
-                ? COMMON.eVocabularyID[jobCreationParameters.eJobType] : 'undefined'}`;
-            LOG.error(error, LOG.LS.eWF);
+            const error: string = `unable to fetch JobRun DB ${jobCreationParameters.eJobType
+                ? COMMON.eVocabularyID[jobCreationParameters.eJobType] : 'unknown error'}`;
+            RK.logError(RK.LogSection.eWF,'workflow job start failed',`get job run: ${error}`, { ...this.getWorkflowContext() },'WorkflowJob');
             return { success: false, error };
         }
 
@@ -119,7 +121,9 @@ export class WorkflowJob implements WF.IWorkflow {
 
     async update(workflowStep: DBAPI.WorkflowStep, jobRun: DBAPI.JobRun): Promise<WF.WorkflowUpdateResults> {
 
-        LOG.info(`WorkflowJob.update started for WorkflowStep (${workflowStep.idWorkflowStep}) and JobRun (${jobRun.idJobRun}:${COMMON.eWorkflowJobRunStatus[jobRun.getStatus()]})`,LOG.LS.eWF);
+        const context = { ...this.getWorkflowContext(), idWorkflowStep: workflowStep.idWorkflowStep, idJobRun: jobRun.idJobRun, jobRunStatus: jobRun.getStatus() };
+
+        RK.logInfo(RK.LogSection.eWF,'workflow update start',undefined, { ...context },'WorkflowJob');
 
         // update workflowStep based on job run data
         const eWorkflowStepStateOrig: COMMON.eWorkflowJobRunStatus = workflowStep.getState();
@@ -129,9 +133,9 @@ export class WorkflowJob implements WF.IWorkflow {
             case COMMON.eWorkflowJobRunStatus.eCancelled: {
                 // messaging in case states are not consistent. could mean workflow is done before job
                 if(eWorkflowStepStateOrig===COMMON.eWorkflowJobRunStatus.eDone && jobRun.getStatus()!==COMMON.eWorkflowJobRunStatus.eDone)
-                    LOG.error(`WorkflowJob.update exiting. Workflow state does not match JobRun. (${eWorkflowStepStateOrig}->${jobRun.getStatus()})`,LOG.LS.eWF);
+                    RK.logError(RK.LogSection.eWF,'workflow update failed','Workflow state does not match JobRun', { ...context, originalState: eWorkflowStepStateOrig },'WorkflowJob');
                 else
-                    LOG.info(`WorkflowJob.update exiting. JobRun (${jobRun.idJobRun}) already completed. (${JSON.stringify(this.workflowJobParameters)})`, LOG.LS.eWF);
+                    RK.logDebug(RK.LogSection.eWF,'workflow update','already completed', { ...context },'WorkflowJob');
 
                 return { success: true, workflowComplete: true }; // job is already done
             }
@@ -182,12 +186,13 @@ export class WorkflowJob implements WF.IWorkflow {
 
         // if the workflow finished then we tell it to cleanup any mutex's created
         if (workflowComplete) {
-            LOG.info(`WorkflowJob.update releasing ${this.completionMutexes.length} waiter(s) ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${COMMON.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${COMMON.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
+            RK.logInfo(RK.LogSection.eWF,'workflow update done','releasing waiter(s)', { ...context, ...this.workflowJobParameters },'WorkflowJob');
             this.signalCompletion();
         } else
-            LOG.info(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${jobRun.idJobRun} ${COMMON.eWorkflowJobRunStatus[jobRun.getStatus()]} -> ${COMMON.eWorkflowJobRunStatus[eWorkflowStepState]}`, LOG.LS.eWF);
-        // LOG.error(`WorkflowJob.update ${JSON.stringify(this.workflowJobParameters)}: ${JSON.stringify(jobRun)} - ${JSON.stringify(workflowStep)}`, new Error(), LOG.LS.eWF);
+            RK.logInfo(RK.LogSection.eWF,'workflow update',undefined, { ...context, eWorkflowStepState },'WorkflowJob');
 
+        if(!dbUpdateResult)
+            RK.logError(RK.LogSection.eWF,'workflow update failed','Database error', { ...context },'WorkflowJob');
         return (dbUpdateResult) ? { success: true, workflowComplete } : { success: false, workflowComplete, error: 'Database Error' };
     }
 
@@ -199,16 +204,18 @@ export class WorkflowJob implements WF.IWorkflow {
         const workflowStep: DBAPI.WorkflowStep | null = (!this.workflowData.workflowStep || this.workflowData.workflowStep.length <= 0)
             ? null : this.workflowData.workflowStep[this.workflowData.workflowStep.length - 1];
 
-        if (!workflowStep)
+        if (!workflowStep) {
+            RK.logError(RK.LogSection.eWF,'workflow update status failed','missing WorkflowStep', { ...this.getWorkflowContext() },'WorkflowJob');
             return { success: false, workflowComplete, error: 'Missing WorkflowStep' };
+        }
 
         const updated: boolean = (eStatus!==workflowStep?.getState());
         workflowStep.setState(eStatus);
         const success: boolean = await workflowStep.update();
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow update',undefined,
-            { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow },
-            'WorkflowUpload.updateStatus'
+        RK.logDebug(RK.LogSection.eWF,'workflow update status',undefined,
+            { workflowComplete, updated, eStatus, ...this.getWorkflowContext() },
+            'WorkflowUpload'
         );
 
         // if we're not updated or not finished then just return
@@ -222,13 +229,13 @@ export class WorkflowJob implements WF.IWorkflow {
         const workflowSet: number = this.workflowData.workflow?.idWorkflowSet ?? -1;
         const workflows: DBAPI.Workflow[] | null = await DBAPI.Workflow.fetchFromWorkflowSet(workflowSet);
         if(!workflows || workflows.length===0) {
-            LOG.info(`No workflows found from set (${this.workflowData.workflow?.idWorkflowSet})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'workflow update status failed','No workflows found from set', { ...this.getWorkflowContext(), idWorkflowSet: this.workflowData.workflow?.idWorkflowSet },'WorkflowJob');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow update',undefined,
+        RK.logDebug(RK.LogSection.eWF,'workflow update',undefined,
             { workflowSet, workflows },
-            'WorkflowUpload.updateStatus'
+            'WorkflowUpload'
         );
 
         // Get all steps from the workflows
@@ -236,19 +243,15 @@ export class WorkflowJob implements WF.IWorkflow {
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow steps update',undefined,
+        RK.logDebug(RK.LogSection.eWF,'workflow steps update',undefined,
             { workflowSteps },
-            'WorkflowUpload.updateStatus'
+            'WorkflowUpload'
         );
 
         // see if any are still going, if so return
         const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'workflow steps update','still running',
-            { stillRunning },
-            'WorkflowUpload.updateStatus'
-        );
         if(stillRunning===true) {
-            LOG.info(`Workflow set still running (${this.workflowData.workflow?.idWorkflow} | ${workflowSet})`,LOG.LS.eWF);
+            RK.logDebug(RK.LogSection.eWF,'workflow update status','still running', { ...this.getWorkflowContext() },'WorkflowJob');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
@@ -273,9 +276,9 @@ export class WorkflowJob implements WF.IWorkflow {
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RecordKeeper.sendEmail(
-                    RecordKeeper.NotifyType.JOB_PASSED,
-                    RecordKeeper.NotifyGroup.EMAIL_USER,
+                await RK.sendEmail(
+                    RK.NotifyType.JOB_PASSED,
+                    RK.NotifyGroup.EMAIL_USER,
                     `${workflowType} Finished`,
                     detailsMessage,
                     startDate,
@@ -286,9 +289,9 @@ export class WorkflowJob implements WF.IWorkflow {
 
             case COMMON.eWorkflowJobRunStatus.eError: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RecordKeeper.sendEmail(
-                    RecordKeeper.NotifyType.JOB_FAILED,
-                    RecordKeeper.NotifyGroup.EMAIL_USER,
+                await RK.sendEmail(
+                    RK.NotifyType.JOB_FAILED,
+                    RK.NotifyGroup.EMAIL_USER,
                     `${workflowType} Failed`,
                     detailsMessage,
                     startDate,
@@ -331,9 +334,9 @@ export class WorkflowJob implements WF.IWorkflow {
             if (error === E_CANCELED)                       // we're done -- cancel comes from signalCompletion()
                 return this.results;
             else if (error === E_TIMEOUT)                   // we timed out
-                return { success: false, error: `WorkflowJob.waitForCompletion timed out after ${timeout}ms` };
+                return { success: false, error: `timed out after ${timeout}ms` };
             else
-                return { success: false, error: `WorkflowJob.waitForCompletion failure: ${JSON.stringify(error)}` };
+                return { success: false, error: `failure: ${JSON.stringify(error)}` };
         } finally {
             releaseOuter(); // releases the lock
         }
@@ -347,8 +350,8 @@ export class WorkflowJob implements WF.IWorkflow {
     async extractParameters(): Promise<H.IOResults> {
         // confirm that this.workflowParams.parameters is valid
         if (!(this.workflowParams.parameters instanceof WorkflowJobParameters)) {
-            const error: string = `WorkflowJob.start called with parameters not of type WorkflowJobParameters: ${JSON.stringify(this.workflowParams.parameters)}`;
-            LOG.error(error, LOG.LS.eWF);
+            const error: string = `called with parameters not of type WorkflowJobParameters: ${JSON.stringify(this.workflowParams.parameters)}`;
+            RK.logError(RK.LogSection.eWF,'extract parameters failed','called with parameters not of type WorkflowJobParameters', { ...this.getWorkflowContext(), parameters: this.workflowParams.parameters },'WorkflowJob');
             return { success: false, error };
         }
 
@@ -357,19 +360,22 @@ export class WorkflowJob implements WF.IWorkflow {
         // confirm job type is a really a Job type
         const eJobType: COMMON.eVocabularyID = this.workflowJobParameters.eCookJob;
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eJobType, COMMON.eVocabularySetID.eJobJobType)) {
-            const error: string = `WorkflowJob.start called with parameters not of type WorkflowJobParameters: ${JSON.stringify(this.workflowJobParameters)}`;
-            LOG.error(error, LOG.LS.eWF);
+            const error: string = `invalid vocabulary in set: ${JSON.stringify(this.workflowJobParameters)}`;
+            RK.logError(RK.LogSection.eWF,'extract parameters failed','invalid vocabulary in set', { ...this.getWorkflowContext(), eJobType, parameters: this.workflowJobParameters },'WorkflowJob');            
             return { success: false, error };
         }
 
         // confirm that this.workflowParams.idSystemObject are asset versions; ultimately, we will want to allow a model and/or capture data, depending on the recipe
-        LOG.info(`WorkflowJob.extractParameters checking for AssetVersions (${this.workflowParams.idSystemObject})`,LOG.LS.eDEBUG);
-        if (!this.workflowParams.idSystemObject)
+        if (!this.workflowParams.idSystemObject) {
+            RK.logWarning(RK.LogSection.eWF,'extract parameters','no objects to act on', { ...this.getWorkflowContext() },'WorkflowJob');
             return { success: true }; // OK to call without objects to act on, at least at this point -- the job itself may complain once started
+        }
 
         const WFUVersion: WorkflowUtilExtractAssetVersions = await WorkflowUtil.extractAssetVersions(this.workflowParams.idSystemObject);
-        if (!WFUVersion.success)
+        if (!WFUVersion.success) {
+            RK.logError(RK.LogSection.eWF,'extract parameters failed',`asset versions error: ${WFUVersion.error}`, { ...this.getWorkflowContext(), idSystemObject: this.workflowParams.idSystemObject },'WorkflowJob');
             return { success: false, error: WFUVersion.error };
+        }
 
         this.idAssetVersions = WFUVersion.idAssetVersions;
         return { success: true };
@@ -380,7 +386,7 @@ export class WorkflowJob implements WF.IWorkflow {
         // get our constellation
         const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
         if(!wfConstellation) {
-            LOG.error('WorkflowJob.getWorkflowObject failed. No constellation found. unitialized?',LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'get workflow failed','No constellation found. not initialized?', { ...this.getWorkflowContext() },'WorkflowJob');
             return null;
         }
 

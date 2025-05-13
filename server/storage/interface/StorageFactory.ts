@@ -2,7 +2,6 @@ import { IStorage } from './IStorage';
 import { LocalStorage } from '../impl';
 import { IOResults } from '../../utils/helpers';
 import { Config, STORAGE_TYPE } from '../../config';
-// import * as LOG from '../../utils/logger';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class StorageFactory {
@@ -22,7 +21,6 @@ export class StorageFactory {
                         StorageFactory.instance = LS;
                         RK.logInfo(RK.LogSection.eSTR,'system initialize success',undefined,{ type: 'LocalStore' },'StorageFactory');
                     } else {
-                        // LOG.error(`Error encountered in StorageFactory.getInstance while initializing LocalStorage: ${IOR.error}`, LOG.LS.eSTR);
                         RK.logError(RK.LogSection.eSTR,'system initialize failed',IOR.error,{ type: 'LocalStore' },'StorageFactory');
                     }
                     break;
