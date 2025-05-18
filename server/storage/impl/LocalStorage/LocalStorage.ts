@@ -47,10 +47,10 @@ export class LocalStorage implements STORE.IStorage {
                 return retValue;
             }
 
-             const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
+            const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
             if (!pathAndHash) {
                 retValue.success = false;
-                 retValue.error = 'unable to compute path and hash';
+                retValue.error = 'unable to compute path and hash';
                 RK.logError(RK.LogSection.eSTR,'read stream failed',retValue.error,{ ...readStreamInput },'LocalStorage');
                 return retValue;
             }

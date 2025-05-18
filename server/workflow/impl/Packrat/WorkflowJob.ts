@@ -48,7 +48,7 @@ export class WorkflowJob implements WF.IWorkflow {
     }
 
     protected getWorkflowContext(): { idWorkflow: number | undefined } {
-        return { idWorkflow: this.workflowData.workflow?.idWorkflow }
+        return { idWorkflow: this.workflowData.workflow?.idWorkflow };
     }
 
     async start(): Promise<H.IOResults> {
@@ -361,7 +361,7 @@ export class WorkflowJob implements WF.IWorkflow {
         const eJobType: COMMON.eVocabularyID = this.workflowJobParameters.eCookJob;
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eJobType, COMMON.eVocabularySetID.eJobJobType)) {
             const error: string = `invalid vocabulary in set: ${JSON.stringify(this.workflowJobParameters)}`;
-            RK.logError(RK.LogSection.eWF,'extract parameters failed','invalid vocabulary in set', { ...this.getWorkflowContext(), eJobType, parameters: this.workflowJobParameters },'WorkflowJob');            
+            RK.logError(RK.LogSection.eWF,'extract parameters failed','invalid vocabulary in set', { ...this.getWorkflowContext(), eJobType, parameters: this.workflowJobParameters },'WorkflowJob');
             return { success: false, error };
         }
 
