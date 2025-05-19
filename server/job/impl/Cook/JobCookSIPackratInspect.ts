@@ -785,7 +785,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             const imageTypes: string[] = [ '.jpg','.jpeg','.png','.bmp','.tga','.tif','.tiff' ];
             if(imageTypes.includes(extension))
                 continue;
-            
+
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
             if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin') {
                 RK.logWarning(RK.LogSection.eJOB,'test for zip','not model geometry file',{ file,extension, idAssetVersions: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
