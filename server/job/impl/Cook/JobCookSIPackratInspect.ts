@@ -4,7 +4,6 @@ import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
-import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
@@ -15,6 +14,7 @@ import { eEventKey } from '../../../event/interface/EventEnums';
 import { IZip } from '../../../utils/IZip';
 import { ZipFile } from '../../../utils/zipFile';
 import { maybe, maybeString } from '../../../utils/types';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import { isArray } from 'lodash';
 import * as path from 'path';
@@ -106,7 +106,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
     async persist(idModel: number, assetMap?: Map<string, number> | undefined): Promise<H.IOResults> {
         if (!this.modelConstellation || !this.modelConstellation.Model || !this.modelConstellation.ModelObjects) {
             const error: string = 'Invalid JobCookSIPackratInspectOutput';
-            LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'persist failed',error,{ idModel },'Job.PackratInspect.Output');
             return { success: false, error };
         }
 
@@ -126,8 +126,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (!mappedId) // try again, with just filename
                     mappedId = assetMap.get(path.basename(fileName));
                 if (!mappedId) {
-                    const error: string = `Missing ${fileName} and ${path.basename(fileName)} from assetMap ${JSON.stringify(assetMap, H.Helpers.saferStringify)}`;
-                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'persist failed','missing filename from assetMap',{ fileName, idModel, assetMap },'Job.PackratInspect.Output');
                     // return { success: false, error };
                     continue;
                 }
@@ -140,7 +139,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
             if (!model) {
                 const error: string = `Failed to fetch model ${idModel}`;
-                LOG.error(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'persist failed','failed to fetch model from DB',{ idModel },'Job.PackratInspect.Output');
                 return { success: false, error };
             }
 
@@ -218,8 +217,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             for (const modelMaterialUVMap of this.modelConstellation.ModelMaterialUVMaps) {
                 const mappedAssetId: number | undefined = assetIDMap.get(modelMaterialUVMap.idAsset);
                 if (!mappedAssetId) {
-                    const error: string = `Missing ${modelMaterialUVMap.idAsset} from asset ID Map`;
-                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'persist failed','missing asset from map',{ idModel, idAsset: modelMaterialUVMap.idAsset },'Job.PackratInspect.Output');
                     // return { success: false, error };
                     continue;
                 }
@@ -239,8 +237,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             for (const modelMaterialChannel of this.modelConstellation.ModelMaterialChannels) {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelMaterialChannel.idModelMaterial);
                 if (!mappedModelMaterialId) {
-                    const error: string = `Missing ${modelMaterialChannel.idModelMaterial} from model material ID map (idModel: ${idModel})`;
-                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'persist failed','missing model material from ID map',{ idModel, idModelMaterial: modelMaterialChannel.idModelMaterial },'Job.PackratInspect.Output');
                     // return { success: false, error };
                     continue;
                 }
@@ -249,8 +246,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                 if (modelMaterialChannel.idModelMaterialUVMap) {
                     mappedModelMaterialUVMapId = modelMaterialUVMapIDMap.get(modelMaterialChannel.idModelMaterialUVMap);
                     if (!mappedModelMaterialUVMapId) {
-                        const error: string = `Missing ${modelMaterialChannel.idModelMaterialUVMap} from model material UV ID map (idModel: ${idModel})`;
-                        LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                        RK.logError(RK.LogSection.eJOB,'persist failed','missing asset from model material UV ID map',{ idModel, idModelMaterialUVMap: modelMaterialChannel.idModelMaterialUVMap },'Job.PackratInspect.Output');
                         // return { success: false, error };
                         continue;
                     }
@@ -269,16 +265,14 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             for (const modelObjectModelMaterialXref of this.modelConstellation.ModelObjectModelMaterialXref) {
                 const mappedModelMaterialId: number | undefined = modelMaterialIDMap.get(modelObjectModelMaterialXref.idModelMaterial);
                 if (!mappedModelMaterialId) {
-                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelMaterial} from model material ID map (idModel: ${idModel})`;
-                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'persist failed','missing asset from model material ID map',{ idModel, idModelMaterial: modelObjectModelMaterialXref.idModelMaterial },'Job.PackratInspect.Output');
                     // return { success: false, error };
                     continue;
                 }
 
                 const mappedModelObjectId: number | undefined = modelObjectIDMap.get(modelObjectModelMaterialXref.idModelObject);
                 if (!mappedModelObjectId) {
-                    const error: string = `Missing ${modelObjectModelMaterialXref.idModelObject} from model object ID map (idModel: ${idModel})`;
-                    LOG.info(`JobCookSIPackratInspectOutput.persist: ${error}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'persist failed','missing asset from model object ID map',{ idModel, idModelObject: modelObjectModelMaterialXref.idModelObject },'Job.PackratInspect.Output');
                     // return { success: false, error };
                     continue;
                 }
@@ -293,7 +287,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
 
         if (origModelConstellation) {
             if (!await origModelConstellation.deleteSupportObjects())
-                LOG.error('JobCookSIPackratInspectOutput.persist unable to delete original model support objects', LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'persist failed','unable to delete original model support objects',{ idModel, origModelConstellation },'Job.PackratInspect.Output');
         }
 
         // Send audit update for model, now that we've finished writing dependent objects, to help ensure full indexing of this model
@@ -365,7 +359,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             idModelObject++;
             const statistics: any = mesh.statistics;
             if (!statistics) {
-                LOG.error(`JobCookSIPackratInspectOutput.extract missing steps['merge-reports'].result.inspection.meshes[${idModelObject - 1}].statistics: ${JSON.stringify(output)}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'extract wroker failed',`missing steps['merge-reports'].result.inspection.meshes[${idModelObject - 1}].statistics`,{ idModel, output },'Job.PackratInspect.Output');
                 continue;
             }
 
@@ -384,7 +378,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
                     if ((materialIndex + 1) > materialCount) {
                         JCOutput.success = false;
                         JCOutput.error = `Invalid materialIndex ${materialIndex}`;
-                        LOG.error(`JobCookSIPackratInspectOutput.extract: ${JCOutput.error}`, LOG.LS.eJOB);
+                        RK.logError(RK.LogSection.eJOB,'extract wroker failed',JCOutput.error,{ idModel },'Job.PackratInspect.Output');
                         continue;
                     }
 
@@ -546,13 +540,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         // find JobCook results for this asset version
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
         if (!idVJobType) {
-            LOG.error('JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job ID of si-packrat-inspect', LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'extract job run failed','unable to compute Job ID of si-packrat-inspect',{ idVJobType, idAssetVersion, sourceMeshFile },'Job.PackratInspect.Output');
             return null;
         }
 
         const jobRuns: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchMatching(1, idVJobType, COMMON.eWorkflowJobRunStatus.eDone, true, [idAssetVersion], sourceMeshFile);
         if (!jobRuns || jobRuns.length != 1) {
-            LOG.info(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed: unable to compute Job Runs of si-packrat-inspect for asset version ${idAssetVersion}, sourceMeshFile ${sourceMeshFile}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'extract job run failed','unable to compute Job Runs of si-packrat-inspect for asset version',{ idVJobType, idAssetVersion, sourceMeshFile },'Job.PackratInspect.Output');
             return null;
         }
         return jobRuns[0];
@@ -565,7 +559,6 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         const jobRun: DBAPI.JobRun | null = await JobCookSIPackratInspectOutput.extractJobRunFromAssetVersion(idAssetVersion, sourceMeshFile);
         if (!jobRun)
             return null;
-        // console.log('>>>> extractFromAssetVersion: ',idAssetVersion, sourceMeshFile, jobRun);
 
         // Determine filename, file type, and date created by computing asset version:
         let fileName: string | null = null;
@@ -575,22 +568,21 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             fileName = assetVersion.FileName;
             dateCreated = assetVersion.DateCreated;
         } else
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion unable to fetch assetVersion from ${idAssetVersion}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'extract job output failed','unable to fetch assetVersion',{ idAssetVersion },'Job.PackratInspect.Output');
 
         let JCOutput: JobCookSIPackratInspectOutput | null = null;
         try {
             JCOutput = await JobCookSIPackratInspectOutput.extract(JSON.parse(jobRun.Output || ''), fileName, dateCreated);
         } catch (error) {
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion${JCOutput ? ' ' + JCOutput.error : ''}`, LOG.LS.eJOB, error);
+            RK.logError(RK.LogSection.eJOB,'extract job output failed',`error extracting: ${error}`,{ idAssetVersion, sourceMeshFile },'Job.PackratInspect.Output');
             return null;
         }
 
         if (!JCOutput.success) {
-            LOG.error(`JobCookSIPackratInspectOutput.extractFromAssetVersion failed extracting job output [${JCOutput.error}]: ${jobRun.Output}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'extract job output failed',`failed extracting job output: ${JCOutput.error}`,{ idAssetVersion, sourceMeshFile },'Job.PackratInspect.Output');
             return null;
         }
 
-        // LOG.info(`GraphQL JobCookSIPackratInspectOutput.extractFromAssetVersion(${JSON.stringify(idAssetVersion)}) = ${JSON.stringify(JCOutput.modelConstellation, H.Helpers.stringifyCallbackCustom)}`, LOG.LS.eJOB);
         return JCOutput;
     }
 
@@ -720,7 +712,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     async cleanupJob(): Promise<H.IOResults> {
         // if we have a temp file path, see if it exists, and clean it up.
         if(this.tempFilePath) {
-            LOG.info(`JobCookSIPackratInspect.cleanupJob removing temp file (PATH: ${this.tempFilePath})`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eJOB,'cleanup job','removing temp file',{ path: this.tempFilePath, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             await H.Helpers.removeFile(this.tempFilePath);
             this.tempFilePath = undefined;
         }
@@ -755,24 +747,25 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // LOG.info(`JobCookSIPackratInspect.testForZipOrStream parameters ${H.Helpers.JSONStringify(this.parameters)}`, LOG.LS.eJOB);
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this._idAssetVersions[0]);
         if (!assetVersion) {
-            LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to fetch asset version ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'test for zip failed','unable to fetch asset version',{ idAssetVersions: this._idAssetVersions, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return false;
         }
 
         if (!assetVersion.FileName || path.extname(assetVersion.FileName).toLowerCase() !== '.zip') {
             // LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing non-zip file ${RSR.fileName}`, LOG.LS.eJOB);
+            RK.logWarning(RK.LogSection.eJOB,'test for zip failed','processing non-zip file',{ fileName: assetVersion.FileName, idAssetVersions: this._idAssetVersions, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return false;
         }
 
         const ZS: IZip | null = await this.fetchZip(assetVersion);
         if (!ZS) {
-            LOG.error(`JobCookSIPackratInspect.testZipOrStream failed (assetVersion: ${assetVersion.FileName}:${assetVersion.idAssetVersion})`,LOG.LS.eDEBUG);
+            RK.logError(RK.LogSection.eJOB,'test for zip failed','cannot fetch zip from AssetVersion',{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return false;
         }
 
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
-            LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to read asset version ${this._idAssetVersions[0]}: ${zipRes.error}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'test for zip failed',`unable to load zip for AssetVersion: ${zipRes.error}`,{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return false;
         }
 
@@ -780,26 +773,29 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         let sourceMeshFile: string | undefined = undefined;
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
-        LOG.info(`JobCookSIPackratInspect.testForZipOrStream processing files (assetVersion: ${assetVersion.idAssetVersion} | ${files.join('|')})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eJOB,'test for zip','processing files in zip',{ files, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+
         for (const file of files) {
             // figure out our type based on the file's extension
             const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
             const extension: string = path.extname(file).toLowerCase() || file.toLowerCase();
-            LOG.info(`JobCookSIPackratInspect.testForZipOrStream considering zip file entry ${file}, extension ${extension}, VocabID ${eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined'}`, LOG.LS.eJOB);
+            RK.logDebug(RK.LogSection.eJOB,'test for zip','considering zip file entry',{ file, extension, idVocab: eVocabID ? COMMON.eVocabularyID[eVocabID] : 'undefined', idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
 
             // for the time being, only handle model geometry files, OBJ .mtl files, and GLTF .bin files
-            if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin')
+            if (eVocabID === undefined && extension !== '.mtl' && extension !== '.bin') {
+                RK.logWarning(RK.LogSection.eJOB,'test for zip','not model geometry file',{ file,extension, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
                 continue;
+            }
 
             // stream our content in
             const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(file);
             if (!readStream) {
-                LOG.error(`JobCookSIPackratInspect.testForZipOrStream unable to fetch read steram for ${file} in zip of idAssetVersion ${this._idAssetVersions[0]}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'test for zip failed','unable to fetch read steram for file in zip of idAssetVersion',{ file, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
                 return false;
             }
 
             // store the stream for later reference
-            LOG.info(`JobCookSIPackratInspect.testForZipOrStream creating stream override for zip file entry ${file}`, LOG.LS.eJOB);
+            RK.logDebug(RK.LogSection.eJOB,'test for zip','creating stream override for zip file entry',{ file, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             RSRs.push({
                 readStream,
                 fileName: file,
@@ -819,7 +815,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             this.parameters.sourceMeshFile = sourceMeshFile;
             this._dbJobRun.Parameters = JSON.stringify(this.parameters, H.Helpers.saferStringify);
             if (!await this._dbJobRun.update())
-                LOG.error(`JobCookSIPackratInspect.testForZipOrStream failed to update JobRun.parameters for ${JSON.stringify(this._dbJobRun, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'test for zip failed','failed to update JobRun.parameters',{ sourceMeshFile, dbJobRun: this._dbJobRun, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
         }
 
         // if we have at least one stream store them in our overrideMap, which is used to keep track of
@@ -831,20 +827,19 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
 
         // no streams found so we return
-        LOG.error  (`JobCookSIPackratInspect.testForZipOrStream no streams found (assetVersion: ${assetVersion.idAssetVersion})`,LOG.LS.eDEBUG);
+        RK.logWarning(RK.LogSection.eJOB,'test for zip failed','no streams found',{ fileName: assetVersion.FileName, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
         return false;
     }
 
     private async fetchZip(assetVersion: DBAPI.AssetVersion): Promise<IZip | null> {
 
-        LOG.info(`JobCookSIPackratInspect.fetchZip fetching ZIP file (${H.Helpers.JSONStringify(assetVersion)})`,LOG.LS.eDEBUG);
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
         if (!RSR.success || !RSR.readStream || !RSR.fileName) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to read asset version ${assetVersion.idAssetVersion}: ${RSR.error} (${RSR.success} | ${RSR.readStream ? true:false} | ${ RSR.fileName ? true:false})`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'fetch zip failed',`unable to read asset version: ${RSR.error}`,{ fileName: assetVersion.FileName, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return null;
-        } else {
-            LOG.info(`JobCookSIPackratInspect.fetchZip processing zip file ${RSR.fileName}`, LOG.LS.eJOB);
         }
+
+        RK.logDebug(RK.LogSection.eJOB,'fetch zip','processing zip file',{ fileName: assetVersion.FileName, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
 
         // copy our zip locally so that we can avoid loading the full zip into memory and use ZipFile
         // This also avoids an issue we're experiencing (as of 8/1/2022) with JSZip not emitting "end" events
@@ -862,14 +857,14 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         try {
             const res: H.IOResults = await H.Helpers.writeStreamToFile(RSR.readStream, this.tempFilePath);
             if (!res.success) {
-                LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}: ${res.error}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'fetch zip failed',`unable to copy asset version: ${res.error}`,{ fileName: assetVersion.FileName, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
                 return null;
             }
 
-            LOG.info(`JobCookSIPackratInspect.fetchZip stream stored at: ${this.tempFilePath} (${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eJOB,'fetch zip','stream stored to disk',{ tempPath: this.tempFilePath, fileName: assetVersion.FileName, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return new ZipFile(this.tempFilePath);
         } catch (err) {
-            LOG.error(`JobCookSIPackratInspect.fetchZip unable to copy asset version ${assetVersion.idAssetVersion} locally to ${this.tempFilePath}`, LOG.LS.eJOB, err);
+            RK.logError(RK.LogSection.eJOB,'fetch zip failed',`unable to copy asset version locally to temp path: ${err}`,{ tempPath: this.tempFilePath, fileName: assetVersion.FileName, idAssetVersions: assetVersion.idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             return null;
         }
     }
@@ -877,6 +872,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     protected async verifyRequest(): Promise<JobIOResults> {
         const superResult: JobIOResults = await super.verifyRequest();
         if(superResult.success===false) {
+            RK.logError(RK.LogSection.eJOB,'verify request failed',`request is invalid: ${superResult.error}`,{ sourceMeshFile: this.parameters.sourceMeshFile, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             this.appendToReportAndLog(`[CookJob:Inspection] request is invalid. ${superResult.error} (${this.parameters.sourceMeshFile})`);
             return superResult;
         }
@@ -889,6 +885,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // }
 
         // we're good to continue
+        RK.logDebug(RK.LogSection.eJOB,'verify request success','request is valid. sending to Cook...',{ sourceMeshFile: this.parameters.sourceMeshFile, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
         this.appendToReportAndLog(`[CookJob:Inspection] request is valid. sending to Cook... (${this.parameters.sourceMeshFile})`);
         return { success: true, allowRetry: false };
     }
@@ -902,6 +899,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // make sure we have logs. we use 'inspect-mesh' even for legacy since legacy 'merged-reports'
         // does not consolidate the log messages.
         if(!cookJobReport.steps['inspect-mesh'] || !cookJobReport.steps['inspect-mesh'].log) {
+            RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: missing inspect-mesh and/or log objects',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             this.appendToReportAndLog('[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects');
             return { success: false, error: 'missing log objects in Cook report', allowRetry: false };
         }
@@ -924,12 +922,14 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                     superResult.error = 'Unknown MeshSmith error. Check report.';
             }
 
+            RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${superResult.error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. ${superResult.error}`);
             return superResult;
         }
 
         // check for ZIP processing errors
         if(logContains(logs,'Error: Unsupported file type: .zip')===true) {
+            RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Zip package incomplete or corrupt.',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
             this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.');
             return { success: false, error: 'Zip package incomplete or corrupt.', allowRetry: false };
         }
@@ -945,6 +945,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
             if(errors.length>0) {
                 const errorMsg = errors.join(' | ');
+                RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${errorMsg}`,{  name: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
                 this.appendToReportAndLog(`[CookJob:Inspection] response is invalid: ${errorMsg}`);
                 return { success: false, error: errorMsg, allowRetry: false };
             }
@@ -952,6 +953,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // get our geometry results
         if (!inspectionRoot?.meshes) {
+            RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Missing meshes in inspection result.',{  name: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
             this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Missing meshes in inspection result.');
             return { success: false, error: 'Missing meshes in Cook report', allowRetry: false };
         }
@@ -959,17 +961,20 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // check for invalid bounding box
         const sizeSum = inspectionRoot.scene.geometry.size.reduce((acc, num) => acc + num, 0);
         if(sizeSum <= 0) {
+            RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh size is zero.',{  name: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
             this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh size is zero.');
             return { success: false, error: 'Invalid mesh. Size is zero.', allowRetry: false };
         }
 
         // check for invalid geometry counts
         if(inspectionRoot.scene.statistics.numFaces<=0 || inspectionRoot.scene.statistics.numVertices<=0 || inspectionRoot.scene.statistics.numEdges<=0 || inspectionRoot.scene.statistics.numTriangles<=0 || logContains(logs,'Invalid vertex index')===true) {
+            RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh missing vertices and/or faces.',{  name: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
             this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
         if(logContains(logs,'Invalid vertex index')===true) {
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
+            RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh size is zero.',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+            this.appendToReportAndLog('[CookJob:Inspection] response is invalid: Missing vertices/faces.');
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
 
@@ -977,6 +982,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         if(inspectionRoot.scene.statistics.numLinkedTextures > 0 || inspectionRoot.scene.statistics.numEmbeddedTextures > 0) {
             // NOTE: just looking at first mesh. multi-model inspection will need special handling
             if(inspectionRoot.meshes[0].statistics.hasTexCoords===false) {
+                RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh missing UVs for included texture.',{  name: this.name(), idJobRun: this._dbJobRun.idJobRun, ...inspectionRoot.scene.statistics },'Job.PackratInspect');
                 this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.');
                 return { success: false, error: 'Invalid mesh. Missing UVs for included texture.', allowRetry: false };
             }

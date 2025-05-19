@@ -53,7 +53,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
 
         RK.logInfo(RK.LogSection.eWF,'workflow update',undefined,
             { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow, step: this.workflowData.workflowSet },
-            'WorkflowIngestion.updateStatus'
+            'Workflow.Ingestion'
         );
 
         // if we're not updated or not finished then just return
@@ -67,7 +67,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
         const workflowSet: number = this.workflowData.workflow?.idWorkflowSet ?? -1;
         const workflows: DBAPI.Workflow[] | null = await DBAPI.Workflow.fetchFromWorkflowSet(workflowSet);
         if(!workflows || workflows.length===0) {
-            RK.logWarning(RK.LogSection.eWF,'update status','no workflows found in set', { idWorkflowSet: this.workflowData.workflow?.idWorkflowSet },'WorkflowIngestion');
+            RK.logWarning(RK.LogSection.eWF,'update status','no workflows found in set', { idWorkflowSet: this.workflowData.workflow?.idWorkflowSet },'Workflow.Ingestion');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
@@ -79,7 +79,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
         // see if any are still going, if so return
         const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
         if(stillRunning===true) {
-            RK.logDebug(RK.LogSection.eWF,'update status','still running', { idWorkflow: this.workflowData.workflow?.idWorkflow },'WorkflowIngestion');
+            RK.logDebug(RK.LogSection.eWF,'update status','still running', { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Ingestion');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
@@ -142,7 +142,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
         // get our constellation
         const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
         if(!wfConstellation) {
-            RK.logError(RK.LogSection.eWF,'get workflow failed','no constellation found. not initialized?', { idWorkflow: this.workflowData.workflow?.idWorkflow },'WorkflowIngestion');
+            RK.logError(RK.LogSection.eWF,'get workflow failed','no constellation found. not initialized?', { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Ingestion');
             return null;
         }
 

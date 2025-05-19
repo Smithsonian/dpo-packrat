@@ -29,11 +29,11 @@ export class WorkflowUtil {
             const OID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!OID) {
                 const error: string = `unable to compute system object type for ${idSystemObject}`;
-                RK.logError(RK.LogSection.eWF,'extract asset versions failed','unable to compute system object type', { idSystemObject },'WorkflowUtil');
+                RK.logError(RK.LogSection.eWF,'extract asset versions failed','unable to compute system object type', { idSystemObject },'Workflow.Util');
                 return { success: false, error, idAssetVersions: null };
             } else if (OID.eObjectType != COMMON.eSystemObjectType.eAssetVersion) {
                 const error: string = `called with invalid system object type ${JSON.stringify(OID)} for ${idSystemObject}; expected eAssetVersion`;
-                RK.logError(RK.LogSection.eWF,'extract asset versions failed','called with invalid system object type', { idSystemObject, ...OID },'WorkflowUtil');
+                RK.logError(RK.LogSection.eWF,'extract asset versions failed','called with invalid system object type', { idSystemObject, ...OID },'Workflow.Util');
                 return { success: false, error, idAssetVersions: null };
             }
             idAssetVersions.push(OID.idObject);
@@ -51,7 +51,7 @@ export class WorkflowUtil {
         idProject: number | undefined,
         idUserInitiator: number | undefined,
         assetMap?: Map<string, number> | undefined): Promise<H.IOResults> { // map of asset filename -> idAsset, needed by WorkflowUtil.computeModelMetrics to persist ModelMaterialUVMap and ModelMaterialChannel
-        RK.logInfo(RK.LogSection.eWF,'compute model metrics',undefined, { fileName, idModel, idSystemObjectModel, idSystemObjectAssetVersion },'WorkflowUtil');
+        RK.logInfo(RK.LogSection.eWF,'compute model metrics',undefined, { fileName, idModel, idSystemObjectModel, idSystemObjectAssetVersion },'Workflow.Util');
 
         switch (path.extname(fileName).toLowerCase()) {
             case '.usda':
@@ -66,7 +66,7 @@ export class WorkflowUtil {
                 new COOK.JobCookSIPackratInspectParameters(fileName, undefined, readStream));
 
         if (!idModel && !idSystemObjectModel && !idSystemObjectAssetVersion) {
-            RK.logError(RK.LogSection.eWF,'compute model metrics failed','called without identifiers', { fileName },'WorkflowUtil');
+            RK.logError(RK.LogSection.eWF,'compute model metrics failed','called without identifiers', { fileName },'Workflow.Util');
             return { success: false, error: `${fileName} called without identifiers` };
         }
 
@@ -80,23 +80,23 @@ export class WorkflowUtil {
 
             const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObjectAssetVersion);
             if (!SO) {
-                RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to fetch system object from id', { fileName, idSystemObjectAssetVersion },'WorkflowUtil');
+                RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to fetch system object from id', { fileName, idSystemObjectAssetVersion },'Workflow.Util');
                 return { success: false, error: `${fileName} unable to fetch system object from id ${idSystemObjectAssetVersion}` };
             }
             if (SO.idAssetVersion)
                 idAssetVersions.push(SO.idAssetVersion);
             else
-                RK.logError(RK.LogSection.eWF,'compute model metrics failed','system object is not an asset version', { fileName, idSystemObjectAssetVersion },'WorkflowUtil');
+                RK.logError(RK.LogSection.eWF,'compute model metrics failed','system object is not an asset version', { fileName, idSystemObjectAssetVersion },'Workflow.Util');
         } else {
             if (!idSystemObjectModel) {
                 const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel ?? 0);
                 if (!model) {
-                    RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to load model from id', { fileName, idModel },'WorkflowUtil');
+                    RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to load model from id', { fileName, idModel },'Workflow.Util');
                     return { success: false, error: `${fileName} unable to load model from ${idModel}` };
                 }
                 const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
                 if (!modelSO) {
-                    RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to load model system object', { fileName, model },'WorkflowUtil');
+                    RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to load model system object', { fileName, model },'Workflow.Util');
                     return { success: false, error: `${fileName} unable to load model system object from ${H.Helpers.JSONStringify(model)}` };
                 }
                 idSystemObjectModel = modelSO.idSystemObject;
@@ -104,13 +104,13 @@ export class WorkflowUtil {
 
             const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectModel);
             if (!assetVersions) {
-                RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to load asset versions', { fileName, idSystemObjectModel },'WorkflowUtil');
+                RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to load asset versions', { fileName, idSystemObjectModel },'Workflow.Util');
                 return { success: false, error: `${fileName} unable to load asset versions from ${idSystemObjectModel}` };
             }
             for (const assetVersion of assetVersions) {
                 const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
                 if (!SOI) {
-                    RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to fetch system object info', { fileName, assetVersion },'WorkflowUtil');
+                    RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to fetch system object info', { fileName, assetVersion },'Workflow.Util');
                     return { success: false, error: `${fileName} unable to fetch system object info from ${H.Helpers.JSONStringify(assetVersion)}` };
                 }
                 idSystemObject.push(SOI.idSystemObject);
@@ -128,19 +128,19 @@ export class WorkflowUtil {
 
         const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
         if (!workflowEngine) {
-            RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to get WorkflowEngine', { fileName },'WorkflowUtil');
+            RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to get WorkflowEngine', { fileName },'Workflow.Util');
             return { success: false, error: `${fileName} unable to get WorkflowEngine: ${JSON.stringify(wfParams)}` };
         }
 
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
         if (!workflow) {
-            RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to create Cook si-packrat-inspect workflow', { fileName, ...wfParams },'WorkflowUtil');
+            RK.logError(RK.LogSection.eWF,'compute model metrics failed','unable to create Cook si-packrat-inspect workflow', { fileName, ...wfParams },'Workflow.Util');
             return { success: false, error: `${fileName} unable to create Cook si-packrat-inspect workflow: ${JSON.stringify(wfParams)}` };
         }
 
         const results = await workflow.waitForCompletion(10 * 60 * 60 * 1000); // 10 hours
         if (!results.success) {
-            RK.logError(RK.LogSection.eWF,'compute model metrics failed',`post-upload error: ${results.error}`, { fileName },'WorkflowUtil');
+            RK.logError(RK.LogSection.eWF,'compute model metrics failed',`post-upload error: ${results.error}`, { fileName },'Workflow.Util');
             return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };
         }
 
@@ -149,10 +149,10 @@ export class WorkflowUtil {
             for (const idAssetVersion of idAssetVersions) {
                 const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
                 if (JCOutput) {
-                    RK.logDebug(RK.LogSection.eWF,'compute model metrics','persisting metrics for model', { fileName, idModel },'WorkflowUtil');
+                    RK.logDebug(RK.LogSection.eWF,'compute model metrics','persisting metrics for model', { fileName, idModel },'Workflow.Util');
                     const results: H.IOResults = await JCOutput.persist(idModel, assetMap);
                     if (!results.success) {
-                        RK.logError(RK.LogSection.eWF,'compute model metrics failed',`peristing metrics error: ${results.error}`, { fileName, idModel, assetMap },'WorkflowUtil');
+                        RK.logError(RK.LogSection.eWF,'compute model metrics failed',`peristing metrics error: ${results.error}`, { fileName, idModel, assetMap },'Workflow.Util');
                         return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };
                     }
                 }

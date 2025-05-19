@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosResponse } from 'axios';
-import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 type CookResourceState = {
     success: boolean,
@@ -48,8 +48,6 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            LOG.info(`getCookResources getting status for resource: ${endpoint}.`,LOG.LS.eSYS);
-
             // make our query to the resource and timeout after 5 seconds to minimize delays
             const response: AxiosResponse | null = await axios.get(endpoint, { timeout: 5000 });
             if (!response || response.status<200 || response.status>299) {
@@ -72,11 +70,10 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
 
         } catch (error: any) {
             const errorMessage = error.message ? error.message : JSON.stringify(error);
-            LOG.error(`getCookResources ${address} attempt ${attempt} failed with error: ${errorMessage}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'get resource status failed',errorMessage,{ address, attempt, endpoint },'CookResource');
 
-            if (attempt === maxRetries || !errorMessage.includes('getaddrinfo EAI_AGAIN')) {
+            if (attempt === maxRetries || !errorMessage.includes('getaddrinfo EAI_AGAIN'))
                 return { success: false, error: errorMessage, address };
-            }
 
             // Wait for a short delay before retrying
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -86,7 +83,7 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
     }
 
     // if all retries failed, return failed state
-    LOG.error(`getCookResources ${address} maximum retries reached.`, LOG.LS.eSYS);
+    RK.logError(RK.LogSection.eSYS,'max retries reached','',{ address },'CookResource');
     return { success: false, error: 'Max retries reached', address };
 };
 const verifyCookResourceCapability = (job: string, resource: DBAPI.CookResource): number => {
@@ -109,7 +106,7 @@ const verifyCookResourceCapability = (job: string, resource: DBAPI.CookResource)
         } break;
 
         default: {
-            LOG.error(`getCookResource failed to verify resource (${resource.Name}: ${resource.Address}). unsupported job (${job}).`,LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'verify resource compatability failed','unsupported job type',{ job, ...resource },'CookResource');
             return 0;
         }
     }
@@ -172,7 +169,7 @@ export const getJobTypeFromCookJobName = (cookJobName: string): string | undefin
     // first by extracting from the name, and then finding best match
     const parts: string[] = cookJobName.split(':');
     if(parts.length<=1) {
-        LOG.error(`getJobTypeFromCookJobName encountered unexpected input format. (${cookJobName})`,LOG.LS.eSYS);
+        RK.logError(RK.LogSection.eSYS,'get job type failed','encountered unexpected input format',{ cookJobName },'CookResource');
         return;
     }
 
@@ -186,7 +183,7 @@ export const getJobTypeFromCookJobName = (cookJobName: string): string | undefin
         case 'si-generate-downloads': return 'generate_downloads';
 
         default:{
-            LOG.error(`getJobTypeFromCookJobName encountered unsupported input format. (${parts[0]})`,LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'get job type failed','ncountered unsupported input format',{ cookJobName, parts },'CookResource');
             return;
         }
     }
@@ -211,20 +208,20 @@ export class CookResource {
         // grab all resources from DB
         const cookResources: DBAPI.CookResource[] | null = await DBAPI.CookResource.fetchAll();
         if(!cookResources) {
-            LOG.error('getCookResources failed. no resources found in the database.',LOG.LS.eSYS);
+            RK.logCritical(RK.LogSection.eSYS,'get resource failed','no resources found in the database',{ job, source, includeAll },'CookResource');
             return createResultError('Cannot find a Cook resource in the database. Contact Packrat support.');
         }
 
         // cycle filter list of resources based on supported features
-        // TODO: add user id, or 'internal'
-        LOG.info(`getCookResources checking availability for '${job}' job from '${(!source)?'internal':source}'`,LOG.LS.eSYS);
+        RK.logInfo(RK.LogSection.eSYS,'get resource','checking availability',{ job, source: source ?? 'internal' },'CookResource');
+
         const cookResourceResults: CookResourceState[] = [];
         for(let i=0; i<cookResources.length; i++) {
 
             // make sure the resource supports the job type
             const supportWeight: number = verifyCookResourceCapability(job,cookResources[i]);
             if(supportWeight <= 0) {
-                LOG.info(`getCookResources skipping resource: ${cookResources[i].Name}. (address: ${cookResources[i].Address} | reason: unsupported job type)`,LOG.LS.eSYS);
+                RK.logDebug(RK.LogSection.eSYS,'get resource','skipping resource. unsupported job type',{ name: cookResources[i].Name, job, source },'CookResource');
                 continue;
             }
 
@@ -235,13 +232,13 @@ export class CookResource {
                 result.weight = supportWeight;
                 cookResourceResults.push(result);
             } else {
-                LOG.info(`getCookResources skipping resource: ${cookResources[i].Name}. (address: ${cookResources[i].Address} | reason: ${result.error})`,LOG.LS.eSYS);
+                RK.logDebug(RK.LogSection.eSYS,'get resource',`skipping resource. ${result.error}`,{ name: cookResources[i].Name, job, source },'CookResource');
             }
         }
 
         // if we're empty, bail
         if(cookResourceResults.length<=0) {
-            LOG.error(`getCookResource cannot find the best fit resource. (resources: ${cookResourceResults.length})`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'get resource failed','cannot find suitable resource for job',{ job, source },'CookResource');
             return createResultError(`Could not find a suitable resource for a ${job} job. (${cookResources.length} resources checked)`);
         }
 
@@ -251,7 +248,7 @@ export class CookResource {
                a.jobsWaiting == undefined || b.jobsWaiting == undefined ||
                a.jobsRunning == undefined || b.jobsRunning == undefined ||
                a.jobsCreated == undefined || b.jobsCreated == undefined) {
-                LOG.error(`getCookResources cannot sort resources. resources have undefined properties. (A: ${JSON.stringify(a)} | B: ${JSON.stringify(b)})`,LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'get resource failed','cannot sort resources. resources have undefined properties.',{ job, source, resourceA: a, resourceB: b },'CookResource');
                 return 0;
             }
 
@@ -283,7 +280,7 @@ export class CookResource {
             // find match of resource and its results
             const resource: DBAPI.CookResource | undefined = cookResources.find(item => item.Address === cookResourceResults[i].address);
             if(!resource) {
-                LOG.info(`getCookResource cannot find a matching resource in original array. skipping (${cookResourceResults[i].address})`, LOG.LS.eSYS);
+                RK.logDebug(RK.LogSection.eSYS,'get resource','cannot find a matching resource in original array. skipping',{ cookResource: cookResourceResults[i].address, job, source },'CookResource');
                 continue;
             }
 
@@ -297,12 +294,12 @@ export class CookResource {
 
         // if we didn't find any then we need to fail
         if(result.resources.length===0) {
-            LOG.error('getCookResource cannot find any suitable resources',LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'get resource failed','cannot find any suitable resources',{ job, source, numResources: cookResources.length },'CookResource');
             return createResultError(`Could not find a matching resource. notify Packrat support. (${cookResources.length} resources checked)`);
         }
 
         // status messgae
-        LOG.info(`getCookResources matched ${result.resources.length} resources. The best fit is ${getResourceInfoString(result.resources[0])}`,LOG.LS.eSYS);
+        RK.logInfo(RK.LogSection.eSYS,'get resource','found available resource',{ resource: result.resources[0], job, source, numResources: cookResources.length },'CookResource');
         return result;
     }
 }

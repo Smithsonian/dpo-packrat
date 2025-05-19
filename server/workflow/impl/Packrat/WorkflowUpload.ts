@@ -72,7 +72,7 @@ export class WorkflowUpload implements WF.IWorkflow {
 
         RK.logInfo(RK.LogSection.eWF,'workflow update',undefined,
             { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow, set: this.workflowData.workflowSet },
-            'WorkflowUpload'
+            'Workflow.Upload'
         );
 
         // if we're not updated or not finished then just return
@@ -86,24 +86,24 @@ export class WorkflowUpload implements WF.IWorkflow {
         const workflowSet: number = this.workflowData.workflow?.idWorkflowSet ?? -1;
         const workflows: DBAPI.Workflow[] | null = await DBAPI.Workflow.fetchFromWorkflowSet(workflowSet);
         if(!workflows || workflows.length===0) {
-            RK.logDebug(RK.LogSection.eWF,'update status','no workflows found from set', { idWorkflowSet: this.workflowData.workflow?.idWorkflowSet },'WorkflowUpload');
+            RK.logDebug(RK.LogSection.eWF,'update status','no workflows found from set', { idWorkflowSet: this.workflowData.workflow?.idWorkflowSet },'Workflow.Upload');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
-        RK.logInfo(RK.LogSection.eWF,'workflow update',undefined,{ workflows, workflowSet },'WorkflowUpload');
+        RK.logInfo(RK.LogSection.eWF,'workflow update',undefined,{ workflows, workflowSet },'Workflow.Upload');
 
         // Get all steps from the workflows
         const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
 
-        RK.logInfo(RK.LogSection.eWF,'workflow step update', undefined,{ workflowSteps },'WorkflowUpload');
+        RK.logInfo(RK.LogSection.eWF,'workflow step update', undefined,{ workflowSteps },'Workflow.Upload');
 
         // see if any are still going, if so return
         const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
-        RK.logInfo(RK.LogSection.eWF,'workflow step update','still running',{ stillRunning },'WorkflowUpload');
+        RK.logInfo(RK.LogSection.eWF,'workflow step update','still running',{ stillRunning },'Workflow.Upload');
         if(stillRunning===true) {
-            RK.logDebug(RK.LogSection.eWF,'step update status','still running', { idWorkflow: this.workflowData.workflow?.idWorkflow, workflowSet },'WorkflowUpload');
+            RK.logDebug(RK.LogSection.eWF,'step update status','still running', { idWorkflow: this.workflowData.workflow?.idWorkflow, workflowSet },'Workflow.Upload');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
@@ -273,7 +273,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     private async validateFileScene(fileName: string, readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
         const svxReader: SvxReader = new SvxReader();
         const svxRes: H.IOResults = await svxReader.loadFromStream(readStream);
-        RK.logError(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'WorkflowUpload');
+        RK.logError(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'Workflow.Upload');
         return (svxRes.success)
             ? this.appendToWFReport(`Upload validated ${fileName}`)
             : this.handleError(`WorkflowUpload.validateFile failed to parse svx file ${fileName}: ${svxRes.error}`);
@@ -286,7 +286,7 @@ export class WorkflowUpload implements WF.IWorkflow {
         try {
             const SH: sharp.Sharp = sharp(buffer);
             const stats: sharp.Stats = await SH.stats();
-            RK.logDebug(RK.LogSection.eWF,'validating image',undefined, { fileName, stats },'WorkflowUpload');
+            RK.logDebug(RK.LogSection.eWF,'validating image',undefined, { fileName, stats },'Workflow.Upload');
             return (stats.channels.length >= 1)
                 ? this.appendToWFReport(`Upload validated ${fileName}`)
                 : this.handleError(`WorkflowUpload.validateFile encountered invalid image ${fileName}`);
@@ -322,9 +322,9 @@ export class WorkflowUpload implements WF.IWorkflow {
 
     private async appendToWFReport(message: string, isError?: boolean | undefined): Promise<H.IOResults> {
         if (isError)
-            RK.logError(RK.LogSection.eWF,'workflow upload error',message, { idWorkflow: this.workflowData.workflow?.idWorkflow },'WorkflowUpload');
+            RK.logError(RK.LogSection.eWF,'workflow upload error',message, { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Upload');
         else
-            RK.logInfo(RK.LogSection.eWF,'workflow upload status',message, { idWorkflow: this.workflowData.workflow?.idWorkflow },'WorkflowUpload');
+            RK.logInfo(RK.LogSection.eWF,'workflow upload status',message, { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Upload');
         return (this.workflowReport) ? this.workflowReport.append(message) : { success: true };
     }
 
@@ -340,7 +340,7 @@ export class WorkflowUpload implements WF.IWorkflow {
         // get our constellation
         const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
         if(!wfConstellation) {
-            RK.logError(RK.LogSection.eWF,'get workflow failed','no constellation found. not initialized?', { idWorkflow: this.workflowData.workflow?.idWorkflow },'WorkflowUpload');
+            RK.logError(RK.LogSection.eWF,'get workflow failed','no constellation found. not initialized?', { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Upload');
             return null;
         }
 
