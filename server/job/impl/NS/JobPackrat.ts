@@ -141,17 +141,17 @@ export abstract class JobPackrat implements JOB.IJob {
             // update the status/values of our job
             let result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job create failed','cannot update JobRun',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job create failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             }
 
             // update our workflow engine with new job status
             result = await this.updateEngines(true); // was: don't block
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job create failed','cannot update job engines',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job create failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             } else
-                RK.logInfo(RK.LogSection.eJOB,'job created',undefined,{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logInfo(RK.LogSection.eJOB,'job created',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
         }
         return updated;
     }
@@ -165,17 +165,17 @@ export abstract class JobPackrat implements JOB.IJob {
             // update the status/values of our job
             let result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job waiting failed','cannot update JobRun',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job waiting failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             }
 
             // update our workflow engine with new job status
             result = await this.updateEngines(true); // was: don't block
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job waiting failed','cannot update job engines',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job waiting failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             } else
-                RK.logInfo(RK.LogSection.eJOB,'job waiting',undefined,{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logInfo(RK.LogSection.eJOB,'job waiting',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
         }
         return updated;
     }
@@ -190,17 +190,17 @@ export abstract class JobPackrat implements JOB.IJob {
             // update the status/values of our job
             let result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job start failed','cannot update JobRun',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job start failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
                 return false;
             }
 
             // update our workflow engine with new job status
             result = await this.updateEngines(true); // was: don't block
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job start failed','cannot update job engines',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job start failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
                 return false;
             } else
-                RK.logInfo(RK.LogSection.eJOB,'job start',undefined,{ name: this.name, idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
+                RK.logInfo(RK.LogSection.eJOB,'job start',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
         }
         return updated;
     }
@@ -219,7 +219,7 @@ export abstract class JobPackrat implements JOB.IJob {
             // update the status/values of our job
             let result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record success failed','cannot update JobRun',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, config: this._dbJobRun.Configuration },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record success failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, config: this._dbJobRun.Configuration },'Job.Packrat');
                 return false;
             }
 
@@ -229,15 +229,15 @@ export abstract class JobPackrat implements JOB.IJob {
             if (this._report)
                 await this._report.append(`${hrefDownload}<br/>\n`);
             else
-                RK.logWarning(RK.LogSection.eJOB,'job record success','no report to append results',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
+                RK.logWarning(RK.LogSection.eJOB,'job record success','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
             // update our workflow engine with new job status
             result = await this.updateEngines(true, true); // was: don't block
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record success failed','cannot update job engines',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record success failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             } else
-                RK.logInfo(RK.LogSection.eJOB,'job record success',undefined,{ name: this.name, idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
+                RK.logInfo(RK.LogSection.eJOB,'job record success',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
         }
         return updated;
     }
@@ -257,7 +257,7 @@ export abstract class JobPackrat implements JOB.IJob {
             // update the status/values of our job
             let result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update JobRun',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, config: this._dbJobRun.Configuration },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, config: this._dbJobRun.Configuration },'Job.Packrat');
                 return false;
             }
 
@@ -268,15 +268,15 @@ export abstract class JobPackrat implements JOB.IJob {
             if (this._report)
                 await this._report.append(`${hrefDownload}<br/>\n`);
             else
-                RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
+                RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
             // update our workflow engine with new job status
             result = await this.updateEngines(true, true); // was: don't block
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update job engines',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             } else
-                RK.logInfo(RK.LogSection.eJOB,'job record failure',this._dbJobRun.Error,{ name: this.name, idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
+                RK.logInfo(RK.LogSection.eJOB,'job record failure',this._dbJobRun.Error,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
         }
 
         return updated;
@@ -300,7 +300,7 @@ export abstract class JobPackrat implements JOB.IJob {
             // update the status/values of our job
             let result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update JobRun',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             }
 
@@ -311,15 +311,15 @@ export abstract class JobPackrat implements JOB.IJob {
             if (this._report)
                 await this._report.append(`${hrefDownload}<br/>\n`);
             else
-                RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ name: this.name, idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
+                RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
             // update our workflow engine with new job status
             result = await this.updateEngines(true, true); // was: don't block
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update job engines',{ name: this.name, idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             } else
-                RK.logInfo(RK.LogSection.eJOB,'job record failure',errorMsg ?? undefined,{ name: this.name, idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
+                RK.logInfo(RK.LogSection.eJOB,'job record failure',errorMsg ?? undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
         }
 
         return updated;

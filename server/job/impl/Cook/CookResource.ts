@@ -183,7 +183,7 @@ export const getJobTypeFromCookJobName = (cookJobName: string): string | undefin
         case 'si-generate-downloads': return 'generate_downloads';
 
         default:{
-            RK.logError(RK.LogSection.eSYS,'get job type failed','ncountered unsupported input format',{ cookJobName, parts },'CookResource');
+            RK.logError(RK.LogSection.eSYS,'get job type failed','encountered unsupported input format',{ cookJobName, parts },'CookResource');
             return;
         }
     }
@@ -213,7 +213,7 @@ export class CookResource {
         }
 
         // cycle filter list of resources based on supported features
-        RK.logInfo(RK.LogSection.eSYS,'get resource','checking availability',{ job, source: source ?? 'internal' },'CookResource');
+        RK.logDebug(RK.LogSection.eSYS,'checking resource','checking availability',{ job, source: source ?? 'internal' },'CookResource');
 
         const cookResourceResults: CookResourceState[] = [];
         for(let i=0; i<cookResources.length; i++) {
@@ -299,7 +299,7 @@ export class CookResource {
         }
 
         // status messgae
-        RK.logInfo(RK.LogSection.eSYS,'get resource','found available resource',{ resource: result.resources[0], job, source, numResources: cookResources.length },'CookResource');
+        RK.logInfo(RK.LogSection.eSYS,'found available resource',undefined,{ resource: result.resources[0], job, source, numResources: cookResources.length },'CookResource');
         return result;
     }
 }

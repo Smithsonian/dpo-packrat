@@ -545,7 +545,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             `;
 
             RK.logInfo(RK.LogSection.eJOB,'scene generation completed',
-                undefined,
+                undefined,undefined,
                 'Job.VoyagerScene.recordSuccess'
             );
 

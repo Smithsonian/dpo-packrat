@@ -229,7 +229,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const idUserCreator: number = LS?.idUser ?? 0;
 
         // cycle through retrieved downloads, processing them
-        RK.logDebug(RK.LogSection.eJOB,'create system objects','procesing generated downloads', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, numDownloads: downloadMap.size },'Job.GenerateDownloads');
+        RK.logDebug(RK.LogSection.eJOB,'create system objects','procesing generated downloads', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, numDownloads: downloadMap.size },'Job.GenerateDownloads');
 
         for (const [downloadType, downloadFile] of downloadMap) {
 
@@ -238,7 +238,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             // fetch the file from WebDav shared space with Cook
             // TODO: just check if file exists vs. actually opening stream
-            RK.logDebug(RK.LogSection.eJOB,'create system objects','processing download', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, downloadFile, downloadType },'Job.GenerateDownloads');
+            RK.logDebug(RK.LogSection.eJOB,'create system objects','processing download', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, downloadFile, downloadType },'Job.GenerateDownloads');
 
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
             if (!RSR.success || !RSR.readStream)
@@ -276,7 +276,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     if(!modelProcessingResult) {
                         // store our info with an error, add to our report, and break out of loop (no point checking other files)
                         modelFiles.push({ ...currentItemResult, success: false, error: `error processing model '${downloadFile}'` });
-                        RK.logError(RK.LogSection.eJOB,'create system objects failed','failed to process model file', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, downloadFile },'Job.GenerateDownloads');
+                        RK.logError(RK.LogSection.eJOB,'create system objects failed','failed to process model file', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, downloadFile },'Job.GenerateDownloads');
                         await this.appendToReportAndLog(`JobCookSIGenerateDownloads failed model file: ${downloadFile}`);
                         break;
                     }
@@ -325,7 +325,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 // make sure we have a MSX to work with
                 const MSX: DBAPI.ModelSceneXref = model.data?.MSX ?? null;
                 if(!MSX) {
-                    RK.logError(RK.LogSection.eJOB,'create system objects failed','cannot update MSX for model. invalid input. no MSX found', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, ...model },'Job.GenerateDownloads');
+                    RK.logError(RK.LogSection.eJOB,'create system objects failed','cannot update MSX for model. invalid input. no MSX found', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, ...model },'Job.GenerateDownloads');
                     continue;
                 }
 
@@ -351,10 +351,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 // TODO: check if other properties like usage differ
                 const MSXResult: boolean = await MSX.update();
                 if(!MSXResult)
-                    RK.logError(RK.LogSection.eJOB,'create system objects','cannot update MSX for model', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, modelName: model.data.MSX.Name },'Job.GenerateDownloads');
+                    RK.logError(RK.LogSection.eJOB,'create system objects','cannot update MSX for model', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, modelName: model.data.MSX.Name },'Job.GenerateDownloads');
             } else
                 RK.logWarning(RK.LogSection.eJOB,'create system objects','skipping generated download model. assuming not referenced by scene',
-                    { name: this.name(), idJobRun: this._dbJobRun.idJobRun, model, idScene: sceneSource.idScene },'Job.GenerateDownloads');
+                    { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, model, idScene: sceneSource.idScene },'Job.GenerateDownloads');
         }
 
         // process the scene file, ingesting it
@@ -362,7 +362,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if(result.success===false)
             return this.logError('create system objects failed',`failed to process svx scene: ${result.error}`,{});
         else {
-            RK.logInfo(RK.LogSection.eJOB,'process scene success','successful processing of svx scene',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFileName: svxSceneFile.fileName },'Job.GenerateDownloads');
+            RK.logInfo(RK.LogSection.eJOB,'process scene success','successful processing of svx scene',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFileName: svxSceneFile.fileName },'Job.GenerateDownloads');
             await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful processing of svx scene: ${svxSceneFile.fileName}`);
         }
 
@@ -376,11 +376,11 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // cycle through models and if there's an asset version link up
         for(const model of modelFiles) {
             if (SOV && model.data.assetVersion) {
-                RK.logDebug(RK.LogSection.eJOB,'create system objects','model linking to scene', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, model, scene: { name: sceneSource.Name, idSystemObject: SOV.idSystemObject } },'Job.GenerateDownloads');
+                RK.logDebug(RK.LogSection.eJOB,'create system objects','model linking to scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, model, scene: { name: sceneSource.Name, idSystemObject: SOV.idSystemObject } },'Job.GenerateDownloads');
                 const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref | null =
                     await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, model.data.assetVersion.idAsset, model.data.assetVersion.idAssetVersion);
                 if (!SOVAVX)
-                    RK.logError(RK.LogSection.eJOB,'create system objects','unable create/update SystemObjectVersionAssetVersionXref', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, SOV, modelAssetVersion: model.data.assetVersion },'Job.GenerateDownloads');
+                    RK.logError(RK.LogSection.eJOB,'create system objects','unable create/update SystemObjectVersionAssetVersionXref', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, SOV, modelAssetVersion: model.data.assetVersion },'Job.GenerateDownloads');
             }
         }
 
@@ -390,7 +390,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!metadataResult.success)
             return this.logError('create system objects failed',`unable to persist scene attachment metadata: ${metadataResult.error}`,{});
 
-        RK.logInfo(RK.LogSection.eJOB,'create system objects','successful generation of downloads', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFileName: svxSceneFile.fileName },'Job.GenerateDownloads');
+        RK.logInfo(RK.LogSection.eJOB,'create system objects','successful generation of downloads', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFileName: svxSceneFile.fileName },'Job.GenerateDownloads');
         await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful generation of downloads: ${svxSceneFile.fileName}`);
         return { success: true };
     }
@@ -409,7 +409,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!JobCookSIGenerateDownloads.vocabDownload) {
             JobCookSIGenerateDownloads.vocabDownload = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
             if (!JobCookSIGenerateDownloads.vocabDownload)
-                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Download Model Purpose', { name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Download Model Purpose', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
         }
         return JobCookSIGenerateDownloads.vocabDownload;
     }
@@ -652,7 +652,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
         const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
 
-        RK.logInfo(RK.LogSection.eJOB,'process model','ingested generated download model',{ name: this.name(), pathObject, pathDownload },'Job.GenerateDownloads');
+        RK.logInfo(RK.LogSection.eJOB,'process model','ingested generated download model',{ jobName: this.name(), pathObject, pathDownload },'Job.GenerateDownloads');
         await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
 
         // currently not passed in. how is this used?
@@ -718,7 +718,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // run si-packrat-inspect on this model to get the metrics and make sure it's valid
         const profileKey: string = `${model.Name} inspection: ${H.Helpers.randomSlug()}`;
-        RK.profile(profileKey,RK.LogSection.eJOB,`${model.Name} inspection`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
+        RK.profile(profileKey,RK.LogSection.eJOB,`${model.Name} inspection`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
         if (idSystemObjectModel) {
             const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, idSystemObjectModel, undefined, undefined,
                 undefined, undefined /* FIXME */, idUserCreator);
@@ -845,7 +845,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!vScene || !vModel)
             return await this.logError('process scene failed','unable to calculate vocabulary needed to ingest scene file', { svxFile });
 
-        RK.logDebug(RK.LogSection.eJOB,'process scene','parsing scene', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFile },'Job.GenerateDownloads');
+        RK.logDebug(RK.LogSection.eJOB,'process scene','parsing scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFile },'Job.GenerateDownloads');
         // LOG.info(`JobCookSIGenerateDownloads.processSceneFile fetched scene:${H.Helpers.JSONStringify(svxData)}`, LOG.LS.eJOB);
 
         // Look for an existing scene, which is a child of the master model (modelSource)
@@ -857,7 +857,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // if we have more than one scene see if there is a clear path to selecting one (i.e. one has EDAN id)
         // TODO: investigate why the system sometimes creates additional scenes
         if(scenes.length>1) {
-            RK.logWarning(RK.LogSection.eJOB,'process scene','found multiple scenes. pruning...', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, numScenes: scenes.length },'Job.GenerateDownloads');
+            RK.logWarning(RK.LogSection.eJOB,'process scene','found multiple scenes. pruning...', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, numScenes: scenes.length },'Job.GenerateDownloads');
 
             // Filter the scenes that have EdanUUID and store the ids of removed scenes
             const scenesWithEdanUUID: DBAPI.Scene[] = [];
@@ -873,13 +873,13 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             // Check if there is only one scene with EdanUUID
             if (scenesWithEdanUUID.length === 1) {
-                RK.logError(RK.LogSection.eJOB,'process scene failed','pruning found scene. Needs cleanup.', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, removedSceneIds,  },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'process scene failed','pruning found scene. Needs cleanup.', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, removedSceneIds,  },'Job.GenerateDownloads');
                 scenes.length = 0;
                 scenes.push(...scenesWithEdanUUID);
             } else {
                 // If there are more than one, clear the removed IDs as no scene is removed
                 removedSceneIds.length = 0;
-                RK.logError(RK.LogSection.eJOB,'process scene failed','pruning returned multiple scenes. needs cleanup.', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, scenesWithEdanUUID, idModel: modelSource.idModel },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'process scene failed','pruning returned multiple scenes. needs cleanup.', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, scenesWithEdanUUID, idModel: modelSource.idModel },'Job.GenerateDownloads');
             }
         }
 
@@ -912,7 +912,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         let asset: DBAPI.Asset | null = null;
         if (createScene) {
-            RK.logDebug(RK.LogSection.eJOB,'process scene','creating new scene', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneName: scene.Name },'Job.GenerateDownloads');
+            RK.logDebug(RK.LogSection.eJOB,'process scene','creating new scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneName: scene.Name },'Job.GenerateDownloads');
 
             // compute ItemParent of ModelSource
             scene.Name = this.sceneParameterHelper.sceneName;
@@ -935,7 +935,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
             // LOG.info(`JobCookSIGenerateDownloads.processSceneFile[${svxFile}] wire ModelSource to Scene: ${H.Helpers.JSONStringify(SOX)}`, LOG.LS.eJOB);
         } else {
-            RK.logDebug(RK.LogSection.eJOB,'process scene','updating existing scene', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneName: scene.Name },'Job.GenerateDownloads');
+            RK.logDebug(RK.LogSection.eJOB,'process scene','updating existing scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneName: scene.Name },'Job.GenerateDownloads');
 
             // determine if we are updating an existing scene with an existing scene asset:
             const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
@@ -949,9 +949,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                         }
                     }
                 } else
-                    RK.logError(RK.LogSection.eJOB,'process scene failed','unable to fetch assets for scene systemobject', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneSO },'Job.GenerateDownloads');
+                    RK.logError(RK.LogSection.eJOB,'process scene failed','unable to fetch assets for scene systemobject', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneSO },'Job.GenerateDownloads');
             } else
-                RK.logError(RK.LogSection.eJOB,'process scene failed','unable to fetch system object', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, scene },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'process scene failed','unable to fetch system object', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, scene },'Job.GenerateDownloads');
         }
 
         // Scene owns this ingested asset of the SVX File
@@ -987,7 +987,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
         const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
 
-        RK.logInfo(RK.LogSection.eJOB,'process scene','ingested scene', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, pathObject, pathDownload },'Job.GenerateDownloads');
+        RK.logInfo(RK.LogSection.eJOB,'process scene','ingested scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathObject, pathDownload },'Job.GenerateDownloads');
         await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
 
         //#region legacy
@@ -1068,7 +1068,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!JobCookSIGenerateDownloads.vocabVoyagerSceneModel) {
             JobCookSIGenerateDownloads.vocabVoyagerSceneModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
             if (!JobCookSIGenerateDownloads.vocabVoyagerSceneModel)
-                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Voyager Scene Model Model Purpose', { name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Voyager Scene Model Model Purpose', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
         }
         return JobCookSIGenerateDownloads.vocabVoyagerSceneModel;
     }
@@ -1077,7 +1077,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!JobCookSIGenerateDownloads.vocabAssetTypeScene) {
             JobCookSIGenerateDownloads.vocabAssetTypeScene = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
             if (!JobCookSIGenerateDownloads.vocabAssetTypeScene)
-                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Asset Type Scene', { name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Asset Type Scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
         }
         return JobCookSIGenerateDownloads.vocabAssetTypeScene;
     }
@@ -1086,7 +1086,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile) {
             JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile)
-                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Asset Type Model Geometry File', { name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Asset Type Model Geometry File', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
         }
         return JobCookSIGenerateDownloads.vocabAssetTypeModelGeometryFile;
     }
@@ -1130,7 +1130,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             return this.logError('verify Cook data','cannot find any assets for the Packrat scene.',{ logInfo: sceneSource.fetchLogInfo() });
 
         const sceneAssetFilenames: string[] = sceneAssets.map(asset => asset.FileName);
-        RK.logDebug(RK.LogSection.eJOB,'verify Cook data',undefined, { name: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneAssetFilenames, fileMap },'Job.GenerateDownloads');
+        RK.logDebug(RK.LogSection.eJOB,'verify Cook data',undefined, { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneAssetFilenames, fileMap },'Job.GenerateDownloads');
 
         // cycle through returned downloads seeing if we have a similar file already in the scene
         // if so, then we check to see if they have the same basename. If not, then we fail and the
@@ -1151,7 +1151,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                     assetsToReplace.push(filename);
         }
 
-        RK.logInfo(RK.LogSection.eJOB,'verify Cook data','verified', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, logInfo: sceneSource.fetchLogInfo(), numFilesNew: (incomingFilenames.length-assetsToReplace.length), numFilesUpdated: assetsToReplace.length },'Job.GenerateDownloads');
+        RK.logInfo(RK.LogSection.eJOB,'verify Cook data','verified', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, logInfo: sceneSource.fetchLogInfo(), numFilesNew: (incomingFilenames.length-assetsToReplace.length), numFilesUpdated: assetsToReplace.length },'Job.GenerateDownloads');
         return { success: true };
     }
 
@@ -1177,7 +1177,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     private async logError(error: string, reason: string, data: any | undefined, addToReport: boolean = true): Promise<H.IOResults> {
 
-        RK.logError(RK.LogSection.eJOB,error,reason,data ? { name: this.name, idJobRun: this._dbJobRun.idJobRun, ...data }: undefined,'Job.GenerateDownloads');
+        RK.logError(RK.LogSection.eJOB,error,reason,data ? { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, ...data }: undefined,'Job.GenerateDownloads');
 
         if(addToReport===true)
             await this.appendToReportAndLog(`${this.name()} ${reason}`);

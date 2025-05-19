@@ -118,7 +118,7 @@ export abstract class JobCook<T> extends JobPackrat {
         const job: string | undefined = COOKRES.getJobTypeFromCookJobName(this._configuration.jobName);
         if(!job) {
             const error = `getCookResource cannot determine Cook job type. (${this._configuration.jobName})`;
-            RK.logError(RK.LogSection.eJOB,'job initialize failed','cannot determine Cook job type', { jobType: this._configuration.jobName, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'job initialize failed','cannot determine Cook job type', { jobType: this._configuration.jobName, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
             this.appendToReportAndLog(error);
             return { success: false, error };
         }
@@ -129,7 +129,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // if we're empty, bail
         if(cookResources.success===false || cookResources.resources.length<=0) {
             const error = `getCookResource cannot find the best fit resource. (${cookResources.error})`;
-            RK.logError(RK.LogSection.eJOB,'job initialize failed',cookResources.error, { name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'job initialize failed',cookResources.error, { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
             this.appendToReportAndLog(error);
             return { success: false, error };
         }
@@ -157,7 +157,7 @@ export abstract class JobCook<T> extends JobPackrat {
     CookServerURL(): string {
         // if we don't have a server yet, throw error
         if(this._initialized === false) {
-            RK.logError(RK.LogSection.eJOB,'get Cook URL failed','not initialized. providing default Cook server endpoint', { name: this.name(), idJobRun: this._dbJobRun.idJobRun, endpoint: this._configuration.cookServerURLs[0] },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'get Cook URL failed','not initialized. providing default Cook server endpoint', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, endpoint: this._configuration.cookServerURLs[0] },'Job.Cook');
             return this._configuration.cookServerURLs[0];
         }
 
@@ -240,7 +240,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await H.Helpers.sleep(CookRetryDelay);
             }
         } catch (error) {
-            RK.logError(RK.LogSection.eJOB,'polling job failed',H.Helpers.getErrorString(error),{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'polling job failed',H.Helpers.getErrorString(error),{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
             return this._results;
         } finally {
             await this.signalCompletion();
@@ -255,13 +255,13 @@ export abstract class JobCook<T> extends JobPackrat {
         // make sure our properties are valid
         const verifyResult: CookIOResults = await this.verifyRequest();
         if(verifyResult.success===false) {
-            RK.logError(RK.LogSection.eJOB,'start job worker',`failed verification: ${verifyResult.error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'start job worker',`failed verification: ${verifyResult.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
             this.recordFailure(`failed verification: ${verifyResult.error}`,verifyResult.error);
             return { success: false, error: verifyResult.error, allowRetry: false };
         }
 
         const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
-            RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, semaphoreCount: value },'Job.Cook');
+            RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, semaphoreCount: value },'Job.Cook');
             return this.startJobWorkerInternal(fireDate);
         });
         return res;
@@ -280,17 +280,17 @@ export abstract class JobCook<T> extends JobPackrat {
             // todo: there's a condition here leading to Cook timeout and repeated attempts even on failure
             while (true) {
                 try {
-                    RK.logDebug(RK.LogSection.eJOB,'start job worker','creating job',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, jobCookPostBody },'Job.Cook');
+                    RK.logDebug(RK.LogSection.eJOB,'start job worker','creating job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, jobCookPostBody },'Job.Cook');
                     const axiosResponse: AxiosResponse<any> | null = await axios.post(encodeURI(requestUrl), jobCookPostBody);
                     // LOG.info(`JobCook.startJobWorkerInternal: create job axios response (${H.Helpers.JSONStringify(axiosResponse)})`,LOG.LS.eDEBUG);
 
                     if (axiosResponse?.status === 201) {
-                        RK.logDebug(RK.LogSection.eJOB,'start job worker','creating job successful post response',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axios: { status: axiosResponse.status, data: axiosResponse.data } },'Job.Cook');
+                        RK.logDebug(RK.LogSection.eJOB,'start job worker','creating job successful post response',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axios: { status: axiosResponse.status, data: axiosResponse.data } },'Job.Cook');
                         break; // success, continue
                     } else {
                         res.error = `JobCook [${this.name()}] creating job: ${requestUrl} unexpected response (${axiosResponse?.status}:${axiosResponse?.statusText})`;
                         RK.logError(RK.LogSection.eJOB,'start job worker failed','creating job unexpeceted response',
-                            { name: this.name(), idJobRun: this._dbJobRun.idJobRun, },'Job.Cook');
+                            { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, },'Job.Cook');
                     }
                 } catch (err) {
                     res = this.handleRequestException(err, requestUrl, 'post', jobCookPostBody);
@@ -298,7 +298,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     // log error at point
                     res.error = `JobCook [${this.name()}] creating job: ${requestUrl} failed (${err})`;
                     RK.logError(RK.LogSection.eJOB,'start job worker failed',`creating job failed: ${H.Helpers.getErrorString(err)}`,
-                        { name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+                        { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
 
                     // if we can't retry, return
                     if (res.allowRetry === false)
@@ -306,7 +306,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 }
 
                 if (++requestCount >= CookRequestRetryCount) {
-                    RK.logError(RK.LogSection.eJOB,'start job worker failed',`failed after max retries: ${res.error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, CookRequestRetryCount },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'start job worker failed',`failed after max retries: ${res.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, CookRequestRetryCount },'Job.Cook');
                     res.allowRetry = true; // allow outer level to retry job creation
                     return res;
                 }
@@ -316,7 +316,7 @@ export abstract class JobCook<T> extends JobPackrat {
             // wait for all files to be staged
             res = await this.stageFiles();
             if (!res.success) {
-                RK.logError(RK.LogSection.eJOB,'start job worker failed',`failed to stage files: ${res.error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                RK.logError(RK.LogSection.eJOB,'start job worker failed',`failed to stage files: ${res.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                 return res;
             }
 
@@ -326,27 +326,27 @@ export abstract class JobCook<T> extends JobPackrat {
             requestUrl = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/run`;
             while (true) {
                 try {
-                    RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+                    RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
                     const axiosResponse = await axios.patch(encodeURI(requestUrl));
                     // LOG.info(`JobCook.startJobWorkerInternal: start job axios response (${H.Helpers.JSONStringify(axiosResponse)})`,LOG.LS.eDEBUG);
 
                     if (axiosResponse.status >= 200 && axiosResponse.status <= 299) {
-                        RK.logInfo(RK.LogSection.eJOB,'start job worker','successful response',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axios: { status: axiosResponse.status, text: axiosResponse.statusText } },'Job.Cook');
+                        RK.logInfo(RK.LogSection.eJOB,'start job worker','successful response',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axios: { status: axiosResponse.status, text: axiosResponse.statusText } },'Job.Cook');
                         break; // success, continue
                     }
 
                     // if we failed, report out
                     res = { success: false, error: `JobCook [${this.name()}] starting job: ${requestUrl} failed (${axiosResponse.status}:${axiosResponse.statusText})` };
-                    RK.logError(RK.LogSection.eJOB,'start job worker failed','starting job failed',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axios: { status: axiosResponse?.status, text: axiosResponse?.statusText } },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'start job worker failed','starting job failed',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axios: { status: axiosResponse?.status, text: axiosResponse?.statusText } },'Job.Cook');
                 } catch (err) {
                     res = this.handleRequestException(err, requestUrl, 'patch', jobCookPostBody);
-                    RK.logError(RK.LogSection.eJOB,'start job worker failed',`handle request exception: ${H.Helpers.getErrorString(err)}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, jobCookPostBody },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'start job worker failed',`handle request exception: ${H.Helpers.getErrorString(err)}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, jobCookPostBody },'Job.Cook');
                     if (res.allowRetry === false)
                         return res;
                 }
 
                 if (++requestCount >= CookRequestRetryCount) {
-                    RK.logError(RK.LogSection.eJOB,'start job worker failed','failed to start after max retries',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'start job worker failed','failed to start after max retries',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
                     res.allowRetry = true; // allow outer level to retry job initiation
                     return res;
                 }
@@ -361,7 +361,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 await this.signalCompletion();
         }
 
-        RK.logInfo(RK.LogSection.eJOB,'start job worker','running',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+        RK.logInfo(RK.LogSection.eJOB,'start job worker','running',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
         return this.pollingLoop(CookTimeout);
     }
 
@@ -371,7 +371,7 @@ export abstract class JobCook<T> extends JobPackrat {
         let requestCount: number = 0;
         let res: H.IOResults = { success: false };
         const requestUrl: string = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}/cancel`;
-        RK.logDebug(RK.LogSection.eJOB,'cancel job worker','cancelling job',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+        RK.logDebug(RK.LogSection.eJOB,'cancel job worker','cancelling job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
 
         while (true) {
             try {
@@ -384,13 +384,13 @@ export abstract class JobCook<T> extends JobPackrat {
             if (res.success)
                 break;
             else if (++requestCount >= CookRequestRetryCount) {
-                RK.logError(RK.LogSection.eJOB,'cancel job worker failed',`failed to cancel after max retries: ${res.error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, numRetries: CookRequestRetryCount },'Job.Cook');
+                RK.logError(RK.LogSection.eJOB,'cancel job worker failed',`failed to cancel after max retries: ${res.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, numRetries: CookRequestRetryCount },'Job.Cook');
                 return res;
             } else
                 await H.Helpers.sleep(CookRetryDelay);
         }
 
-        RK.logInfo(RK.LogSection.eJOB,'cancel job worker','cancelled job',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+        RK.logInfo(RK.LogSection.eJOB,'cancel job worker','cancelled job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
         this.appendToReportAndLog(`JobCook [${this.name()}] cancelled`);
         return { success: true };
     }
@@ -410,7 +410,7 @@ export abstract class JobCook<T> extends JobPackrat {
                 // only log errors after first attempt, as job creation may not be complete on Cook server
                 const error: string = JSON.stringify(axiosResponse);
                 if (pollNumber > 1)
-                    RK.logError(RK.LogSection.eJOB,'polling failed',`polling ${requestUrl} failed: ${error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, pollNumber },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'polling failed',`polling ${requestUrl} failed: ${error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, pollNumber },'Job.Cook');
                 return { success: false, allowRetry: true, connectFailure: false, otherCookError: false, error };
             }
 
@@ -419,19 +419,19 @@ export abstract class JobCook<T> extends JobPackrat {
             // and then convert the numerical values so they pass JSON.parse.
             const cookJobReport = H.Helpers.safeJSONParse(axiosResponse.data);
             if(!cookJobReport) {
-                RK.logError(RK.LogSection.eJOB,'polling failed',`polling ${requestUrl} failed: Invalid response data`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, pollNumber },'Job.Cook');
+                RK.logError(RK.LogSection.eJOB,'polling failed',`polling ${requestUrl} failed: Invalid response data`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, pollNumber },'Job.Cook');
                 return { success: false, allowRetry: false, connectFailure: false, otherCookError: false };
             }
 
             // look for completion in 'state' member, via value of 'done', 'error', or 'cancelled'; update eJobRunStatus and terminate polling job
             // write to the log for the first 10 polling cycles, then every 5th one after that
             if (pollNumber <= 10 || ((pollNumber % 5) == 0))
-                RK.logDebug(RK.LogSection.eJOB,'polling job',undefined,{ state: cookJobReport['state'], requestUrl, pollNumber, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                RK.logDebug(RK.LogSection.eJOB,'polling job',undefined,{ state: cookJobReport['state'], pollNumber, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
 
             // if we finished (i.e. not running or waiting) then we push out an additional log statement
             // to ensure it's caught
             if(cookJobReport['state']!=='waiting' && cookJobReport['state']!=='running')
-                RK.logDebug(RK.LogSection.eJOB,'polling job','exited',{ state: cookJobReport['state'], requestUrl, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                RK.logDebug(RK.LogSection.eJOB,'polling job','exited',{ state: cookJobReport['state'], jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
 
             // extract our Cook JobID
             const cookJobID: string = cookJobReport['id'];
@@ -461,8 +461,8 @@ export abstract class JobCook<T> extends JobPackrat {
                     return { ...verifyResult, connectFailure: false, otherCookError: false };
                 }
                 default: {
-                    RK.logWarning(RK.LogSection.eJOB,'polling job','unsupported state',{ state: cookJobReport['state'], requestUrl, pollNumber, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
-                    RK.logDebug(RK.LogSection.eJOB,'polling job','axios response',{ requestUrl, pollNumber, name: this.name(), idJobRun: this._dbJobRun.idJobRun, axiosResponse },'Job.Cook');
+                    RK.logWarning(RK.LogSection.eJOB,'polling job','unsupported state',{ state: cookJobReport['state'], pollNumber, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+                    RK.logDebug(RK.LogSection.eJOB,'polling job','axios response',{ pollNumber, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, axiosResponse },'Job.Cook');
                 }
             }
             // LOG.info(`JobCook.pollingCallback: job ${cookJobReport['state']} report\n${H.Helpers.JSONStringify(cookJobReport)}`,LOG.LS.eDEBUG);
@@ -500,7 +500,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
                 // transmit file to Cook work folder via WebDAV
                 const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                RK.logInfo(RK.LogSection.eJOB,'fetch file','fetch file via WebDAV',{ cookEndpoint, destination, semaphoreCount: value, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                RK.logInfo(RK.LogSection.eJOB,'fetch file','fetch file via WebDAV',{ cookEndpoint, destination, semaphoreCount: value, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
 
                 const webdavClient: WebDAVClient = createClient(cookEndpoint, {
                     authType: AuthType.None,
@@ -521,11 +521,11 @@ export abstract class JobCook<T> extends JobPackrat {
                 };
                 const RS: Readable = webdavClient.createReadStream(destination, webdavWSOpts);
                 RS.on('error', error => {
-                    RK.logError(RK.LogSection.eJOB,'fetch file failed',`stream error: ${H.Helpers.getErrorString(error)}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, destination },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'fetch file failed',`stream error: ${H.Helpers.getErrorString(error)}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, destination },'Job.Cook');
                 });
                 return { readStream: RS, fileName, storageHash: null, success: true };
             } catch (error) {
-                RK.logError(RK.LogSection.eJOB,'fetch file failed',H.Helpers.getErrorString(error),{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                RK.logError(RK.LogSection.eJOB,'fetch file failed',H.Helpers.getErrorString(error),{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                 return { readStream: null, fileName, storageHash: null, success: false, error: JSON.stringify(error) };
             }
         });
@@ -534,7 +534,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     protected async stageFiles(): Promise<H.IOResults> {
         // this runs on job creation when internal work starts
-        RK.logInfo(RK.LogSection.eJOB,'stage files','staging asset versions',{ idAssetVersions: this._idAssetVersions, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+        RK.logInfo(RK.LogSection.eJOB,'stage files','staging asset versions',{ idAssetVersions: this._idAssetVersions, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
 
         // early out if we don't have anything staged
         if (!this._idAssetVersions)
@@ -549,7 +549,7 @@ export abstract class JobCook<T> extends JobPackrat {
                     // in this case, the override stream is for the model geometry file
                     let RSRs: STORE.ReadStreamResult[] | undefined = this._streamOverrideMap.get(idAssetVersion);
                     if (!RSRs) {
-                        RK.logInfo(RK.LogSection.eJOB,'stage files','found no stream override for idAssetVersion among overrides',{ idAssetVersion, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                        RK.logDebug(RK.LogSection.eJOB,'stage files','found no stream override for idAssetVersion among overrides',{ idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                         RSRs = [];
                         RSRs.push(await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion));
                     }
@@ -565,7 +565,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         // transmit file to Cook work folder via WebDAV
                         const destination: string = `/${this._configuration.jobId}/${fileName}`;
-                        RK.logInfo(RK.LogSection.eJOB,'stage files','staging via WebDAV',{ cookServerUrl: this.CookServerURL(), destination, semaphoreCount: value, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                        RK.logDebug(RK.LogSection.eJOB,'stage files','staging via WebDAV',{ cookServerUrl: this.CookServerURL(), destination, semaphoreCount: value, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
 
                         const webdavClient: WebDAVClient = createClient(this.CookServerURL(), {
                             authType: AuthType.None,
@@ -583,7 +583,7 @@ export abstract class JobCook<T> extends JobPackrat {
                             try {
                                 WS = webdavClient.createWriteStream(destination, webdavWSOpts);
                                 WS.on('error', error => {
-                                    RK.logError(RK.LogSection.eJOB,'stage files failed',`staging via WebDAV stream error: ${error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, destination },'Job.Cook');
+                                    RK.logError(RK.LogSection.eJOB,'stage files failed',`staging via WebDAV stream error: ${error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, destination },'Job.Cook');
                                 });
 
                                 res = await H.Helpers.writeStreamToStreamComputeSize(RSR.readStream, WS, true);
@@ -598,11 +598,11 @@ export abstract class JobCook<T> extends JobPackrat {
 
                         if (!res.success) {
                             const error = `JobCook [${this.name()}] JobCook.stageFiles staging via WebDAV unable to transmit file ${fileName} ${idAssetVersion}: ${res.error}`;
-                            RK.logError(RK.LogSection.eJOB,'stage files failed','staging via WebDAV unable to transmit file for asset version',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, idAssetVersion },'Job.Cook');
+                            RK.logError(RK.LogSection.eJOB,'stage files failed','staging via WebDAV unable to transmit file for asset version',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, idAssetVersion },'Job.Cook');
                             return { success: false, error };
                         }
 
-                        RK.logInfo(RK.LogSection.eJOB,'stage files','via WebDav transmitted bytes',{ cookServerUrl: this.CookServerURL(), destination, transmittedBytes: res.size, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                        RK.logDebug(RK.LogSection.eJOB,'stage files','via WebDav transmitted bytes',{ cookServerUrl: this.CookServerURL(), destination, transmittedBytes: res.size, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
 
                         // use WebDAV client's stat to detect when file is fully staged and available on the server
                         // poll for filesize of remote file.  Continue polling:
@@ -616,7 +616,7 @@ export abstract class JobCook<T> extends JobPackrat {
                                 const stat: any = await webdavClient.stat(destination);
                                 const baseName: string | undefined = (stat.data) ? stat.data.basename : stat.basename;
                                 const size: number = ((stat.data) ? stat.data.size : stat.size) || 0;
-                                RK.logInfo(RK.LogSection.eJOB,'stage files','verifying transmission via WebDAV',{ pollingLocation, receivedBytes: size, transmittedBytes: res.size, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                                RK.logDebug(RK.LogSection.eJOB,'stage files','verifying transmission via WebDAV',{ pollingLocation, receivedBytes: size, transmittedBytes: res.size, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                                 if (size >= res.size) {
                                     stagingSuccess = (baseName === fileName);
                                     break;
@@ -625,24 +625,24 @@ export abstract class JobCook<T> extends JobPackrat {
                                 const error: any = err;
                                 const status: number | undefined = (error && typeof(error['status']) === 'number') ? error['status'] : undefined;
                                 if (status === 404)
-                                    RK.logWarning(RK.LogSection.eJOB,'stage files','stat received error: 404 - not found',{ pollingLocation, status, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                                    RK.logWarning(RK.LogSection.eJOB,'stage files','stat received error: 404 file not found',{ pollingLocation, status, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                                 else
-                                    RK.logError(RK.LogSection.eJOB,'stage files failed',`stat error: ${error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, pollingLocation },'Job.Cook');
+                                    RK.logError(RK.LogSection.eJOB,'stage files failed',`stat error: ${error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pollingLocation },'Job.Cook');
                             }
                             await H.Helpers.sleep(CookRetryDelay); // sleep for an additional CookRetryDelay ms before exiting, to allow for file writing to complete
                         }
                         if (stagingSuccess) {
-                            RK.logInfo(RK.LogSection.eJOB,'stage files','via WebDAV success',{ cookServerUrl: this.CookServerURL(), destination, name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                            RK.logInfo(RK.LogSection.eJOB,'stage files success','via WebDAV',{ cookServerUrl: this.CookServerURL(), destination, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                         } else {
                             error = `Unable to verify existence of staged file ${fileName}`;
-                            RK.logError(RK.LogSection.eJOB,'stage files failed',`staging via WebDAV error: ${error}`,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, destination, serverURL: this.CookServerURL() },'Job.Cook');
+                            RK.logError(RK.LogSection.eJOB,'stage files failed',`staging via WebDAV error: ${error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, destination, serverURL: this.CookServerURL() },'Job.Cook');
                             success = false;
                             break;
                         }
                     }
                     return { success, error };
                 } catch (error) {
-                    RK.logError(RK.LogSection.eJOB,'stage files failed',H.Helpers.getErrorString(error),{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'stage files failed',H.Helpers.getErrorString(error),{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
                     return { success: false, error: JSON.stringify(error) };
                 }
             });
@@ -660,8 +660,8 @@ export abstract class JobCook<T> extends JobPackrat {
 
         // additional logging in case notification isn't sent
         const error = `JobCook.handleCookConnectionFailure: Packrat was unable to connect to ${cookServerURL}`;
-        RK.logError(RK.LogSection.eJOB,'Cook connection failed','unable to connect to Cook server',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, cookServerURL },'Job.Cook');
-        RK.logWarning(RK.LogSection.eJOB,'Cook connection','switching to new server',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, expected: cookServerURL, updated: this._configuration.cookServerURLs[this._configuration.cookServerURLIndex] },'Job.Cook');
+        RK.logError(RK.LogSection.eJOB,'Cook connection failed','unable to connect to Cook server',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, cookServerURL },'Job.Cook');
+        RK.logWarning(RK.LogSection.eJOB,'Cook connection','switching to new server',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, expected: cookServerURL, updated: this._configuration.cookServerURLs[this._configuration.cookServerURLIndex] },'Job.Cook');
 
         // only notify once about a specific server
         if (JobCook._cookServerFailureNotificationList.has(cookServerURL))
@@ -702,7 +702,7 @@ export abstract class JobCook<T> extends JobPackrat {
                                          message.indexOf('connect ETIMEDOUT') > -1);
         if (connectFailure) {
             const error: string = `Cannot connect to Cook on ${requestUrl}: ${message}`;
-            RK.logError(RK.LogSection.eJOB,'request exception','cannot connect to Cook server',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, method },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'request exception','cannot connect to Cook server',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, requestUrl, method },'Job.Cook');
 
             if ((++JobCook._cookConnectFailures % CookRequestRetryCount) === 0) // if we are experiencing too many connection errors,
                 this.handleCookConnectionFailure();                             // inform IT-OPS email alias and attempt to switch to "next" Cook server, if any
@@ -728,7 +728,7 @@ export abstract class JobCook<T> extends JobPackrat {
             switch (true) {
                 // catch all 5xx codes and treat as errors
                 case (status>=500 && status<=599): {
-                    RK.logError(RK.LogSection.eJOB,'request exception',error,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, status },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'request exception',error,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, status },'Job.Cook');
                     res.allowRetry = false;
                     return res;
                 }
@@ -738,18 +738,18 @@ export abstract class JobCook<T> extends JobPackrat {
                 } break;
                 // catch remaining 4xx codes which should be failure
                 case (status>=400 && status<=499): {
-                    RK.logError(RK.LogSection.eJOB,'request exception',error,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, status },'Job.Cook');
+                    RK.logError(RK.LogSection.eJOB,'request exception',error,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, status },'Job.Cook');
                     res.allowRetry = false;
                     return res;
                 }
             }
         } else {
-            RK.logError(RK.LogSection.eJOB,'request exception failed','no status response received',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'request exception failed','no status response received',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
             return res;
         }
 
         if (emitLog)
-            RK.logInfo(RK.LogSection.eJOB,'request exception',error,{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logInfo(RK.LogSection.eJOB,'request exception',error,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
         return res;
     }
 
@@ -763,7 +763,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // TODO: broader support for other 'groups' of filenames that may not have an SVX
         const svxFilename: string | undefined = filenames.find(filename => filename.includes('.svx.json'));
         if(!svxFilename || svxFilename.length == 0) {
-            RK.logError(RK.LogSection.eJOB,'extract base name failed','cannot extract basename. SVX file not found',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'extract base name failed','cannot extract basename. SVX file not found',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
             return null;
         }
 
@@ -773,7 +773,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // compare with others in the list to make sure they match
         const errorNames: string[] = filenames.filter(filename => !filename.startsWith(baseName));
         if(errorNames.length>0) {
-            RK.logError(RK.LogSection.eJOB,'extract base name failed','filenames do not share base name',{ name: this.name(), idJobRun: this._dbJobRun.idJobRun, baseName, errorNames },'Job.Cook');
+            RK.logError(RK.LogSection.eJOB,'extract base name failed','filenames do not share base name',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, baseName, errorNames },'Job.Cook');
             return null;
         }
 

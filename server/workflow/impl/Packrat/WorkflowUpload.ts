@@ -90,18 +90,18 @@ export class WorkflowUpload implements WF.IWorkflow {
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
-        RK.logInfo(RK.LogSection.eWF,'workflow update',undefined,{ workflows, workflowSet },'Workflow.Upload');
+        RK.logDebug(RK.LogSection.eWF,'workflow update','collected workflows',{ workflows, workflowSet },'Workflow.Upload');
 
         // Get all steps from the workflows
         const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
 
-        RK.logInfo(RK.LogSection.eWF,'workflow step update', undefined,{ workflowSteps },'Workflow.Upload');
+        RK.logDebug(RK.LogSection.eWF,'workflow step update','collected steps',{ workflowSteps },'Workflow.Upload');
 
         // see if any are still going, if so return
         const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
-        RK.logInfo(RK.LogSection.eWF,'workflow step update','still running',{ stillRunning },'Workflow.Upload');
+        RK.logDebug(RK.LogSection.eWF,'workflow step update','still running',{ stillRunning },'Workflow.Upload');
         if(stillRunning===true) {
             RK.logDebug(RK.LogSection.eWF,'step update status','still running', { idWorkflow: this.workflowData.workflow?.idWorkflow, workflowSet },'Workflow.Upload');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
