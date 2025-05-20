@@ -36,7 +36,7 @@ export class UserCache {
         // TODO: replace with paged output
         const UserFetch: User[] | null = await User.fetchUserList('', DBAPI.eUserStatus.eAll); /* istanbul ignore next */
         if (!UserFetch) {
-            RK.logError(RK.LogSection.eCACHE,'flush internal cache failed','unable to fetch users',undefined,'UserCache');
+            RK.logError(RK.LogSection.eCACHE,'flush internal cache failed','unable to fetch users',undefined,'Cache.User');
             return false;
         }
 

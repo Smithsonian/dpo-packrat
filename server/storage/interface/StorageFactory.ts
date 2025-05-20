@@ -19,9 +19,9 @@ export class StorageFactory {
                     /* istanbul ignore else */
                     if (IOR.success===true) {
                         StorageFactory.instance = LS;
-                        RK.logInfo(RK.LogSection.eSTR,'system initialize success',undefined,{ type: 'LocalStore' },'StorageFactory');
+                        RK.logInfo(RK.LogSection.eSTR,'system initialize success',undefined,{ type: 'LocalStore' },'Storage.Factory');
                     } else {
-                        RK.logError(RK.LogSection.eSTR,'system initialize failed',IOR.error,{ type: 'LocalStore' },'StorageFactory');
+                        RK.logError(RK.LogSection.eSTR,'system initialize failed',IOR.error,{ type: 'LocalStore' },'Storage.Factory');
                     }
                     break;
                 }

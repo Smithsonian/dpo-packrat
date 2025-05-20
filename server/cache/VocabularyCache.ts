@@ -408,7 +408,7 @@ export class VocabularyCache {
             if (vocabEntryArray)
                 vocabEntryArray.push(vocabulary);
             else {
-                RK.logError(RK.LogSection.eCACHE,'flush worker failed','invalid CovabularySet ID',{ idVocabularySet: vocabulary.idVocabularySet },'Vocabulary.Cache');
+                RK.logError(RK.LogSection.eCACHE,'flush worker failed','invalid CovabularySet ID',{ idVocabularySet: vocabulary.idVocabularySet },'Cache.Vocabulary');
                 continue;
             }
         }
@@ -417,7 +417,7 @@ export class VocabularyCache {
         for (const vocabList of this.vocabSetEntries.values())
             vocabList.sort((vocab1, vocab2) => vocab1.SortOrder - vocab2.SortOrder);
 
-        RK.logDebug(RK.LogSection.eCACHE,'flush vocab cache success',undefined,{ vocabCount: vocabArray.length, vocabSetCount: vocabSetArray.length },'Vocabulary.Cache');
+        RK.logDebug(RK.LogSection.eCACHE,'flush vocab cache success',undefined,{ vocabCount: vocabArray.length, vocabSetCount: vocabSetArray.length },'Cache.Vocabulary');
         return true;
     }
 
@@ -626,7 +626,7 @@ export class VocabularyCache {
             case 'masks':       eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks; break;
             case 'mask':        eVocabID = COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks; break;
             default:  {
-                RK.logError(RK.LogSection.eCACHE,'map variant failed','unsupported photogrammetry variant type',{ variant },'Vocabulary.Cache');
+                RK.logError(RK.LogSection.eCACHE,'map variant failed','unsupported photogrammetry variant type',{ variant },'Cache.Vocabulary');
                 return undefined;
             }
         }
@@ -651,7 +651,7 @@ export class VocabularyCache {
             '.zip'
         ];
         if(nonModelTypes.includes(extension)) {
-            RK.logDebug(RK.LogSection.eCACHE,'map model extension','attempting to map known type, but not a model',{ extension },'Vocabulary.Cache');
+            RK.logDebug(RK.LogSection.eCACHE,'map model extension','attempting to map known type, but not a model',{ extension },'Cache.Vocabulary');
             return undefined;
         }
 
@@ -674,7 +674,7 @@ export class VocabularyCache {
             case '.pts':  return COMMON.eVocabularyID.eModelFileTypepts;
 
             default: {
-                RK.logError(RK.LogSection.eCACHE,'map model extension failed','unsupported model file extension',{ extension },'Vocabulary.Cache');
+                RK.logError(RK.LogSection.eCACHE,'map model extension failed','unsupported model file extension',{ extension },'Cache.Vocabulary');
                 return undefined;
             }
         }
@@ -757,7 +757,7 @@ export class VocabularyCache {
             case 'standard number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeStandardNumber;
             case 'usnm number':  return COMMON.eVocabularyID.eIdentifierIdentifierTypeUSNMNumber;
             default: {
-                RK.logError(RK.LogSection.eCACHE,'map identifier failed','unsupported identifier type',{ identifierType },'Vocabulary.Cache');
+                RK.logError(RK.LogSection.eCACHE,'map identifier failed','unsupported identifier type',{ identifierType },'Cache.Vocabulary');
                 return undefined;
             }
         }
@@ -780,7 +780,7 @@ export class VocabularyCache {
             case 'yd': return COMMON.eVocabularyID.eModelUnitsYard;
             case 'mi': return COMMON.eVocabularyID.eModelUnitsMile;
             default: {
-                RK.logError(RK.LogSection.eCACHE,'map units failed','unsupported units type',{ units },'Vocabulary.Cache');
+                RK.logError(RK.LogSection.eCACHE,'map units failed','unsupported units type',{ units },'Cache.Vocabulary');
                 return undefined;
             }
         }

@@ -30,7 +30,7 @@ class LDAPAuth implements IAuth {
         try {
             let res: VerifyUserResult = await this.fetchClient();
             if (!res.success) {
-                RK.logError(RK.LogSection.eAUTH,'verify user failed','cannot fetch client',{ response: H.Helpers.getErrorString(res.error), email, auth: res.data.type },'LDAPAuth');
+                RK.logError(RK.LogSection.eAUTH,'verify user failed','cannot fetch client',{ response: H.Helpers.getErrorString(res.error), email, auth: res.data.type },'Auth.LDAP');
                 return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
             }
 
@@ -48,7 +48,7 @@ class LDAPAuth implements IAuth {
             res = await this.bindUser(resUserSearch.DN, password);
             return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
         } catch (error) {
-            RK.logError(RK.LogSection.eAUTH,'verify user failed',H.Helpers.getErrorString(error),email,'LDAPAuth');
+            RK.logError(RK.LogSection.eAUTH,'verify user failed',H.Helpers.getErrorString(error),email,'Auth.LDAP');
             return { success: false, error: JSON.stringify(error), data: { auth: 'ldaps', server: this._ldapConfig.server } };
         }
     }
@@ -93,33 +93,33 @@ class LDAPAuth implements IAuth {
         this._client.on('error', error => {
             const errorMessage: string | undefined = (error instanceof Error) ? error.message : undefined;
             if (errorMessage && errorMessage.includes('ECONNRESET'))
-                RK.logWarning(RK.LogSection.eAUTH,'LDAPS client connect','ECONNRESET - destroying old LDAP client',{ server: this._ldapConfig.server, os: os.type() },'LDAPAuth');
+                RK.logWarning(RK.LogSection.eAUTH,'LDAPS client connect','ECONNRESET - destroying old LDAP client',{ server: this._ldapConfig.server, os: os.type() },'Auth.LDAP');
             else
-                RK.logWarning(RK.LogSection.eAUTH,'LDAPS client connect',H.Helpers.getErrorString(error),{ server: this._ldapConfig.server, os: os.type() },'LDAPAuth');
+                RK.logWarning(RK.LogSection.eAUTH,'LDAPS client connect',H.Helpers.getErrorString(error),{ server: this._ldapConfig.server, os: os.type() },'Auth.LDAP');
 
             this.destroyClient();
         });
 
         // catching other events from the client
-        this._client.on('connectRefused', msg =>    { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`connection refused - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth'); this.destroyClient(); });
-        this._client.on('connectTimeout', msg =>    { RK.logError(RK.LogSection.eAUTH,'LDAPS clientconnect',`connection timeout - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth'); this.destroyClient(); });
-        this._client.on('connectError', msg =>      { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`socket connection error - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth'); this.destroyClient(); });
-        this._client.on('setupError', msg =>        { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`setup error after connection - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth'); this.destroyClient(); });
-        this._client.on('socketTimeout', msg =>     { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`socket timeout - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth'); this.destroyClient(); });
-        this._client.on('destroy', msg =>           { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`connection destroyed - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth');  });
-        this._client.on('end', msg =>               { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`socket end event - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth');  });
-        this._client.on('close', msg =>             { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`socket closed - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth');  });
-        this._client.on('connect', msg =>           { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`connected - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'LDAPAuth');  });
+        this._client.on('connectRefused', msg =>    { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`connection refused - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP'); this.destroyClient(); });
+        this._client.on('connectTimeout', msg =>    { RK.logError(RK.LogSection.eAUTH,'LDAPS clientconnect',`connection timeout - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP'); this.destroyClient(); });
+        this._client.on('connectError', msg =>      { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`socket connection error - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP'); this.destroyClient(); });
+        this._client.on('setupError', msg =>        { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`setup error after connection - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP'); this.destroyClient(); });
+        this._client.on('socketTimeout', msg =>     { RK.logError(RK.LogSection.eAUTH,'LDAPS client connect',`socket timeout - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP'); this.destroyClient(); });
+        this._client.on('destroy', msg =>           { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`connection destroyed - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP');  });
+        this._client.on('end', msg =>               { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`socket end event - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP');  });
+        this._client.on('close', msg =>             { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`socket closed - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP');  });
+        this._client.on('connect', msg =>           { RK.logDebug(RK.LogSection.eAUTH,'LDAPS client connect',`connected - ${H.Helpers.getErrorString(msg)}`,{ server: this._ldapConfig.server },'Auth.LDAP');  });
 
         // return success regardless
         // TODO: wait for finish (end event?) before returning so we block and ensure system doesn't progress without knowing.
-        RK.logDebug(RK.LogSection.eAUTH,'LDAPS client created',undefined,{ server: this._ldapConfig.server, os: os.type() },'LDAPAuth');
+        RK.logDebug(RK.LogSection.eAUTH,'LDAPS client created',undefined,{ server: this._ldapConfig.server, os: os.type() },'Auth.LDAP');
         return { success: true };
     }
 
     private destroyClient() {
         if(this._client) {
-            RK.logDebug(RK.LogSection.eAUTH,'LDAPS client destroyed',undefined,{ server: this._ldapConfig.server },'LDAPAuth');
+            RK.logDebug(RK.LogSection.eAUTH,'LDAPS client destroyed',undefined,{ server: this._ldapConfig.server },'Auth.LDAP');
             this._client.destroy();
             this._client = null;
         }
@@ -140,7 +140,7 @@ class LDAPAuth implements IAuth {
         return new Promise<VerifyUserResult>(function(resolve) {
             client.bind(ldapBind, password, (err: any): void => {
                 if (err) {
-                    RK.logDebug(RK.LogSection.eAUTH,'LDAPS bind service failed',H.Helpers.getErrorString(err),undefined,'LDAPAuth');
+                    RK.logDebug(RK.LogSection.eAUTH,'LDAPS bind service failed',H.Helpers.getErrorString(err),undefined,'Auth.LDAP');
                     resolve({ success: false, error: 'Unable to connect to LDAP server' });
                 } else
                     resolve({ success: true });
@@ -168,19 +168,19 @@ class LDAPAuth implements IAuth {
             client.search(ldapConfig.DC, searchOptions, (err: any, res: LDAP.SearchCallbackResponse): void => {
                 if (err) {
                     // const error: string = `Unable to locate ${email}`;
-                    // RK.logError(RK.LogSection.eAUTH,'user search failed',H.Helpers.getErrorString(err),undefined,'LDAPAuth');
+                    // RK.logError(RK.LogSection.eAUTH,'user search failed',H.Helpers.getErrorString(err),undefined,'Auth.LDAP');
                     resolve({ success: false, error: H.Helpers.getErrorString(err), DN: null });
                 }
 
                 res.on('searchEntry', (entry: any) => {
-                    // RK.logDebug(RK.LogSection.eAUTH,'user search success',undefined,{ email, objectName: entry.objectName },'LDAPAuth');
+                    // RK.logDebug(RK.LogSection.eAUTH,'user search success',undefined,{ email, objectName: entry.objectName },'Auth.LDAP');
                     searchComplete = true;
                     resolve({ success: true, DN: entry.objectName });
                 });
 
                 res.on('error', (err: any) => {
                     // const error: string = `unable to locate user`; // ${email}`;
-                    // RK.logError(RK.LogSection.eAUTH,'user search failed',`cannot locate user - ${H.Helpers.getErrorString(err)}`,email,'LDAPAuth');
+                    // RK.logError(RK.LogSection.eAUTH,'user search failed',`cannot locate user - ${H.Helpers.getErrorString(err)}`,email,'Auth.LDAP');
                     resolve({ success: false, error: H.Helpers.getErrorString(err), DN: null });
                 });
 
@@ -188,7 +188,7 @@ class LDAPAuth implements IAuth {
                     if (!searchComplete) {
                         result;
                         const error: string = 'unable to locate user'; // ${email}`;
-                        // RK.logError(RK.LogSection.eAUTH,'user search failed','cannot locate user end',email,'LDAPAuth');
+                        // RK.logError(RK.LogSection.eAUTH,'user search failed','cannot locate user end',email,'Auth.LDAP');
                         resolve({ success: false, error, DN: null });
                     }
                 });
@@ -206,7 +206,7 @@ class LDAPAuth implements IAuth {
                 if (err) {
                     err;
                     // const error: string = `invalid password for ${email}`;
-                    // RK.logError(RK.LogSection.eAUTH,'LDAP bind user failed','invalid password',email,'LDAPAuth');
+                    // RK.logError(RK.LogSection.eAUTH,'LDAP bind user failed','invalid password',email,'Auth.LDAP');
                     resolve({ success: false, error: 'invalid password' });
                 } else
                     resolve({ success: true });

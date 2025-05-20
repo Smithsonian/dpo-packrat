@@ -3,7 +3,6 @@
 import solr from 'solr-client';
 
 import * as NAV from '../../interface';
-// import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
@@ -140,7 +139,7 @@ export class NavigationSolr implements NAV.INavigation {
             if (filterColumn)
                 filterColumns.push(filterColumn.substring(1)); // strip of "e" prefix (eHierarchyUnit -> HierarchyUnit)
             else
-                RK.logError(RK.LogSection.eNAV,'compute search query failed','unexpected metadata column',metadataColumn,'NavigationSolr');
+                RK.logError(RK.LogSection.eNAV,'compute search query failed','unexpected metadata column',metadataColumn,'Navigation.Solr');
         }
 
         if (filterColumns.length > 0)
@@ -149,7 +148,7 @@ export class NavigationSolr implements NAV.INavigation {
         if (filter.rows > 0)
             SQ = SQ.rows(filter.rows);
 
-        RK.logDebug(RK.LogSection.eNAV,'compute search query success',undefined,H.Helpers.removeEmptyFields(filter),'NavigationSolr');
+        RK.logDebug(RK.LogSection.eNAV,'compute search query success',undefined,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
         return SQ;
     }
 
@@ -213,7 +212,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const systemObjectType of systemObjectTypes) {
             const filterValue = DBAPI.SystemObjectTypeToName(systemObjectType);
             if (!filterValue) {
-                RK.logError(RK.LogSection.eNAV,'xform system object failed','invaid system object type',systemObjectType,'NavigationSolr');
+                RK.logError(RK.LogSection.eNAV,'xform system object failed','invaid system object type',systemObjectType,'Navigation.Solr');
                 continue;
             }
             termList.push(filterValue);
@@ -227,7 +226,7 @@ export class NavigationSolr implements NAV.INavigation {
         for (const idVocabFilter of vocabFilterIDs) {
             const vocabFilter: Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabFilter);
             if (!vocabFilter) {
-                RK.logError(RK.LogSection.eNAV,'xform vocabulary IDs failed','invalid vocabulary value',idVocabFilter,'NavigationSolr');
+                RK.logError(RK.LogSection.eNAV,'xform vocabulary IDs failed','invalid vocabulary value',idVocabFilter,'Navigation.Solr');
                 continue;
             }
             termList.push(vocabFilter.Term);
@@ -244,20 +243,20 @@ export class NavigationSolr implements NAV.INavigation {
         const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(this._solrClientPackrat, SQ);
         if (queryResult.error) {
             error = `Solr Nav Query Failure: ${JSON.stringify(queryResult.error)}`;
-            RK.logError(RK.LogSection.eNAV,'execute search query failed',queryResult.error,H.Helpers.removeEmptyFields(filter),'NavigationSolr');
+            RK.logError(RK.LogSection.eNAV,'execute search query failed',queryResult.error,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
         if (!queryResult.result || queryResult.result.numFound === undefined ||
             (queryResult.result.numFound > 0 && !queryResult.result.docs)) {
             error = `Solr Nav Query Response malformed: ${JSON.stringify(queryResult.result)}`;
-            RK.logError(RK.LogSection.eNAV,'execute search query failed','Solr query response malformed',queryResult.result,'NavigationSolr');
+            RK.logError(RK.LogSection.eNAV,'execute search query failed','Solr query response malformed',queryResult.result,'Navigation.Solr');
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
         // let docNumber: number = 1;
         for (const doc of queryResult.result.docs) {
             if (!doc.id || !doc.CommonObjectType || !doc.CommonidObject || (doc.CommonName === null)) {
-                RK.logError(RK.LogSection.eNAV,'execute search query failed','malformed query response document',doc,'NavigationSolr');
+                RK.logError(RK.LogSection.eNAV,'execute search query failed','malformed query response document',doc,'Navigation.Solr');
                 continue;
             }
             // LOG.info(`NavigationSolr.executeSolrNavQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
@@ -278,7 +277,7 @@ export class NavigationSolr implements NAV.INavigation {
             cursorMark = null;
 
         // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
-        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.result.nextCursorMark },'NavigationSolr');
+        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.result.nextCursorMark },'Navigation.Solr');
         return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
@@ -413,7 +412,7 @@ export class NavigationSolr implements NAV.INavigation {
         SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
 
         // LOG.info(`NavigationSolr.computeSolrMetaQuery ${JSON.stringify(filter)}:\n${this._solrClientMeta.solrUrl()}/select?${SQ.build()}`, LOG.LS.eNAV);
-        RK.logDebug(RK.LogSection.eNAV,'compute meta query success',undefined,H.Helpers.removeEmptyFields(filter),'NavigationSolr');
+        RK.logDebug(RK.LogSection.eNAV,'compute meta query success',undefined,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
         return SQ;
     }
     // #endregion
@@ -425,20 +424,20 @@ export class NavigationSolr implements NAV.INavigation {
         const queryResult: SolrQueryResult = await this.executeSolrQueryWorker(this._solrClientMeta, SQ);
         if (queryResult.error) {
             error = `Solr Meta Query Failure: ${JSON.stringify(queryResult.error)}`;
-            RK.logError(RK.LogSection.eNAV,'execute meta query failed',`Solr query failure - ${H.Helpers.getErrorString(queryResult.error)}`,H.Helpers.removeEmptyFields(filter),'NavigationSolr');
+            RK.logError(RK.LogSection.eNAV,'execute meta query failed',`Solr query failure - ${H.Helpers.getErrorString(queryResult.error)}`,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
         if (!queryResult.result || queryResult.result.numFound === undefined ||
             (queryResult.result.numFound > 0 && !queryResult.result.docs)) {
             error = `Solr Meta Query Response malformed: ${JSON.stringify(queryResult.result)}`;
-            RK.logError(RK.LogSection.eNAV,'execute meta query failed',`Solr response malformed - ${H.Helpers.getErrorString(queryResult.result)}`,H.Helpers.removeEmptyFields(filter),'NavigationSolr');
+            RK.logError(RK.LogSection.eNAV,'execute meta query failed',`Solr response malformed - ${H.Helpers.getErrorString(queryResult.result)}`,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
             return { success: false, error, entries, metadataColumns: filter.metadataColumns };
         }
 
         // let docNumber: number = 1;
         for (const doc of queryResult.result.docs) {
             if (!doc.id || !doc.idSystemObjectParent) {
-                RK.logError(RK.LogSection.eNAV,'execute meta query failed','Solr response document malformed',doc,'NavigationSolr');
+                RK.logError(RK.LogSection.eNAV,'execute meta query failed','Solr response document malformed',doc,'Navigation.Solr');
                 continue;
             }
             // LOG.info(`NavigationSolr.executeSolrMetaQuery [${docNumber++}]: ${JSON.stringify(doc)}`, LOG.LS.eNAV);
@@ -458,7 +457,7 @@ export class NavigationSolr implements NAV.INavigation {
 
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(entries)}`, LOG.LS.eNAV);
-        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.result.nextCursorMark },'NavigationSolr');
+        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.result.nextCursorMark },'Navigation.Solr');
         return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
@@ -477,7 +476,7 @@ export class NavigationSolr implements NAV.INavigation {
             const SR = await solrClient._client.search(SQ);
             return { result: SR.response, error: null };
         } catch (err) {
-            RK.logError(RK.LogSection.eNAV,'execute solr worker failed',H.Helpers.getErrorString(err),H.Helpers.removeEmptyFields(solr.Query),'NavigationSolr');
+            RK.logError(RK.LogSection.eNAV,'execute solr worker failed',H.Helpers.getErrorString(err),H.Helpers.removeEmptyFields(solr.Query),'Navigation.Solr');
             return { result: null, error: (err instanceof Error) ? err.toString() : 'Unexpected error' };
         }
     }

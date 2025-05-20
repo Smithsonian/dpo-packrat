@@ -82,7 +82,7 @@ export class OCFLObject {
         fileName: string | null, metadata: any | null, opInfo: OperationInfo): Promise<H.IOResults> {
         if (pathOnDisk && inputStream) {
             const error: string = 'OCFLObject.addOrUpdate called with both a file and a stream';
-            RK.logError(RK.LogSection.eSTR,'object add or update failed','invalid use. called with both a file and stream',{ pathOnDisk, fileName, metadata },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'object add or update failed','invalid use. called with both a file and stream',{ pathOnDisk, fileName, metadata },'OCFL.Object');
             return { success: false, error };
         }
 
@@ -139,7 +139,7 @@ export class OCFLObject {
                         return hashResults;
                 } catch (err) {
                     const error: string = 'OCFLObject.addOrUpdateWorker createWriteStream exception';
-                    RK.logError(RK.LogSection.eSTR,'object add or update failed',`createWriteStream exception: ${H.Helpers.getErrorString(err)}`,{ fileName, pathOnDisk },'OCFLObject');
+                    RK.logError(RK.LogSection.eSTR,'object add or update failed',`createWriteStream exception: ${H.Helpers.getErrorString(err)}`,{ fileName, pathOnDisk },'OCFL.Object');
                     return { success: false, error };
                 } finally {
                     if (writeStream)
@@ -198,13 +198,13 @@ export class OCFLObject {
         // Avoid using "H.Helpers.moveFile" because this does not work across volumes.
         results = await H.Helpers.copyFile(pathOnDisk, destName);
         if (!results.success) {
-            RK.logError(RK.LogSection.eSTR,'move file failed',results.error,{ pathOnDisk, destination: destName },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'move file failed',results.error,{ pathOnDisk, destination: destName },'OCFL.Object');
             return results;
         }
 
         results = await H.Helpers.removeFile(pathOnDisk);
         if (!results.success) {
-            RK.logError(RK.LogSection.eSTR,'remove file failed',results.error,{ pathOnDisk },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'remove file failed',results.error,{ pathOnDisk },'OCFL.Object');
             return results;
         }
         return results;
@@ -425,12 +425,12 @@ export class OCFLObject {
         if (maxVersion <= 0) {
             ioResults.success = false;
             ioResults.error = `Invalid inventory file for ${this._storageKey}`;
-            RK.logError(RK.LogSection.eSTR,'validate object failed','invalid inventory file. negative max version',{ storageKey: this._storageKey },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'validate object failed','invalid inventory file. negative max version',{ storageKey: this._storageKey },'OCFL.Object');
             return ioResults;
         }
         ioResults = await ocflInventoryRoot.validate(this, true);
         if (ioResults.success===false) {
-            RK.logError(RK.LogSection.eSTR,'validate object failed',ioResults.error,{ storageKey: this._storageKey },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'validate object failed',ioResults.error,{ storageKey: this._storageKey },'OCFL.Object');
             return ioResults;
         }
 
@@ -440,7 +440,7 @@ export class OCFLObject {
             if (invResults.success===false || !invResults.ocflInventory) {
                 ioResults.success = false;
                 ioResults.error = invResults.error ? invResults.error : /* istanbul ignore next */ `Failed to read inventory for ${this._storageKey}, version ${version}`;
-                RK.logError(RK.LogSection.eSTR,'validate object failed',`read disk error: ${ioResults.error}`,{ storageKey: this._storageKey, version },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'validate object failed',`read disk error: ${ioResults.error}`,{ storageKey: this._storageKey, version },'OCFL.Object');
                 return ioResults;
             }
 
@@ -448,7 +448,7 @@ export class OCFLObject {
             ioResults = await ocflInventory.validate(this, false);
             /* istanbul ignore next */
             if (ioResults.success===false) {
-                RK.logError(RK.LogSection.eSTR,'validate object failed',`OCFL validate error: ${ioResults.error}`,{ storageKey: this._storageKey },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'validate object failed',`OCFL validate error: ${ioResults.error}`,{ storageKey: this._storageKey },'OCFL.Object');
                 return ioResults;
             }
 
@@ -457,7 +457,7 @@ export class OCFLObject {
                 if (!L.isEqual(ocflInventory, ocflInventoryRoot)) {
                     ioResults.success = false;
                     ioResults.error = `Root inventory does not match head inventory for ${this._storageKey}`;
-                    RK.logError(RK.LogSection.eSTR,'validate object failed','Root inventory does not match head inventory',{ storageKey: this._storageKey },'OCFLObject');
+                    RK.logError(RK.LogSection.eSTR,'validate object failed','Root inventory does not match head inventory',{ storageKey: this._storageKey },'OCFL.Object');
                     return ioResults;
                 }
             }
@@ -466,7 +466,7 @@ export class OCFLObject {
             if (version != ocflInventory.headVersion) {
                 ioResults.success = false;
                 ioResults.error = `Invalid inventory version for ${this._storageKey}: observed ${ocflInventory.headVersion}, expected ${version}`;
-                RK.logError(RK.LogSection.eSTR,'validate object failed','Invalid inventory version',{ storageKey: this._storageKey, expected: version, observed: ocflInventory.headVersion },'OCFLObject');                return ioResults;
+                RK.logError(RK.LogSection.eSTR,'validate object failed','Invalid inventory version',{ storageKey: this._storageKey, expected: version, observed: ocflInventory.headVersion },'OCFL.Object');                return ioResults;
             }
         }
 
@@ -474,12 +474,12 @@ export class OCFLObject {
         const fileMap: Map<string, string> = ocflInventoryRoot.manifest.getFileMap();
         const fileList: string[] | null = await H.Helpers.getDirectoryEntriesRecursive(this._objectRoot);
         if (verbose)
-            RK.logDebug(RK.LogSection.eSTR,'validate object file check',undefined,{ storageKey: this._storageKey, fileMap, fileList },'OCFLObject');
+            RK.logDebug(RK.LogSection.eSTR,'validate object file check',undefined,{ storageKey: this._storageKey, fileMap, fileList },'OCFL.Object');
         /* istanbul ignore if */
         if (!fileList) {
             ioResults.success = false;
             ioResults.error = `Unable to read filelist from directory from ${this._objectRoot}`;
-            RK.logError(RK.LogSection.eSTR,'validate object failed','Unable to read file list from directory',{ storageKey: this._storageKey, dir: this._objectRoot },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'validate object failed','Unable to read file list from directory',{ storageKey: this._storageKey, dir: this._objectRoot },'OCFL.Object');
             return ioResults;
         }
 
@@ -487,7 +487,7 @@ export class OCFLObject {
             const relName: string = path.relative(this._objectRoot, fileName);
             const baseName: string = path.basename(fileName);
             if (verbose)
-                RK.logDebug(RK.LogSection.eSTR,'validate object','Root inventory does not match head inventory',{ storageKey: this._storageKey },'OCFLObject');
+                RK.logDebug(RK.LogSection.eSTR,'validate object','Root inventory does not match head inventory',{ storageKey: this._storageKey },'OCFL.Object');
 
             // Skip Inventory, Inventory Digest, and Namaste file
             if (baseName == ST.OCFLStorageObjectInventoryFilename ||
@@ -499,28 +499,28 @@ export class OCFLObject {
             if (!hash) {
                 ioResults.success = false;
                 ioResults.error = `No hash found for ${relName} in manifest ${H.Helpers.JSONStringify(fileMap)}`;
-                RK.logError(RK.LogSection.eSTR,'validate object failed','no hash found in manifest',{ storageKey: this._storageKey, relativeName: relName, fileMap },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'validate object failed','no hash found in manifest',{ storageKey: this._storageKey, relativeName: relName, fileMap },'OCFL.Object');
                 return ioResults;
             }
 
             ioResults = await H.Helpers.fileOrDirExists(fileName);
             /* istanbul ignore if */
             if (ioResults.success===false) {
-                RK.logError(RK.LogSection.eSTR,'validate object failed',`cannot find filename: ${ioResults.error}`,{ storageKey: this._storageKey, dir: this._objectRoot },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'validate object failed',`cannot find filename: ${ioResults.error}`,{ storageKey: this._storageKey, dir: this._objectRoot },'OCFL.Object');
                 return ioResults;
             }
 
             const hashResults: H.HashResults = await H.Helpers.computeHashFromFile(fileName, ST.OCFLDigestAlgorithm);
             /* istanbul ignore if */
             if (hashResults.success===false) {
-                RK.logError(RK.LogSection.eSTR,'validate object failed',`compute hash error: ${hashResults.error}`,{ storageKey: this._storageKey, dir: this._objectRoot },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'validate object failed',`compute hash error: ${hashResults.error}`,{ storageKey: this._storageKey, dir: this._objectRoot },'OCFL.Object');
                 return hashResults;
             }
 
             if (hash != hashResults.hash) {
                 ioResults.success = false;
                 ioResults.error = `Computed hash for ${fileName} does not match; expected ${hash}; observed ${hashResults.hash}`;
-                RK.logError(RK.LogSection.eSTR,'validate object failed','computed hash does not match',{ storageKey: this._storageKey, expected: hash, observed: hashResults.hash },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'validate object failed','computed hash does not match',{ storageKey: this._storageKey, expected: hash, observed: hashResults.hash },'OCFL.Object');
                 return ioResults;
             }
         }
@@ -566,13 +566,13 @@ export class OCFLObject {
 
         /* istanbul ignore next */
         if (!this._ocflInventory) {
-            RK.logError(RK.LogSection.eSTR,'file location failed','no OCFL inventory found',{ storageKey: this._storageKey, fileName, version },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'file location failed','no OCFL inventory found',{ storageKey: this._storageKey, fileName, version },'OCFL.Object');
             return null;
         }
 
         const pathAndHash: OCFLPathAndHash = this._ocflInventory.getContentPathAndHash(fileName, version);
         if (!pathAndHash.hash && !pathAndHash.path) {
-            RK.logError(RK.LogSection.eSTR,'file location failed','cannot get path or hash',{ storageKey: this._storageKey, ...pathAndHash },'OCFLObject');
+            RK.logError(RK.LogSection.eSTR,'file location failed','cannot get path or hash',{ storageKey: this._storageKey, ...pathAndHash },'OCFL.Object');
             return null;
         }
 
@@ -666,7 +666,7 @@ export class OCFLObject {
             const destFolder: string = this.versionRoot(version);
             const retValue: H.IOResults = await H.Helpers.removeDirectory(destFolder, true);
             if (!retValue.success)
-                RK.logError(RK.LogSection.eSTR,'rollback failed',`remove directory error: ${retValue.error}`,{ storageKey: this._storageKey, destination: destFolder },'OCFLObject');
+                RK.logError(RK.LogSection.eSTR,'rollback failed',`remove directory error: ${retValue.error}`,{ storageKey: this._storageKey, destination: destFolder },'OCFL.Object');
         }
         /* istanbul ignore next */
         if (!this._ocflInventory.rollbackVersion())

@@ -43,7 +43,7 @@ export class SystemObjectCache {
         // TODO: replace with paged output
         const SOFetch: SystemObject[] | null = await SystemObject.fetchAll(); /* istanbul ignore next */
         if (!SOFetch) {
-            RK.logError(RK.LogSection.eCACHE,'flush internal cache failed','unable to fetch system object',undefined,'SystemObjectCache');
+            RK.logError(RK.LogSection.eCACHE,'flush internal cache failed','unable to fetch system object',undefined,'Cache.SystemObject');
             return false;
         }
 
@@ -54,7 +54,7 @@ export class SystemObjectCache {
                 this.systemIDToObjectMap.set(SO.idSystemObject, oID);
             }
         }
-        RK.logDebug(RK.LogSection.eCACHE,'flush internal cache success',undefined,undefined,'SystemObjectCache');
+        RK.logDebug(RK.LogSection.eCACHE,'flush internal cache success',undefined,undefined,'Cache.SystemObject');
         return true;
     }
 
@@ -100,7 +100,7 @@ export class SystemObjectCache {
                     // this.objectIDToSystemMap.set(oIDKey, sID);
                 }
             } else
-                RK.logError(RK.LogSection.eCACHE,'get system object failed',`unable to lookup ${COMMON.eSystemObjectType[eObjectType]}`,{ idObject },'SystemObjectCache');
+                RK.logError(RK.LogSection.eCACHE,'get system object failed',`unable to lookup ${COMMON.eSystemObjectType[eObjectType]}`,{ idObject },'Cache.SystemObject');
         }
         return sID;
     }
@@ -199,7 +199,7 @@ export class SystemObjectCache {
 
         const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
         if (!SO) {
-            RK.logError(RK.LogSection.eCACHE,'get object name failed','unable to lookup system object',{ idSystemObject },'SystemObjectCache');
+            RK.logError(RK.LogSection.eCACHE,'get object name failed','unable to lookup system object',{ idSystemObject },'Cache.SystemObject');
             return undefined;
         }
         return this.getObjectNameInternal(SO);
@@ -208,7 +208,7 @@ export class SystemObjectCache {
     private async flushObjectWorker(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
         const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
         if (!SO) {
-            RK.logError(RK.LogSection.eCACHE,'fl;ush object failed','unable to fetch system object',{ idSystemObject },'SystemObjectCache');
+            RK.logError(RK.LogSection.eCACHE,'fl;ush object failed','unable to fetch system object',{ idSystemObject },'Cache.SystemObject');
             return undefined;
         }
 
@@ -324,7 +324,7 @@ export class SystemObjectCache {
         else if (SO.idActor) return { idObject: SO.idActor, eObjectType: COMMON.eSystemObjectType.eActor };
         else if (SO.idStakeholder) return { idObject: SO.idStakeholder, eObjectType: COMMON.eSystemObjectType.eStakeholder };
 
-        RK.logError(RK.LogSection.eCACHE,'convert system object failed','unable to interpret',{ systemObject: SO },'SystemObjectCache');
+        RK.logError(RK.LogSection.eCACHE,'convert system object failed','unable to interpret',{ systemObject: SO },'Cache.SystemObject');
         return undefined;
     }
 

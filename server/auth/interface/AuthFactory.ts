@@ -36,7 +36,7 @@ class AuthFactory {
         const verifyRes: VerifyUserResult = await auth.verifyUser(email, password);
         if (!verifyRes.success) {
             AuditFactory.audit({ email, error: verifyRes.error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            RK.logError(RK.LogSection.eAUTH,'user login failed',verifyRes.error ?? 'undefined',{ email, ...verifyRes.data },'AuthFactory',true);
+            RK.logError(RK.LogSection.eAUTH,'user login failed',verifyRes.error ?? 'undefined',{ email, ...verifyRes.data },'Auth.Factory',true);
             return { user: null, error: verifyRes.error };
         }
 
@@ -45,7 +45,7 @@ class AuthFactory {
         if (!users || users.length == 0) {
             const error: string = `${email} is not a Packrat user`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            RK.logError(RK.LogSection.eAUTH,'user login failed','not a Packrat user',{ email, ...verifyRes.data },'AuthFactory',true);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','not a Packrat user',{ email, ...verifyRes.data },'Auth.Factory',true);
             return { user: null, error };
         }
 
@@ -53,7 +53,7 @@ class AuthFactory {
         if (users.length > 1) {
             const error: string = `Multiple users exist for ${email}`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            RK.logError(RK.LogSection.eAUTH,'user login failed','multiple users exist',{ email, ...verifyRes.data },'AuthFactory',true);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','multiple users exist',{ email, ...verifyRes.data },'Auth.Factory',true);
             return { user: null, error };
         }
 
@@ -62,7 +62,7 @@ class AuthFactory {
         if (!user.Active) {
             const error: string = `${email} is not active in Packrat`;
             AuditFactory.audit({ email, error }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthFailed);
-            RK.logError(RK.LogSection.eAUTH,'user login failed','user account disabled',{ id: user.idUser, name: user.Name, email, ...verifyRes.data },'AuthFactory',true);
+            RK.logError(RK.LogSection.eAUTH,'user login failed','user account disabled',{ id: user.idUser, name: user.Name, email, ...verifyRes.data },'Auth.Factory',true);
             return { user: null, error };
         }
 
@@ -70,7 +70,7 @@ class AuthFactory {
         const LS: LocalStore = await ASL.getOrCreateStore();
         LS.idUser = user.idUser;
 
-        RK.logInfo(RK.LogSection.eAUTH,'user login success',undefined,{ id: user.idUser, name: user.Name, email, ...verifyRes.data },'AuthFactory');
+        RK.logInfo(RK.LogSection.eAUTH,'user login success',undefined,{ id: user.idUser, name: user.Name, email, ...verifyRes.data },'Auth.Factory');
         AuditFactory.audit({ email }, { eObjectType: 0, idObject: 0 }, eEventKey.eAuthLogin);
 
         return { user };

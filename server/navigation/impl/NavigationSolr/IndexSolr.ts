@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as NAV from '../../interface';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import { ObjectGraphDataEntry } from '../../../db';
 import { SolrClient, eSolrCore } from './SolrClient';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import * as NS from 'node-schedule';
 
@@ -36,7 +36,7 @@ export class IndexSolr implements NAV.IIndexer {
     constructor() {
         if (IndexSolr.reindexJob === null) {
             IndexSolr.reindexJob = NS.scheduleJob('Packrat Solr Full Reindex', '0 */4 * * *', IndexSolr.fullIndexScheduled);
-            LOG.info('IndexSolr reindex job scheduled', LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'reindex job scheduled',undefined,{},'Navigation.Solr.Index');
         }
     }
 
@@ -45,7 +45,7 @@ export class IndexSolr implements NAV.IIndexer {
             return this.fullIndexProfiled();
 
         if (IndexSolr.fullIndexUnderway) {
-            LOG.error('IndexSolr.fullIndex() already underway; exiting this additional request early', LOG.LS.eNAV);
+            RK.logWarning(RK.LogSection.eNAV,'full index failed','already underway; exiting this additional request early',{},'Navigation.Solr.Index');
             return false;
         }
 
@@ -54,7 +54,7 @@ export class IndexSolr implements NAV.IIndexer {
             IndexSolr.fullIndexUnderway = true;
             retValue = await this.fullIndexWorker();
         } catch (error) {
-            LOG.error('IndexSolr.fullIndex', LOG.LS.eNAV, error);
+            RK.logError(RK.LogSection.eNAV,'full index failed',H.Helpers.getErrorString(error),{},'Navigation.Solr.Index');
         } finally {
             IndexSolr.fullIndexUnderway = false;
         }
@@ -65,11 +65,11 @@ export class IndexSolr implements NAV.IIndexer {
         // Compute full object graph for object
         // LOG.info(`IndexSolr.indexObject(${idSystemObject}) START`, LOG.LS.eNAV);
         if (!await this.objectGraphDatabase.fetchFromSystemObject(idSystemObject))
-            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed computing ObjectGraph`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'index object failed','failed computing ObjectGraph',{ idSystemObject },'Navigation.Solr.Index');
 
         const OGDE: ObjectGraphDataEntry | undefined = this.objectGraphDatabase.objectMap.get(idSystemObject);
         if (!OGDE) {
-            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed fetching ObjectGraphDataEntry from ObjectGraphDatabase`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'index object failed','failed computing ObjectGraphDataEntry from ObjectGraphDatabase',{ idSystemObject },'Navigation.Solr.Index');
             return false;
         }
 
@@ -92,15 +92,15 @@ export class IndexSolr implements NAV.IIndexer {
                 if (res.success)
                     res = await solrClient.commit();
                 if (!res.success)
-                    LOG.error(`IndexSolr.indexObject failed: ${res.error}, docs=${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV);
+                    RK.logError(RK.LogSection.eNAV,'index object failed',res.error,{ idSystemObject, docs },'Navigation.Solr.Index');
             } catch (error) {
-                LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed, docs=${JSON.stringify(docs, H.Helpers.saferStringify)}`, LOG.LS.eNAV, error);
+                RK.logError(RK.LogSection.eNAV,'index object failed',H.Helpers.getErrorString(error),{ idSystemObject, docs },'Navigation.Solr.Index');
                 return false;
             }
 
-            LOG.info(`IndexSolr.indexObject(${idSystemObject}) succeeded, updating ${docs.size} documents`, LOG.LS.eNAV);
+            RK.logInfo(RK.LogSection.eNAV,'index object success',`updating ${docs.size} documents`,{ idSystemObject },'Navigation.Solr.Index');
         } else
-            LOG.error(`IndexSolr.indexObject(${idSystemObject}) failed in handleObject`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'index object failed','failed in handleObject',{ idSystemObject },'Navigation.Solr.Index');
 
         return true;
     }
@@ -110,22 +110,23 @@ export class IndexSolr implements NAV.IIndexer {
         const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
         const documentCount: number = await this.indexMetadataWorker(solrClient, metadataList, false);
         if (documentCount >= -1) {
-            LOG.info(`IndexSolr.indexMetadata succeeded, updating ${documentCount} documents`, LOG.LS.eNAV);
+            RK.logInfo(RK.LogSection.eNAV,'index metadata success',`updating ${documentCount} documents`,{ metadataList },'Navigation.Solr.Index');
             return true;
         } else {
-            LOG.error('IndexSolr.indexMetadata failed', LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'index metadata failed','metadata worker error',{ metadataList },'Navigation.Solr.Index');
             return false;
         }
     }
 
     private async fullIndexProfiled(): Promise<boolean> {
         if (IndexSolr.fullIndexUnderway) {
-            LOG.error('IndexSolr.fullIndexProfiled() already underway; exiting this additional request early', LOG.LS.eNAV);
+            RK.logWarning(RK.LogSection.eNAV,'full index profiled failed','already underway; exiting this additional request early',{},'Navigation.Solr.Index');
             return false;
         }
 
-        LOG.info('****************************************', LOG.LS.eNAV);
-        LOG.info('IndexSolr.fullIndexProfiled() starting', LOG.LS.eNAV);
+        const profilerKey: string = `solr index: ${H.Helpers.randomSlug()}`;
+        RK.profile(profilerKey,RK.LogSection.eNAV,'full index profiled',undefined,'Navigation.Solr.Index');
+        RK.logInfo(RK.LogSection.eNAV,'full index profiled start',undefined,{},'Navigation.Solr.Index');
         return new Promise<boolean>((resolve) => {
             const inspector = require('inspector');
             const fs = require('fs');
@@ -139,22 +140,25 @@ export class IndexSolr implements NAV.IIndexer {
                         IndexSolr.fullIndexUnderway = true;
                         retValue = await this.fullIndexWorker();
                     } catch (error) {
-                        LOG.error('IndexSolr.fullIndexProfiled', LOG.LS.eNAV, error);
+                        RK.logError(RK.LogSection.eNAV,'full index profiled failed',H.Helpers.getErrorString(error),{},'Navigation.Solr.Index');
                     } finally {
                         IndexSolr.fullIndexUnderway = false;
                     }
 
-                    LOG.info('IndexSolr.fullIndexProfiled() fullIndex() complete', LOG.LS.eNAV);
+                    RK.logInfo(RK.LogSection.eNAV,'full index profiled success',undefined,{},'Navigation.Solr.Index');
+                    RK.profileEnd(profilerKey);
                     resolve(retValue);
 
                     // some time later...
                     session.post('Profiler.stop', (err, { profile }) => {
                         // Write profile to disk, upload, etc.
                         if (!err) {
-                            LOG.info('IndexSolr.fullIndexProfiled() writing profile', LOG.LS.eNAV);
+                            RK.logDebug(RK.LogSection.eNAV,'full index profiled','writing profile',{},'Navigation.Solr.Index');
                             fs.writeFileSync('./profile.cpuprofile', JSON.stringify(profile));
+                        } else {
+                            RK.logError(RK.LogSection.eNAV,'full index profiled',H.Helpers.getErrorString(err),{},'Navigation.Solr.Index');
                         }
-                        LOG.info('IndexSolr.fullIndexProfiled() writing profile ending', LOG.LS.eNAV);
+                        RK.logDebug(RK.LogSection.eNAV,'full index profiled','writing profile ending',{},'Navigation.Solr.Index');
                     });
                 });
             });
@@ -175,7 +179,7 @@ export class IndexSolr implements NAV.IIndexer {
             // supply all required fields
             const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
             if (!oID) {
-                LOG.error(`IndexSolr.handleAncestors unable to extract system object info for ${idSystemObject}`, LOG.LS.eNAV);
+                RK.logError(RK.LogSection.eNAV,'handle ancestors','unable to extract system object info',{ idSystemObject },'Navigation.Solr.Index');
                 continue;
             }
 
@@ -190,7 +194,7 @@ export class IndexSolr implements NAV.IIndexer {
     }
 
     private static async fullIndexScheduled(): Promise<boolean> {
-        LOG.info('IndexSolr reindex job starting', LOG.LS.eNAV);
+        RK.logInfo(RK.LogSection.eNAV,'reindex job starting',undefined,{},'Navigation.Solr.Index');
         const IS: IndexSolr = new IndexSolr();
         return IS.fullIndex();
     }
@@ -206,7 +210,7 @@ export class IndexSolr implements NAV.IIndexer {
         const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackrat);
 
         if (!(await this.objectGraphDatabase.fetch())) {
-            LOG.error('IndexSolr.fullIndexWorkerOG failed on ObjectGraphDatabase.fetch()', LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'full index worker failed','cannot fetch object graph database',{},'Navigation.Solr.Index');
             return false;
         }
 
@@ -224,7 +228,7 @@ export class IndexSolr implements NAV.IIndexer {
                     docs = [];
                 }
             } else
-                LOG.error('IndexSolr.fullIndexWorkerOG failed in handleObject', LOG.LS.eNAV);
+                RK.logError(RK.LogSection.eNAV,'full index worker failed','failed tto handle object',{ doc, objectGraphDataEntry },'Navigation.Solr.Index');
         }
 
         if (docs.length > 0) {
@@ -233,21 +237,25 @@ export class IndexSolr implements NAV.IIndexer {
                 return false;
         }
 
-        LOG.info(`IndexSolr.fullIndex indexed units: ${this.countUnit}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed projects: ${this.countProject}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed subjects: ${this.countSubject}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed items: ${this.countItem}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed capture data: ${this.countCaptureData}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed models: ${this.countModel}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed scenes: ${this.countScene}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed intermediary files: ${this.countIntermediaryFile}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed project documentation: ${this.countProjectDocumentation}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed assets: ${this.countAsset}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed asset versions: ${this.countAssetVersion}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed actors: ${this.countActor}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed stakeholders: ${this.countStakeholder}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex indexed unknown: ${this.countUnknown}`, LOG.LS.eNAV);
-        LOG.info(`IndexSolr.fullIndex committed ${documentCount} total documents`, LOG.LS.eNAV);
+        RK.logInfo(RK.LogSection.eNAV,'index success',undefined,
+            {
+                units: this.countUnit,
+                projects: this.countProject,
+                subject: this.countSubject,
+                items: this.countItem,
+                captureData: this.countCaptureData,
+                models: this.countModel,
+                scenes: this.countScene,
+                intermediaryFiles: this.countIntermediaryFile,
+                documentation: this.countProjectDocumentation,
+                assets: this.countAsset,
+                assetVersions: this.countAssetVersion,
+                actors: this.countActor,
+                stakeholders: this.countStakeholder,
+                unknown: this.countUnknown,
+                committed: documentCount
+            },'Navigation.Solr.Index');
+
         return true;
     }
 
@@ -262,7 +270,7 @@ export class IndexSolr implements NAV.IIndexer {
         while (true) { // eslint-disable-line no-constant-condition
             const metadataList: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchAllByPage(idMetadataLast, 25000);
             if (!metadataList) {
-                LOG.error('IndexSolr.fullIndexWorkerMeta could not fetch metadata', LOG.LS.eNAV);
+                RK.logInfo(RK.LogSection.eNAV,'metadata worker failed','could not fetch metadata',{ idMetadataLast },'Navigation.Solr.Index');
                 return false;
             }
             if (metadataList.length <= 0)
@@ -276,7 +284,7 @@ export class IndexSolr implements NAV.IIndexer {
             idMetadataLast = metadataList[metadataList.length - 1].idMetadata;
         }
 
-        LOG.info(`IndexSolr.fullIndex indexed metadata: ${this.countMetadata}`, LOG.LS.eNAV);
+        RK.logInfo(RK.LogSection.eNAV,'metadata worker',`indexed metadata: ${this.countMetadata}`,{},'Navigation.Solr.Index');
         return result;
     }
 
@@ -333,7 +341,7 @@ export class IndexSolr implements NAV.IIndexer {
                     if (metadataSourceV)
                         doc.MetadataSource = createDoc ? metadataSourceV.Term : { 'set': metadataSourceV.Term };
                     else
-                        LOG.error(`IndexSolr.fullIndexWorkerMeta could not fetch metadata source ${metadata.idVMetadataSource}`, LOG.LS.eNAV);
+                        RK.logError(RK.LogSection.eNAV,'metadata worker failed','could not fetch metadata source',{ metadata },'Navigation.Solr.Index');
                 }
             }
             doc.idSystemObjectParent = createDoc ? idSystemObjectParent : { 'set': idSystemObjectParent };
@@ -354,13 +362,13 @@ export class IndexSolr implements NAV.IIndexer {
             if (res.success)
                 res = await solrClient.commit();
             if (!res.success)
-                LOG.error(`IndexSolr.${callerForLog} failed: ${res.error}`, LOG.LS.eNAV);
+                RK.logError(RK.LogSection.eNAV,'add document to Solr failed',res.error,{ docs, callerForLog },'Navigation.Solr.Index');
         } catch (error) {
-            LOG.error(`IndexSolr.${callerForLog} failed`, LOG.LS.eNAV, error);
+            RK.logError(RK.LogSection.eNAV,'add document to Solr failed',H.Helpers.getErrorString(error),{ docs, callerForLog },'Navigation.Solr.Index');
             return -1;
         }
         documentCount += docs.length;
-        LOG.info(`IndexSolr.${callerForLog} committed ${documentCount} total documents to ${solrClient.core()}`, LOG.LS.eNAV);
+        RK.logInfo(RK.LogSection.eNAV,'add document to Solr success',`committed ${documentCount} total documents`,{ solrCore: solrClient.core() },'Navigation.Solr.Index');
         return documentCount;
     }
 
@@ -413,7 +421,7 @@ export class IndexSolr implements NAV.IIndexer {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.error(`Unable to compute Unit for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
+                    RK.logError(RK.LogSection.eNAV,'extract common fields failed','unable to compute Unit for object',{ ...objInfo },'Navigation.Solr.Index');
                 }
             }
             nameArray.push(name);
@@ -435,7 +443,7 @@ export class IndexSolr implements NAV.IIndexer {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.error(`Unable to compute Project for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
+                    RK.logError(RK.LogSection.eNAV,'extract common fields failed','unable to compute Project for object',{ ...objInfo },'Navigation.Solr.Index');
                 }
             }
             nameArray.push(name);
@@ -457,7 +465,7 @@ export class IndexSolr implements NAV.IIndexer {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.error(`Unable to compute Subject for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
+                    RK.logError(RK.LogSection.eNAV,'extract common fields failed','unable to compute Subject for object',{ ...objInfo },'Navigation.Solr.Index');
                 }
             }
             nameArray.push(name);
@@ -479,7 +487,7 @@ export class IndexSolr implements NAV.IIndexer {
                     this.hierarchyNameMap.set(objInfo.idSystemObject, name);
                 } else {
                     name = 'Unknown';
-                    LOG.error(`Unable to compute Item for ${JSON.stringify(objInfo)}`, LOG.LS.eNAV);
+                    RK.logError(RK.LogSection.eNAV,'extract common fields failed','unable to compute Item for object',{ ...objInfo },'Navigation.Solr.Index');
                 }
             }
             nameArray.push(name);
@@ -550,7 +558,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleUnit(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!unit) {
-            LOG.error(`IndexSolr.handleUnit failed to compute unit from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle unit failed','failed to compute unit',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = unit.Name;
@@ -563,7 +571,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleProject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const project: DBAPI.Project | null = await DBAPI.Project.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!project) {
-            LOG.error(`IndexSolr.handleProject failed to compute project from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle project failed','failed to compute project',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = project.Name;
@@ -575,7 +583,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleSubject(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const subject: DBAPI.Subject | null = await DBAPI.Subject.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!subject) {
-            LOG.error(`IndexSolr.handleSubject failed to compute subject from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle subject failed','failed to compute subject',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
 
@@ -592,7 +600,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleItem(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const item: DBAPI.Item | null = await DBAPI.Item.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!item) {
-            LOG.error(`IndexSolr.handleItem failed to compute item from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle item failed','failed to compute item',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = item.Name;
@@ -604,7 +612,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleCaptureData(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const captureData: DBAPI.CaptureData | null = await DBAPI.CaptureData.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!captureData) {
-            LOG.error(`IndexSolr.handleCaptureData failed to compute capture data from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle capture data failed','failed to compute capture data',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         const captureDataPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(captureData.idCaptureData);
@@ -647,7 +655,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleModel(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!modelConstellation) {
-            LOG.error(`IndexSolr.handleModel failed to compute ModelConstellation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle model failed','failed to compute ModelConstellation',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         const model: DBAPI.Model = modelConstellation.Model;
@@ -806,7 +814,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleScene(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!scene) {
-            LOG.error(`IndexSolr.handleScene failed to compute scene from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle scene failed','failed to compute Scene',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = scene.Name;
@@ -844,7 +852,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleIntermediaryFile(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const intermediaryFile: DBAPI.IntermediaryFile | null = await DBAPI.IntermediaryFile.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!intermediaryFile) {
-            LOG.error(`IndexSolr.handleIntermediaryFile failed to compute intermediaryFile from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle intermediary file failed','failed to compute IntermediaryFile',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = `Intermediary File created ${intermediaryFile.DateCreated.toISOString()}`;
@@ -857,7 +865,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleProjectDocumentation(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const projectDocumentation: DBAPI.ProjectDocumentation | null = await DBAPI.ProjectDocumentation.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!projectDocumentation) {
-            LOG.error(`IndexSolr.handleProjectDocumentation failed to compute projectDocumentation from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle project documentation failed','failed to compute ProjectDocumentation',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = projectDocumentation.Name;
@@ -869,7 +877,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleAsset(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!asset) {
-            LOG.error(`IndexSolr.handleAsset failed to compute asset from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle asset failed','failed to compute Asset',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
 
@@ -889,13 +897,13 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleAssetVersion(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!assetVersion) {
-            LOG.error(`IndexSolr.handleAssetVersion failed to compute assetVersion from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle asset version failed','failed to compute AssetVersion',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
 
         const user: DBAPI.User | null = await DBAPI.User.fetch(assetVersion.idUserCreator);
         if (!user) {
-            LOG.error(`IndexSolr.handleAssetVersion failed to compute idUserCreator from ${assetVersion.idUserCreator}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle asset version failed','failed to compute idUserCreator',{ idUserCreator: assetVersion.idUserCreator },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = `${assetVersion.FileName} v${assetVersion.Version}`;
@@ -915,7 +923,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleActor(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const actor: DBAPI.Actor | null = await DBAPI.Actor.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!actor) {
-            LOG.error(`IndexSolr.handleActor failed to compute actor from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle actor failed','failed to compute Actor',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
         doc.CommonName = actor.IndividualName;
@@ -927,7 +935,7 @@ export class IndexSolr implements NAV.IIndexer {
     private async handleStakeholder(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
         const stakeholder: DBAPI.Stakeholder | null = await DBAPI.Stakeholder.fetch(objectGraphDataEntry.systemObjectIDType.idObject);
         if (!stakeholder) {
-            LOG.error(`IndexSolr.handleStakeholder failed to compute stakeholder from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'handle stakeholder failed','failed to compute Stakeholder',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
             return false;
         }
 
@@ -942,7 +950,8 @@ export class IndexSolr implements NAV.IIndexer {
     }
 
     private async handleUnknown(doc: any, objectGraphDataEntry: DBAPI.ObjectGraphDataEntry): Promise<boolean> {
-        LOG.error(`IndexSolr.fullIndex called with unknown object type from ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`, LOG.LS.eNAV);
+        RK.logError(RK.LogSection.eNAV,'handle unknown','called with unknown object type',{ ...objectGraphDataEntry.systemObjectIDType },'Navigation.Solr.Index');
+
         doc.CommonName = `Unknown ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)}`;
         this.countUnknown++;
         return false;

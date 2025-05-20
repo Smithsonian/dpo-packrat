@@ -20,16 +20,16 @@ AuthRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
         const { ip } = H.Helpers.getUserDetailsFromRequest(req);
 
         if (error) {
-            RK.logDebug(RK.LogSection.eAUTH,'user login failed',error,{ ip },'AuthRouter',true);
+            RK.logDebug(RK.LogSection.eAUTH,'user login failed',error,{ ip },'Auth.Router',true);
             return res.send({ success: false, message: error });
         }
         return req.logIn(user, error => {   // assigns user to request.user
             if (error) {
-                RK.logDebug(RK.LogSection.eAUTH,'user login failed',error, { ip },'AuthRouter',true);
+                RK.logDebug(RK.LogSection.eAUTH,'user login failed',error, { ip },'Auth.Router',true);
                 return next(error);
             }
 
-            RK.logDebug(RK.LogSection.eAUTH,'user login success',undefined, { idUser: user.idUser, name: user.Name, email: user.EmailAddress, ip },'AuthRouter',true);
+            RK.logDebug(RK.LogSection.eAUTH,'user login success',undefined, { idUser: user.idUser, name: user.Name, email: user.EmailAddress, ip },'Auth.Router',true);
             return res.send({ success: true });
         });
     })(req, res, next);
@@ -41,10 +41,10 @@ AuthRouter.get('/logout', (req: Request, res: Response) => {
 
     req['logout'](err => {
         if(err) {
-            RK.logDebug(RK.LogSection.eAUTH,'user logout failed',err,{ idUser: id, ip },'AuthRouter',true);
+            RK.logDebug(RK.LogSection.eAUTH,'user logout failed',err,{ idUser: id, ip },'Auth.Router',true);
             res.send({ success: false, message: err });
         } else {
-            RK.logDebug(RK.LogSection.eAUTH,'user logout success',undefined,{ idUser: id, ip },'AuthRouter',true);
+            RK.logDebug(RK.LogSection.eAUTH,'user logout success',undefined,{ idUser: id, ip },'Auth.Router',true);
             res.send({ success: true });
         }
     });
