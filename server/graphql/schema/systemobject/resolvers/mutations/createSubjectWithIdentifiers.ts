@@ -1,12 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CreateSubjectWithIdentifiersResult, MutationCreateSubjectWithIdentifiersArgs } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import { handleMetadata } from './updateObjectDetails';
 import * as DBAPI from '../../../../../db';
 import * as COL from '../../../../../collections/interface';
-import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { VocabularyCache } from '../../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs, context: Context): Promise<CreateSubjectWithIdentifiersResult> {
     const {
@@ -61,7 +62,7 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
     }
 
     if (idIdentifierPreferred === null)
-        return sendResult(false, 'Error setting preferred identifier for subject');
+        return sendResult(false,'create subject failed','Error setting preferred identifier for subject');
 
     const Subject = new DBAPI.Subject({
         idSubject: 0,
@@ -72,11 +73,11 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
         idIdentifierPreferred
     });
     if (!await Subject.create())
-        return sendResult(false, 'Error creating subject');
+        return sendResult(false,'create subject failed','Error creating subject');
 
     const SO = await Subject.fetchSystemObject();
     if (!SO)
-        return sendResult(false, 'Unable to compute system object; subject only partially created');
+        return sendResult(false,'create subject failed','Unable to compute system object; subject only partially created');
 
     for (const identifier of identifiersList) {
         if (SO.idSystemObject)
@@ -86,18 +87,18 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
 
     let res: H.IOResults = await handleMetadata(SO.idSystemObject, metadata, user);
     if (!res.success)
-        return sendResult(false, res.error);
+        return sendResult(false,'create subject failed',res.error);
 
     res = await publishSubject(SO.idSystemObject);
     if (!res.success)
-        return sendResult(false, res.error);
+        return sendResult(false,'create subject failed',res.error);
 
-    return sendResult(true);
+    return sendResult(true,'create subject failed',undefined,{ Subject });
 }
 
-function sendResult(success: boolean, message?: string): CreateSubjectWithIdentifiersResult {
+function sendResult(success: boolean, message: string, reason?: string, data?: any): CreateSubjectWithIdentifiersResult {
     if (!success)
-        LOG.error(`createSubjectWithIdentifier: ${message}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,message,reason,data,'GraphQL.SystemObject.Subject');
     return { success, message: message ?? '' };
 }
 

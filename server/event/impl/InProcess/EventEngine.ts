@@ -17,7 +17,7 @@ export class EventEngine implements EVENT.IEventEngine {
     }
 
     async initialize(): Promise<IOResults> {
-        RK.logDebug(RK.LogSection.eEVENT,'system initialize','wiring default consumers',{ consumers: 'DB, Auth, Publish, HTTP' },'EventEngine');
+        RK.logDebug(RK.LogSection.eEVENT,'system initialize','wiring default consumers',{ consumers: 'DB, Auth, Publish, HTTP' },'Event.Engine');
 
         const createdConsumers: string[] = [];
         await this.createConsumer(EVENT.eEventTopic.eDB) && createdConsumers.push('DB');
@@ -32,7 +32,7 @@ export class EventEngine implements EVENT.IEventEngine {
     }
 
     async createProducer(): Promise<EVENT.IEventProducer | null> {
-        // RK.logDebug(RK.LogSection.eEVENT,'create event producer',undefined,undefined,'EventEngine');
+        // RK.logDebug(RK.LogSection.eEVENT,'create event producer',undefined,undefined,'Event.Engine');
         return new EventProducer(this);
     }
 
@@ -40,7 +40,7 @@ export class EventEngine implements EVENT.IEventEngine {
     async createConsumer(eTopic: EVENT.eEventTopic): Promise<EVENT.IEventConsumer | null>;
     async createConsumer(eTopic?: EVENT.eEventTopic): Promise<EVENT.IEventConsumer | null> {
         if (!eTopic) {
-            RK.logError(RK.LogSection.eEVENT,'create event consumer failed','called without expected topic',undefined,'EventEngine');
+            RK.logError(RK.LogSection.eEVENT,'create event consumer failed','called without expected topic',undefined,'Event.Engine');
             return null;
         }
 
@@ -52,18 +52,18 @@ export class EventEngine implements EVENT.IEventEngine {
             case EVENT.eEventTopic.ePublish: consumer = new EventConsumerPublish(this); break;
             case EVENT.eEventTopic.eHTTP: consumer = new EventConsumerHTTP(this); break;
             default: {
-                RK.logError(RK.LogSection.eEVENT,'create event consumer failed','called without unexpected topic',{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
+                RK.logError(RK.LogSection.eEVENT,'create event consumer failed','called without unexpected topic',{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
                 return null;
             }
         }
 
         const registerResult: IOResults = await this.registerConsumer(eTopic, consumer);
         if(registerResult.success===false) {
-            RK.logError(RK.LogSection.eEVENT,'create event consumer failed',registerResult.message,{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
+            RK.logError(RK.LogSection.eEVENT,'create event consumer failed',registerResult.message,{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
             return null;
         }
 
-        RK.logDebug(RK.LogSection.eEVENT,'create event consumer success',undefined,{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
+        RK.logDebug(RK.LogSection.eEVENT,'create event consumer success',undefined,{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
         return consumer;
     }
 
@@ -80,7 +80,7 @@ export class EventEngine implements EVENT.IEventEngine {
     }
 
     async unregisterConsumer(eTopic: EVENT.eEventTopic, consumer: EventConsumer): Promise<void> {
-        RK.logDebug(RK.LogSection.eEVENT,'unregister event consumer',undefined,{ topic: EVENT.eEventTopic[eTopic] },'EventEngine');
+        RK.logDebug(RK.LogSection.eEVENT,'unregister event consumer',undefined,{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
 
         const consumerSet: Set<EventConsumer> | undefined = this.consumerMap.get(eTopic);
         if (consumerSet)

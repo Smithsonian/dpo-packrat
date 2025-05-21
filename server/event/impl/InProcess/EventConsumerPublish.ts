@@ -5,8 +5,7 @@ import { EventEngine } from './EventEngine';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
-import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class EventConsumerPublish extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -17,18 +16,18 @@ export class EventConsumerPublish extends EventConsumer {
         // inform audit interface of authentication event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
-                LOG.error(`EventConsumerPublish.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                RK.logError(RK.LogSection.eEVENT,'event worker failed','sent event with unknown key',{ ...dataItem },'Event.Consumer.Publish');
                 continue;
             }
 
             switch (dataItem.key) {
                 case EVENT.eEventKey.eSceneQCd:
                     if (!await this.publishScene(dataItem.value))
-                        LOG.error('EventConsumerPublish.eventWorker failed publishing scene', LOG.LS.eEVENT);
+                        RK.logError(RK.LogSection.eEVENT,'event worker failed','failed publishing scene',{ ...dataItem },'Event.Consumer.Publish');
                     break;
 
                 default:
-                    LOG.error(`EventConsumerPublish.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                    RK.logError(RK.LogSection.eEVENT,'event worker failed','unsupported key',{ ...dataItem },'Event.Consumer.Publish');
                     break;
             }
         }
@@ -47,20 +46,20 @@ export class EventConsumerPublish extends EventConsumer {
             }
         }
 
-        LOG.info(`EventConsumerPublish.publishScene Scene QCd ${audit.idDBObject}`, LOG.LS.eEVENT);
         if (audit.idAudit === 0)
             audit.create(); // don't use await so this happens asynchronously
 
         if (!idSystemObject) {
-            LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for scene without idSystemObject ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+            RK.logError(RK.LogSection.eEVENT,'publish scene failed','received eSceneQCd event for scene without idSystemObject',{ audit },'Event.Consumer.Publish');
             return false;
         }
 
         if (audit.getDBObjectType() !== COMMON.eSystemObjectType.eScene) {
-            LOG.error(`EventConsumerPublish.publishScene received eSceneQCd event for non scene object ${JSON.stringify(audit, H.Helpers.saferStringify)}`, LOG.LS.eEVENT);
+            RK.logError(RK.LogSection.eEVENT,'publish scene failed','received eSceneQCd event for non scene object',{ audit },'Event.Consumer.Publish');
             return false;
         }
 
+        RK.logInfo(RK.LogSection.eEVENT,'publish scene success',undefined,{ dataItemValue, idSystemObject },'Event.Consumer.Publish');
         return true;
     }
 }

@@ -275,7 +275,6 @@ export class NotifySlack {
 
     //#region SENDING
     private static async postMessage(entry: SlackEntry): Promise<SlackResult> {
-        console.log('post slack message');
         try {
             // get our headers
             const slackHeaders: any = NotifySlack.formatHeaders();
@@ -292,7 +291,6 @@ export class NotifySlack {
             // send the main message and wait for it to return
             const mainResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(mainResponse.data.ok===false) {
-                console.log('failed slack: ',mainResponse);
                 return { success: false, message: 'failed to send slack message', data: { error: mainResponse.data?.error } };
             }
 

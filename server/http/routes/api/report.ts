@@ -399,7 +399,6 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
         }
     }
 
-    // console.log('result: ',result);
     return result;
 };
 const processAssetAnalysis = async (basePath: string, totalAssets: number): Promise<boolean> => {

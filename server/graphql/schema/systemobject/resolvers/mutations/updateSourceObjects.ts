@@ -1,7 +1,7 @@
 import { UpdateSourceObjectsResult, MutationUpdateSourceObjectsArgs, ExistingRelationship } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { isValidParentChildRelationship } from '../../../ingestion/resolvers/mutations/ingestData';
 
 export default async function updateSourceObjects(_: Parent, args: MutationUpdateSourceObjectsArgs): Promise<UpdateSourceObjectsResult> {
@@ -24,7 +24,7 @@ export default async function updateSourceObjects(_: Parent, args: MutationUpdat
             for (const newlySelected of newlySelectedArr) {
                 const isValidRelationship = isValidParentChildRelationship(newlySelected.objectType, ChildObjectType, Sources, PreviouslySelected, true);
                 if (!isValidRelationship) {
-                    LOG.error(`updateSourceObjects failed to create connection between ${idSystemObject} and ${newlySelected.idSystemObject}`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'update source objects failed',`failed to create connection between ${idSystemObject} and ${newlySelected.idSystemObject}`,{},'GraphQL.SystemObject.SourceObject');
                     result.status = 'warn';
                     result.message += ' ' + newlySelected.idSystemObject;
                     continue;
@@ -32,12 +32,12 @@ export default async function updateSourceObjects(_: Parent, args: MutationUpdat
 
                 const wireSourceToDerived = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(newlySelected.idSystemObject, SO.idSystemObject);
                 if (!wireSourceToDerived) {
-                    LOG.error(`updateSourceObjects failed to wire SystemObjectXref ${JSON.stringify(wireSourceToDerived)}`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'update source objects failed','failed to wire SystemObjectXref',{ wireSourceToDerived },'GraphQL.SystemObject.SourceObject');
                     continue;
                 }
             }
         } else {
-            LOG.error(`updateSourceObjects failed to fetch system object ${idSystemObject}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'update source objects failed',`failed to fetch system object ${idSystemObject}`,{},'GraphQL.SystemObject.SourceObject');
             return { success: false, message: `Failed to fetch system object ${idSystemObject}`, status: 'error' };
         }
     }

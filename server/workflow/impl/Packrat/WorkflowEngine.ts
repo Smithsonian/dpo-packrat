@@ -432,7 +432,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if(idScene) {
             scene = await DBAPI.Scene.fetch(idScene);
             if(!scene)
-                console.log(`no scene found for id: ${idScene}`);
+                RK.logWarning(RK.LogSection.eWF,'generate scene',`no scene found for id: ${idScene}`,{ idModel },'Workflow.Engine');
         }
 
         // if we still don't have a scene try to get it from the master model
@@ -440,10 +440,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // get scene (if any) from master model
             const childScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(idModel);
             if(!childScenes || childScenes.length===0) {
-                console.log(`No children scenes found (idModel: ${idModel})`);
+                RK.logWarning(RK.LogSection.eWF,'generate scene',`No children scenes found`,{ idModel },'Workflow.Engine');
             } else {
                 if(childScenes.length > 1)
-                    console.log(`retrieved ${childScenes.length} scenes for model (idModel: ${idModel})`);
+                    RK.logDebug(RK.LogSection.eWF,'generate scene',`retrieved ${childScenes.length} scenes for model`,{ idModel },'Workflow.Engine');
                 scene = childScenes[0];
             }
         }

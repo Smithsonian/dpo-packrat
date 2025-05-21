@@ -28,8 +28,8 @@ interface ApolloFile {
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
     const profileKey: string = 'upload: '+H.Helpers.randomSlug();
-    RK.logInfo(RK.LogSection.eGQL,'upload asset request',undefined,args,'GraphQL.uploadAsset',true);
-    RK.profile(profileKey,RK.LogSection.eGQL,'upload asset',{},'GraphQL.uploadAsset');
+    RK.logInfo(RK.LogSection.eGQL,'upload asset request',undefined,args,'GraphQL.Upload.Asset',true);
+    RK.profile(profileKey,RK.LogSection.eGQL,'upload asset',{},'GraphQL.Upload.Asset');
     const { user } = context;
 
     // using GraphQL and graphql-upload middleware the client sends a multi-part/form upload (stream)
@@ -46,7 +46,7 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     const memoryAfter = process.memoryUsage();
 
     // log our memory consumption and update our profiler to include it
-    // RK.logDebug(RK.LogSection.eGQL,'upload asset','request result',{ rss: (memoryBefore.rss-memoryAfter.rss), heap: (memoryBefore.heapUsed-memoryAfter.heapUsed), workerResult },'GraphQL.uploadAsset');
+    // RK.logDebug(RK.LogSection.eGQL,'upload asset','request result',{ rss: (memoryBefore.rss-memoryAfter.rss), heap: (memoryBefore.heapUsed-memoryAfter.heapUsed), workerResult },'GraphQL.Upload.Asset');
     RK.profileUpdate(profileKey, { file: apolloFile.filename, type: args.type, idAsset: args.idAsset, rss: (memoryBefore.rss-memoryAfter.rss), heap: (memoryBefore.heapUsed-memoryAfter.heapUsed) });
     RK.profileEnd(profileKey);
     return workerResult;
@@ -71,7 +71,7 @@ class UploadAssetWorker extends ResolverBase {
     }
 
     async upload(): Promise<UploadAssetResult> {
-        RK.logInfo(RK.LogSection.eGQL,'asset upload started',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+        RK.logInfo(RK.LogSection.eGQL,'asset upload started',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
 
         // entry point for file upload requests coming from the client
         this.LS = await ASL.getOrCreateStore();
@@ -83,10 +83,10 @@ class UploadAssetWorker extends ResolverBase {
 
         if (success) {
             await this.appendToWFReport('<b>Upload succeeded</b>');
-            RK.logInfo(RK.LogSection.eGQL,'asset upload success',undefined,{ file: this.apolloFile.filename, ...UAR },'UploadAssetWorker');
+            RK.logInfo(RK.LogSection.eGQL,'asset upload success',undefined,{ file: this.apolloFile.filename, ...UAR },'GraphQL.Upload.AssetWorker');
         } else {
             await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
-            RK.logError(RK.LogSection.eGQL,'asset upload failed',UAR.error ?? 'unknown error',{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'asset upload failed',UAR.error ?? 'unknown error',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
         }
 
         return UAR;
@@ -94,17 +94,17 @@ class UploadAssetWorker extends ResolverBase {
 
     private async uploadWorker(): Promise<UploadAssetResult> {
         // creates a WorkflowReport for the upload request allowing for asynchronous handling
-        RK.logDebug(RK.LogSection.eGQL,'upload worker started',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+        RK.logDebug(RK.LogSection.eGQL,'upload worker started',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
 
         const { filename, createReadStream } = this.apolloFile;
         const url: string = `/ingestion/uploads/${filename}`;
         const auditResult: boolean = await AuditFactory.audit({ url, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
         if(auditResult===false) {
-            RK.logError(RK.LogSection.eGQL,'property check failed','unknown error',{ file: this.apolloFile.filename, url, idUser: this.user?.idUser ?? -1, idAsset: this.idAsset },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'property check failed','unknown error',{ file: this.apolloFile.filename, url, idUser: this.user?.idUser ?? -1, idAsset: this.idAsset },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Failed property audit' };
         }
         if (!this.user) {
-            RK.logError(RK.LogSection.eGQL,'auth check failed','user not authenticated',{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'auth check failed','user not authenticated',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Noauth, error: 'User not authenticated' };
         }
 
@@ -112,32 +112,32 @@ class UploadAssetWorker extends ResolverBase {
         // else if an 'attachment' is specified (this is a child) then we will try to attach
         // otherwise, we are adding a new asset to the system
         if (this.idAsset) {
-            RK.logDebug(RK.LogSection.eGQL,'asset updating',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logDebug(RK.LogSection.eGQL,'asset updating',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             await this.appendToWFReport(`<b>Upload starting</b>: UPDATE ${filename}`, false);
         } else if (this.idSOAttachment) {
-            RK.logDebug(RK.LogSection.eGQL,'asset attaching',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logDebug(RK.LogSection.eGQL,'asset attaching',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             await this.appendToWFReport(`<b>Upload starting</b>: ATTACH ${filename}`, false);
         } else {
-            RK.logDebug(RK.LogSection.eGQL,'asset creating',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logDebug(RK.LogSection.eGQL,'asset creating',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             await this.appendToWFReport(`<b>Upload starting</b>: ADD ${filename}`, false);
         }
 
         const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            RK.logCritical(RK.LogSection.eGQL,'storage system failed','unable to retrieve Storage Implementation from StorageFactory',{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logCritical(RK.LogSection.eGQL,'storage system failed','unable to retrieve Storage Implementation from StorageFactory',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Storage system unavailable' };
         }
 
         // get a write stream for us to store the incoming stream
         const WSResult: STORE.WriteStreamResult = await storage.writeStream(filename);
         if (!WSResult.success || !WSResult.writeStream || !WSResult.storageKey) {
-            RK.logError(RK.LogSection.eGQL,'storage system failed','unable to retrieve write stream from IStroage',{ file: this.apolloFile.filename, error: WSResult.error },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'storage system failed','unable to retrieve write stream from IStroage',{ file: this.apolloFile.filename, error: WSResult.error },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
         const { writeStream, storageKey } = WSResult;
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(this.type);
         if (!vocabulary) {
-            RK.logError(RK.LogSection.eGQL,'vocabulary failed','unable to retrieve asset type vocabulary',{ file: this.apolloFile.filename, type: this.type },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'vocabulary failed','unable to retrieve asset type vocabulary',{ file: this.apolloFile.filename, type: this.type },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Unable to retrieve asset type vocabulary' };
         }
 
@@ -145,7 +145,7 @@ class UploadAssetWorker extends ResolverBase {
             // write our incoming stream of bytes to a file in local storage (staging)
             const fileStream = createReadStream({ highWaterMark: 1024 * 1024 });
             const stream = fileStream.pipe(writeStream);
-            RK.logDebug(RK.LogSection.eGQL,'upload staging','writing stream to staging',{ file: this.apolloFile.filename, path: fileStream.path },'UploadAssetWorker');
+            RK.logDebug(RK.LogSection.eGQL,'upload staging','writing stream to staging',{ file: this.apolloFile.filename, path: fileStream.path },'GraphQL.Upload.AssetWorker');
 
             return await new Promise((resolve) => {
                 let isResolved = false;
@@ -159,7 +159,7 @@ class UploadAssetWorker extends ResolverBase {
 
                 // file (read) stream callbacks. taking bytes transfered from the buffer
                 fileStream.once('error', ASR.bind(async (error) => {
-                    RK.logError(RK.LogSection.eGQL,'filestream failed',H.Helpers.getErrorString(error),{ file: this.apolloFile.filename },'UploadAssetWorker');
+                    RK.logError(RK.LogSection.eGQL,'filestream failed',H.Helpers.getErrorString(error),{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
                     await this.appendToWFReport(`FileStream error: ${error.message}`, false, true);
 
                     await storage.discardWriteStream({ storageKey });
@@ -167,10 +167,10 @@ class UploadAssetWorker extends ResolverBase {
                     // stream.emit('error', error);
                 }));
                 fileStream.once('end', () => {
-                    RK.logDebug(RK.LogSection.eGQL,'filestream finished',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+                    RK.logDebug(RK.LogSection.eGQL,'filestream finished',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
                 });
                 fileStream.once('close', () => {
-                    RK.logDebug(RK.LogSection.eGQL,'filestream closed',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+                    RK.logDebug(RK.LogSection.eGQL,'filestream closed',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
                 });
 
                 // (write) stream callbacks for storing the transferred bytes to disk
@@ -181,7 +181,7 @@ class UploadAssetWorker extends ResolverBase {
                 stream.on('data', (chunk) => {
                     totalBytes += chunk.length;
                     if(totalBytes>=nextThreshold) {
-                        RK.logDebug(RK.LogSection.eGQL,'transferred bytes','transferred from tmp to staging',{ file: this.apolloFile.filename, totalBytes, url },'UploadAssetWorker');
+                        RK.logDebug(RK.LogSection.eGQL,'transferred bytes','transferred from tmp to staging',{ file: this.apolloFile.filename, totalBytes, url },'GraphQL.Upload.AssetWorker');
                         nextThreshold += thresholdOffset;
                     }
                 });
@@ -190,21 +190,21 @@ class UploadAssetWorker extends ResolverBase {
                     safeResolve(await this.uploadWorkerOnFinish(storageKey, filename, vocabulary.idVocabulary));
                 }));
                 stream.once('error', ASR.bind(async (error) => {
-                    RK.logError(RK.LogSection.eGQL,'writestream failed',H.Helpers.getErrorString(error),{ file: this.apolloFile.filename },'UploadAssetWorker');
+                    RK.logError(RK.LogSection.eGQL,'writestream failed',H.Helpers.getErrorString(error),{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
                     await this.appendToWFReport(`UploadAssetWorker.uploadWorker: upload failed (${error.message})`, false, true);
 
                     await storage.discardWriteStream({ storageKey });
                     safeResolve({ status: UploadStatus.Failed, error: `Upload failed (${error.message})` });
                 }));
                 stream.once('close', () => {
-                    RK.logDebug(RK.LogSection.eGQL,'writestream closed',undefined,{ file: this.apolloFile.filename },'UploadAssetWorker');
+                    RK.logDebug(RK.LogSection.eGQL,'writestream closed',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
                 });
                 // stream.on('drain', () => {
                 //     LOG.info('UploadAssetWorker.uploadWorker: stream drained.',LOG.LS.eDEBUG);
                 // });
             });
         } catch (error) {
-            RK.logError(RK.LogSection.eGQL,'upload worker failed',H.Helpers.getErrorString(error),{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'upload worker failed',H.Helpers.getErrorString(error),{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Upload failed' };
         }
     }
@@ -221,21 +221,21 @@ class UploadAssetWorker extends ResolverBase {
         // TODO: do we want this as it occurs when the context is lost for ASL. when is the cache set?
         //       if CACHE is used how does it sync back with the main storage system?
         if (this.LS) {
-            RK.logWarning(RK.LogSection.eGQL,'context store failed','missing LocalStore on finish. using cached value',{ file: this.apolloFile.filename, storageKey, idVocabulary },'UploadAssetWorker');
+            RK.logWarning(RK.LogSection.eGQL,'context store failed','missing LocalStore on finish. using cached value',{ file: this.apolloFile.filename, storageKey, idVocabulary },'GraphQL.Upload.AssetWorker');
 
             return ASL.run(this.LS, async () => {
                 return await this.uploadWorkerOnFinishWorker(storageKey, filename, idVocabulary);
             });
         } else {
-            RK.logError(RK.LogSection.eGQL,'context store failed','missing LocalStore. no cached value',{ file: this.apolloFile.filename, storageKey, idVocabulary },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'context store failed','missing LocalStore. no cached value',{ file: this.apolloFile.filename, storageKey, idVocabulary },'GraphQL.Upload.AssetWorker');
         }
 
-        RK.logDebug(RK.LogSection.eGQL,'upload worker finished',undefined,{ file: this.apolloFile.filename, storageKey, idVocabulary },'UploadAssetWorker');
+        RK.logDebug(RK.LogSection.eGQL,'upload worker finished',undefined,{ file: this.apolloFile.filename, storageKey, idVocabulary },'GraphQL.Upload.AssetWorker');
         return await this.uploadWorkerOnFinishWorker(storageKey, filename, idVocabulary);
     }
 
     private async uploadWorkerOnFinishWorker(storageKey: string, filename: string, idVocabulary: number): Promise<UploadAssetResult> {
-        // RK.logInfo(RK.LogSection.eGQL,'upload worker','finishing worker and adding new assets',{ file: this.apolloFile.filename, storageKey, idVocabulary },'UploadAssetWorker');
+        // RK.logInfo(RK.LogSection.eGQL,'upload worker','finishing worker and adding new assets',{ file: this.apolloFile.filename, storageKey, idVocabulary },'GraphQL.Upload.AssetWorker');
 
         const idUser: number = this.user!.idUser; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const opInfo: STORE.OperationInfo | null = await STORE.AssetStorageAdapter.computeOperationInfo(idUser,
@@ -244,7 +244,7 @@ class UploadAssetWorker extends ResolverBase {
                 : `Uploaded new asset ${filename}`);
         if (!opInfo) {
             const error: string = `uploadAsset unable to compute operation info from user ${idUser}`;
-            RK.logError(RK.LogSection.eGQL,'info compute failed','unable to compute operation info',{ file: this.apolloFile.filename, idUser },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'info compute failed','unable to compute operation info',{ file: this.apolloFile.filename, idUser },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error };
         }
 
@@ -262,20 +262,20 @@ class UploadAssetWorker extends ResolverBase {
                 DateCreated: new Date()
             };
 
-            RK.logDebug(RK.LogSection.eGQL,'asset commit success',undefined,{ file: this.apolloFile.filename, storageKey: ASCNAI.storageKey, idVAssetType: ASCNAI.idVAssetType, idSOAttachment: ASCNAI.idSOAttachment },'UploadAssetWorker');
+            RK.logDebug(RK.LogSection.eGQL,'asset commit success',undefined,{ file: this.apolloFile.filename, storageKey: ASCNAI.storageKey, idVAssetType: ASCNAI.idVAssetType, idSOAttachment: ASCNAI.idSOAttachment },'GraphQL.Upload.AssetWorker');
             commitResult = await STORE.AssetStorageAdapter.commitNewAsset(ASCNAI);
         } else { // update existing asset with new asset version
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(this.idAsset);
             if (!asset) {
                 const error: string = `uploadAsset unable to fetch asset ${this.idAsset}`;
-                RK.logError(RK.LogSection.eGQL,'asset fetch failed','not in DB',{ file: this.apolloFile.filename, idAsset: this.idAsset },'UploadAssetWorker');
+                RK.logError(RK.LogSection.eGQL,'asset fetch failed','not in DB',{ file: this.apolloFile.filename, idAsset: this.idAsset },'GraphQL.Upload.AssetWorker');
                 return { status: UploadStatus.Failed, error };
             }
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(this.idAsset);
             if (!assetVersion) {
                 const error: string = `uploadAsset unable to fetch latest asset version from asset ${this.idAsset}`;
-                RK.logError(RK.LogSection.eGQL,'asset version fetch failed','unable to fetch latest',{ file: this.apolloFile.filename, idAsset: this.idAsset },'UploadAssetWorker');
+                RK.logError(RK.LogSection.eGQL,'asset version fetch failed','unable to fetch latest',{ file: this.apolloFile.filename, idAsset: this.idAsset },'GraphQL.Upload.AssetWorker');
                 return { status: UploadStatus.Failed, error };
             }
 
@@ -290,18 +290,18 @@ class UploadAssetWorker extends ResolverBase {
                 DateCreated: new Date()
             };
 
-            RK.logDebug(RK.LogSection.eGQL,'asset version commit success',undefined,{ file: this.apolloFile.filename, path: ASCNAVI.FilePath, storageKey: ASCNAVI.storageKey, idVAssetType: ASCNAVI.asset.idAsset, idSOAttachment: ASCNAVI.idSOAttachment, },'UploadAssetWorker');
+            RK.logDebug(RK.LogSection.eGQL,'asset version commit success',undefined,{ file: this.apolloFile.filename, path: ASCNAVI.FilePath, storageKey: ASCNAVI.storageKey, idVAssetType: ASCNAVI.asset.idAsset, idSOAttachment: ASCNAVI.idSOAttachment, },'GraphQL.Upload.AssetWorker');
             commitResult = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAVI);
         }
 
         if (!commitResult.success) {
-            RK.logError(RK.LogSection.eGQL,'asset commit failed',H.Helpers.getErrorString(commitResult.error),{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'asset commit failed',H.Helpers.getErrorString(commitResult.error),{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: commitResult.error };
         }
         // commitResult.assets; commitResult.assetVersions; <-- These have been created
         const { assetVersions } = commitResult;
         if (!assetVersions) {
-            RK.logError(RK.LogSection.eGQL,'asset check failed','no asset versions created',{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'asset check failed','no asset versions created',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'No Asset Versions created' };
         }
 
@@ -309,7 +309,7 @@ class UploadAssetWorker extends ResolverBase {
         if (this.workflowHelper.success)
             return { status: UploadStatus.Complete, idAssetVersions: this.idAssetVersions };
         else {
-            RK.logError(RK.LogSection.eGQL,'workflow create failed',H.Helpers.getErrorString(this.workflowHelper.error),{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'workflow create failed',H.Helpers.getErrorString(this.workflowHelper.error),{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: this.workflowHelper.error, idAssetVersions: this.idAssetVersions };
         }
     }
@@ -318,7 +318,7 @@ class UploadAssetWorker extends ResolverBase {
         const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
         if (!workflowEngine) {
             const error: string = 'uploadAsset createWorkflow could not load WorkflowEngine';
-            RK.logCritical(RK.LogSection.eGQL,'workflow factory failed','cannot load WorkflowEngine',{ file: this.apolloFile.filename },'UploadAssetWorker');
+            RK.logCritical(RK.LogSection.eGQL,'workflow factory failed','cannot load WorkflowEngine',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
             return { success: false, error };
         }
 
@@ -336,10 +336,10 @@ class UploadAssetWorker extends ResolverBase {
                 const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
                 const href: string = H.Helpers.computeHref(path, assetVersion.FileName);
 
-                RK.logInfo(RK.LogSection.eGQL,'asset version upload success',undefined,{ file: this.apolloFile.filename, path },'UploadAssetWorker');
+                RK.logInfo(RK.LogSection.eGQL,'asset version upload success',undefined,{ file: this.apolloFile.filename, path },'GraphQL.Upload.AssetWorker');
                 await this.appendToWFReport(`Uploaded asset: ${href}`);
             } else {
-                RK.logError(RK.LogSection.eGQL,'asset version upload failed','unable to fetch system object',{ file: this.apolloFile.filename, ...oID },'UploadAssetWorker');
+                RK.logError(RK.LogSection.eGQL,'asset version upload failed','unable to fetch system object',{ file: this.apolloFile.filename, ...oID },'GraphQL.Upload.AssetWorker');
             }
         }
 
@@ -353,7 +353,7 @@ class UploadAssetWorker extends ResolverBase {
         const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
         if (!workflow) {
             const error: string = `unable to create Upload workflow: ${JSON.stringify(wfParams)}`;
-            RK.logError(RK.LogSection.eGQL,'workflow create failed',undefined,{ file: this.apolloFile.filename, ...wfParams },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'workflow create failed',undefined,{ file: this.apolloFile.filename, ...wfParams },'GraphQL.Upload.AssetWorker');
             return { success: false, error };
         }
         const workflowObj: DBAPI.Workflow | null = await workflow.getWorkflowObject();
@@ -364,7 +364,7 @@ class UploadAssetWorker extends ResolverBase {
             for (const assetVersion of assetVersions)
                 await UploadAssetWorker.retireFailedUpload(assetVersion);
 
-            RK.logError(RK.LogSection.eGQL,'workflow failed',H.Helpers.getErrorString(results.error),{ file: this.apolloFile.filename, idWorkflow: workflowObj?.idWorkflow ?? -1 },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'workflow failed',H.Helpers.getErrorString(results.error),{ file: this.apolloFile.filename, idWorkflow: workflowObj?.idWorkflow ?? -1 },'GraphQL.Upload.AssetWorker');
             return results;
         }
 
@@ -372,7 +372,7 @@ class UploadAssetWorker extends ResolverBase {
         for (const assetVersion of assetVersions)
             this.idAssetVersions.push(assetVersion.idAssetVersion);
 
-        RK.logInfo(RK.LogSection.eGQL,'workflow create success',undefined,{ file: this.apolloFile.filename, idWorkflow: workflowObj?.idWorkflow ?? -1 },'UploadAssetWorker');
+        RK.logInfo(RK.LogSection.eGQL,'workflow create success',undefined,{ file: this.apolloFile.filename, idWorkflow: workflowObj?.idWorkflow ?? -1 },'GraphQL.Upload.AssetWorker');
         return { success: true, workflowEngine, workflow, workflowReport };
     }
 
@@ -380,7 +380,7 @@ class UploadAssetWorker extends ResolverBase {
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
             const error: string = `post-upload workflow error handler failed to discard uploaded asset: ${ASR.error}`;
-            RK.logError(RK.LogSection.eGQL,'asset retire failed',H.Helpers.getErrorString(ASR.error),{ file: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, idAsset: assetVersion.idAsset },'UploadAssetWorker');
+            RK.logError(RK.LogSection.eGQL,'asset retire failed',H.Helpers.getErrorString(ASR.error),{ file: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, idAsset: assetVersion.idAsset },'GraphQL.Upload.AssetWorker');
             return { success: false, error };
         }
         return { success: true };

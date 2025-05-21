@@ -16,7 +16,7 @@ export class EventConsumerAuth extends EventConsumer {
         // inform audit interface of authentication event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
-                RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unknown key',{ key: dataItem.key },'EventConsumerAuth');
+                RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unknown key',{ key: dataItem.key },'Event.Consumer.Auth');
                 continue;
             }
 
@@ -27,11 +27,11 @@ export class EventConsumerAuth extends EventConsumer {
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
 
-                    RK.logDebug(RK.LogSection.eEVENT,`login event ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'success' : 'failed'}`,undefined,this.parseAuditData(audit.Data),'EventConsumerAuth');
+                    RK.logDebug(RK.LogSection.eEVENT,`login event ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'success' : 'failed'}`,undefined,this.parseAuditData(audit.Data),'Event.Consumer.Auth');
                 } break;
 
                 default:
-                    RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unsupported key',{ key: dataItem.key },'EventConsumerAuth');
+                    RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unsupported key',{ key: dataItem.key },'Event.Consumer.Auth');
                     break;
             }
         }
