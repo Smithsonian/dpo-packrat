@@ -94,7 +94,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 continue;
             }
 
-            // lookup workflow object and forward "updated" event
+            // lookup workflow object and forward 'updated' event
             const workflow: WF.IWorkflow | undefined = this.workflowMap.get(WFC.workflow.idWorkflow);
             if (!workflow) {
                 RK.logError(RK.LogSection.eWF,'job update failed','unable to locate workflow',{ idJobRun, workflowStep, idWorkflow: WFC.workflow.idWorkflow },'Workflow.Engine');
@@ -440,7 +440,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // get scene (if any) from master model
             const childScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(idModel);
             if(!childScenes || childScenes.length===0) {
-                RK.logWarning(RK.LogSection.eWF,'generate scene',`No children scenes found`,{ idModel },'Workflow.Engine');
+                RK.logWarning(RK.LogSection.eWF,'generate scene','No children scenes found',{ idModel },'Workflow.Engine');
             } else {
                 if(childScenes.length > 1)
                     RK.logDebug(RK.LogSection.eWF,'generate scene',`retrieved ${childScenes.length} scenes for model`,{ idModel },'Workflow.Engine');
@@ -1112,7 +1112,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (!assetVersionDiffuse &&                             // if we don't have a diffuse texture, and
             !assetVersionMTL &&                                 // we don't have a MTL file, and
             UVMapFileCount === 1)                               // we have only one UV Map
-            assetVersionDiffuse = assetVersionDiffuseBackup;    // use our "backup" notion of diffuse texture
+            assetVersionDiffuse = assetVersionDiffuseBackup;    // use our 'backup' notion of diffuse texture
 
         const units: string | undefined = await COOK.JobCookSIVoyagerScene.convertModelUnitsVocabToCookUnits(modelConstellation.Model.idVUnits);
         const retValue = { exitEarly: false, idModel, idSystemObjectModel, assetVersionGeometry, assetVersionDiffuse, assetVersionMTL, units };
@@ -1163,7 +1163,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { exitEarly: true };
         }
 
-        // Search for master model for this scene, among "source" objects
+        // Search for master model for this scene, among 'source' objects
         // assuming Scene has models as source/parent
         const SOMasters: DBAPI.SystemObject[] | null =  await DBAPI.SystemObject.fetchMasterFromXref(idSystemObjectScene);
         if (!SOMasters) {

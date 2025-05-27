@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import * as LOG from '../../utils/logger';
 import { Request, Response } from 'express';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
+import * as H from '../../utils/helpers';
 
 export function errorhandler(error, _req: Request, _res: Response, next): void {
-    LOG.error('HTTP Error Handler', LOG.LS.eHTTP, error);
+    RK.logError(RK.LogSection.eHTTP,'HTTP error handler',error,H.Helpers.cleanExpressRequest(_req),'HTTP.ErrorHandler');
     next(error);
 }

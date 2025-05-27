@@ -8,7 +8,6 @@ import { User } from '../db/api/User';
 import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
-import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 // import { migrate } from './routes/migrate';
@@ -167,7 +166,6 @@ export class HttpServer {
         server.applyMiddleware({ app: this.app, cors: false });
 
         // utility endpoints
-        this.app.get('/logtest', logtest);
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);

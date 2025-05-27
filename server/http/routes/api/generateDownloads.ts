@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as LOG from '../../../utils/logger';
+// import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import * as COL from '../../../collections/interface';
 import { ASL, LocalStore } from '../../../utils/localStore';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
@@ -74,14 +75,14 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
     // grab it and make sure it's a scene
     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetchBySystemObject(idSystemObject);
     if(!scene) {
-        LOG.error(`API.generateDownloads failed. cannot find Scene. (id:${idSystemObject})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create scene op failed','cannot find Scene',{ idSystemObject },'HTTP.Route.GenDownloads');
         return generateResponse(false,`cannot find scene: ${idSystemObject}`,idSystemObject);
     }
 
     // if we're here then we want to try and initiate the workflow
     const wfEngine: IWorkflowEngine | null = await WorkflowFactory.getInstance();
     if(!wfEngine) {
-        LOG.error(`API.generateDownloads failed to get WorkflowEngine. (id: ${scene.idScene} | scene: ${scene.Name})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create scene op failed','cannot get WorkflowEngine',{ ...scene },'HTTP.Route.GenDownloads');
         return generateResponse(false,'failed to get WorkflowEngine',idSystemObject);
     }
 
@@ -92,8 +93,6 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
 
     // create our workflow for generating downloads
     const result: WorkflowCreateResult = await wfEngine.generateDownloads(scene.idScene, workflowParams);
-    LOG.info(`API.generateDownloads post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
-
     const isValid: boolean = result.data.isValid ?? false;
     const isJobRunning: boolean = (!result.data.activeJobs) ? false : (result.data.activeJobs.length>0);
     const idWorkflow: number | undefined = (result.data.workflow?.idWorkflow) ?? undefined;
@@ -101,7 +100,7 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
 
     // make sure we saw success, otherwise bail
     if(result.success===false) {
-        LOG.error(`API.generateDownloads failed to generate downloads: ${result.message}`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create scene op failed',result.message,{ scene, workflowParams },'HTTP.Route.GenDownloads');
         return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
     }
 
@@ -112,7 +111,7 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
     // grab it and make sure it's a scene
     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetchBySystemObject(idSystemObject);
     if(!scene) {
-        LOG.error(`API.generateDownloads failed. cannot find Scene. (id:${idSystemObject})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot find Scene',{ idSystemObject },'HTTP.Route.GenDownloads');
         return generateResponse(false,`cannot find scene: ${idSystemObject}`,idSystemObject);
     }
 
@@ -120,14 +119,14 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
     // TODO: shouldn't be an error if first run by page but only when responding to user action
     const isValid: boolean = (scene.PosedAndQCd)?true:false;
     if(isValid === false) {
-        LOG.error(`API.generateDownloads failed. scene is not QC'd. (scene:${scene.idScene})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','scene is not reviewed',{ ...scene },'HTTP.Route.GenDownloads');
         return generateResponse(false,'scene has not be QC\'d.',idSystemObject);
     }
 
     // get any active jobs
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,scene.idScene);
     if(!activeJobs) {
-        LOG.error(`API.generateDownloads failed. cannot determine if job is running. (idScene: ${scene.idScene})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot determine if job is running',{ ...scene },'HTTP.Route.GenDownloads');
         return generateResponse(false,'failed to get active jobs from DB',idSystemObject,{ isValid, isJobRunning: false });
     }
 
@@ -142,24 +141,24 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
             idWorkflowReport = workflowReport[0].idWorkflowReport;
             idWorkflow = workflowReport[0].idWorkflow;
         } else
-            LOG.info(`API.generateDownloads unable to get workflowReport (idScene: ${scene.idScene} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+            RK.logWarning(RK.LogSection.eHTTP,'get scene op status','unable to get workflowReport',{ idScene: scene.idScene, idJobRun: activeJobs[0].idJobRun },'HTTP.Route.GenDownloads');
 
         // return our response and log it
-        LOG.info(`API.generateDownloads job already running (idScene: ${scene.idScene} | idJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eHTTP);
+        RK.logWarning(RK.LogSection.eHTTP,'get scene op status','job already running',{ idScene: scene.idScene, activeJobs: idActiveJobRun },'HTTP.Route.GenDownloads');
         return generateResponse(false,'job already running', idSystemObject, { isValid, isJobRunning: (activeJobs.length>0), idWorkflow, idWorkflowReport });
     }
 
     // send our info back to the client
-    LOG.info(`API.generateDownloads job is not running but valid. (id: ${scene.idScene} | scene: ${scene.Name})`,LOG.LS.eHTTP);
+    RK.logInfo(RK.LogSection.eHTTP,'get scene op status success','job is not running but valid',{ ...scene },'HTTP.Route.GenDownloads');
     return generateResponse(true,'scene is valid and no job is running', idSystemObject,{ isValid, isJobRunning: (activeJobs.length>0) });
 };
 
 const publishScene = async (response: GenDownloadsResponse, intendedState: COMMON.ePublishedState): Promise<void> => {
     // CAUTION: this will likely continue running after the calling thread returns
 
-    LOG.info(`API.GenerateDownloads publishing scene: ${response.id} (${COMMON.ePublishedState[intendedState]})`,LOG.LS.eHTTP);
+    RK.logDebug(RK.LogSection.eHTTP,'publishing scene',undefined,{ ...response, state: COMMON.ePublishedState[intendedState] },'HTTP.Route.GenDownloads');
     if(!response || !response.id || !response.state || !response.state.idWorkflow) {
-        LOG.error(`API.Project.publishScene cannot publish scene. invalid inputs (${response.id} | ${response.state} | ${response.state?.idWorkflow}).`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'publish scene failed','invalid inputs',{ ...response },'HTTP.Route.GenDownloads');
         return;
     }
 
@@ -183,7 +182,7 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
 
     // if we don't have anything then we failed
     if (!workflow || !workflow.idWorkflowSet) {
-        LOG.error(`API.Project.publishScene cannot publish scene. no valid workflow(set) available after ${maxAttempts} attempts.`, LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'publish scene failed',`no valid workflow(set) available after ${maxAttempts} attempts.`,{ ...response },'HTTP.Route.GenDownloads');
         return;
     }
 
@@ -199,7 +198,7 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
 
         // get our WorkflowSet status, which will bail on first error/cancel
         workflowSetStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
-        LOG.info(`API.GenerateDownloads.PublishScene waiting for WorkflowSet to finish (${response.id}: ${COMMON.eWorkflowJobRunStatus[workflowSetStatus.state]})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eHTTP,'publish scene',`waiting for WorkflowSet to finish (${response.id}: ${COMMON.eWorkflowJobRunStatus[workflowSetStatus.state]})`,{},'HTTP.Route.GenDownloads');
 
         // see if we're done
         // there is a scenario where inspection fails on one of the objects, setting this state to Error
@@ -212,7 +211,7 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
         // this can cause the 'known' list of steps to be all done and the loop can exit prematurely. we introduce an
         // arbitrary delay if isDone to try and catch this.
         if(isDone===true) {
-            LOG.info('API.GenerateDownloads.PublishScene is done',LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eHTTP,'publish scene','is done',{ ...response },'HTTP.Route.GenDownloads');
 
             // HACK: delaying so that when the first generate downloads finishes
             // there is enough time for the system to add 'inspection' steps
@@ -224,35 +223,35 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
                 // fetchStatus returns the list of WorkflowSteps used to determine the state
                 workflowSetStatus = await DBAPI.WorkflowSet.fetchStatus(workflow.idWorkflowSet);
                 if(workflowSetStatus.data.length != preCount) {
-                    LOG.info(`API.GenerateDownloads.PublishScene found new steps (${preCount}->${workflowSetStatus.data.length})`,LOG.LS.eDEBUG);
+                    RK.logDebug(RK.LogSection.eHTTP,'publish scene',`found new workflow steps: ${preCount}->${workflowSetStatus.data.length}`,{},'HTTP.Route.GenDownloads');
                     isDone = false;
                 } else
-                    LOG.error('API.GenerateDownloads.PublishScene could not fetch status when done',LOG.LS.eHTTP);
+                    RK.logError(RK.LogSection.eHTTP,'publish scene','could not fetch status when done',{},'HTTP.Route.GenDownloads');
             } // error or cancelled
         } else
             // wait for X ms before trying again
             await new Promise(resolve => setTimeout(resolve, iterationDelay));
     }
 
-    LOG.info(`API.GenerateDownloads.PublishScene finished waiting for ${response.id}. (${COMMON.eWorkflowJobRunStatus[workflowSetStatus.state]}: ${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
+    RK.logDebug(RK.LogSection.eHTTP,'publish scene',`finished waiting for ${response.id}. (${COMMON.eWorkflowJobRunStatus[workflowSetStatus.state]}: ${(Date.now()-startTime)/1000}s)`,{},'HTTP.Route.GenDownloads');
 
     // if we are finished, publish the scene, otherwise, handle the error/state
     if(workflowSetStatus.state===COMMON.eWorkflowJobRunStatus.eDone) {
-        LOG.info(`API.GenerateDownloads.PublishScene starting...(${H.Helpers.JSONStringify(workflowSetStatus)})`,LOG.LS.eDEBUG);
+
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // get our collection and publish the id with the same state
         const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
         const success: boolean = await ICol.publish(response.id, intendedState);
         if (success===false) {
-            LOG.error(`API.Project.publishScene failed to publish (${response.id} | ${COMMON.ePublishedState[intendedState]})`,LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eHTTP,'publish scene failed',response.message,{ id: response.id, intendedState: COMMON.ePublishedState[intendedState] },'HTTP.Route.GenDownloads');
             return;
         } else {
-            LOG.info(`API.GenerateDownloads.PublishScene scene (${response.id}) was published successfully.`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eHTTP,'publish scene success',`scene (${response.id}) was published successfully`,{},'HTTP.Route.GenDownloads');
         }
     }
 
-    LOG.info(`API.GenerateDownloads finished publishing scene: ${response.id} (${COMMON.ePublishedState[workflowSetStatus.state]})`,LOG.LS.eHTTP);
+    RK.logInfo(RK.LogSection.eHTTP,'publish scene success',`finished publishing scene: ${response.id} (${COMMON.ePublishedState[workflowSetStatus.state]})`,{},'HTTP.Route.GenDownloads');
     return;
 };
 
@@ -261,7 +260,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     // make sure we're authenticated (i.e. see if request has a 'user' object)
     if (!isAuthenticated(req)) {
         AuditFactory.audit({ url: req.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eGenDownloads);
-        LOG.error('API.generateDownloads failed. not authenticated.', LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'generate downloads failed','not authenticated',{ url: req.path },'HTTP.Route.GenDownloads');
         res.status(403).send('no authenticated');
         return;
     }
@@ -269,7 +268,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     // get our LocalStore. If we don't have one then bail. it is needed for the user id, auditing, and workflows
     const LS: LocalStore | undefined = ASL.getStore();
     if(!LS || !LS.idUser){
-        LOG.error('API.generateDownloads failed. cannot get LocalStore or idUser',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'generate downloads failed','cannot get LocalStore or idUser',{ },'HTTP.Route.GenDownloads');
         res.status(200).send(JSON.stringify(generateResponse(false,'missing store/user')));
         return;
     }
@@ -300,11 +299,11 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
                 // post message if a count difference meaning we got bad data
                 if(idSystemObjects.length != body.idSystemObject.length)
-                    LOG.error(`API.generateDownloads received ${body.idSystemObject.length-idSystemObjects.length} bad IDs. (${body.idSystemObject.join(', ')})`,LOG.LS.eHTTP);
+                    RK.logError(RK.LogSection.eHTTP,'generate downloads failed',`received ${body.idSystemObject.length-idSystemObjects.length} bad IDs`,{ idSystemObjects: body.idSystemObject },'HTTP.Route.GenDownloads');
             }
         } break;
         default: {
-            LOG.error('API.generateDownloads failed. unsupported HTTP method',LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'generate downloads failed','unsupported HTTP method',{ url: req.path, method: req.method },'HTTP.Route.GenDownloads');
             res.status(400).send(JSON.stringify(generateResponse(false,'invalid HTTP method')));
             return;
         }
@@ -312,7 +311,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
 
     // make sure we have ids to work with
     if(idSystemObjects.length === 0) {
-        LOG.error('API.generateDownloads failed. no IDs found in request.',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'generate downloads failed','no IDs found in request',{ ...H.Helpers.cleanExpressRequest(req) },'HTTP.Route.GenDownloads');
         res.status(200).send(JSON.stringify(generateResponse(false,'invalid id parameters/body. none found.')));
         return;
     }
@@ -320,7 +319,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat
     const maxIDs: number = 50;
     if(idSystemObjects.length>maxIDs) {
-        LOG.info(`API.generateDownloads too many scenes submitted. limiting to ${maxIDs}`,LOG.LS.eHTTP);
+        RK.logWarning(RK.LogSection.eHTTP,'generate downloads',`too many scenes submitted. limiting to ${maxIDs}`,{ url: req.path },'HTTP.Route.GenDownloads');
         idSystemObjects.splice(maxIDs);
     }
 
@@ -338,7 +337,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
             // will create a new Scene version that is unpublished, affecting our ability to re-publish
             const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject ?? -1);
             if(!sceneSOV) {
-                LOG.error(`API.GenerateDownloads failed to get SystemObjectVersion for scene (${idSystemObject ?? -1})`,LOG.LS.eDB);
+                RK.logError(RK.LogSection.eHTTP,'generate downloads failed','cannot get SystemObjectVersion for scene',{ url: req.path, idSystemObject },'HTTP.Route.GenDownloads');
                 continue;
             }
             const currentPublishedState: COMMON.ePublishedState = sceneSOV.PublishedState;
@@ -351,7 +350,7 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
             // and when done re-publishes the scene (non-blocking)
             if(result.success===true && rePublish===true) {
                 if(currentPublishedState===COMMON.ePublishedState.eNotPublished) {
-                    LOG.error(`API.GenerateDownloads cannot publish unpublished scenes (${idSystemObject ?? -1})`,LOG.LS.eDB);
+                    RK.logWarning(RK.LogSection.eHTTP,'generate downloads','cannot publish unpublished scenes',{ url: req.path, idSystemObject },'HTTP.Route.GenDownloads');
                     continue;
                 }
                 publishScene(result, currentPublishedState);
@@ -363,5 +362,6 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
     }
 
     // create our combined response and return info to client
+    RK.logInfo(RK.LogSection.eHTTP,'generate downloads request success',undefined,{ url: req.path },'HTTP.Route.GenDownloads');
     res.status(200).send(JSON.stringify(buildOpResponse(responses)));
 }

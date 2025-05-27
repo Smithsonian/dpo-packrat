@@ -1,9 +1,10 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface';
-import * as LOG from '../../utils/logger';
+// import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import { ParsedQs, parse } from 'qs';
 
@@ -136,7 +137,7 @@ export class DownloaderParser {
             + (idWorkflowU ? 1 : 0) + (idWorkflowReportU ? 1 : 0) + (idWorkflowSetU ? 1 : 0)
             + (idJobRunU ? 1 : 0) + (idSystemObjectVersionCommentU ? 1 : 0) + (idAssetVersionCommentU ? 1 : 0);
         if (urlParamCount != 1) {
-            LOG.error(`DownloadParser called with ${urlParamCount} parameters, expected 1`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'parse arguments failed',`called with ${urlParamCount} parameters, expected 1`,{},'HTTP.Route.DownloadParser');
             return this.recordStatus(404);
         }
 
@@ -144,7 +145,7 @@ export class DownloaderParser {
             this.idAssetVersion = H.Helpers.safeNumber(idAssetVersionU);
             this.requestURL = `${this.rootURL}?idAssetVersion=${idAssetVersionU}`;
             if (!this.idAssetVersion) {
-                LOG.error(`${this.requestURL}, invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting safe id',{ idAssetVersionU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eAssetVersion;
@@ -153,7 +154,7 @@ export class DownloaderParser {
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this.idAssetVersion!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!assetVersion) {
-                LOG.error(`${this.requestURL}, invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter fetching AssetVersion',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, assetVersion };
@@ -163,7 +164,7 @@ export class DownloaderParser {
             this.idAsset = H.Helpers.safeNumber(idAssetU);
             this.requestURL = `${this.rootURL}?idAsset=${idAssetU}`;
             if (!this.idAsset) {
-                LOG.error(`${this.requestURL}, invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting Asset safe id',{ idAssetU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eAsset;
@@ -172,7 +173,7 @@ export class DownloaderParser {
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(this.idAsset!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!assetVersion) {
-                LOG.error(`${this.requestURL} unable to fetch asset version`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch asset version',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, assetVersion }; // this.emitDownload(assetVersion);
@@ -185,7 +186,7 @@ export class DownloaderParser {
                 :`/download?idSystemObject=${idSystemObjectU}`;
 
             if (!this.idSystemObject) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting SystemObject safe id',{ idSystemObjectU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eSystemObject;
@@ -200,7 +201,7 @@ export class DownloaderParser {
 
             const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!assetVersions) {
-                LOG.error(`${this.requestURL} unable to fetch asset versions`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch latest asset versions',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             if (assetVersions.length == 0)
@@ -234,10 +235,10 @@ export class DownloaderParser {
             }
 
             if (!allowUnmatchedPaths) {
-                LOG.error(`${this.requestURL} unable to find assetVersion with path ${pathToMatch}`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed',`unable to find assetVersion with path ${pathToMatch}`,{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             } else {
-                LOG.info(`${this.requestURL} unable to find assetVersion with path ${pathToMatch}`, LOG.LS.eHTTP);
+                RK.logWarning(RK.LogSection.eHTTP,'parse arguments',`unable to find assetVersion with path ${pathToMatch}, but allowed`,{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return { success: true, matchedPartialPath }; // this.emitDownload(assetVersion);
             }
         }
@@ -246,7 +247,7 @@ export class DownloaderParser {
             this.idSystemObjectVersion = H.Helpers.safeNumber(idSystemObjectVersionU);
             this.requestURL = `${this.rootURL}?idSystemObjectVersion=${idSystemObjectVersionU}`;
             if (!this.idSystemObjectVersion) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting SystemObjectVersion safe id',{ idSystemObjectVersionU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eSystemObjectVersion;
@@ -255,7 +256,7 @@ export class DownloaderParser {
 
             const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObjectVersion(this.idSystemObjectVersion!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!assetVersions) {
-                LOG.error(`${this.requestURL} unable to fetch asset versions`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch AssetVersion from SystemObjectVersion',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             if (assetVersions.length == 0)
@@ -267,7 +268,7 @@ export class DownloaderParser {
             this.idMetadata = H.Helpers.safeNumber(idMetadataU);
             this.requestURL = `${this.rootURL}?idMetadata=${idMetadataU}`;
             if (!this.idMetadata) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting Metadata safe id',{ idMetadataU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eMetadata;
@@ -276,7 +277,7 @@ export class DownloaderParser {
 
             const metadata: DBAPI.Metadata | null = await DBAPI.Metadata.fetch(this.idMetadata!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!metadata) {
-                LOG.error(`${this.requestURL} unable to fetch metadata`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch metadata',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
 
@@ -289,13 +290,13 @@ export class DownloaderParser {
             } else if (metadata.idAssetVersionValue) {
                 const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(metadata.idAssetVersionValue);
                 if (!assetVersion) {
-                    LOG.error(`${this.requestURL} unable to fetch asset version`, LOG.LS.eHTTP);
+                    RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch asset version from Metadata',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                     return this.recordStatus(404);
                 }
                 return { success: true, assetVersion };
             }
 
-            LOG.error(`${this.requestURL} called without metadata value`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'parse arguments failed','called without metadata value',{ idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
             return this.recordStatus(404);
         }
 
@@ -303,7 +304,7 @@ export class DownloaderParser {
             this.idWorkflow = H.Helpers.safeNumber(idWorkflowU);
             this.requestURL = `${this.rootURL}?idWorkflow=${idWorkflowU}`;
             if (!this.idWorkflow) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting Workflow safe id',{ idWorkflowU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eWorkflow;
@@ -312,7 +313,7 @@ export class DownloaderParser {
 
             const WFReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(this.idWorkflow!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!WFReports || WFReports.length === 0) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter fetching report from Workflow',{ idWorkflow: this.idWorkflow, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, WFReports }; // this.emitDownloadReports(WFReports);
@@ -322,7 +323,7 @@ export class DownloaderParser {
             this.idWorkflowReport = H.Helpers.safeNumber(idWorkflowReportU);
             this.requestURL = `${this.rootURL}?idWorkflowReport=${idWorkflowReportU}`;
             if (!this.idWorkflowReport) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting WorkflowReport safe id',{ idWorkflowReportU, idWorkflow: this.idWorkflow, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eWorkflowReport;
@@ -331,7 +332,7 @@ export class DownloaderParser {
 
             const WFReport: DBAPI.WorkflowReport | null = await DBAPI.WorkflowReport.fetch(this.idWorkflowReport!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!WFReport) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter fetching report from id',{ idWorkflowReport: this.idWorkflowReport, idWorkflow: this.idWorkflow, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, WFReports: [WFReport] }; // this.emitDownloadReports([WFReport]);
@@ -341,7 +342,7 @@ export class DownloaderParser {
             this.idWorkflowSet = H.Helpers.safeNumber(idWorkflowSetU);
             this.requestURL = `${this.rootURL}?idWorkflowSet=${idWorkflowSetU}`;
             if (!this.idWorkflowSet) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting WorkflowSet safe id',{ idWorkflowSetU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eWorkflowSet;
@@ -350,7 +351,7 @@ export class DownloaderParser {
 
             const WFReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflowSet(this.idWorkflowSet!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!WFReports || WFReports.length === 0) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter fetching workflow set by id',{ idWorkflowSet: this.idWorkflowSet, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, WFReports }; // this.emitDownloadReports(WFReports);
@@ -360,7 +361,7 @@ export class DownloaderParser {
             this.idJobRun = H.Helpers.safeNumber(idJobRunU);
             this.requestURL = `${this.rootURL}?idJobRun=${idJobRunU}`;
             if (!this.idJobRun) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting JobRun safe id',{ idJobRunU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode = eDownloadMode.eJobRun;
@@ -369,7 +370,7 @@ export class DownloaderParser {
 
             const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(this.idJobRun!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!jobRun) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','cannot fetch JobRun by id',{ idJobRun: this.idJobRun, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, jobRun }; // this.emitDownloadJobRun(jobRun);
@@ -379,7 +380,7 @@ export class DownloaderParser {
             this.idSystemObjectVersionComment = H.Helpers.safeNumber(idSystemObjectVersionCommentU);
             this.requestURL = `${this.rootURL}?idSystemObjectVersionComment=${idSystemObjectVersionCommentU}`;
             if (!this.idSystemObjectVersionComment) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting SystemObjectVersionComment safe id',{ idSystemObjectVersionCommentU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode          = eDownloadMode.eSystemObjectVersionComment;
@@ -388,7 +389,7 @@ export class DownloaderParser {
 
             const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(this.idSystemObjectVersionComment!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!systemObjectVersion) {
-                LOG.error(`${this.requestURL} unable to fetch system object version`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch system object version from comment id',{ idSystemObjectVersionComment: this.idSystemObjectVersionComment, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, content: systemObjectVersion.Comment };
@@ -398,7 +399,7 @@ export class DownloaderParser {
             this.idAssetVersionComment = H.Helpers.safeNumber(idAssetVersionCommentU);
             this.requestURL = `${this.rootURL}?idAssetVersionComment=${idAssetVersionCommentU}`;
             if (!this.idAssetVersionComment) {
-                LOG.error(`${this.requestURL} invalid parameter`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','invalid parameter getting AssetVersionComment safe id',{ idAssetVersionCommentU, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             this.eMode          = eDownloadMode.eAssetVersionComment;
@@ -407,7 +408,7 @@ export class DownloaderParser {
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(this.idAssetVersionComment!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (!assetVersion) {
-                LOG.error(`${this.requestURL} unable to fetch asset version`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'parse arguments failed','unable to fetch asset version from comment id',{ idAssetVersionComment: this.idAssetVersionComment, idAssetVersion: this.idAssetVersion, url: this.requestURL },'HTTP.Route.DownloadParser');
                 return this.recordStatus(404);
             }
             return { success: true, content: assetVersion.Comment };
