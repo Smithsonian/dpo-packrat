@@ -1,6 +1,6 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as LOG from '../logger';
+import { RecordKeeper as RK  } from '../../records/recordKeeper';
 import * as H from '../helpers';
 import * as ZIPS from '../zipStream';
 import * as ZIPF from '../zipFile';
@@ -56,11 +56,14 @@ export class BagitReader implements IZip {
             return await this.loadFromZipStream(this._params.zipStream, this._params.validate);
         else if (this._params.directory)
             return await this.loadFromDirectory(this._params.directory, this._params.validate);
-        else
+        else {
+            RK.logError(RK.LogSection.eSYS,'laod failed','invalid constructor params',{ params: this._params },'Utils.BagIt.Reader');
             return { success: false, error: 'Invalid BagitReader constructor params' };
+        }
     }
 
     async add(_fileNameAndPath: string, _inputStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        RK.logError(RK.LogSection.eSYS,'add','not implemented',{ path: _fileNameAndPath },'Utils.BagIt.Reader');
         return { success: false, error: 'Not Implemented' };
     }
 
@@ -96,6 +99,7 @@ export class BagitReader implements IZip {
             await this.validate();
         if (!filter)
             return this._dataDirectories;
+
         const allFiltered: string[] = zipFilterResults(this._files, filter);
         const dirMap: Map<string, boolean> = new Map<string, boolean>();
         const results: string[] = [];
@@ -113,13 +117,15 @@ export class BagitReader implements IZip {
         try {
             this._zip = new ZIPF.ZipFile(fileName);
             const results: H.IOResults = await this._zip.load();
-            if (!results.success)
+            if (!results.success) {
+                RK.logError(RK.LogSection.eSYS,'load from ZipFile failed',results.error,{ fileName, validate },'Utils.BagIt.Reader');
                 return results;
+            }
             this._files = await this._zip.getJustFiles(null);
 
             return validate ? await this.validate() : results;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('bagitReader.loadFromZipFile', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'load from ZipFile failed',H.Helpers.getErrorString(error),{ fileName, validate },'Utils.BagIt.Reader');
             return { success: false, error: `bagitReader.loadFromZipFile ${JSON.stringify(error)}` };
         }
     }
@@ -134,15 +140,17 @@ export class BagitReader implements IZip {
 
             return validate ? await this.validate() : results;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('bagitReader.loadFromZipStream', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'load from ZipStream',H.Helpers.getErrorString(error),{},'Utils.BagIt.Reader');
             return { success: false, error: `bagitReader.loadFromZipStream ${JSON.stringify(error)}` };
         }
     }
 
     async loadFromDirectory(directory: string, validate: boolean): Promise<H.IOResults> {
         const fileList: string[] | null = await H.Helpers.getDirectoryEntriesRecursive(directory);
-        if (!fileList)
+        if (!fileList) {
+            RK.logError(RK.LogSection.eSYS,'load from directory failed',`unable to read: ${directory}`,{ directory },'Utils.BagIt.Reader');
             return { success: false, error: `Unable to read ${directory}` };
+        }
         this._files = fileList;
 
         return validate ? await this.validate() : { success: true };
@@ -182,15 +190,17 @@ export class BagitReader implements IZip {
                 : fileName ? fs.createReadStream(fileName) : null;
         } catch (error) /* istanbul ignore next */ {
             if (doNotLogErrors !== true)
-                LOG.error(`bagitReader.streamContent unable to read ${file}`, LOG.LS.eSYS, error);
+                RK.logError(RK.LogSection.eSYS,'stream content',`unable to read: ${file}`,{},'Utils.BagIt.Reader');
             return null;
         }
     }
 
     async uncompressedSize(file: string): Promise<number | null> {
         if (!this._validated) { /* istanbul ignore if */
-            if (!(await this.validate()).success)
+            if (!(await this.validate()).success) {
+                RK.logError(RK.LogSection.eSYS,'compute uncompressed size failed','cannot validate',{ file },'Utils.BagIt.Reader');
                 return null;
+            }
         }
 
         try {
@@ -202,7 +212,7 @@ export class BagitReader implements IZip {
             const statResults: H.StatResults = await H.Helpers.stat(fileName);
             return (statResults.success && statResults.stat) ? statResults.stat.size : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.info(`bagitReader.uncompressedSize unable to read ${file}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'compute uncompressed size failed',`unable to read file: ${H.Helpers.getErrorString(error)}`,{ file },'Utils.BagIt.Reader');
             return null;
         }
     }
@@ -346,7 +356,7 @@ export class BagitReader implements IZip {
             let manifestFile: string | undefined = algorithmMapManifest.get(algorithm);
             /* istanbul ignore if */
             if (!manifestFile) {
-                LOG.error(`Unexpected hash algorithm ${algorithm}`, LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'validate',`Unexpected hash algorithm ${algorithm}`,{},'Utils.BagIt.Reader');
                 continue;
             }
 
@@ -358,7 +368,7 @@ export class BagitReader implements IZip {
             manifestFile = algorithmMapTagManifest.get(algorithm);
             /* istanbul ignore if */
             if (!manifestFile) {
-                LOG.error(`Unexpected hash algorithm ${algorithm}`, LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'validate',`get manifest has unexpected hash algorithm ${algorithm}`,{},'Utils.BagIt.Reader');
                 continue;
             }
 

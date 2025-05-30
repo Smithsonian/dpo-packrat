@@ -18,7 +18,8 @@ export class SubjectUnitIdentifier {
     static idVocabEdanRecordID: number;
 
     static async fetch(query: string, maxResults: number): Promise<SubjectUnitIdentifier[] | null> {
-        if (!query)         // Searches on '' return everything!  Don't allow this due to performance issues
+        // Searches on '' return everything!  Don't allow this due to performance issues
+        if (!query)
             return null;
 
         try {

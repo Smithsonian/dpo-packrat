@@ -1,7 +1,8 @@
-import * as LOG from './logger';
 import * as fs from 'fs';
 import { Readable } from 'stream';
 import * as readline from 'readline';
+import { getErrorString } from '../records/utils/utils';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 export class LineStream {
     private inputName: string | undefined = undefined;
@@ -19,13 +20,14 @@ export class LineStream {
             if (!this.inputStream)
                 return null;
         } catch (error) {
-            LOG.error('LineStream.readLines', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'read lines failed',getErrorString(error),{ filter },'Utils.Stream.Line');
             return null;
         }
 
         return new Promise<string[]>((resolve, reject) => {
             try {
                 if (!this.inputStream) {
+                    RK.logError(RK.LogSection.eSYS,'read lines failed','read stream is null',{ filter },'Utils.Stream.Line');
                     reject('this.readStream is null');
                     return;
                 }
@@ -53,6 +55,7 @@ export class LineStream {
 
                 rl.on('close', () => resolve(results));
             } catch (err) {
+                RK.logError(RK.LogSection.eSYS,'read lines failed',getErrorString(err),{ filter },'Utils.Stream.Line');
                 reject(err);
             }
         });

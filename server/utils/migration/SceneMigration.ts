@@ -5,7 +5,7 @@ import * as STORE from '../../storage/interface';
 import * as NAV from '../../navigation/interface';
 import * as COL from '../../collections/interface/';
 import * as H from '../helpers';
-import * as LOG from '../logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { SceneMigrationPackage } from './SceneMigrationPackage';
 import { SceneHelpers } from '../../utils';
 import { SvxReader } from '../parser';
@@ -838,10 +838,10 @@ export class SceneMigration {
     }
 
     private log(scope: string, message: string): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.info(`SceneMigration (${this.scenePackage?.EdanUUID}) ${scope}: ${message}`, LOG.LS.eMIG);
+        RK.logInfo(RK.LogSection.eMIG,scope,message,{ ...this.scenePackage },'Utils.Migration.Scene');
     }
 
     private logError(scope: string, message: string, error?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
-        LOG.error(`SceneMigration (${this.scenePackage?.EdanUUID}) ${scope}: ${message}`, LOG.LS.eMIG, error);
+        RK.logInfo(RK.LogSection.eMIG,scope,`${message}: ${error}`,{ ...this.scenePackage },'Utils.Migration.Scene');
     }
 }
