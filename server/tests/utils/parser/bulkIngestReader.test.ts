@@ -6,7 +6,7 @@ import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../../utils/helpers';
 import { BagitReader } from '../../../utils/parser/bagitReader';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { BulkIngestReader, IngestMetadata } from '../../../utils/parser';
 import { Config } from '../../../config';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
@@ -152,7 +152,7 @@ async function testLoad(fileName: string | null, assetVersion: DBAPI.AssetVersio
         ioResults = await BIR.loadFromAssetVersion(assetVersion.idAssetVersion, autoClose);
 
     if (!ioResults.success && expectSuccess)
-        LOG.error(ioResults.error, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'test load',ioResults.error,{},'Tests.Utils.BagIt.IngestReader');
     expect(ioResults.success).toEqual(expectSuccess);
     if (!ioResults.success)
         return !expectSuccess;
@@ -264,7 +264,7 @@ async function testCommitNewAsset(TestCase: BulkIngestReaderTestCase | null, fil
     }
     expect(ASRC.success).toBeTruthy();
     if (!ASRC.success) {
-        LOG.error(`AssetStorageAdaterTest AssetStorageAdapter.commitNewAsset: ${ASRC.error}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'commnit new asset',ASRC.error,{},'Tests.Utils.BagIt.IngestReader');
         return TestCase;
     }
 

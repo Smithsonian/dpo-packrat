@@ -3,7 +3,7 @@ import { join } from 'path';
 
 import { SvxReader, SvxExtraction } from '../../../utils/parser';
 import * as H from '../../../utils/helpers';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 const mockScene = (folder: string, fileName: string) => join(__dirname, `../../mock/scenes/${folder}/${fileName}`);
 /*
@@ -68,16 +68,17 @@ async function validateLoadFromStream(folder: string, fileName: string, expectSu
     const svxReader: SvxReader = new SvxReader();
     const result: H.IOResults = await svxReader.loadFromStream(readStream);
     if (!expectSuccess) {
-        LOG.info(`SvxReader.loadFromStream ${folder}/${fileName} expected failure: ${result.error}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'validate load from stream',`SvxReader.loadFromStream ${folder}/${fileName} expected failure: ${result.error}`,{},'Tests.Utils.Parser.SVX');
         expect(result.success).toBeFalsy();
         return null;
     }
 
     if (!result.success)
-        LOG.error(`SvxReader.loadFromStream: ${result.error}`, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'validate load from stream',result.error,{},'Tests.Utils.Parser.SVX');
     expect(result.success).toBeTruthy();
     expect(svxReader.SvxDocument).toBeTruthy();
     expect(svxReader.SvxExtraction).toBeTruthy();
-    LOG.info(`SvxReader.loadFromStream ${folder}/${fileName} expected success`, LOG.LS.eTEST);
+
+    RK.logInfo(RK.LogSection.eTEST,'validate load from stream',`${folder}/${fileName} expected success`,{},'Tests.Utils.Parser.SVX');
     return svxReader;
 }

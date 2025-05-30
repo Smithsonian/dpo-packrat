@@ -1,32 +1,18 @@
-import { Email } from '../../utils/email';
-import * as H from '../../utils/helpers';
-import * as LOG from '../../utils/logger';
-
-/*
-afterAll(async done => {
-    await H.Helpers.sleep(5000);
-    done();
-});
-*/
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 describe('Utils: Email', () => {
-    testSend('', '');
-    // testSend('tysonj@si.edu', 'tysonj@si.edu');
-    // testSend('tysonj@si.edu', 'jon.tyson@gmail.com');
-    // testSend('tysonj@si.edu', 'jon@internetshoppingclub.com');
+    testSend();
 });
 
-async function testSend(from: string, to: string): Promise<void> {
-    const message: string = `${from} -> ${to}`;
-    test('Utils: Email.Send', async () => {
-        if (from === '' && to === '')
-            return;
+async function testSend(): Promise<void> {
 
-        const res: H.IOResults = await Email.Send(from, to, `Test ${message}`, message);
+    test('Utils: Email.Send', async () => {
+
+        const res = await RK.emailTest(1);
         if (res.success)
-            LOG.info(`testSend ${message} Success`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'send','success',{ ...res.data },'Tests.Utils.Email');
         else
-            LOG.error(`testSend ${message} FAIL`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'send',res.message,{ ...res.data },'Tests.Utils.Email');
         expect(res.success).toBeTruthy();
     });
 }

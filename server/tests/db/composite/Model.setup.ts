@@ -1,8 +1,8 @@
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as UTIL from '../api';
-import * as LOG from '../../../utils/logger';
 import * as MIG from '../../../utils/migration';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class ModelTestCase {
     testCase: string;
@@ -30,7 +30,7 @@ export class ModelTestCase {
     assetFileNameMap(): Map<string, number> {
         const retValue: Map<string, number> = new Map<string, number>();
         for (const assetVersion of this.assetVersions) {
-            LOG.info(`ModelTestCase.assetFileNameMap [${assetVersion.FileName}, ${assetVersion.idAssetVersion}]`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'asset file name map',`${assetVersion.FileName}, ${assetVersion.idAssetVersion}`,{},'Tests.DB.Model.Setup');
             retValue.set(assetVersion.FileName, assetVersion.idAsset);
         }
         return retValue;
@@ -82,7 +82,7 @@ export class ModelTestSetup {
         // let assigned: boolean = true;
         this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
         if (!this.userOwner) {
-            LOG.error('ModelTestSetup failed to create user', LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'initialize','failed to create user',{},'Tests.DB.Model.Setup');
             return false;
         }
 
@@ -113,19 +113,21 @@ export class ModelTestSetup {
         }
 
         for (const [ uniqueID, MMFList ] of migrationFilesMap) {
-            LOG.info(`ModelTestSetup handling ${uniqueID} with ${MMFList.length} files`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'initialize',`handling ${uniqueID} with ${MMFList.length} files`,{},'Tests.DB.Model.Setup');
+
             const MM: MIG.ModelMigration = new MIG.ModelMigration();
             const resMigration: MIG.ModelMigrationResults = await MM.migrateModel(MMFList, this.userOwner.idUser, true, true);
             if (!resMigration.success || !resMigration.model || !resMigration.modelFileName) {
                 if (resMigration.filesMissing)      // handle special case where files are not present
-                    LOG.info(`ModelTestSetup skipping ${uniqueID}: ${H.Helpers.JSONStringify(resMigration)}`, LOG.LS.eTEST);
+                    RK.logInfo(RK.LogSection.eTEST,'initialize',`skipping ${uniqueID}: ${H.Helpers.JSONStringify(resMigration)}`,{},'Tests.DB.Model.Setup');
                 else
-                    LOG.error(`ModelTestSetup handling ${uniqueID} failed: ${H.Helpers.JSONStringify(resMigration)}`, LOG.LS.eTEST);
+                    RK.logError(RK.LogSection.eTEST,'initialize',`handling ${uniqueID} failed: ${H.Helpers.JSONStringify(resMigration)}`,{},'Tests.DB.Model.Setup');
                 continue;
             }
 
             // record test case data
-            LOG.info(`ModelTestSetup handled ${uniqueID}: ${H.Helpers.JSONStringify(resMigration)}`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'initialize',`handled ${uniqueID}: ${H.Helpers.JSONStringify(resMigration)}`,{},'Tests.DB.Model.Setup');
+
             if (resMigration.assetVersion) {
                 let MTC: ModelTestCase | undefined = this.testCaseMap.get(uniqueID);
                 if (!MTC) {
