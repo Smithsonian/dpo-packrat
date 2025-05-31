@@ -120,7 +120,7 @@ export const randomNotifyPackage = (index: number, system: 'email' | 'slack'): N
         endDate,
         detailsLink: Math.random() > 0.5 ? details[getRandomInt(0, details.length - 1)] : undefined,
         detailsMessage: detailsMessages[getRandomInt(0, detailsMessages.length - 1)],
-        sendTo: (system==='email') ? ['emaslowski@quotient-inc.com'] : ['ericmaslowski']
+        sendTo: (system==='email') ? ['packrat-dev@si.edu'] : ['ericmaslowski']
     };
 };
 
