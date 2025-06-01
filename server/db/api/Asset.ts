@@ -3,7 +3,8 @@ import { Asset as AssetBase, SystemObject as SystemObjectBase, Prisma } from '@p
 import { SystemObject, SystemObjectBased } from '..';
 import { VocabularyCache } from '../../cache';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import * as COMMON from '@dpo-packrat/common';
 
 export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemObjectBased {
@@ -51,7 +52,8 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset');
+            return false;
         }
     }
 
@@ -70,7 +72,8 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset');
+            return false;
         }
     }
 
@@ -81,7 +84,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAsset, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset');
             return null;
         }
     }
@@ -93,7 +96,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyObject<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findUnique({ where: { idAsset, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset');
             return null;
         }
     }
@@ -103,7 +106,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyArray<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findMany(), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset');
             return null;
         }
     }
@@ -115,7 +118,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyObject<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findUnique({ where: { StorageKey, }, }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchByStorageKey', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by storage key failed',H.Helpers.getErrorString(error),{ StorageKey, ...this },'DB.Asset');
             return null;
         }
     }
@@ -127,7 +130,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyArray<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findMany({ where: { idAssetGroup } }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchFromAssetGroup', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from AssetGroup failed',H.Helpers.getErrorString(error),{ idAssetGroup, ...this },'DB.Asset');
             return null;
         }
     }
@@ -139,7 +142,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyArray<AssetBase, Asset>(
                 await DBC.DBConnection.prisma.asset.findMany({ where: { SystemObject_Asset_idSystemObjectToSystemObject: { idSystemObject } } }), Asset);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchFromSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject, ...this },'DB.Asset');
             return null;
         }
     }
@@ -197,7 +200,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 return null;
             return Asset.constructFromPrisma(assets[0]);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchMatching', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fecth matching failed',H.Helpers.getErrorString(error),{ idSystemObject, FileName, idVAssetType, ...this },'DB.Asset');
             return null;
         }
     }
@@ -218,7 +221,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
                 retValue.set(countInfo.idAsset, Number(countInfo.RowCount));
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.computeVersionCountMap', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'compute version count map failed',H.Helpers.getErrorString(error),{ idAssets, ...this },'DB.Asset');
             return null;
         }
     }
@@ -232,7 +235,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSystemObject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Asset.fetchSourceSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch source SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset');
             return null;
         }
     }

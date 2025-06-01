@@ -3,7 +3,7 @@ import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@p
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
-import * as LOG from '../../utils/logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
     idModel!: number;
@@ -94,7 +94,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
+            return false;
         }
     }
 
@@ -123,7 +124,8 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
+            return false;
         }
     }
 
@@ -133,7 +135,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idModel, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.model.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -145,7 +147,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyObject<ModelBase, Model>(
                 await DBC.DBConnection.prisma.model.findUnique({ where: { idModel, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -155,7 +157,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyArray<ModelBase, Model>(
                 await DBC.DBConnection.prisma.model.findMany(), Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -168,7 +170,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             return DBC.CopyArray<ModelBase, Model>(
                 await DBC.DBConnection.prisma.model.findMany({ where: { ModelSceneXref: { some: { idScene }, }, }, }), Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.fetchModelFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from scene xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -209,7 +211,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchDerivedFromItems', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from Items failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -226,7 +228,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 WHERE ASV.FileName = ${FileName}
                   AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchByFileNameAndAssetType', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by filename and AssetType failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -247,7 +249,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
 
             return null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchBySystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -265,7 +267,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 WHERE (SOM.idModel = ${idModelParent ?? -1} OR SOM.idScene = ${idSceneParent ?? -1})
                   AND M.AutomationTag = ${AutomationTag}`, Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchChildrenModels', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch child Models failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }
@@ -286,7 +288,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                   AND ASV.FileName = ${FileName}
                   AND ASS.idVAssetType IN (${Prisma.join(idVAssetTypes)})`, Model);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Model.fetchItemChildrenModels', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch Item child Models failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model');
             return null;
         }
     }

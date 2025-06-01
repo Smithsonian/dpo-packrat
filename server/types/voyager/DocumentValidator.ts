@@ -25,8 +25,8 @@ import setupSchema from './json/setup.schema.json';
 
 import { IDocument } from './document';
 
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +54,7 @@ export class DocumentValidator {
     validate(document: IDocument): H.IOResults {
         if (!this._validateDocument(document)) {
             const error: string = this._schemaValidator.errorsText(this._validateDocument.errors, { separator: ', ', dataVar: 'document' });
-            LOG.error(error, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'validate failed',error,{ document },'Types.Voyager');
             return { success: false, error };
         }
 

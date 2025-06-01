@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * TODO
+ * - add support for function/method profiling using NPM inspector
+ */
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';

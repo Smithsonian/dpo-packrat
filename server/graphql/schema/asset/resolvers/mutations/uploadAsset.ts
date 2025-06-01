@@ -3,7 +3,6 @@ import { MutationUploadAssetArgs, UploadAssetResult, UploadStatus, User /*, Asse
 import { ResolverBase, IWorkflowHelper } from '../../../ResolverBase';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as STORE from '../../../../../storage/interface';
-// import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import * as CACHE from '../../../../../cache';
 import * as DBAPI from '../../../../../db';

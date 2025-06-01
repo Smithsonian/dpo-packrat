@@ -1,4 +1,3 @@
-// import * as LOG from '../utils/logger';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import { User } from '../db';

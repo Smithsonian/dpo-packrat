@@ -2,7 +2,7 @@
 
 import { PrismaClient } from '@prisma/client';
 import { ASL, LocalStore } from '../../utils/localStore';
-import * as LOG from '../../utils/logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export type PrismaClientTrans = Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>;
 
@@ -32,7 +32,9 @@ export class DBConnection {
                 ],
             });
 
-            prisma.$on('error', (e) => { LOG.error(`PrismaClient error ${e.target}`, LOG.LS.eDB); });
+            prisma.$on('error', (e) => {
+                RK.logError(RK.LogSection.eDB,'prisma error',e.target,{},'DB.Connection');
+            });
             // prisma.$on('query', (e) => { LOG.info(e.query, LOG.LS.eDB); });
 
             this._prisma = prisma;

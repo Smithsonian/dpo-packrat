@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { ModelProcessingAction as ModelProcessingActionBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBase> implements ModelProcessingActionBase {
     idModelProcessingAction!: number;
@@ -34,7 +35,8 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
+            return false;
         }
     }
 
@@ -52,7 +54,8 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
+            return false;
         }
     }
 
@@ -63,7 +66,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return DBC.CopyObject<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBC.DBConnection.prisma.modelProcessingAction.findUnique({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelProcessingAction.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
             return null;
         }
     }
@@ -75,7 +78,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return DBC.CopyArray<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBC.DBConnection.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelProcessingAction.fetchFromModel', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
             return null;
         }
     }

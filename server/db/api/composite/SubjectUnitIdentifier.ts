@@ -2,8 +2,9 @@
 import { Vocabulary } from '../Vocabulary';
 import * as DBC from '../../connection';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
 import * as COMMON from '@dpo-packrat/common';
+import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class SubjectUnitIdentifier {
     idSubject!: number;
@@ -78,7 +79,7 @@ export class SubjectUnitIdentifier {
             ORDER BY S.Name
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SubjectUnitIdentifier.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ query, ...this },'DB.Composite.SubjectUnitIdentifier');
             return null;
         }
     }
@@ -142,7 +143,7 @@ export class SubjectUnitIdentifier {
             // LOG.info(`DBAPI.SubjectUnitIdentifier.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
             return await DBC.DBConnection.prisma.$queryRawUnsafe<SubjectUnitIdentifier[] | null>(sql, ...queryRawParams);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SubjectUnitIdentifier.search', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'search failed',H.Helpers.getErrorString(error),{ query, ...this },'DB.Composite.SubjectUnitIdentifier');
             return null;
         }
     }

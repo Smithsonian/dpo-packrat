@@ -1,7 +1,6 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface';
-// import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';

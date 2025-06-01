@@ -1,5 +1,3 @@
-// import * as LOG from '../utils/logger';
-// import * as H from '../utils/helpers';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import * as COMMON from '@dpo-packrat/common';

@@ -1,6 +1,6 @@
 import { Asset, AssetVersion, Model, ModelObject, ModelObjectModelMaterialXref, ModelMaterial, ModelMaterialChannel, ModelMaterialUVMap, SystemObject, Vocabulary } from '../..';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class ModelAsset {
     Asset: Asset;
@@ -18,7 +18,7 @@ export class ModelAsset {
     static async fetch(assetVersion: AssetVersion): Promise<ModelAsset | null> {
         const asset: Asset | null = await Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
         if (!asset) {
-            LOG.error(`ModelAsset.fetch(${JSON.stringify(assetVersion)}) failed`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch by AssetVersion failed','cannot fetch asset',{ assetVersion },'DB.Composite.ModelConstellation');
             return null;
         }
         const uvMaps: ModelMaterialUVMap[] | null = await ModelMaterialUVMap.fetchFromAsset(assetVersion.idAsset);
@@ -103,7 +103,7 @@ export class ModelConstellation {
     static async fetch(idModel: number): Promise<ModelConstellation | null> {
         const model: Model | null = await Model.fetch(idModel);
         if (!model) {
-            LOG.error(`ModelConstellation.fetch() unable to compute model from ${idModel}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch by Model failed','unable to compute model from id',{ idModel },'DB.Composite.ModelConstellation');
             return null;
         }
 

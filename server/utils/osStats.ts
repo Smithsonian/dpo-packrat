@@ -1,8 +1,6 @@
-// import * as LOG from './logger';
 import * as os from 'os';
 import * as process from 'process';
 import { RecordKeeper as RK } from '../records/recordKeeper';
-// import * as H from './helpers';
 // import * as heapdump from 'heapdump';
 // const memwatch = require('@airbnb/node-memwatch');
 

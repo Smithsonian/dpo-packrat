@@ -3,9 +3,9 @@ import * as P from '@prisma/client';
 import { Prisma } from '@prisma/client';
 import { WorkflowStep } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
-// import * as H from '../../utils/helpers';
+import * as H from '../../utils/helpers';
 import { eEventKey } from '../../event/interface/EventEnums';
+import { RecordKeeper as RK  } from '../../records/recordKeeper';
 
 export interface SystemObjectBased {
     fetchSystemObject(): Promise<SystemObject | null>;
@@ -81,7 +81,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.updateRetired', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'update retired failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return false;
         }
     }
@@ -93,7 +93,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSystemObject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -103,7 +103,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyArray<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findMany(), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -121,7 +121,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                     },
                 }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchDerivedFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -139,7 +139,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                     },
                 }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchMasterFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch master from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -157,7 +157,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
                     },
                 }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchWorkflowStepFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch WorkflowStep from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -169,7 +169,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idActor } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromActor', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Actor id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -181,7 +181,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAsset } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromAsset', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Asset id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -193,7 +193,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromAssetVersion', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from AssetVersion id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -205,7 +205,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idCaptureData } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromCaptureData', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from CaptureData id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -217,7 +217,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idIntermediaryFile } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromIntermediaryFile', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from IntermediaryFile id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -229,7 +229,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idItem } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromItem', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Item id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -241,7 +241,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idModel } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromModel', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -253,7 +253,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProject } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromProject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Project id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -265,7 +265,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProjectDocumentation } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromProjectDocumentation', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Documentation id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -277,7 +277,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idScene } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromScene', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Scene id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -289,7 +289,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idStakeholder } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromStakeholder', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Stakeholder id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -301,7 +301,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromSubject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Subject id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -313,7 +313,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             return DBC.CopyObject<P.SystemObject, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit } }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.fetchSystemObjectFromUnit', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Unit id failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }
@@ -365,7 +365,7 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
             // LOG.info(`SystemObject.computeAffectedByUpdate(${JSON.stringify(idAssets)}) = ${JSON.stringify(idSystemObjects, H.Helpers.saferStringify)}`, LOG.LS.eDB);
             return idSystemObjects;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObject.computeAffectedByUpdate', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'compute affected by update failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject');
             return null;
         }
     }

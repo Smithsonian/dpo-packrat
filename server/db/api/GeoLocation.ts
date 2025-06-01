@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { GeoLocation as GeoLocationBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLocationBase {
     idGeoLocation!: number;
@@ -33,7 +34,8 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.GeoLocation');
+            return false;
         }
     }
 
@@ -45,7 +47,8 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.GeoLocation');
+            return false;
         }
     }
 
@@ -56,7 +59,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
             return DBC.CopyObject<GeoLocationBase, GeoLocation>(
                 await DBC.DBConnection.prisma.geoLocation.findUnique({ where: { idGeoLocation, }, }), GeoLocation);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.GeoLocation.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.GeoLocation');
             return null;
         }
     }

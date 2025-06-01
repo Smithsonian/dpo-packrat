@@ -2,8 +2,6 @@
 import * as DBAPI from '../../db';
 import * as COMMON from '@dpo-packrat/common';
 import { LicenseCache } from '../../cache';
-// import * as H from '../../utils/helpers';
-// import * as LOG from '../../utils/logger';
 /*
 afterAll(async done => {
     await H.Helpers.sleep(4000);
@@ -70,7 +68,7 @@ function licenseCacheTestWorker(eMode: eCacheTestMode): void {
             }
 
             expect(await LicenseCache.getLicense(-1)).toBeUndefined();
-            expect(await LicenseCache.getLicenseByEnum(-1)).toBeUndefined();
+            expect(await LicenseCache.getLicenseByEnum(-1 as unknown as COMMON.eLicense)).toBeUndefined();
             expect(await LicenseCache.getLicenseResolver(-1)).toBeUndefined();
             expect(await LicenseCache.clearAssignment(-1)).toBeTruthy();
             if (licenseCC0)

@@ -2,8 +2,8 @@
 import { CaptureDataFile as CaptureDataFileBase } from '@prisma/client';
 import { AssetVersion } from './AssetVersion';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implements CaptureDataFileBase {
     idCaptureDataFile!: number;
@@ -34,7 +34,8 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.File');
+            return false;
         }
     }
 
@@ -51,7 +52,8 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.File');
+            return false;
         }
     }
 
@@ -62,7 +64,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return DBC.CopyObject<CaptureDataFileBase, CaptureDataFile>(
                 await DBC.DBConnection.prisma.captureDataFile.findUnique({ where: { idCaptureDataFile, }, }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataFile.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idCaptureDataFile, ...this },'DB.CaptureData.File');
             return null;
         }
     }
@@ -74,7 +76,7 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
             return DBC.CopyArray<CaptureDataFileBase, CaptureDataFile>(
                 await DBC.DBConnection.prisma.captureDataFile.findMany({ where: { idCaptureData } }), CaptureDataFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataFile.fetchFromCaptureData', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from CaptureData failed',H.Helpers.getErrorString(error),{ idCaptureData, ...this },'DB.CaptureData.File');
             return null;
         }
     }
@@ -88,14 +90,14 @@ export class CaptureDataFile extends DBC.DBObject<CaptureDataFileBase> implement
 
         const CDFiles: CaptureDataFile[] | null = await CaptureDataFile.fetchFromCaptureData(idCaptureData); /* istanbul ignore next */
         if (!CDFiles) {
-            LOG.error(`DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData failed to retrieve CaptureDataFiles from ${idCaptureData}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch folder variant from CaptureData failed',`failed to retrieve CaptureDataFiles from ${idCaptureData}`,{ ...this },'DB.CaptureData.File');
             return null;
         }
 
         for (const CDFile of CDFiles) {
             const assetVersion: AssetVersion | null = await AssetVersion.fetchLatestFromAsset(CDFile.idAsset); /* istanbul ignore next */
             if (!assetVersion) {
-                LOG.error(`DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData failed to fetch assetVersion from ${JSON.stringify(CDFile, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch folder variant from CaptureData failed','failed to fetch assetVersion from CaptureDataFile',{ idCaptureData, ...this },'DB.CaptureData.File');
                 return null;
             }
 

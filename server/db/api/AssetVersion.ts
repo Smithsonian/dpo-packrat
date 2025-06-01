@@ -2,7 +2,8 @@
 import { AssetVersion as AssetVersionBase, SystemObject as SystemObjectBase } from '@prisma/client';
 import { SystemObject, SystemObjectBased, SystemObjectVersion } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements AssetVersionBase, SystemObjectBased {
     idAssetVersion!: number;
@@ -87,7 +88,8 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
+            return false;
         }
 
         /*
@@ -120,7 +122,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 WHERE AV.idAsset = ${idAsset};`;
             return (VersionInfo && VersionInfo.length > 0) ? Number(VersionInfo[0].Version) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.computeNextVersionNumber', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'compute next version number failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -135,7 +137,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             if (!IngestedOrig && Ingested && !Version) {
                 const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset); /* istanbul ignore next*/
                 if (!nextVersion) {
-                    LOG.error('DBAPI.AssetVersion.updateWorker failed to compute nextVersion', LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'update failed','failed to compute nextVersion',{ ...this },'DB.Asset.Version');
                     return false;
                 }
                 Version = nextVersion;
@@ -161,7 +163,8 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
+            return false;
         }
     }
 
@@ -171,7 +174,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -183,7 +186,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyObject<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findUnique({ where: { idAssetVersion, }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error(`DBAPI.AssetVersion.fetch(${idAssetVersion})`, LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAssetVersion, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -193,7 +196,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany(), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -205,7 +208,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset, Version }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by Asset and version failed',H.Helpers.getErrorString(error),{ idAsset, Version, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -233,7 +236,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchFromAsset', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Asset failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -259,7 +262,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchFromSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -282,7 +285,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchFromSystemObjectVersion', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObjectVersion failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -298,13 +301,13 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         if (SOV) {
             assetVersions = await AssetVersion.fetchFromSystemObjectVersion(SOV.idSystemObjectVersion); /* istanbul ignore next */
             if (!assetVersions)
-                LOG.error(`DBAPI.AssetVersion.fetchLatestFromSystemObject failed to retrieve asset versions from SystemObjectVersion ${JSON.stringify(SOV)}; falling back to all asset versions for idSystemObject ${idSystemObject}`, LOG.LS.eDB);
+                RK.logInfo(RK.LogSection.eDB,'fetch latest from SystemObject',`failed to retrieve asset versions from SystemObjectVersion; falling back to all asset versions for idSystemObject ${idSystemObject}`,{ SOV, ...this },'DB.Asset.Version');
         }
 
         if (!assetVersions)
             assetVersions = await AssetVersion.fetchFromSystemObject(idSystemObject); /* istanbul ignore next */
         if (!assetVersions) {
-            LOG.info(`DBAPI.AssetVersion.fetchLatestFromSystemObject retrieved no asset versions for ${idSystemObject}`, LOG.LS.eDB);
+            RK.logInfo(RK.LogSection.eDB,'fetch latest from SystemObject',`retrieved no asset versions for ${idSystemObject}`,{ ...this },'DB.Asset.Version');
             return null;
         }
         return assetVersions;
@@ -327,7 +330,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return AssetVersion.constructFromPrisma(assetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchFirstFromAsset', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch first from Asset failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -351,7 +354,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return AssetVersion.constructFromPrisma(assetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchLatestFromAsset', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch latest from Asset failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -375,7 +378,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                     LIMIT 1`,AssetVersion);
             return (!assetVersion || assetVersion.length===0) ? null : assetVersion[0];
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchVoyagerSceneFromScene', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch Voyager scene from Scene failed',H.Helpers.getErrorString(error),{ idScene, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -387,7 +390,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchFromUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUserCreator, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -423,7 +426,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 return res;
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchFromUserByIngested', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch ingested from User failed',H.Helpers.getErrorString(error),{ idUserCreator, Ingested, Retired, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -433,7 +436,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { Ingested } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchByIngested', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by ingested failed',H.Helpers.getErrorString(error),{ Ingested, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -443,7 +446,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { StorageKeyStaging } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.fetchByStorageKeyStaging', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by staging storage key failed',H.Helpers.getErrorString(error),{ StorageKeyStaging, ...this },'DB.Asset.Version');
             return null;
         }
     }
@@ -462,13 +465,13 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
             /* istanbul ignore next */
             if (storageKeyStagingCount.length != 1) { // array of wrong length returned, error ... should never happen
-                LOG.error(`AssetVersion.countStorageKeyStaging received invalid query response ${JSON.stringify(storageKeyStagingCount)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch by ingested failed',`received invalid query response ${JSON.stringify(storageKeyStagingCount)}`,{ StorageKeyStaging, Ingested, Retired, ...this },'DB.Asset.Version');
                 return null;
             }
 
             return Number(storageKeyStagingCount[0].RowCount);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AssetVersion.countStorageKeyStaging', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'count storage key staging failed',H.Helpers.getErrorString(error),{ StorageKeyStaging, Ingested, Retired, ...this },'DB.Asset.Version');
             return null;
         }
     }

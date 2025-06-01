@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { UserPersonalizationUrl as UserPersonalizationUrlBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlBase> implements UserPersonalizationUrlBase {
     idUserPersonalizationUrl!: number;
@@ -30,7 +31,8 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
+            return false;
         }
     }
 
@@ -46,7 +48,8 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
+            return  false;
         }
     }
 
@@ -57,7 +60,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return DBC.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBC.DBConnection.prisma.userPersonalizationUrl.findUnique({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationUrl.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
             return null;
         }
     }
@@ -69,7 +72,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return DBC.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBC.DBConnection.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationUrl.fetchFromUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
             return null;
         }
     }

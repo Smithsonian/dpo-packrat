@@ -1,12 +1,12 @@
 import { Scene, Model, ModelSceneXref, AssetVersion, Vocabulary, SystemObjectInfo } from '../..';
-import * as H from '../../../utils/helpers';
-import * as LOG from '../../../utils/logger';
 import * as STORE from '../../../storage/interface';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { IZip } from '../../../utils/IZip';
 import { SvxReader, SvxNonModelAsset } from '../../../utils/parser/svxReader';
 import * as path from 'path';
+import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class SceneConstellation {
     Scene: Scene | null;
@@ -25,12 +25,12 @@ export class SceneConstellation {
     static async fetchFromScene(idScene: number): Promise<SceneConstellation | null> {
         const scene: Scene | null = await Scene.fetch(idScene);
         if (!scene) {
-            LOG.error(`SceneConstellation.fetchFromScene(${idScene}) failed to retrieve Scene`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from Scene failed','failed to retrieve Scene',{ idScene, ...this },'DB.Composite.SceneConstellation');
             return null;
         }
         const modelSceneXref: ModelSceneXref[] | null = await ModelSceneXref.fetchFromScene(idScene);
         if (!modelSceneXref) {
-            LOG.error(`SceneConstellation.fetchFromScene(${idScene}) failed to retrieve ModelSceneXref`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from Scene failed','failed to retrieve ModelSceneXref',{ idScene, ...this },'DB.Composite.SceneConstellation');
             return null;
         }
 
@@ -47,7 +47,7 @@ export class SceneConstellation {
         if (sOI)
             SvxNonModelAssets = await SceneConstellation.computeNonModelAssets(sOI.idSystemObject, handledAssetSet);
         else
-            LOG.error(`SceneConstellation.fetchFromScene(${idScene}) failed to compute scene's idSystemObject`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from Scene failed','failed to compute scene idSystemObject',{ idScene, ...this },'DB.Composite.SceneConstellation');
 
         return new SceneConstellation(scene, modelSceneXref, SvxNonModelAssets);
     }
@@ -55,7 +55,7 @@ export class SceneConstellation {
     private static async computeNonModelAssets(idSystemObject: number, handledAssetSet?: Set<string> | undefined): Promise<SvxNonModelAsset[] | null> {
         const assetVersions: AssetVersion[] | null = await AssetVersion.fetchLatestFromSystemObject(idSystemObject);
         if (!assetVersions) {
-            LOG.error(`SceneConstellation.computeNonModelAssets(${idSystemObject}) failed to compute scene's asset versions`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'compute non-model assets failed','failed to compute scene asset versions',{ idSystemObject, ...this },'DB.Composite.SceneConstellation');
             return null;
         }
 
@@ -91,7 +91,8 @@ export class SceneConstellation {
     }
 
     static async fetchFromAssetVersion(idAssetVersion: number, directory?: string | undefined, idScene?: number | undefined): Promise<SceneConstellation | null> {
-        LOG.info(`SceneConstellation.fetchFromAssetVersion(${idAssetVersion}, ${directory})`, LOG.LS.eDB);
+        RK.logError(RK.LogSection.eDB,'fetch from AssetVersion',undefined,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
+
         let zip: IZip | null = null;
         let isBagit: boolean = false;
         try {
@@ -99,7 +100,7 @@ export class SceneConstellation {
             let readStream: NodeJS.ReadableStream | null = null;
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
             if (!RSR.success || !RSR.fileName || !RSR.readStream) {
-                LOG.error(`SceneConstellation.fetchFromAssetVersion(${idAssetVersion}, ${directory}): ${RSR.error}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',RSR.error,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                 return null;
             }
 
@@ -108,7 +109,7 @@ export class SceneConstellation {
             if (RSR.fileName.toLowerCase().endsWith('.zip')) {
                 const CAR: STORE.CrackAssetResult = await STORE.AssetStorageAdapter.crackAssetByAssetVersionID(idAssetVersion);
                 if (!CAR.success || !CAR.zip) {
-                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable to crack zipfile ${RSR.fileName} for idAssetVersion ${idAssetVersion}: ${CAR.error}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',`crack zipfile ${RSR.fileName} for idAssetVersion: ${CAR.error}`,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                     return null;
                 }
                 zip = CAR.zip;
@@ -116,10 +117,10 @@ export class SceneConstellation {
 
                 const files: string[] = await SceneConstellation.fetchFileFromZip(zip, isBagit, '.svx.json', directory) ?? [];
                 if (files.length === 0) {
-                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable to locate scene file with .svx.json extension in zipfile ${RSR.fileName} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',`unable to locate scene file with .svx.json extension in zipfile ${RSR.fileName} for AssetVersion`,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                     return null;
                 } else
-                    LOG.info(`SceneConstellation.fetchFromAssetVersion found scene json in ${JSON.stringify(files)}`, LOG.LS.eDB);
+                    RK.logInfo(RK.LogSection.eDB,'fetch from AssetVersion failed','found scene json in files',{ files },'DB.Composite.SceneConstellation');
 
                 fileName += `/${files[0]}`;
                 readStream = await zip.streamContent(files[0]);
@@ -127,7 +128,7 @@ export class SceneConstellation {
                 readStream = RSR.readStream;
 
             if (!readStream) {
-                LOG.error(`SceneConstellation.fetchFromAssetVersion unable to compute stream from ${fileName} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',`unable to compute stream from ${fileName} for AssetVersion`,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                 return null;
             }
 
@@ -135,7 +136,7 @@ export class SceneConstellation {
             const svx: SvxReader = new SvxReader();
             const res: H.IOResults = await svx.loadFromStream(readStream);
             if (!res.success || !svx.SvxExtraction) {
-                LOG.error(`SceneConstellation.fetchFromAssetVersion unable to read stream from ${RSR.fileName} for idAssetVersion ${idAssetVersion}: ${res.error}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',`unable to read stream from ${RSR.fileName} for idAssetVersion: ${res.error}`,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                 return null;
             }
 
@@ -150,10 +151,10 @@ export class SceneConstellation {
                         if (model)
                             modelExistingNameMap.set(MSX.Name, model.idModel);
                         else
-                            LOG.error(`SceneConstellation.fetchFromAssetVersion unable to read idModel ${MSX.idModel} referenced in ModelSceneXref ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eDB);
+                            RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',`unable to read idModel ${MSX.idModel} referenced in ModelSceneXref`,{ MSX, idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                     }
                 } else
-                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable to read original ModelSceneXref from idScene ${idScene} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed','unable to read original ModelSceneXref from Scene for AssetVersion',{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
 
                 const sOI: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: idScene, eObjectType: COMMON.eSystemObjectType.eScene });
                 if (sOI) {
@@ -161,11 +162,11 @@ export class SceneConstellation {
                     if (SvxNonModelAsset) {
                         for (const NMA of SvxNonModelAsset)
                             assetExistingNameMap.set(NMA.uri, NMA.idAssetVersion);
-                        LOG.info(`SceneConstellation.fetchFromAssetVersion assetExistingNameMap=${H.Helpers.JSONStringify(assetExistingNameMap)}`, LOG.LS.eDB);
+                        RK.logInfo(RK.LogSection.eDB,'fetch from AssetVersion','existing asset name map',{ assetExistingNameMap },'DB.Composite.SceneConstellation');
                     } else
-                        LOG.error(`SceneConstellation.fetchFromAssetVersion unable to compute non-model assets from idScene ${idScene} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                        RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed','unable to compute non-model assets from Scene for AssetVersion',{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                 } else
-                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable to compute system object info from idScene ${idScene} for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed','unable to compute system object info from Scene for AssetVersion',{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
             }
 
             const scene: Scene = svx.SvxExtraction.extractScene();
@@ -178,7 +179,7 @@ export class SceneConstellation {
                 const idVAssetType1: number | undefined = v1?.idVocabulary;
                 const idVAssetType2: number | undefined = v2?.idVocabulary;
                 if (!idVAssetType1 || !idVAssetType2) {
-                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable to lookup vocabulary for idAssetVersion ${idAssetVersion}: ${res.error}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',`unable to lookup vocabulary for AssetVersion: ${res.error}`,{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                     return null;
                 }
 
@@ -213,12 +214,12 @@ export class SceneConstellation {
             if (svx.SvxExtraction.nonModelAssets) {
                 const AV = await AssetVersion.fetch(idAssetVersion);
                 if (!AV) {
-                    LOG.error(`SceneConstellation.fetchFromAssetVersion unable fetch Asset Version for idAssetVersion ${idAssetVersion}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed','unable fetch AssetVersion',{ idAssetVersion, directory, idScene, ...this },'DB.Composite.SceneConstellation');
                     return null;
                 }
                 nonModelAssets = [];
                 for (const NMA of svx.SvxExtraction.nonModelAssets) {
-                    LOG.info(`SceneConstellation.fetchFromAssetVersion processing nonModelAsset ${H.Helpers.JSONStringify(NMA)}`, LOG.LS.eDB);
+                    RK.logInfo(RK.LogSection.eDB,'fetch from AssetVersion failed','processing non-Model asset',{ NMA },'DB.Composite.SceneConstellation');
                     // if we have a zip, look for our asset within that zip by name
                     if (zip) {
                         const files: string[] = await SceneConstellation.fetchFileFromZip(zip, isBagit, NMA.uri, directory) ?? [];
@@ -261,7 +262,7 @@ export class SceneConstellation {
         if (!SceneConstellation.vocabAssetTypeModel) {
             SceneConstellation.vocabAssetTypeModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModel);
             if (!SceneConstellation.vocabAssetTypeModel)
-                LOG.error('SceneConstellation unable to fetch vocabulary for Asset Type Model', LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'compute vocab asset type model failed','unable to fetch vocabulary',{ ...this },'DB.Composite.SceneConstellation');
         }
         return SceneConstellation.vocabAssetTypeModel;
     }
@@ -270,7 +271,7 @@ export class SceneConstellation {
         if (!SceneConstellation.vocabAssetTypeModelGeometryFile) {
             SceneConstellation.vocabAssetTypeModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!SceneConstellation.vocabAssetTypeModelGeometryFile)
-                LOG.error('SceneConstellation unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'compute vocab from model geometry file failed','unable to fetch vocabulary for Asset Type Model Geometry File',{ ...this },'DB.Composite.SceneConstellation');
         }
         return SceneConstellation.vocabAssetTypeModelGeometryFile;
     }

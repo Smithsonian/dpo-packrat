@@ -2,9 +2,9 @@
 import { WorkflowSet as WorkflowSetBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as DBAPI from '../';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements WorkflowSetBase {
     idWorkflowSet!: number;
@@ -21,7 +21,8 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             ({ idWorkflowSet: this.idWorkflowSet } = await DBC.DBConnection.prisma.workflowSet.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
+            return false;
         }
     }
 
@@ -33,7 +34,8 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
+            return  false;
         }
     }
 
@@ -44,7 +46,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             return DBC.CopyObject<WorkflowSetBase, WorkflowSet>(
                 await DBC.DBConnection.prisma.workflowSet.findUnique({ where: { idWorkflowSet, }, }), WorkflowSet);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowSet.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
             return null;
         }
     }
@@ -62,7 +64,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
                     },
                 }), WorkflowSet);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowSet.fetchFromWorkflow', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Workflow',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
             return null;
         }
     }
@@ -91,7 +93,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             // TODO: revisit core Workflow logic to identify/fix where states lose sync
             const storedStepState: COMMON.eWorkflowJobRunStatus = steps[i].getState();
             const stepStatus: H.IOStatus = await DBAPI.WorkflowStep.fetchStatus(steps[i].idWorkflowStep);
-            LOG.info(`WorkflowSet.fetchStatus getting WorkflowStep state (${steps[i].idWorkflowStep}: ${COMMON.eWorkflowJobRunStatus[stepStatus.state]} | stored: ${COMMON.eWorkflowJobRunStatus[storedStepState]})`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eDB,'fetch status',undefined,{ idWorkflowStep: steps[i].idWorkflowStep, state: COMMON.eWorkflowJobRunStatus[stepStatus.state], stored: COMMON.eWorkflowJobRunStatus[storedStepState] },'DB.Workflow.Set');
 
             switch(stepStatus.state) {
                 case COMMON.eWorkflowJobRunStatus.eError:
