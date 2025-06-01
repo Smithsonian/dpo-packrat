@@ -18,7 +18,7 @@ async function testSend(): Promise<void> {
             } else {
                 // if we're not successful we check to see if we're outside the firewall testing (i.e. GitHub)
                 // if so, we force success.
-                let validError: boolean = result.data?.errors?.some(error => error.includes("ENOTFOUND smtp.si.edu")) ?? false;
+                const validError: boolean = result.data?.errors?.some(error => error.includes('ENOTFOUND smtp.si.edu')) ?? false;
                 if(validError) {
                     RK.logWarning(RK.LogSection.eTEST,'send','outside of firewall. cannot send email. passing test...',{},'Tests.Utils.Email');
                     expect(true).toBeTruthy();
