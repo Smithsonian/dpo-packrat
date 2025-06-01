@@ -18,13 +18,14 @@ async function testSend(): Promise<void> {
             } else {
                 // if we're not successful we check to see if we're outside the firewall testing (i.e. GitHub)
                 // if so, we force success.
-                const message: string = result.data?.error ?? result.message;
+                const message: string = result.data?.error ?? result.data?.errors ?? result.message;
+                console.log(message);
                 if(message.includes('ENOTFOUND smtp.si.edu')) {
                     RK.logError(RK.LogSection.eTEST,'send','outside of firewall. cannot send email',{ ...result.data },'Tests.Utils.Email');
                     expect(true).toBeTruthy();
                     return;
                 } else
-                    RK.logError(RK.LogSection.eTEST,'send',result.message,{ ...result.data },'Tests.Utils.Email');
+                    RK.logError(RK.LogSection.eTEST,'send',result.message, result.data,'Tests.Utils.Email');
             }
         }
 

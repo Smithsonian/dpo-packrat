@@ -429,7 +429,7 @@ export class RecordKeeper {
         return result;
     }
     static async drainAllQueues(timeout: number = 10000): Promise<IOResults> {
-        
+
         const errors: string[] = [];
 
         let result = await RecordKeeper.logWaitForEmptyQueue(timeout);
@@ -443,7 +443,7 @@ export class RecordKeeper {
 
         if(errors.length === 0)
             return { success: true, message: 'all queues drained' };
-        else 
-            return { success: false, message: 'cannot drain all queues', data: { errors }};
+        else
+            return { success: false, message: 'cannot drain all queues', data: { errors } };
     }
 }

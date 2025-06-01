@@ -13,8 +13,8 @@ beforeEach(async () => {
                 RK.logCritical(RK.LogSection.eEVENT,'cannot initialize');
             else if(result.success===false)
                 RK.logCritical(RK.LogSection.eEVENT,'cannot initialize',result.message);
-         })
-    })
+        });
+    });
 });
 
 afterEach(async () => {
