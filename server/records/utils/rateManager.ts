@@ -117,6 +117,21 @@ export class RateManager<T> {
         this.queue = [];
         this.mode = 'standard';
     }
+    public async waitUntilIdle(timeoutMs: number = 10000): Promise<{ success: boolean, message: string, queueSize: number }> {
+        const interval = 500;
+        const start = Date.now();
+
+        const queueSize: number = this.queue.length;
+
+        while (this.queue.length > 0 || this.isRunning) {
+            if (Date.now() - start > timeoutMs)
+                return { success: false, message: 'timed out. queue did not drain.', queueSize: this.queue.length };
+
+            await this.delay(interval);
+        }
+
+        return { success: true, message: 'drained queue', queueSize };
+    }
     //#endregion
 
     //#region UTILS

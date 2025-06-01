@@ -12,9 +12,10 @@ async function testSend(): Promise<void> {
 
         if(result.success) {
             result = await RK.emailTest(1);
-            if (result.success)
+            if (result.success) {
                 RK.logInfo(RK.LogSection.eTEST,'send','success',{ ...result.data },'Tests.Utils.Email');
-            else {
+                expect(result.success).toBeTruthy();
+            } else {
                 // if we're not successful we check to see if we're outside the firewall testing (i.e. GitHub)
                 // if so, we force success.
                 const message: string = result.data?.error ?? result.message;
@@ -27,6 +28,7 @@ async function testSend(): Promise<void> {
             }
         }
 
+        RK.logDebug(RK.LogSection.eTEST,'EMAIL TEST RESULTS',result.message,result.data,'Tests.Utils.Email');
         expect(result.success).toBeTruthy();
     });
 }

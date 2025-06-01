@@ -196,6 +196,9 @@ export class RecordKeeper {
     static async logTest(numLogs: number): Promise<IOResults> {
         return LOG.testLogs(numLogs);
     }
+    static async logWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return LOG.waitForQueueToDrain(timeout);
+    }
     //#endregion
 
     //#region NOTIFY
@@ -329,6 +332,9 @@ export class RecordKeeper {
     static async emailTest(numEmails: number): Promise<IOResults> {
         return NOTIFY.testEmail(numEmails);
     }
+    static async emailWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return NOTIFY.waitEmptyEmailQueue(timeout);
+    }
 
     // slack
     private static async getSlackIDsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
@@ -400,6 +406,9 @@ export class RecordKeeper {
 
         return NOTIFY.testSlack(numMessages,channel);
     }
+    static async slackWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return NOTIFY.waitEmptySlackQueue(timeout);
+    }
     //#endregion
 
     // utility
@@ -418,5 +427,23 @@ export class RecordKeeper {
             result.data = { reason: src.error, ...data };
 
         return result;
+    }
+    static async drainAllQueues(timeout: number = 10000): Promise<IOResults> {
+        
+        const errors: string[] = [];
+
+        let result = await RecordKeeper.logWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`log: ${result.message}`);
+
+        result = await RecordKeeper.emailWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`email: ${result.message}`);
+
+        result = await RecordKeeper.slackWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`slack: ${result.message}`);
+
+        if(errors.length === 0)
+            return { success: true, message: 'all queues drained' };
+        else 
+            return { success: false, message: 'cannot drain all queues', data: { errors }};
     }
 }

@@ -61,6 +61,9 @@ export class Notify {
         const result = await LOG.profileEnd(profileKey);
         return { success: (errors.length<=0), message: `finished testing ${numEmails} email messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average, errors: (errors.length>0) ? errors?.join(' | ') : null } };
     }
+
+    // utilities
+    public static waitEmptyEmailQueue = NotifyEmail.waitForQueueToDrain as (timeout: number) => Promise<NotifyResult>;
     //#endregion
 
     //#region SLACK
@@ -117,6 +120,9 @@ export class Notify {
         const result = await LOG.profileEnd(profileKey);
         return { success: (errors.length<=0), message: `finished testing ${numMessages} slack messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average, errors: (errors.length>0) ? errors?.join(' | ') : null } };
     }
+
+    // utilities
+    public static waitEmptySlackQueue = NotifySlack.waitForQueueToDrain as (timeout: number) => Promise<NotifyResult>;
     //#endregion
 }
 

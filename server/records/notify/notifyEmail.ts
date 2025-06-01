@@ -96,6 +96,17 @@ export class NotifyEmail {
 
         return errorMessages.join(' | ');
     }
+    public static async waitForQueueToDrain(timeout: number = 10000): Promise<EmailResult> {
+        
+        if(!this.rateManager)
+            return { success: false, message: 'no manager running' };
+
+        const result = await this.rateManager.waitUntilIdle(timeout);
+        if(!result.success)
+            return { success: false, message: result.message, data: { queueSize: result.queueSize }};
+
+        return { success: true, message: result.message };
+    }
     //#endregion
 
     //#region FORMATING
