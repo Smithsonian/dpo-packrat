@@ -59,7 +59,7 @@ export class Notify {
         // close our profiler and return results
         const metrics = rateManager?.getMetrics();
         const result = await LOG.profileEnd(profileKey);
-        return { success: (errors.length<=0), message: `finished testing ${numEmails} email messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average, errors: (errors.length>0) ? errors?.join(' | ') : null } };
+        return { success: (errors.length<=0), message: `finished testing ${numEmails} email messages.`, data: { message: result.message, maxRate: metrics?.rates.max, avgRate: metrics?.rates.average, errors } };
     }
 
     // utilities
