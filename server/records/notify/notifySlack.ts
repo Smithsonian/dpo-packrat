@@ -9,7 +9,7 @@ import axios, { AxiosResponse } from 'axios';
 import * as UTIL from '../utils/utils';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { NotifyPackage, NotifyType, getTypeString, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
-import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
+import { RateManager, RateManagerConfig, RateManagerResult, RateManagerMetrics } from '../utils/rateManager';
 // import { Logger as LOG, LogSection } from '../logger/log';
 
 //#region TYPES & INTERFACES
@@ -207,6 +207,26 @@ export class NotifySlack {
             return { success: false, message: result.message, data: { queueSize: result.queueSize } };
 
         return { success: true, message: result.message };
+    }
+    // get status of slack system
+    public static getStatus(): SlackResult {
+
+        if(NotifySlack.isActive()===false)
+            return { success: false, message: 'Slack not running' };
+
+        // grab manager metrics to get queue size (backpressure)
+        const rateManagerMetrics: RateManagerMetrics | undefined = NotifySlack.rateManager?.getMetrics();
+
+        const result: SlackResult = {
+            success: true,
+            message: 'Slack status',
+            data: {
+                isActive: NotifySlack.isActive(),
+                queueSize: rateManagerMetrics?.queueLength ?? -1,
+            }
+        };
+
+        return result;
     }
     //#endregion
 

@@ -59,11 +59,12 @@ export class HttpServer {
         // initialize logging and notification system
         const loggerResult: IOResults = await RK.initialize(RK.SubSystem.LOGGER);
         if(loggerResult.success===false) {
-            RK.logFallback(RK.LogSection.eSYS,'system failed: Logger',loggerResult.message,loggerResult.data,'HttpServer');
-            RK.logFallback(RK.LogSection.eSYS,'server failed','No logging available');
+            RK.logFallback(RK.LogLevel.CRITICAL, RK.LogSection.eSYS,'system failed: Logger',loggerResult.message,loggerResult.data,'HttpServer');
+            RK.logFallback(RK.LogLevel.CRITICAL, RK.LogSection.eSYS,'server failed','No logging available');
             return false;
         }
         RK.logInfo(RK.LogSection.eSYS,'system started: Logger',undefined,loggerResult.data,'HttpServer');
+        RK.checkStatus(1000);
 
         // get our webDAV server
         this.WDSV = await WebDAVServer.server();

@@ -3,8 +3,10 @@
 import path from 'path';
 import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
-import { Logger as LOG, LogSection  } from './logger/log';
+import { Logger as LOG, LogSection, LogLevel  } from './logger/log';
 import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
+import { NotifyEmail } from './notify/notifyEmail';
+import { NotifySlack } from './notify/notifySlack';
 
 // temp definition for where IOResults will be
 export type IOResults = {
@@ -30,6 +32,7 @@ export class RecordKeeper {
 
     static SubSystem = SubSystem;
     static LogSection = LogSection;
+    static LogLevel = LogLevel;
     static NotifyGroup = NotifyUserGroup;
     static NotifyType = NotifyType;
     static SlackChannel = SlackChannel;
@@ -171,6 +174,9 @@ export class RecordKeeper {
         const { idUser, idRequest } = RecordKeeper.getContext();
         return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest);
     }
+    static logFallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
+        LOG.fallback(level,sec,message,reason,data,caller);
+    }
 
     // profiler functions
     // Usage: call 'profile' with a unique label and any needed metadata. This creates/starts a timer.
@@ -187,9 +193,6 @@ export class RecordKeeper {
     }
 
     // stats and utilities
-    static logFallback(sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
-        console.log(`[FALLBACK] ${sec}: ${message}, ${reason} (caller: ${caller} | data: ${JSON.stringify(data)})`);
-    }
     static logTotalCount(): number {
         return LOG.getStats().counts.total;
     }
@@ -411,16 +414,16 @@ export class RecordKeeper {
     }
     //#endregion
 
-    // utility
+    //#region UTILITY
     static convertResults(src: any, message?: string, data?: any): IOResults {
         if(!src)
             return { success: false, message: 'invalid conversion', data: src };
 
-        const result: IOResults = { success: false, message: message ?? '', data };
-        if(src.success)
-            result.success = src.success;
-        else
-            return { success: false, message: 'invalid format conversion.', data: src };
+        const result: IOResults = {
+            success: src?.success ?? false,
+            message: message ?? src.message ?? 'unknown message',
+            data: data ?? src?.data ?? undefined
+        };
 
         // if we have an error message prepend it to the data property
         if(src.error)
@@ -446,4 +449,75 @@ export class RecordKeeper {
         else
             return { success: false, message: 'cannot drain all queues', data: { errors } };
     }
+    static getStatus(system: SubSystem, doLog: boolean = true): IOResults {
+
+        switch(system) {
+            case SubSystem.LOGGER: {
+                const logStatus = LOG.getStatus();
+
+                if(!logStatus.success || !logStatus.data || !logStatus.data.isActive) {
+                    if(doLog)
+                        RecordKeeper.logFallback(LogLevel.ERROR,LogSection.eSYS,'Logger status','system not available',{},'RecordKeeper');
+                    return RecordKeeper.convertResults(logStatus);
+                }
+
+                if(logStatus.data.numTransports<=0) {
+                    if(doLog)
+                        RecordKeeper.logInfo(LogSection.eSYS,'Logger status','no writeable transports',{ path: logStatus.data.path, transports: logStatus.data.transports },'RecordKeeper');
+                    return RecordKeeper.convertResults(logStatus);
+                }
+                
+                // TODO: notices if high backpressure
+
+                // output status
+                if(doLog)
+                    RecordKeeper.logPerformance(LogSection.eSYS,'Logger status',undefined,logStatus.data,'RecordKeeper');
+                return RecordKeeper.convertResults(logStatus);
+            }
+
+            case SubSystem.NOTIFY_EMAIL: {
+                const emailStatus = NotifyEmail.getStatus();
+
+                if(!emailStatus.success || !emailStatus.data || !emailStatus.data.isActive) {
+                    if(doLog)
+                        RecordKeeper.logError(LogSection.eSYS,'Email status','system not available',{},'RecordKeeper');
+                    return RecordKeeper.convertResults(emailStatus);
+                }
+                
+                // TODO: notices if high backpressure
+
+                // output status
+                if(doLog)
+                    RecordKeeper.logPerformance(LogSection.eSYS,'Email status',undefined,emailStatus.data,'RecordKeeper');
+                return RecordKeeper.convertResults(emailStatus);
+            }
+
+            case SubSystem.NOTIFY_SLACK: {
+                const slackStatus = NotifySlack.getStatus();
+
+                if(!slackStatus.success || !slackStatus.data || !slackStatus.data.isActive) {
+                    if(doLog)
+                        RecordKeeper.logError(LogSection.eSYS,'Slack status','system not available',{},'RecordKeeper');
+                    return RecordKeeper.convertResults(slackStatus);
+                }
+                
+                // TODO: notices if high backpressure
+
+                // output status
+                if(doLog)
+                    RecordKeeper.logPerformance(LogSection.eSYS,'Slack status',undefined,slackStatus.data,'RecordKeeper');
+                return RecordKeeper.convertResults(slackStatus);
+            } break;
+        }
+
+        return { success: false, message: 'invalid status request' };
+    }
+    static checkStatus(intervalMs: number): void {
+        setInterval(() => {
+            const result = RecordKeeper.getStatus(SubSystem.LOGGER, true);
+            if(!result.success)
+                RecordKeeper.logError(LogSection.eSYS,'check status failed',result.message,result.data,'RecordKeeper');
+        }, intervalMs);
+    }
+    //#endregion
 }

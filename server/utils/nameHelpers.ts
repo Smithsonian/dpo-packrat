@@ -57,7 +57,7 @@ export class NameHelpers {
             .replace(/\./g, '-')                // replace periods with hyphens
             .replace(/[^a-zA-Z0-9\-_]/g, '-')   // remove everything except letters, digits, hyphens, and underscores
             .replace(/\W$/, '');                // remove the last character if it's not alphanumeric or an underscore (cleanup)
-        RK.logError(RK.LogSection.eSYS,'sanitize name',`${fileName} -> ${result}`,{},'Utils.Name');
+        RK.logInfo(RK.LogSection.eSYS,'sanitize name',`${fileName} -> ${result}`,{},'Utils.Name');
 
         return result;
     }

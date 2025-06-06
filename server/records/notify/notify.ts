@@ -64,6 +64,7 @@ export class Notify {
 
     // utilities
     public static waitEmptyEmailQueue = NotifyEmail.waitForQueueToDrain as (timeout: number) => Promise<NotifyResult>;
+    public static getEmailStatus = NotifyEmail.getStatus as (intervalMs: number) => NotifyResult;
     //#endregion
 
     //#region SLACK
@@ -123,6 +124,7 @@ export class Notify {
 
     // utilities
     public static waitEmptySlackQueue = NotifySlack.waitForQueueToDrain as (timeout: number) => Promise<NotifyResult>;
+    public static getSlackStatus = NotifySlack.getStatus as (intervalMs: number) => NotifyResult;
     //#endregion
 }
 

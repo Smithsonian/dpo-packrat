@@ -75,7 +75,7 @@ export class WebDAVServer {
         });
         this.server.afterRequest((ctx, next) => {
             // Display the method, the URI, the returned status code and the returned message
-            RK.logInfo(RK.LogSection.eHTTP,'before request',`${ctx.request.method} ${ctx.request.url} end`,{ ...ctx.response },'HTTP.Route.WebDAV');
+            RK.logInfo(RK.LogSection.eHTTP,'after request',`${ctx.request.method} ${ctx.request.url} end`,{ ...ctx.response },'HTTP.Route.WebDAV');
             next();
         });
     }
@@ -92,7 +92,7 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
             const idUser: number | undefined | null = LS?.idUser;
             const user: DBAPI.User | undefined = idUser ? await CACHE.UserCache.getUser(idUser) : undefined;
             if (user) {
-                // LOG.info(`WEBDAV ${ctx.request.url} authenticated for UserID ${user.idUser}`, LOG.LS.eHTTP);
+                RK.logInfo(RK.LogSection.eHTTP,'get user','authenticated for user',{ idUser: user.idUser, name: user.Name },'HTTP.Route.WebDAV');
                 // @ts-ignore: ts(2345)
                 callback(null, { uid: user.idUser.toString(), username: user.Name });
                 return;

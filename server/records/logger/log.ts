@@ -8,7 +8,7 @@
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
-import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
+import { RateManager, RateManagerConfig, RateManagerMetrics, RateManagerResult } from '../utils/rateManager';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { LogLevel, LogSection } from './logTypes';
 
@@ -85,7 +85,7 @@ export class Logger {
     //#region PUBLIC
     private static isActive(): boolean {
         // we're initialized if we have a logger running
-        return (Logger.logger);
+        return (Logger.logger!=null);
     }
     public static configure(logDirectory: string, environment: ENVIRONMENT_TYPE, rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number): LoggerResult {
         // we allow for re-assigning configuration options even if already running
@@ -224,15 +224,22 @@ export class Logger {
                 // exitOnError: false, // do not exit on exceptions. combines with 'handleExceptions' above
             });
 
+            // add our events on failure
+            Logger.logger.on('error', (err) => {
+                Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'Winston stream failed',err,undefined,'RecordKeeper.Logger');
+            });
+
             // add our custom colors as well
             addColors(customLevels.colors);
 
             // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
             Logger.trackLogMetrics(5000,10);
         } catch(error) {
+            const errorMsg: string = error instanceof Error ? error.message : String(error);
+            Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'configure failed',errorMsg,undefined,'RecordKeeper.Logger');
             return {
                 success: false,
-                message: error instanceof Error ? error.message : String(error)
+                message: errorMsg
             };
         }
 
@@ -459,13 +466,50 @@ export class Logger {
 
         return { success: true, message: result.message };
     }
+
+    // get status of log system
+    public static getStatus(): LoggerResult {
+
+        if(Logger.isActive()===false)
+            return { success: false, message: 'Logger not running' };
+
+        // see if any transports are writable
+        const transports: any[] = [ ];
+        Logger.logger.transports.forEach(t => {
+            transports.push({
+                name: t.name,
+                constructor: t.constructor.name,
+                silent: t.silent,
+                level: t.level,
+                writeable: typeof t.write === 'function'
+            })
+        });
+        const numActiveTransports: number = transports.filter(t => t.writeable).length;
+
+        // grab manager metrics to get queue size (backpressure)
+        const rateManagerMetrics: RateManagerMetrics | undefined = Logger.rateManager?.getMetrics();
+
+        const result: LoggerResult = {
+            success: true,
+            message: 'Logger status',
+            data: {
+                isActive: Logger.isActive(),
+                numTransports: numActiveTransports,
+                path: Logger.logDir,
+                queueSize: rateManagerMetrics?.queueLength ?? -1,
+                transports,
+                stats: Logger.getStats(),
+            }
+        };
+        return result;
+    }
     //#endregion
 
     //#region LOG
     private static async postLog(entry: LogEntry): Promise<LoggerResult> {
         // see if we're configured/active
         if(Logger.isActive()===false || Logger.logger===null) {
-            console.error('Logger.postLog: failed to post. No logger...\n',entry,Logger.isActive(),Logger.logger);
+            Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'post log failed','no logger system',entry,'RecordKeeper.Logger');
             return { success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` };
         }
 
@@ -482,7 +526,7 @@ export class Logger {
         // before moving on.
         return new Promise<LoggerResult>((resolve)=> {
             if(Logger.isActive()===false || Logger.logger===null) {
-                console.error('Logger.postLogToWinston: failed to post. No logger...\n',entry);
+                Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'post to Winston failed','no logger system',entry,'RecordKeeper.Logger');
                 resolve({ success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` });
                 return;
             }
@@ -529,6 +573,27 @@ export class Logger {
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
         return Logger.postLog(Logger.getLogEntry(LogLevel.PERFORMANCE, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+    }
+    public static fallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
+        switch(level) {
+            case LogLevel.CRITICAL:
+            case LogLevel.ERROR:
+                console.error(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                break;
+            
+            case LogLevel.WARNING:
+                console.warn(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                break;
+
+            case LogLevel.DEBUG:
+                console.debug(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                break;
+
+            case LogLevel.INFO:
+            case LogLevel.PERFORMANCE:
+                console.info(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                break;
+        }
     }
     //#endregion
 
