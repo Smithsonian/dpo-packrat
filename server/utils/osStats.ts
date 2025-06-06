@@ -189,7 +189,6 @@ export class UsageMonitor {
         if (this.verboseSamples) {
             if (++this.verboseCount >= this.verboseSamples) {
                 this.verboseCount = 0;
-                // LOG.info(`UsageMonitor.sample ${this.emitInfo()}`, LOG.LS.eSYS);
                 RK.logPerformance(RK.LogSection.eSYS,'system usage stats',undefined,this.emitInfo(),'UsageMonitor');
             }
         }

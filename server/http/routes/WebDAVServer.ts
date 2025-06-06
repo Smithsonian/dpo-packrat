@@ -219,6 +219,8 @@ class WebDAVFileSystem extends webdav.FileSystem {
     /** Returns true if caller should try again, calling callback when done */
     protected async getPropertyFromResource(pathWD: webdav.Path, propertyName: string, allowMissing: boolean, callback: webdav.ReturnCallback<any>): Promise<void> {
         try {
+            RK.logInfo(RK.LogSection.eHTTP,'get property from resource','START',{ pathWD, propertyName },'HTTP.Route.WebDAV');
+
             const pathS: string = pathWD.toString();
             const logPrefix: string = `WebDAVFileSystem._${propertyName}(${pathS})`;
             let resource: FileSystemResource | undefined = this.getResource(pathS);
@@ -255,7 +257,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 if (!resource) {
                     if (!allowMissing) {
                         const error: string = `${logPrefix} failed to compute resource`;
-                        RK.logError(RK.LogSection.eHTTP,'before request failed','cannot compute resource',{},'HTTP.Route.WebDAV');
+                        RK.logError(RK.LogSection.eHTTP,'get property from resource failed','cannot compute resource',{},'HTTP.Route.WebDAV');
                         callback(new Error(error));
                         return;
                     }
@@ -276,6 +278,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
             else
                 LOG.info(logPrefix, LOG.LS.eHTTP);
             */
+            RK.logDebug(RK.LogSection.eHTTP,'get property from resource','DONE',{ pathWD, propertyName },'HTTP.Route.WebDAV');
             if (propertyName !== 'create')
                 callback(undefined, resource[propertyName]);
             else

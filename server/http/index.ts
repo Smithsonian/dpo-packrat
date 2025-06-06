@@ -64,7 +64,11 @@ export class HttpServer {
             return false;
         }
         RK.logInfo(RK.LogSection.eSYS,'system started: Logger',undefined,loggerResult.data,'HttpServer');
-        RK.checkStatus(1000);
+        RK.checkStatus(3000);
+
+        // setInterval(() => {
+        //     console.log(`[heartbeat] ${new Date().toISOString()}`);
+        // }, 3000);
 
         // get our webDAV server
         this.WDSV = await WebDAVServer.server();
@@ -296,6 +300,7 @@ export class HttpServer {
 
 process.on('uncaughtException', (err) => {
     RK.logCritical(RK.LogSection.eSYS,'uncaught exception',err.message,undefined,'HttpServer');
+    console.trace('unhandled exception');
 
     // For the time being, we prevent Node from exiting.
     // Once we've installed a process monitor in staging & production, like PM2, change this to
@@ -306,4 +311,5 @@ process.on('uncaughtException', (err) => {
 // Catch unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     RK.logCritical(RK.LogSection.eSYS,'unhandled rejection','a Promise reject was not handled', { promise, reason },'HttpServer');
+    console.trace('unhandled rejection');
 });

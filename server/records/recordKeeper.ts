@@ -5,8 +5,6 @@ import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection, LogLevel  } from './logger/log';
 import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
-import { NotifyEmail } from './notify/notifyEmail';
-import { NotifySlack } from './notify/notifySlack';
 
 // temp definition for where IOResults will be
 export type IOResults = {
@@ -466,7 +464,7 @@ export class RecordKeeper {
                         RecordKeeper.logInfo(LogSection.eSYS,'Logger status','no writeable transports',{ path: logStatus.data.path, transports: logStatus.data.transports },'RecordKeeper');
                     return RecordKeeper.convertResults(logStatus);
                 }
-                
+
                 // TODO: notices if high backpressure
 
                 // output status
@@ -476,14 +474,14 @@ export class RecordKeeper {
             }
 
             case SubSystem.NOTIFY_EMAIL: {
-                const emailStatus = NotifyEmail.getStatus();
+                const emailStatus = NOTIFY.getEmailStatus();
 
                 if(!emailStatus.success || !emailStatus.data || !emailStatus.data.isActive) {
                     if(doLog)
                         RecordKeeper.logError(LogSection.eSYS,'Email status','system not available',{},'RecordKeeper');
                     return RecordKeeper.convertResults(emailStatus);
                 }
-                
+
                 // TODO: notices if high backpressure
 
                 // output status
@@ -493,14 +491,14 @@ export class RecordKeeper {
             }
 
             case SubSystem.NOTIFY_SLACK: {
-                const slackStatus = NotifySlack.getStatus();
+                const slackStatus = NOTIFY.getSlackStatus();
 
                 if(!slackStatus.success || !slackStatus.data || !slackStatus.data.isActive) {
                     if(doLog)
                         RecordKeeper.logError(LogSection.eSYS,'Slack status','system not available',{},'RecordKeeper');
                     return RecordKeeper.convertResults(slackStatus);
                 }
-                
+
                 // TODO: notices if high backpressure
 
                 // output status
@@ -515,6 +513,7 @@ export class RecordKeeper {
     static checkStatus(intervalMs: number): void {
         setInterval(() => {
             const result = RecordKeeper.getStatus(SubSystem.LOGGER, true);
+            // console.log(`>>>> checkStatus interval (${result.data.queueSize})`);
             if(!result.success)
                 RecordKeeper.logError(LogSection.eSYS,'check status failed',result.message,result.data,'RecordKeeper');
         }, intervalMs);
