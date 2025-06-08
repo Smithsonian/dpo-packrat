@@ -55,12 +55,12 @@ export class RateManager<T> {
             const section: string = 'SYS'.padStart(5);
             const level = !success ? 'error' : isDebug ? 'debug' : 'info';
             const levelPad: string = (level.length<6) ? ' '.repeat(6-level.length) : '';
-            
+
             // using 'log' for all output since error would output traces which we don't want in our logs
             console.log(`${timestamp} [00000] U--- ${section} ${levelPad}${level}: [FALLBACK|RateManager] ${message} (${JSON.stringify(data)})`);
         });
         const onPost = cfg.onPost ?? (async (entry: T) => {
-            onLog(true, 'unconfigured onPost', { ...entry }); 
+            onLog(true, 'unconfigured onPost', { ...entry });
             return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
         });
 
@@ -213,7 +213,7 @@ export class RateManager<T> {
         }
 
         if (this.debugMode)
-                this.config.onLog(true,'done processing queue',{},true);
+            this.config.onLog(true,'done processing queue',{},true);
 
         // Return the result of the last processed item or batch
         this.isRunning = false;
@@ -377,7 +377,7 @@ export class RateManager<T> {
             lastSample.startSize = currentSize;
 
             if(this.debugMode===true)
-                this.config.onLog(true,'metrics update',{numEntries: currentDiff, rates: this.metrics.rates });
+                this.config.onLog(true,'metrics update',{ numEntries: currentDiff, rates: this.metrics.rates });
 
             await this.delay(interval);
         }

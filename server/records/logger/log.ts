@@ -100,7 +100,7 @@ export class Logger {
                 burstRate,
                 burstThreshold,
                 onPost: Logger.postLogToWinston,
-                onLog: ((success:boolean, message: string, data?: any, isDebug?: boolean)=>{
+                onLog: ((success: boolean, message: string, data?: any, isDebug?: boolean)=>{
                     if(success===false)
                         Logger.error(LogSection.eSYS,'rate manager failed',message,data,'RateManager.Logger');
                     else if(isDebug===true)
@@ -260,7 +260,7 @@ export class Logger {
     }
     public static setDebugMode(value: boolean): void {
         Logger.debugMode = value;
-    } 
+    }
     public static getStats(): LoggerStats {
         Logger.stats.counts.total = (Logger.stats.counts.critical + Logger.stats.counts.error + Logger.stats.counts.warning + Logger.stats.counts.info + Logger.stats.counts.debug);
         return Logger.stats;
@@ -314,7 +314,7 @@ export class Logger {
     public static safeInspect = (data: any) => {
         // safely inspect an object and output to the native console
         console.log(util.inspect(data, { depth: 4, colors: true }));
-    }
+    };
     //#endregion
 
     //#region UTILS
@@ -516,7 +516,7 @@ export class Logger {
                 return '\x1b[37m';
         }
     }
-    
+
     // remove circular dependencies from submitted data to be logged
     private static stripCircular = <T>(obj: T): T => {
         const seen = new WeakSet();
@@ -527,7 +527,7 @@ export class Logger {
             }
             return value;
         }));
-    }
+    };
     //#endregion
 
     //#region LOG
@@ -607,7 +607,7 @@ export class Logger {
         return Logger.postLog(Logger.getLogEntry(LogLevel.PERFORMANCE, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
     public static fallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
-        
+
         const timestamp: string = new Date().toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
         const section: string = sec ? sec.padStart(5) : '-----';
         const levelPad: string = (level.toString().length<6) ? ' '.repeat(6-level.toString().length) : '';
