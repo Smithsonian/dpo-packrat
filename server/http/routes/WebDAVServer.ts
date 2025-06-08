@@ -70,12 +70,12 @@ export class WebDAVServer {
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
-            RK.logInfo(RK.LogSection.eHTTP,'before request',`${ctx.request.method} ${ctx.request.url} start`,{},'HTTP.Route.WebDAV');
+            RK.logDebug(RK.LogSection.eHTTP,'before request',`${ctx.request.method} ${ctx.request.url} start`,{},'HTTP.Route.WebDAV');
             next();
         });
         this.server.afterRequest((ctx, next) => {
             // Display the method, the URI, the returned status code and the returned message
-            RK.logInfo(RK.LogSection.eHTTP,'after request',`${ctx.request.method} ${ctx.request.url} end`,{ ...ctx.response },'HTTP.Route.WebDAV');
+            RK.logInfo(RK.LogSection.eHTTP,'request',`${ctx.request.method} ${ctx.request.url}`,{ statusCode: ctx.response.statusCode, statusText: ctx.response.statusMessage, writeable: ctx.response.writable },'HTTP.Route.WebDAV');
             next();
         });
     }
@@ -219,7 +219,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
     /** Returns true if caller should try again, calling callback when done */
     protected async getPropertyFromResource(pathWD: webdav.Path, propertyName: string, allowMissing: boolean, callback: webdav.ReturnCallback<any>): Promise<void> {
         try {
-            RK.logInfo(RK.LogSection.eHTTP,'get property from resource','START',{ pathWD, propertyName },'HTTP.Route.WebDAV');
+            // RK.logInfo(RK.LogSection.eHTTP,'get property from resource','START',{ pathWD, propertyName },'HTTP.Route.WebDAV');
 
             const pathS: string = pathWD.toString();
             const logPrefix: string = `WebDAVFileSystem._${propertyName}(${pathS})`;
@@ -345,7 +345,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
     async _openReadStream(pathWD: webdav.Path, _info: webdav.OpenReadStreamInfo, callback: webdav.ReturnCallback<Readable>): Promise<void> {
         try {
             const pathS: string = pathWD.toString();
-            RK.logDebug(RK.LogSection.eHTTP,'open read stream',undefined,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
+            RK.logInfo(RK.LogSection.eHTTP,'open read stream',undefined,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
 
             const DP: DownloaderParser = new DownloaderParser('', pathS);
             const DPResults: DownloaderParserResults = await DP.parseArguments();
@@ -420,6 +420,8 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
     async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo,
         callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): Promise<void> {
+
+        RK.logInfo(RK.LogSection.eHTTP,'open write stream',undefined,{ pathWebDAV: pathWD },'HTTP.Route.WebDAV');
 
         try {
             /*

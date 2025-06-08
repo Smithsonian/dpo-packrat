@@ -15,6 +15,7 @@ export interface RateManagerConfig<T> {
     minInterval?: number,       // minimum duration for a batch/interval in ms. (higher values use less resources)
     metricsInterval?: number,   // the rate in which metrics (averages) are calculated in ms (default: 5s)
     onPost: ((entry: T) => Promise<RateManagerResult>),     // function to call when posting an entry
+    onLog?: (success: boolean, message: string, data?: any, isDebug?: boolean) => void; // optional logging callback
 }
 export interface RateManagerMetrics {
     counts: {
@@ -48,16 +49,30 @@ export class RateManager<T> {
     constructor(cfg: Partial<RateManagerConfig<T>>) {
         // merge our configs with what the user provided
         // we use partial to gaurantee that the properties have values
+        const onLog = cfg.onLog ?? ((success: boolean, message: string, data?: any, isDebug: boolean = false) => {
+            // properties to mimic standard formatting
+            const timestamp: string = new Date().toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
+            const section: string = 'SYS'.padStart(5);
+            const level = !success ? 'error' : isDebug ? 'debug' : 'info';
+            const levelPad: string = (level.length<6) ? ' '.repeat(6-level.length) : '';
+            
+            // using 'log' for all output since error would output traces which we don't want in our logs
+            console.log(`${timestamp} [00000] U--- ${section} ${levelPad}${level}: [FALLBACK|RateManager] ${message} (${JSON.stringify(data)})`);
+        });
+        const onPost = cfg.onPost ?? (async (entry: T) => {
+            onLog(true, 'unconfigured onPost', { ...entry }); 
+            return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
+        });
+
+        // build our config object
         this.config = {
             targetRate: cfg.targetRate ?? 10,
             burstRate: cfg.burstRate ?? 50,
             burstThreshold: cfg.burstThreshold ?? 250,
             minInterval: cfg.minInterval ?? 1000,
             metricsInterval: cfg.metricsInterval ?? 1000,
-            onPost: cfg.onPost ?? (async (entry: T) => {
-                console.log('[RateManager] Unconfigured onPost',entry);
-                return { success: true, message: 'Unconfigured onPost', data: { ...entry } };
-            }),
+            onPost,
+            onLog
         };
 
         this.metrics = {
@@ -100,6 +115,9 @@ export class RateManager<T> {
     public getConfig(): RateManagerConfig<T> {
         return this.config;
     }
+    public setDebugMode(value: boolean): void {
+        this.debugMode = value;
+    }
 
     public startManager(): void {
         // start our queue if needed. used if manager is stopped with entries still in the queue.
@@ -128,6 +146,8 @@ export class RateManager<T> {
                 return { success: false, message: 'timed out. queue did not drain.', queueSize: this.queue.length };
 
             await this.delay(interval);
+            if (this.debugMode)
+                this.config.onLog(true, 'rate manager waiting until idle...',{},true);
         }
 
         return { success: true, message: 'drained queue', queueSize };
@@ -156,11 +176,14 @@ export class RateManager<T> {
     }
     private switchToBurstMode(): void {
         this.mode = 'burst';
-        console.warn('Switched to burst mode');
+        if (this.debugMode)
+            this.config.onLog(true,'switched to burst mode',{},true);
     }
     private switchToNormalMode(): void {
         this.mode = 'standard';
-        console.warn('Switched to normal mode');
+
+        if (this.debugMode)
+            this.config.onLog(true,'switch to normal target mode',{},true);
     }
 
     private async processQueue(): Promise<void> {
@@ -173,15 +196,24 @@ export class RateManager<T> {
         while (this.queue.length > 0 && this.isRunning) {
             this.updateRate(this.queue.length);
 
+            if (this.debugMode)
+                this.config.onLog(true,'updating queue',{ queueSize: this.queue.length },true);
+
             if (this.mode === 'burst')
                 lastResult = await this.processAtBurstRate();
             else
                 lastResult = await this.processAtTargetRate();
 
+            if(lastResult.success===false && this.debugMode)
+                this.config.onLog(false,`error processing queue: ${lastResult.message}`,{});
+
             // add our delay as calculated, if success
             if(lastResult.data)
                 await this.delay(Math.max(0, lastResult.data.delayForRate));
         }
+
+        if (this.debugMode)
+                this.config.onLog(true,'done processing queue',{},true);
 
         // Return the result of the last processed item or batch
         this.isRunning = false;
@@ -198,29 +230,38 @@ export class RateManager<T> {
         // place to store our accumulated failed messages
         const failedMessages: Array<{ entry: T, reason: string }> = [];
 
-        if(this.debugMode===true)
-            console.log('[RateManager] process: pre batch', { idealEntriesPerSecond, processingTimePerEntry, maxEntriesPerBatch, batchSize });
+        if (this.debugMode)
+            this.config.onLog(true,'burst process: pre batch',{ idealEntriesPerSecond, processingTimePerEntry, maxEntriesPerBatch, batchSize },true);
 
         // Process each entry in the batch
         const startTime: number = Date.now();
         await Promise.all(batch.map(async (queueItem) => {
             let attempts = 0;
-            let success = false;
+            let isDone = false;
             let result: RateManagerResult;
 
-            while (attempts < 3 && !success) {
+            while (attempts < 3 && isDone===false) {
                 attempts++;
                 result = await this.config.onPost(queueItem.entry);
 
-                if (result.success) {
+                if (result.success===true) {
                     // Resolve the promise as successful
+                    if (this.debugMode)
+                        this.config.onLog(true,'post request successful',{ ...result },true);
+
                     queueItem.resolve(result);
-                    success = true;
+                    isDone = true;
                 } else if (attempts < 3) {
                     // Delay before retrying (small delay between retries)
+                    if (this.debugMode)
+                        this.config.onLog(true,'retrying message',{ ...result },true);
+
                     await this.delay(500);
                 } else {
                     // Max retries reached, resolve as failed and add to failedMessages
+                    if (this.debugMode)
+                        this.config.onLog(false,'failed to post',{ ...result });
+
                     queueItem.resolve(result);
                     failedMessages.push({ entry: queueItem.entry, reason: result.message });
                 }
@@ -244,7 +285,7 @@ export class RateManager<T> {
         const delayForRate = Math.max(0, (targetTimeForBatch - processingTime) * 1000);
 
         if(this.debugMode===true)
-            console.log('[RateManager] process: post batch', { actualRate, delayForRate });
+            this.config.onLog(true,'burst process: post batch',{ actualRate, delayForRate },true);
 
         // if we had an failed then we return these results
         if (failedMessages.length > 0)
@@ -260,7 +301,10 @@ export class RateManager<T> {
 
         // post/process our entry and resolve its promise when done
         const startTime: number = Date.now();
+
+        if (this.debugMode) this.config.onLog(true,'target process: pre onPost',{},true);
         const result = await this.config.onPost(entry.entry);
+        if (this.debugMode) this.config.onLog(true,'target process: post onPost',{ ... result },true);
         entry.resolve(result);
 
         // update our metrics
@@ -333,7 +377,7 @@ export class RateManager<T> {
             lastSample.startSize = currentSize;
 
             if(this.debugMode===true)
-                console.log(`[RateManager] metrics update: (${currentDiff} entries | current: ${this.metrics.rates.current}/s | avg: ${this.metrics.rates.average}/s | max: ${this.metrics.rates.max}/s)`);
+                this.config.onLog(true,'metrics update',{numEntries: currentDiff, rates: this.metrics.rates });
 
             await this.delay(interval);
         }

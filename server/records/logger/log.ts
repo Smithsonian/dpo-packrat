@@ -8,6 +8,7 @@
 import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as util from 'util';
 import { RateManager, RateManagerConfig, RateManagerMetrics, RateManagerResult } from '../utils/rateManager';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { LogLevel, LogSection } from './logTypes';
@@ -99,6 +100,14 @@ export class Logger {
                 burstRate,
                 burstThreshold,
                 onPost: Logger.postLogToWinston,
+                onLog: ((success:boolean, message: string, data?: any, isDebug?: boolean)=>{
+                    if(success===false)
+                        Logger.error(LogSection.eSYS,'rate manager failed',message,data,'RateManager.Logger');
+                    else if(isDebug===true)
+                        Logger.debug(LogSection.eSYS,'rate manager',message,data,'RateManager.Logger');
+                    else
+                        Logger.info(LogSection.eSYS,'rate manager',message,data,'RateManager.Logger');
+                })
             };
 
             // if we already have a manager we re-configure it (causes restart). otherwise, we create a new one
@@ -228,7 +237,11 @@ export class Logger {
             Logger.logger.on('error', (err) => {
                 Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'Winston stream failed',err,undefined,'RecordKeeper.Logger');
             });
-
+            Logger.logger.transports.forEach(t => {
+                t.on('error', (err) => {
+                    Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'Winston transport failed',err,{ name: t.name, constructor: t.constructor.name },'RecordKeeper.Logger');
+                });
+            });
             // add our custom colors as well
             addColors(customLevels.colors);
 
@@ -245,12 +258,62 @@ export class Logger {
 
         return { success: true, message: `configured Logger. Sending to file ${(environment===ENVIRONMENT_TYPE.DEVELOPMENT) ? 'and console' : ''}` };
     }
+    public static setDebugMode(value: boolean): void {
+        Logger.debugMode = value;
+    } 
     public static getStats(): LoggerStats {
         Logger.stats.counts.total = (Logger.stats.counts.critical + Logger.stats.counts.error + Logger.stats.counts.warning + Logger.stats.counts.info + Logger.stats.counts.debug);
         return Logger.stats;
     }
-    public static setDebugMode(value: boolean): void {
-        Logger.debugMode = value;
+    public static getStatus(): LoggerResult {
+
+        if(Logger.isActive()===false)
+            return { success: false, message: 'Logger not running' };
+
+        // see if any transports are writable
+        const transports: any[] = [ ];
+        Logger.logger.transports.forEach(t => {
+            transports.push({
+                name: t.name,
+                constructor: t.constructor.name,
+                silent: t.silent,
+                level: t.level,
+                writeable: typeof t.write === 'function'
+            });
+        });
+        const numActiveTransports: number = transports.filter(t => t.writeable).length;
+
+        // grab manager metrics to get queue size (backpressure)
+        const rateManagerMetrics: RateManagerMetrics | undefined = Logger.rateManager?.getMetrics();
+
+        const result: LoggerResult = {
+            success: true,
+            message: 'Logger status',
+            data: {
+                isActive: Logger.isActive(),
+                numTransports: numActiveTransports,
+                path: Logger.logDir,
+                queueSize: rateManagerMetrics?.queueLength ?? -1,
+                transports,
+                stats: Logger.getStats(),
+            }
+        };
+        return result;
+    }
+    public static async waitForQueueToDrain(timeout: number = 10000): Promise<LoggerResult> {
+        // wait for our queue to empty out
+        if(!this.rateManager)
+            return { success: false, message: 'no manager running' };
+
+        const result = await this.rateManager.waitUntilIdle(timeout);
+        if(!result.success)
+            return { success: false, message: result.message, data: { queueSize: result.queueSize } };
+
+        return { success: true, message: result.message };
+    }
+    public static safeInspect = (data: any) => {
+        // safely inspect an object and output to the native console
+        console.log(util.inspect(data, { depth: 4, colors: true }));
     }
     //#endregion
 
@@ -315,8 +378,8 @@ export class Logger {
             result = '';
         }
 
-        // Truncate to 160 characters with ellipsis if needed
-        return result.length > 160 ? result.slice(0, 157) + '...' : result;
+        // Truncate to 145 characters with ellipsis if needed
+        return result.length > 145 ? result.slice(0, 142) + '...' : result;
     }
     private static flattenObject(obj: object, prefix = ''): Record<string, string> {
         return Object.keys(obj).reduce((acc, key) => {
@@ -398,7 +461,7 @@ export class Logger {
             lastSample.startSize = currentSize;
 
             if(Logger.debugMode===true)
-                console.log(`\tLog metrics update: (${Logger.stats.metrics.logRate} log/s | avg: ${Logger.stats.metrics.logRateAvg})`);
+                Logger.performance(LogSection.eSYS,'metrics update',undefined,{ ...Logger.stats.metrics },'RecordKeeper.Logger');
 
             await Logger.delay(interval);
         }
@@ -453,55 +516,17 @@ export class Logger {
                 return '\x1b[37m';
         }
     }
-
-    // wait for our queue to empty out
-    public static async waitForQueueToDrain(timeout: number = 10000): Promise<LoggerResult> {
-
-        if(!this.rateManager)
-            return { success: false, message: 'no manager running' };
-
-        const result = await this.rateManager.waitUntilIdle(timeout);
-        if(!result.success)
-            return { success: false, message: result.message, data: { queueSize: result.queueSize } };
-
-        return { success: true, message: result.message };
-    }
-
-    // get status of log system
-    public static getStatus(): LoggerResult {
-
-        if(Logger.isActive()===false)
-            return { success: false, message: 'Logger not running' };
-
-        // see if any transports are writable
-        const transports: any[] = [ ];
-        Logger.logger.transports.forEach(t => {
-            transports.push({
-                name: t.name,
-                constructor: t.constructor.name,
-                silent: t.silent,
-                level: t.level,
-                writeable: typeof t.write === 'function'
-            })
-        });
-        const numActiveTransports: number = transports.filter(t => t.writeable).length;
-
-        // grab manager metrics to get queue size (backpressure)
-        const rateManagerMetrics: RateManagerMetrics | undefined = Logger.rateManager?.getMetrics();
-
-        const result: LoggerResult = {
-            success: true,
-            message: 'Logger status',
-            data: {
-                isActive: Logger.isActive(),
-                numTransports: numActiveTransports,
-                path: Logger.logDir,
-                queueSize: rateManagerMetrics?.queueLength ?? -1,
-                transports,
-                stats: Logger.getStats(),
+    
+    // remove circular dependencies from submitted data to be logged
+    private static stripCircular = <T>(obj: T): T => {
+        const seen = new WeakSet();
+        return JSON.parse(JSON.stringify(obj, (_key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) return '[Circular]';
+                seen.add(value);
             }
-        };
-        return result;
+            return value;
+        }));
     }
     //#endregion
 
@@ -513,12 +538,19 @@ export class Logger {
             return { success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` };
         }
 
+        // if we're in debug mode we inspect all data coming in for circular dependencies
+        if(Logger.debugMode===true)
+            Logger.safeInspect(entry);
+
+        // strip any circular dependencies
+        const safeEntry = Logger.stripCircular(entry);
+
         // if we have the rate manager running, queue it up
         // otherwise just send to the logger
         if(Logger.rateManager)// && Logger.rateManager.isActive()===true)
-            return Logger.rateManager.add(entry);
+            return Logger.rateManager.add(safeEntry);
         else {
-            return Logger.postLogToWinston(entry);
+            return Logger.postLogToWinston(safeEntry);
         }
     }
     private static async postLogToWinston(entry: LogEntry): Promise<LoggerResult> {
@@ -575,23 +607,31 @@ export class Logger {
         return Logger.postLog(Logger.getLogEntry(LogLevel.PERFORMANCE, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
     }
     public static fallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
+        
+        const timestamp: string = new Date().toISOString().replace('T', ' ').replace('Z', '').split('.')[0];
+        const section: string = sec ? sec.padStart(5) : '-----';
+        const levelPad: string = (level.toString().length<6) ? ' '.repeat(6-level.toString().length) : '';
+
+        if(reason.length>0)
+            data = { reason, ...data };
+
         switch(level) {
             case LogLevel.CRITICAL:
             case LogLevel.ERROR:
-                console.error(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                console.error(`${timestamp} [00000] U--- ${section} ${levelPad}${level}: [FALLBACK|${caller}] ${message} (${Logger.processData(data)})`);
                 break;
-            
+
             case LogLevel.WARNING:
-                console.warn(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                console.warn(`${timestamp} [00000] U--- ${section} ${levelPad}${level}: [FALLBACK|${caller}] ${message} (${Logger.processData(data)})`);
                 break;
 
             case LogLevel.DEBUG:
-                console.debug(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                console.debug(`${timestamp} [00000] U--- ${section} ${levelPad}${level}: [FALLBACK|${caller}] ${message} (${Logger.processData(data)})`);
                 break;
 
             case LogLevel.INFO:
             case LogLevel.PERFORMANCE:
-                console.info(`[${caller}] ${sec}: ${message}, ${reason} (data: ${JSON.stringify(data)}) - FALLBACK`);
+                console.info(`${timestamp} [00000] U--- ${section} ${levelPad}${level}: [FALLBACK|${caller}] ${message} (${Logger.processData(data)})`);
                 break;
         }
     }
@@ -794,22 +834,17 @@ export class Logger {
         while ((Logger.stats.counts.total - startCount) < numLogs) {
 
             if(Logger.debugMode)
-                console.log('waiting for logs to post: ',(Logger.stats.counts.total - startCount) +'|'+numLogs);
+                Logger.debug(LogSection.eSYS,'test logs',`waiting for logs to post: ${(Logger.stats.counts.total - startCount)}`,{ numLogs },'RecordKeeper.Logger');
 
             // Check if timeout has been reached
             if (Date.now() - startTime > timeout) {
-                console.error('Timeout reached while waiting for logs.');
+                Logger.error(LogSection.eSYS,'test logs failed','Timeout reached while waiting for logs',{},'RecordKeeper.Logger');
                 break;
             }
 
             // Wait for 1 second before checking again
             await Logger.delay(1000);
         }
-
-        // test await/async
-        // console.log('pre');
-        // const t = await Logger.info(LogSection.eTEST, 'await test' );
-        // console.log('post',t);
 
         // close our profiler and return results
         const result = await Logger.profileEnd(profileKey);
