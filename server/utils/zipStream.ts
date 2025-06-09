@@ -1,6 +1,6 @@
 import JSZip, * as JSZ from 'jszip';
-import * as LOG from './logger';
 import * as H from './helpers';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 import { IZip, zipFilterResults } from './IZip';
 
 /**
@@ -22,6 +22,7 @@ export class ZipStream implements IZip {
     async load(): Promise<H.IOResults> {
         if (!this._inputStream) {
             const error: string = 'ZipStream.load called with no input stream';
+            RK.logError(RK.LogSection.eSYS,'load failed','called with no input stream',{ files: this._files },'Utils.ZipStream');
             return { success: false, error };
         }
 
@@ -37,7 +38,7 @@ export class ZipStream implements IZip {
             this._zip = await JSZ.loadAsync(await P);
             return this.extractEntries();
         } catch (err) /* istanbul ignore next */ {
-            LOG.error('ZipStream.load', LOG.LS.eSYS, err);
+            RK.logError(RK.LogSection.eSYS,'load failed',H.Helpers.getErrorString(err),{ files: this._files },'Utils.ZipStream');
             return { success: false, error: 'ZipStream.load' };
         }
     }
@@ -51,7 +52,7 @@ export class ZipStream implements IZip {
             this._zip.file(fileNameAndPath, H.Helpers.readFileFromStreamThrowErrors(inputStream), { binary: true });
             return this.extractEntries(); // Order n^2 if we're add()'ing lots of entries.
         } catch (err) /* istanbul ignore next */ {
-            LOG.error('ZipStream.add', LOG.LS.eSYS, err);
+            RK.logError(RK.LogSection.eSYS,'add failed',H.Helpers.getErrorString(err),{ path: fileNameAndPath, files: this._files },'Utils.ZipStream');
             return { success: false, error: 'ZipStream.add' };
         }
     }
@@ -66,7 +67,7 @@ export class ZipStream implements IZip {
                 this.extractEntry(entry);
         } catch (err) /* istanbul ignore next */ {
             const error: string = `ZipStream.extractEntries: ${JSON.stringify(err)}`;
-            LOG.error(error, LOG.LS.eSYS,);
+            RK.logError(RK.LogSection.eSYS,'extract entries failed',H.Helpers.getErrorString(err),{ files: this._files },'Utils.ZipStream');
             return { success: false, error };
         }
         return { success: true };
@@ -98,17 +99,19 @@ export class ZipStream implements IZip {
 
     async streamContent(entry: string | null): Promise<NodeJS.ReadableStream | null> {
         try {
-            if (!this._zip)
+            if (!this._zip) {
+                RK.logError(RK.LogSection.eSYS,'stream content failed','no zip object',{ entry, files: this._files },'Utils.ZipStream');
                 return null;
+            }
             if (!entry)
                 return this._zip.generateNodeStream({ streamFiles: true, compression: 'DEFLATE', compressionOptions: { level: 8 } }); // we seem to experience issues with zipFile uncompressing "level 9" compression, which perahsp corresponds to PKWare's DEFLATE64, per this article: https://github.com/thejoshwolfe/yauzl/issues/58
             else {
                 const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
+                RK.logError(RK.LogSection.eSYS,'stream content failed','no zip object from entry',{ entry, files: this._files },'Utils.ZipStream');
                 return (ZO) ? ZO.nodeStream() : null;
             }
         } catch (err) /* istanbul ignore next */ {
-            const error: string = `ZipStream.streamContent: ${JSON.stringify(err)}`;
-            LOG.error(error, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'load failed',H.Helpers.getErrorString(err),{ entry, files: this._files },'Utils.ZipStream');
             return null;
         }
     }
@@ -116,9 +119,13 @@ export class ZipStream implements IZip {
     async uncompressedSize(entry: string): Promise<number | null> {
         const stream: NodeJS.ReadableStream | null = await this.streamContent(entry);
         if (!stream) {
-            return (this._dirs.has(entry))
-                ? 0                 // 0 means a directory or zero-length file
-                : null;             // null means invalid entry
+            if(this._dirs.has(entry)) {
+                RK.logWarning(RK.LogSection.eSYS,'compute uncompressed size','directory or zero length file',{ entry },'Utils.ZipStream');
+                return 0;
+            } else {
+                RK.logError(RK.LogSection.eSYS,'compute uncompressed size failed','invalid entry',{ entry },'Utils.ZipStream');
+                return null;
+            }
         }
         return H.Helpers.computeSizeOfStream(stream);
     }

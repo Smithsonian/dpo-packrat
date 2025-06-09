@@ -80,7 +80,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         document.head.appendChild(css);
 
         const script = document.createElement('script');
-        script.src = Config.voyager.storyJS;
+        script.src = Config.voyager.storyJS; // specific version: 'https://3d-api.si.edu/resources/js/v0.50.0/voyager-story.min.js';
         script.async = true;
         document.body.appendChild(script);
 

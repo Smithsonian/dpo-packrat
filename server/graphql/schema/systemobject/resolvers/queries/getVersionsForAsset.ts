@@ -2,7 +2,7 @@ import { DetailVersion, GetVersionsForAssetResult, QueryGetVersionsForAssetArgs 
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import * as COMMON from '@dpo-packrat/common';
 
@@ -13,17 +13,17 @@ export default async function getVersionsForAsset(_: Parent, args: QueryGetVersi
     const versions: DetailVersion[] = [];
     const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if (!SO) {
-        LOG.error(`getVersionsForAsset unable to load system object for id ${idSystemObject}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get versions for asset failed',`unable to load system object for id ${idSystemObject}`,{  },'GraphQL.SystemObject.Versions');
         return { versions };
     }
     if (!SO.idAsset) {
-        LOG.error(`getVersionsForAsset loaded non-asset system object ${JSON.stringify(SO)}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get versions for asset failed','loaded non-asset system object',{ ...SO },'GraphQL.SystemObject.Versions');
         return { versions };
     }
 
     const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(SO.idAsset, false);
     if (!assetVersions) {
-        LOG.error(`getVersionsForAsset unable to load asset versions for asset ${SO.idAsset}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get versions for asset failed',`unable to load asset versions for asset ${SO.idAsset}`,{  },'GraphQL.SystemObject.Versions');
         return { versions };
     }
 

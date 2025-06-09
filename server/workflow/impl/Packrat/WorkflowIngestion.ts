@@ -2,10 +2,8 @@ import * as WF from '../../interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
-import * as LOG  from '../../../utils/logger';
 import { Config } from '../../../config';
-import { RecordKeeper } from '../../../records/recordKeeper';
-// import { LogSection } from '../../../records/logger/log';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // This Workflow represents an ingestion action, typically initiated by a user.
 // The workflow itself performs no work (ingestion is performed in the graphQl ingestData routine)
@@ -53,9 +51,9 @@ export class WorkflowIngestion implements WF.IWorkflow {
         workflowStep.setState(eStatus);
         const success: boolean = await workflowStep.update();
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status',
+        RK.logInfo(RK.LogSection.eWF,'workflow update',undefined,
             { workflowComplete, updated, eStatus, workflow: this.workflowData.workflow, step: this.workflowData.workflowSet },
-            'WorkflowUpload.updateStatus'
+            'Workflow.Ingestion'
         );
 
         // if we're not updated or not finished then just return
@@ -69,33 +67,19 @@ export class WorkflowIngestion implements WF.IWorkflow {
         const workflowSet: number = this.workflowData.workflow?.idWorkflowSet ?? -1;
         const workflows: DBAPI.Workflow[] | null = await DBAPI.Workflow.fetchFromWorkflowSet(workflowSet);
         if(!workflows || workflows.length===0) {
-            LOG.info(`No workflows found from set (${this.workflowData.workflow?.idWorkflowSet})`,LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'update status','no workflows found in set', { idWorkflowSet: this.workflowData.workflow?.idWorkflowSet },'Workflow.Ingestion');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
-
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status worfklows',
-            { workflowSet, workflows },
-            'WorkflowUpload.updateStatus'
-        );
 
         // Get all steps from the workflows
         const workflowSteps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromWorkflowSet(workflowSet);
         if(!workflowSteps || workflowSteps.length===0)
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
 
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status steps',
-            { workflowSteps },
-            'WorkflowUpload.updateStatus'
-        );
-
         // see if any are still going, if so return
         const stillRunning: boolean = workflowSteps.some( step => ![4,5,6].includes(step.State));
-        RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'update status still running',
-            { stillRunning },
-            'WorkflowUpload.updateStatus'
-        );
         if(stillRunning===true) {
-            LOG.info(`Workflow set still running (${this.workflowData.workflow?.idWorkflow} | ${workflowSet})`,LOG.LS.eWF);
+            RK.logDebug(RK.LogSection.eWF,'update status','still running', { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Ingestion');
             return { success, workflowComplete, error: success ? '' : 'Database Error' };
         }
 
@@ -117,9 +101,9 @@ export class WorkflowIngestion implements WF.IWorkflow {
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/ingestion/uploads';
-                await RecordKeeper.sendEmail(
-                    RecordKeeper.NotifyType.JOB_PASSED,
-                    RecordKeeper.NotifyGroup.EMAIL_USER,
+                await RK.sendEmail(
+                    RK.NotifyType.JOB_PASSED,
+                    RK.NotifyGroup.EMAIL_USER,
                     'Ingestion Finished',
                     detailsMessage,
                     startDate,
@@ -130,9 +114,9 @@ export class WorkflowIngestion implements WF.IWorkflow {
 
             case COMMON.eWorkflowJobRunStatus.eError: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RecordKeeper.sendEmail(
-                    RecordKeeper.NotifyType.JOB_FAILED,
-                    RecordKeeper.NotifyGroup.EMAIL_USER,
+                await RK.sendEmail(
+                    RK.NotifyType.JOB_FAILED,
+                    RK.NotifyGroup.EMAIL_USER,
                     'Ingestion Failed',
                     detailsMessage,
                     startDate,
@@ -158,7 +142,7 @@ export class WorkflowIngestion implements WF.IWorkflow {
         // get our constellation
         const wfConstellation: DBAPI.WorkflowConstellation | null = await this.workflowConstellation();
         if(!wfConstellation) {
-            LOG.error('WorkflowIngestion.getWorkflowObject failed. No constellation found. unitialized?',LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'get workflow failed','no constellation found. not initialized?', { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Ingestion');
             return null;
         }
 

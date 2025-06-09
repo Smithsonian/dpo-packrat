@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { ModelMaterial as ModelMaterialBase, ModelObject, Prisma } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements ModelMaterialBase {
     idModelMaterial!: number;
@@ -25,7 +26,8 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            return false;
         }
     }
 
@@ -40,7 +42,8 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            return false;
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
@@ -51,7 +54,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 where: { idModelMaterial, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterial.delete', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
             return false;
         }
     }
@@ -63,7 +66,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             return DBC.CopyObject<ModelMaterialBase, ModelMaterial>(
                 await DBC.DBConnection.prisma.modelMaterial.findUnique({ where: { idModelMaterial, }, }), ModelMaterial);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterial.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
             return null;
         }
     }
@@ -85,7 +88,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 ModelMaterial
             );
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterial.fetchFromModelObjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelObjects failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
             return null;
         }
     }

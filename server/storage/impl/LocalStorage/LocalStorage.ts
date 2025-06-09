@@ -4,10 +4,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ST from './SharedTypes';
 import * as STORE from '../../interface';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { OCFLRoot, ComputeWriteStreamLocationResults } from './OCFLRoot';
 import * as OO from './OCFLObject';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class LocalStorage implements STORE.IStorage {
     private ocflRoot: OCFLRoot;
@@ -17,12 +17,17 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
-        LOG.info(`LocalStorage.initialize using ${rootRepository} and ${rootStaging}`, LOG.LS.eSTR);
-        return await this.ocflRoot.initialize(rootRepository, rootStaging);
+        const result: H.IOResults = await this.ocflRoot.initialize(rootRepository, rootStaging);
+        if(!result.success)
+            RK.logError(RK.LogSection.eSTR,'storage initialize failed',result.error,{ rootRepository, rootStaging },'LocalStorage');
+        else
+            RK.logInfo(RK.LogSection.eSTR,'storage initialize success',undefined,{ rootRepository, rootStaging },'LocalStorage');
+        return result;
     }
 
     async readStream(readStreamInput: STORE.ReadStreamInput): Promise<STORE.ReadStreamResult> {
-        LOG.info(`LocalStorage.readStream ${readStreamInput.storageKey + (readStreamInput.staging ? '' : ('/' + readStreamInput.fileName))}`, LOG.LS.eSTR);
+        RK.logInfo(RK.LogSection.eSTR,'read stream started',undefined,{ ...readStreamInput },'LocalStorage');
+
         const retValue: STORE.ReadStreamResult = {
             readStream: null,
             fileName: null,
@@ -37,15 +42,16 @@ export class LocalStorage implements STORE.IStorage {
             const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
             if (!ocflObjectInitResults.success || !ocflObjectInitResults.ocflObject) {
                 retValue.success = false;
-                retValue.error = ocflObjectInitResults.error;
+                retValue.error = `OFCL error: ${ocflObjectInitResults.error}`;
+                RK.logError(RK.LogSection.eSTR,'read stream failed',retValue.error,{ ...readStreamInput },'LocalStorage');
                 return retValue;
             }
 
-            // LOG.info(`OCFLObject:\n${JSON.stringify(ocflObjectInitResults.ocflObject)}`, LOG.LS.eSTR);
             const pathAndHash: OO.OCFLPathAndHash | null = ocflObjectInitResults.ocflObject.fileLocationAndHash(fileName, version);
             if (!pathAndHash) {
                 retValue.success = false;
-                retValue.error = `LocalStorage.readStream unable to compute path and hash for ${fileName} version ${version}`;
+                retValue.error = 'unable to compute path and hash';
+                RK.logError(RK.LogSection.eSTR,'read stream failed',retValue.error,{ ...readStreamInput },'LocalStorage');
                 return retValue;
             }
             filePath = pathAndHash.path;
@@ -56,7 +62,7 @@ export class LocalStorage implements STORE.IStorage {
             if (!hashResults.success) {
                 retValue.success = false;
                 retValue.error = hashResults.error;
-                LOG.error(retValue.error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'read stream failed',retValue.error,{ ...readStreamInput },'LocalStorage');
                 return retValue;
             }
             fileHash = hashResults.hash;
@@ -70,10 +76,11 @@ export class LocalStorage implements STORE.IStorage {
             retValue.fileName = fileName;
             retValue.success = true;
             retValue.error = '';
+            RK.logInfo(RK.LogSection.eSTR,'read stream success',undefined,{ filePath, ...readStreamInput },'LocalStorage');
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('LocalStorage.readStream', LOG.LS.eSTR, error);
             retValue.success = false;
-            retValue.error = JSON.stringify(error);
+            retValue.error = `stream error: ${H.Helpers.getErrorString(error)}`;
+            RK.logError(RK.LogSection.eSTR,'read stream failed',retValue.error,{ ...readStreamInput },'LocalStorage');
         }
         return retValue;
     }
@@ -102,7 +109,6 @@ export class LocalStorage implements STORE.IStorage {
      *    network transit from server to Isilon happens once, no matter if staging is located locally or on Isilon.
      */
     async writeStream(fileName: string): Promise<STORE.WriteStreamResult> {
-        LOG.info(`LocalStorage.writeStream ${fileName}`, LOG.LS.eSTR);
         const retValue: STORE.WriteStreamResult = {
             writeStream: null,
             storageKey: null,
@@ -115,28 +121,29 @@ export class LocalStorage implements STORE.IStorage {
         /* istanbul ignore if */
         if (!res.ioResults.success) {
             retValue.success = false;
-            retValue.error = res.ioResults.error;
+            retValue.error = `compute stream location error: ${res.ioResults.error}`;
+            RK.logError(RK.LogSection.eSTR,'write stream failed',retValue.error,{ fileName },'LocalStorage');
             return retValue;
         }
 
-        LOG.info(`LocalStorage.writeStream writing to disk (res: ${H.Helpers.JSONStringify(res)})`,LOG.LS.eDEBUG);
         try {
             // set our watermark level higher (1MB) to reduce potential backpressure
             retValue.writeStream = fs.createWriteStream(res.locationPrivate, { highWaterMark: 1024 * 1024 });
             retValue.storageKey = res.locationPublic;
             retValue.success = true;
             retValue.error = '';
+            RK.logInfo(RK.LogSection.eSTR,'write stream success',undefined,{ fileName, storageKey: retValue.storageKey },'LocalStorage');
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('LocalStorage.writeStream', LOG.LS.eSTR, error);
             retValue.success = false;
-            retValue.error = JSON.stringify(error);
+            retValue.error = `stream error: ${H.Helpers.getErrorString(error)}`;
+            RK.logError(RK.LogSection.eSTR,'write stream failed',retValue.error,{ fileName, locationPrivate: res.locationPrivate },'LocalStorage');
         }
 
         return retValue;
     }
 
     async commitWriteStream(CommitWriteStreamInput: STORE.CommitWriteStreamInput): Promise<STORE.CommitWriteStreamResult> {
-        LOG.info(`LocalStorage.commitWriteStream ${CommitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
+
         const retValue: STORE.CommitWriteStreamResult = {
             storageHash: null,
             storageSize: null,
@@ -179,29 +186,32 @@ export class LocalStorage implements STORE.IStorage {
         return retValue;
     }
 
-    async discardWriteStream(DiscardWriteStreamInput: STORE.DiscardWriteStreamInput): Promise<STORE.DiscardWriteStreamResult> {
-        if (DiscardWriteStreamInput.storageKey.includes('..') || DiscardWriteStreamInput.storageKey.includes(':')) {
-            LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey} called with invalid storagekey`, LOG.LS.eSTR);
+    async discardWriteStream(discardWriteStreamInput: STORE.DiscardWriteStreamInput): Promise<STORE.DiscardWriteStreamResult> {
+        if (discardWriteStreamInput.storageKey.includes('..') || discardWriteStreamInput.storageKey.includes(':')) {
+            RK.logError(RK.LogSection.eSTR,'writer stream discard failed','called with invalid storage key',{ ...discardWriteStreamInput },'LocalStorage');
             return { success: false, error: 'Invalid storagekey' };
         }
 
-        const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), DiscardWriteStreamInput.storageKey);
-        LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey}: deleting ${filePath}`, LOG.LS.eSTR);
+        const filePath: string = path.join(this.ocflRoot.computeLocationStagingRoot(), discardWriteStreamInput.storageKey);
 
         const resRemove: H.IOResults = await H.Helpers.removeFile(filePath);
         if (!resRemove.success) { // perhaps the file has already been removed?  If so, log this but treat it as success
             const resExists: H.IOResults = await H.Helpers.fileOrDirExists(filePath);
             if (!resExists.success) {
-                LOG.info(`LocalStorage.discardWriteStream ${DiscardWriteStreamInput.storageKey} was already deleted`, LOG.LS.eSTR);
+                RK.logWarning(RK.LogSection.eSTR,'write stream discard failed','cannot remove file. already deleted or does not exist',{ filePath, ...discardWriteStreamInput },'LocalStorage');
                 return { success: true };
+            } else {
+                RK.logError(RK.LogSection.eSTR,'write stream discard failed',`unknown error: ${resRemove.error}`,{ filePath, ...discardWriteStreamInput },'LocalStorage');
             }
         }
 
         // Attempt to remove directory, which may not be empty... so allow failures.  Attempt up to 3 times, with sleeps in between, in case the OS is slow to release locks on an empty folder
         const fileDir: string = path.dirname(filePath);
         const maxTries: number = 3;
-        this.removeStagedFolder(fileDir, DiscardWriteStreamInput.storageKey, maxTries); // DO NOT AWAIT, so our main thread does not block
+        this.removeStagedFolder(fileDir, discardWriteStreamInput.storageKey, maxTries); // DO NOT AWAIT, so our main thread does not block
 
+        // TODO: should wait for folder success befor returning that the operation was successful.
+        //       this is done so the rest of the process can continue even is risdue is left behind.
         return resRemove;
     }
 
@@ -210,13 +220,13 @@ export class LocalStorage implements STORE.IStorage {
         for (let tryCount: number = 1; tryCount <= maxTries; tryCount++) {
             resDirRemove = await H.Helpers.removeDirectory(fileDir, false, false);
             if (resDirRemove.success) {
-                LOG.info(`LocalStorage.removeStagedFolder ${storageKey} deleted folder ${fileDir}`, LOG.LS.eSTR);
+                RK.logDebug(RK.LogSection.eSTR,'staged folder remove success',undefined,{ fileDir, storageKey, tryCount, maxTries },'LocalStorage');
                 return resDirRemove;
             }
 
             const dirNotEmpty: boolean = (resDirRemove.error ?? '').includes('ENOTEMPTY');
             if (tryCount >= maxTries || !dirNotEmpty) // final try or not a dir not empty error? log result
-                LOG.info(`LocalStorage.removeStagedFolder ${storageKey} could not delete folder ${fileDir}: ${resDirRemove.error}`, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'staged folder remove failed',H.Helpers.getErrorString(resDirRemove.error),{ fileDir, storageKey, tryCount, maxTries },'LocalStorage');
 
             if (dirNotEmpty) // not empty? sleep && try again
                 await H.Helpers.sleep(5000);
@@ -227,13 +237,15 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async promoteStagedAsset(promoteStagedAssetInput: STORE.PromoteStagedAssetInput): Promise<STORE.PromoteStagedAssetResult> {
-        LOG.info(`LocalStorage.promoteStagedAsset ${promoteStagedAssetInput.fileName} ${promoteStagedAssetInput.storageKeyStaged} -> ${promoteStagedAssetInput.storageKeyFinal}`, LOG.LS.eSTR);
+
         const { storageKeyStaged, storageKeyFinal, fileName, inputStream, metadata, opInfo } = promoteStagedAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKeyFinal, true);
         /* istanbul ignore next */
-        if (!ocflObjectInitResults.success)
+        if (!ocflObjectInitResults.success) {
+            RK.logError(RK.LogSection.eSTR,'asset promotion failed',ocflObjectInitResults.error,{ ...promoteStagedAssetInput },'LocalStorage');
             return ocflObjectInitResults;
-        else if (!ocflObjectInitResults.ocflObject) {
+        } else if (!ocflObjectInitResults.ocflObject) {
+            RK.logError(RK.LogSection.eSTR,'asset promotion failed','OCFLObject initialization failure',{ ...promoteStagedAssetInput },'LocalStorage');
             return {
                 success: false,
                 error: 'OCFLObject initialization failure'
@@ -246,64 +258,98 @@ export class LocalStorage implements STORE.IStorage {
         // if we have data then update the OCFL object
         const PSAR: STORE.PromoteStagedAssetResult = await ocflObjectInitResults.ocflObject.addOrUpdate(pathOnDisk, inputStream, fileName, metadata, opInfo); // moves staged file, or streams file, if present
 
-        if (!PSAR.success)
+        if (!PSAR.success) {
+            RK.logError(RK.LogSection.eSTR,'asset promotion failed',PSAR.error,{ ...promoteStagedAssetInput, pathOnDisk },'LocalStorage');
             return PSAR;
-        return (!inputStream && fileName) ? await H.Helpers.removeDirectory(path.dirname(pathOnDisk), false) : PSAR; // cleanup staged directory if we have a staged file
+        }
+
+        // cleanup staged directory if we have a staged file
+        if (!inputStream && fileName) {
+            const result = await H.Helpers.removeDirectory(path.dirname(pathOnDisk), false);
+            if (!result.success) {
+                RK.logError(RK.LogSection.eSTR, 'staged asset promotion failed', result.error, { ...promoteStagedAssetInput }, 'LocalStorage');
+                return result;
+            }
+        }
+
+        RK.logDebug(RK.LogSection.eSTR, 'staged asset promotion success', undefined, { fileName, storageKeyStaged, storageKeyFinal }, 'LocalStorage');
+        return PSAR;
     }
 
     async renameAsset(renameAssetInput: STORE.RenameAssetInput): Promise<STORE.RenameAssetResult> {
-        LOG.info(`LocalStorage.renameAsset ${renameAssetInput.storageKey} ${renameAssetInput.fileNameOld} -> ${renameAssetInput.fileNameNew}`, LOG.LS.eSTR);
+
         const { storageKey, fileNameOld, fileNameNew, opInfo } = renameAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         /* istanbul ignore else */
-        if (!ocflObjectInitResults.success)
+        if (!ocflObjectInitResults.success) {
+            RK.logError(RK.LogSection.eSTR,'asset rename failed',ocflObjectInitResults.error,{ storageKey, fileNameOld, fileNameNew },'LocalStorage');
             return ocflObjectInitResults;
-        else if (!ocflObjectInitResults.ocflObject) {
+        } else if (!ocflObjectInitResults.ocflObject) {
+            RK.logError(RK.LogSection.eSTR,'asset rename failed','OCFLObject initialization failure',{ storageKey, fileNameOld, fileNameNew },'LocalStorage');
             return {
                 success: false,
                 error: 'OCFLObject initialization failure'
             };
         }
 
-        return await ocflObjectInitResults.ocflObject.rename(fileNameOld, fileNameNew, opInfo);
+        const result: H.IOResults = await ocflObjectInitResults.ocflObject.rename(fileNameOld, fileNameNew, opInfo);
+        if(!result.success)
+            RK.logError(RK.LogSection.eSTR,'asset rename failed',result.error,{ storageKey, fileNameOld, fileNameNew },'LocalStorage');
+        else
+            RK.logDebug(RK.LogSection.eSTR,'asset rename success',undefined,{ storageKey, fileNameOld, fileNameNew },'LocalStorage');
+
+        return result;
     }
 
     async hideAsset(hideAssetInput: STORE.HideAssetInput): Promise<STORE.HideAssetResult> {
-        LOG.info(`LocalStorage.hideAsset ${hideAssetInput.storageKey}/${hideAssetInput.fileName}`, LOG.LS.eSTR);
+
         const { storageKey, fileName, opInfo } = hideAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         /* istanbul ignore else */
-        if (!ocflObjectInitResults.success)
+        if (!ocflObjectInitResults.success) {
+            RK.logError(RK.LogSection.eSTR,'asset hide failed',ocflObjectInitResults.error,{ storageKey, fileName },'LocalStorage');
             return ocflObjectInitResults;
-        else if (!ocflObjectInitResults.ocflObject) {
+        } else if (!ocflObjectInitResults.ocflObject) {
+            RK.logError(RK.LogSection.eSTR,'asset hide failed','OCFLObject initialization failure',{ storageKey, fileName },'LocalStorage');
             return {
                 success: false,
                 error: 'OCFLObject initialization failure'
             };
         }
 
-        return await ocflObjectInitResults.ocflObject.delete(fileName, opInfo);
+        const result: H.IOResults = await ocflObjectInitResults.ocflObject.delete(fileName, opInfo);
+        if(!result.success)
+            RK.logError(RK.LogSection.eSTR,'asset hide failed',result.error,{ storageKey, fileName },'LocalStorage');
+        else
+            RK.logDebug(RK.LogSection.eSTR,'asset hide success',undefined,{ storageKey, fileName },'LocalStorage');
+        return result;
     }
 
     async reinstateAsset(reinstateAssetInput: STORE.ReinstateAssetInput): Promise<STORE.ReinstateAssetResult> {
-        LOG.info(`LocalStorage.reinstateAsset ${reinstateAssetInput.storageKey}/${reinstateAssetInput.fileName}`, LOG.LS.eSTR);
         const { storageKey, fileName, version, opInfo } = reinstateAssetInput;
         const ocflObjectInitResults: OO.OCFLObjectInitResults = await this.ocflRoot.ocflObject(storageKey, false);
         /* istanbul ignore else */
-        if (!ocflObjectInitResults.success)
+        if (!ocflObjectInitResults.success) {
+            RK.logError(RK.LogSection.eSTR,'asset reinstate failed',ocflObjectInitResults.error,{ storageKey, fileName, version },'LocalStorage');
             return ocflObjectInitResults;
-        else if (!ocflObjectInitResults.ocflObject) {
+        } else if (!ocflObjectInitResults.ocflObject) {
+            RK.logError(RK.LogSection.eSTR,'asset reinstate failed','OCFLObject initialization failure',{ storageKey, fileName, version },'LocalStorage');
             return {
                 success: false,
                 error: 'OCFLObject initialization failure'
             };
         }
 
-        return await ocflObjectInitResults.ocflObject.reinstate(fileName, version, opInfo);
+        const result: H.IOResults = await ocflObjectInitResults.ocflObject.reinstate(fileName, version, opInfo);
+        if(!result.success)
+            RK.logError(RK.LogSection.eSTR,'asset reinstate failed',result.error,{ storageKey, fileName, version },'LocalStorage');
+        else
+            RK.logDebug(RK.LogSection.eSTR,'asset reinstate success',undefined,{ storageKey, fileName, version },'LocalStorage');
+        return result;
     }
 
     async updateMetadata(updateMetadataInput: STORE.UpdateMetadataInput): Promise<STORE.UpdateMetadataResult> {
-        LOG.info(`LocalStorage.updateMetadata ${updateMetadataInput.storageKey}`, LOG.LS.eSTR);
+
         const { storageKey, metadata, opInfo } = updateMetadataInput;
         const promoteStagedAssetInput: STORE.PromoteStagedAssetInput = {
             storageKeyStaged: '',
@@ -313,11 +359,16 @@ export class LocalStorage implements STORE.IStorage {
             metadata,
             opInfo
         };
-        return await this.promoteStagedAsset(promoteStagedAssetInput);
+
+        const result: H.IOResults = await this.promoteStagedAsset(promoteStagedAssetInput);
+        if(!result.success)
+            RK.logError(RK.LogSection.eSTR,'metadata update failed',result.error,{ storageKey, metadata },'LocalStorage');
+        else
+            RK.logDebug(RK.LogSection.eSTR,'metadata update success',undefined,{ storageKey, metadata },'LocalStorage');
+        return result;
     }
 
     async validateAsset(storageKey: string): Promise<STORE.ValidateAssetResult> {
-        LOG.info(`LocalStorage.validateAsset ${storageKey}`, LOG.LS.eSTR);
         const retValue: STORE.ValidateAssetResult = {
             success: false
         };
@@ -327,10 +378,12 @@ export class LocalStorage implements STORE.IStorage {
         if (!ocflObjectInitResults.success) {
             retValue.success = false;
             retValue.error = ocflObjectInitResults.error;
+            RK.logError(RK.LogSection.eSTR,'asset validate failed',ocflObjectInitResults.error,{ storageKey },'LocalStorage');
             return retValue;
         } else if (!ocflObjectInitResults.ocflObject) {
             retValue.success = false;
             retValue.error = 'OCFLObject initialization failure';
+            RK.logError(RK.LogSection.eSTR,'asset validate failed',retValue.error,{ storageKey },'LocalStorage');
             return retValue;
         }
 
@@ -339,9 +392,11 @@ export class LocalStorage implements STORE.IStorage {
         if (!ioResults.success) {
             retValue.success = false;
             retValue.error = ioResults.error;
+            RK.logError(RK.LogSection.eSTR,'asset validate failed',`validate error: ${retValue.error}`,{ storageKey },'LocalStorage');
             return retValue;
         }
 
+        RK.logError(RK.LogSection.eSTR,'asset validate success',undefined,{ storageKey },'LocalStorage');
         retValue.success = true;
         return retValue;
     }

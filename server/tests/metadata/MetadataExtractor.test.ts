@@ -2,11 +2,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
-import * as LOG from '../../utils/logger';
 import * as META from '../../metadata';
 import * as DBAPI from '../../db';
 import * as H from '../../utils/helpers';
 import * as UTIL from '../db/api';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 const mockPathTurtle: string = path.join(__dirname, '../mock/utils/bagit/PackratTest/data/nmnh_sea_turtle-1_low/camera/');
 const mockPathF1991_46: string = path.join(__dirname, '../mock/captures/f1991_46-dataset/camera/'); // eslint-disable-line camelcase
@@ -68,7 +68,7 @@ async function extractFromFile(fileName: string, filePath: string, expectSuccess
             expect(validateImageMetadata(extractor, fileName)).toBeTruthy();
             logMetadata(extractor, fileName);
         } else
-            LOG.error(`Metadata Extractor.extractMetadata from file failed: ${results.error}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'extract from file',results.error,{},'Tests.Metadata');
     }
 
     expect(results.success).toEqual(expectSuccess);
@@ -95,7 +95,7 @@ async function extractFromStream(fileName: string, filePath: string, expectSucce
                 expect(validateImageMetadata(extractor, fileName)).toBeTruthy();
                 logMetadata(extractor, fileName);
             } else
-                LOG.error(`Metadata Extractor.extractMetadata from stream failed: ${results.error}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'extract from stream',results.error,{},'Tests.Metadata');
         }
 
         expect(results.success).toEqual(expectSuccess);
@@ -103,7 +103,7 @@ async function extractFromStream(fileName: string, filePath: string, expectSucce
     } catch (error) {
         success = false;
         if (expectSuccess) {
-            LOG.error('Metadata Extractor.extractMetadata from stream failed', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'extract from stream',H.Helpers.getErrorString(error),{},'Tests.Metadata');
             expect(false).toEqual(true);
         }
     }
@@ -148,7 +148,7 @@ function validationImageMetadataField(extractor: META.MetadataExtractor, fileNam
     if (extractor.metadata.has(field))
         return true;
 
-    LOG.error(`Metadata extraction for ${fileName} missing expected field ${field}`, LOG.LS.eTEST);
+    RK.logError(RK.LogSection.eTEST,'validation image metadata field',`Metadata extraction for ${fileName} missing expected field ${field}`,{},'Tests.Metadata');
     return false;
 }
 
@@ -158,5 +158,6 @@ function logMetadata(extractor: META.MetadataExtractor, fileName: string): void 
     let extract: string = `\nMetadata extract from ${fileName}:`;
     for (const [key, value] of extractor.metadata)
         extract += `\n${key}: ${value}`;
-    LOG.info(extract, LOG.LS.eTEST);
+
+    RK.logInfo(RK.LogSection.eTEST,'log metadata',extract,{},'Tests.Metadata');
 }

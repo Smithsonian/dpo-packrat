@@ -2,7 +2,7 @@ import * as NET from 'net';
 import * as UTIL from '../utils/utils';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { NotifyPackage, NotifyType, getMessagePrefixByType, getMessageIconUrlByType } from './notifyShared';
-import { RateManager, RateManagerConfig, RateManagerResult } from '../utils/rateManager';
+import { RateManager, RateManagerConfig, RateManagerResult, RateManagerMetrics } from '../utils/rateManager';
 
 // declaring this empty for branding/clarity since it is used
 // for instances that are not related to the RateManager
@@ -95,6 +95,37 @@ export class NotifyEmail {
             .map(item => item.message);
 
         return errorMessages.join(' | ');
+    }
+    public static async waitForQueueToDrain(timeout: number = 10000): Promise<EmailResult> {
+
+        if(!this.rateManager)
+            return { success: false, message: 'no manager running' };
+
+        const result = await this.rateManager.waitUntilIdle(timeout);
+        if(!result.success)
+            return { success: false, message: result.message, data: { queueSize: result.queueSize } };
+
+        return { success: true, message: result.message };
+    }
+    // get status of email system
+    public static getStatus(): EmailResult {
+
+        if(NotifyEmail.isActive()===false)
+            return { success: false, message: 'Email not running' };
+
+        // grab manager metrics to get queue size (backpressure)
+        const rateManagerMetrics: RateManagerMetrics | undefined = NotifyEmail.rateManager?.getMetrics();
+
+        const result: EmailResult = {
+            success: true,
+            message: 'Email status',
+            data: {
+                isActive: NotifyEmail.isActive(),
+                queueSize: rateManagerMetrics?.queueLength ?? -1,
+            }
+        };
+
+        return result;
     }
     //#endregion
 

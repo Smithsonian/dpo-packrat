@@ -1,7 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { UpdateObjectDetailsResult, MutationUpdateObjectDetailsArgs, MetadataInput, User } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
-import * as LOG from '../../../../../utils/logger';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import { maybe } from '../../../../../utils/types';
@@ -11,6 +11,7 @@ import * as H from '../../../../../utils/helpers';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 import { NameHelpers } from '../../../../../utils/nameHelpers';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
@@ -18,18 +19,18 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { idSystemObject, idObject, objectType, data } = input;
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
-        return sendResult(false, 'Error with Name and/or Retired field(s); update failed');
+        return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
 
     const SO = await DBAPI.SystemObject.fetch(idSystemObject);
     if (!SO)
-        return sendResult(false, `Error fetching object ${idSystemObject}; update failed`);
+        return sendResult(false,'update object details failed',`Error fetching object ${idSystemObject}; update failed`);
 
     if (!SO.Retired && data.Retired) {
         if (!await SO.retireObject())
-            return sendResult(false, 'Error retiring object; update failed');
+            return sendResult(false,'update object details failed','Error retiring object; update failed');
     } else if (SO.Retired && !data.Retired) {
         if (!await SO.reinstateObject())
-            return sendResult(false, 'Error reinstating object; update failed');
+            return sendResult(false,'update object details failed','Error reinstating object; update failed');
     }
 
     let identifierPreferred: null | number = null;
@@ -44,7 +45,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     existingIdentifier.IdentifierValue = identifier;
                     existingIdentifier.idVIdentifierType = Number(identifierType);
                     if (!await existingIdentifier.update())
-                        return sendResult(false, `Unable to update identifier with id ${idIdentifier}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to update identifier with id ${idIdentifier}; update failed`);
                 }
             }
 
@@ -52,7 +53,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (idIdentifier === 0 && identifier && identifierType) {
                 const newIdentifier = new DBAPI.Identifier({ idIdentifier: 0, IdentifierValue: identifier, idVIdentifierType: identifierType, idSystemObject });
                 if (!await newIdentifier.create())
-                    return sendResult(false, `Unable to create identifier when updating ${SystemObjectTypeToName(objectType)}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to create identifier when updating ${SystemObjectTypeToName(objectType)}; update failed`);
                 if (preferred === true)
                     identifierPreferred = newIdentifier.idIdentifier;
             }
@@ -66,28 +67,28 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         if (data.License > 0) {
             const reassignedLicense: DBAPI.License | null = await DBAPI.License.fetch(data.License);
             if (!reassignedLicense)
-                return sendResult(false, `Unable to fetch license with id ${data.License}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch license with id ${data.License}; update failed`);
 
             if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
-                return sendResult(false, `Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
             LicenseNew = reassignedLicense;
         } else {
             if (!await DBAPI.LicenseManager.clearAssignment(idSystemObject))
-                return sendResult(false, `Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
             LicenseNew = undefined;
         }
     }
-    LOG.info(`updateObjectDetails LicenseOld=${H.Helpers.JSONStringify(LicenseOld)}, LicenseNew=${H.Helpers.JSONStringify(LicenseNew)}`, LOG.LS.eGQL);
+    RK.logError(RK.LogSection.eGQL,'update object details','changing license',{ oldLicense: LicenseOld, newLicense: LicenseNew },'GraphQL.SystemObject.ObjectDetails');
 
     const metadataRes: H.IOResults = await handleMetadata(idSystemObject, data.Metadata, user);
     if (!metadataRes.success)
-        return sendResult(false, metadataRes.error);
+        return sendResult(false,'update object details failed',metadataRes.error);
 
     switch (objectType) {
         case COMMON.eSystemObjectType.eUnit: {
             const Unit = await DBAPI.Unit.fetch(idObject);
             if (!Unit)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             Unit.Name = data.Name;
             if (data.Unit) {
@@ -97,13 +98,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
 
             if (!await Unit.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         case COMMON.eSystemObjectType.eProject: {
             const Project = await DBAPI.Project.fetch(idObject);
             if (!Project)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             Project.Name = data.Name;
             if (data.Project) {
@@ -112,7 +113,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
 
             if (!await Project.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         case COMMON.eSystemObjectType.eSubject: {
@@ -123,7 +124,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 const Subject = await DBAPI.Subject.fetch(idObject);
                 if (!Subject)
-                    return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
                 Subject.Name = data.Name;
                 Subject.idIdentifierPreferred = identifierPreferred;
@@ -132,7 +133,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (Subject.idGeoLocation) {
                     const GeoLocation = await DBAPI.GeoLocation.fetch(Subject.idGeoLocation);
                     if (!GeoLocation)
-                        return sendResult(false, `Unable to fetch GeoLocation with id ${Subject.idGeoLocation}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to fetch GeoLocation with id ${Subject.idGeoLocation}; update failed`);
 
                     GeoLocation.Altitude = maybe<number>(Altitude);
                     GeoLocation.Latitude = maybe<number>(Latitude);
@@ -145,7 +146,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     GeoLocation.TS1 = maybe<number>(TS1);
                     GeoLocation.TS2 = maybe<number>(TS2);
                     if (!await GeoLocation.update())
-                        return sendResult(false, `Unable to update GeoLocation with id ${Subject.idGeoLocation}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to update GeoLocation with id ${Subject.idGeoLocation}; update failed`);
                 } else if (geoLocationProvided) {
                     const GeoLocationInput = {
                         idGeoLocation: 0,
@@ -162,13 +163,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     };
                     const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
                     if (!await GeoLocation.create())
-                        return sendResult(false, `Unable to create GeoLocation when updating ${SystemObjectTypeToName(objectType)}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to create GeoLocation when updating ${SystemObjectTypeToName(objectType)}; update failed`);
 
                     Subject.idGeoLocation = GeoLocation.idGeoLocation;
                 }
 
                 if (!await Subject.update())
-                    return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             }
             break;
         }
@@ -180,7 +181,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 const Item = await DBAPI.Item.fetch(idObject);
                 if (!Item)
-                    return sendResult(false, `Unable to fetch Media Group with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to fetch Media Group with id ${idObject}; update failed`);
 
                 const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
                 Item.Name = namedWithoutSubtitle ? data.Name : computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
@@ -193,7 +194,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (Item.idGeoLocation) {
                     const GeoLocation = await DBAPI.GeoLocation.fetch(Item.idGeoLocation);
                     if (!GeoLocation)
-                        return sendResult(false, `Unable to fetch GeoLocation with id ${Item.idGeoLocation}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to fetch GeoLocation with id ${Item.idGeoLocation}; update failed`);
 
                     GeoLocation.Altitude = maybe<number>(Altitude);
                     GeoLocation.Latitude = maybe<number>(Latitude);
@@ -206,7 +207,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     GeoLocation.TS1 = maybe<number>(TS1);
                     GeoLocation.TS2 = maybe<number>(TS2);
                     if (!await GeoLocation.update())
-                        return sendResult(false, `Unable to update GeoLocation with id ${Item.idGeoLocation}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to update GeoLocation with id ${Item.idGeoLocation}; update failed`);
                 } else if (geoLocationProvided) {
                     const GeoLocationInput = {
                         idGeoLocation: 0,
@@ -223,13 +224,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     };
                     const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
                     if (!await GeoLocation.create())
-                        return sendResult(false, 'Unable to create GeoLocation when updating Media Group; update failed');
+                        return sendResult(false,'update object details failed','Unable to create GeoLocation when updating Media Group; update failed');
 
                     Item.idGeoLocation = GeoLocation.idGeoLocation;
                 }
 
                 if (!await Item.update())
-                    return sendResult(false, `Unable to update Media Group with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to update Media Group with id ${idObject}; update failed`);
             }
             break;
         }
@@ -237,7 +238,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (data.CaptureData) {
                 const CaptureData = await DBAPI.CaptureData.fetch(idObject);
                 if (!CaptureData)
-                    return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
                 CaptureData.Name = data.Name;
                 const {
@@ -259,10 +260,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     datasetUse
                 } = data.CaptureData;
 
-                if (datasetFieldId && !H.Helpers.validFieldId(datasetFieldId)) return sendResult(false, 'Dataset Field ID is invalid; update failed');
-                if (itemPositionFieldId && !H.Helpers.validFieldId(itemPositionFieldId)) return sendResult(false, 'Position Field ID is invalid; update failed');
-                if (itemArrangementFieldId && !H.Helpers.validFieldId(itemArrangementFieldId)) return sendResult(false, 'Arrangement Field ID is invalid; update failed');
-                if (clusterGeometryFieldId && !H.Helpers.validFieldId(clusterGeometryFieldId)) return sendResult(false, 'Cluster Geometry Field ID is invalid; update failed');
+                if (datasetFieldId && !H.Helpers.validFieldId(datasetFieldId)) return sendResult(false,'update object details failed','Dataset Field ID is invalid; update failed');
+                if (itemPositionFieldId && !H.Helpers.validFieldId(itemPositionFieldId)) return sendResult(false,'update object details failed','Position Field ID is invalid; update failed');
+                if (itemArrangementFieldId && !H.Helpers.validFieldId(itemArrangementFieldId)) return sendResult(false,'update object details failed','Arrangement Field ID is invalid; update failed');
+                if (clusterGeometryFieldId && !H.Helpers.validFieldId(clusterGeometryFieldId)) return sendResult(false,'update object details failed','Cluster Geometry Field ID is invalid; update failed');
 
                 CaptureData.DateCaptured = new Date(dateCaptured);
                 if (description) CaptureData.Description = description;
@@ -273,25 +274,25 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     folders.forEach((folder) => foldersMap.set(folder.name, folder.variantType ?? 0));
                     const CDFiles = await DBAPI.CaptureDataFile.fetchFromCaptureData(CaptureData.idCaptureData);
                     if (!CDFiles)
-                        return sendResult(false, `Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`);
+                        return sendResult(false,'update object details failed',`Unable to fetch Capture Data Files with id ${CaptureData.idCaptureData}; update failed`);
                     for (const file of CDFiles) {
                         const assetVersion = await DBAPI.AssetVersion.fetchLatestFromAsset(file.idAsset);
                         if (!assetVersion)
-                            return sendResult(false, `Unable to fetch asset version with idAsset ${file.idAsset}; update failed`);
+                            return sendResult(false,'update object details failed',`Unable to fetch asset version with idAsset ${file.idAsset}; update failed`);
 
                         const newVariantType = foldersMap.get(assetVersion.FilePath);
                         file.idVVariantType = newVariantType || null;
                         if (!await file.update())
-                            return sendResult(false, `Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`);
+                            return sendResult(false,'update object details failed',`Unable to update Capture Data File with id ${file.idCaptureDataFile}; update failed`);
                     }
                 }
                 if (!await CaptureData.update())
-                    return sendResult(false, `Unable to update Capture Data with id ${CaptureData.idCaptureData}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to update Capture Data with id ${CaptureData.idCaptureData}; update failed`);
 
                 // Fetch and update photogrammetry capture data details
                 const CaptureDataPhoto: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(CaptureData.idCaptureData);
                 if (!CaptureDataPhoto || CaptureDataPhoto.length < 1)
-                    return sendResult(false, `Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`);
 
                 const [CD] = CaptureDataPhoto;
 
@@ -308,7 +309,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
                 CD.CaptureDatasetUse = datasetUse;
                 if (!await CD.update())
-                    return sendResult(false, `Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`);
             }
             break;
         }
@@ -316,7 +317,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (data.Model) {
                 const Model = await DBAPI.Model.fetch(idObject);
                 if (!Model)
-                    return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
                 const {
                     DateCreated,
@@ -339,14 +340,14 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 Model.DateCreated = new Date(DateCreated);
 
                 if (!await Model.update())
-                    return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                    return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             }
             break;
         }
         case COMMON.eSystemObjectType.eScene: {
             const Scene = await DBAPI.Scene.fetch(idObject);
             if (!Scene)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
 
@@ -359,39 +360,39 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (typeof data.Scene.ApprovedForPublication === 'boolean') Scene.ApprovedForPublication = data.Scene.ApprovedForPublication;
             }
             if (!await Scene.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
             const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(Scene.idScene, idSystemObject, user?.idUser,
                 oldPosedAndQCd, Scene.PosedAndQCd, LicenseOld, LicenseNew);
             if (!res.success)
-                return sendResult(false, res.error);
+                return sendResult(false,'update object details failed',res.error);
             return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
         }
         case COMMON.eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
             if (!IntermediaryFile)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             const Asset = await DBAPI.Asset.fetch(IntermediaryFile.idAsset);
             if (!Asset)
-                return sendResult(false, `Unable to fetch Asset using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch Asset using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`);
             Asset.FileName = data.Name;
             if (!await Asset.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(IntermediaryFile.idAsset);
             if (!assetVersion)
-                return sendResult(false, `Unable to fetch Asset Version using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch Asset Version using IntermediaryFile.idAsset ${IntermediaryFile.idAsset}; update failed`);
             assetVersion.FileName = data.Name;
             if (!await assetVersion.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         case COMMON.eSystemObjectType.eProjectDocumentation: {
             const ProjectDocumentation = await DBAPI.ProjectDocumentation.fetch(idObject);
             if (!ProjectDocumentation)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             ProjectDocumentation.Name = data.Name;
             if (data.ProjectDocumentation) {
@@ -400,13 +401,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
 
             if (!await ProjectDocumentation.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         case COMMON.eSystemObjectType.eAsset: {
             const Asset = await DBAPI.Asset.fetch(idObject);
             if (!Asset)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             Asset.FileName = data.Name;
             if (data.Asset) {
@@ -415,13 +416,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             }
 
             if (!await Asset.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         case COMMON.eSystemObjectType.eAssetVersion: {
             const AssetVersion = await DBAPI.AssetVersion.fetch(idObject);
             if (!AssetVersion)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             AssetVersion.FileName = data.Name;
             if (data.AssetVersion) {
@@ -446,13 +447,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 Actor.OrganizationName = maybe<string>(OrganizationName);
             }
             if (!await Actor.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         case COMMON.eSystemObjectType.eStakeholder: {
             const Stakeholder = await DBAPI.Stakeholder.fetch(idObject);
             if (!Stakeholder)
-                return sendResult(false, `Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to fetch ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
             Stakeholder.IndividualName = data.Name;
             if (data.Stakeholder) {
@@ -464,7 +465,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 Stakeholder.PhoneNumberOffice = maybe<string>(PhoneNumberOffice);
             }
             if (!await Stakeholder.update())
-                return sendResult(false, `Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
+                return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
             break;
         }
         default:
@@ -474,9 +475,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     return { success: true, message: '' };
 }
 
-function sendResult(success: boolean, message?: string): UpdateObjectDetailsResult {
+function sendResult(success: boolean, message: string, reason?: string, data?: any): UpdateObjectDetailsResult {
     if (!success)
-        LOG.error(`updateObjectDetails: ${message}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,message,reason,data,'GraphQL.SystemObject.ObjectDetails');
     return { success, message: message ?? '' };
 }
 

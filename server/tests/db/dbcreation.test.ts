@@ -1,11 +1,11 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as DBC from '../../db/connection';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as UTIL from './api';
 import { VocabularyCache } from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 afterAll(async done => {
     // await H.Helpers.sleep(4000);
@@ -3323,7 +3323,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch Workflow: Workflow.fetchFromWorkflowType', async () => {
         let workflowFetch: DBAPI.Workflow[] | null = null;
         if (vocabularyWorkflowType) {
-            LOG.info(`DB Fetch Workflow fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'fetch from workflow type',`fetching from workflow vocab ${JSON.stringify(vocabularyWorkflowType)}`,{},'Tests.DB.Creation');
             const eVocabEnum: COMMON.eVocabularyID | undefined = await VocabularyCache.vocabularyIdToEnum(vocabularyWorkflowType.idVocabulary);
             expect(eVocabEnum).toBeTruthy();
 
@@ -7766,9 +7766,9 @@ describe('DB Delete Test', () => {
         if (systemObjectXrefSubItem4) {
             const res: H.IOResults = await systemObjectXrefSubItem4.deleteIfAllowed();
             if (!res.success)
-                LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'delete',`failed: ${res.error}`,{},'Tests.DB.Creation');
             else
-                LOG.info(`DB Delete succeeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+                RK.logInfo(RK.LogSection.eTEST,'delete',`succeeded: ${JSON.stringify(systemObjectXrefSubItem4)}`,{},'Tests.DB.Creation');
             expect(res.success).toBeTruthy();
 
             // try to fetch; should not be found
@@ -7778,9 +7778,9 @@ describe('DB Delete Test', () => {
         if (systemObjectXrefSubItem2) {
             const res: H.IOResults = await DBAPI.SystemObjectXref.deleteIfAllowed(systemObjectXrefSubItem2.idSystemObjectXref);
             if (!res.success)
-                LOG.info(`DB Delete failed, as expected: ${res.error}`, LOG.LS.eTEST);
+                RK.logInfo(RK.LogSection.eTEST,'delete',`failed, as expected: ${res.error}`,{},'Tests.DB.Creation');
             else
-                LOG.error(`DB Delete succeeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'delete',`succeeded unexpectedly: ${JSON.stringify(systemObjectXrefSubItem2)}`,{},'Tests.DB.Creation');
             expect(res.success).toBeFalsy();
 
             // try to fetch; should be found
@@ -7792,9 +7792,9 @@ describe('DB Delete Test', () => {
         if (systemObjectXrefProjectItem1) {
             const res: H.IOResults = await DBAPI.SystemObjectXref.deleteIfAllowed(systemObjectXrefProjectItem1.idSystemObjectXref);
             if (!res.success)
-                LOG.error(`DB Delete failed: ${res.error}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'delete',res.error,{},'Tests.DB.Creation');
             else
-                LOG.info(`DB Delete succeeded: ${JSON.stringify(systemObjectXrefSubItem4)}`, LOG.LS.eTEST);
+                RK.logInfo(RK.LogSection.eTEST,'delete',`succeeded: ${JSON.stringify(systemObjectXrefSubItem4)}`,{},'Tests.DB.Creation');
             expect(res.success).toBeTruthy();
 
             // try to fetch; should not be found

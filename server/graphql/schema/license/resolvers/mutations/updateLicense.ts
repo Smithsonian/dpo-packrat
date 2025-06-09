@@ -1,7 +1,6 @@
 import { CreateLicenseResult, MutationUpdateLicenseArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
-// import * as LOG from '../../../../utils/logger';
 
 export default async function updateLicense(_: Parent, args: MutationUpdateLicenseArgs): Promise<CreateLicenseResult> {
     const { input } = args;

@@ -1,8 +1,8 @@
 import { SystemObjectCache } from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../db';
-import * as LOG from '../../utils/logger';
 // import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { ObjectGraphTestSetup } from '../db/composite/ObjectGraph.setup';
 import { createItemTest } from '../db/api';
 import * as L from 'lodash';
@@ -153,7 +153,7 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
         case COMMON.eSystemObjectType.eActor: SO = await DBAPI.SystemObject.fetchFromActorID(idObject); break;
         case COMMON.eSystemObjectType.eStakeholder: SO = await DBAPI.SystemObject.fetchFromStakeholderID(idObject); break;
         case COMMON.eSystemObjectType.eUnknown:
-            LOG.error(`SystemObjectCache.convertSystemObjectToObjectID(${JSON.stringify(SOExamine)}) encountered unknown SystemObject type: ${JSON.stringify(oID)}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'convert system object to object id',`${JSON.stringify(SOExamine)} encountered unknown SystemObject type: ${JSON.stringify(oID)}`,{},'Tests.DB.Model.Setup');
             expect(eObjectType).not.toEqual(COMMON.eSystemObjectType.eUnknown);
             break;
     }
@@ -166,7 +166,7 @@ async function testSystemObject(SOExamine: DBAPI.SystemObject): Promise<boolean>
     expect(oIDFetch).toBeTruthy();
 
     if (!L.isEqual(oIDFetch, oID))
-        LOG.error(`testSystemObject fetched ${JSON.stringify(oIDFetch)} vs ${JSON.stringify(oID)}: ${JSON.stringify(SOExamine)}`, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'convert system object to object id',`fetched ${JSON.stringify(oIDFetch)} vs ${JSON.stringify(oID)}: ${JSON.stringify(SOExamine)}`,{},'Tests.DB.Model.Setup');
     expect(oIDFetch).toEqual(oID);
 
     const oIDsID: DBAPI.SystemObjectIDAndType | undefined = await SystemObjectCache.getObjectAndSystemFromSystem(SOExamine.idSystemObject);
@@ -266,7 +266,7 @@ async function testObjectAndID(oID: DBAPI.ObjectIDAndType): Promise<boolean> {
             SOI = (stakeholder) ? await SystemObjectCache.getSystemFromStakeholder(stakeholder) : undefined;
         } break;
         case COMMON.eSystemObjectType.eUnknown:
-            LOG.error('Invalid Test Case!', LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'object and id','Invalid Test Case!',{},'Tests.DB.Model.Setup');
             expect(eObjectType).not.toEqual(COMMON.eSystemObjectType.eUnknown);
             break;
     }

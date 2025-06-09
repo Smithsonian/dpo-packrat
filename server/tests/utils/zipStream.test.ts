@@ -1,8 +1,8 @@
 import fs from 'fs';
 import * as path from 'path';
 import { ZipStream } from '../../utils/zipStream';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { RecordKeeper as RK  } from '../../records/recordKeeper';
 import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
 
 const mockPath: string = path.join(__dirname, '../mock/utils/zip/');
@@ -61,7 +61,7 @@ describe('ZipStream', () => {
         for (const entry of await zip.getAllEntries(null)) {
             const observedSize: number | null = await zip.uncompressedSize(entry);
             const expectedSize: number | undefined = fileSizeMap.get(entry);
-            LOG.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'uncompressed size',`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`,{},'Tests.Utils.ZipStream');
             expect(observedSize).not.toBeNull();
             expect(expectedSize).not.toBeUndefined();
             expect(observedSize).toEqual(expectedSize);
@@ -104,7 +104,7 @@ describe('ZipStream', () => {
         expect(res.success).toBeTruthy();
 
         const filePathRandom: string = path.join(directoryPath, 'randomSource.txt');
-        LOG.info(`zipStream.test creating zip to ${filePathRandom}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'add',`zipStream.test creating zip to ${filePathRandom}`,{},'Tests.Utils.ZipStream');
 
         const WS: NodeJS.WritableStream = fs.createWriteStream(filePathRandom);
         expect(WS).toBeTruthy();
@@ -123,7 +123,7 @@ describe('ZipStream', () => {
         expect(await zipAdd.getJustDirectories(null)).toEqual(expect.arrayContaining(['randomPath/']));
 
         const filePathRandomOutput: string = H.Helpers.randomFilename(directoryPath, '') + '.zip';
-        LOG.info(`zipStream.test writing zip to ${filePathRandomOutput}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'add',`zipStream.test writing zip to ${filePathRandomOutput}`,{},'Tests.Utils.ZipStream');
         const WSOutput: NodeJS.WritableStream = fs.createWriteStream(filePathRandomOutput);
         expect(WSOutput).toBeTruthy();
 
@@ -141,6 +141,6 @@ describe('ZipStream', () => {
 });
 
 export function logStringArray(array: string[], prefix: string): void {
-    for (const entry of array)
-        LOG.info(`${prefix}${entry}`, LOG.LS.eTEST);
+    // for (const entry of array)
+    RK.logInfo(RK.LogSection.eTEST,'log string array',undefined,{ prefix, array },'Tests.Utils.ZipStream');
 }

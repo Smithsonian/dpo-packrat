@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { LicenseAssignment as LicenseAssignmentBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> implements LicenseAssignmentBase {
     idLicenseAssignment!: number;
@@ -34,7 +35,8 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.License.Assignment');
+            return false;
         }
     }
 
@@ -53,7 +55,8 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.License.Assignment');
+            return false;
         }
     }
 
@@ -71,7 +74,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             return DBC.CopyObject<LicenseAssignmentBase, LicenseAssignment>(
                 await DBC.DBConnection.prisma.licenseAssignment.findUnique({ where: { idLicenseAssignment, }, }), LicenseAssignment);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.LicenseAssignment.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.License.Assignment');
             return null;
         }
     }
@@ -83,7 +86,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             return DBC.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBC.DBConnection.prisma.licenseAssignment.findMany({ where: { idLicense } }), LicenseAssignment);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.LicenseAssignment.fetchFromLicense', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from License failed',H.Helpers.getErrorString(error),{ ...this },'DB.License.Assignment');
             return null;
         }
     }
@@ -95,7 +98,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             return DBC.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBC.DBConnection.prisma.licenseAssignment.findMany({ where: { idUserCreator } }), LicenseAssignment);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.LicenseAssignment.fetchFromUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.License.Assignment');
             return null;
         }
     }
@@ -107,7 +110,7 @@ export class LicenseAssignment extends DBC.DBObject<LicenseAssignmentBase> imple
             return DBC.CopyArray<LicenseAssignmentBase, LicenseAssignment>(
                 await DBC.DBConnection.prisma.licenseAssignment.findMany({ where: { idSystemObject } }), LicenseAssignment);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.LicenseAssignment.fetchFromSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.License.Assignment');
             return null;
         }
     }

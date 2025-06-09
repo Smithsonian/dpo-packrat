@@ -49,6 +49,7 @@ module.exports = {
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
     setupFiles: ['<rootDir>/tests/setEnvVars.ts'],
+    setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],
     moduleNameMapper: { '^axios$': require.resolve('axios'), },
     globalTeardown: '<rootDir>/tests/teardown.ts'
 };

@@ -4,6 +4,9 @@ import passport from 'passport';
 import { AuthFactory, VerifiedUser } from '../interface';
 import * as DBAPI from '../../db';
 
+/**
+ * Callbacks and routines for connecting our AuthFactory authentication code to PassportJS
+ */
 const options = {
     usernameField: 'email'
 };

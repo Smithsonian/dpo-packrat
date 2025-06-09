@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { CaptureDataGroupCaptureDataXref as CaptureDataGroupCaptureDataXrefBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGroupCaptureDataXrefBase> implements CaptureDataGroupCaptureDataXrefBase {
     idCaptureDataGroupCaptureDataXref!: number;
@@ -28,7 +29,8 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Group.Xref');
+            return false;
         }
     }
 
@@ -43,7 +45,8 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Group.Xref');
+            return false;
         }
     }
 
@@ -55,7 +58,7 @@ export class CaptureDataGroupCaptureDataXref extends DBC.DBObject<CaptureDataGro
                 await DBC.DBConnection.prisma.captureDataGroupCaptureDataXref.findUnique({ where: { idCaptureDataGroupCaptureDataXref, }, }),
                 CaptureDataGroupCaptureDataXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureDataGroupCaptureDataXref.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Group.Xref');
             return null;
         }
     }

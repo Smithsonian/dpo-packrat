@@ -1,52 +1,53 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { RollbackAssetVersionResult, MutationRollbackAssetVersionArgs } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as STORE from '../../../../../storage/interface';
-import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function rollbackAssetVersion(_: Parent, args: MutationRollbackAssetVersionArgs, context: Context): Promise<RollbackAssetVersionResult> {
     const { input } = args;
     const { idAssetVersion, rollbackNotes } = input;
     const { user } = context;
     if (!user)
-        return sendResponse(false, 'unable to detemine user from context');
+        return sendResponse(false,'rollback asset version failed','unable to detemine user from context');
 
     const assetVersionOrig: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
     if (!assetVersionOrig)
-        return sendResponse(false, `unable to load AssetVersion for idAssetVersion ${idAssetVersion}`);
+        return sendResponse(false,'rollback asset version failed',`unable to load AssetVersion for idAssetVersion ${idAssetVersion}`);
 
     const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersionOrig.idAsset);
     if (!asset)
-        return sendResponse(false, `unable to load asset for ${assetVersionOrig.idAsset}`);
+        return sendResponse(false,'rollback asset version failed',`unable to load asset for ${assetVersionOrig.idAsset}`);
 
     let SOBased: DBAPI.SystemObjectBased | null = null;
     if (asset.idSystemObject) {
         const SOPair: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(asset.idSystemObject);
         if (!SOPair)
-            return sendResponse(false, `unable to load system object pair info for ${asset.idSystemObject}`);
+            return sendResponse(false,'rollback asset version failed',`unable to load system object pair info for ${asset.idSystemObject}`);
         SOBased = SOPair.SystemObjectBased;
     }
 
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
     if (!storage)
-        return sendResponse(false, 'unable to obtain storage instance');
+        return sendResponse(false,'rollback asset version failed','unable to obtain storage instance');
 
     // get readstream for the asset version to which we're rolling back
     const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersionOrig.idAssetVersion);
     if (!RSR.success || !RSR.readStream)
-        return sendResponse(false, `unable to obtain readstream from rollback asset version ${JSON.stringify(assetVersionOrig, H.Helpers.saferStringify)}: ${RSR.error}`);
+        return sendResponse(false,'rollback asset version failed',`unable to obtain readstream from rollback asset version: ${RSR.error}`,{ assetVersionOrig });
 
     // get write stream from our new version
     const wsRes: STORE.WriteStreamResult = await storage.writeStream(assetVersionOrig.FileName);
     if (!wsRes.success || !wsRes.storageKey || !wsRes.writeStream)
-        return sendResponse(false, `unable to obtain storage write stream: ${wsRes.error}`);
+        return sendResponse(false,'rollback asset version failed',`unable to obtain storage write stream: ${wsRes.error}`);
 
     // write bits to writeStream
     try {
         const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(RSR.readStream, wsRes.writeStream);
         if (!wrRes.success)
-            return sendResponse(false, `unable to write rollback bits to storage: ${wrRes.error}`);
+            return sendResponse(false,'rollback asset version failed',`unable to write rollback bits to storage: ${wrRes.error}`);
     } finally {
         wsRes.writeStream.end();
     }
@@ -71,10 +72,10 @@ export default async function rollbackAssetVersion(_: Parent, args: MutationRoll
     // commit uploaded bits to staging storage
     const comRes: STORE.AssetStorageResultCommit = await STORE.AssetStorageAdapter.commitNewAssetVersion(ASCNAI);
     if (!comRes.success || !comRes.assetVersions || comRes.assetVersions.length <= 0)
-        return sendResponse(false, `unable to commit new asset: ${comRes.error}`);
+        return sendResponse(false,'rollback asset version failed',`unable to commit new asset: ${comRes.error}`);
 
     if (comRes.assetVersions.length !== 1)
-        return sendResponse(false, `produced too many asset versions! ${JSON.stringify(comRes.assetVersions, H.Helpers.saferStringify)}`);
+        return sendResponse(false,'rollback asset version failed','produced too many asset versions',{ assetVersions: comRes.assetVersions });
 
     const ingestAssetInput: STORE.IngestAssetInput = {
         asset,
@@ -90,13 +91,13 @@ export default async function rollbackAssetVersion(_: Parent, args: MutationRoll
     // ingest uploaded asset; this creates a new asset version, promotes content into storage, and updates affected system objects with a new system object version:
     const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
     if (!IAR.success)
-        return sendResponse(false, `failed to ingest rolled back asset ${IAR.error}`);
+        return sendResponse(false,'rollback asset version failed',`failed to ingest rolled back asset ${IAR.error}`);
 
-    return sendResponse(true);
+    return sendResponse(true,'rollback asset version success',undefined,{ ...args.input });
 }
 
-function sendResponse(success: boolean, message?: string | undefined): RollbackAssetVersionResult {
+function sendResponse(success: boolean, message: string, reason?: string, data?: any): RollbackAssetVersionResult {
     if (!success)
-        LOG.error(`rollbackAssetVersion ${message}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,message,reason,data,'GraphQL.Asset');
     return { success, message };
 }

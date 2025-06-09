@@ -3,7 +3,6 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface/';
 import * as META from '../../metadata';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
@@ -12,6 +11,7 @@ import { SvxReader } from '../../utils/parser';
 import { IDocument } from '../../types/voyager';
 import * as COMMON from '@dpo-packrat/common';
 import { EdanCollection } from './EdanCollection';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
@@ -88,13 +88,13 @@ export class PublishScene {
         }
 
         if (!this.scene || !this.subject) {
-            LOG.info(`PublishScene.publish cannot publish. no scene/subject. (scene: ${this.scene?.Name} | subject: ${this.subject?.Name})`,LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed','cannot publish. no scene/subject',{ scene: this.scene, subject: this.subject },'Publish.Scene');
             return false;
         }
 
         // stage scene
         if (!await this.stageSceneFiles() || !this.sharedName) {
-            LOG.error(`PublishScene.publish cannot stage files. (scene: ${this.scene?.Name} | sharedName: ${this.sharedName})`,LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed','cannot stage files',{ scene: this.scene, sharedName: this.sharedName },'Publish.Scene');
             return false;
         }
 
@@ -102,14 +102,14 @@ export class PublishScene {
         // this is done first so when we update with license/status info the scene is there
         let edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
         if (!edanRecord) {
-            LOG.error('PublishScene.publish EDAN failed', LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed','create EDAN package failed',{ scene: this.scene, sharedName: this.sharedName },'Publish.Scene');
             return false;
         }
-        LOG.info(`PublishScene.publish 3D package (${edanRecord.url}) succeeded with Edan (status: ${edanRecord.status}, publicSearch: ${edanRecord.publicSearch}, resources: ${this.edan3DResourceList?.length ?? 0}, path: ${this.sharedName})`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'publish sucess','3D package published to EDAN',{ status: edanRecord.status, publicSearch: edanRecord.publicSearch, resources: this.edan3DResourceList?.length ?? 0, path: this.sharedName },'Publish.Scene');
 
         // stage downloads
         if (!await this.stageDownloads() || !this.edan3DResourceList) {
-            LOG.error(`PublishScene.publish failed to stage downloads. (count: ${this.edan3DResourceList?.length ?? -1})`,LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed','failed to stage downloads',{ count: this.edan3DResourceList?.length ?? -1 },'Publish.Scene');
             return false;
         }
 
@@ -137,16 +137,15 @@ export class PublishScene {
             E3DPackage.resources = (downloads && haveDownloads) ? this.edan3DResourceList : [];
             E3DPackage.media_usage = media_usage; // eslint-disable-line camelcase
 
-            LOG.info(`PublishScene.publish updating ${edanRecord.url}`, LOG.LS.eCOLL);
+            RK.logDebug(RK.LogSection.eCOLL,'publish','updating package',{ edanRecord },'Publish.Scene');
             edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, edanRecord.title, E3DPackage, status, publicSearch);
             if (!edanRecord) {
-                LOG.error('PublishScene.publish Edan3DPackage update failed', LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'publish failed','EDAN package update failed',{ edanPackage: E3DPackage },'Publish.Scene');
                 return false;
             }
-            // LOG.info(`PublishScene.publish updated ${edanRecord.url}:\n${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eCOLL);
         }
 
-        LOG.info(`PublishScene.publish (UUID: ${this.scene.EdanUUID}, status: ${COMMON.ePublishedState[status]}, publicSearch: ${publicSearch}, downloads: ${downloads}, has downloads: ${haveDownloads})`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'publish EDAN package success',undefined,{ UUID: this.scene.EdanUUID, status: COMMON.ePublishedState[status], publicSearch, downloads, haveDownloads },'Publish.Scene');
         return true;
     }
 
@@ -189,7 +188,7 @@ export class PublishScene {
                     : { success: false, error: 'Unable to compute idSystemObject for asset version' };
                 if (!results.success) {
                     const error: string = `PublishScene.extractSceneMetadata unable to persist scene attachment metadata for asset version ${JSON.stringify(SAC.assetVersion, H.Helpers.saferStringify)}: ${results.error}`;
-                    LOG.error(error, LOG.LS.eCOLL);
+                    RK.logError(RK.LogSection.eCOLL,'extract scene metadata failed',`unable to persist scene attachment metadata for asset version: ${results.error}`,{ assetVersion: SAC.assetVersion },'Publish.Scene');
                     retValue.error += (retValue.error ? '\n' : '') + error;
                     retValue.success = false;
                 }
@@ -202,7 +201,7 @@ export class PublishScene {
         this.analyzed = true;
         if (!await this.fetchScene(ePublishedStateIntended) || !this.scene || !this.subject)
             return false;
-        LOG.info(`PublishScene.analyze UUID ${this.scene.EdanUUID}`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'analyze',undefined,{ uuid: this.scene.EdanUUID, ePublishedStateIntended },'Publish.Scene');
 
         // Process models, building a mapping from the model's idSystemObject -> ModelSceneXref, for those models that are for Downloads
         if (!await this.computeMSXMap() || !this.DownloadMSXMap)
@@ -217,26 +216,26 @@ export class PublishScene {
         const changingPubState: boolean = (ePublishedStateIntended !== undefined);
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(this.idSystemObject);
         if (!oID) {
-            LOG.error(`PublishScene.fetchScene unable to retrieve object details from ${this.idSystemObject}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'fetch scene failed','unable to retrieve object details',{ idSystemObject: this.idSystemObject },'Publish.Scene');
             return false;
         }
 
         if (oID.eObjectType !== COMMON.eSystemObjectType.eScene) {
-            LOG.error(`PublishScene.fetchScene called for non scene object ${JSON.stringify(oID, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'fetch scene failed','called for non scene object',{ objectID: oID },'Publish.Scene');
             return false;
         }
 
         // fetch SystemObjectVersion
         this.systemObjectVersion = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(this.idSystemObject);
         if (!this.systemObjectVersion && changingPubState) {
-            LOG.error(`PublishScene.fetchScene could not compute SystemObjectVersion for idSystemObject ${this.idSystemObject}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'fetch scene failed','could not compute SystemObjectVersion for idSystemObject',{ idSystemObject: this.idSystemObject },'Publish.Scene');
             return false;
         }
 
         // fetch scene
         this.scene = oID.idObject ? await DBAPI.Scene.fetch(oID.idObject) : null;
         if (!this.scene) {
-            LOG.error(`PublishScene.fetchScene could not compute scene from ${JSON.stringify(oID, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'fetch scene failed','could not compute scene',{ objectID: oID },'Publish.Scene');
             return false;
         }
 
@@ -244,7 +243,7 @@ export class PublishScene {
         if (changingPubState) {
             if (ePublishedStateIntended !== COMMON.ePublishedState.eNotPublished &&
                (!this.scene.ApprovedForPublication || !this.scene.PosedAndQCd)) {
-                LOG.error(`PublishScene.fetchScene attempting to publish non-Approved and/or non-QC'd scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'fetch scene failed','attempting to publish non-Approved and/or non-QC scene',{ scene: this.scene },'Publish.Scene');
                 return false;
             }
 
@@ -252,7 +251,7 @@ export class PublishScene {
             if (!this.scene.EdanUUID) {
                 this.scene.EdanUUID = uuidv4();
                 if (!await this.scene.update()) {
-                    LOG.error(`PublishScene.fetchScene unable to persist UUID for scene object ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                    RK.logError(RK.LogSection.eCOLL,'fetch scene failed','unable to persist UUID for scene object',{ scene: this.scene },'Publish.Scene');
                     return false;
                 }
             }
@@ -261,7 +260,7 @@ export class PublishScene {
         // compute subject(s) owning this scene
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(this.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
         if (!await OG.fetch()) {
-            LOG.error(`PublishScene.fetchScene unable to compute object graph for scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'fetch scene failed','unable to compute object graph for scene',{ scene: this.scene },'Publish.Scene');
             return false;
         }
         if (OG.subject && OG.subject.length > 0)
@@ -285,7 +284,7 @@ export class PublishScene {
             return null;
         const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
         if (!MSXs) {
-            LOG.error(`PublishScene.computeDownloadMSXMap unable to fetch ModelSceneXrefs for scene ${idScene}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'compute download map','unable to fetch ModelSceneXrefs for scene',{ idScene },'Publish.Scene');
             return null;
         }
 
@@ -312,32 +311,40 @@ export class PublishScene {
         const newDownloadState: boolean = newPosedAndQCd && DBAPI.LicenseAllowsDownloadGeneration(LicenseNew?.RestrictLevel);
 
         if (oldDownloadState === newDownloadState)
-            return PublishScene.sendResult(true);
+            return { success: true };
 
         if (newDownloadState) {
-            LOG.info(`PublishScene.handleSceneUpdates generating downloads for scene ${idScene} (skipping)`, LOG.LS.eGQL);
+            RK.logInfo(RK.LogSection.eCOLL,'handle scene updates','generating downloads for scene (skipping)',{ idScene },'Publish.Scene');
+
             // Generate downloads
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
-            if (!workflowEngine)
-                return PublishScene.sendResult(false, `Unable to fetch workflow engine for download generation for scene ${idScene}`);
+            if (!workflowEngine) {
+                RK.logError(RK.LogSection.eCOLL,'handle scene updates','Unable to fetch workflow engine for download generation for scene',{ idScene },'Publish.Scene');
+                return { success: false, error: `Unable to fetch workflow engine for download generation for scene ${idScene}` };
+            }
 
             // trigger the workflow/recipe
             // HACK: disable automatic download generation for the moment
             // workflowEngine.generateSceneDownloads(idScene, { idUserInitiator: _idUser }); // don't await
             return { success: true, downloadsGenerated: false, downloadsRemoved: false };
         } else { // Remove downloads
-            LOG.info(`PublishScene.handleSceneUpdates removing downloads for scene ${idScene}`, LOG.LS.eGQL);
+            RK.logInfo(RK.LogSection.eCOLL,'handle scene updates','removing downloads for scene',{ idScene },'Publish.Scene');
+
             // Compute downloads
             const DownloadMSXMap: Map<number, DBAPI.ModelSceneXref> | null = await PublishScene.computeDownloadMSXMap(idScene);
-            if (!DownloadMSXMap)
-                return PublishScene.sendResult(false, `Unable to fetch scene downloads for scene ${idScene}`);
+            if (!DownloadMSXMap) {
+                RK.logError(RK.LogSection.eCOLL,'handle scene update failed','Unable to fetch scene downloads for scene',{ idScene },'Publish.Scene');
+                return { success: false, error: `Unable to fetch scene downloads for scene ${idScene}` };
+            }
 
             // For each download, compute assets, and set those to having an asset vresion override of 0, which means do not attach to the cloned system object
             const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
             for (const idSystemObject of DownloadMSXMap.keys()) {
                 const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
-                if (!assets)
-                    return PublishScene.sendResult(false, `Unable to fetch assets for idSystemObject ${idSystemObject} for scene ${idScene}`);
+                if (!assets) {
+                    RK.logError(RK.LogSection.eCOLL,'handle scene update failed','Unable to fetch assets for idSystemObject',{ idSystemObject },'Publish.Scene');
+                    return { success: false, error: `Unable to fetch assets for idSystemObject ${idSystemObject} for scene ${idScene}` };
+                }
                 for (const asset of assets)
                     assetVersionOverrideMap.set(asset.idAsset, 0);
             }
@@ -351,23 +358,17 @@ export class PublishScene {
         }
     }
 
-    private static sendResult(success: boolean, error?: string): H.IOResults {
-        if (!success)
-            LOG.error(error, LOG.LS.eCOLL);
-        return { success, error };
-    }
-
     private async collectAssets(ePublishedStateIntended?: COMMON.ePublishedState): Promise<boolean> {
         // LOG.info(`>>> collectAssets.DownloadMSXMap: ${H.Helpers.JSONStringify(this.DownloadMSXMap)}`,LOG.LS.eDEBUG);
         if (!this.DownloadMSXMap)
             return false;
         this.assetVersions = await DBAPI.AssetVersion.fetchLatestFromSystemObject(this.idSystemObject);
         if (!this.assetVersions || this.assetVersions.length === 0) {
-            LOG.error(`PublishScene.collectAssets unable to load asset versions for scene ${JSON.stringify(this.scene, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'collect assets failed','unable to load asset versions for scene',{ scene: this.scene },'Publish.Scene');
             return false;
         }
 
-        LOG.info(`PublishScene.collectAssets downloadMSXMap ${H.Helpers.JSONStringify(this.DownloadMSXMap)}`, LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eCOLL,'collect assets','download MSX map',{ downloadMSXMap: this.DownloadMSXMap },'Publish.Scene');
 
         // first pass through assets: detect and record the scene file (first file to match *.svx.json); lookup supporting information
         // prepare to extract and discard the path to this file, so that the scene zip is "rooted" at the svx.json
@@ -375,9 +376,9 @@ export class PublishScene {
         for (const assetVersion of this.assetVersions) {
             // grab our system object for this asset version
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-            LOG.info(`PublishScene.collectAssets considering assetVersion=${JSON.stringify(assetVersion, H.Helpers.saferStringify)} asset=${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+            RK.logInfo(RK.LogSection.eCOLL,'collect assets','considering assetVersion',{ assetVersion, asset },'Publish.Scene');
             if (!asset) {
-                LOG.error(`PublishScene.collectAssets unable to load asset by id ${assetVersion.idAsset}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'collect assets failed','unable to load asset by id',{ assetVersion },'Publish.Scene');
                 return false;
             }
 
@@ -388,7 +389,7 @@ export class PublishScene {
             let isAttachment: boolean = false;
             const SOAssetVersion: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
             if (!SOAssetVersion) {
-                LOG.error(`PublishScene.collectAssets unable to compute system object for ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'collect assets failed','unable to compute system object',{ assetVersion },'Publish.Scene');
                 return false;
             }
             const metadataSet: DBAPI.Metadata[] | null = await  DBAPI.Metadata.fetchFromSystemObject(SOAssetVersion.idSystemObject);
@@ -400,7 +401,7 @@ export class PublishScene {
                     }
                 }
             } else
-                LOG.error(`PublishScene.collectAssets unable to compute metadata for ${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'collect assets failed','unable to compute metadata',{ assetVersion },'Publish.Scene');
 
             // if we have our asset and a system object (always the case?) then we see if this asset is in the download/resource
             // map...
@@ -412,7 +413,7 @@ export class PublishScene {
                 } else {
                     const model: DBAPI.Model | null = await DBAPI.Model.fetch(modelSceneXref.idModel);
                     if (!model) {
-                        LOG.error(`PublishScene.collectAssets unable to load model from xref ${H.Helpers.JSONStringify(modelSceneXref)}`, LOG.LS.eCOLL);
+                        RK.logError(RK.LogSection.eCOLL,'collect assets failed','unable to load model from xref',{ modelSceneXref },'Publish.Scene');
                         return false;
                     }
                     // LOG.info(`>>> PublishScene.collectAssets adding to list with MSX (${asset.FileName}|${isAttachment}|${H.Helpers.JSONStringify(modelSceneXref)}`, LOG.LS.eDEBUG);
@@ -421,14 +422,13 @@ export class PublishScene {
                     // HACK: special case for handling dual-use assets (draco/usdz), which will be added as downloads/attachments by default.
                     // whe check if we're dealing with that asset and add like other scene referenced assets. (i.e. we omit the MSX and metadataSet)
                     if(modelSceneXref.Usage === 'App3D' || modelSceneXref.Usage === 'iOSApp3D') {
-                        LOG.info(`>>> PublishScene.collectAssets adding draco/usdz assets again (${asset.FileName})`,LOG.LS.eDEBUG);
+                        RK.logDebug(RK.LogSection.eCOLL,'collect assets failed','adding draco/usdz assets again',{ asset },'Publish.Scene');
                         this.SacList.push({ idSystemObject: asset.idSystemObject, asset, assetVersion, metadataSet: undefined });
                     }
                 }
 
-            } else {
-                LOG.info(`PublishScene.collectAssets not adding. no idSystemObject ${H.Helpers.JSONStringify(asset)}|${H.Helpers.JSONStringify(metadataSet)}`, LOG.LS.eDEBUG);
-            }
+            } else
+                RK.logDebug(RK.LogSection.eCOLL,'collect assets failed','not adding. no idSystemObject',{ asset, metadataSet },'Publish.Scene');
 
             if (!this.sceneFile && assetVersion.FileName.toLowerCase().endsWith('.svx.json')) {
                 this.sceneFile = assetVersion.FileName;
@@ -438,14 +438,14 @@ export class PublishScene {
                 if (ePublishedStateIntended !== undefined) {
                     const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
                     if (!RSR.success || !RSR.readStream) {
-                        LOG.error(`PublishScene.collectAssets failed to extract stream for scene's asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eCOLL);
+                        RK.logError(RK.LogSection.eCOLL,'collect assets failed',`failed to extract stream for scene asset version: ${RSR.error}`,{ assetVersion },'Publish.Scene');
                         return false;
                     }
 
                     const svx: SvxReader = new SvxReader();
                     stageRes = await svx.loadFromStream(RSR.readStream);
                     if (!stageRes.success) {
-                        LOG.error(`PublishScene.collectAssets failed to extract scene's svx.json contents: ${stageRes.error}`, LOG.LS.eCOLL);
+                        RK.logError(RK.LogSection.eCOLL,'collect assets failed',`failed to extract scene svx.json contents: ${stageRes.error}`,{},'Publish.Scene');
                         return false;
                     }
                     this.svxDocument = svx.SvxDocument;
@@ -459,14 +459,14 @@ export class PublishScene {
 
     private async stageSceneFiles(): Promise<boolean> {
         if (this.SacList.length <= 0 || !this.scene) {
-            LOG.error(`PublishScene.stageSceneFiles cannot stage files for scene (${this.sceneFile}). No scene or assets list (${this.scene}|${this.SacList.length})`,LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'stage scene files failed','cannot stage files for scene. No scene or assets list',{ sceneFile: this.sceneFile, scene: this.scene, sacList: this.SacList },'Publish.Scene');
             return false;
         }
         let stageRes: H.IOResults = { success: true };
 
         // log what will be included
         const assets: string[] = this.SacList.map(SAC => { return `${SAC.asset.FileName}(v${SAC.assetVersion.Version})`; });
-        LOG.info(`PublishScene.stageSceneFiles collecting assets for scene (${this.sceneFile}): ${assets.join(',')}`,LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'stage scene files','collecting assets for scene',{ sceneFile: this.sceneFile, assets },'Publish.Scene');
 
         // second pass: zip up appropriate assets; prepare to copy downloads
         const zip: ZIP.ZipStream = new ZIP.ZipStream();
@@ -476,7 +476,7 @@ export class PublishScene {
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`PublishScene.stageSceneFiles failed to extract stream for asset version ${SAC.assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`failed to extract stream for asset version: ${RSR.error}`,{ ...SAC.assetVersion },'Publish.Scene');
                 return false;
             }
 
@@ -486,10 +486,11 @@ export class PublishScene {
                 rebasedPath = rebasedPath.substring(1);
 
             const fileNameAndPath: string = path.posix.join(rebasedPath, SAC.assetVersion.FileName);
-            LOG.info(`PublishScene.stageSceneFiles adding ${fileNameAndPath} to zip`, LOG.LS.eCOLL);
+            RK.logDebug(RK.LogSection.eCOLL,'stage scene files','adding to zip',{ fileNameAndPath },'Publish.Scene');
+
             const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
             if (!res.success) {
-                LOG.error(`PublishScene.stageSceneFiles failed to add asset version ${SAC.assetVersion.idAssetVersion} to zip: ${res.error}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`failed to add asset version to zip: ${res.error}`,{ ...SAC.assetVersion },'Publish.Scene');
                 return false;
             }
         }
@@ -497,7 +498,7 @@ export class PublishScene {
         // stream entire zip
         const zipStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
         if (!zipStream) {
-            LOG.error('PublishScene.stageSceneFiles failed to extract stream from zip', LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'stage scene files failed','failed to extract stream from zip',{},'Publish.Scene');
             return false;
         }
 
@@ -506,7 +507,7 @@ export class PublishScene {
         if (!stageRes.success)
             stageRes = await H.Helpers.createDirectory(Config.collection.edan.stagingRoot);
         if (!stageRes.success) {
-            LOG.error(`PublishScene.stageSceneFiles unable to ensure existence of staging directory ${Config.collection.edan.stagingRoot}: ${stageRes.error}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`unable to ensure existence of staging directory: ${stageRes.error}`,{ stagingRoot: Config.collection.edan.stagingRoot },'Publish.Scene');
             return false;
         }
 
@@ -516,15 +517,16 @@ export class PublishScene {
         const noFinalSlash: boolean = !Config.collection.edan.upsertContentRoot.endsWith('/');
         this.sharedName = Config.collection.edan.upsertContentRoot + (noFinalSlash ? '/' : '') + this.scene.EdanUUID! + '.zip'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const stagedName: string = path.join(Config.collection.edan.stagingRoot, this.scene.EdanUUID!) + '.zip'; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        LOG.info(`PublishScene.stageSceneFiles staging file ${stagedName}, referenced in publish as ${this.sharedName}`, LOG.LS.eCOLL);
-        LOG.info(`PublishScene.stageSceneFiles paths (upsertRoot: ${Config.collection.edan.upsertContentRoot} | stagingRoot: ${Config.collection.edan.stagingRoot} | shared: ${this.sharedName} | staged: ${stagedName}).`,LOG.LS.eDEBUG);
+
+        RK.logDebug(RK.LogSection.eCOLL,'stage scene files','staging file referenced in publish as shared name',{ upsertRoot: Config.collection.edan.upsertContentRoot, stagingRoot: Config.collection.edan.stagingRoot, sharedName: this.sharedName, stagedName },'Publish.Scene');
 
         stageRes = await H.Helpers.writeStreamToFile(zipStream, stagedName);
         if (!stageRes.success) {
-            LOG.error(`PublishScene.stageSceneFiles unable to stage file ${stagedName}: ${stageRes.error}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`unable to stage file: ${stageRes.error}`,{ stagedName },'Publish.Scene');
             return false;
         }
-        LOG.info(`PublishScene.stageSceneFiles staged file ${stagedName}`, LOG.LS.eCOLL);
+
+        RK.logInfo(RK.LogSection.eCOLL,'stage scene files success',undefined,{ stagedName },'Publish.Scene');
         return true;
     }
 
@@ -546,19 +548,20 @@ export class PublishScene {
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`PublishScene.stageDownloads failed to extract stream for asset version ${SAC.assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'stage downloads failed',`failed to extract stream for asset version: ${RSR.error}`,{ ...SAC.assetVersion },'Publish.Scene');
                 return false;
             }
 
             // copy stream to resourcesHotFolder
             const stagedName: string = path.join(this.resourcesHotFolder, SAC.assetVersion.FileName);
-            LOG.info(`PublishScene.stageDownloads staging file ${stagedName}`, LOG.LS.eCOLL);
+            RK.logInfo(RK.LogSection.eCOLL,'stage downloads',undefined,{ stagedName },'Publish.Scene');
+
             stageRes = await H.Helpers.writeStreamToFile(RSR.readStream, stagedName);
             if (!stageRes.success) {
-                LOG.error(`PublishScene.stageDownloads unable to stage file ${stagedName}: ${stageRes.error}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'stage downloads failed',`unable to stage file: ${stageRes.error}`,{ stagedName },'Publish.Scene');
                 return false;
             }
-            LOG.info(`PublishScene.stageDownloads staged file ${stagedName}`, LOG.LS.eCOLL);
+            RK.logInfo(RK.LogSection.eCOLL,'stage downloads success',undefined,{ stagedName },'Publish.Scene');
 
             // prepare download entry
             const resource: COL.Edan3DResource | null = await this.extractResource(SAC, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
@@ -578,7 +581,7 @@ export class PublishScene {
         if (!stageRes.success)
             stageRes = await H.Helpers.createDirectory(this.resourcesHotFolder);
         if (!stageRes.success) {
-            LOG.error(`PublishScene.ensureResourceHotFolderExists failed to create resources hot folder ${this.resourcesHotFolder}: ${stageRes.error}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'check hot folder exists failed',`failed to create resources hot folder: ${stageRes.error}`,{ hotFolder: this.resourcesHotFolder },'Publish.Scene');
             return false;
         }
         return true;
@@ -695,7 +698,9 @@ export class PublishScene {
         if (SAC.model && SAC.modelSceneXref) {
             const typeV: DBAPI.Vocabulary | undefined = SAC.model.idVCreationMethod ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVCreationMethod) : undefined;
             switch (typeV?.Term) {
-                default: LOG.error(`PublishScene.extractResource found no type mapping for ${typeV?.Term}`, LOG.LS.eCOLL); break;
+                default:
+                    RK.logError(RK.LogSection.eCOLL,'extract resource failed','found no type mapping', { type: typeV?.Term },'Publish.Scene');
+                    break;
                 case undefined: break;
                 case 'Scan To Mesh':    type = '3D mesh'; break;
                 case 'CAD':             type = 'CAD model'; break;
@@ -703,7 +708,9 @@ export class PublishScene {
 
             const unitsV: DBAPI.Vocabulary | undefined = SAC.model.idVUnits ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVUnits) : undefined;
             switch (unitsV?.Term) {
-                default: LOG.error(`PublishScene.extractResource found no units mapping for ${unitsV?.Term}`, LOG.LS.eCOLL); break;
+                default:
+                    RK.logError(RK.LogSection.eCOLL,'extract resource failed','found no units mapping', { units: unitsV?.Term },'Publish.Scene');
+                    break;
                 case undefined: break;
                 case 'Millimeter':  UNITS = 'mm'; break;
                 case 'Centimeter':  UNITS = 'cm'; break;
@@ -717,7 +724,9 @@ export class PublishScene {
 
             const modelTypeV: DBAPI.Vocabulary | undefined = SAC.model.idVFileType ? await CACHE.VocabularyCache.vocabulary(SAC.model.idVFileType) : undefined;
             switch (modelTypeV?.Term) {
-                default: LOG.error(`PublishScene.extractResource found no model file type mapping for ${modelTypeV?.Term}`, LOG.LS.eCOLL); break;
+                default:
+                    RK.logError(RK.LogSection.eCOLL,'stage downloads failed','found no model file type mapping',{ type: modelTypeV?.Term },'Publish.Scene');
+                    break;
                 case undefined: break;
                 case 'obj - Alias Wavefront Object':                MODEL_FILE_TYPE = 'obj'; break;
                 case 'ply - Stanford Polygon File Format':          MODEL_FILE_TYPE = 'ply'; break;
@@ -737,7 +746,9 @@ export class PublishScene {
             }
 
             switch (path.extname(SAC.assetVersion.FileName).toLowerCase()) {
-                default: LOG.error(`PublishScene.extractResource found no file type mapping for ${SAC.assetVersion.FileName}`, LOG.LS.eCOLL); break;
+                default:
+                    RK.logError(RK.LogSection.eCOLL,'stage downloads failed','found no file type mapping',{ assetVersion: SAC.assetVersion },'Publish.Scene');
+                    break;
                 case '.zip':    FILE_TYPE = 'zip'; break;
                 case '.glb':    FILE_TYPE = 'glb'; break;
                 case '.usdz':   FILE_TYPE = 'usdz'; break;
@@ -779,17 +790,16 @@ export class PublishScene {
         if (LR && LR.License &&
             DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) === COMMON.ePublishedState.eNotPublished)
             ePublishedStateIntended = COMMON.ePublishedState.eNotPublished;
-        LOG.info(`PublishScene.updatePublishedState computed license ${LR ? JSON.stringify(LR.License, H.Helpers.saferStringify) : 'none'}, resulting in published state of ${ePublishedStateIntended}`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'update published state','computed license, resulting in published state',{ license: LR?.License ?? 'none', ePublishedStateIntended },'Publish.Scene');
 
         if (this.systemObjectVersion.publishedStateEnum() !== ePublishedStateIntended) {
             this.systemObjectVersion.setPublishedState(ePublishedStateIntended);
             if (!await this.systemObjectVersion.update()) {
-                LOG.error(`PublishScene.updatePublishedState unable to update published state for ${JSON.stringify(this.systemObjectVersion, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'update published state failed','unable to update published state',{ systemObjectVersion: this.systemObjectVersion },'Publish.Scene');
                 return false;
             }
-        } else {
-            LOG.info(`PublishScene.updatePublishedState skipping.... ${H.Helpers.JSONStringify(ePublishedStateIntended)}`, LOG.LS.eDEBUG);
-        }
+        } else
+            RK.logDebug(RK.LogSection.eCOLL,'update published state','skipping...',{ ePublishedStateIntended },'Publish.Scene');
 
         return true;
     }
@@ -817,7 +827,7 @@ export class PublishScene {
             case COMMON.ePublishedState.eInternal:           status = 1; publicSearch = false; downloads = true;  break; // same as 'NotPublished' but needed since default is 'NotPublished' and never triggers update.
             // case COMMON.ePublishedState.eViewOnly:           status = 0; publicSearch = true;  downloads = false; break;
         }
-        LOG.info(`PublishScene.computeEdanSearchFlags(${COMMON.ePublishedState[eState]}) = { status ${status}, publicSearch ${publicSearch}, downloads ${downloads} }`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'compute EDAN search flags',undefined,{ state: COMMON.ePublishedState[eState], status, publicSearch, downloads },'Publish.Scene');
         return { status, publicSearch, downloads };
     }
 }

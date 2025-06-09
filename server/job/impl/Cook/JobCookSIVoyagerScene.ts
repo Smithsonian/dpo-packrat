@@ -5,7 +5,6 @@ import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
 import { WorkflowUtil } from '../../../workflow/impl/Packrat/WorkflowUtil';
-import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
@@ -20,7 +19,7 @@ import * as path from 'path';
 import { Readable } from 'stream';
 import { ModelHierarchy, NameHelpers } from '../../../utils/nameHelpers';
 import { IngestTitle } from '../../../types/graphql';
-import { RecordKeeper } from '../../../records/recordKeeper';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export type JobCookSIVoyagerSceneMetaDataFile = {
     edanRecordId: string;
@@ -58,20 +57,21 @@ export class JobCookSIVoyagerSceneParameterHelper {
 
         const modelSource: DBAPI.Model | null = idModel ? await DBAPI.Model.fetch(idModel) : null;
         if (!modelSource)
-            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to fetch model with id ${idModel}`);
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute failed','unable to fetch model with id',idModel);
 
         // compute ItemParent of ModelSource
         const SOModelSource: DBAPI.SystemObject | null = await modelSource.fetchSystemObject();
         if (!SOModelSource)
-            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute system object from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute failed','unable to compute system object from Model Source',modelSource);
 
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(SOModelSource.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
         if (!await OG.fetch())
-            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute object graph from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute failed','unable to compute object graph from Model Source',modelSource);
 
         const metaDataFileJSON: JobCookSIVoyagerSceneMetaDataFile | null = await JobCookSIVoyagerSceneParameterHelper.computeSceneMetaData(OG, modelSource);
         if (!metaDataFileJSON)
-            return JobCookSIVoyagerSceneParameterHelper.logError(`unable to compute metadata file JSON from Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)}`);
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute failed','unable to compute metadata file JSON from Model Source',modelSource);
+
 
         const sceneName: string = metaDataFileJSON.title + (metaDataFileJSON.sceneTitle ? ': ' + metaDataFileJSON.sceneTitle : '');
         return new JobCookSIVoyagerSceneParameterHelper(/*idModel ?? 0, */modelSource, SOModelSource, OG, metaDataFileJSON, sceneName, metaDataFileJSON.sceneTitle);
@@ -79,24 +79,18 @@ export class JobCookSIVoyagerSceneParameterHelper {
 
     private static async computeSceneMetaData(OG: DBAPI.ObjectGraph, modelSource: DBAPI.Model): Promise<JobCookSIVoyagerSceneMetaDataFile | null> {
         const subjects: DBAPI.Subject[] | null = OG.subject;
-        if (subjects === null || subjects.length === 0 || subjects.length > 1) { // if we have no subjects or multiple subjects, return default
-            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute single Subject from OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-            return null;
-        }
+        if (subjects === null || subjects.length === 0 || subjects.length > 1) // if we have no subjects or multiple subjects, return default
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute scene metadata failed','unable to compute single Subject from OG',OG);
 
         // Compute subject's Edan Record ID identifier:
         const subject: DBAPI.Subject = subjects[0];
         const SOSubject: DBAPI.SystemObject | null = await subject.fetchSystemObject();
-        if (!SOSubject) {
-            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute system object for Subject ${JSON.stringify(subject, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
-            return null;
-        }
+        if (!SOSubject)
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute scene metadata failed','unable to compute system object for Subject',{ subject });
 
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(SOSubject.idSystemObject);
-        if (!identifiers) {
-            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute identifiers for Subject System Object ${SOSubject.idSystemObject}`, LOG.LS.eJOB);
-            return null;
-        }
+        if (!identifiers)
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute scene metadata failed','unable to compute identifiers for Subject System Object',{ idSystemObject: SOSubject.idSystemObject });
 
         // select first identifier of type Edan Record ID
         let edanRecordId: string = '';
@@ -108,17 +102,16 @@ export class JobCookSIVoyagerSceneParameterHelper {
         }
 
         const MH: ModelHierarchy | null = await NameHelpers.computeModelHierarchy(modelSource);
-        if (!MH) {
-            LOG.error(`JobCookSIVoyagerSceneParameterExtract.computeSceneMetaData unable to compute model hierarchy from model ${H.Helpers.JSONStringify(modelSource)}`, LOG.LS.eJOB);
-            return null;
-        }
+        if (!MH)
+            return JobCookSIVoyagerSceneParameterHelper.logError('compute scene metadata failed','unable to compute model hierarchy from model',modelSource);
+
         const IngestTitle: IngestTitle = NameHelpers.sceneTitleOptions([MH]);
         const sceneTitle: string | undefined = IngestTitle.subtitle && IngestTitle.subtitle.length === 1 ? IngestTitle.subtitle[0] ?? undefined : undefined;
         return { edanRecordId, title: IngestTitle.title, sceneTitle };
     }
 
-    private static logError(errorBase: string): null {
-        LOG.error(`JobCookSIVoyagerSceneParameterExtract.compute ${errorBase}`, LOG.LS.eJOB);
+    private static logError(error: string, reason: string, data: any): null {
+        RK.logError(RK.LogSection.eJOB,error,reason,{ ...data },'VoyagerSceneParameterHelper');
         return null;
     }
 }
@@ -207,40 +200,40 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             await this.appendToReportAndLog(`${this.name()} ${results.success ? 'succeeded' : 'failed: ' + results.error}`, !results.success);
             return results;
         } catch (error) {
-            LOG.error('JobCookSIVoyagerScene.cleanupJob', LOG.LS.eJOB, error);
+            RK.logError(RK.LogSection.eJOB,'cleanup failed',H.Helpers.getErrorString(error),{ parameters: this.parameters },'Job.VoyagerScene');
             return { success: false, error: JSON.stringify(error) };
         }
     }
 
     private async createSystemObjects(): Promise<H.IOResults> {
         if (!this.parameterHelper)
-            return this.logError('JobCookSIVoyagerScene.createSystemObjects called without needed parameters');
+            return this.logError('create system objects failed','called without needed parameters',undefined);
 
         const svxFile: string = this.parameters.svxFile ?? 'scene.svx.json';
         const vScene: DBAPI.Vocabulary | undefined = await this.computeVocabAssetTypeScene();
         const vModel: DBAPI.Vocabulary | undefined = await this.computeVocabAssetTypeModelGeometryFile();
         if (!vScene || !vModel)
-            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to calculate vocabulary needed to ingest scene file ${svxFile}`);
+            return this.logError('create system objects failed','unable to calculate vocabulary needed to ingest scene file',{ svxFile });
 
         // Retrieve svx.json
         let RSR: STORE.ReadStreamResult = await this.fetchFile(svxFile);
         if (!RSR.success || !RSR.readStream)
-            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to fetch stream for scene file ${svxFile}: ${RSR.error}`);
+            return this.logError('create system objects failed',`unable to fetch stream for scene file: ${RSR.error}`,{ svxFile });
 
         // Parse Scene
         const svx: SvxReader = new SvxReader();
         const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
         if (!res.success || !svx.SvxExtraction)
-            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to parse scene file ${svxFile}: ${res.error}`);
-        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] parse scene`, LOG.LS.eJOB);
-        // LOG.info(`JobCookSIVoyagerScene.createSystemObjects fetched scene:\n${JSON.stringify(svx.SvxExtraction, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
+            return this.logError('create system objects failed',`unable to parse scene file: ${res.error}`,{ svxFile });
+
+        // RK.logDebug(RK.LogSection.eJOB,'extracted svx',undefined,svx.SvxExtraction,'Job.VoyagerScene');
 
         // Look for an existing scene, which is a child of modelSource
-        // TODO: what if there are multiple?
+        // TODO: what if there are multiple scenes as a child of modelSource?
         const modelSource: DBAPI.Model = this.parameterHelper.modelSource;
         const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
         if (!scenes)
-            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to fetch children scenes of model ${modelSource.idModel}`);
+            return this.logError('create system objects failed','unable to fetch children scenes of model', { idModel: modelSource.idModel });
 
         // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one);
         // If we have just one scene, before reusing it, see if the model names all match up
@@ -267,21 +260,20 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             if (this.parameterHelper.sceneTitle)
                 scene.Title = this.parameterHelper.sceneTitle;
             if (!await scene.create())
-                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create Scene file ${svxFile}: database error`);
+                return this.logError('create system objects failed','unable to create Scene file: database error',undefined);
 
             // wire ModelSource to Scene
             const SOX: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, scene);
             if (!SOX)
-                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`);
+                return this.logError('create system objects failed','unable to wire Model Source to Scene',{ modelSource, scene });
 
             // wire ItemParent to Scene
             const OG: DBAPI.ObjectGraph = this.parameterHelper.OG;
             if (OG.item && OG.item.length > 0) {
                 const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(OG.item[0], scene);
                 if (!SOX2)
-                    return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire item ${JSON.stringify(OG.item[0], H.Helpers.saferStringify)} to Scene ${JSON.stringify(scene, H.Helpers.saferStringify)}: database error`);
+                    return this.logError('create system objects failed','unable to wire item to Scene', { item: OG.item[0], scene });
             }
-            // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ModelSource to Scene: ${JSON.stringify(SOX, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
         } else {
             // determine if we are updating an existing scene with an existing scene asset:
             const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
@@ -295,16 +287,17 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         }
                     }
                 } else
-                    LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch assets for scene systemobject ${JSON.stringify(sceneSO, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'create system objects failed','unable to fetch assets for scene systemobject',{ sceneSO },'Job.VoyagerScene');
             } else
-                LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch system object for ${JSON.stringify(scene, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                // TODO: why don't we return on failure?
+                RK.logError(RK.LogSection.eJOB,'create system objects failed','unable to fetch system object',{ scene },'Job.VoyagerScene');
         }
 
         // Scene owns this ingested asset of the SVX File
         // Read file a second time ... cloneStream isn't available
         RSR = await this.fetchFile(svxFile);
         if (!RSR.success || !RSR.readStream)
-            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to fetch stream for scene file ${svxFile}: ${RSR.error}`);
+            return this.logError('create system objects failed',`unable to fetch stream for scene file: ${RSR.error}`,{ svxFile });
 
         const LS: LocalStore = await ASL.getOrCreateStore();
         const idUserCreator: number = LS?.idUser ?? 0;
@@ -323,9 +316,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         };
         let IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success)
-            return this.logError(`unable to ingest scene file ${svxFile}: ${IAR.error}`);
+            return this.logError('create system objects failed',`unable to ingest scene file: ${IAR.error}`,{ svxFile });
         if (IAR.assetVersions && IAR.assetVersions.length > 1)
-            LOG.error(`JobCookSIVoyagerScene.createSystemObjects created multiple asset versions, unexpectedly, ingesting ${svxFile}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'create system objects failed','created multiple asset versions, unexpectedly',{ svxFile },'Job.VoyagerScene');
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
@@ -364,18 +357,18 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                                         break;
                                 }
                             } else
-                                LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch assets for model systemobject ${JSON.stringify(modelSO, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                                RK.logError(RK.LogSection.eJOB,'create system objects failed','unable to fetch assets for model SystemObject',{ modelSO },'Job.VoyagerScene');
                         } else
-                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable to fetch system object for ${JSON.stringify(model, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                            RK.logError(RK.LogSection.eJOB,'create system objects failed','unable to fetch system object',{ model },'Job.VoyagerScene');
                     } else { // create model and related records
                         model = await this.transformModelSceneXrefIntoModel(MSX, modelSource);
                         if (!await model.create())
-                            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create Model from referenced model ${MSX.Name}: database error`);
+                            return this.logError('create system objects failed','unable to create Model from referenced model',MSX);
 
                         // wire ModelSource to Model
                         const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
                         if (!SOX1)
-                            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire Model Source ${JSON.stringify(modelSource, H.Helpers.saferStringify)} to Model ${JSON.stringify(model, H.Helpers.saferStringify)}: database error`);
+                            return this.logError('create system objects failed','unable to wire Model Source to Model',{ modelSource, model });
 
                         // Create ModelSceneXref for new model and parent scene
                         /* istanbul ignore else */
@@ -383,18 +376,18 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                             MSX.idModel = model.idModel;
                             MSX.idScene = scene.idScene;
                             if (!await MSX.create())
-                                return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to create ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`);
+                                return this.logError('create system objects failed','unable to create ModelSceneXref for model xref',MSX);
                         } else
-                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unexpected non-null ModelSceneXref for model xref ${JSON.stringify(MSX)}: database error`, LOG.LS.eJOB);
+                            RK.logError(RK.LogSection.eJOB,'create system objects failed','unexpected non-null ModelSceneXref for model xref',{ MSX },'Job.VoyagerScene');
 
                         const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
                         if (!SOX2)
-                            return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to wire Scene ${JSON.stringify(scene, H.Helpers.saferStringify)} and Model ${JSON.stringify(model, H.Helpers.saferStringify)} together: database error`);
+                            return this.logError('create system objects failed','unable to wire Scene and Model together', { model, scene });
                     }
 
                     const RSRModel: STORE.ReadStreamResult = await this.fetchFile(MSX.Name);
                     if (!RSRModel.success || !RSRModel.readStream)
-                        return this.logError(`JobCookSIVoyagerScene.createSystemObjects unable to fetch stream for model file ${MSX.Name}: ${RSRModel.error}`);
+                        return this.logError('create system objects failed',`unable to fetch stream for model file: ${RSRModel.error}`,MSX);
 
                     const FileName: string = path.basename(MSX.Name);
                     const FilePath: string = path.dirname(MSX.Name);
@@ -414,9 +407,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     };
                     IAR = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISIModel);
                     if (!IAR.success)
-                        return this.logError(`unable to ingest model file ${MSX.Name}: ${IAR.error}`);
+                        return this.logError('create system objects failed',`unable to ingest model file: ${IAR.error}`,MSX);
                     if (IAR.assetVersions && IAR.assetVersions.length > 1)
-                        LOG.error(`JobCookSIVoyagerScene.createSystemObjects created multiple asset versions, unexpectedly, ingesting ${MSX.Name}`, LOG.LS.eJOB);
+                        RK.logError(RK.LogSection.eJOB,'create system objects failed','created multiple asset versions, unexpectedly',{ MSX },'Job.VoyagerScene');
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                     const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
@@ -434,7 +427,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                         const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref | null =
                             await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(SOV.idSystemObjectVersion, assetVersion.idAsset, assetVersion.idAssetVersion);
                         if (!SOVAVX)
-                            LOG.error(`JobCookSIVoyagerScene.createSystemObjects unable create/update SystemObjectVersionAssetVersionXref for ${JSON.stringify(SOV, H.Helpers.saferStringify)}, ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eJOB);
+                            RK.logError(RK.LogSection.eJOB,'create system objects failed','unable create/update SystemObjectVersionAssetVersionXref',{ SOV, assetVersion },'Job.VoyagerScene');
                     }
 
                     // run si-packrat-inspect on this model
@@ -443,9 +436,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                     if (results.success)
                         this.appendToReportAndLog(`JobCookSIVoyagerScene extracted model metrics for ${FileName}`);
                     else if (results.error)
-                        this.logError(results.error);
+                        this.logError('create system objects failed',results.error,{ FileName, model });
                 } else
-                    LOG.error(`JobCookSIVoyagerScene.createSystemObjects skipping unnamed model ${JSON.stringify(MSX)}`, LOG.LS.eJOB);
+                    RK.logError(RK.LogSection.eJOB,'create system objects failed','skipping unnamed model',{ MSX },'Job.VoyagerScene');
             }
         }
 
@@ -510,7 +503,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!JobCookSIVoyagerScene.vocabVoyagerSceneModel) {
             JobCookSIVoyagerScene.vocabVoyagerSceneModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
             if (!JobCookSIVoyagerScene.vocabVoyagerSceneModel)
-                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Voyager Scene Model Model Purpose',{},'Job.VoyagerScene');
         }
         return JobCookSIVoyagerScene.vocabVoyagerSceneModel;
     }
@@ -519,7 +512,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!JobCookSIVoyagerScene.vocabAssetTypeScene) {
             JobCookSIVoyagerScene.vocabAssetTypeScene = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
             if (!JobCookSIVoyagerScene.vocabAssetTypeScene)
-                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Scene', LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Asset Type Scene',{ idJobRun: this._dbJobRun.idJobRun },'Job.VoyagerScene');
         }
         return JobCookSIVoyagerScene.vocabAssetTypeScene;
     }
@@ -528,7 +521,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile) {
             JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile);
             if (!JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile)
-                LOG.error('JobCookSIVoyagerScene unable to fetch vocabulary for Asset Type Model Geometry File', LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eJOB,'compute vocab failed','unable to fetch vocabulary for Asset Type Model Geometry File',{ idJobRun: this._dbJobRun.idJobRun },'Job.VoyagerScene');
         }
         return JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile;
     }
@@ -551,8 +544,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
             `;
 
-            RecordKeeper.logInfo(RecordKeeper.LogSection.eWF,'scene generation completed',
-                undefined,
+            RK.logInfo(RK.LogSection.eJOB,'scene generation completed',
+                undefined,undefined,
                 'Job.VoyagerScene.recordSuccess'
             );
 
@@ -562,9 +555,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 Config.http.clientUrl +'/workflow';
 
             // send email out
-            await RecordKeeper.sendEmail(
-                RecordKeeper.NotifyType.JOB_PASSED,
-                RecordKeeper.NotifyGroup.EMAIL_USER,
+            await RK.sendEmail(
+                RK.NotifyType.JOB_PASSED,
+                RK.NotifyGroup.EMAIL_USER,
                 'Scene Generation Finished',
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
@@ -592,9 +585,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
             `;
 
-            RecordKeeper.logError(RecordKeeper.LogSection.eWF,'scene generation failed',
-                undefined,
-                'Job.VoyagerScene.recordFailure'
+            RK.logError(RK.LogSection.eJOB,'scene generation failed',
+                undefined,undefined,
+                'Job.VoyagerScene'
             );
 
             // build our URL
@@ -602,9 +595,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             const url: string = Config.http.clientUrl +'/workflow';
 
             // send email out
-            await RecordKeeper.sendEmail(
-                RecordKeeper.NotifyType.JOB_FAILED,
-                RecordKeeper.NotifyGroup.EMAIL_USER,
+            await RK.sendEmail(
+                RK.NotifyType.JOB_FAILED,
+                RK.NotifyGroup.EMAIL_USER,
                 'Scene Generation Failed',
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
@@ -615,10 +608,14 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         return updated;
     }
 
-    // private async logError(errorBase: string): Promise<H.IOResults> {
-    //     const error: string = `${this.name()} ${errorBase}`;
-    //     await this.appendToReportAndLog(error, true);
-    //     return { success: false, error };
-    // }
+    private async logError(error: string, reason: string, data: any | undefined, addToReport: boolean = true): Promise<H.IOResults> {
+
+        RK.logError(RK.LogSection.eJOB,error,reason,data ? { ...data }: undefined,'Job.VoyagerScene');
+
+        if(addToReport===true)
+            await this.appendToReportAndLog(`${this.name()} ${reason}`);
+
+        return { success: false, error: reason };
+    }
 }
 

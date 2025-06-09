@@ -3,7 +3,7 @@ import * as DBAPI from '../../db';
 import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../utils/helpers';
 import { VocabularyCache } from '../../cache';
-import * as LOG from '../../utils/logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 /*
 afterAll(async done => {
     await H.Helpers.sleep(4000);
@@ -839,7 +839,8 @@ async function testVocabularyBySetAndTerm(eVocabSetId: COMMON.eVocabularySetID, 
     const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyBySetAndTerm(eVocabSetId, term);
     if (expectSuccess) {
         if (vocabulary === undefined)
-            LOG.error(`testVocabularyBySetAndTerm count not find set ${COMMON.eVocabularySetID[eVocabSetId]}, term ${term}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'vocabulary set and term',`count not find set ${COMMON.eVocabularySetID[eVocabSetId]}, term ${term}`,{},'Tests.Cache.Vocab');
+
         expect(vocabulary).toBeTruthy();
     }
     if (vocabulary)
@@ -924,7 +925,7 @@ async function testIsPreferredAsset(eVocabID: COMMON.eVocabularyID, eObjectType:
     const nonMatch: boolean = await VocabularyCache.isPreferredAsset(vocabulary.idVocabulary, SONonMatch);
     if (!expectFailure) {
         if (!match)
-            LOG.error(`testIsPreferredAsset(${COMMON.eVocabularyID[eVocabID]}, ${COMMON.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} FAILED`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'is preferred asset',`${COMMON.eVocabularyID[eVocabID]} - ${COMMON.eSystemObjectType[eObjectType]}: ${JSON.stringify(vocabulary)} FAILED`,{},'Tests.Cache.Vocab');
         // else
         //     LOG.info(`testIsPreferredAsset(${COMMON.eVocabularyID[eVocabID]}, ${COMMON.eSystemObjectType[eObjectType]}): ${JSON.stringify(vocabulary)} Success`, LOG.LS.eTEST);
         expect(match).toBeTruthy();

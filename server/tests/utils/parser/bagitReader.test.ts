@@ -1,8 +1,8 @@
 import fs from 'fs';
 import { join } from 'path';
 import { BagitReader, BagitReaderParams } from '../../../utils/parser/';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 const mockPathZip: string = join(__dirname, '../../mock/utils/zip/');
 const mockPathDir: string = join(__dirname, '../../mock/utils/bagit/');
@@ -53,7 +53,7 @@ describe('BagitReader', () => {
         for (const entry of await bagitZipStream.getAllEntries(null)) {
             const observedSize: number | null = await bagitZipStream.uncompressedSize(entry);
             const expectedSize: number | undefined = fileSizeMap.get(entry);
-            LOG.info(`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'uncompressed size',`Examined ${entry}: expected ${expectedSize} vs observed ${observedSize}`,{},'Tests.Utils.BagIt.Reader');
             expect(observedSize).not.toBeNull();
             expect(expectedSize).not.toBeUndefined();
             expect(observedSize).toEqual(expectedSize);
@@ -227,7 +227,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     let result: H.IOResults = await bagit.load();
 
     if (!result.success) {
-        LOG.error(result.error, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'test BagIt load',result.error,{},'Tests.Utils.BagIt.Reader');
         expect(expectFailure).toBeTruthy();
         return bagit;
     }
@@ -235,7 +235,7 @@ async function testBagitLoad(options: BagitLoadOptions): Promise<BagitReader> {
     if (!validate && subsequentValidate) {
         result = await bagit.validate();
         if (!result.success)
-            LOG.error(result.error, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'test BagIt load',result.error,{},'Tests.Utils.BagIt.Reader');
         expect(result.success).toBeTruthy();
     }
 

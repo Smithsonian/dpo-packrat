@@ -2,9 +2,8 @@ import * as DBAPI from '../db';
 import { IngestTitle, RelatedObjectInput } from '../types/graphql';
 import * as CACHE from '../cache';
 import * as H from './helpers';
-import * as LOG from './logger';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 import * as COMMON from '@dpo-packrat/common';
-// import sanitize from 'sanitize-filename';
 
 export const UNKNOWN_NAME: string = '<UNKNOWN>';
 
@@ -58,7 +57,7 @@ export class NameHelpers {
             .replace(/\./g, '-')                // replace periods with hyphens
             .replace(/[^a-zA-Z0-9\-_]/g, '-')   // remove everything except letters, digits, hyphens, and underscores
             .replace(/\W$/, '');                // remove the last character if it's not alphanumeric or an underscore (cleanup)
-        LOG.info(`nameHelpers.sanitizeFileName (${fileName} -> ${result})`,LOG.LS.eDEBUG);
+        RK.logInfo(RK.LogSection.eSYS,'sanitize name',`${fileName} -> ${result}`,{},'Utils.Name');
 
         return result;
     }
@@ -188,7 +187,7 @@ export class NameHelpers {
     }
 
     private static recordError(error: string): null {
-        LOG.error(`NameHelpers.${error}`, LOG.LS.eSYS);
+        RK.logError(RK.LogSection.eSYS,'record error',error,{},'Utils.Name');
         return null;
     }
 }

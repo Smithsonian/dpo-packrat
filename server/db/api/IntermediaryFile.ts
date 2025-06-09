@@ -2,7 +2,8 @@
 import { IntermediaryFile as IntermediaryFileBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> implements IntermediaryFileBase, SystemObjectBased {
     idIntermediaryFile!: number;
@@ -29,7 +30,8 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.IntermediaryFiles');
+            return false;
         }
     }
 
@@ -44,7 +46,8 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.IntermediaryFiles');
+            return false;
         }
     }
 
@@ -54,7 +57,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idIntermediaryFile, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.intermediaryFile.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.IntermediaryFiles');
             return null;
         }
     }
@@ -66,7 +69,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
             return DBC.CopyObject<IntermediaryFileBase, IntermediaryFile>(
                 await DBC.DBConnection.prisma.intermediaryFile.findUnique({ where: { idIntermediaryFile, }, }), IntermediaryFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.IntermediaryFile.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.IntermediaryFiles');
             return null;
         }
     }
@@ -76,7 +79,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
             return DBC.CopyArray<IntermediaryFileBase, IntermediaryFile>(
                 await DBC.DBConnection.prisma.intermediaryFile.findMany(), IntermediaryFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.IntermediaryFile.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.IntermediaryFiles');
             return null;
         }
     }
@@ -100,7 +103,7 @@ export class IntermediaryFile extends DBC.DBObject<IntermediaryFileBase> impleme
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, IntermediaryFile);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.IntermediaryFile.fetchDerivedFromItems', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from Items failed',H.Helpers.getErrorString(error),{ ...this },'DB.IntermediaryFiles');
             return null;
         }
     }

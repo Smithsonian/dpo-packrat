@@ -2,7 +2,8 @@
 import { Item as ItemBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { Merge } from '../../utils/types';
 
 export type ItemAndProject = Merge<Item, { idProject: number, ProjectName: string }>;
@@ -50,7 +51,8 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
+            return false;
         }
     }
 
@@ -69,7 +71,8 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
+            return false;
         }
     }
 
@@ -79,7 +82,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idItem, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.item.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -91,7 +94,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return DBC.CopyObject<ItemBase, Item>(
                 await DBC.DBConnection.prisma.item.findUnique({ where: { idItem, }, }), Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -101,7 +104,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
             return DBC.CopyArray<ItemBase, Item>(
                 await DBC.DBConnection.prisma.item.findMany(), Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -132,7 +135,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                     },
                 }), Item);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchDerivedFromSubject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from Subject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -210,7 +213,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 res.push(Item.constructFromPrisma(item));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchDerivedFromSubjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from Subjects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -242,7 +245,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 res.push(Item.constructFromPrisma(item));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchMasterFromCaptureData', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch master from CaptureData failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -274,7 +277,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 res.push(Item.constructFromPrisma(item));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchMasterFromModel', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch master from Models failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -306,7 +309,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 res.push(Item.constructFromPrisma(item));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchMasterFromScene', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch master from Scenes failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -338,7 +341,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 res.push(Item.constructFromPrisma(item));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchMasterFromIntermediaryFiles', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch master from IntermediaryFiles failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }
@@ -360,7 +363,7 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
                 JOIN Project AS P ON (SOP.idProject = P.idProject)
                 WHERE I.idItem IN (${Prisma.join(idItems)})`;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Item.fetchRelatedItemsAndProjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch related Items and Projects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Item');
             return null;
         }
     }

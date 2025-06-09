@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as solr from 'solr-client';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export enum eSolrCore {
     ePackrat,
@@ -58,7 +58,7 @@ export class SolrClient {
             return { success: true };
         } catch (err) /* istanbul ignore next */ {
             const error: string = `SolrClient.add failed: ${JSON.stringify(err)}`;
-            LOG.error(error, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'add failed',H.Helpers.getErrorString(err),{},'Navigation.Solr.Client');
             return { success: false, error };
         }
     }
@@ -69,7 +69,7 @@ export class SolrClient {
             return { success: true };
         } catch (err) /* istanbul ignore next */ {
             const error: string = `SolrClient.commit failed: ${JSON.stringify(err)}`;
-            LOG.error(error, LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'commit failed',H.Helpers.getErrorString(err),{},'Navigation.Solr.Client');
             return { success: false, error };
         }
     }

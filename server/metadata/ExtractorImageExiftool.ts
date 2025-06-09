@@ -1,7 +1,7 @@
 import { IExtractor, IExtractorResults } from './IExtractor';
-import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 import path from 'path';
 import { ExifTool, Tags } from 'exiftool-vendored';
@@ -36,7 +36,7 @@ export class ExtractorImageExiftool implements IExtractor  {
 
                     const results: H.IOResults = await H.Helpers.writeStreamToFile(inputStream, tempFile.path); /* istanbul ignore next */
                     if (!results.success) {
-                        LOG.error(`ExtractorImageExiftool.extractMetadata unable to create temp file ${tempFile.path}: ${results.error}`, LOG.LS.eMETA);
+                        RK.logError(RK.LogSection.eMETA,'extract metadata failed',`unable to create temp file: ${results.error}`,{ fileName, tempPath: tempFile.path },'Metadata.Extractor.ImageEXIFTool');
                         return results;
                     }
                     fileNameToParse = tempFile.path;
@@ -44,7 +44,7 @@ export class ExtractorImageExiftool implements IExtractor  {
 
                 const extractions: Tags | null = await ExtractorImageExiftool.exiftool.read(fileNameToParse); // istanbul ignore next
                 if (extractions.errors && extractions.errors.length > 0)
-                    LOG.info(`ExtractorImageExiftool.extractMetadata encountered issues: ${JSON.stringify(extractions.errors)}`, LOG.LS.eMETA);
+                    RK.logWarning(RK.LogSection.eMETA,'extract metadata','encountered issues',{ fileName, errors: extractions.errors },'Metadata.Extractor.ImageEXIFTool');
 
                 for (const [name, valueU] of Object.entries(extractions)) {
                     switch (name) { // skip attributes that are not themselves tags:
@@ -70,7 +70,7 @@ export class ExtractorImageExiftool implements IExtractor  {
                         value = String(valueU); /* istanbul ignore next */
 
                     if (metadata.has(name))
-                        LOG.info(`ExtractorImageExiftool.extractMetadata already has value for ${name}`, LOG.LS.eMETA);
+                        RK.logWarning(RK.LogSection.eMETA,'extract metadata',`already has value for ${name}`,{ fileName },'Metadata.Extractor.ImageEXIFTool');
                     metadata.set(name, value);
                 }
 
@@ -86,8 +86,12 @@ export class ExtractorImageExiftool implements IExtractor  {
 
                 return { success: true, metadata };
             } catch (err) /* istanbul ignore next */ {
-                if (this.testErrorForUnsupportedFileType(tempFile?.path, err))
+                if (this.testErrorForUnsupportedFileType(tempFile?.path, err)) {
+                    RK.logError(RK.LogSection.eMETA,'extract metadata failed',`unable to extract metadata from file: ${err}`,{ fileName, tempPath: tempFile?.path },'Metadata.Extractor.ImageEXIFTool');
                     return { success: false, error: `Exiftool is unable to extract metadata from file ${tempFile?.path}` };
+                }
+
+                RK.logError(RK.LogSection.eMETA,'extract metadata failed',`exception: ${err}`,{ fileName, tempPath: tempFile?.path },'Metadata.Extractor.ImageEXIFTool');
                 const res: H.IOResults = (err instanceof Error) ? await this.handleExiftoolException(err) : { success: false, error: 'Unknown error' };
                 if (!res.success)
                     return res;
@@ -117,11 +121,12 @@ export class ExtractorImageExiftool implements IExtractor  {
             try {
                 if (!ExtractorImageExiftool.exiftoolInit) {
                     const exiftoolVersion: string = await ExtractorImageExiftool.exiftool.version();
-                    LOG.info(`ExtractorImageExiftool.extractMetadata using exiftool version ${exiftoolVersion}`, LOG.LS.eMETA);
+                    RK.logInfo(RK.LogSection.eMETA,'initialize success',`using exiftool version ${exiftoolVersion}`,{},'Metadata.Extractor.ImageEXIFTool');
                     ExtractorImageExiftool.exiftoolInit = true;
                 }
                 break;
             } catch (err) {
+                RK.logError(RK.LogSection.eMETA,'initialize failed',`exception: ${err}`,{},'Metadata.Extractor.ImageEXIFTool');
                 const res: IExtractorResults = (err instanceof Error) ? await this.handleExiftoolException(err) : { success: false, error: 'Unknown error' };
                 if (!res.success)
                     return res;
@@ -132,11 +137,10 @@ export class ExtractorImageExiftool implements IExtractor  {
 
     private async handleExiftoolException(err: Error): Promise<IExtractorResults> {
         const error: string = 'ExtractorImageExiftool exiftool exception';
-        LOG.error(error, LOG.LS.eMETA, err);
 
         const errMessage: string = H.Helpers.safeString(err.message) ?? '';
         if (errMessage.indexOf('BatchCluster has ended, cannot enqueue') > -1) {
-            LOG.info('ExtractorImageExiftool.handleExiftoolException restarting exiftool', LOG.LS.eMETA);
+            RK.logInfo(RK.LogSection.eMETA,'restarting EXIF tool',undefined,{},'Metadata.Extractor.ImageEXIFTool');
             await ExtractorImageExiftool.exiftool.end();
             ExtractorImageExiftool.exiftool = new ExifTool();
             return { success: true, error }; // true -> retry

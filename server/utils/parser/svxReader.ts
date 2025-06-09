@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
-import * as LOG from '../logger';
 import * as H from '../helpers';
 import * as SVX from '../../types/voyager';
 import * as THREE from 'three';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export type SvxNonModelAsset = {
     uri: string;
@@ -172,14 +172,14 @@ export class SvxExtraction {
                 const nodeMatrix: THREE.Matrix4 = new THREE.Matrix4();
                 nodeMatrix.compose(nodeTranslation, nodeRotation, nodeScale);
                 modelMatrix.multiply(nodeMatrix);
-                LOG.info(`svxReader.extractModelDetails nodeMatrix=${JSON.stringify(nodeMatrix)}`, LOG.LS.eSYS);
+
             }
 
             const finalTranslation: THREE.Vector3   = new THREE.Vector3();
             const finalRotation: THREE.Quaternion   = new THREE.Quaternion();
             const finalScale: THREE.Vector3         = new THREE.Vector3().setScalar(1);
             modelMatrix.decompose(finalTranslation, finalRotation, finalScale);
-            LOG.info(`svxReader.extractModelDetails modelMatrix=${JSON.stringify(modelMatrix)}`, LOG.LS.eSYS);
+            RK.logDebug(RK.LogSection.eSYS,'extract model details',undefined,{ modelMatrix },'Utils.SVX.Extraction');
 
             const TS0: number = finalTranslation.x;
             const TS1: number = finalTranslation.y;
@@ -267,12 +267,18 @@ export class SvxExtraction {
     }
 
     static extract(document: any): { svx: SvxExtraction | null, results: H.IOResults } {
-        if (!document)
+        if (!document) {
+            RK.logError(RK.LogSection.eSYS,'extract failed','Missing document',{},'Utils.SVX.Extraction');
             return { svx: null, results: { success: false, error: 'Missing document' } };
-        if (document.asset === undefined)
+        }
+        if (document.asset === undefined) {
+            RK.logError(RK.LogSection.eSYS,'extract failed','Missing asset',{},'Utils.SVX.Extraction');
             return { svx: null, results: { success: false, error: 'Missing asset' } };
-        if (document.asset.type !== 'application/si-dpo-3d.document+json')
+        }
+        if (document.asset.type !== 'application/si-dpo-3d.document+json') {
+            RK.logError(RK.LogSection.eSYS,'extract failed',`Incorrect asset.type: ${document.asset.type}`,{},'Utils.SVX.Extraction');
             return { svx: null, results: { success: false, error: `Incorrect asset.type: ${document.asset.type}` } };
+        }
         /*
         if (document.asset.version === undefined)
             return { svx: null, results: { success: false, error: 'Missing asset.version' } };
@@ -326,12 +332,10 @@ export class SvxReader {
                 return { success: false, error: 'Unable to read stream' };
             const json: string = buffer.toString();
 
-            LOG.info(`SvxReader.loadFromStream read ${buffer.length} bytes.`,LOG.LS.eSYS);
-            // LOG.info(`SvxReader.loadFromStream read json ${json}`,LOG.LS.eSYS);
-
+            RK.logDebug(RK.LogSection.eSYS,'load from stream',`read ${buffer.length} bytes.`,{},'Utils.SVX.Reader');
             return this.loadFromJSON(json);
         } catch (err) /* istanbul ignore next */ {
-            LOG.error('SvxReader.loadFromStream', LOG.LS.eSYS, err);
+            RK.logError(RK.LogSection.eSYS,'load from stream failed',H.Helpers.getErrorString(err),{},'Utils.SVX.Reader');
             return { success: false, error: `SvxReader.loadFromStream failed: ${JSON.stringify(err)}` };
         }
     }
@@ -343,7 +347,7 @@ export class SvxReader {
             const validRes: H.IOResults = SvxReader.DV.validate(obj);
             if (!validRes.success) {
                 const error: string = `SVX JSON Validation Failed: ${validRes.error}`;
-                LOG.error(`SvxReader.loadFromJSON ${error}`, LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'load from JSON failed',error,{ json },'Utils.SVX.Reader');
                 return { success: false, error };
             }
 
@@ -359,7 +363,7 @@ export class SvxReader {
             return { success: true };
         } catch (err) {
             const error: string = 'SvxReader.loadFromJSON failed processing invalid json';
-            LOG.error(error, LOG.LS.eSYS, err);
+            RK.logError(RK.LogSection.eSYS,'load from JSON failed',`processing invalid json: ${err}`,{},'Utils.SVX.Reader');
             return { success: false, error };
         }
     }
