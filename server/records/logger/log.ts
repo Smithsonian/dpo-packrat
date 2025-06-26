@@ -12,6 +12,7 @@ import * as util from 'util';
 import { RateManager, RateManagerConfig, RateManagerMetrics, RateManagerResult } from '../utils/rateManager';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { LogLevel, LogSection } from './logTypes';
+import { getErrorString } from '../utils/utils';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
@@ -83,6 +84,61 @@ export class Logger {
     private static metricsIsRunning: boolean = false;
     private static rateManager: RateManager<LogEntry> | null =  null;
 
+    // formats
+    private static customJsonFormat = format.combine(
+        // we want a very specific order for the outputted JSON so we use a custom format to
+        // ensure fields are printed in a specific order to improve readability
+        format.timestamp(),
+        format.printf((info) => {
+            // eslint-disable-next-line no-control-regex
+            const level = info.level.replace(/\u001b\[\d{2}m/g, ''); // Remove ANSI color codes
+
+            // Arrange the properties in the desired order
+            const log = {
+                timestamp: new Date(info.timestamp).toISOString(), // UTC timestamp
+                level,
+                message: info.message,
+                data: info.data,
+                context: info.context
+            };
+            return JSON.stringify(log);
+        })
+    );
+    private static customConsoleFormat = format.printf((info) => {
+        // when outputting to the console/terminal we want cleaner, single-line logs so it's easier
+        // to follow visually.
+        const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
+        const requestId: string = (info.context.idRequest && info.context.idRequest>=0) ? `[${String(info.context.idRequest).padStart(5, '0')}]` : '[00000]';
+        const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U---';
+        const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
+        const message: string = info.message;
+        const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
+
+        // to get right-aligned, colored levels we need to strip away any hidden colorization codes
+        // and use that to see how long the actual level text is. From there we determine how much
+        // padding is needed to right-align things. This is necessary because Winston's colorization
+        // code alters the formatting/lengths of the level stripping all whitespace.
+        const level: string = info.level.toLowerCase();
+        // eslint-disable-next-line no-control-regex
+        const levelRaw: string = info.level.replace(/\u001b\[.*?m/g, '');
+        const levelPad: string = (levelRaw.length<6) ? ' '.repeat(6-levelRaw.length) : '';
+
+        // Format data fields in parenthesis
+        let dataFields: string = '';
+        if (info.data) {
+            dataFields = `${Logger.getTextColorCode('dim')}(${Logger.processData(info.data)})${Logger.getTextColorCode()}`;
+        }
+
+        // Build the formatted log message
+        return `${timestamp} ${requestId} ${userId} ${section} ${levelPad}${level}: ${(caller ?? '')}${message} ${dataFields}`;
+    });
+
+    // rolling log variables
+    private static currentDate: Date = new Date(2025, 0, 1);
+    private static readonly transportCheckInterval = 60 * 1000;     // check for a new month every minute
+    private static isTransportUpdatePending = false;                // are we waiting for an update
+    private static transportMonitor: NodeJS.Timeout | null = null;  // reference to our timer
+
     //#region PUBLIC
     private static isActive(): boolean {
         // we're initialized if we have a logger running
@@ -149,55 +205,6 @@ export class Logger {
         };
 
         try {
-            // we want a very specific order for the outputted JSON so we use a custom format to
-            // ensure fields are printed in a specific order to improve readability
-            const customJsonFormat = format.combine(
-                format.timestamp(),
-                format.printf((info) => {
-                    // eslint-disable-next-line no-control-regex
-                    const level = info.level.replace(/\u001b\[\d{2}m/g, ''); // Remove ANSI color codes
-
-                    // Arrange the properties in the desired order
-                    const log = {
-                        timestamp: new Date(info.timestamp).toISOString(), // UTC timestamp
-                        level,
-                        message: info.message,
-                        data: info.data,
-                        context: info.context
-                    };
-                    return JSON.stringify(log);
-                })
-            );
-
-            // when outputting to the console/terminal we want cleaner, single-line logs so it's easier
-            // to follow visually.
-            const customConsoleFormat = format.printf((info) => {
-                const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
-                const requestId: string = (info.context.idRequest && info.context.idRequest>=0) ? `[${String(info.context.idRequest).padStart(5, '0')}]` : '[00000]';
-                const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U---';
-                const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
-                const message: string = info.message;
-                const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;
-
-                // to get right-aligned, colored levels we need to strip away any hidden colorization codes
-                // and use that to see how long the actual level text is. From there we determine how much
-                // padding is needed to right-align things. This is necessary because Winston's colorization
-                // code alters the formatting/lengths of the level stripping all whitespace.
-                const level: string = info.level.toLowerCase();
-                // eslint-disable-next-line no-control-regex
-                const levelRaw: string = info.level.replace(/\u001b\[.*?m/g, '');
-                const levelPad: string = (levelRaw.length<6) ? ' '.repeat(6-levelRaw.length) : '';
-
-                // Format data fields in parenthesis
-                let dataFields: string = '';
-                if (info.data) {
-                    dataFields = `${Logger.getTextColorCode('dim')}(${Logger.processData(info.data)})${Logger.getTextColorCode()}`;
-                }
-
-                // Build the formatted log message
-                return `${timestamp} ${requestId} ${userId} ${section} ${levelPad}${level}: ${(caller ?? '')}${message} ${dataFields}`;
-            });
-
             // Resolve relative paths to absolute paths using the current directory
             if (!path.isAbsolute(logDirectory)) {
                 logDirectory = path.resolve(__dirname, logDirectory);
@@ -208,19 +215,17 @@ export class Logger {
             }
 
             const fileTransport = new transports.File({
-                filename: Logger.getLogFilePath(),
-                format: customJsonFormat,
+                filename: Logger.getLogFilePath(true),
+                format: Logger.customJsonFormat,
                 // handleExceptions: false  // used to disable buffering for higher volume support at risk of errors
                 maxsize: 150 * 1024 * 1024, // 150 MB in bytes
                 maxFiles: 20,               // Keep a maximum of 20 log files (3GB)
-                tailable: true              // Ensure the log files are named in a "rolling" way
             });
-
             const consoleTransport = new transports.Console({
                 format: format.combine(
                     format.timestamp(),
                     format.colorize(),
-                    customConsoleFormat
+                    Logger.customConsoleFormat
                 ),
                 // handleExceptions: false // used to disable buffering for higher volume support at risk of errors
             });
@@ -247,6 +252,9 @@ export class Logger {
 
             // start up our metrics tracker (sampel every 5 seconds, 10 samples per avgerage calc)
             Logger.trackLogMetrics(5000,10);
+
+            // start up our date monitor to detect when we should switch transports to a new month
+            Logger.startTransportMonitor(10000);
         } catch(error) {
             const errorMsg: string = error instanceof Error ? error.message : String(error);
             Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'configure failed',errorMsg,undefined,'RecordKeeper.Logger');
@@ -256,7 +264,7 @@ export class Logger {
             };
         }
 
-        return { success: true, message: `configured Logger. Sending to file ${(environment===ENVIRONMENT_TYPE.DEVELOPMENT) ? 'and console' : ''}` };
+        return { success: true, message: `configured Logger. Sending to file ${(environment===ENVIRONMENT_TYPE.DEVELOPMENT) ? 'and console' : ''}`, data: { path: Logger.getLogFilePath(true) } };
     }
     public static setDebugMode(value: boolean): void {
         Logger.debugMode = value;
@@ -322,6 +330,81 @@ export class Logger {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    // transport monitoring
+    private static isSameMonth(oldDate: Date): boolean {
+        const newDate = new Date();
+
+        if(oldDate.getUTCFullYear() != newDate.getUTCFullYear() ||
+            (oldDate.getMonth()+1) != (newDate.getMonth()+1)) {
+            return false;
+        }
+
+        return true;
+    }
+    private static startTransportMonitor(drainTimeout: number = 1000, attemptDelay: number = 1000): void {
+        if (Logger.transportMonitor)
+            return;
+
+        Logger.transportMonitor = setInterval(async () => {
+
+            // if we're the same month or already waiting for an update
+            if (Logger.isSameMonth(Logger.currentDate)===true || Logger.isTransportUpdatePending)
+                return;
+
+            // start waiting for a stable moment when the queue is drained
+            Logger.info(LogSection.eSYS,'switching log month',undefined,{ oldDate: Logger.currentDate, newDate: new Date() },'RecordKeeper.Logger.TransportMonitor');
+            Logger.isTransportUpdatePending = true;
+            let stable = false;
+
+            // Wait until queue is empty for idleWindow duration
+            while (!stable) {
+                const result = await Logger.waitForQueueToDrain(drainTimeout);
+                if (!result.success) {
+                    await Logger.delay(attemptDelay); // Check again in a second
+                    continue;
+                }
+
+                // if successful then we're stable
+                // TODO: introduce an additional delay in case we catch an empty queue in heavy activity
+                stable = true;
+                break;
+            }
+
+            // Pause the RateManager
+            Logger.debug(LogSection.eSYS,'stopped rate manager','for log transport switch',{ queueSize: this.rateManager?.getMetrics().queueLength ?? -1 },'RecordKeeper.Logger.TransportMonitor');
+            Logger.rateManager?.stopManager();
+
+            // Swap the file transport
+            try {
+                const oldTransport = Logger.logger.transports.find(t => t instanceof transports.File);
+                if (oldTransport)
+                    Logger.logger.remove(oldTransport);
+
+                const newPath = Logger.getLogFilePath(true);
+                const newFileTransport = new transports.File({
+                    filename: newPath,
+                    format: Logger.customJsonFormat,
+                    maxsize: 150 * 1024 * 1024,
+                    maxFiles: 20
+                });
+
+                Logger.logger.add(newFileTransport);
+                Logger.currentDate = new Date();
+
+                // wait for our file to exists
+                await Logger.waitUntilFileExists(newPath);
+
+            } catch (err) {
+                Logger.fallback(LogLevel.CRITICAL, LogSection.eSYS, 'Failed to rotate file transport', getErrorString(err), undefined, 'RecordKeeper.Logger.TransportMonitor');
+            } finally {
+                Logger.debug(LogSection.eSYS,'started rate manager','after log transport switch',{ newPath: Logger.getLogFilePath(true) },'RecordKeeper.Logger.TransportMonitor');
+                Logger.rateManager?.startManager(); // resume
+                Logger.isTransportUpdatePending = false;
+            }
+
+        }, Logger.transportCheckInterval);
+    }
+
     // build our log entry structure/object
     private static getLogEntry(level: LogLevel, message: string, reason: string,  data: any | undefined, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
         // create our data structure wrapping in reason if it exists
@@ -346,18 +429,18 @@ export class Logger {
         };
         return entry;
     }
-    private static getLogFilePath(): string {
+    private static getLogFilePath(includeFilename: boolean=false): string {
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        const logDir = path.join(Logger.logDir, `${year}`, `${month}`);
+        const logDir = path.join(Logger.logDir,`${year}`,`${month}`);
 
         if (!fs.existsSync(logDir)) {
             fs.mkdirSync(logDir, { recursive: true });
         }
 
-        return path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
+        return (includeFilename===false) ? logDir : path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
     }
 
     // processing of our 'data' field
@@ -528,6 +611,22 @@ export class Logger {
             return value;
         }));
     };
+
+    // wait until our log file exists
+    private static waitUntilFileExists(path: string, timeoutMs = 10000): Promise<void> {
+        const start = Date.now();
+        return new Promise((resolve, reject) => {
+            const interval = setInterval(() => {
+                if (fs.existsSync(path)) {
+                    clearInterval(interval);
+                    resolve();
+                } else if (Date.now() - start > timeoutMs) {
+                    clearInterval(interval);
+                    reject(new Error('Log file was not created in time'));
+                }
+            }, 100);
+        });
+    }
     //#endregion
 
     //#region LOG

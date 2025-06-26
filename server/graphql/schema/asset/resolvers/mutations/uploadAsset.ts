@@ -38,8 +38,11 @@ export default async function uploadAsset(_: Parent, args: MutationUploadAssetAr
     // NOTE: getting the ReadStream does NOT mean the file has been fully written to disk yet. For very
     // large files this can fall out of sync causing dropped connections/streams. It is especially sensitive
     // to concurrent large uploads and disk, memory, or network I/O bottlenecks.
+    process.env.DEBUG = 'graphql-upload*';
     const memoryBefore = process.memoryUsage();
+    RK.logDebug(RK.LogSection.eGQL,'PRE wait file',undefined,{ type: args.type, idAsset: args.idAsset, idSOAttachment: args.idSOAttachment },'GraphQL.Upload.Asset');
     const apolloFile: ApolloFile = await args.file;
+    RK.logDebug(RK.LogSection.eGQL,'POST wait file',undefined,{ fileName: apolloFile.filename },'GraphQL.Upload.Asset');
     const uploadAssetWorker: UploadAssetWorker = new UploadAssetWorker(user, apolloFile, args.idAsset, args.type, args.idSOAttachment);
     const workerResult = await uploadAssetWorker.upload();
     const memoryAfter = process.memoryUsage();
@@ -133,6 +136,7 @@ class UploadAssetWorker extends ResolverBase {
             RK.logError(RK.LogSection.eGQL,'storage system failed','unable to retrieve write stream from IStroage',{ file: this.apolloFile.filename, error: WSResult.error },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Storage unavailable' };
         }
+        RK.logDebug(RK.LogSection.eGQL,'write stream created',undefined, { filename },'GraphQL.Upload.AssetWorker');
         const { writeStream, storageKey } = WSResult;
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(this.type);
         if (!vocabulary) {
@@ -142,7 +146,9 @@ class UploadAssetWorker extends ResolverBase {
 
         try {
             // write our incoming stream of bytes to a file in local storage (staging)
+            RK.logDebug(RK.LogSection.eGQL,'PRE create read stream',undefined, { filename },'GraphQL.Upload.AssetWorker');
             const fileStream = createReadStream({ highWaterMark: 1024 * 1024 });
+            RK.logDebug(RK.LogSection.eGQL,'POST create read stream',undefined, { filename },'GraphQL.Upload.AssetWorker');
             const stream = fileStream.pipe(writeStream);
             RK.logDebug(RK.LogSection.eGQL,'upload staging','writing stream to staging',{ file: this.apolloFile.filename, path: fileStream.path },'GraphQL.Upload.AssetWorker');
 
