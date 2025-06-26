@@ -266,6 +266,22 @@ export class Logger {
 
         return { success: true, message: `configured Logger. Sending to file ${(environment===ENVIRONMENT_TYPE.DEVELOPMENT) ? 'and console' : ''}`, data: { path: Logger.getLogFilePath(true) } };
     }
+    public static async shutdown(): Promise<void> {
+        if (Logger.logger) {
+            for (const transport of Logger.logger.transports) {
+                if (typeof transport.close === 'function') {
+                    transport.close();
+                }
+            }
+        }
+
+        // Also shutdown RateManager if used
+        if (Logger.rateManager) {
+            await Logger.rateManager.waitUntilIdle(10000); // flush queue
+            await Logger.rateManager.stopManager();
+        }
+    }
+
     public static setDebugMode(value: boolean): void {
         Logger.debugMode = value;
     }
@@ -331,11 +347,12 @@ export class Logger {
     }
 
     // transport monitoring
-    private static isSameMonth(oldDate: Date): boolean {
+    private static isSameDate(oldDate: Date): boolean {
         const newDate = new Date();
 
         if(oldDate.getUTCFullYear() != newDate.getUTCFullYear() ||
-            (oldDate.getMonth()+1) != (newDate.getMonth()+1)) {
+            (oldDate.getMonth()+1) != (newDate.getMonth()+1) ||
+            oldDate.getDate() != newDate.getDate()) {
             return false;
         }
 
@@ -348,7 +365,7 @@ export class Logger {
         Logger.transportMonitor = setInterval(async () => {
 
             // if we're the same month or already waiting for an update
-            if (Logger.isSameMonth(Logger.currentDate)===true || Logger.isTransportUpdatePending)
+            if (Logger.isSameDate(Logger.currentDate)===true || Logger.isTransportUpdatePending)
                 return;
 
             // start waiting for a stable moment when the queue is drained
@@ -429,8 +446,8 @@ export class Logger {
         };
         return entry;
     }
-    private static getLogFilePath(includeFilename: boolean=false): string {
-        const date = new Date();
+    private static getLogFilePath(includeFilename: boolean=false, dateOverride: Date | null = null): string {
+        const date = (dateOverride) ? dateOverride : new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');

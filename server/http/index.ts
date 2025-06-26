@@ -6,7 +6,7 @@ import { Config } from '../config';
 import * as H from '../utils/helpers';
 import { User } from '../db/api/User';
 import { UsageMonitor } from '../utils/osStats';
-import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
+import { RecordKeeper as RK, IOResults, RecordKeeper } from '../records/recordKeeper';
 
 import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
@@ -319,4 +319,16 @@ process.on('unhandledRejection', (reason, promise) => {
     // RK.logCritical(RK.LogSection.eSYS,'unhandled rejection','a Promise reject was not handled', { promise, reason },'HttpServer');
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     console.trace('unhandled rejection');
+});
+
+process.on('SIGINT', async () => {
+    console.log('Shutting down RecordKeeper...');
+    await RecordKeeper.shutdown();
+    process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+    console.log('Shutting down RecordKeeper...');
+    await RecordKeeper.shutdown();
+    process.exit(0);
 });
