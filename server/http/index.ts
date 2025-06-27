@@ -138,6 +138,12 @@ export class HttpServer {
 
         // DEBUG: early stage request debugging middleware
         // this.app.use(HttpServer.logRequestDetailed);
+        // TEMP: inside apolloServer setup
+        this.app.use((req, _res, next) => {
+            req.on('close', () => RK.logDebug(RK.LogSection.eHTTP,'Request CLOSED',undefined,H.Helpers.cleanExpressRequest(req),'Express.ConfigMiddleware'));
+            req.on('aborted', () => RK.logDebug(RK.LogSection.eHTTP,'Request ABORTED',undefined,H.Helpers.cleanExpressRequest(req),'Express.ConfigMiddleware'));
+            next();
+        });
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
@@ -158,7 +164,7 @@ export class HttpServer {
         // authentication and graphQL endpoints
         this.app.use('/auth', AuthRouter);
         this.app.use('/graphql', graphqlUploadExpress({
-            maxFileSize: 30 * 1024 * 1024 * 1024, // 30 GB
+            maxFileSize: 40 * 1024 * 1024 * 1024, // 40 Gb
             maxFiles: 10,
             tmpdir: path.join(Config.storage.rootStaging,'tmp'),
             debug: true,
@@ -314,3 +320,19 @@ process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
     console.trace('unhandled rejection');
 });
+
+// make sure we're not in testing environments as it will cause issues due
+// to how those environments manage processes
+if (!Config.environment.isJest && !Config.environment.isGitCI) {
+    process.on('SIGINT', async () => {
+        console.log('SIGINT: shutting down RecordKeeper...');
+        await RK.shutdown();
+        process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+        console.log('SIGTERM: shutting down RecordKeeper...');
+        await RK.shutdown();
+        process.exit(0);
+    });
+}

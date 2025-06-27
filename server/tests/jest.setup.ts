@@ -20,3 +20,7 @@ beforeEach(async () => {
 afterEach(async () => {
     await RK.drainAllQueues();
 });
+
+afterAll(async () => {
+    await RK.shutdown();
+});

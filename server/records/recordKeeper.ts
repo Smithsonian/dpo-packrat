@@ -132,7 +132,10 @@ export class RecordKeeper {
         return { success: false, message: `cannot configure system. unsupported system: ${system}` };
     }
 
-    static cleanup(): IOResults {
+    static async shutdown(): Promise<IOResults> {
+
+        await LOG.shutdown();
+
         return { success: true, message: 'record keeper cleaned up' };
     }
     private static getContext(): { idUser: number, idRequest: number, userEmail: string | null } {
