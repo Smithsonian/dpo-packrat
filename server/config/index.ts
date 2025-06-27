@@ -85,6 +85,8 @@ export type ConfigType = {
     },
     environment: {
         type: ENVIRONMENT_TYPE;
+        isJest: boolean;
+        isGitCI: boolean;
     },
     http: {
         clientUrl: string;
@@ -159,6 +161,7 @@ export const Config: ConfigType = {
                 5,  // Eric Maslowski
                 6,  // Megan Dattoria
                 11, // Katie Wolfe
+                17, // Lindsey Dougan
             ]
         },
     },
@@ -180,6 +183,8 @@ export const Config: ConfigType = {
     },
     environment: {
         type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,
+        isJest: process.env.JEST_WORKER_ID !== undefined,
+        isGitCI: process.env.GITHUB_ACTIONS === 'true',
     },
     http: {
         clientUrl: process.env.PACKRAT_CLIENT_ENDPOINT ? process.env.PACKRAT_CLIENT_ENDPOINT : 'https://packrat.si.edu:8443',

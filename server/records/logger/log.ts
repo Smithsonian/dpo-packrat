@@ -5,14 +5,12 @@
  * TODO
  * - add support for function/method profiling using NPM inspector
  */
-import { createLogger, format, transports, addColors } from 'winston';
 import * as path from 'path';
-import * as fs from 'fs';
-import * as util from 'util';
+import { createLogger, format, transports, addColors } from 'winston';
 import { RateManager, RateManagerConfig, RateManagerMetrics, RateManagerResult } from '../utils/rateManager';
+import { getErrorString, safeFlattenObject, delay, stripErrors, waitUntilFileExists, stripCircular, createPath, safeInspect } from '../utils/utils';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { LogLevel, LogSection } from './logTypes';
-import { getErrorString } from '../utils/utils';
 
 // adjust our default event hanlder to support higher throughput. (default is 10)
 require('events').EventEmitter.defaultMaxListeners = 50;
@@ -42,7 +40,13 @@ export interface LoggerStats {
     }
 }
 
-type DataType = string | number | boolean | object | any[]; // valid types for our 'data' field
+type DataType = string | number | boolean | null | undefined |  DataType[] | Record<string, unknown>; //object | any[]; // valid types for our 'data' field
+enum LoggerState {
+    UNDEFINED,
+    ONLINE,
+    CLOSING,
+    OFFLINE
+}
 
 interface LoggerContext {
     section: string | null;
@@ -72,6 +76,7 @@ interface LoggerResult extends RateManagerResult {}
 //#endregion
 
 export class Logger {
+    //#region VARIABLES
     private static logger: any | null = null;
     private static logDir: string = path.join(__dirname, 'Logs');
     private static environment: ENVIRONMENT_TYPE = ENVIRONMENT_TYPE.DEVELOPMENT;
@@ -81,6 +86,7 @@ export class Logger {
         metrics: { logRate: 0, logRateAvg: 0, logRateMax: 0 }
     };
     private static debugMode: boolean = false;
+    private static state: LoggerState = LoggerState.UNDEFINED;
     private static metricsIsRunning: boolean = false;
     private static rateManager: RateManager<LogEntry> | null =  null;
 
@@ -138,11 +144,12 @@ export class Logger {
     private static readonly transportCheckInterval = 60 * 1000;     // check for a new month every minute
     private static isTransportUpdatePending = false;                // are we waiting for an update
     private static transportMonitor: NodeJS.Timeout | null = null;  // reference to our timer
+    //#endregion
 
     //#region PUBLIC
     private static isActive(): boolean {
         // we're initialized if we have a logger running
-        return (Logger.logger!=null);
+        return (Logger.state===LoggerState.ONLINE && Logger.logger!=null);
     }
     public static configure(logDirectory: string, environment: ENVIRONMENT_TYPE, rateManager: boolean = true, targetRate?: number, burstRate?: number, burstThreshold?: number): LoggerResult {
         // we allow for re-assigning configuration options even if already running
@@ -210,12 +217,15 @@ export class Logger {
                 logDirectory = path.resolve(__dirname, logDirectory);
             }
 
-            if (!fs.existsSync(Logger.logDir)) {
-                fs.mkdirSync(Logger.logDir, { recursive: true });
-            }
+            // create our folder
+            const filePath: string = Logger.getLogFilePath(true);
+            const dirResult = createPath(path.dirname(filePath));
+            if(dirResult.success===false)
+                throw new Error(`cannot create path: ${dirResult.message}`);
 
+            // create our transport
             const fileTransport = new transports.File({
-                filename: Logger.getLogFilePath(true),
+                filename: filePath,
                 format: Logger.customJsonFormat,
                 // handleExceptions: false  // used to disable buffering for higher volume support at risk of errors
                 maxsize: 150 * 1024 * 1024, // 150 MB in bytes
@@ -255,9 +265,13 @@ export class Logger {
 
             // start up our date monitor to detect when we should switch transports to a new month
             Logger.startTransportMonitor(10000);
+
+            // ste our state
+            Logger.state = LoggerState.ONLINE;
         } catch(error) {
             const errorMsg: string = error instanceof Error ? error.message : String(error);
             Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'configure failed',errorMsg,undefined,'RecordKeeper.Logger');
+            Logger.state = LoggerState.OFFLINE;
             return {
                 success: false,
                 message: errorMsg
@@ -267,6 +281,8 @@ export class Logger {
         return { success: true, message: `configured Logger. Sending to file ${(environment===ENVIRONMENT_TYPE.DEVELOPMENT) ? 'and console' : ''}`, data: { path: Logger.getLogFilePath(true) } };
     }
     public static async shutdown(): Promise<void> {
+        Logger.state = LoggerState.CLOSING;
+
         if (Logger.logger) {
             for (const transport of Logger.logger.transports) {
                 if (typeof transport.close === 'function') {
@@ -280,6 +296,11 @@ export class Logger {
             await Logger.rateManager.waitUntilIdle(10000); // flush queue
             await Logger.rateManager.stopManager();
         }
+
+        // cleanup our timer for date changes
+        (Logger.transportMonitor) && clearTimeout(Logger.transportMonitor);
+
+        Logger.state = LoggerState.OFFLINE;
     }
 
     public static setDebugMode(value: boolean): void {
@@ -335,17 +356,9 @@ export class Logger {
 
         return { success: true, message: result.message };
     }
-    public static safeInspect = (data: any) => {
-        // safely inspect an object and output to the native console
-        console.log(util.inspect(data, { depth: 4, colors: true }));
-    };
     //#endregion
 
     //#region UTILS
-    private static async delay(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
     // transport monitoring
     private static isSameDate(oldDate: Date): boolean {
         const newDate = new Date();
@@ -359,13 +372,13 @@ export class Logger {
         return true;
     }
     private static startTransportMonitor(drainTimeout: number = 1000, attemptDelay: number = 1000): void {
-        if (Logger.transportMonitor)
+        if (Logger.transportMonitor || Logger.state===LoggerState.CLOSING)
             return;
 
         Logger.transportMonitor = setInterval(async () => {
 
             // if we're the same month or already waiting for an update
-            if (Logger.isSameDate(Logger.currentDate)===true || Logger.isTransportUpdatePending)
+            if (Logger.isSameDate(Logger.currentDate)===true || Logger.isTransportUpdatePending || !Logger.isActive())
                 return;
 
             // start waiting for a stable moment when the queue is drained
@@ -377,7 +390,7 @@ export class Logger {
             while (!stable) {
                 const result = await Logger.waitForQueueToDrain(drainTimeout);
                 if (!result.success) {
-                    await Logger.delay(attemptDelay); // Check again in a second
+                    await delay(attemptDelay); // Check again in a second
                     continue;
                 }
 
@@ -393,11 +406,23 @@ export class Logger {
 
             // Swap the file transport
             try {
-                const oldTransport = Logger.logger.transports.find(t => t instanceof transports.File);
+                // make sure our transports exist
+                // TODO: improve checks for testing environments by checking for presence of key flags
+                const FileTransport = transports?.File;
+                if (!FileTransport)
+                    throw new Error('File transport not available');
+
+                const oldTransport = Logger.logger.transports.find(t => t instanceof FileTransport);
                 if (oldTransport)
                     Logger.logger.remove(oldTransport);
 
+                // get our full path and build any needed folders
                 const newPath = Logger.getLogFilePath(true);
+                const dirResult = createPath(path.dirname(newPath));
+                if(dirResult.success===false)
+                    throw new Error(`cannot create path: ${dirResult.message}`);
+
+                // build our new transport
                 const newFileTransport = new transports.File({
                     filename: newPath,
                     format: Logger.customJsonFormat,
@@ -409,7 +434,7 @@ export class Logger {
                 Logger.currentDate = new Date();
 
                 // wait for our file to exists
-                await Logger.waitUntilFileExists(newPath);
+                await waitUntilFileExists(newPath);
 
             } catch (err) {
                 Logger.fallback(LogLevel.CRITICAL, LogSection.eSYS, 'Failed to rotate file transport', getErrorString(err), undefined, 'RecordKeeper.Logger.TransportMonitor');
@@ -453,10 +478,6 @@ export class Logger {
         const day = String(date.getDate()).padStart(2, '0');
         const logDir = path.join(Logger.logDir,`${year}`,`${month}`);
 
-        if (!fs.existsSync(logDir)) {
-            fs.mkdirSync(logDir, { recursive: true });
-        }
-
         return (includeFilename===false) ? logDir : path.join(logDir, `PackratLog_${year}-${month}-${day}.log`);
     }
 
@@ -469,33 +490,15 @@ export class Logger {
             result = data.toString();
         } else if (Array.isArray(data)) {
             result = data.map(item => Logger.processData(item)).join(', ');
-        } else if (typeof data === 'object' && data !== null) {
-            const flatObject = Logger.flattenObject(data);
+        } else {
+            const flatObject = safeFlattenObject(stripErrors(data));
             result = Object.entries(flatObject)
                 .map(([key, value]) => `${key}: ${value}`)
                 .join(', ');
-        } else {
-            result = '';
         }
 
         // Truncate to 145 characters with ellipsis if needed
         return result.length > 145 ? result.slice(0, 142) + '...' : result;
-    }
-    private static flattenObject(obj: object, prefix = ''): Record<string, string> {
-        return Object.keys(obj).reduce((acc, key) => {
-            const newKey = prefix ? `${prefix}.${key}` : key; // Handle nested keys with dot notation
-            let value = (obj as Record<string, any>)[key];
-
-            if (typeof value === 'object' && value !== null && value !== undefined && !Array.isArray(value)) {
-                Object.assign(acc, Logger.flattenObject(value, newKey)); // Recursively flatten nested objects
-            } else {
-                if(newKey==='error' && !value)
-                    value = 'undefined error';
-                acc[newKey] = value?.toString(); // Assign non-object values directly
-            }
-
-            return acc;
-        }, {} as Record<string, string>);
     }
 
     // update our stats counter
@@ -563,7 +566,7 @@ export class Logger {
             if(Logger.debugMode===true)
                 Logger.performance(LogSection.eSYS,'metrics update',undefined,{ ...Logger.stats.metrics },'RecordKeeper.Logger');
 
-            await Logger.delay(interval);
+            await delay(interval);
         }
 
         Logger.metricsIsRunning = false;
@@ -616,50 +619,22 @@ export class Logger {
                 return '\x1b[37m';
         }
     }
-
-    // remove circular dependencies from submitted data to be logged
-    private static stripCircular = <T>(obj: T): T => {
-        const seen = new WeakSet();
-        return JSON.parse(JSON.stringify(obj, (_key, value) => {
-            if (typeof value === 'object' && value !== null) {
-                if (seen.has(value)) return '[Circular]';
-                seen.add(value);
-            }
-            return value;
-        }));
-    };
-
-    // wait until our log file exists
-    private static waitUntilFileExists(path: string, timeoutMs = 10000): Promise<void> {
-        const start = Date.now();
-        return new Promise((resolve, reject) => {
-            const interval = setInterval(() => {
-                if (fs.existsSync(path)) {
-                    clearInterval(interval);
-                    resolve();
-                } else if (Date.now() - start > timeoutMs) {
-                    clearInterval(interval);
-                    reject(new Error('Log file was not created in time'));
-                }
-            }, 100);
-        });
-    }
     //#endregion
 
     //#region LOG
     private static async postLog(entry: LogEntry): Promise<LoggerResult> {
         // see if we're configured/active
-        if(Logger.isActive()===false || Logger.logger===null) {
+        if(Logger.isActive()===false) {
             Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'post log failed','no logger system',entry,'RecordKeeper.Logger');
             return { success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` };
         }
 
         // if we're in debug mode we inspect all data coming in for circular dependencies
         if(Logger.debugMode===true)
-            Logger.safeInspect(entry);
+            safeInspect(entry);
 
         // strip any circular dependencies
-        const safeEntry = Logger.stripCircular(entry);
+        const safeEntry = stripCircular(entry);
 
         // if we have the rate manager running, queue it up
         // otherwise just send to the logger
@@ -673,7 +648,7 @@ export class Logger {
         // wrapping in a promise to ensure the logger finishes all transports
         // before moving on.
         return new Promise<LoggerResult>((resolve)=> {
-            if(Logger.isActive()===false || Logger.logger===null) {
+            if(Logger.isActive()===false) {
                 Logger.fallback(LogLevel.CRITICAL,LogSection.eSYS,'post to Winston failed','no logger system',entry,'RecordKeeper.Logger');
                 resolve({ success: false, message: `cannot post message. no logger (${entry.message} | ${entry.context})` });
                 return;
@@ -959,7 +934,7 @@ export class Logger {
             }
 
             // Wait for 1 second before checking again
-            await Logger.delay(1000);
+            await delay(1000);
         }
 
         // close our profiler and return results

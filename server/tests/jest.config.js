@@ -15,7 +15,7 @@ module.exports = {
         // '**/tests/collections/*.test.ts',
         // '**/tests/db/**/*.test.ts',
         // '**/tests/graphql/graphql.test.ts',
-        // '**/tests/metadata/*.test.ts'
+        // '**/tests/metadata/*.test.ts',
         // '**/tests/navigation/**/*.test.ts',
         // '**/tests/storage/**/*.test.ts',
         // '**/tests/utils/**/*.test.ts',
