@@ -488,8 +488,39 @@ export abstract class JobCook<T> extends JobPackrat {
             return { success: false, allowRetry: false, error: cookJobReport['error'] };
         }
 
+        // if we're successful then we remove the Cook job
+        await this.removeCookJob();
+
         // we made it here so the job appears successful
         return { success: true, allowRetry: false };
+    }
+
+    private async removeCookJob(): Promise<JobIOResults> {
+        // remove Cook job freeing up resources on Cook servers
+        RK.logDebug(RK.LogSection.eJOB,'Cook cleanup job',`start: ${this._configuration.jobId}`, { ...this._configuration },'Job.Cook');
+
+        const requestUrl: string = this.CookServerURL() + `clients/${this._configuration.clientId}/jobs/${this._configuration.jobId}`;
+        try {
+            const axiosResponse = await axios.delete(encodeURI(requestUrl));
+
+            if (axiosResponse.status < 200 || axiosResponse.status > 299) {
+                // only log errors after first attempt, as job creation may not be complete on Cook server
+                const error: string = JSON.stringify(axiosResponse);
+                RK.logError(RK.LogSection.eJOB,'Cook cleanup job',`failed: ${error}`,{ ...this._configuration, idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+                return { success: false, allowRetry: false, error };
+            }
+
+            // Cook may return a string vs. JSON in the event that there is invalid values (e.g. large numbers)
+            // or anything that would make JSON.parse fail. To catch the large numbers we preprocess the JSON
+            // and then convert the numerical values so they pass JSON.parse.
+            const responseData = H.Helpers.safeJSONParse(axiosResponse.data);
+            RK.logInfo(RK.LogSection.eJOB,'Cook cleanup job',`success: ${this._configuration.jobId}`, { ...this._configuration, responseData },'Job.Cook');
+            return { success: true };
+        } catch(err) {
+            const error: string =  H.Helpers.getErrorString(err);
+            RK.logError(RK.LogSection.eJOB,'Cook cleanup job',`failed. error thrown: ${error}`,{ ...this._configuration, idJobRun: this._dbJobRun.idJobRun, requestUrl },'Job.Cook');
+            return { success: false, error };
+        }
     }
 
     protected async fetchFile(fileName: string): Promise<STORE.ReadStreamResult> {
