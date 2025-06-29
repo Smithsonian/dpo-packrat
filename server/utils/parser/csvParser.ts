@@ -1,6 +1,7 @@
 import csv from 'csv-parser';
 import { CSVHeaders, CSVTypes, CSVFields } from './csvTypes';
-import * as LOG from '../logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
+import * as H from '../../utils/helpers';
 
 export class CSVParser {
     /** Note that this method will throw an exception if using the await ... syntax and the specified fileStream is not readable */
@@ -24,7 +25,7 @@ export class CSVParser {
                 stream.on('error', (error) => reject(error));
                 stream.on('end', () => resolve(rows));
             } catch (error) /* istanbul ignore next */ {
-                LOG.error('CSVParser.parse', LOG.LS.eSYS, error);
+                RK.logError(RK.LogSection.eSYS,'parse failed',H.Helpers.getErrorString(error),{},'Utils.Parser.CSV');
                 reject(error);
             }
         });

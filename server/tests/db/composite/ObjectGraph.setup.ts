@@ -2,7 +2,7 @@ import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as UTIL from '../api';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 /** Implements the object graph described here: https://confluence.si.edu/download/attachments/100272687/ObjectGraph.png?api=v2 */
 export class ObjectGraphTestSetup {
@@ -255,14 +255,14 @@ export class ObjectGraphTestSetup {
         this.licenseRestricted = await CACHE.LicenseCache.getLicenseByEnum(COMMON.eLicense.eRestricted) ?? null;
 
         if (!this.licenseCC0 || !this.licenseDownload || !this.licenseView || !this.licenseRestricted) {
-            LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch cached licenses', LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'assign licenses','unable to fetch cached licenses',{},'Tests.DB.ObjectGraph.Setup');
             return false;
         }
 
         if (!this.idSOUnit1 || !this.idSOUnit2 || !this.idSOProject1 || !this.idSOSubject1 ||
             !this.idSOSubject2 || !this.idSOSubject4 || !this.idSOItem1 || !this.idSOItem2 ||
             !this.idSOCaptureData1 || !this.idSOCaptureData2 || !this.user1) {
-            LOG.error('ObjectGraphTestSetup.assignLicenses unable to fetch objects', LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'assign licenses','unable to fetch objects',{},'Tests.DB.ObjectGraph.Setup');
             return false;
         }
 

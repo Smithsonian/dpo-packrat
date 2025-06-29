@@ -1,8 +1,8 @@
 import { GetObjectChildrenResult, QueryGetObjectChildrenArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } from '../../../../../navigation/interface';
-import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getObjectChildren(_: Parent, args: QueryGetObjectChildrenArgs): Promise<GetObjectChildrenResult> {
     const {
@@ -28,7 +28,7 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
 
     if (!navigation) {
         const error: string = 'Cannot get navigation instance';
-        LOG.error('getObjectChilgren', LOG.LS.eGQL, error);
+        RK.logError(RK.LogSection.eGQL,'get object children failed',error,{ ...args.input },'GraphQL.Repository.Children');
 
         return {
             success: false,

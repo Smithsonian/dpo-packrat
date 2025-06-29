@@ -1,8 +1,8 @@
 import * as H from '../utils/helpers';
-import * as LOG from '../utils/logger';
 import * as CACHE from '../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { IExtractor, IExtractorResults } from './IExtractor';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 import { pathExists } from 'fs-extra';
 import { ExtractorImageExifr } from './ExtractorImageExifr';
@@ -21,9 +21,12 @@ export class MetadataExtractor {
 
     async extractMetadata(fileName: string, inputStream?: NodeJS.ReadableStream | undefined): Promise<H.IOResults> {
         try {
-            if (!inputStream && !await pathExists(fileName))
+            if (!inputStream && !await pathExists(fileName)) {
+                RK.logError(RK.LogSection.eMETA,'extract metadata failed',`could not locate ${fileName}`,{ fileName },'Metadata.Extractor');
                 return { success: false, error: `MetadataExtractor.extractMetadata could not locate ${fileName}` };
+            }
         } catch (err) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eMETA,'extract metadata failed',`could not locate ${fileName}: ${err}`,{ fileName },'Metadata.Extractor');
             return { success: false, error: `MetadataExtractor.extractMetadata could not locate ${fileName}: ${JSON.stringify(err)}` };
         }
 
@@ -36,11 +39,11 @@ export class MetadataExtractor {
                 if (results.success && results.metadata && results.metadata.size > 0)
                     this.eMetadataSource = MetadataExtractor.extractorImage.eMetadataSource();
             } else
-                LOG.info(`MetadataExtractor.extractMetadata does not handle filetype for ${fileName}`, LOG.LS.eMETA);
+                RK.logWarning(RK.LogSection.eMETA,'extract metadata','does not handle filetype',{ fileName },'Metadata.Extractor');
         }
 
         if (!results.success)
-            LOG.error(`MetadataExtractor.extractMetadata failed: ${results.error}`, LOG.LS.eMETA);
+            RK.logError(RK.LogSection.eMETA,'extract metadata failed',results.error,{ fileName },'Metadata.Extractor');
         return results;
     }
 
@@ -82,14 +85,14 @@ export class MetadataExtractor {
                 const extractor: IExtractor = new exifModule.ExtractorImageExiftool();
                 results = await extractor.initialize();
                 if (results.success) {
-                    LOG.info('MetadataExtractor.initializeExtractorImage using exiftool', LOG.LS.eMETA);
+                    RK.logInfo(RK.LogSection.eMETA,'initialize extractor success','using exiftool',{},'Metadata.Extractor');
                     MetadataExtractor.extractorImage = extractor;
                     return results;
                 }
             }
-            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exiftool: ${results.error ?? 'ExtractorImageExiftool import failed'}`, LOG.LS.eMETA);
+            RK.logError(RK.LogSection.eMETA,'initialize extractor failed',`failed to initialize exiftool: ${results.error ?? 'import failed'}`,{},'Metadata.Extractor');
         } catch (err) {
-            LOG.error('MetadataExtractor.initializeExtractorImage failed to initialize exiftool', LOG.LS.eMETA, err);
+            RK.logError(RK.LogSection.eMETA,'initialize extractor failed',`failed to initialize exiftool: ${err}`,{},'Metadata.Extractor');
         }
 
         results.error = '';
@@ -97,28 +100,28 @@ export class MetadataExtractor {
             const extractor: IExtractor = new ExtractorImageExifr();
             results = await extractor.initialize();
             if (results.success) {
-                LOG.info('MetadataExtractor.initializeExtractorImage using exifr', LOG.LS.eMETA);
+                RK.logInfo(RK.LogSection.eMETA,'initialize extractor success','using exifr',{},'Metadata.Extractor');
                 MetadataExtractor.extractorImage = extractor;
                 return results;
             }
-            LOG.info(`MetadataExtractor.initializeExtractorImage failed to initialize exifr: ${results.error}`, LOG.LS.eMETA);
+            RK.logError(RK.LogSection.eMETA,'initialize extractor failed',`failed to initialize exifr: ${results.error}`,{},'Metadata.Extractor');
         } catch (err) {
-            LOG.error('MetadataExtractor.initializeExtractorImage failed to initialize exifr', LOG.LS.eMETA, err);
+            RK.logError(RK.LogSection.eMETA,'initialize extractor failed',`failed to initialize exifr. catch: ${err}`,{},'Metadata.Extractor');
         }
 
-        LOG.error('MetadataExtractor.initializeExtractorImage unable to load exiftool and exifr', LOG.LS.eMETA);
+        RK.logError(RK.LogSection.eMETA,'initialize extractor failed','unable to load exiftool and exifr',{},'Metadata.Extractor');
         return results;
     }
 
     private async importModule(moduleName: string, exceptionsAreErrors: boolean): Promise<ExifModule | null> { // eslint-disable-line @typescript-eslint/no-explicit-any
         try {
-            LOG.info(`MetadataExtractor.importModule ${moduleName}`, LOG.LS.eMETA);
+            RK.logDebug(RK.LogSection.eMETA,'import module',undefined,{ moduleName },'Metadata.Extractor');
             return await import(moduleName);
         } catch (err) {
             if (exceptionsAreErrors)
-                LOG.error(`MetadataExtractor.importModule ${moduleName} FAILED`, LOG.LS.eMETA, err);
+                RK.logError(RK.LogSection.eMETA,'import module failed',`exceptions: ${err}`,{ moduleName },'Metadata.Extractor');
             else
-                LOG.info(`MetadataExtractor.importModule ${moduleName} FAILED: ${err}`, LOG.LS.eMETA);
+                RK.logError(RK.LogSection.eMETA,'import module failed',H.Helpers.getErrorString(err),{ moduleName },'Metadata.Extractor');
             return null;
         }
     }

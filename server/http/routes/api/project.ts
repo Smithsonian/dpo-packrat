@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
@@ -8,6 +7,7 @@ import { ASL, LocalStore } from '../../../utils/localStore';
 import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { Config } from '../../../config';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 //#region Types and Definitions
 
@@ -72,7 +72,7 @@ export async function getProjects(req: Request, res: Response): Promise<void> {
     const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll();
     if(!projects || projects.length===0) {
         const error = `no projects found ${!projects ? '(is NULL)':''}`;
-        LOG.error(`API.getProject failed. ${error}`, LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get projects failed',error,{},'HTTP.Route.Project');
         res.status(200).send(JSON.stringify(generateResponse(false,`getProjects: ${error}`)));
         return;
     }
@@ -94,7 +94,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     // get our project id from our params
     const { id } = req.params;
     const idProject: number = parseInt(id);
-    LOG.info(`API.Projects get project scenes: ${idProject}`,LOG.LS.eHTTP);
+    RK.logInfo(RK.LogSection.eHTTP,'get projects failed',`get project scenes: ${idProject}`,{},'HTTP.Route.Project');
 
     // our holder for final scenes
     let project: DBAPI.Project | null = null;
@@ -109,7 +109,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
         project = await DBAPI.Project.fetch(idProject);
         if(!project) {
             const error = `cannot find Project (${idProject})`;
-            LOG.error(`API.getProjectScenes ${error}`,LOG.LS.eDB);
+            RK.logError(RK.LogSection.eHTTP,'get project scenes failed',error,{},'HTTP.Route.Project');
             res.status(200).send(JSON.stringify(generateResponse(false,error)));
             return;
         }
@@ -121,7 +121,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     // make sure we have scenes
     if(!scenes) {
         const error = `cannot get scenes from Project in DB (${idProject})`;
-        LOG.error(`API.getProjectScenes ${error}`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'get project scenes failed',error,{},'HTTP.Route.Project');
         res.status(200).send(JSON.stringify(generateResponse(false,error)));
         return;
     } else if(scenes.length===0) {
@@ -130,7 +130,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     }
 
     // initial scene gathering status output
-    LOG.info(`API.getProjectScenes grabbed ${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
+    RK.logDebug(RK.LogSection.eHTTP,'get project scenes',`grabbed ${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}) in ${getElapseSeconds(timestamp,Date.now())} seconds`,{},'HTTP.Route.Project');
     timestamp = Date.now();
 
     // cycle through scenes building results, and removing any that are null
@@ -142,7 +142,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
 
     // initial scene gathering status output
     const dataSize: number = JSON.stringify(scenes).length;
-    LOG.info(`API.getProjectScenes processed ${result.length}/${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}: ${dataSize} bytes) in ${getElapseSeconds(timestamp,Date.now())} seconds`,LOG.LS.eDEBUG);
+    RK.logInfo(RK.LogSection.eHTTP,'get project scenes success',`processed ${result.length}/${scenes.length} scenes from Project (${(idProject<0)?'all':idProject}: ${dataSize} bytes) in ${getElapseSeconds(timestamp,Date.now())} seconds`,{},'HTTP.Route.Project');
 
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${result.length} scenes`,[...result])));
@@ -158,7 +158,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     // get published state and properties (SystemObjectVersion)
     const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
     if(!sceneSO) {
-        LOG.error(`API.Project.buildProjectSceneDef failed to get scene (${scene.idScene}) SystemObject`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','cannot get scene SystemObject',{ ...scene },'HTTP.Route.Project');
         return null;
     }
 
@@ -166,7 +166,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     // scene. We do this to get the earliest and current states of the scene
     const sceneSOVs: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(sceneSO.idSystemObject);
     if(!sceneSOVs || sceneSOVs.length===0) {
-        LOG.error(`API.Project.buildProjectSceneDef failed to get SystemObjectVersion (${sceneSO.idSystemObject}) for scene (idScene: ${scene.idScene})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','cannot get SystemObjectVersion for scene',{ ...scene },'HTTP.Route.Project');
         return null;
     }
 
@@ -186,10 +186,10 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     // get our item
     const itemResults: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
     if(!itemResults || itemResults.length===0) {
-        LOG.error(`API.Project.buildProjectSceneDef failed to get Item (${scene.idScene})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','cannot get Item from scene',{ ...scene },'HTTP.Route.Project');
         return null;
     } else if(itemResults.length > 1) {
-        LOG.error(`API.Project.buildProjectSceneDef scene (idScene: ${scene.idScene}) has more than one Media Group (idItem: ${itemResults.map((i)=>i.idItem).join(',')})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','scene has more than one Media Group',{ scene, idItems: itemResults.map((i)=>i.idItem) },'HTTP.Route.Project');
     }
     const item: DBAPI.Item = itemResults[0];
     const itemSO: DBAPI.SystemObject | null = await item.fetchSystemObject();
@@ -198,12 +198,12 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     const subjectResults: DBAPI.Subject[] | null = await DBAPI.Subject.fetchMasterFromItems([item.idItem]);
     let subjectAltName: string | null = null;
     if(!subjectResults || subjectResults.length===0) {
-        LOG.error(`API.Project.buildProjectSceneDef failed to get Subject (${scene.idScene})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','cannot get Subject',{ ...scene },'HTTP.Route.Project');
         return null;
     } else if(subjectResults.length > 1) {
         // if we have more than one subject assigned (error) then we concat the names so it's clear
         // on the front end too.
-        LOG.error(`API.Project.buildProjectSceneDef MediaGroup (idItem: ${item.idItem}) of scene (idScene: ${scene.idScene}) has more than one Subject (idSubject: ${subjectResults.map((i)=>i.idSubject).join(',')})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','MediaGroup of scene has more than one subject',{ item, scene, idSubjects: subjectResults.map((i)=>i.idSubject) },'HTTP.Route.Project');
         subjectAltName = '(X) '+subjectResults.map((s) => s.Name).join(' | ');
     }
     const subject: DBAPI.Subject = subjectResults[0];
@@ -222,14 +222,14 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     // get all models associated with the Scene
     const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
     if (!MSXs) {
-        LOG.error(`API.Project.buildProjectSceneDef unable to fetch ModelSceneXrefs for scene ${scene.idScene}`, LOG.LS.eCOLL);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','unable to fetch ModelSceneXrefs for scene',{ ...scene },'HTTP.Route.Project');
         return null;
     }
 
     // build summaries for all dependencies
     const derivativeResult = await buildSummaryDerivatives(MSXs);
     if(!derivativeResult) {
-        LOG.error(`API.Project.buildProjectSceneDef unable to dependencies for scene ${scene.idScene}`, LOG.LS.eCOLL);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','unable to dependencies for scene',{ ...scene },'HTTP.Route.Project');
         return null;
     }
     const { models, downloads, ar } = derivativeResult;
@@ -237,7 +237,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     // get master model(s)
     const masterModels: AssetList | null = await buildSummaryMasterModels(scene.idScene);
     if(!masterModels) {
-        LOG.error(`API.Project.buildProjectSceneDef unable get master model(s) for scene ${scene.idScene}`, LOG.LS.eCOLL);
+        RK.logError(RK.LogSection.eHTTP,'build scene def failed','unable get master model(s) for scene',{ ...scene },'HTTP.Route.Project');
         return null;
     }
 
@@ -292,7 +292,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             },
     };
 
-    LOG.info(`API.Project.buildProjectSceneDef built scene summary (name: ${result.name} | time: ${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
+    RK.logDebug(RK.LogSection.eHTTP,'build scene def',`built scene summary (name: ${result.name} | time: ${(Date.now()-startTime)/1000}s)`,{},'HTTP.Route.Project');
     return result;
 };
 const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ models: AssetList, downloads: AssetList, ar: AssetList }  | null> => {
@@ -303,7 +303,7 @@ const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ 
             const summary: AssetSummary | null = await buildAssetSummaryFromMSX(MSX);
             return summary ? { summary, MSX } : null;
         } catch (error) {
-            LOG.error(`API.Project.buildSummaryDerivatives failed to build asset summary (id: ${MSX.idModelSceneXref} | model: ${MSX.idModel} | scene: ${MSX.idScene})`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'build scene derivatives failed','build asset summary',{ ...MSX },'HTTP.Route.Project');
             return null;
         }
     });
@@ -356,7 +356,7 @@ const buildSummaryMasterModels = async (idScene: number): Promise<AssetList | nu
     for(const model of masterModels) {
         const masterSummary: AssetSummary | null = await buildAssetSummaryFromModel(model.idModel);
         if(!masterSummary) {
-            LOG.error(`API.Project.buildMasterModelSummarie unable to build summary for Master model of scene (idScene: ${idScene} | idModel: ${model.idModel})`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eHTTP,'build scene derivatives failed','unable to build summary for Master model of scene',{ idScene, model },'HTTP.Route.Project');
             result.status = 'SysError';
             continue;
         }
@@ -448,14 +448,14 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
     // get our actual model so we can get the date created
     const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
     if(!model) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch model (id: ${idModel})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch model',{ idModel },'HTTP.Route.Project');
         return null;
     }
 
     // get our system object id for the model (just using original)
     const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
     if(!modelSO) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch SystemObject model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch SystemObject model',{ ...model },'HTTP.Route.Project');
         return null;
     }
 
@@ -474,22 +474,22 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
     // NOTE: there will often be 3+ for a single model (ex. obj, mtl, jpg)
     const modelAsset: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(model.idModel);
     if(!modelAsset || modelAsset.length===0) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset from model (idModel: ${model.idModel} | msx: ${model.Name})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch asset from model',{ ...model },'HTTP.Route.Project');
         return null;
     } else if(modelAsset.length>1)
-        LOG.info(`API.Project.buildAssetSummaryFromModel more than one asset assigned to model. using first one. (idModel: ${model.idModel} | count: ${modelAsset.length})`,LOG.LS.eDEBUG);
+        RK.logWarning(RK.LogSection.eHTTP,'build asset summary from model failed','more than one asset assigned to model. using first one.',{ ...model, numAssets: modelAsset.length },'HTTP.Route.Project');
 
     // get our latest asset version
     const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
     if(!modelAssetVer) {
-        LOG.error(`API.Project.buildAssetSummaryFromModel cannot fetch asset version from from model asset (idModel: ${model.idModel} | idAsset: ${modelAsset[0].idAsset})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch asset version from from model asset',{ model, idAsset: modelAsset[0].idAsset },'HTTP.Route.Project');
         return null;
     }
 
     // get our user who created the current version of the asset
     const modelCreator: DBAPI.User | null = await DBAPI.User.fetch(modelAssetVer.idUserCreator);
     if(!modelCreator)
-        LOG.error(`API.Project.buildAssetSummaryFromModel did not find creator account attached to this model (idModel: ${model.idModel} | idAsset: ${modelAssetVer.idAsset} | idUserCreator: ${modelAssetVer.idUserCreator})`,LOG.LS.eDB);
+        RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','did not find creator account attached to this model',{ model, idAsset: modelAssetVer.idAsset, idUserCreator: modelAssetVer.idUserCreator },'HTTP.Route.Project');
 
     // determine who created this asset (if possible)
     result.creator = {
@@ -550,21 +550,21 @@ const isAuthorized = async (req: Request): Promise<H.IOResults> => {
 
     // make sure we're authenticated (i.e. see if request has a 'user' object)
     if (!isAuthenticated(req)) {
-        LOG.error('API.getSummary failed. not authenticated.', LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'is authorized failed','not authenticated',{},'HTTP.Route.Project');
         return { success: false, error: 'not authenticated' };
     }
 
     // get our LocalStore. If we don't have one then bail. it is needed for the user id, auditing, and workflows
     const LS: LocalStore | undefined = ASL.getStore();
     if(!LS || !LS.idUser){
-        LOG.error('API.getSummary failed. cannot get LocalStore or idUser',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'is authorized failed','cannot get LocalStore or idUser',{},'HTTP.Route.Project');
         return { success: false, error: `missing local store/user (${LS?.idUser})` };
     }
 
     // make sure we're of specific class of user (e.g. tools)
     const authorizedUsers: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
     if(!authorizedUsers.includes(LS.idUser)) {
-        LOG.error(`API.getProjects failed. user is not authorized for this request (${LS.idUser})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'is authorized failed','user is not authorized for this request',{},'HTTP.Route.Project');
         return { success: false, error: `user (${LS.idUser}) does not have permission.` };
     }
 
@@ -604,7 +604,7 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     for(let i=0; i<downloads.length; i++) {
         if(downloads[i].dateCreated < targetDate) {
-            LOG.info(`API.Project.getDownloadStatus for ${downloads[i].name} [${i}] (${downloads[i].dateCreated} - ${targetDate})`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eHTTP,'get download model status',`${downloads[i].name} [${i}] (${downloads[i].dateCreated} - ${targetDate})`,{},'HTTP.Route.Project');
             return 'Error';
         }
     }
@@ -620,8 +620,8 @@ const getStatusARModels = (models: AssetSummary[]): string => {
 
         // if any model is too old or prior to known error return error
         if(model.dateCreated < targetDate) {
-            LOG.info(`API.Project.getStatusARModels for ${model.name} (${model.dateCreated} - ${targetDate})`,LOG.LS.eDEBUG);
-            return (model.downloadable===true)?'Error: NativeAR':'Error: WebAR';
+            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateCreated} - ${targetDate})`,{},'HTTP.Route.Project');
+            return (model.downloadable===true)?'Error: NativeAR':'Error:`${model.name} (${model.dateCreated} - ${targetDate})` WebAR';
         }
 
         // build our counts for comparison
@@ -645,7 +645,7 @@ const getStatusARModels = (models: AssetSummary[]): string => {
     }
 
     // If none of the conditions are met, log the error and return 'Unexpected'
-    LOG.error(`API.Project.getStatusARModels counts (native: ${downloadableCount} | web: ${nonDownloadableCount})`,LOG.LS.eHTTP);
+    RK.logError(RK.LogSection.eHTTP,'get AR model status failed','unexpected counts',{ native: downloadableCount, web: nonDownloadableCount },'HTTP.Route.Project');
     return 'Unexpected';
 };
 const getStatusCaptureData = (cd: AssetList): string => {
@@ -711,7 +711,7 @@ const getModelAssetProperties = (MSX: DBAPI.ModelSceneXref) => {
                         } break;
 
                     default:
-                        LOG.error(`Unsupported usage for model asset (${MSX.Usage})`,LOG.LS.eHTTP);
+                        RK.logError(RK.LogSection.eHTTP,'get model asset properties failed','unsupported usage for model asset',{ usage: MSX.Usage },'HTTP.Route.Project');
                 }
             }
         }
@@ -771,7 +771,7 @@ const processScenesWithLimit = async (
                 const result = await buildProjectSceneDef(scene, project);
                 if (result) results.push(result);
             } catch (error) {
-                LOG.error(`Failed to process scene ${scene.idScene}: ${error}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eHTTP,'process scenes failed',`cannot process scene ${scene.idScene}: ${error}`,{},'HTTP.Route.Project');
             }
         }
     };

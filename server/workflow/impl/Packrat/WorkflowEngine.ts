@@ -5,7 +5,6 @@ import { WorkflowJob } from './WorkflowJob';
 import { WorkflowIngestion } from './WorkflowIngestion';
 import { WorkflowUpload } from './WorkflowUpload';
 import * as COOK from '../../../job/impl/Cook';
-import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBAPI from '../../../db';
@@ -15,7 +14,7 @@ import { NameHelpers, ModelHierarchy, UNKNOWN_NAME } from '../../../utils/nameHe
 import { ASL, LocalStore } from '../../../utils/localStore';
 import * as H from '../../../utils/helpers';
 import path from 'path';
-import * as L from 'lodash';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 type AssetAndVersionResult = {
     success: boolean;
@@ -52,18 +51,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
     async create(workflowParams: WF.WorkflowParameters): Promise<WF.IWorkflow | null> {
         if (!workflowParams.eWorkflowType) {
-            LOG.error(`WorkflowEngine.create called without workflow type ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create workflow failed','called without workflow type',{ ...workflowParams },'Workflow.Engine');
             return null;
         }
 
-        LOG.info(`WorkflowEngine.create workflow [${this.workflowMap.size}] ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}: ${JSON.stringify(workflowParams, H.Helpers.saferStringify)}`, LOG.LS.eWF);
         const WFC: DBAPI.WorkflowConstellation | null = await this.createDBObjects(workflowParams);
         if (!WFC)
             return null;
 
         const workflow: WF.IWorkflow | null = await this.fetchWorkflowImpl(workflowParams, WFC);
         if (!workflow) {
-            LOG.error(`WorkflowEngine.create failed to fetch workflow implementation ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create workflow failed','failed to fetch workflow implementation',{ type: COMMON.eVocabularyID[workflowParams.eWorkflowType] },'Workflow.Engine');
             return null;
         }
         if (WFC.workflow)
@@ -71,15 +69,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const startResults: H.IOResults = await workflow.start();
         if (!startResults) {
-            LOG.error(`WorkflowEngine.create failed to start workflow ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create workflow failed','failed to start',{ type: COMMON.eVocabularyID[workflowParams.eWorkflowType] },'Workflow.Engine');
             return null;
         }
-        LOG.info(`WorkflowEngine.created workflow [${this.workflowMap.size}]: ${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
+
+        RK.logInfo(RK.LogSection.eWF,'create workflow success', undefined,{ ...workflowParams },'Workflow.Engine');
         return workflow;
     }
 
     async jobUpdated(idJobRun: number): Promise<boolean> {
-        LOG.info(`WorkflowEngine.jobUpdated: ${idJobRun}`, LOG.LS.eWF);
 
         const jobRun: DBAPI.JobRun | null = await DBAPI.JobRun.fetch(idJobRun);
         if (!jobRun)
@@ -92,14 +90,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const workflowStep of workflowSteps) {
             const WFC: DBAPI.WorkflowConstellation | null = await DBAPI.WorkflowConstellation.fetch(workflowStep.idWorkflow);
             if (!WFC || !WFC.workflow) {
-                LOG.error(`WorkflowEngine.jobUpdated (${idJobRun}) skipping orphan workflow step ${JSON.stringify(workflowStep)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'job update failed','skipping orphan workflow step',{ idJobRun, workflowStep },'Workflow.Engine');
                 continue;
             }
 
-            // lookup workflow object and forward "updated" event
+            // lookup workflow object and forward 'updated' event
             const workflow: WF.IWorkflow | undefined = this.workflowMap.get(WFC.workflow.idWorkflow);
             if (!workflow) {
-                LOG.error(`WorkflowEngine.jobUpdated(${idJobRun}) unable to locate workflow ${WFC.workflow.idWorkflow}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'job update failed','unable to locate workflow',{ idJobRun, workflowStep, idWorkflow: WFC.workflow.idWorkflow },'Workflow.Engine');
                 continue;
             }
 
@@ -107,25 +105,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             if (updateRes.workflowComplete) {
                 this.workflowMap.delete(WFC.workflow.idWorkflow);
                 await this.unsetActiveWorkflowStep(true);
-                LOG.info(`WorkflowEngine.jobUpdated completed workflow [${this.workflowMap.size}]: ${idJobRun}`, LOG.LS.eWF);
+                RK.logInfo(RK.LogSection.eWF,'job update done',undefined,{ idJobRun, idWorkflow: WFC.workflow.idWorkflow },'Workflow.Engine');
             }
             result = updateRes.success && result;
         }
+
         return result;
     }
 
     async event(eWorkflowEvent: COMMON.eVocabularyID, workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
-        LOG.info(`WorkflowEngine.event ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+
+        RK.logInfo(RK.LogSection.eWF,'event',undefined,{ eventType: COMMON.eVocabularyID[eWorkflowEvent], parameters: workflowParams?.parameters },'Workflow.Engine');
         const idVWorkflowEvent: number | undefined = await WorkflowEngine.computeWorkflowIDFromEnum(eWorkflowEvent, COMMON.eVocabularySetID.eWorkflowEvent);
         if (!idVWorkflowEvent) {
-            LOG.error(`WorkflowEngine.event called with invalid workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'event failed','called with invalid workflow event type',{ eventType: COMMON.eVocabularyID[eWorkflowEvent] },'Workflow.Engine');
             return null;
         }
 
         switch (eWorkflowEvent) {
             case COMMON.eVocabularyID.eWorkflowEventIngestionIngestObject: return this.eventIngestionIngestObject(workflowParams);
             default:
-                LOG.info(`WorkflowEngine.event called with unhandled workflow event type ${COMMON.eVocabularyID[eWorkflowEvent]}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'event failed','called with unhandled workflow event type',{ eventType: COMMON.eVocabularyID[eWorkflowEvent] },'Workflow.Engine');
                 return null;
         }
     }
@@ -159,44 +159,47 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // TODO: make this it's own workflow implementation instead of a routine (e.g. WorkflowGenDownloads)
         // TODO: move scene verification into Scene class (returns CSIR). we then check everything is available for gen downloads here
 
+        RK.logInfo(RK.LogSection.eWF,'generate downloads','started',{ idScene, ...workflowParams.parameters },'Workflow.Engine');
+
         //#region get and verify scene
         // grab our scene from the DB
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(idScene);
         if(!scene) {
-            LOG.error(`API.generateDownloads failed. cannot find Scene. (idScene:${idScene})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot find scene',{ idScene },'Workflow.Engine');
             return { success: false, message: 'cannot find scene' };
         }
 
         // get our system object
         const sceneSO: DBAPI.SystemObject | null = await scene.fetchSystemObject();
         if(!sceneSO) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid without SystemObject. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','scene is invalid without SystemObject',{ idScene },'Workflow.Engine');
             return { success: false, message: 'cannot get SystemObject', data: { isValid: false } };
         }
 
         // get our information about the scene
         const CSIR: ComputeSceneInfoResult | null = await this.computeSceneInfo(scene.idScene,sceneSO.idSystemObject);
         if(!CSIR || !CSIR.idScene || CSIR.exitEarly==true) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot compute scene info',{ idScene },'Workflow.Engine');
             return { success: false, message: 'cannot compute scene info', data: { isValid: false } };
         }
-        LOG.info(`WorkflowEngine.generateDownloads verify scene (idScene:${CSIR.idScene} | sceneFile: ${CSIR.assetSVX?.FileName} | idModel: ${CSIR.idModel} | modelFile: ${CSIR.assetVersionGeometry?.FileName})`,LOG.LS.eDEBUG);
+
+        RK.logDebug(RK.LogSection.eWF,'generate downloads','verify scene',{ idScene: CSIR.idScene, sceneFile: CSIR.assetSVX?.FileName, idModel: CSIR.idModel, modelFile: CSIR.assetVersionGeometry?.FileName },'Workflow.Engine');
 
         // make sure we have a voyager scene
         if(!CSIR.assetSVX) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. No voyager scene found (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','no voyager scene found',{ idScene },'Workflow.Engine');
             return { success: false, message: 'no voyager scene found', data: { isValid: false } };
         }
 
         // make sure we have a master model
         if(!CSIR.assetVersionGeometry || !CSIR.idModel) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. No master model found (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','no master model found',{ idScene },'Workflow.Engine');
             return { success: false, message: 'no master model found', data: { isValid: false } };
         }
 
         // make sure we can run the recipe (valid scene, not running, etc)
         if(scene.PosedAndQCd === false) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. Scene is invalid. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','scene is not posed or reviewed',{ idScene },'Workflow.Engine');
             return { success: false, message: 'not posed, licensed, or QC', data: { isValid: false } };
         }
         const isValid: boolean = true;
@@ -206,7 +209,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // make sure we don't have any jobs running. >0 if a running job was found.
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(8,scene.idScene);
         if(!activeJobs) {
-            LOG.error(`WorkflowEngine.generateDownloads failed. cannot determine if job is running. (idScene: ${scene.idScene})`,LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot determine if job is running',{ idScene },'Workflow.Engine');
             return { success: false, message: 'failed to get active jobs from DB', data: { isValid: false } };
         }
 
@@ -222,9 +225,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 idWorkflowReport = workflowReport[0].idWorkflowReport;
                 idWorkflow = workflowReport[0].idWorkflow;
             } else
-                LOG.info(`WorkflowEngine.generateDownloads unable to get workflowReport (idScene: ${scene.idScene} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+                RK.logWarning(RK.LogSection.eWF,'generate downloads','unable to get workflowReport',{ idScene: scene.idScene, idJobRun: activeJobs[0].idJobRun },'Workflow.Engine');
 
-            LOG.info(`WorkflowEngine.generateDownloads did not start. Job already running (idScene: ${scene.idScene} | activeJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'generate downloads','did not start. job already running',{ idScene: scene.idScene, activeJobRun: idActiveJobRun.join(',') },'Workflow.Engine');
             return { success: false, message: 'Job already running', data: { isValid: true, activeJobs, idWorkflow, idWorkflowReport } };
         }
         //#endregion
@@ -232,14 +235,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         //#region get system objects to act on
         const SOGeometry: DBAPI.SystemObject| null = await CSIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry file systemobject from ${JSON.stringify(CSIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to compute geometry file systemobject',{ assetVersionGeometry: CSIR.assetVersionGeometry },'Workflow.Engine');
             return { success: false, message: 'cannot get SystemObject for geometry file', data: { isValid: false, activeJobs } };
         }
         const idSystemObject: number[] = [SOGeometry.idSystemObject];
 
         const SOSVX: DBAPI.SystemObject| null = CSIR.assetSVX ? await CSIR.assetSVX.fetchSystemObject() : null;
         if (!SOSVX) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute scene file systemobject from ${JSON.stringify(CSIR.assetSVX, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to compute scene file systemobject',{ assetSVX: CSIR.assetSVX },'Workflow.Engine');
             return { success: false, message: 'cannot get SystemObject for voyager scene file', data: { isValid: false, activeJobs } };
         }
         idSystemObject.push(SOSVX.idSystemObject);
@@ -255,12 +258,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         // build our base names
         const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
-        LOG.info(`WorkflowEngine.generateDownloads compute names (sceneBaseName: ${sceneBaseName} | modelBaseName: ${modelBaseName})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eWF,'generate downloads','compute names',{ sceneBaseName, modelBaseName },'Workflow.Engine');
 
         // #region build our scene parameters
         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CSIR.idModel);
         if(parameterHelper==null) {
-            LOG.error(`WorkflowEngine.generateDownloads cannot create workflow parameters\n(CSIR:${H.Helpers.JSONStringify(CSIR)})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot create workflow parameters',{ CSIR },'Workflow.Engine');
             return { success: false, message: 'cannot create workflow parameters', data: { isValid, activeJobs } };
         }
 
@@ -274,7 +277,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // if no project found then have integrity issue and should not make things by creating additional assets
         const sceneProjects: DBAPI.Project[] | null = await DBAPI.Project.fetchFromScene(scene.idScene);
         if(!sceneProjects || sceneProjects.length!=1) {
-            LOG.error(`WorkflowEngine.generateDownloads cannot find project for scene. (idScene: ${scene.idScene})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate downloads failed','cannot find project for scene',{ idScene: scene.idScene },'Workflow.Engine');
             return { success: false, message: `cannot create workflow if scene does not have a Project (${scene.idScene})`, data: { isValid, activeJobs } };
         }
 
@@ -286,7 +289,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idUserInitiator: workflowParams.idUserInitiator,
             parameters: jobParamSIGenerateDownloads,
         };
-        LOG.info(`WorkflowEngine.generateDownloads generating downloads... (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eDEBUG);
+
+        // RK.logDebug(RK.LogSection.eWF,'generate downloads','started',{ ...wfParamSIGenerateDownloads },'Workflow.Engine');
         //#endregion
 
         const doCreate: boolean = true;
@@ -294,35 +298,34 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // create our workflow
             const wf: WF.IWorkflow | null = await this.create(wfParamSIGenerateDownloads);
             if (!wf) {
-                LOG.error(`WorkflowEngine.generateDownloads unable to create Cook si-generate-downloads workflow: ${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to create Cook si-generate-downloads workflow',{ ...wfParamSIGenerateDownloads },'Workflow.Engine');
                 return { success: false, message: 'cannot create downloads workflow', data: { isValid, activeJobs } };
             }
 
             // get our Workflow object from the database
             const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
             if(!workflow) {
-                LOG.error(`WorkflowEngine.generateDownloads unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIGenerateDownloads)})`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to get DB object for workflow',{ ...wfParamSIGenerateDownloads },'Workflow.Engine');
                 return { success: false, message: 'cannot get worfklow object', data: { isValid, activeJobs } };
             }
-            LOG.info(`WorkflowEngine.generateDownloads retrieved workflow (${workflow.idWorkflow} | ${workflow.idWorkflowSet})`,LOG.LS.eDEBUG);
 
             // get our workflow report for the new workflow
             const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
             if(!workflowReport || workflowReport.length <= 0) {
-                LOG.error(`WorkflowEngine.generateDownloads unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate downloads failed','unable to get workflow report',{ ...wfParamSIGenerateDownloads },'Workflow.Engine');
                 return { success: false, message: 'cannot get workflow report object', data: { isValid, activeJobs } };
             }
-            LOG.info(`WorkflowEngine.generateDownloads retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
-            LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eWF,'generate downloads','retrieved workflow report',{ idWorkflowReport: workflowReport[0].idWorkflowReport },'Workflow.Engine');
 
             // return success
-            return { success: true, message: 'generating downloads', data: { isValid, activeJobs, workflow, workflowReport } };
+            return { success: true, message: 'generate downloads success', data: { isValid, activeJobs, workflow, workflowReport } };
         } else
-            return { success: true, message: 'generating downloads', data: { isValid, activeJobs } };
+            return { success: true, message: 'generate downloads success', data: { isValid, activeJobs } };
     }
 
     async generateScene(idModel: number, idScene: number | null, workflowParams: WF.WorkflowParameters): Promise<WF.WorkflowCreateResult> {
-        LOG.info(`WorkflowEngine.generateScene (idModel: ${idModel} | idScene: ${idScene} | params: ${H.Helpers.JSONStringify(workflowParams)})`,LOG.LS.eDEBUG);
+
+        RK.logInfo(RK.LogSection.eWF,'generate scene','started',{ idModel, idScene, ...workflowParams.parameters },'Workflow.Engine');
 
         // making sure we didn't make it here but user wanted to skip generation
         // if (workflowParams.parameters.skipSceneGenerate===true) {
@@ -334,7 +337,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // make sure we don't have any jobs running. >0 if a running job was found.
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByModel(8,idModel);
         if(!activeJobs) {
-            LOG.error(`WorkflowEngine.generateScene failed. cannot determine if job is running. (idModel: ${idModel})`,LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'generate scene failed','cannot determine if job is running. no active jobs from DB.',{ idModel, idScene },'Workflow.Engine');
             return { success: false, message: 'failed to get active jobs from DB', data: { isValid: false } };
         }
 
@@ -350,9 +353,9 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 idWorkflowReport = workflowReport[0].idWorkflowReport;
                 idWorkflow = workflowReport[0].idWorkflow;
             } else
-                LOG.info(`WorkflowEngine.generateScene unable to get workflowReport (idModel: ${idModel} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+                RK.logWarning(RK.LogSection.eWF,'generate scene','unable to get workflowReport',{ idModel, idJobRun: activeJobs[0].idJobRun },'Workflow.Engine');
 
-            LOG.info(`WorkflowEngine.generateScene did not start. Job already running (idModel: ${idModel} | activeJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'generate scene failed','did not start. Job already running',{ idModel, activeJobRun: idActiveJobRun.join(',') },'Workflow.Engine');
             return { success: false, message: 'Job already running', data: { isValid: true, activeJobs, idWorkflow, idWorkflowReport } };
         }
         //#endregion
@@ -361,7 +364,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // get and verify model (must be master)
         const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
         if(!model) {
-            LOG.error(`WorkflowEngine.generateScene cannot get model (idModel: ${idModel})`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eWF,'generate scene failed','cannot get model',{ idModel },'Workflow.Engine');
             return { success: false, message: 'cannot get model', data: { isValid: false }  };
         }
 
@@ -371,7 +374,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // get the system object of the model since we need the id for its info
         const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(idModel);
         if(!modelSO) {
-            LOG.error(`WorkflowEngine.generateScene cannot get model SystemObject (idModel: ${idModel})`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eWF,'generate scene failed','cannot get model SystemObject',{ idModel, idScene },'Workflow.Engine');
             return { success: false, message: 'cannot get model SystemObject', data: { isValid: false }  };
         }
         //#endregion
@@ -380,27 +383,29 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // grab an Asset from the current Model. All assets associated with the Master model have their
         // idSystemObject assigned to the idSystemObject of the Master model. We use this to compute our info/stats
         const modelAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(idModel);
-        if(!modelAssets || modelAssets.length===0)
+        if(!modelAssets || modelAssets.length===0) {
+            RK.logError(RK.LogSection.eWF,'generate scene failed','cannot get model Asset',{ idModel },'Workflow.Engine');
             return { success: false, message: 'cannot get model Asset', data: { isValid: false }  };
+        }
         const modelAsset: DBAPI.Asset = modelAssets[0];
 
         // get model info
         const CMIR: ComputeModelInfoResult | undefined = await this.computeModelInfo(idModel, modelAsset.idSystemObject ?? -1);
         if (!CMIR || CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
-            LOG.error(`WorkflowEngine.generateScene cannot compute model info (idModel: ${idModel} | CMIR: ${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate scene failed','cannot compute model info',{ ...CMIR },'Workflow.Engine');
             return { success: false, message: 'cannot get model info', data: { isValid: false }  };
         }
 
         // bail if no units defined
         if(CMIR.units ===undefined) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units (CMIR: ${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate scene failed','skipping si-voyager-scene for master model with unsupported units',{ ...CMIR },'Workflow.Engine');
             return { success: false, message: `model has invalid units (${CMIR.units})`, data: { isValid: false }  };
         }
 
         // get our geometry and the associated system object for our params
         const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file SystemObject (CMIR: ${H.Helpers.JSONStringify(CMIR.assetVersionGeometry)})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate scene failed','unable to compute geometry file SystemObject',{ ...CMIR },'Workflow.Engine');
             return { success: false, message: 'failed to get geometry system object', data: { isValid: false }  };
         }
         const idSystemObjects: number[] = [SOGeometry.idSystemObject];
@@ -427,7 +432,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if(idScene) {
             scene = await DBAPI.Scene.fetch(idScene);
             if(!scene)
-                console.log(`no scene found for id: ${idScene}`);
+                RK.logWarning(RK.LogSection.eWF,'generate scene',`no scene found for id: ${idScene}`,{ idModel },'Workflow.Engine');
         }
 
         // if we still don't have a scene try to get it from the master model
@@ -435,10 +440,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // get scene (if any) from master model
             const childScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(idModel);
             if(!childScenes || childScenes.length===0) {
-                console.log(`No children scenes found (idModel: ${idModel})`);
+                RK.logWarning(RK.LogSection.eWF,'generate scene','No children scenes found',{ idModel },'Workflow.Engine');
             } else {
                 if(childScenes.length > 1)
-                    console.log(`retrieved ${childScenes.length} scenes for model (idModel: ${idModel})`);
+                    RK.logDebug(RK.LogSection.eWF,'generate scene',`retrieved ${childScenes.length} scenes for model`,{ idModel },'Workflow.Engine');
                 scene = childScenes[0];
             }
         }
@@ -451,17 +456,17 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // multiple SVX files for a single scene
             const svxAssetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchActiveVoyagerSceneFromScene(scene.idScene);
             if(!svxAssetVersion)
-                LOG.info(`WorkflowEngine.generateScene no active SVX file found for scene ${scene.idScene} (idModel: ${idModel})`,LOG.LS.eWF);
+                RK.logWarning(RK.LogSection.eWF,'generate scene','no active SVX file found for scene',{ idModel, idScene },'Workflow.Engine');
             else {
                 // compare filenames. if a match then add it to staged resources. otherwise, fail
-                // TODO: fix the naming?
+                // TODO: should we return on this failure?
                 if(svxAssetVersion.FileName !== svxFilename)
-                    LOG.info(`WorkflowEngine.generateScene basenames do not match. (${svxAssetVersion.FileName} -> ${svxFilename})`,LOG.LS.eWF);
+                    RK.logWarning(RK.LogSection.eWF,'generate scene failed','basenames do not match',{ idModel, idScene, expected: svxFilename, observed: svxAssetVersion.FileName },'Workflow.Engine');
                 else {
                     // grab our SystemObject since we need to feed it to the list of staged files
                     const svxAssetVersionSO: DBAPI.SystemObject | null = await svxAssetVersion.fetchSystemObject();
                     if(!svxAssetVersionSO)
-                        LOG.info(`WorkflowEngine.generateScene cannot get SystemObject for asset version. (idAssetVersion: ${svxAssetVersion.idAssetVersion})`,LOG.LS.eWF);
+                        RK.logWarning(RK.LogSection.eWF,'generate scene failed','cannot get SystemObject for asset version',{ idModel, idScene, idAssetVersion: svxAssetVersion.idAssetVersion },'Workflow.Engine');
                     else
                         idSystemObjects.push(svxAssetVersionSO.idSystemObject);
                 }
@@ -473,7 +478,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // build up our parameters and create the workflow
         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CMIR.idModel);
         if(parameterHelper==null) {
-            LOG.error(`WorkflowEngine.generateScene cannot create workflow parameters (CMIR:${H.Helpers.JSONStringify(CMIR)})`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'generate scene failed','cannot create workflow parameters',{ ...CMIR },'Workflow.Engine');
             return { success: false, message: 'cannot create workflow parameters', data: { isValid, activeJobs } };
         }
 
@@ -500,7 +505,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             parameters: jobParamSIVoyagerScene,
         };
         //#endregion
-        LOG.info(`WorkflowEngine.generateScene Cook parameters: ${H.Helpers.JSONStringify(wfParamSIVoyagerScene)}`,LOG.LS.eDEBUG);
+
+        RK.logDebug(RK.LogSection.eWF,'generate scene','cook parameters',{ ...wfParamSIVoyagerScene.parameters },'Workflow.Engine');
 
         //#region Workflow
         // create our workflow
@@ -509,37 +515,38 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             // create our workflow
             const wf: WF.IWorkflow | null = await this.create(wfParamSIVoyagerScene);
             if (!wf) {
-                LOG.error(`WorkflowEngine.generateScene unable to create Cook si-voyager-scene workflow: ${H.Helpers.JSONStringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate scene failed','unable to create Cook si-voyager-scene workflow',{ ...wfParamSIVoyagerScene.parameters },'Workflow.Engine');
                 return { success: false, message: 'cannot create voyager scene workflow', data: { isValid, activeJobs } };
             }
 
             // get our Workflow object from the database
             const workflow: DBAPI.Workflow | null = await wf.getWorkflowObject();
             if(!workflow) {
-                LOG.error(`WorkflowEngine.generateScene unable to get DB object for workflow. (${H.Helpers.JSONStringify(wfParamSIVoyagerScene)})`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate scene failed','unable to get DB object for workflow',{ ...wfParamSIVoyagerScene.parameters },'Workflow.Engine');
                 return { success: false, message: 'cannot get workflow object', data: { isValid, activeJobs } };
             }
-            LOG.info(`WorkflowEngine.generateScene retrieved workflow (${workflow.idWorkflow} | ${workflow.idWorkflowSet})`,LOG.LS.eDEBUG);
 
             // get our workflow report for the new workflow
             const workflowReport: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(workflow.idWorkflow);
             if(!workflowReport || workflowReport.length <= 0) {
-                LOG.error(`WorkflowEngine.generateScene unable to get workflow report. (${workflow.idWorkflow}))`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'generate scene failed','unable to get workflow report',{ idModel, idScene, idWorkflow: workflow.idWorkflow },'Workflow.Engine');
                 return { success: false, message: 'cannot get worfklow report object', data: { isValid, activeJobs } };
             }
-            LOG.info(`WorkflowEngine.generateScene retrieved workflow report (${workflowReport[0].idWorkflowReport})`,LOG.LS.eDEBUG);
-            LOG.info(`\t ${H.Helpers.JSONStringify(workflowReport[0].Data)}`,LOG.LS.eDEBUG);
 
             // return success
+            RK.logInfo(RK.LogSection.eWF,'generate scene success','',{ idModel, idScene, activeJobs, workflow, workflowReport },'Workflow.Engine');
             return { success: true, message: 'generating scene', data: { isValid, activeJobs, workflow, workflowReport } };
-        } else
+        } else {
+            RK.logInfo(RK.LogSection.eWF,'generate scene success','',{ idModel, idScene, activeJobs },'Workflow.Engine');
             return { success: true, message: 'generating scene', data: { isValid, activeJobs } };
+        }
         //#endregion
     }
 
     private async eventIngestionIngestObject(workflowParams: WF.WorkflowParameters | null): Promise<WF.IWorkflow[] | null> {
-        LOG.info(`WorkflowEngine.eventIngestionIngestObject params=${JSON.stringify(workflowParams)}`, LOG.LS.eWF);
-        // LOG.info(H.Helpers.getStackTrace('WorkflowEngine.eventIngestionIngestObject'),LOG.LS.eDEBUG);
+
+        RK.logInfo(RK.LogSection.eWF,'ingest object event','triggered',{ ...workflowParams?.parameters },'Workflow.Engine');
+
         if (!workflowParams || !workflowParams.idSystemObject)
             return null;
 
@@ -556,8 +563,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const idSystemObject of workflowParams.idSystemObject) {
             const { success, asset, assetVersion } = await this.computeAssetAndVersion(idSystemObject);
             // LOG.info(`WorkflowEngine.eventIngestionIngestObject computeAssetAndVersion ${JSON.stringify({ success, asset, assetVersion }, H.Helpers.saferStringify)}`, LOG.LS.eWF);
-            if (!success || !asset || !assetVersion || !asset.idSystemObject)
+            if (!success || !asset || !assetVersion || !asset.idSystemObject) {
+                RK.logWarning(RK.LogSection.eWF,'ingest object event','skipping asset. cannot compute asset and version',{ idSystemObject, ...workflowParams.parameters },'Workflow.Engine');
                 continue;
+            }
 
             // skip processing asset-owning parent objects multiple times
             if (systemObjectHandled.has(asset.idSystemObject))
@@ -567,7 +576,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
             const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(asset.idSystemObject);
             if (!oID) {
-                LOG.error(`WorkflowEngine.eventIngestionIngestObject unable to compute system object owner of ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'ingest object event','unable to compute system object owner',{ ...asset },'Workflow.Engine');
                 continue;
             }
 
@@ -577,12 +586,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     if (!CMIR) { // lookup model info, if we haven't already
                         CMIR = await this.computeModelInfo(oID.idObject, asset.idSystemObject);
                         if (CMIR.exitEarly || CMIR.assetVersionGeometry === undefined) {
-                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping model ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                            RK.logWarning(RK.LogSection.eWF,'ingest object event','skipping model',{ objectID: oID, fileName: asset.FileName, ...CMIR },'Workflow.Engine');
                             CMIR = undefined;
                             continue;
                         }
                     } else if (CMIR.idModel !== oID.idObject) { // make sure we're processing the same model
-                        LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple models ([${CMIR.idModel}, ${oID.idObject}])`, LOG.LS.eWF);
+                        RK.logError(RK.LogSection.eWF,'ingest object event','encountered multiple models',{ objectID: oID, fileName: asset.FileName, ...CMIR },'Workflow.Engine');
                         continue;
                     }
                     break;
@@ -592,23 +601,23 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         if (!CSIR) {
                             CSIR = await this.computeSceneInfo(oID.idObject, asset.idSystemObject);
                             if (CSIR.exitEarly || CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
-                                LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)}`, LOG.LS.eWF);
+                                RK.logWarning(RK.LogSection.eWF,'ingest object event','skipping scene',{ objectID: oID, fileName: asset.FileName, ...CSIR },'Workflow.Engine');
                                 CSIR = undefined;
                                 continue;
                             }
                         } else if (CSIR.idScene !== oID.idObject) {
-                            LOG.error(`WorkflowEngine.eventIngestionIngestObject encountered multiple scenes ([${CSIR.idScene}, ${oID.idObject}])`, LOG.LS.eWF);
+                            RK.logError(RK.LogSection.eWF,'ingest object event','encountered multiple scenes',{ objectID: oID, fileName: asset.FileName, ...CSIR },'Workflow.Engine');
                             continue;
                         }
 
                         if (CSIR.scene !== undefined && !CSIR.scene.PosedAndQCd) { // we have scene info, and that scene has not been posed and QCd
-                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which has not been PosedAndQCd`, LOG.LS.eWF);
+                            RK.logWarning(RK.LogSection.eWF,'ingest object event','skipping scene. not Posed or QC',{ objectID: oID, fileName: asset.FileName },'Workflow.Engine');
                             CSIR = undefined;
                             continue;
                         }
 
                         if (!DBAPI.LicenseAllowsDownloadGeneration(CSIR.licenseResolver?.License?.RestrictLevel)) { // we don't have a license resolver, or that license does not allow download generation
-                            LOG.info(`WorkflowEngine.eventIngestionIngestObject skipping scene ${JSON.stringify(oID)} which does not have the needed license for download generation`, LOG.LS.eWF);
+                            RK.logWarning(RK.LogSection.eWF,'ingest object event','skipping scene. invalid license for scene generation',{ objectID: oID, fileName: asset.FileName, ...CSIR },'Workflow.Engine');
                             CSIR = undefined;
                             continue;
                         }
@@ -629,12 +638,12 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private async eventIngestionIngestObjectModel(CMIR: ComputeModelInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean, generateDownloads: boolean = false): Promise<WF.IWorkflow[] | null> {
         // LOG.info(H.Helpers.getStackTrace('WorkflowEngine.eventIngestionIngestObjectModel'),LOG.LS.eDEBUG);
         if (!assetsIngested) {
-            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logDebug(RK.LogSection.eWF,'ingest model event failed','skipping post-ingest workflows as no assets were updated',{ ...CMIR },'Workflow.Engine');
             return null;
         }
 
         if (CMIR.assetVersionGeometry === undefined) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry and/or diffuse texture from model ${CMIR.idModel}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'ingest model event failed','unable to compute geometry and/or diffuse texture from model',{ ...CMIR },'Workflow.Engine');
             return null;
         }
 
@@ -652,13 +661,13 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
             // All others will not result in scene or download generation
             default:
-                LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping unsupported model type ${eModelType ? COMMON.eVocabularyID[eModelType] : 'unknown'} for ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'ingest model event failed','skipping unsupported model type',{ modelType: eModelType ? COMMON.eVocabularyID[eModelType] : 'unknown', ...CMIR },'Workflow.Engine');
                 return null;
         }
 
         const SOGeometry: DBAPI.SystemObject| null = await CMIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute geometry file systemobject from ${JSON.stringify(CMIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'ingest model event failed','unable to compute geometry file systemobject',{ ...CMIR },'Workflow.Engine');
             return null;
         }
         const idSystemObject: number[] = [SOGeometry.idSystemObject];
@@ -672,14 +681,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             idSystemObject.push(SOMTL.idSystemObject);
 
         const workflows: WF.IWorkflow[] = [];
-        const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
+        const { sceneBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CMIR.idModel, CMIR.assetVersionGeometry.FileName);
 
         // initiate WorkflowJob for cook si-voyager-scene
         if (CMIR.units !== undefined && CMIR.idModel !== undefined) {
             const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CMIR.idModel);
             if (parameterHelper) {
                 if (workflowParams.parameters.skipSceneGenerate) {
-                    LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene per user instruction idSO ${workflowParams.idSystemObject}`, LOG.LS.eWF);
+                    RK.logWarning(RK.LogSection.eWF,'ingest model event','skipping si-voyager-scene per user instruction',{ idSystemObject: workflowParams.idSystemObject },'Workflow.Engine');
                 } else {
                     const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
                         new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
@@ -697,24 +706,22 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     if (wfSIVoyagerScene)
                         workflows.push(wfSIVoyagerScene);
                     else
-                        LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIVoyagerScene)}`, LOG.LS.eWF);
+                        RK.logError(RK.LogSection.eWF,'ingest model event failed','unable to create Cook si-voyager-scene workflow',{ ...wfParamSIVoyagerScene },'Workflow.Engine');
                 }
             } else
-                LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to compute parameter info needed by Cook si-voyager-scene workflow from model: ${CMIR.idModel}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'ingest model event failed','unable to compute parameter info needed by Cook si-voyager-scene workflow from model',{ ...CMIR },'Workflow.Engine');
         } else
-            LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene for master model with unsupported units or model ID ${JSON.stringify(CMIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'ingest model event','skipping si-voyager-scene for master model with unsupported units or model ID',{ ...CMIR },'Workflow.Engine');
 
         // do we want to generate downloads for this ingestion
         if(generateDownloads===true) {
 
             // TEMP: preventing automatic download generation
-            if(generateDownloads===true) {
-                LOG.info(`!!! WorkflowEngine.generateDownloads reached w/ ingest model. (idScene: ${CMIR.idModel})`,LOG.LS.eDEBUG);
-                console.trace('WorkflowEngine.generateDownloads');
-                return null;
-            }
+            RK.logWarning(RK.LogSection.eWF,'ingest model event failed','enerateDownloads reached w/ ingest model',{ ...CMIR, trace: H.Helpers.getStackTrace('eventIngestionIngestObjectModel') },'Workflow.Engine');
+            return null;
 
             // does this ingested model have a scene child?  If so, initiate WorkflowJob for cook si-generate-downloads
+            /*
             const SODerived: DBAPI.SystemObject[] | null = CMIR.idSystemObjectModel ? await DBAPI.SystemObject.fetchDerivedFromXref(CMIR.idSystemObjectModel) : null;
             if (!SODerived)
                 return workflows.length > 0 ? workflows : null;
@@ -770,35 +777,34 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         LOG.error(`WorkflowEngine.eventIngestionUploadAssetVersion unable to create Cook si-voyager-scene workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
                 }
             }
-        } else
-            LOG.info('WorkflowEngine.eventIngestionUploadAssetVersion skipping generating downloads',LOG.LS.eWF);
+            */
+        }
 
         return workflows.length > 0 ? workflows : null;
     }
 
     private async eventIngestionIngestObjectScene(CSIR: ComputeSceneInfoResult, workflowParams: WF.WorkflowParameters, assetsIngested: boolean, generateDownloads: boolean = false): Promise<WF.IWorkflow[] | null> {
-        // LOG.info(H.Helpers.getStackTrace('WorkflowEngine.eventIngestionIngestObjectScene'),LOG.LS.eDEBUG);
 
         if (!assetsIngested) {
-            LOG.info(`WorkflowEngine.eventIngestionIngestObjectScene skipping post-ingest workflows as no assets were updated for ${JSON.stringify(CSIR, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logInfo(RK.LogSection.eWF,'ingest scene event failed','skipping post-ingest workflows as no assets were updated',{ ...CSIR, params: workflowParams.parameters },'Workflow.Engine');
             return null;
         }
 
         if (CSIR.assetVersionGeometry === undefined || CSIR.assetSVX === undefined) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry and/or scene asset version from scene ${CSIR.idScene}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'ingest scene event failed','unable to compute geometry and/or scene asset version from scene',{ ...CSIR, params: workflowParams.parameters },'Workflow.Engine');
             return null;
         }
 
         const SOGeometry: DBAPI.SystemObject| null = await CSIR.assetVersionGeometry.fetchSystemObject();
         if (!SOGeometry) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute geometry file systemobject from ${JSON.stringify(CSIR.assetVersionGeometry, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'ingest scene event failed','unable to compute geometry file systemobject',{ ...CSIR, params: workflowParams.parameters },'Workflow.Engine');
             return null;
         }
         const idSystemObject: number[] = [SOGeometry.idSystemObject];
 
         const SOSVX: DBAPI.SystemObject| null = CSIR.assetSVX ? await CSIR.assetSVX.fetchSystemObject() : null;
         if (!SOSVX) {
-            LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to compute scene file systemobject from ${JSON.stringify(CSIR.assetSVX, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'ingest scene event failed','unable to compute scene file systemobject',{ ...CSIR, params: workflowParams.parameters },'Workflow.Engine');
             return null;
         }
         idSystemObject.push(SOSVX.idSystemObject);
@@ -815,12 +821,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if(generateDownloads===true) {
 
             // TEMP: preventing automatic download generation
-            if(generateDownloads===true) {
-                LOG.info(`!!! WorkflowEngine.generateDownloads reached w/ ingest scene. (idScene: ${CSIR.idScene})`,LOG.LS.eDEBUG);
-                console.trace('WorkflowEngine.generateDownloads');
-                return null;
-            }
+            RK.logWarning(RK.LogSection.eWF,'ingest scene event failed','generateDownloads reached w/ ingest scene',{ ...CSIR, trace: H.Helpers.getStackTrace('eventIngestionIngestObjectScene') },'Workflow.Engine');
+            return null;
 
+            /*
             // initiate WorkflowJob for cook si-generate-download
             const { sceneBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
 
@@ -856,8 +860,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             if (workflow)
                 return [workflow];
             LOG.error(`WorkflowEngine.eventIngestionIngestObjectScene unable to create Cook si-generate-downloads workflow: ${JSON.stringify(wfParamSIGenerateDownloads)}`, LOG.LS.eWF);
-        } else
-            LOG.info('WorkflowEngine.eventIngestionUploadAssetVersion skipping generating downloads',LOG.LS.eWF);
+            */
+        }
 
         return null;
     }
@@ -867,7 +871,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (idModel) {
             modelSource = await DBAPI.Model.fetch(idModel);
             if (!modelSource)
-                LOG.error(`WorkflowEngine.computeSceneAndModelBaseNames unable to compute Model from idModel ${idModel}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'compute base names failed','unable to get Model from idModel',{ idModel },'Workflow.Engine');
         }
 
         let sceneBaseName: string | null = null;
@@ -878,7 +882,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 if (sceneBaseName === UNKNOWN_NAME)
                     sceneBaseName = null;
             } else
-                LOG.error(`WorkflowEngine.eventIngestionIngestObjectModel unable to load model hierarchy from Model ${H.Helpers.JSONStringify(modelSource)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'compute base names failed','unable to load model hierarchy from Model',{ idModel },'Workflow.Engine');
         }
 
         if (!sceneBaseName)
@@ -892,11 +896,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     static async computeWorkflowIDFromEnum(eVocabEnum: COMMON.eVocabularyID, eVocabSetEnum: COMMON.eVocabularySetID): Promise<number | undefined> {
         const idVocab: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eVocabEnum);
         if (!idVocab) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with invalid workflow type ${COMMON.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute workflow ID failed','called with invalid workflow type',{ type: COMMON.eVocabularyID[eVocabEnum] ?? 'undefined' },'Workflow.Engine');
             return undefined;
         }
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eVocabEnum, eVocabSetEnum)) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeFromEnum called with non-workflow type vocabulary ${COMMON.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute workflow ID failed','called with non-workflow type vocabulary',{ type: COMMON.eVocabularyID[eVocabEnum] ?? 'undefined' },'Workflow.Engine');
             return undefined;
         }
         return idVocab;
@@ -905,11 +909,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     static async computeWorkflowEnumFromID(idVocab: number, eVocabSetEnum: COMMON.eVocabularySetID): Promise<COMMON.eVocabularyID | undefined> {
         const eVocabEnum: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVocab);
         if (!eVocabEnum) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with invalid workflow type ${idVocab}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute workflow enum failed','called with invalid workflow vocab id',{ idVocab },'Workflow.Engine');
             return undefined;
         }
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eVocabEnum, eVocabSetEnum)) {
-            LOG.error(`WorkflowEngine.computeWorkflowTypeEnumFromID called with non-workflow type vocabulary ${COMMON.eVocabularyID[eVocabEnum]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute workflow enum failed','called with non-workflow type vocabulary',{ type: COMMON.eVocabularyID[eVocabEnum] ?? 'undefined' },'Workflow.Engine');
             return undefined;
         }
         return eVocabEnum;
@@ -945,7 +949,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // WorkflowStep for initiation
         const idVWorkflowStepType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eWorkflowStepTypeStart);
         if (!idVWorkflowStepType) {
-            LOG.error(`WorkflowEngine.create called with invalid workflow type ${COMMON.eVocabularyID[workflowParams.eWorkflowType]}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'create db objects failed','called with invalid workflow type',{ type: COMMON.eVocabularyID[workflowParams.eWorkflowType] ?? 'undefined' },'Workflow.Engine');
             return null;
         }
 
@@ -998,26 +1002,26 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private async computeAssetAndVersion(idSystemObject: number): Promise<AssetAndVersionResult> {
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
         if (!oID) {
-            LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid idSystemObject ${idSystemObject}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute asset and version failed','skipping invalid idSystemObject',{ idSystemObject },'Workflow.Engine');
             return { success: false };
         }
 
         if (oID.eObjectType != COMMON.eSystemObjectType.eAssetVersion) {
-            LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute asset and version failed','skipping invalid object type',{ idSystemObject, ...oID },'Workflow.Engine');
             return { success: false };
         }
 
         // load asset version
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
         if (!assetVersion)  {
-            LOG.error(`WorkflowEngine.computeAssetAndVersion skipping invalid object ${JSON.stringify(oID)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute asset and version failed','skipping invalid object. cannot get AssetVersion',{ idSystemObject, ...oID },'Workflow.Engine');
             return { success: false };
         }
 
         // load asset
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
         if (!asset) {
-            LOG.error(`WorkflowEngine.computeAssetAndVersion unable to load asset from idAsset ${assetVersion.idAsset}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute asset and version failed','unable to load asset from idAsset',{ idSystemObject, idAsset: assetVersion.idAsset },'Workflow.Engine');
             return { success: false };
         }
         return { success: true, asset, assetVersion };
@@ -1027,20 +1031,20 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const vMaster: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
         const vDiffuse: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelMaterialChannelMaterialTypeDiffuse);
         if (!vMaster || !vDiffuse) {
-            LOG.error('WorkflowEngine.computeModelInfo unable to compute model vocabulary', LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute model info failed','unable to compute model vocabulary',{ idModel },'Workflow.Engine');
             return { exitEarly: true };
         }
 
         // lookup model constellation
         const modelConstellation: DBAPI.ModelConstellation | null = await DBAPI.ModelConstellation.fetch(idModel);
         if (!modelConstellation || !modelConstellation.Model || !modelConstellation.ModelAssets) {
-            LOG.error(`WorkflowEngine.computeModelInfo unable to compute model from ${JSON.stringify(idModel)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute model info failed','unable to compute model from ID',{ idModel },'Workflow.Engine');
             return { exitEarly: true };
         }
 
         // If this is not a master model, skip post-ingestion workflow
         if (modelConstellation.Model.idVPurpose != vMaster.idVocabulary) {
-            LOG.info(`WorkflowEngine.computeModelInfo skipping non-master model ${JSON.stringify(modelConstellation.Model, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+            RK.logDebug(RK.LogSection.eWF,'compute model info','skipping non-master model',{ idModel },'Workflow.Engine');
             return { exitEarly: true };
         }
 
@@ -1056,7 +1060,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 if (MMC.idVMaterialType != vDiffuse.idVocabulary)
                     continue;
                 if (idAssetDiffuse !== undefined) {
-                    LOG.error(`WorkflowEngine.computeModelInfo encountered multiple diffuse channels in model ${modelConstellation.Model.idModel}`, LOG.LS.eWF);
+                    RK.logError(RK.LogSection.eWF,'compute model info failed','encountered multiple diffuse channels in model',{ idModel: modelConstellation.Model.idModel },'Workflow.Engine');
                     break;
                 }
 
@@ -1072,7 +1076,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                         }
                     }
                     if (!idAssetDiffuse) {
-                        LOG.error(`WorkflowEngine.computeModelInfo could not find expected diffuse channel in UV Map ${MMC.idModelMaterial}`, LOG.LS.eWF);
+                        RK.logError(RK.LogSection.eWF,'compute model info failed','could not find expected diffuse channel in UV Map',{ idModelMaterial: MMC.idModelMaterial },'Workflow.Engine');
                         continue;
                     }
                 }
@@ -1091,7 +1095,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     if (!assetVersionGeometry)
                         assetVersionGeometry = modelAsset.AssetVersion;
                     else {
-                        LOG.error(`WorkflowEngine.computeModelInfo encountered multiple geometry files for model ${JSON.stringify(modelConstellation.Model)}`, LOG.LS.eWF);
+                        RK.logError(RK.LogSection.eWF,'compute model info failed','encountered multiple geometry files for model',{ idModel },'Workflow.Engine');
                         continue;
                     }
                     break;
@@ -1108,35 +1112,36 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (!assetVersionDiffuse &&                             // if we don't have a diffuse texture, and
             !assetVersionMTL &&                                 // we don't have a MTL file, and
             UVMapFileCount === 1)                               // we have only one UV Map
-            assetVersionDiffuse = assetVersionDiffuseBackup;    // use our "backup" notion of diffuse texture
+            assetVersionDiffuse = assetVersionDiffuseBackup;    // use our 'backup' notion of diffuse texture
 
         const units: string | undefined = await COOK.JobCookSIVoyagerScene.convertModelUnitsVocabToCookUnits(modelConstellation.Model.idVUnits);
         const retValue = { exitEarly: false, idModel, idSystemObjectModel, assetVersionGeometry, assetVersionDiffuse, assetVersionMTL, units };
-        LOG.info(`WorkflowEngine.computeModelInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+
+        RK.logInfo(RK.LogSection.eWF,'compute model info success','',{ ...retValue },'Workflow.Engine');
         return retValue;
     }
 
     private async computeSceneInfo(idScene: number, idSystemObjectScene: number): Promise<ComputeSceneInfoResult> {
         const vAssetType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeScene);
         if (!vAssetType) {
-            LOG.error('WorkflowEngine.computeSceneInfo unable to compute scene asset type', LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute scene asset type',{ idScene, idSystemObjectScene },'Workflow.Engine');
             return { exitEarly: true };
         }
 
         // lookup scene constellation
         const sceneConstellation: DBAPI.SceneConstellation | null = await DBAPI.SceneConstellation.fetchFromScene(idScene);
         if (!sceneConstellation || !sceneConstellation.Scene) {
-            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene from ${JSON.stringify(idScene)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute scene from scene constellation',{ idScene, idSystemObjectScene },'Workflow.Engine');
             return { exitEarly: true };
         }
         const scene: DBAPI.Scene = sceneConstellation.Scene;
         const licenseResolver: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObjectScene);
         if (!licenseResolver)
-            LOG.info(`WorkflowEngine.computeSceneInfo unable to compute license resolver for scene system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            RK.logWarning(RK.LogSection.eWF,'compute scene info','unable to compute license resolver for scene system object',{ idScene, idSystemObjectScene },'Workflow.Engine');
 
         const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObjectScene);
         if (!assetVersions) {
-            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute latest asset versions from system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute latest asset versions from system object',{ idScene, idSystemObjectScene },'Workflow.Engine');
             return { exitEarly: true };
         }
 
@@ -1145,7 +1150,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         for (const assetVersion of assetVersions) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
             if (!asset) {
-                LOG.error(`WorkflowEngine.computeSceneInfo unable to compute asset from asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute asset from asset version',{ idScene, idSystemObjectScene, ...assetVersion },'Workflow.Engine');
                 continue;
             }
             if (asset.idVAssetType === vAssetType.idVocabulary) {
@@ -1154,15 +1159,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             }
         }
         if (!assetSVX) {
-            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene's asset version from system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute scene asset version from system object',{ idScene, idSystemObjectScene },'Workflow.Engine');
             return { exitEarly: true };
         }
 
-        // Search for master model for this scene, among "source" objects
+        // Search for master model for this scene, among 'source' objects
         // assuming Scene has models as source/parent
         const SOMasters: DBAPI.SystemObject[] | null =  await DBAPI.SystemObject.fetchMasterFromXref(idSystemObjectScene);
         if (!SOMasters) {
-            LOG.error(`WorkflowEngine.computeSceneInfo unable to compute scene's master objects from system object ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute scene master objects from system object',{ idScene, idSystemObjectScene },'Workflow.Engine');
             return { exitEarly: true };
         }
 
@@ -1179,14 +1184,15 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 CMIR = undefined;
         }
         if (!CMIR) {
-            LOG.info(`WorkflowEngine.computeSceneInfo unable to compute scene's master model source for ${JSON.stringify(idSystemObjectScene)}`, LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'compute scene info failed','unable to compute scene master model source',{ idScene, idSystemObjectScene },'Workflow.Engine');
             return { exitEarly: true };
         }
 
         const retValue = { exitEarly: false, idScene, idModel: CMIR.idModel, idSystemObjectScene,
             assetSVX, assetVersionGeometry: CMIR.assetVersionGeometry, assetVersionDiffuse: CMIR.assetVersionDiffuse,
             assetVersionMTL: CMIR.assetVersionMTL, scene, licenseResolver, units: CMIR.units };
-        LOG.info(`WorkflowEngine.computeSceneInfo returning ${JSON.stringify(retValue, H.Helpers.saferStringify)}`, LOG.LS.eWF);
+
+        RK.logInfo(RK.LogSection.eWF,'compute scene info','',{ ...retValue },'Workflow.Engine');
         return retValue;
     }
 
@@ -1207,7 +1213,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         if (LS.idWorkflowSet) {
             const workflowSet: DBAPI.WorkflowSet | null = await DBAPI.WorkflowSet.fetch(LS.idWorkflowSet);
             if (!workflowSet)
-                LOG.error(`WorkflowEngine.getActiveWorkflowSet unable to fetch active WorkflowSet ${LS.idWorkflowSet}`, LOG.LS.eWF);
+                RK.logError(RK.LogSection.eWF,'get workflow set failed','unable to fetch active WorkflowSet from LocalStore',{ idWorkflowSet: LS.idWorkflowSet },'Workflow.Engine');
             return workflowSet;
         }
 
@@ -1220,7 +1226,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         const workflowSet: DBAPI.WorkflowSet | null = new DBAPI.WorkflowSet({ idWorkflowSet: 0 });
         if (!await workflowSet.create()) {
-            LOG.error('WorkflowEngine.nextWorkflowSet unable to create new WorkflowSet', LOG.LS.eWF);
+            RK.logError(RK.LogSection.eWF,'next workflow set failed','unable to create new WorkflowSet',undefined,'Workflow.Engine');
             return null;
         }
 

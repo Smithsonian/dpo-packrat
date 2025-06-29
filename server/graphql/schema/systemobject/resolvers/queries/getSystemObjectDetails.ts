@@ -11,7 +11,7 @@ import {
     SystemObject
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 type PublishedStateInfo = {
     publishedState: string;
@@ -24,18 +24,15 @@ const UNKNOWN_NAME: string = '<UNKNOWN>';
 export default async function getSystemObjectDetails(_: Parent, args: QueryGetSystemObjectDetailsArgs): Promise<GetSystemObjectDetailsResult> {
     const { input } = args;
     const { idSystemObject } = input;
-    // LOG.info('getSystemObjectDetails 0', LOG.LS.eGQL);
 
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
-    // LOG.info('getSystemObjectDetails 1', LOG.LS.eGQL);
 
     const { success, error, unit, project, subject, item, objectAncestors, OGDB } = await getObjectAncestors(idSystemObject);
     if (!success) {
         const message: string = `Failed to compute ancestors: ${error}`;
-        LOG.error(message, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get details failed',message,{ input },'GraphQL.SystemObject.Details');
         throw new Error(message);
     }
-    // LOG.info('getSystemObjectDetails 2', LOG.LS.eGQL);
 
     const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
@@ -47,19 +44,19 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     if (!oID) {
         const message: string = `No object ID found for ID: ${idSystemObject}`;
-        LOG.error(message, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get details failed',message,{ input },'GraphQL.SystemObject.Details');
         throw new Error(message);
     }
 
     if (!systemObject) {
         const message: string = `No system object found for ID: ${idSystemObject}`;
-        LOG.error(`getSystemObjectDetails: ${message}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get details failed',message,{ input },'GraphQL.SystemObject.Details');
         throw new Error(message);
     }
 
     if (!objectVersions) {
         const message: string = `No SystemObjectVersions found for ID: ${idSystemObject}`;
-        LOG.error(`getSystemObjectDetails: ${message}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get details failed',message,{ input },'GraphQL.SystemObject.Details');
         throw new Error(message);
     }
 
@@ -72,7 +69,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const metadata: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(idSystemObject);
     if (!metadata) {
         const message: string = `Unable to retrieve metadata for ID: ${idSystemObject}`;
-        LOG.error(`getSystemObjectDetails: ${message}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get details failed',message,{ input },'GraphQL.SystemObject.Details');
         throw new Error(message);
     }
 
@@ -124,7 +121,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                                   scene.PosedAndQCd &&            // Posed and QCd
                                   mayBePublished;                 // License defined and allows publishing
                 } else
-                    LOG.error(`Unable to compute scene for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'get published state failed','unable to compute scene',{ idSystemObject, ...oID },'GraphQL.SystemObject.Details');
             } break;
 
             case COMMON.eSystemObjectType.eSubject:
@@ -154,7 +151,7 @@ export async function getRelatedObjects(idSystemObject: number, type: RelatedObj
 
         if (!oID) {
             const message: string = `No object ID found for ID: ${idSystemObject}`;
-            LOG.error(message, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'get related objects failed',message,{ type },'GraphQL.SystemObject.Details');
             throw new Error(message);
         }
 
@@ -218,7 +215,7 @@ async function resolveNameForObject(idSystemObject: number): Promise<string> {
 async function resolveSubtitleForObject(idSystemObject: number): Promise<string | null> {
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
     if (!oID) {
-        LOG.error(`getSystemObjectDetails resolveSubtitleForObject failed to compute object ID and type for ${idSystemObject}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'resolve subtitle failed','failed to compute object ID and type',{ idSystemObject },'GraphQL.SystemObject.Details');
         return null;
     }
 
@@ -226,7 +223,7 @@ async function resolveSubtitleForObject(idSystemObject: number): Promise<string 
         case COMMON.eSystemObjectType.eItem: {
             const item: DBAPI.Item | null = await DBAPI.Item.fetch(oID.idObject);
             if (!item) {
-                LOG.error(`getSystemObjectDetails resolveSubtitleForObject unable to load item with id ${oID.idObject}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'resovle subtitle failed','unable to load item with id',{ ...oID },'GraphQL.SystemObject.Details');
                 return null;
             }
             return item.Title;
@@ -235,7 +232,7 @@ async function resolveSubtitleForObject(idSystemObject: number): Promise<string 
         case COMMON.eSystemObjectType.eModel: {
             const model: DBAPI.Model | null = await DBAPI.Model.fetch(oID.idObject);
             if (!model) {
-                LOG.error(`getSystemObjectDetails resolveSubtitleForObject unable to load model with id ${oID.idObject}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'resovle subtitle failed','unable to load model with id',{ ...oID },'GraphQL.SystemObject.Details');
                 return null;
             }
             return model.Title;
@@ -244,7 +241,7 @@ async function resolveSubtitleForObject(idSystemObject: number): Promise<string 
         case COMMON.eSystemObjectType.eScene: {
             const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
             if (!scene) {
-                LOG.error(`getSystemObjectDetails resolveSubtitleForObject unable to load scene with id ${oID.idObject}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'resovle subtitle failed','unable to load scene with id',{ ...oID },'GraphQL.SystemObject.Details');
                 return null;
             }
             return scene.Title;
@@ -266,7 +263,7 @@ async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner
         case COMMON.eSystemObjectType.eAssetVersion: {
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(oID.idObject);
             if (!assetVersion)
-                LOG.error(`getSystemObjectDetails: failed to load asset version with id ${oID.idObject}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'compute asset failed','failed to load asset version with id',{ ...oID },'GraphQL.SystemObject.Details');
             else
                 idAsset = assetVersion.idAsset;
         } break;
@@ -277,13 +274,13 @@ async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner
 
     const assetDB: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
     if (!assetDB) {
-        LOG.error(`getSystemObjectDetails: failed to load asset with id ${idAsset}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute asset failed','failed to load asset with id',{ idAsset },'GraphQL.SystemObject.Details');
         return { owner, asset };
     }
 
     const SOAsset: DBAPI.SystemObject | null = await DBAPI.SystemObjectPairs.fetchFromAssetID(assetDB.idAsset);
     if (!SOAsset) {
-        LOG.error(`getSystemObjectDetails: failed to load system object for asset with id ${idAsset}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute asset failed','failed to load system object for asset with id',{ idAsset },'GraphQL.SystemObject.Details');
         return { owner, asset };
     }
 
@@ -295,7 +292,7 @@ async function computeAssetAndOwner(oID: DBAPI.ObjectIDAndType): Promise<{ owner
 
     const oIDParent: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(assetDB.idSystemObject);
     if (!oIDParent) {
-        LOG.error(`getSystemObjectDetails: failed to load system object information for idSystemObject ${assetDB.idSystemObject}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute asset failed','failed to load system object information for idSystemObject',{ ...assetDB },'GraphQL.SystemObject.Details');
         return { owner, asset };
     }
 

@@ -1,8 +1,7 @@
 import * as fs from 'fs-extra';
 import StreamZip from 'node-stream-zip';
-
-import * as LOG from './logger';
 import * as H from './helpers';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 import { IZip, zipFilterResults } from './IZip';
 
 /**
@@ -46,19 +45,24 @@ export class ZipFile implements IZip {
                                     this._files.push(entry.name);
                             }
                             resolve({ success: true });
-                        } else
+                        } else {
+                            RK.logError(RK.LogSection.eSYS,'load','Zip not initialized',{ fileName: this._fileName },'Utils.ZipFile');
                             resolve({ success: false, error: 'Zip not initialized' });
+                        }
                     });
-                } else
+                } else {
+                    RK.logError(RK.LogSection.eSYS,'load','Zip not initialized',{ fileName: this._fileName },'Utils.ZipFile');
                     resolve({ success: false, error: 'Zip not initialized' });
+                }
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('ZipFile.load', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'load',H.Helpers.getErrorString(error),{ fileName: this._fileName },'Utils.ZipFile');
             return { success: false, error: JSON.stringify(error) };
         }
     }
 
     async add(_fileNameAndPath: string, _inputStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+        RK.logError(RK.LogSection.eSYS,'add failed','not implemented',{ fileName: this._fileName, path: _fileNameAndPath },'Utils.ZipFile');
         return { success: false, error: 'Not Implemented' };
     }
 
@@ -75,7 +79,7 @@ export class ZipFile implements IZip {
                         resolve({ success: true });
                     else {
                         const error: string = `ZipFile.close ${err}`;
-                        LOG.error(error, LOG.LS.eSYS);
+                        RK.logError(RK.LogSection.eSYS,'close failed',H.Helpers.getErrorString(err),{ fileName: this._fileName },'Utils.ZipFile');
                         resolve({ success: false, error });
                     }
                 });
@@ -100,13 +104,13 @@ export class ZipFile implements IZip {
                             if (!error && stream)
                                 resolve(stream);
                             else {
-                                LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
+                                RK.logError(RK.LogSection.eSYS,'stream content failed',H.Helpers.getErrorString(error),{ fileName: this._fileName, entry },'Utils.ZipFile');
                                 resolve(null);
                             }
                         });
                     }
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.error(`ZipFile.streamContent ${entry}`, LOG.LS.eSYS, error);
+                    RK.logError(RK.LogSection.eSYS,'stream content failed',`catch: ${H.Helpers.getErrorString(error)}`,{ fileName: this._fileName, entry },'Utils.ZipFile');
                     resolve(null);
                 }
             }
@@ -122,7 +126,7 @@ export class ZipFile implements IZip {
                     const zipEntry = this._zip.entry(entry);
                     resolve((zipEntry) ? zipEntry.size : null);
                 } catch (error) /* istanbul ignore next */ {
-                    LOG.info(`ZipFile.uncompressedSize ${entry}: ${JSON.stringify(error)}`, LOG.LS.eSYS);
+                    RK.logDebug(RK.LogSection.eSYS,'uncompressed size',H.Helpers.getErrorString(error),{ fileName: this._fileName, entry },'Utils.ZipFile');
                     resolve(null);
                 }
             }

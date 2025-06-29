@@ -4,7 +4,6 @@ import * as CACHE from '../../cache';
 import * as META from '../../metadata';
 import * as WF from '../../workflow/interface';
 import * as REP from '../../report/interface';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ST from '../impl/LocalStorage/SharedTypes';
 import { ZipFile, ZipStream, IOResults, IZip } from '../../utils';
@@ -17,6 +16,7 @@ import { ASL, LocalStore } from '../../utils/localStore';
 import { SvxReader } from '../../utils/parser';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
@@ -130,17 +130,20 @@ type AssetFileOrStreamResult = {
  */
 export class AssetStorageAdapter {
     static async readAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<STORE.ReadStreamResult> {
-        LOG.info(`AssetStorageAdapter.readAsset idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`, LOG.LS.eSTR);
+
+        const context = { fileName: asset.FileName, storageKey: asset.StorageKey, stagingKey: assetVersion.StorageKeyStaging,idAsset: asset.idAsset, idAssetSO: asset.idSystemObject, idAssetVersion: assetVersion.idAssetVersion };
+
+        // LOG.info(`AssetStorageAdapter.readAsset idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`, LOG.LS.eSTR);
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.readAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            RK.logError(RK.LogSection.eSTR,'read asset failed',error,{ ...context },'AssetStorageAdapter');
             return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
         const { storageKey, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
         if (!storageKey) {
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'read asset failed',H.Helpers.getErrorString(error),{ ...context },'AssetStorageAdapter');
             return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
@@ -151,14 +154,19 @@ export class AssetStorageAdapter {
             staging: !assetVersion.Ingested
         };
 
-        return await storage.readStream(readStreamInput);
+        const result: STORE.ReadStreamResult = await storage.readStream(readStreamInput);
+        if(result.success===true)
+            RK.logInfo(RK.LogSection.eSTR,'read asset success',undefined,{ ...context },'AssetStorageAdapter');
+        else
+            RK.logError(RK.LogSection.eSTR,'read asset failed',result.error,{ ...context },'AssetStorageAdapter');
+        return result;
     }
 
     static async readAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<STORE.ReadStreamResult> {
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
         if (!asset) {
-            const error: string = `AssetStorageAdapter.readAssetVersion: Unable to retrieve Asset ${assetVersion.idAsset}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `readAssetVersion: unable to retrieve Asset ${assetVersion.idAsset}`;
+            RK.logError(RK.LogSection.eSTR,'read asset version failed','unable to retrieve asset',{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion },'AssetStorageAdapter');
             return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
@@ -168,8 +176,8 @@ export class AssetStorageAdapter {
     static async readAssetVersionByID(idAssetVersion: number): Promise<STORE.ReadStreamResult> {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion); /* istanbul ignore next */
         if (!assetVersion) {
-            const error: string = `AssetStorageAdapter.readAssetVersionByID: Unable to retrieve Asset ${idAssetVersion}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `readAssetVersionByID: Unable to retrieve Asset ${idAssetVersion}`;
+            RK.logError(RK.LogSection.eSTR,'read asset version failed','unable to retrieve asset',{ idAssetVersion },'AssetStorageAdapter');
             return { readStream: null, fileName: null, storageHash: null, success: false, error };
         }
 
@@ -202,20 +210,20 @@ export class AssetStorageAdapter {
         const { storageKey, storageHash, asset, assetNameOverride, FilePath, idSOAttachment, opInfo, DateCreated } = commitNewAssetVersionInput;
         const commitWriteStreamInput: STORE.CommitWriteStreamInput = { storageKey, storageHash };
 
-        LOG.info(`AssetStorageAdapter.commitNewAssetVersion idAsset ${asset.idAsset}: ${commitWriteStreamInput.storageKey}`, LOG.LS.eSTR);
-        // LOG.info(`AssetStorageAdapter.commitNewAssetVersion write stream. (${H.Helpers.JSONStringify(commitWriteStreamInput)})`, LOG.LS.eDEBUG);
+        const context = { fileName: asset.FileName, storageKey, idAsset: asset.idAsset, idAssetSO: asset.idSystemObject, assetNameOverride };
+        RK.logInfo(RK.LogSection.eSTR,'commit asset version',undefined,{ ...context },'AssetStorageAdapter');
 
         // get our storage system
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.commitNewAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            RK.logError(RK.LogSection.eSTR,'commit asset version failed',error,{ ...context },'AssetStorageAdapter');
             return { assets: null, assetVersions: null, success: false, error };
         }
 
         const resStorage: STORE.CommitWriteStreamResult = await storage.commitWriteStream(commitWriteStreamInput);
         if (!resStorage.success) {
-            LOG.error(`AssetStorageAdapter.commitNewAssetVersion cannot commit write stream: ${resStorage.error}. (${H.Helpers.JSONStringify(commitWriteStreamInput)})`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'commit asset version failed',`cannot commit write stream: ${resStorage.error}`,{ ...context },'AssetStorageAdapter');
             return { assets: null, assetVersions: null, success: false, error: resStorage.error };
         }
 
@@ -254,19 +262,21 @@ export class AssetStorageAdapter {
         asset: DBAPI.Asset, FilePath: string, idSOAttachment: number | null | undefined, opInfo: STORE.OperationInfo,
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storage: IStorage): Promise<AssetStorageResultCommit> {
 
+        const context = { fileName: asset.FileName, idAsset: asset.idAsset, idAssetSO: asset.idSystemObject, idSOAttachment };
+
         // Compute path to bagit zip; crack it open; pass it off to bulkIngestReader
         const stagingFileName: string = await storage.stagingFileName(commitWriteStreamInput.storageKey);
         const bagitZip: IZip = new BagitReader({ zipFileName: stagingFileName, zipStream: null, directory: null, validate: true, validateContent: false });
         let loadResults: IOResults = await bagitZip.load(); /* istanbul ignore next */
         if (!loadResults.success) {
-            LOG.error(loadResults.error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'commit asset version failed',`cannot build Bagit Reader: ${loadResults.error}`,{ ...context, stagingFileName },'AssetStorageAdapter');
             return { assets: null, assetVersions: null, success: false, error: loadResults.error };
         }
 
         const bulkIngestReader: BulkIngestReader = new BulkIngestReader();
         loadResults = await bulkIngestReader.loadFromZip(bagitZip, true); /* istanbul ignore next */
         if (!loadResults.success) {
-            LOG.error(loadResults.error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'commit asset version failed',`cannot load from ZIP: ${loadResults.error}`,{ ...context, stagingFileName },'AssetStorageAdapter');
             return { assets: null, assetVersions: null, success: false, error: loadResults.error };
         }
 
@@ -301,8 +311,10 @@ export class AssetStorageAdapter {
             if (assetVersion) {
                 assets.push(assetClone);
                 assetVersions.push(assetVersion);
-            } else
+            } else {
+                RK.logError(RK.LogSection.eSTR,'commit asset version failed','unable to crerate assets and asset versions',{ ...context, stagingFileName },'AssetStorageAdapter');
                 return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions' };
+            }
         }
 
         return { assets, assetVersions, success: true };
@@ -313,14 +325,16 @@ export class AssetStorageAdapter {
         DateCreated: Date, resStorage: STORE.CommitWriteStreamResult, storageKey: string,
         BulkIngest: boolean, idSOAttachment: number | null | undefined, ingestedObject: IngestMetadata | null,
         assetNameOverride: string | null, Ingested: boolean | null): Promise<DBAPI.AssetVersion | null> {
+
+        const context = { fileName: asset.FileName, idAsset: asset.idAsset, idAssetSO: asset.idSystemObject, idSOAttachment };
+
         // LOG.info(`AssetStorageAdapter.createAssetConstellation for ${JSON.stringify(asset)} with override name ${assetNameOverride}`, LOG.LS.eSTR);
         if (asset.idAsset == 0) {
             if (assetNameOverride)
                 asset.FileName = assetNameOverride;
             /* istanbul ignore if */
             if (!await asset.create()) {
-                const error: string = `AssetStorageAdapter.createAssetAndVersion: Unable to create Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'create asset constellation failed','cannot create asset',{ ...context },'AssetStorageAdapter');
                 return null;
             }
         }
@@ -344,13 +358,14 @@ export class AssetStorageAdapter {
 
         /* istanbul ignore if */
         if (!await assetVersion.create()) {
-            const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to create AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'create asset constellation failed','unable to create asset version',{ ...context, idAssetVersion: assetVersion.idAssetVersion },'AssetStorageAdapter');
             return null;
         } /* istanbul ignore next */
 
-        if (!await AssetStorageAdapter.storeBulkIngestMetadata(assetVersion, opInfo.idUser, ingestedObject))
+        if (!await AssetStorageAdapter.storeBulkIngestMetadata(assetVersion, opInfo.idUser, ingestedObject)) {
+            RK.logError(RK.LogSection.eSTR,'create asset constellation failed','cannot store bulk ingest metadata',{ ...context, idAssetVersion: assetVersion.idAssetVersion, ingestedObject },'AssetStorageAdapter');
             return null;
+        }
         return assetVersion;
     }
 
@@ -358,10 +373,11 @@ export class AssetStorageAdapter {
         if (!ingestedObject)
             return true;
 
+        const context = { fileName: assetVersion.FileName, idAsset: assetVersion.idAsset, idAssetVersion: assetVersion.idAssetVersion };
+
         const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject(); /* istanbul ignore next */
         if (!SO) {
-            const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to fetch system object for AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'store bulk metadata failed','unable to fetch system object for asset version',{ ...context },'AssetStorageAdapter');
             return false;
         }
 
@@ -379,32 +395,38 @@ export class AssetStorageAdapter {
         }); /* istanbul ignore next */
 
         if (!await metadata.create()) {
-            const error: string = `AssetStorageAdapter.commitNewAssetVersion: Unable to create metadata ${JSON.stringify(metadata, H.Helpers.saferStringify)} for AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'store bulk metadata failed','unable to create metadata',{ ...context, metadata },'AssetStorageAdapter');
             return false;
         }
         return true;
     }
 
     static async extractBulkIngestMetadata(assetVersion: DBAPI.AssetVersion): Promise<IngestMetadata | null> {
-        LOG.info(`AssetStorageAdapter.extractBulkIngestMetadata idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`, LOG.LS.eSTR);
+
+        const context = { fileName: assetVersion.FileName, idAsset: assetVersion.idAsset, idAssetVersion: assetVersion.idAssetVersion };
+
         const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
         const metadataList: DBAPI.Metadata[] | null = SO ? await DBAPI.Metadata.fetchFromSystemObject(SO.idSystemObject) : /* istanbul ignore next */ null; /* istanbul ignore next */
-        if (!metadataList)
+        if (!metadataList) {
+            RK.logError(RK.LogSection.eSTR,'extract bulk metadata failed','unable to fetch metadata from system object',{ ...context, idAssetVersionSO: SO?.idSystemObject },'AssetStorageAdapter');
             return null;
+        }
 
         const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion); /* istanbul ignore next */
-        if (!vocabulary)
+        if (!vocabulary) {
+            RK.logError(RK.LogSection.eSTR,'extract bulk metadata failed','unable to fetch vocabulary byt Enum',{ ...context },'AssetStorageAdapter');
             return null;
+        }
 
         for (const metadata of metadataList) { /* istanbul ignore next */
             if (metadata.idVMetadataSource != vocabulary.idVocabulary || !metadata.ValueExtended)
                 continue;
             // Found it!
             try {
+                RK.logInfo(RK.LogSection.eSTR,'extract bulk metadata success',undefined,{ ...context, metadata },'AssetStorageAdapter');
                 return JSON.parse(metadata.ValueExtended);
             } catch (error) {
-                LOG.error(`AssetStorageAdapter.extractBulkIngestMetadata ${JSON.stringify(metadata, H.Helpers.saferStringify)}`, LOG.LS.eSTR, error);
+                RK.logError(RK.LogSection.eSTR,'extract bulk metadata failed',H.Helpers.getErrorString(error),{ ...context, metadata },'AssetStorageAdapter');
                 return null;
             }
         }
@@ -413,9 +435,11 @@ export class AssetStorageAdapter {
 
     static async ingestAsset(ingestAssetInput: IngestAssetInput): Promise<IngestAssetResult> {
         const { SOBased, idSystemObject, Comment, doNotUpdateParentVersion } = ingestAssetInput;
+        const context = { fileName: ingestAssetInput.assetVersion.FileName, idAsset: ingestAssetInput.assetVersion.idAsset, idAssetVersion: ingestAssetInput.assetVersion.idAssetVersion };
+
         if (!idSystemObject && !SOBased) {
             const error: string = 'ingestAsset called without system object information';
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'ingest asset failed','called without system object information',{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -424,15 +448,17 @@ export class AssetStorageAdapter {
             /* istanbul ignore if */
             if (!SO) {
                 const error: string = `Unable to fetch SystemObject for ${SO}`;
-                LOG.error(error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'ingest asset failed','unable to fetch SystemObject',{ ...context },'AssetStorageAdapter');
                 return { success: false, error };
             }
             ingestAssetInput.idSystemObject = SO.idSystemObject;
         }
 
         const IAR: IngestAssetResult = await AssetStorageAdapter.ingestAssetWorker(ingestAssetInput);
-        if (!IAR.success || !ingestAssetInput.idSystemObject)
+        if (!IAR.success || !ingestAssetInput.idSystemObject) {
+            RK.logError(RK.LogSection.eSTR,'ingest asset failed','unable to create ingest worker',{ ...context },'AssetStorageAdapter');
             return IAR;
+        }
 
         const assetVersionOverrideMap: Map<number, number> = new Map<number, number>();
         if (IAR.assetVersions) {
@@ -445,7 +471,7 @@ export class AssetStorageAdapter {
         if (!SOV) {
             IAR.success = false;
             IAR.error = 'DB Failure creating SystemObjectVersion';
-            LOG.error(`AssetStorageAdapter.ingestAsset failed to create new SystemObjectVersion for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'ingest asset failed',`cannot clone object and xrefs: ${IAR.error}`,{ ...context },'AssetStorageAdapter');
             return IAR;
         }
         IAR.systemObjectVersion = SOV;
@@ -455,27 +481,29 @@ export class AssetStorageAdapter {
             // Scenes own Models, Models own Assets; those assets are *also* part of the scene's system object version
             // So, when we update a model-owned asset, we also need to add a new system object version for that scene!
             if (IAR.affectedSystemObjectIds && IAR.affectedSystemObjectIds.size > 0) {
-                LOG.info(`AssetStorageAdapter.ingestAsset found affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}: ${JSON.stringify(IAR.affectedSystemObjectIds, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                RK.logDebug(RK.LogSection.eSTR,'ingest asset','found affected system objects',{ ...context, affectedObjectIDs: IAR.affectedSystemObjectIds },'AssetStorageAdapter');
                 for (const idSystemObject of IAR.affectedSystemObjectIds) {
                     if (idSystemObject !== ingestAssetInput.idSystemObject) { // we've already updated ingestAssetInput.idSystemObject above
                         const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, Comment, assetVersionOverrideMap, IAR.assetsUnzipped);
                         if (!SOV)
-                            LOG.error(`AssetStorageAdapter.ingestAsset failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eSTR);
+                            RK.logError(RK.LogSection.eSTR,'ingest asset failed','failed to create new SystemObjectVersion',{ ...context },'AssetStorageAdapter');
                     }
                 }
             } else
-                LOG.info(`AssetStorageAdapter.ingestAsset found no affectedSystemObjectIds for ${ingestAssetInput.idSystemObject}`, LOG.LS.eSTR);
+                RK.logDebug(RK.LogSection.eSTR,'ingest asset','found no affected system objects. ignoring updating parent version',{ ...context },'AssetStorageAdapter');
         }
 
+        RK.logInfo(RK.LogSection.eSTR,'ingest asset success',undefined,{ ...context },'AssetStorageAdapter',true);
         return IAR;
     }
 
     private static async ingestAssetWorker(ingestAssetInput: IngestAssetInput): Promise<IngestAssetResult> {
         const { asset, assetVersion, allowZipCracking, idSystemObject, opInfo } = ingestAssetInput;
-        LOG.info(`AssetStorageAdapter.ingestAssetWorker idAsset ${asset.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, idSystemObject ${idSystemObject}, allowZipCracking ${allowZipCracking}`, LOG.LS.eSTR);
+        const context = { fileName: asset.FileName, idAsset: asset.idAsset, idAssetVersion: assetVersion.idAssetVersion, idAssetVersionSO: idSystemObject };
+
         if (!idSystemObject) {
-            const error: string = 'AssetStorageAdapter.ingestAssetWorker called with missing value for idSystemObject';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'ingestAssetWorker called with missing value for idSystemObject';
+            RK.logError(RK.LogSection.eSTR,'ingest asset worker failed','called with missing idSystemObject',{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -483,15 +511,15 @@ export class AssetStorageAdapter {
         // Update asset.StorageKey and assetVersion.Ingested to true, if needed (may not be needed for bulk ingests and zips)
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.ingestAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'ingestAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            RK.logError(RK.LogSection.eSTR,'ingest asset worker failed','unable to retrieve storage implementation from factory',{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
         const metadata: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors); /* istanbul ignore next */
         if (!await metadata.fetch()) {
-            const error: string = `AssetStorageAdapter.ingestAssetWorker: Update to retrieve object ancestry for system object ${idSystemObject}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `ingestAssetWorker: Update to retrieve object ancestry for system object ${idSystemObject}`;
+            RK.logError(RK.LogSection.eSTR,'ingest asset worker failed','unable to retrieve object ancestry',{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -523,6 +551,12 @@ export class AssetStorageAdapter {
         // Send Workflow Ingestion event
         if (ingestAssetInput.doNotSendIngestionEvent === undefined || ingestAssetInput.doNotSendIngestionEvent === false)
             await AssetStorageAdapter.sendWorkflowIngestionEvent(IAR, opInfo.idUser);
+
+        if(IAR.success===false)
+            RK.logError(RK.LogSection.eSTR,'ingest asset worker failed','called with missing idSystemObject',{ ...context },'AssetStorageAdapter');
+        else
+            RK.logDebug(RK.LogSection.eSTR,'ingest asset worker success',undefined,{ ...context },'AssetStorageAdapter');
+
         return IAR;
     }
 
@@ -530,11 +564,13 @@ export class AssetStorageAdapter {
         if (!IAR.assetVersions)
             return { success: true };
 
+        const context = { assets: IAR.assetVersions?.map(a => { return { idAsset: a.idAsset, fileName: a.FileName, idAssetVersion: a.idAssetVersion };}) ?? null };
+
         let error: string | undefined = undefined;
         const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
         if (!workflowEngine) {
             error = 'ingestData createWorkflow could not load WorkflowEngine';
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'send ingestion event failed',error,{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -553,8 +589,7 @@ export class AssetStorageAdapter {
             const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
             const sysInfo: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
             if (!sysInfo) {
-                error = `ingestData sendWorkflowIngestionEvent could not find system object for ${JSON.stringify(oID)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'send ingestion event failed','could not find system object',{ ...context, ...oID },'AssetStorageAdapter');
                 continue;
             }
             systemObjectSet.add(sysInfo.idSystemObject);
@@ -571,8 +606,7 @@ export class AssetStorageAdapter {
                     idWorkflowStepSystemObjectXref: 0
                 });
                 if (!await WSSOX.create()) {
-                    error = `ingestData sendWorkflowIngestionEvent failed to create WorkflowStepSystemObjectXref ${JSON.stringify(WSSOX, H.Helpers.saferStringify)}`;
-                    LOG.error(error, LOG.LS.eSTR);
+                    RK.logError(RK.LogSection.eSTR,'send ingestion event failed','failed to create WorkflowStep xref',{ ...context, ...H.Helpers.extractProperties(WSSOX) },'AssetStorageAdapter');
                 }
             }
         }
@@ -587,7 +621,7 @@ export class AssetStorageAdapter {
             }
             const ret: H.IOResults = await wfReport.append(message);
             if (!ret.success)
-                LOG.error(`Unable to append ${message} to workflow report`, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'send ingestion event failed','unable to append to workflow report',{ ...context, message },'AssetStorageAdapter');
         }
 
         const parameters = {
@@ -608,9 +642,12 @@ export class AssetStorageAdapter {
     }
 
     private static async detectAndHandleSceneIngest(IAR: IngestAssetResult): Promise<{ success: boolean, transformUpdated: boolean }> {
-        LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest called with IngestAssetResult of ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-        if (!IAR.assets || !IAR.assetVersions)
+        // LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest called with IngestAssetResult of ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+
+        if (!IAR.assets || !IAR.assetVersions) {
+            RK.logError(RK.LogSection.eSTR,'handle scene ingest failed','called without assets or asset versions',{ ...IAR },'AssetStorageAdapter');
             return { success: false, transformUpdated: false };
+        }
 
         // first, identify assets and asset versions for the scene and models
         let sceneAsset: DBAPI.Asset | null = null;
@@ -627,41 +664,41 @@ export class AssetStorageAdapter {
                         sceneAsset = asset;
                         sceneAssetVersion = assetVersionMap.get(asset.idAsset);
                     } else
-                        LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest skipping unexpected scene ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                        RK.logError(RK.LogSection.eSTR,'handle scene ingest failed','skipping unexpected scene',{ ...asset },'AssetStorageAdapter');
                     break;
 
                 case undefined:
-                    LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to detect asset type for ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    RK.logError(RK.LogSection.eSTR,'handle scene ingest failed','unable to detect asset type',{ ...asset },'AssetStorageAdapter');
                     break;
             }
         }
 
         if (!sceneAsset || !sceneAssetVersion) {
-            LOG.info('AssetStorageAdapter.detectAndHandleSceneIngest did not locate scene info', LOG.LS.eSTR);
+            RK.logDebug(RK.LogSection.eSTR,'handle scene ingest success','did not locate scene info',{ ...IAR },'AssetStorageAdapter');
             return { success: true, transformUpdated: false };
         }
 
         const SOScene: DBAPI.SystemObject | null = sceneAsset.idSystemObject ? await DBAPI.SystemObject.fetch(sceneAsset.idSystemObject) : null;
         if (!SOScene || !SOScene.idScene) {
-            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to identify scene system object for the ingested asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'handle scene ingest failed','unable to identify scene system object for the ingested asset',{ ...H.Helpers.extractProperties(sceneAsset) },'AssetStorageAdapter');
             return { success: false, transformUpdated: false };
         }
 
         // next, retrieve & parse the scene, extracting model references and transforms
         const RSR: STORE.ReadStreamResult = await AssetStorageAdapter.readAsset(sceneAsset, sceneAssetVersion);
         if (!RSR.success || !RSR.readStream) {
-            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to fetch stream for scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${RSR.error}`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'handle scene ingest failed','unable to fetch stream for scene asset',{ ...H.Helpers.extractProperties(sceneAsset) },'AssetStorageAdapter');
             return { success: false, transformUpdated: false };
         }
 
         const svx: SvxReader = new SvxReader();
         const res: H.IOResults = await svx.loadFromStream(RSR.readStream);
         if (!res.success || !svx.SvxExtraction) {
-            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to parse scene asset ${JSON.stringify(sceneAsset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'handle scene ingest failed',`unable to parse scene asset: ${res.error}`,{ ...H.Helpers.extractProperties(sceneAsset) },'AssetStorageAdapter');
             return { success: false, transformUpdated: false };
         }
 
-        LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest extracted SVX ModelDetails=\n${JSON.stringify(svx.SvxExtraction.modelDetails, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+        RK.logDebug(RK.LogSection.eSTR,'handle scene ingest failed','extracted SVX model details',{ modelDetails: svx.SvxExtraction.modelDetails },'AssetStorageAdapter');
 
         // finally, update ModelSceneXref for each model reference:
         let success: boolean = true;
@@ -678,11 +715,12 @@ export class AssetStorageAdapter {
                     await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(SOScene.idScene, MSX.Name, MSX.Usage, MSX.Quality, MSX.UVResolution);
                 const MSXSource: DBAPI.ModelSceneXref | null = (MSXSources && MSXSources.length > 0) ? MSXSources[0] : null;
                 if (MSXSource) {
-                    LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    // LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest found existing ModelSceneXref=${JSON.stringify(MSXSource, H.Helpers.saferStringify)} from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    RK.logDebug(RK.LogSection.eSTR,'handle scene ingest failed','found existing model scene xref',{ MSX, MSXSource },'AssetStorageAdapter');
                     const { transformUpdated: transformUpdatedLocal, updated } = MSXSource.updateIfNeeded(MSX);
                     if (updated) {
                         if (!await MSXSource.update()) {
-                            LOG.error(`AssetStorageAdapter.detectAndHandleSceneIngest unable to update ModelSceneXref ${JSON.stringify(MSXSource, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                            RK.logError(RK.LogSection.eSTR,'handle scene ingest failed','unable to update model scene xref',{ MSXSource },'AssetStorageAdapter');
                             success = false;
                         }
                     }
@@ -691,7 +729,7 @@ export class AssetStorageAdapter {
                 } else {
                     // Could not find the ModelSceneXref
                     transformUpdated = true;
-                    LOG.info(`AssetStorageAdapter.detectAndHandleSceneIngest did not find existing ModelSceneXref from referenced model ${JSON.stringify(MSX, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    RK.logWarning(RK.LogSection.eSTR,'handle scene ingest failed','did not find existing model scene xref',{ MSX },'AssetStorageAdapter');
                     continue;
                 }
             }
@@ -712,22 +750,22 @@ export class AssetStorageAdapter {
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${assetVersion.FilePath}/` : '';
         for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
-            LOG.info(`Checking ${entry} for ${fileID}`, LOG.LS.eDEBUG);
+
             if (bulkIngest && !entry.includes(fileID)) // only process assets found in our path
                 continue;
 
             // Get a readstream to that part of the zip; compute hash and filesize
             let inputStream: NodeJS.ReadableStream | null = await zip.streamContent(entry); /* istanbul ignore next */
             if (!inputStream) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `ingestAssetBulkZipWorker: unable to stream entry ${entry} of AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+                RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unable to stream entry',{ entry, assetVersion },'AssetStorageAdapter');
                 if (IAR.success)
                     IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
                 continue;
             }
             const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm); /* istanbul ignore next */
             if (!hashResults.success) {
-                LOG.error(hashResults.error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker',`unable to compute hash: ${hashResults.error}`,{ entry, assetVersion },'AssetStorageAdapter');
                 if (IAR.success)
                     IAR = { success: false, error: hashResults.error, assets, assetVersions, systemObjectVersion: null };
                 continue;
@@ -736,8 +774,8 @@ export class AssetStorageAdapter {
             // Get a second readstream to that part of the zip, to reset stream position after computing the hash
             inputStream = await zip.streamContent(entry); /* istanbul ignore next */
             if (!inputStream) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to stream entry ${entry} of AssetVersion (reset) ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `ingestAssetBulkZipWorker: unable to stream entry ${entry} of AssetVersion (reset) ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+                RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unable to stream entry',{ entry, assetVersion },'AssetStorageAdapter');
                 if (IAR.success)
                     IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
                 continue;
@@ -777,14 +815,14 @@ export class AssetStorageAdapter {
                     break; /* istanbul ignore next */
 
                 default:
-                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker encountered unexpected asset type id for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unsupported asset type',{ asset },'AssetStorageAdapter');
                     eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
                     break;
             }
             const idVAssetType: number | undefined = await VocabularyCache.vocabularyEnumToId(eAssetType); /* istanbul ignore next */
             if (!idVAssetType) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to compute asset type of Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `ingestAssetBulkZipWorker: unable to compute asset type of Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
+                RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unable to compute asset type',{ asset },'AssetStorageAdapter');
                 if (IAR.success)
                     IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
                 continue;
@@ -802,23 +840,23 @@ export class AssetStorageAdapter {
                 await DBAPI.Asset.fetchMatching(asset.idSystemObject, FileName, idVAssetType) : null;
 
             if (assetComponent) {
-                LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching idSystemObject:${asset.idSystemObject} (FileName: ${FileName} | FilePath:${FilePath} | idVAssetType:${idVAssetType} | assetComponent:${JSON.stringify(assetComponent, H.Helpers.saferStringify)})`, LOG.LS.eSTR);
+                RK.logDebug(RK.LogSection.eSTR,'bulk ingest zip worker','found matching idSystemObject',{ assetComponent },'AssetStorageAdapter');
                 // examine most recent asset version, if any; if the hash matches, avoid creating a new version
                 assetVersionComponent = await DBAPI.AssetVersion.fetchLatestFromAsset(assetComponent.idAsset);
                 if (assetVersionComponent && assetVersionComponent.StorageHash === hashResults.hash) {
-                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker FOUND matching assetVersion=${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    RK.logDebug(RK.LogSection.eSTR,'bulk ingest zip worker','found matching asset version',{ assetVersionComponent },'AssetStorageAdapter');
                     if (assetVersionComponent.FileName !== FileName || assetVersionComponent.FilePath !== FilePath) {  // Found the right asset version!  If necessary, update the filename & path
                         assetVersionComponent.FileName = FileName;
                         assetVersionComponent.FilePath = FilePath;
                         if (!await assetVersionComponent.update())
-                            LOG.error(`AssetStorageAdapter.ingestAssetBulkZipWorker unable to update AssetVersion name for ${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                            RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unable to update asset version',{ assetVersionComponent },'AssetStorageAdapter');
                     }
                 } else {
-                    LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker did NOT find assetVersion for hash=${JSON.stringify(hashResults.hash)}; assetVersion=${JSON.stringify(assetVersionComponent, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                    RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','cannot find asset version for hash',{ hash: hashResults.hash, assetVersionComponent },'AssetStorageAdapter');
                     assetVersionComponent = null;
                 }
             } else {
-                LOG.info(`AssetStorageAdapter.ingestAssetBulkZipWorker did NOT find asset idSystemObject=${asset.idSystemObject}; FileName=${FileName}; FilePath=${FilePath}; idVAssetType=${idVAssetType}; creating new`, LOG.LS.eSTR);
+                RK.logDebug(RK.LogSection.eSTR,'bulk ingest zip worker','cannot find asset idSystemObject. creating new.',{ entry, asset },'AssetStorageAdapter');
                 assetComponent = new DBAPI.Asset({ FileName, idAssetGroup: 0, idVAssetType, idSystemObject: asset.idSystemObject, StorageKey: null, idAsset: 0 });
             }
 
@@ -835,8 +873,8 @@ export class AssetStorageAdapter {
             }
 
             if (!assetVersionComponent) {
-                const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to create AssetVersion from Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `ingestAssetBulkZipWorker unable to create AssetVersion from Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
+                RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unable to create asset version from asset',{ asset },'AssetStorageAdapter');
                 if (IAR.success)
                     IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
                 continue;
@@ -848,8 +886,8 @@ export class AssetStorageAdapter {
                 if (ASR.success)
                     assetsIngested = true;
                 else {
-                    const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${ASR.error}`;
-                    LOG.error(error, LOG.LS.eSTR);
+                    const error: string = `ingestAssetBulkZipWorker unable to promote Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${ASR.error}`;
+                    RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unable to promote asset',{ entry, asset },'AssetStorageAdapter');
                     if (IAR.success)
                         IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
                     continue;
@@ -866,30 +904,35 @@ export class AssetStorageAdapter {
         // Discard the source file if we're the last one using it, retire the asset version, clear the StorageKeyStaging, and retire the asset if all versions are retired
         const ASR: AssetStorageResult = await AssetStorageAdapter.discardAssetVersion(assetVersion); /* istanbul ignore next */
         if (!ASR.success) {
-            const error: string = `AssetStorageAdapter.ingestAssetBulkZipWorker: ${ASR.error}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `ingestAssetBulkZipWorker: ${ASR.error}`;
+            RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker',`unable to discard asset version: ${ASR.error}`,{ asset: ASR.asset, assetVersion },'AssetStorageAdapter');
             return { success: false, error, assets, assetVersions, systemObjectVersion: null };
         }
 
+        RK.logDebug(RK.LogSection.eSTR,'bulk ingest zip worker success',undefined,{ assets: assetVersions.map(a=>{ return { idAsset: a.idAsset, fileName: a.FileName, idAssetVersion: a.idAssetVersion };}) },'AssetStorageAdapter');
         return { success: true, assets, assetVersions, systemObjectVersion: null, assetsUnzipped: true, assetsIngested, affectedSystemObjectIds };
     }
 
     private static async retireAssetIfAllVersionsAreRetired(asset: DBAPI.Asset): Promise<H.IOResults> {
-        LOG.info(`AssetStorageAdapter.retireAssetIfAllVersionsAreRetired ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+
         const assetVersionsNotRetired: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromAsset(asset.idAsset, false);
         if (!assetVersionsNotRetired) {
-            const error: string = `AssetStorageAdapter.retireAssetIfAllVersionsAreRetired unable to compute non-retired asset versions from asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `retireAssetIfAllVersionsAreRetired: unable to compute non-retired asset versions from asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
+            RK.logError(RK.LogSection.eSTR,'retire asset failed','unable to compute non-retired asset versions from asset',{ asset },'AssetStorageAdapter');
             return { success: false, error };
         }
-        if (assetVersionsNotRetired.length > 0)
+        if (assetVersionsNotRetired.length > 0) {
+            RK.logDebug(RK.LogSection.eSTR,'retire asset success',undefined,{ asset },'AssetStorageAdapter');
             return { success: true };
+        }
 
         if (!await DBAPI.SystemObject.retireSystemObject(asset)) {
-            const error: string = `AssetStorageAdapter.retireAssetIfAllVersionsAreRetired unable to retire Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `retireAssetIfAllVersionsAreRetired: unable to retire Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
+            RK.logError(RK.LogSection.eSTR,'retire asset failed','unable to retire Asset',{ asset },'AssetStorageAdapter');
             return { success: false, error };
         }
+
+        RK.logDebug(RK.LogSection.eSTR,'retire asset success',undefined,{ asset },'AssetStorageAdapter');
         return { success: true };
     }
 
@@ -900,7 +943,7 @@ export class AssetStorageAdapter {
         if (!storageKey) {
             const storageKeyResults = await storage.computeStorageKey(asset.idAsset.toString()); /* istanbul ignore next */
             if (!storageKeyResults.success) {
-                LOG.error(storageKeyResults.error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'promote asset worker failed',storageKeyResults.error,{ asset, assetVersion },'AssetStorageAdapter');
                 return { asset, assetVersion, success: false, error: storageKeyResults.error };
             } else
                 storageKey = storageKeyResults.storageKey;
@@ -917,7 +960,7 @@ export class AssetStorageAdapter {
 
         const resStorage = await storage.promoteStagedAsset(promoteStagedAssetInput);
         if (!resStorage.success) {
-            LOG.error(resStorage.error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'promote asset worker failed',resStorage.error,{ asset, assetVersion },'AssetStorageAdapter');
             return { asset, assetVersion, success: false, error: resStorage.error };
         }
 
@@ -935,7 +978,7 @@ export class AssetStorageAdapter {
         if (updateAsset) /* istanbul ignore next */ {
             if (!await asset.update()) {
                 const error: string = `AssetStorageAdapter.ingestAsset: Unable to update Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;
-                LOG.error(error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'promote asset worker failed','Unable to update Asset',{ asset },'AssetStorageAdapter');
                 return { asset, assetVersion, success: false, error };
             }
         }
@@ -945,8 +988,8 @@ export class AssetStorageAdapter {
         if (opInfo.message)
             assetVersion.Comment = opInfo.message;
         if (!await assetVersion.update()) {
-            const error: string = `AssetStorageAdapter.ingestAsset: Unable to update AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `ingestAsset: Unable to update AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+            RK.logError(RK.LogSection.eSTR,'promote asset worker failed','Unable to update AssetVersion',{ assetVersion },'AssetStorageAdapter');
             return { asset, assetVersion, success: false, error };
         }
 
@@ -961,50 +1004,56 @@ export class AssetStorageAdapter {
             if (AFOSR.stream)
                 H.Helpers.destroyReadStream(AFOSR.stream);
         } else
-            LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to compute metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${AFOSR.error}`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'promote asset worker failed',`unable to compute metadata for asset: ${AFOSR.error}`,{ asset },'AssetStorageAdapter');
 
         // Persist extracted metadata
         if (res.success) {
             const SO: DBAPI.SystemObject | null = await assetVersion.fetchSystemObject();
             if (!SO)
-                LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to fetch system object for asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
-            LOG.info(`AssetStorageAdapter.promoteAssetWorker persisting ${extractor.metadata.size} metadata key/values for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'promote asset worker failed','unable to fetch system object for asset version',{ assetVersion },'AssetStorageAdapter');
+
+            RK.logDebug(RK.LogSection.eSTR,'promote asset worker','persistingmetadata key/values for asset',{ asset, numFields: extractor.metadata.size },'AssetStorageAdapter');
+
             const idSystemObject: number = SO ? SO.idSystemObject : objectGraph.idSystemObject;
             res = await META.MetadataManager.persistExtractor(idSystemObject, objectGraph.idSystemObject, extractor, assetVersion.idUserCreator);
             if (!res.success)
-                LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to persist metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'promote asset worker failed',`unable to persist metadata for asset: ${res.error}`,{ asset },'AssetStorageAdapter');
         } else
-            LOG.error(`AssetStorageAdapter.promoteAssetWorker unable to extract metadata for asset ${JSON.stringify(asset, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'promote asset worker failed',`unable to extract metadata for asset: ${res.error}`,{ asset },'AssetStorageAdapter');
 
+        RK.logDebug(RK.LogSection.eSTR,'promote asset worker success',undefined,{ fileName: asset.FileName, idAsset: asset.idAsset, idAssetVersion: assetVersion.idAssetVersion },'AssetStorageAdapter');
         return { asset, assetVersion, success: true }; // we always return true at this point; i.e. we do not treat metadata extraction failures as ingestion failure
     }
 
     static async ingestStreamOrFile(ISI: IngestStreamOrFileInput): Promise<IngestAssetResult> {
-        LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} starting`, LOG.LS.eSTR);
+
+        const context = { fileName: ISI.FileName, hasStream: ISI.readStream ? true:false, localPath: ISI.localFilePath, type: ISI.idVAssetType, idAsset: ISI.asset?.idAsset ?? -1 };
+        RK.logInfo(RK.LogSection.eSTR,'ingest stream or file start',undefined,{ ...context },'AssetStorageAdapter');
+
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.ingestStreamOrFile unable to retrieve Storage Implementation from StorageFactory.getInstace()';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            RK.logError(RK.LogSection.eSTR,'ingest stream or file failed','unable to retrieve Storage Implementation from StorageFactory',{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
         if (!ISI.idVAssetType) { // !ISI.idUserCreator ||
-            const error: string = 'AssetStorageAdapter.ingestStreamOrFile missing required parameters';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'missing required parameters';
+            RK.logError(RK.LogSection.eSTR,'ingest stream or file failed','missing required parameters',{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
         const wsRes: STORE.WriteStreamResult = await storage.writeStream(ISI.FileName);
         if (!wsRes.success || !wsRes.writeStream || !wsRes.storageKey) {
             const error: string = `unable to create write stream for ${ISI.FileName}: ${wsRes.error}`;
-            LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'ingest stream or file failed',`unable to create write stream: ${wsRes.error}`,{ ...context },'AssetStorageAdapter');
             return { success: false, error };
         }
 
         if (!ISI.readStream) {
             if (!ISI.localFilePath) {
-                const error: string = 'AssetStorageAdapter.ingestStreamOrFile called without either ReadStream or LocalFilePath specified';
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = 'called without either ReadStream or LocalFilePath specified';
+                RK.logError(RK.LogSection.eSTR,'ingest stream or file failed','called without either ReadStream or LocalFilePath specified',{ ...context },'AssetStorageAdapter');
                 return { success: false, error };
             }
             ISI.readStream = fs.createReadStream(ISI.localFilePath);
@@ -1013,7 +1062,7 @@ export class AssetStorageAdapter {
         // make sure both streams are valid
         if(ISI.readStream.readable===false || wsRes.writeStream.writable===false) {
             const error: string = `individual streams are not valid. (read: ${ISI.readStream.readable} | write: ${wsRes.writeStream.writable})`;
-            LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'ingest stream or file failed','individual streams are not valid',{ ...context, readStream: ISI.readStream.readable, writeStream: wsRes.writeStream.writable  },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -1021,7 +1070,7 @@ export class AssetStorageAdapter {
             const wrRes: H.IOResults = await H.Helpers.writeStreamToStream(ISI.readStream, wsRes.writeStream);
             if (!wrRes.success) {
                 const error: string = `unable to write to stream: ${wrRes.error}`;
-                LOG.error('AssetStorageAdapter.ingestStreamOrFile ' + error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'ingest stream or file failed',error,{ ...context },'AssetStorageAdapter');
                 return { success: false, error };
             }
         } finally {
@@ -1031,8 +1080,8 @@ export class AssetStorageAdapter {
         let comRes: STORE.AssetStorageResultCommit | null = null;
         const opInfo: STORE.OperationInfo | null = await STORE.AssetStorageAdapter.computeOperationInfo(ISI.idUserCreator, `Ingesting asset ${ISI.FileName}`);
         if (!opInfo) {
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to compute operation info from user ${ISI.idUserCreator}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `Unable to compute operation info from user ${ISI.idUserCreator}`;
+            RK.logError(RK.LogSection.eSTR,'ingest stream or file failed','Unable to compute operation info from user',{ ...context, idUser: ISI.idUserCreator },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -1061,8 +1110,8 @@ export class AssetStorageAdapter {
 
         if (!comRes || !comRes.success || !comRes.assets || comRes.assets.length != 1 || !comRes.assetVersions || comRes.assetVersions.length != 1) {
             // LOG.info(`AssetStorageAdapter.ingestStreamOrFile commit asset: ${comRes ? comRes.error : ''}. (ISI: ${H.Helpers.JSONStringify(ISI)} | Result: ${H.Helpers.JSONStringify(comRes)})`,LOG.LS.eDEBUG);
-            const error: string = `AssetStorageAdapter.ingestStreamOrFile Unable to commit asset: ${comRes ? comRes.error : ''}. (ISI: ${H.Helpers.JSONStringify(ISI)} | Result: ${H.Helpers.JSONStringify(comRes)})`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `Unable to commit asset: ${comRes ? comRes.error : ''}. (ISI: ${H.Helpers.JSONStringify(ISI)} | Result: ${H.Helpers.JSONStringify(comRes)})`;
+            RK.logError(RK.LogSection.eSTR,'ingest stream or file failed',`Unable to commit asset: ${comRes ? comRes.error : ''}`,{ ...context, commitResult: comRes },'AssetStorageAdapter');
             return { success: false, error };
         }
 
@@ -1078,12 +1127,12 @@ export class AssetStorageAdapter {
             doNotUpdateParentVersion: ISI.doNotUpdateParentVersion
         };
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
-        LOG.info(`AssetStorageAdapter.ingestStreamOrFile ${ISI.FileName} completed: ${JSON.stringify(IAR, H.Helpers.saferStringify)}`, LOG.LS.eSTR);
+        RK.logInfo(RK.LogSection.eSTR,'ingest stream or file success',undefined,{ ...context, numAssets: IAR.assets?.length ?? 0, numAssetVersions: IAR.assetVersions?.length ?? 0 },'AssetStorageAdapter');
         return IAR;
     }
 
     static async renameAsset(asset: DBAPI.Asset, fileNameNew: string, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
-        LOG.info(`AssetStorageAdapter.renameAsset idAsset ${asset.idAsset}: ${asset.FileName} -> ${fileNameNew}`, LOG.LS.eSTR);
+
         const renameAssetInput: STORE.RenameAssetInput = {
             storageKey: asset.StorageKey ? asset.StorageKey : /* istanbul ignore next */ '',
             fileNameOld: asset.FileName,
@@ -1099,16 +1148,18 @@ export class AssetStorageAdapter {
             if (!await asset.update())
                 return {
                     success: false,
-                    error: `AssetStorageAdapter.renameAsset: Unable to update Asset.FileName ${JSON.stringify(asset, H.Helpers.saferStringify)}`,
+                    error: `Unable to update Asset.FileName ${JSON.stringify(asset, H.Helpers.saferStringify)}`,
                     asset,
                     assetVersion: null
                 };
         }
+
+        RK.logDebug(RK.LogSection.eSTR,'rename asset success',undefined,{ asset, fileNameNew },'AssetStorageAdapter');
         return ASR;
     }
 
     static async hideAsset(asset: DBAPI.Asset, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
-        LOG.info(`AssetStorageAdapter.hideAsset idAsset ${asset.idAsset}`, LOG.LS.eSTR);
+
         const hideAssetInput: STORE.HideAssetInput = {
             storageKey: asset.StorageKey ? asset.StorageKey : /* istanbul ignore next */ '',
             fileName: asset.FileName,
@@ -1124,16 +1175,18 @@ export class AssetStorageAdapter {
             if (!await DBAPI.SystemObject.retireSystemObject(asset)) /* istanbul ignore next */
                 return {
                     success: false,
-                    error: `AssetStorageAdapter.hideAsset: Unable to mark SystemObject as retired for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`,
+                    error: `Unable to mark SystemObject as retired for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`,
                     asset,
                     assetVersion: null
                 };
         }
+
+        RK.logDebug(RK.LogSection.eSTR,'hide asset success','',{ asset },'AssetStorageAdapter');
         return ASR;
     }
 
     static async reinstateAsset(asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion | null, opInfo: STORE.OperationInfo): Promise<AssetStorageResult> {
-        LOG.info(`AssetStorageAdapter.reinstateAsset idAsset ${asset.idAsset}, idAssetVersion ${assetVersion?.idAssetVersion}`, LOG.LS.eSTR);
+
         const reinstateAssetInput: STORE.ReinstateAssetInput = {
             storageKey: asset.StorageKey ? asset.StorageKey : /* istanbul ignore next */ '',
             fileName: assetVersion ? assetVersion.FileName : asset.FileName,
@@ -1150,12 +1203,13 @@ export class AssetStorageAdapter {
             if (!await DBAPI.SystemObject.reinstateSystemObject(asset)) /* istanbul ignore next */
                 return {
                     success: false,
-                    error: `AssetStorageAdapter.reinstateAsset: Unable to mark SystemObject as not retired for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`,
+                    error: `Unable to mark SystemObject as not retired for Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`,
                     asset,
                     assetVersion
                 };
         }
 
+        RK.logDebug(RK.LogSection.eSTR,'reinstate asset success','',{ asset, assetVersion },'AssetStorageAdapter');
         return ASR;
     }
 
@@ -1163,7 +1217,7 @@ export class AssetStorageAdapter {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
             const error: string = `AssetStorageAdapter.crackAssetByAssetVersionID unable to compute AssetVersion for idAssetVersion ${idAssetVersion}`;
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'crack asset by version id failed','unable to compute AssetVersion for idAssetVersion',{ idAssetVersion },'AssetStorageAdapter');
             return { success: false, error, zip: null, asset: null, isBagit: false };
         }
         return this.crackAsset(assetVersion);
@@ -1182,33 +1236,39 @@ export class AssetStorageAdapter {
 
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset); /* istanbul ignore next */
         if (!asset) {
-            const error: string = `AssetStorageAdapter.crackAsset unable to compute asset for AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `unable to compute asset for AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+
             return { success: false, error, zip: null, asset: null, isBagit: false };
         }
 
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
-            const error: string = 'AssetStorageAdapter.crackAsset: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = 'Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            RK.logError(RK.LogSection.eSTR,'creack asset failed',error,{ assetVersion },'AssetStorageAdapter');
             return { success: false, error, zip: null, asset: null, isBagit: false };
         }
 
-        return await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion);
+        const result: CrackAssetResult = await AssetStorageAdapter.crackAssetWorker(storage, asset, assetVersion);
+        if(result.success===false)
+            RK.logError(RK.LogSection.eSTR,'crack asset failed',result.error,{ asset },'AssetStorageAdapter');
+        else
+            RK.logDebug(RK.LogSection.eSTR,'crack asset success',undefined,{ asset },'AssetStorageAdapter');
+
+        return result;
     }
 
     /** Computes storage key/ingested, then creates either a read stream or a filename for use in accessing the file. */
     private static async assetFileOrStream(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<AssetFileOrStreamResult> {
         const { storageKey, ingested, error } = AssetStorageAdapter.computeStorageKeyAndIngested(asset, assetVersion); /* istanbul ignore next */
         if (!storageKey) {
-            LOG.error(error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'create asset stream or file failed',`cannot compute storage key: ${error}`,{ asset, assetVersion },'AssetStorageAdapter');
             return { success: false, error };
         }
 
-        LOG.info(`AssetStorageAdapter.assetFileOrStream fileName ${assetVersion.FileName} extension ${path.extname(assetVersion.FileName).toLowerCase()} storageKey ${storageKey} ingested ${ingested}`, LOG.LS.eSTR);
-
-        if (!ingested)  // non-ingested content is staged locally
+        if (!ingested) {  // non-ingested content is staged locally
+            RK.logInfo(RK.LogSection.eSTR,'create asset stream or file success','staged locally',{ fileName: await storage.stagingFileName(storageKey) },'AssetStorageAdapter');
             return { success: true, fileName: await storage.stagingFileName(storageKey) };
+        }
 
         // ingested content lives on remote storage; we'll need to stream it back to the server for processing
         const readStreamInput: STORE.ReadStreamInput = {
@@ -1220,17 +1280,18 @@ export class AssetStorageAdapter {
 
         const RSR: STORE.ReadStreamResult = await storage.readStream(readStreamInput); /* istanbul ignore next */
         if (!RSR.success|| !RSR.readStream) {
-            LOG.error(RSR.error, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'create asset stream or file failed',`cannot compute storage key: ${RSR.error}`,{ readStreamInput },'AssetStorageAdapter');
             return { success: true, error: RSR.error };
         }
 
+        RK.logDebug(RK.LogSection.eSTR,'create asset stream or file success',undefined,{ storageKey },'AssetStorageAdapter');
         return { success: true, stream: RSR.readStream, fileName: assetVersion.FileName };
     }
 
     private static async crackAssetWorker(storage: IStorage, asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion): Promise<CrackAssetResult> {
         const AFOSR: AssetFileOrStreamResult = await AssetStorageAdapter.assetFileOrStream(storage, asset, assetVersion);
         if (!AFOSR.success) {
-            LOG.error(AFOSR.error ?? '', LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'crack asset worker failed',AFOSR.error,{ asset, assetVersion },'AssetStorageAdapter');
             return { success: false, error: AFOSR.error, zip: null, asset: null, isBagit: false };
         }
 
@@ -1239,8 +1300,6 @@ export class AssetStorageAdapter {
 
         let reader: IZip | null = null;
         try {
-            LOG.info(`AssetStorageAdapter.crackAssetWorker fileName ${assetVersion.FileName} extension ${path.extname(assetVersion.FileName).toLowerCase()} isBulkIngest ${isBulkIngest} isZipFile ${isZipFilename}`, LOG.LS.eSTR);
-
             if (AFOSR.stream) { // ingested content
                 reader = (isBulkIngest) /* istanbul ignore next */ // We don't ingest bulk ingest files as is -- they end up getting cracked apart, so we're unlikely to hit this branch of code
                     ? new BagitReader({ zipFileName: null, zipStream: AFOSR.stream, directory: null, validate: true, validateContent: false })
@@ -1249,22 +1308,27 @@ export class AssetStorageAdapter {
                 reader = (isBulkIngest)
                     ? new BagitReader({ zipFileName: AFOSR.fileName, zipStream: null, directory: null, validate: true, validateContent: false })
                     : new ZipFile(AFOSR.fileName);
-            } else
-                return { success: false, error: 'AssetStorageAdapter.crackAsset unable to determine filename or stream', zip: null, asset: null, isBagit: false };
+            } else {
+                RK.logError(RK.LogSection.eSTR,'crack asset worker failed','unable to determine filename or stream',{ asset, assetVersion },'AssetStorageAdapter');
+                return { success: false, error: 'unable to determine filename or stream', zip: null, asset: null, isBagit: false };
+            }
 
             const ioResults: IOResults = await reader.load(); /* istanbul ignore next */
             if (!ioResults.success) {
                 await reader.close();
                 if (isBulkIngest || isZipFilename)
-                    LOG.error(ioResults.error, LOG.LS.eSTR);
+                    RK.logError(RK.LogSection.eSTR,'crack asset worker failed',`unable to load reader: ${ioResults.error}`,{ asset, assetVersion, isBulkIngest, isZipFile: isZipFilename },'AssetStorageAdapter');
                 return { success: false, error: ioResults.error, zip: null, asset: null, isBagit: false };
             }
         } catch (error) /* istanbul ignore next */ {
             if (reader)
                 await reader.close();
-            LOG.error('AssetStorageAdapter.crackAsset', LOG.LS.eSTR, error);
-            return { success: false, error: `AssetStorageAdapter.crackAsset ${JSON.stringify(error, H.Helpers.saferStringify)}`, zip: null, asset: null, isBagit: false };
+
+            RK.logError(RK.LogSection.eSTR,'crack asset worker failed',H.Helpers.getErrorString(error),{ asset, assetVersion },'AssetStorageAdapter');
+            return { success: false, error: `${JSON.stringify(error, H.Helpers.saferStringify)}`, zip: null, asset: null, isBagit: false };
         }
+
+        RK.logDebug(RK.LogSection.eSTR,'crack asset worker success',undefined,{ asset, assetVersion, isBulkIngest, isZipFile: isZipFilename },'AssetStorageAdapter');
         return { success: true, zip: reader, asset, isBagit: isBulkIngest };
     }
 
@@ -1276,13 +1340,15 @@ export class AssetStorageAdapter {
         };
 
         const ASC: CrackAssetResult = await AssetStorageAdapter.crackAsset(assetVersion); /* istanbul ignore next */
-        LOG.info(`AssetStorageAdapter.getAssetVersionContents idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}, ASC.success ${ASC.success}, ASC.zip ${ASC.zip != null}`, LOG.LS.eSTR);
+
         if (!ASC.zip) {     // if our file is not a zip, just return it
             retValue.all.push(assetVersion.FileName);
             return retValue;
         }
-        if (!ASC.success)   // if cracking the asset fails, then we found nothing
+        if (!ASC.success) {   // if cracking the asset fails, then we found nothing
+            RK.logError(RK.LogSection.eSTR,'get asset version contents failed','found nothing in asset',{ assetVersion },'AssetStorageAdapter');
             return retValue;
+        }
 
         // for the time being, we handle bagit content differently than zip content
         // bagits (isBulkIngest) use getJustFiles() to report the contents of the data folder,
@@ -1306,21 +1372,25 @@ export class AssetStorageAdapter {
                 }
                 const baseName: string = path.basename(entry);
                 retValue.all.push(baseName);
-                // LOG.info(`Entry ${entry}: Dir ${dirName}; Base ${baseName}`, LOG.LS.eSTR);
             }
         }
 
         await ASC.zip.close();
+        RK.logDebug(RK.LogSection.eSTR,'get asset version contents success',undefined,{ assetVersion },'AssetStorageAdapter');
         return retValue;
     }
 
     /** This method removes staged files from our storage system (i.e. uploaded but not ingested). If successful,
      * it then retires the asset version, clears the StorageKeyStaging, and retires the asset, when all versions are retired */
     static async discardAssetVersion(assetVersion: DBAPI.AssetVersion): Promise<AssetStorageResult> {
-        LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}`, LOG.LS.eSTR);
+
+        RK.logDebug(RK.LogSection.eSTR,'discard AssetVersion',undefined,{ assetVersion },'AssetStorageAdapter');
+
         // only works for staged versions -- fail if not staged
-        if (assetVersion.Ingested)
-            return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Ingested asset versions cannot be discarded' };
+        if (assetVersion.Ingested) {
+            RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed','ingested assets cannot be discarded', { assetVersion },'AssetStorageAdapter');
+            return { asset: null, assetVersion, success: false, error: 'Ingested asset versions cannot be discarded' };
+        }
 
         // this should be true, but a storage failure may result in a cleared StorageKeyStaging for a non-ingested asset version
         if (assetVersion.StorageKeyStaging) {
@@ -1329,41 +1399,47 @@ export class AssetStorageAdapter {
             // we only perform the discard if this is the final non-retired reference
             const storageKeyStagingCount: number | null = await DBAPI.AssetVersion.countStorageKeyStaging(assetVersion.StorageKeyStaging, false, false);
             if (storageKeyStagingCount === null) {
-                const error: string = `AssetStorageAdapter.discardAssetVersion call to AssetVersion.countStorageKeyStaging(${assetVersion.StorageKeyStaging}, false, false) failed`;
-                LOG.error(error, LOG.LS.eSTR);
+                const error: string = `call to AssetVersion.countStorageKeyStaging(${assetVersion.StorageKeyStaging}, false, false) failed`;
+                RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed','cannout count staging storage key', { assetVersion },'AssetStorageAdapter');
                 return { asset: null, assetVersion, success: false, error };
             }
             if (storageKeyStagingCount === 1) {
                 // fetch storage interface
                 const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
-                if (!storage)
-                    return { asset: null, assetVersion, success: false, error: 'AssetStorageAdapter.discardAssetVersion: Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
+                if (!storage) {
+                    RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed','unable to retrieve Storage Implementation from StorageFactory', { assetVersion },'AssetStorageAdapter');
+                    return { asset: null, assetVersion, success: false, error: 'Unable to retrieve Storage Implementation from StorageFactory.getInstace()' };
+                }
 
                 const DWSR: STORE.DiscardWriteStreamResult = await storage.discardWriteStream({ storageKey: assetVersion.StorageKeyStaging });
-                if (!DWSR.success)
-                    return { asset: null, assetVersion, success: false, error: `AssetStorageAdapter.discardAssetVersion: ${DWSR.error}` };
+                if (!DWSR.success) {
+                    RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed',`cannot discard write stream: ${DWSR.error}`, { assetVersion },'AssetStorageAdapter');
+                    return { asset: null, assetVersion, success: false, error: `${DWSR.error}` };
+                }
             } else
-                LOG.info(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion} skipped IStorage.discardWriteStream as asset reference count is ${storageKeyStagingCount} !== 1`, LOG.LS.eSTR);
+                RK.logDebug(RK.LogSection.eSTR,'discard AssetVersion','skipped IStorage.discardWriteStream as asset reference count !== 1',{ assetVersion, storageKeyStagingCount },'AssetStorageAdapter');
         } else
-            LOG.error(`AssetStorageAdapter.discardAssetVersion idAsset ${assetVersion.idAsset}, idAssetVersion ${assetVersion.idAssetVersion}) was not ingested but had no StorageKeyStaging`, LOG.LS.eSTR);
+            RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed','was not ingested. no StorageKeyStaging', { assetVersion },'AssetStorageAdapter');
 
         // retire assetVersion
-        if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) /* istanbul ignore next */
-            return { asset: null, assetVersion: null, success: false, error: 'AssetStorageAdapter.discardAssetVersion: SystemObject.retireSystemObject failed' };
+        if (!await DBAPI.SystemObject.retireSystemObject(assetVersion)) { /* istanbul ignore next */
+            RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed','retire sdystem object failed', { assetVersion },'AssetStorageAdapter');
+            return { asset: null, assetVersion: null, success: false, error: 'SystemObject.retireSystemObject failed' };
+        }
 
         // clear StorageKeyStaging from this retired asset version
         assetVersion.StorageKeyStaging = '';
         // assetVersion.Ingested = true;
         if (!await assetVersion.update()) /* istanbul ignore next */ {
-            const error: string = `AssetStorageAdapter.discardAssetVersion unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `unable to clear staging storage key from AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+            RK.logError(RK.LogSection.eSTR,'discard AssetVersion failed','unable to clear staging storage key from AssetVersion', { assetVersion },'AssetStorageAdapter');
             return { asset: null, assetVersion: null, success: false, error };
         }
 
         // Retire the asset associated with this asset version ... if and only if all versions are also retired
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
         if (!asset)
-            return { asset: null, assetVersion: null, success: false, error: `AssetStorageAdapter.discardAssetVersion: Unable to fetch asset ${assetVersion.idAsset}` };
+            return { asset: null, assetVersion: null, success: false, error: `Unable to fetch asset ${assetVersion.idAsset}` };
 
         const retireRes: H.IOResults = await AssetStorageAdapter.retireAssetIfAllVersionsAreRetired(asset);
         return (retireRes.success)
@@ -1378,8 +1454,8 @@ export class AssetStorageAdapter {
 
         /* istanbul ignore next */
         if (!asset.StorageKey) {
-            const error: string = `AssetStorageAdapter.actOnAssetWorker: Asset ${JSON.stringify(asset, H.Helpers.saferStringify)} has null storageKey`;
-            LOG.error(error, LOG.LS.eSTR);
+            const error: string = `Asset ${JSON.stringify(asset, H.Helpers.saferStringify)} has null storageKey`;
+            RK.logError(RK.LogSection.eSTR,'act on asset worker failed','has NULL storage key', { asset },'AssetStorageAdapter');
             return { success: false, error, asset, assetVersion: null };
         }
 
@@ -1393,8 +1469,8 @@ export class AssetStorageAdapter {
         const storage: IStorage | null = await StorageFactory.getInstance(); /* istanbul ignore next */
         if (!storage) {
             retValue.success = false;
-            retValue.error = 'AssetStorageAdapter.actOnAssetWorker: Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
-            LOG.error(retValue.error, LOG.LS.eSTR);
+            retValue.error = 'Unable to retrieve Storage Implementation from StorageFactory.getInstace()';
+            RK.logError(RK.LogSection.eSTR,'act on asset worker failed','unable to retrieve Storage Implementation from StorageFactory', { asset },'AssetStorageAdapter');
             return retValue;
         }
 
@@ -1402,8 +1478,8 @@ export class AssetStorageAdapter {
         const assetVersionOld: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(asset.idAsset); /* istanbul ignore next */
         if (!assetVersionOld) {
             retValue.success = false;
-            retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to fetch latest AssetVersion for ${asset}`;
-            LOG.error(retValue.error, LOG.LS.eSTR);
+            retValue.error = `Unable to fetch latest AssetVersion for ${asset}`;
+            RK.logError(RK.LogSection.eSTR,'act on asset worker failed','unable to fetch latest AssetVersion', { asset },'AssetStorageAdapter');
             return retValue;
         }
 
@@ -1412,7 +1488,7 @@ export class AssetStorageAdapter {
             if (!renameAssetResult.success) {
                 retValue.success = false;
                 retValue.error = renameAssetResult.error;
-                LOG.error(retValue.error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'act on asset worker failed','cannot rename asset', { asset },'AssetStorageAdapter');
                 return retValue;
             }
             fileNameNew = renameAssetInput.fileNameNew;
@@ -1421,7 +1497,7 @@ export class AssetStorageAdapter {
             if (!hideAssetResult.success) {
                 retValue.success = false;
                 retValue.error = hideAssetResult.error;
-                LOG.error(retValue.error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'act on asset worker failed','cannot hide asset', { asset },'AssetStorageAdapter');
                 return retValue;
             }
         } else /* istanbul ignore next */ if (reinstateAssetInput) {
@@ -1429,7 +1505,7 @@ export class AssetStorageAdapter {
             if (!reinstateAssetResult.success) {
                 retValue.success = false;
                 retValue.error = reinstateAssetResult.error;
-                LOG.error(retValue.error, LOG.LS.eSTR);
+                RK.logError(RK.LogSection.eSTR,'act on asset worker failed','cannot reinstate asset', { asset },'AssetStorageAdapter');
                 return retValue;
             }
         }
@@ -1455,8 +1531,8 @@ export class AssetStorageAdapter {
         /* istanbul ignore next */
         if (!await assetVersion.create()) {
             retValue.success = false;
-            retValue.error = `AssetStorageAdapter.actOnAssetWorker: Unable to create AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
-            LOG.error(retValue.error, LOG.LS.eSTR);
+            retValue.error = `Unable to create AssetVersion ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`;
+            RK.logError(RK.LogSection.eSTR,'act on asset worker failed','unable to create AssetVersion', { asset },'AssetStorageAdapter');
             return retValue;
         }
         retValue.asset = asset;
@@ -1485,8 +1561,8 @@ export class AssetStorageAdapter {
         let error: string = '';
         if (ingested) { /* istanbul ignore next */
             if (!asset.StorageKey) {
-                error = `AssetStorageAdapter.computeStorageKeyAndIngested: Asset ${JSON.stringify(asset, H.Helpers.saferStringify)} has null storageKey`;
-                LOG.error(error, LOG.LS.eSTR);
+                error = `Asset ${JSON.stringify(asset, H.Helpers.saferStringify)} has null storageKey`;
+                RK.logError(RK.LogSection.eSTR,'compute storage key failed','has NULL storage key', { asset, assetVersion },'AssetStorageAdapter');
                 return { storageKey, ingested, error };
             }
             storageKey = asset.StorageKey;

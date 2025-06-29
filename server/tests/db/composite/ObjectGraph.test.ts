@@ -1,8 +1,8 @@
 import * as DBAPI from '../../../db';
 import * as UTIL from '../api';
-import * as LOG from '../../../utils/logger';
 // import * as H from '../../../utils/helpers';
 import { ObjectGraphTestSetup } from './ObjectGraph.setup';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 
@@ -778,7 +778,8 @@ describe('DB Composite ObjectGraph All', () => {
 
 describe('DB Composite ObjectGraph.fetch Invalid', () => {
     test('DB Composite ObjectGraph Invalid Object Wiring Ascending 1', async () => {
-        LOG.info('NOTICE: Errors that follow are due to invalid wiring and are expected!', LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'fetch','NOTICE: Errors that follow are due to invalid wiring and are expected!',{},'Tests.DB.Composite.ObjectGraph');
+
         await UTIL.createXref(OHTS.intermediaryFile1, OHTS.subject4);
         await UTIL.createXref(OHTS.projectDocumentation1, OHTS.subject4);
         await UTIL.createXref(OHTS.scene1, OHTS.subject4);

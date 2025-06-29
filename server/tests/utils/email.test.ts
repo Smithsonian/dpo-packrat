@@ -1,32 +1,33 @@
-import { Email } from '../../utils/email';
-import * as H from '../../utils/helpers';
-import * as LOG from '../../utils/logger';
-
-/*
-afterAll(async done => {
-    await H.Helpers.sleep(5000);
-    done();
-});
-*/
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 describe('Utils: Email', () => {
-    testSend('', '');
-    // testSend('tysonj@si.edu', 'tysonj@si.edu');
-    // testSend('tysonj@si.edu', 'jon.tyson@gmail.com');
-    // testSend('tysonj@si.edu', 'jon@internetshoppingclub.com');
+    testSend();
 });
 
-async function testSend(from: string, to: string): Promise<void> {
-    const message: string = `${from} -> ${to}`;
-    test('Utils: Email.Send', async () => {
-        if (from === '' && to === '')
-            return;
+async function testSend(): Promise<void> {
 
-        const res: H.IOResults = await Email.Send(from, to, `Test ${message}`, message);
-        if (res.success)
-            LOG.info(`testSend ${message} Success`, LOG.LS.eTEST);
-        else
-            LOG.error(`testSend ${message} FAIL`, LOG.LS.eTEST);
-        expect(res.success).toBeTruthy();
+    test('Utils: Email.Send', async () => {
+
+        let result = await RK.initialize(RK.SubSystem.NOTIFY_EMAIL);
+
+        if(result.success) {
+            result = await RK.emailTest(1);
+            if (result.success) {
+                RK.logInfo(RK.LogSection.eTEST,'send','success',{ ...result.data },'Tests.Utils.Email');
+                expect(result.success).toBeTruthy();
+            } else {
+                // if we're not successful we check to see if we're outside the firewall testing (i.e. GitHub)
+                // if so, we force success.
+                const validError: boolean = result.data?.errors?.some(error => error.includes('ENOTFOUND smtp.si.edu')) ?? false;
+                if(validError) {
+                    RK.logWarning(RK.LogSection.eTEST,'send','outside of firewall. cannot send email. passing test...',{},'Tests.Utils.Email');
+                    expect(true).toBeTruthy();
+                    return;
+                } else
+                    RK.logError(RK.LogSection.eTEST,'send',result.message, result.data,'Tests.Utils.Email');
+            }
+        }
+
+        expect(result.success).toBeTruthy();
     });
 }

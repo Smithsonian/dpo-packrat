@@ -2,7 +2,8 @@
 import { ModelMaterialUVMap as ModelMaterialUVMapBase, Prisma } from '@prisma/client';
 import { Model } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> implements ModelMaterialUVMapBase {
     idModelMaterialUVMap!: number;
@@ -30,7 +31,8 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            return false;
         }
     }
 
@@ -47,7 +49,8 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            return false;
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
@@ -58,7 +61,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 where: { idModelMaterialUVMap, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.delete', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
             return false;
         }
     }
@@ -70,7 +73,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyObject<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findUnique({ where: { idModelMaterialUVMap, }, }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
             return null;
         }
     }
@@ -82,7 +85,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idAsset } }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.fetchFromAsset', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Asset failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
             return null;
         }
     }
@@ -94,7 +97,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idModel } }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.fetchFromModel', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
             return null;
         }
     }
@@ -115,7 +118,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 ModelMaterialUVMap
             );
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialUVMap.fetchFromModels', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Models failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
             return null;
         }
     }

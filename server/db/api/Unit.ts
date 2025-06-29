@@ -2,7 +2,8 @@
 import { Unit as UnitBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObjectBased {
     idUnit!: number;
@@ -31,7 +32,8 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
+            return false;
         }
     }
 
@@ -47,7 +49,8 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
+            return  false;
         }
     }
 
@@ -57,7 +60,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }
@@ -69,7 +72,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyObject<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findUnique({ where: { idUnit, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }
@@ -79,7 +82,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany({ orderBy: { Name: 'asc' } }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }
@@ -92,7 +95,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 FROM Unit AS U
                 JOIN Subject AS S ON (U.idUnit = S.idUnit)`, Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchAllWithSubjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all with Subjects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }
@@ -116,7 +119,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectDerived = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchMasterFromProjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch master from Projects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }
@@ -128,7 +131,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
             return DBC.CopyArray<UnitBase, Unit>(
                 await DBC.DBConnection.prisma.unit.findMany({ where: { UnitEdan: { some: { Abbreviation }, }, }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchFromUnitEdanAbbreviation', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from UnitEdan abbreviation failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }
@@ -146,7 +149,7 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
                         { Name: { contains: search }, },
                     ] }, }), Unit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchFromNameSearch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from name search failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
             return null;
         }
     }

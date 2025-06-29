@@ -3,12 +3,11 @@ import { ApolloServerOptions, computeGQLQuery } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
-import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
+import { User } from '../db/api/User';
 import { UsageMonitor } from '../utils/osStats';
-import { RecordKeeper } from '../records/recordKeeper';
+import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
-import { logtest } from './routes/logtest';
 import { heartbeat } from './routes/heartbeat';
 import { solrindex, solrindexprofiled } from './routes/solrindex';
 // import { migrate } from './routes/migrate';
@@ -31,6 +30,7 @@ import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 import * as path from 'path';
+import { IEventEngine } from '../event/interface';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -50,42 +50,72 @@ export class HttpServer {
     static async getInstance(): Promise<HttpServer | null> {
         if (!HttpServer._singleton) {
             HttpServer._singleton = new HttpServer();
-            await HttpServer._singleton.initializeServer();
+            await HttpServer._singleton.HttpServer();
         }
         return HttpServer._singleton;
     }
 
-    private async initializeServer(): Promise<boolean> {
-        LOG.info('**************************', LOG.LS.eSYS);
-        LOG.info('Packrat Server Initialized', LOG.LS.eSYS);
+    private async HttpServer(): Promise<boolean> {
+        // initialize logging and notification system
+        const loggerResult: IOResults = await RK.initialize(RK.SubSystem.LOGGER);
+        if(loggerResult.success===false) {
+            RK.logFallback(RK.LogLevel.CRITICAL, RK.LogSection.eSYS,'system failed: Logger',loggerResult.message,loggerResult.data,'HttpServer');
+            RK.logFallback(RK.LogLevel.CRITICAL, RK.LogSection.eSYS,'server failed','No logging available');
+            return false;
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Logger',undefined,loggerResult.data,'HttpServer');
+
+        // setInterval(() => {
+        //     console.log(`[heartbeat] ${new Date().toISOString()}`);
+        // }, 3000);
 
         // get our webDAV server
         this.WDSV = await WebDAVServer.server();
-        if (this.WDSV) {
-            LOG.info('initialized WebDAV Server', LOG.LS.eSYS);
-        } else {
-            LOG.error('Failed to initialize WebDAV server', LOG.LS.eSYS);
+        if (!this.WDSV) {
+            RK.logCritical(RK.LogSection.eSYS,'system failed: WebDAV server','failed to initialize WebDAV server',undefined,'HttpServer');
+            RK.logCritical(RK.LogSection.eSYS,'server failed','No WebDAV server');
             return false;
         }
+        RK.logInfo(RK.LogSection.eSYS,'system started: WebDAV server',undefined,undefined,'HttpServer');
 
         // configure our routes/endpoints
         const res: boolean = await this.configureMiddlewareAndRoutes();
+        if (res===false) {
+            RK.logCritical(RK.LogSection.eSYS,'system failed: Middleware and Routes', 'failed to initialize Express middleware and routes',undefined,'HttpServer');
+            RK.logCritical(RK.LogSection.eSYS,'server failed','No Middleware or Routes');
+            return false;
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Middleware and Routes',undefined,undefined,'HttpServer');
 
         // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
-        EventFactory.getInstance();
+        const eventEngine: IEventEngine | null = await EventFactory.getInstance();
+        const eventResult: IOResults = await eventEngine?.initialize() ?? { success: false, message: 'no engine instance' };
+        if (eventResult.success===false) {
+            RK.logCritical(RK.LogSection.eSYS,'system failed: Event Engine', `failed to initialize EventEngine. ${eventResult.message}}`,undefined,'HttpServer');
+            RK.logCritical(RK.LogSection.eSYS,'server failed','No Event Engine');
+            return false;
+        }
+        RK.logInfo(RK.LogSection.eSYS,'system started: Event Engine',undefined,eventResult.data,'HttpServer');
+
+        // start usage monitoring
         if (monitorCPU) {
             const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
             monitor.start();
+            RK.logInfo(RK.LogSection.eSYS,'system started: Usage Monitoring',undefined,{ frequency: 1000, samples: monitorVerboseSamples },'HttpServer');
         }
 
-        // initialize notification system
-        const notifyResult: H.IOResults = await RecordKeeper.configure();
-        if(notifyResult.success===false)
-            LOG.error(`FAILED to configure Notification system. no notices will be sent (${notifyResult.error})`,LOG.LS.eSYS);
-        else
-            LOG.info(`Notification system is running: ${Config.environment.type}`,LOG.LS.eSYS);
+        // initialize notifications
+        const notifyResult: IOResults = await RK.initialize(RK.SubSystem.NOTIFY_EMAIL);
+        if(notifyResult.success===false) {
+            RK.logError(RK.LogSection.eSYS,'system failed: Email Notifications',notifyResult.message,notifyResult.data,'HttpServer');
+        }
+        // set our email groups, pulling from the database
+        RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ALL, await User.fetchEmailsByIDs() ?? []);
+        RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
+        RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyResult.data,'HttpServer');
 
         // return our response
+        RK.logInfo(RK.LogSection.eSYS,'Packrat server running...',undefined,{ environment: Config.environment.type, port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
         return res;
     }
 
@@ -106,8 +136,14 @@ export class HttpServer {
         });
         this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100MB' }) as RequestHandler);
 
-        // early stage request debugging middleware
+        // DEBUG: early stage request debugging middleware
         // this.app.use(HttpServer.logRequestDetailed);
+        // TEMP: inside apolloServer setup
+        this.app.use((req, _res, next) => {
+            req.on('close', () => RK.logDebug(RK.LogSection.eHTTP,'Request CLOSED',undefined,H.Helpers.cleanExpressRequest(req),'Express.ConfigMiddleware'));
+            req.on('aborted', () => RK.logDebug(RK.LogSection.eHTTP,'Request ABORTED',undefined,H.Helpers.cleanExpressRequest(req),'Express.ConfigMiddleware'));
+            next();
+        });
 
         // get our cookie and auth system rolling. We do this here so we can extract
         // our user information (if present) and have it for creating the LocalStore.
@@ -128,7 +164,7 @@ export class HttpServer {
         // authentication and graphQL endpoints
         this.app.use('/auth', AuthRouter);
         this.app.use('/graphql', graphqlUploadExpress({
-            maxFileSize: 30 * 1024 * 1024 * 1024, // 30 GB
+            maxFileSize: 40 * 1024 * 1024 * 1024, // 40 Gb
             maxFiles: 10,
             tmpdir: path.join(Config.storage.rootStaging,'tmp'),
             debug: true,
@@ -140,7 +176,6 @@ export class HttpServer {
         server.applyMiddleware({ app: this.app, cors: false });
 
         // utility endpoints
-        this.app.get('/logtest', logtest);
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
@@ -172,7 +207,7 @@ export class HttpServer {
         // if we're not testing then open up server on the correct port
         if (process.env.NODE_ENV !== 'test') {
             const server = this.app.listen(Config.http.port, () => {
-                LOG.info(`Server is running on port ${Config.http.port}`, LOG.LS.eSYS);
+                RK.logInfo(RK.LogSection.eSYS,'system started: Express server',undefined,{ port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
             });
 
             // Set keep-alive parameters on the server
@@ -186,11 +221,30 @@ export class HttpServer {
     }
 
     // creates a LocalStore populated with the next requestID
-    private static assignLocalStore(req: Request, _res, next): void {
-        const user = req['user'];
-        const idUser = user ? user['idUser'] : undefined;
-        ASL.run(new LocalStore(true, idUser), () => {
-            LOG.info(`HTTP.idRequestMiddleware creating new LocalStore (url: ${req.originalUrl} | idUser: ${idUser})`,LOG.LS.eHTTP);
+    private static async assignLocalStore(req: Request, _res, next): Promise<void> {
+        const { id } = H.Helpers.getUserDetailsFromRequest(req);
+
+        // create our new store
+        const LS: LocalStore = new LocalStore(true, id);
+
+        // if we have an id then get the email and store it
+        // we do this here because RecordKeeper needs the user email for notifications
+        // but cannot include any DB calls to avoid cyclic redundancy (Audit and Event)
+        if(id) {
+            const user: User | null = await User.fetch(id);
+            if(user) {
+                const doNotify: boolean = user.Active && (user.WorkflowNotificationTime!=null);
+                if(user && user.EmailAddress.length>0)
+                    LS.setUserNotify(user.EmailAddress,doNotify);
+            } else {
+                RK.logError(RK.LogSection.eSYS,'creating new LocalStore failed','cannot get user from ID',{ idUser: id },'HttpServer');
+            }
+        }
+
+
+        // run the store for this user
+        ASL.run(LS, () => {
+            // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id },'HttpServer');
             next();
         });
     }
@@ -198,8 +252,7 @@ export class HttpServer {
     // utility routines and middleware
     private static logRequest(req: Request, _res, next): void {
         // figure out who is calling this
-        const user = req['user'];
-        const idUser = user ? user['idUser'] : undefined;
+        const { id, ip } = H.Helpers.getUserDetailsFromRequest(req);
 
         // our method (GET, POST, ...)
         let method = req.method.toUpperCase();
@@ -216,7 +269,8 @@ export class HttpServer {
             } else
                 query = `Unknown GraphQL: ${query}|${req.path}`;
         }
-        LOG.info(`[REQUEST] ${method} request [${query}] made by user ${idUser}. (${queryParams})`,LOG.LS.eHTTP);
+
+        RK.logInfo(RK.LogSection.eHTTP,'request made',undefined,{ method, query, idUser: id, source: ip, queryParams },'HttpServer',true);
         next();
     }
     // private static logRequestDetailed(req: Request, _res, next): void {
@@ -250,7 +304,9 @@ export class HttpServer {
 }
 
 process.on('uncaughtException', (err) => {
-    LOG.error('*** UNCAUGHT EXCEPTION ***', LOG.LS.eSYS, err);
+    // RK.logCritical(RK.LogSection.eSYS,'uncaught exception',err.message,undefined,'HttpServer');
+    console.error('unhandled exception', err);
+    console.trace('unhandled exception');
 
     // For the time being, we prevent Node from exiting.
     // Once we've installed a process monitor in staging & production, like PM2, change this to
@@ -260,6 +316,23 @@ process.on('uncaughtException', (err) => {
 
 // Catch unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
+    // RK.logCritical(RK.LogSection.eSYS,'unhandled rejection','a Promise reject was not handled', { promise, reason },'HttpServer');
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // LOG.error('*** UNCAUGHT REJECTION ***', LOG.LS.eSYS, reason);
+    console.trace('unhandled rejection');
 });
+
+// make sure we're not in testing environments as it will cause issues due
+// to how those environments manage processes
+if (!Config.environment.isJest && !Config.environment.isGitCI) {
+    process.on('SIGINT', async () => {
+        console.log('SIGINT: shutting down RecordKeeper...');
+        await RK.shutdown();
+        process.exit(0);
+    });
+
+    process.on('SIGTERM', async () => {
+        console.log('SIGTERM: shutting down RecordKeeper...');
+        await RK.shutdown();
+        process.exit(0);
+    });
+}

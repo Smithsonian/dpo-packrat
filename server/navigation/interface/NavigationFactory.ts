@@ -3,7 +3,7 @@ import { IIndexer } from './IIndexer';
 import { NavigationDB } from '../impl';
 import { NavigationSolr } from '../impl/NavigationSolr';
 import { Config, NAVIGATION_TYPE } from '../../config';
-import * as LOG from '../../utils/logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class NavigationFactory {
     private static instance: INavigation | null = null;
@@ -50,24 +50,25 @@ export class NavigationFactory {
     static async objectIndexer(): Promise<void> {
         const nav: INavigation| null = await NavigationFactory.getInstance();
         if (!nav) {
-            LOG.error('NavigationFactory.objectIndexer unable to fetch navigation instance', LOG.LS.eNAV);
+            RK.logError(RK.LogSection.eNAV,'object indexer failed','unable to fetch navigation instance',{},'Navigation.Factory');
             return;
         }
 
         if (!NavigationFactory.objectIndexSet) {
-            LOG.info('NavigationFactory.objectIndexer indexing 0 objects', LOG.LS.eNAV);
+            RK.logWarning(RK.LogSection.eNAV,'object indexer failed','indexing 0 objects',{},'Navigation.Factory');
             return;
         }
 
         const objects: number[] = Array.from(NavigationFactory.objectIndexSet);
         NavigationFactory.objectIndexSet = null;
 
-        LOG.info(`NavigationFactory.objectIndexer indexing ${objects.length} objects`, LOG.LS.eNAV);
+        RK.logInfo(RK.LogSection.eNAV,'object indexer','indexing objects',{ numObjects: objects.length },'Navigation.Factory');
+
         for (const idSystemObject of objects) {
             // use a seperate indexer for each object so that we avoid short-circuiting inheritance relationships, used to populate ancestor and descendent information
             const indexer: IIndexer | null = nav ? await nav.getIndexer() : null;
             if (!indexer) {
-                LOG.error('NavigationFactory.objectIndexer unable to fetch navigation indexer', LOG.LS.eNAV);
+                RK.logError(RK.LogSection.eNAV,'object indexer failed','unable to fetch navigation indexer',{ numObjects: objects.length },'Navigation.Factory');
                 return;
             }
             await indexer.indexObject(idSystemObject);

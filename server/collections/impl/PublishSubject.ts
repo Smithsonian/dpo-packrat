@@ -2,11 +2,13 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COL from '../../collections/interface/';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
-/** This class is used to create and update EDANMDM records, translating Packrat Subject data and metadata into the EdanMDMContent format required for EDANMDM records */
+/** This class is used to create and update EDANMDM records, translating Packrat Subject data and metadata into the EdanMDMContent format required for EDANMDM records
+ * TODO: pass data contextual data into response routine
+*/
 export class PublishSubject {
     private idSystemObject: number;
     private subject?: DBAPI.Subject | null;
@@ -40,34 +42,34 @@ export class PublishSubject {
 
         this.edanRecord = await ICol.createEdanMDM(this.edanMDM, 0, true);
         if (!this.edanRecord) {
-            LOG.error(`PublishSubject.publish ${JSON.stringify(this.edanMDM, H.Helpers.saferStringify)} failed`, LOG.LS.eCOLL);
-            return PublishSubject.returnResults(false, 'Edan publishing failed');
+            RK.logError(RK.LogSection.eCOLL,'publish failed','cannot create EDAN MDM record',{ edanMDM: this.edanMDM },'Publish.Subject');
+            return this.returnResults(false, 'Edan publishing failed');
         }
 
         // update SystemObjectVersion.PublishedState
         res = await this.updatePublishedState(COMMON.ePublishedState.ePublished);
         if (!res.success)
             return res;
-        return PublishSubject.returnResults(true);
+        return this.returnResults(true);
     }
 
     private async analyze(): Promise<H.IOResults> {
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(this.idSystemObject);
         if (!oID)
-            return PublishSubject.returnResults(false, `unable to retrieve object details from ${this.idSystemObject}`);
+            return this.returnResults(false, `unable to retrieve object details from ${this.idSystemObject}`);
 
         if (oID.eObjectType !== COMMON.eSystemObjectType.eSubject)
-            return PublishSubject.returnResults(false, `called for non subject object ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
+            return this.returnResults(false, `called for non subject object ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
 
         // fetch subject
         this.subject = oID.idObject ? await DBAPI.Subject.fetch(oID.idObject) : null;
         if (!this.subject)
-            return PublishSubject.returnResults(false, `could not compute subject from ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
+            return this.returnResults(false, `could not compute subject from ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
 
         // fetch subject metadata
         const metadataSet: DBAPI.Metadata[] | null = await DBAPI.Metadata.fetchFromSystemObject(this.idSystemObject);
         if (!metadataSet)
-            return PublishSubject.returnResults(false, `could not compute subject metadata from ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
+            return this.returnResults(false, `could not compute subject metadata from ${JSON.stringify(oID, H.Helpers.saferStringify)}`);
         for (const metadata of metadataSet) {
             const nameNormalized: string = metadata.Name.toLowerCase();
             let metadataList: DBAPI.Metadata[] | undefined = this.metadataMap.get(nameNormalized);
@@ -78,7 +80,7 @@ export class PublishSubject {
             metadataList.push(metadata);
         }
         // LOG.info(`PublishSubject.analyze() metadataMap: ${JSON.stringify(this.metadataMap, H.Helpers.saferStringify)}`, LOG.LS.eCOLL);
-        return PublishSubject.returnResults(true);
+        return this.returnResults(true);
     }
 
     private async transform(): Promise<H.IOResults> {
@@ -115,29 +117,29 @@ export class PublishSubject {
             }
 
             if (nonRepeating && values.length > 1)
-                LOG.error(`PublishSubject.transform encountered non-repeating element ${metadataName} with multiple value ${JSON.stringify(metadataList)}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'publish failed','encountered non-repeating element wih multiple value',{ metadataName, metadataList },'Publish.Subject');
         }
 
         if (!this.edanMDM.descriptiveNonRepeating.title.label)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.title.label missing');
+            return this.returnResults(false, 'descriptiveNonRepeating.title.label missing');
         if (!this.edanMDM.descriptiveNonRepeating.title.content)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.title.content missing');
+            return this.returnResults(false, 'descriptiveNonRepeating.title.content missing');
         if (!this.edanMDM.descriptiveNonRepeating.record_ID)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.record_ID missing');
+            return this.returnResults(false, 'descriptiveNonRepeating.record_ID missing');
         if (!this.edanMDM.descriptiveNonRepeating.data_source)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.data_source missing');
+            return this.returnResults(false, 'descriptiveNonRepeating.data_source missing');
         if (!this.edanMDM.descriptiveNonRepeating.unit_code)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.unit_code missing');
+            return this.returnResults(false, 'descriptiveNonRepeating.unit_code missing');
         if (!this.edanMDM.descriptiveNonRepeating.metadata_usage)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.metadata_usage missing');
+            return this.returnResults(false, 'descriptiveNonRepeating.metadata_usage missing');
         if (!this.edanMDM.descriptiveNonRepeating.metadata_usage.access)
-            return PublishSubject.returnResults(false, 'descriptiveNonRepeating.metadata_usage.access missing');
-        return PublishSubject.returnResults(true);
+            return this.returnResults(false, 'descriptiveNonRepeating.metadata_usage.access missing');
+        return this.returnResults(true);
     }
 
-    private static returnResults(success: boolean, message?: string): H.IOResults {
+    private returnResults(success: boolean, message?: string): H.IOResults {
         if (!success)
-            LOG.error(`PublishSubject.fetchSubject ${message}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed',message,{ edanMDM: this.edanMDM },'Publish.Subject');
         return { success, error: message ?? '' };
     }
 
@@ -148,17 +150,17 @@ export class PublishSubject {
         if (unitDBs != null && unitDBs.length > 0)
             unitDB = unitDBs[0];
         if (!unitDB)
-            return PublishSubject.returnResults(false, 'Unable to compute Unit');
+            return this.returnResults(false, 'Unable to compute Unit');
 
         this.edanMDM.descriptiveNonRepeating.data_source = unitDB.Name ?? '';
         this.edanMDM.descriptiveNonRepeating.unit_code = unitDB.Abbreviation ?? '';
-        return PublishSubject.returnResults(true);
+        return this.returnResults(true);
     }
 
     private async handleLicense(licenseText: string): Promise<H.IOResults> {
         const access: string = (licenseText.toLowerCase() === 'cc0, publishable w/ downloads') ? 'CC0' : 'Usage conditions apply';
         this.edanMDM.descriptiveNonRepeating.metadata_usage!.access = access; // eslint-disable-line @typescript-eslint/no-non-null-assertion
-        return PublishSubject.returnResults(true);
+        return this.returnResults(true);
     }
 
     private static transformIntoLabelContent(metadataList: string[]): COL.EdanLabelContent[] {
@@ -176,7 +178,7 @@ export class PublishSubject {
                 systemObjectVersion.setPublishedState(ePublishedStateIntended);
                 if (!await systemObjectVersion.update()) {
                     const error: string = `PublishSubject.updatePublishedState unable to update published state for ${JSON.stringify(systemObjectVersion, H.Helpers.saferStringify)}`;
-                    LOG.error(error, LOG.LS.eCOLL);
+                    RK.logError(RK.LogSection.eCOLL,'update publish state failed','unable to update published state',{ systemObjectVersion },'Publish.Subject');
                     return { success: false, error };
                 }
             }
@@ -194,7 +196,7 @@ export class PublishSubject {
 
         if (!await systemObjectVersion.create()) {
             const error: string = `PublishSubject.updatePublishedState could not create SystemObjectVersion for idSystemObject ${this.idSystemObject}`;
-            LOG.error(error, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'update publish state failed','could not create SystemObjectVersion for idSystemObject',{ idSystemObjects: this.idSystemObject },'Publish.Subject');
             return { success: false, error };
         }
 

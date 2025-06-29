@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { AccessAction as AccessActionBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class AccessAction extends DBC.DBObject<AccessActionBase> implements AccessActionBase {
     idAccessAction!: number;
@@ -27,7 +28,8 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Action');
+            return false;
         }
     }
 
@@ -39,7 +41,8 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 data: { Name, SortOrder, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Action');
+            return false;
         }
     }
 
@@ -50,7 +53,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
             return DBC.CopyObject<AccessActionBase, AccessAction>(
                 await DBC.DBConnection.prisma.accessAction.findUnique({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessAction.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessAction, ...this },'DB.Access.Action');
             return null;
         }
     }
@@ -68,7 +71,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                     },
                 }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessAction.fetchFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ idAccessRole, ...this },'DB.Access.Action');
             return null;
         }
     }

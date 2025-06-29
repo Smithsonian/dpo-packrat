@@ -6,8 +6,8 @@ import { AssetStorageAdapter } from '../../../../../storage/interface';
 import { AssetVersion, Project, SystemObjectInfo } from '../../../../../db';
 import* as CACHE from '../../../../../cache';
 import { IngestMetadata, BulkIngestReader } from '../../../../../utils/parser';
-import * as LOG from '../../../../../utils/logger';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getAssetVersionsDetails(_: Parent, args: QueryGetAssetVersionsDetailsArgs, _context: Context): Promise<GetAssetVersionsDetailsResult> {
     let firstSubject: SubjectUnitIdentifier | null = null;
@@ -18,7 +18,7 @@ export default async function getAssetVersionsDetails(_: Parent, args: QueryGetA
     for (const idAssetVersion of idAssetVersions) {
         const assetVersion: AssetVersion | null = await AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
-            LOG.error(`GraphQL getAssetVersionsDetails called with invalid idAssetVersion ${idAssetVersion}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'get asset version details failed',`called with invalid idAssetVersion ${idAssetVersion}`,{ ...args.input },'GraphQL.License');
             return { valid: false, Details: [] };
         }
 

@@ -4,7 +4,7 @@ import * as STORE from '../../storage/interface';
 import * as CACHE from '../../cache';
 import * as NAV from '../../navigation/interface';
 import * as H from '../helpers';
-import * as LOG from '../logger';
+import { RecordKeeper as RK  } from '../../records/recordKeeper';
 import { LineStream } from '../lineStream';
 import { ModelMigrationFile } from './ModelMigrationFile';
 import { WorkflowUtil } from '../../workflow/impl/Packrat/WorkflowUtil';
@@ -814,9 +814,9 @@ export class ModelMigration {
 
     private logStatus(context: string, success: boolean, message: string | undefined, err?: any): void {
         if (!success)
-            LOG.error(`ModelMigration (${this.uniqueID}) ${context}: ${message}`, LOG.LS.eMIG, err);
+            RK.logError(RK.LogSection.eMIG,'model migration failed',`${context}${message}: ${err}`,{},'Utils.Stream.Line');
         else
-            LOG.info(`ModelMigration (${this.uniqueID}) ${context}${message ? (': ' + message) : ''}`, LOG.LS.eMIG);
+            RK.logInfo(RK.LogSection.eMIG,'model migration',`${context}${message}`,{},'Utils.Stream.Line');
     }
 
     private returnStatus(context: string, success: boolean, message: string | undefined, props?: any, err?: any): H.IOResults { // eslint-disable-line @typescript-eslint/no-explicit-any

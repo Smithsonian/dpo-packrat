@@ -11,7 +11,7 @@ import {
     SceneDetailFields
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import * as H from '../../../../../utils/helpers';
 import * as SH from '../../../../../utils/sceneHelpers';
 
@@ -93,11 +93,11 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 };
                 const Scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
                 if (!Scene)
-                    LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) unable to compute Scene details`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'update source objects failed','unable to compute Scene details',{ ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
                 const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
                 const sceneCanBeQCdRes: H.IOResults = await SH.SceneHelpers.sceneCanBeQCd(systemObject.idScene);
                 if (!sceneCanBeQCdRes.success && sceneCanBeQCdRes.error)
-                    LOG.error(`getDetailsTabForObject(${systemObject.idSystemObject}) encountered error during SceneHelpers.sceneCanBeQCd: ${sceneCanBeQCdRes.error}`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'update source objects failed',`encountered error checking if sceneCanBeQCd: ${sceneCanBeQCdRes.error}`,{  ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
 
                 fields = {
                     ...fields,

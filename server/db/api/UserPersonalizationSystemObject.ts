@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { UserPersonalizationSystemObject as UserPersonalizationSystemObjectBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonalizationSystemObjectBase> implements UserPersonalizationSystemObjectBase {
     idUserPersonalizationSystemObject!: number;
@@ -30,7 +31,8 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            return false;
         }
     }
 
@@ -46,7 +48,8 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            return  false;
         }
     }
 
@@ -57,7 +60,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return DBC.CopyObject<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBC.DBConnection.prisma.userPersonalizationSystemObject.findUnique({ where: { idUserPersonalizationSystemObject, }, }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationSystemObject.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
             return null;
         }
     }
@@ -69,7 +72,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return DBC.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBC.DBConnection.prisma.userPersonalizationSystemObject.findMany({ where: { idUser } }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationSystemObject.fetchFromUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
             return null;
         }
     }
@@ -81,7 +84,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return DBC.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBC.DBConnection.prisma.userPersonalizationSystemObject.findMany({ where: { idSystemObject } }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UserPersonalizationSystemObject.fetchFromSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
             return null;
         }
     }

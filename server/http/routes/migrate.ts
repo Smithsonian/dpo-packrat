@@ -1,9 +1,9 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as H from '../../utils/helpers';
-import * as LOG from '../../utils/logger';
 import * as WFP from '../../workflow/impl/Packrat';
 import { ASL, LocalStore } from '../../utils/localStore';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import { SceneMigrationPackages, ModelMigrationFiles } from '../../utils/migration/MigrationData';
 import { MigrationUtils, ModelMigration, ModelMigrationResults, ModelMigrationFile, SceneMigration, SceneMigrationResults, SceneMigrationPackage } from '../../utils/migration';
@@ -27,7 +27,7 @@ export async function migrate(request: Request, response: Response): Promise<voi
         NS.scheduleJob(soon, () => Migrator.launcher(migrator));
         response.send('Migration Scheduled');
     } catch (error) {
-        LOG.error('migrate', LOG.LS.eMIG, error);
+        RK.logError(RK.LogSection.eHTTP,'migrate failed',H.Helpers.getErrorString(error),H.Helpers.cleanExpressRequest(request),'HTTP.Route.Migrate');
     }
 }
 
@@ -67,14 +67,14 @@ class Migrator {
 
         if (log) {
             if (this.sceneIDSet === null)
-                LOG.info('SceneMigration migrating all scenes', LOG.LS.eMIG);
+                RK.logDebug(RK.LogSection.eMIG,'parse arguments','migrating all scenes',{ },'HTTP.Route.Migrate');
             else if (this.sceneIDSet !== undefined)
-                LOG.info(`SceneMigration migrating ${H.Helpers.JSONStringify(this.sceneIDSet)}`, LOG.LS.eMIG);
+                RK.logDebug(RK.LogSection.eMIG,'parse arguments','migrating scene ID set',{ sceneIDSet: this.sceneIDSet },'HTTP.Route.Migrate');
 
             if (this.modelIDSet === null)
-                LOG.info(`ModelMigration ${this.extractMode ? 'extracting data for' : 'migrating' } all models`, LOG.LS.eMIG);
+                RK.logDebug(RK.LogSection.eMIG,'parse arguments',`${this.extractMode ? 'extracting data for' : 'migrating' } all models`,{ },'HTTP.Route.Migrate');
             else if (this.modelIDSet !== undefined)
-                LOG.info(`ModelMigration ${this.extractMode ? 'extracting data for' : 'migrating' } ${H.Helpers.JSONStringify(this.modelIDSet)}`, LOG.LS.eMIG);
+                RK.logDebug(RK.LogSection.eMIG,'parse arguments',`${this.extractMode ? 'extracting data for' : 'migrating' } model ID set`,{  modelIDSet: this.modelIDSet },'HTTP.Route.Migrate');
         }
         return ret;
     }
@@ -292,17 +292,18 @@ class Migrator {
 
     private recordMigrationResult(success: boolean, message: string, error?: any): void { // eslint-disable-line @typescript-eslint/no-explicit-any
         if (success)
-            LOG.info(message, LOG.LS.eMIG);
+            RK.logInfo(RK.LogSection.eMIG,'record migration result success',message,{ },'HTTP.Route.Migrate');
         else {
             this.success = false;
-            LOG.error(`FAIL ${message}`, LOG.LS.eMIG, error);
+            RK.logError(RK.LogSection.eMIG,'record migration result failed',`${message}: ${H.Helpers.getErrorString(error)}`,{ },'HTTP.Route.Migrate');
         }
 
         this.results += `${message}<br/>\n`;
     }
 
     private sendError(statusCode: number, message: string): boolean {
-        LOG.error(`/migrate error ${message}`, LOG.LS.eMIG);
+        RK.logError(RK.LogSection.eMIG,'migrate failed',`send error: ${message}`,{ statusCode },'HTTP.Route.Migrate');
+
         this.success = false;
         this.results += `Migration Failed: ${message}`;
         this.response.status(statusCode);

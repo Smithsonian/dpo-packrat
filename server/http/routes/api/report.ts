@@ -2,11 +2,11 @@
 import fs from 'fs';
 import readline from 'readline';
 import * as path from 'path';
-import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import * as STORE from '../../../storage/interface';
 import { Config } from '../../../config';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // import * as COMMON from '@dpo-packrat/common';
 // import * as COL from '../../../collections/interface';
@@ -128,7 +128,7 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
     // get asset's source system object (i.e. what the asset belongs to)
     const sourceSO: DBAPI.SystemObject | null = await summary.asset.fetchSourceSystemObject();
     if(!sourceSO) {
-        LOG.info(`API.report.getAssetContext: cannot get context. no source SystemObject. likely floating asset. (${summary.asset.idAsset}:${summary.asset.FileName})`,LOG.LS.eHTTP);
+        RK.logWarning(RK.LogSection.eHTTP,'get asset context failed','cannot get context. no source SystemObject. likely floating asset.',{ ...summary.asset },'HTTP.Route.Report');
         return { units, projects, subjects, items, parent };
     }
     parent.idSystemObject = sourceSO.idSystemObject;
@@ -140,18 +140,18 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
     // TODO: use vocabulary enums. currently they map to different values (e.g. Scene = 53 and not 137)
     if(sourceSO.idScene) {
         if(summary.asset.idVAssetType!==137)
-            LOG.error(`API.report.getAssetContext: asset type mismatch (scene: ${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'get asset context failed','asset type mismatch: scene',{ scene: sourceSO.idSystemObject, asset: summary.asset },'HTTP.Route.Report');
         parent.type = 'scene';
     } else if(sourceSO.idModel) {
         if(summary.asset.idVAssetType!==135 && summary.asset.idVAssetType!==136 && summary.asset.idVAssetType!==141)
-            LOG.error(`API.report.getAssetContext: asset type mismatch (model: ${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'get asset context failed','asset type mismatch: model',{ model: sourceSO.idSystemObject, asset: summary.asset },'HTTP.Route.Report');
         parent.type = 'model';
     } else if(sourceSO.idCaptureData) {
         if(summary.asset.idVAssetType!==133)
-            LOG.error(`API.report.getAssetContext: asset type mismatch (capture data: ${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'get asset context failed','asset type mismatch: capture data',{ captureData: sourceSO.idSystemObject, asset: summary.asset },'HTTP.Route.Report');
         parent.type = 'capture_data';
     } else {
-        LOG.error(`API.report.getAssetContext: unsupported asset type (${sourceSO.idSystemObject} | ${summary.asset.idSystemObject} | ${summary.asset.idVAssetType})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get asset context failed','unsupported asset type',{ source: sourceSO.idSystemObject, asset: summary.asset },'HTTP.Route.Report');
         parent.type = 'unsupported';
         return { units, projects, subjects, items, parent };
     }
@@ -160,7 +160,7 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
     items = await DBAPI.Item.fetchMasterFromSystemObject(sourceSO.idSystemObject);
     if(!items || items.length===0) {
         // all other context is null since we have no way to get to it
-        LOG.error(`API.report.getAssetContext: no MediaGroup found for asset (${summary.asset.idAsset}:${summary.asset.FileName} | source: ${summary.asset.idSystemObject})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get asset context failed','no MediaGroup found for asset',{ ...summary.asset },'HTTP.Route.Report');
         return { units, projects, subjects, items, parent };
     }
 
@@ -168,12 +168,12 @@ const getAssetContext = async (summary: AssetSummary): Promise<{
     const itemIDs: number[] = items.map(mg=>mg.idItem);
     subjects = await DBAPI.Subject.fetchMasterFromItems(itemIDs);
     if(!subjects || subjects.length===0)
-        LOG.error(`API.report.getAssetContext: no Subject found for asset (idAsset: ${summary.asset.idAsset} | idItem: ${itemIDs.join(', ')})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get asset context failed','no Subject found for asset',{ idAsset: summary.asset.idAsset, idItems: itemIDs },'HTTP.Route.Report');
 
     // projects
     projects = await DBAPI.Project.fetchMasterFromItems(itemIDs);
     if(!projects || projects.length===0)
-        LOG.error(`API.report.getAssetContext: no Projects found for asset (idAsset: ${summary.asset.idAsset} | idItem: ${itemIDs.join(', ')})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get asset context failed','no Projects found for asset',{ idAsset: summary.asset.idAsset, idItems: itemIDs },'HTTP.Route.Report');
     else
         summary.context.project = projects;
 
@@ -197,11 +197,11 @@ const getAssetSummary = async (idAssets: number[] = [], basePath: string): Promi
     if(idAssets.length===0) {
         assets = await DBAPI.Asset.fetchAll();
         if(!assets || assets.length===0) {
-            LOG.error('API.getAssetSummary: no assets found', LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'get asset summary failed','no assets found',{},'HTTP.Route.Report');
             return -1;
         }
     } else {
-        LOG.info(`API.getAssetSummary: not supporting specific idAsset queries yet (${idAssets.join(', ')})`,LOG.LS.eDEBUG);
+        RK.logError(RK.LogSection.eHTTP,'get asset summary failed','not supporting specific idAsset queries yet',{ idAssets },'HTTP.Route.Report');
         return -1;
     }
 
@@ -227,7 +227,7 @@ const getAssetSummary = async (idAssets: number[] = [], basePath: string): Promi
         // get our version(s)
         summary.versions = await DBAPI.AssetVersion.fetchFromAsset(summary.asset.idAsset) ?? [];
         if(!summary.versions || summary.versions.length===0) {
-            LOG.error(`API.getAssetSummary: no asset versions found for: ${summary.asset.idAsset}`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'get asset summary failed',`no asset versions found for: ${summary.asset.idAsset}`,{},'HTTP.Route.Report');
             summary.error.push({ process: 'versions', message: 'no asset versions found' });
         }
 
@@ -260,7 +260,7 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
     // get our system object for the asset
     const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(summary.asset.idAsset);
     if(!assetSO) {
-        LOG.error(`API.report.getAssetAnalysis: cannot analyze asset. no SystemObject (${summary.asset.idAsset})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get asset analysis failed','no SystemObject',{ ...summary.asset },'HTTP.Route.Report');
         return null;
     }
 
@@ -292,7 +292,7 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
     // // grab an instance of our storage factory for OCFL tests/checks
     const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
     if(!storage) {
-        LOG.error('API.report.getAssetAnalysis cannot get storage interface',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get asset analysis failed','cannot get storage interface',{ ...result.asset },'HTTP.Route.Report');
         return null;
     }
 
@@ -372,7 +372,7 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
 
                 const fileStats: H.StatResults = await H.Helpers.stat(filePath);
                 if(fileStats.success===false || !fileStats.stat) {
-                    LOG.error(`cannot get stats for file: ${filePath}`,LOG.LS.eHTTP);
+                    RK.logError(RK.LogSection.eHTTP,'get asset analysis failed',`cannot get stats for file: ${filePath}`,{ ...result.asset },'HTTP.Route.Report');
                     versionResult.validation.sizeMatches = {
                         success: false,
                         message: fileStats.success ? '' : fileStats.error ?? 'undefined'
@@ -394,22 +394,20 @@ const getAssetAnalysis = async (summary: any): Promise<AnalysisAssetResult | nul
 
             // TODO: hash comparison
             // versionResult.validation.hashMatches = false;
-
             result.asset.versions.push(versionResult);
         }
     }
 
-    // console.log('result: ',result);
     return result;
 };
 const processAssetAnalysis = async (basePath: string, totalAssets: number): Promise<boolean> => {
 
-    LOG.info(`API.report: processing ${totalAssets} assets`,LOG.LS.eHTTP);
+    RK.logError(RK.LogSection.eHTTP,'process asset analysis',`processing ${totalAssets} assets`,{ basePath },'HTTP.Route.Report');
 
     // make sure we have our assets file
     let fileCheck = await H.Helpers.fileOrDirExists(basePath+'.assets');
     if(fileCheck.success===false) {
-        LOG.error(`processAssetAnalysis: assets file does not exist. (${basePath+'.assets'})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'process asset analysis failed','assets file does not exist',{ path: basePath+'.assets' },'HTTP.Route.Report');
         return false;
     }
 
@@ -466,7 +464,7 @@ const processAssetAnalysis = async (basePath: string, totalAssets: number): Prom
             const obj = JSON.parse(line);
             const result: AnalysisAssetResult | null = await getAssetAnalysis(obj);
             if(!result) {
-                LOG.error(`[${index++}/${totalAssets}] API.report: Failed to analyze asset: ${obj.asset.idAsset}`,LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'process asset analysis failed',undefined,{ ...obj.asset },'HTTP.Route.Report');
                 continue;
             }
 
@@ -479,10 +477,10 @@ const processAssetAnalysis = async (basePath: string, totalAssets: number): Prom
                 csvStream.write(csvRow);
 
             // status output
-            LOG.info(`[${index}/${totalAssets}] API.report: processed asset analysis (${(Date.now()-startTime)/1000}s)`,LOG.LS.eDEBUG);
+            RK.logDebug(RK.LogSection.eHTTP,'process asset analysis',`processed asset analysis (${index}: ${(Date.now()-startTime)/1000}s)`,{},'HTTP.Route.Report');
             index++;
         } catch (err) {
-            LOG.error('API.report: Error parsing asset line',LOG.LS.eHTTP,err);
+            RK.logError(RK.LogSection.eHTTP,'process asset analysis failed',`parsing asset line error: ${err}`,{},'HTTP.Route.Report');
         }
     }
 
@@ -602,7 +600,7 @@ async function reportAssetFiles(_req: Request, res: Response, basePath: string):
     // process all assets. results stored with 'assets' extension
     const assetsResult: number = await getAssetSummary([],basePath);
     if(assetsResult<=0) {
-        LOG.error('API.reportAssetFiles: cannot get assets from system',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'report asset files failed','cannot get assets from system',{ basePath },'HTTP.Route.Report');
         res.status(200).send(JSON.stringify(generateResponse(false, 'cannot get assets from system', guid, H.ProcessState.FAILED)));
         return;
     }
@@ -620,7 +618,7 @@ async function reportAssetFiles(_req: Request, res: Response, basePath: string):
     };
 
     // log output messages
-    LOG.info(`API.reportAssetFiles: validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${basePath})`,LOG.LS.eDEBUG);
+    RK.logInfo(RK.LogSection.eHTTP,'report asset files',`validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s`,{ basePath },'HTTP.Route.Report');
 
     // create our combined response and return info to client
     result.report = `validated ${assetsResult} assets in ${(Date.now()-startTime)/1000}s (${basePath})`;
@@ -647,7 +645,7 @@ export async function createReport(req: Request, res: Response): Promise<void> {
 
         default: {
             const error = `API.report.createReport: unsupported report type (${req.params.type})`;
-            LOG.error(`API.report.createReport: ${error}`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'create report failed',`unsupported report type: ${req.params.type}`,{},'HTTP.Route.Report');
             res.status(200).send(JSON.stringify({ success: false, message: error }));
             return;
         }
@@ -686,7 +684,7 @@ export async function getReportList(req: Request, res: Response): Promise<void> 
             data: { type: reportType, reports }
         });
     } catch (err) {
-        LOG.error('API.report.getReportList: error reading reports directory.', LOG.LS.eHTTP, err);
+        RK.logError(RK.LogSection.eHTTP,'get report list failed',`error reading reports directory: ${err}`,{},'HTTP.Route.Report');
         res.status(500).json({ success: false, message: 'Error reading reports directory' });
     }
 }
@@ -708,10 +706,10 @@ export async function getReportFile(req: Request, res: Response): Promise<void> 
         const format = req.params.format.toLowerCase();
 
         // Construct the filename using the format: report_<type>_<date>.<extension>
-        const filename = `report_${reportType}_${date}.${format}`;
+        const fileName = `report_${reportType}_${date}.${format}`;
 
         // Build the full path to the report file.
-        const filePath = path.join(Config.storage.rootStaging, 'reports', filename);
+        const filePath = path.join(Config.storage.rootStaging, 'reports', fileName);
 
         // Verify that the file exists.
         await fs.promises.access(filePath, fs.constants.F_OK);
@@ -728,24 +726,26 @@ export async function getReportFile(req: Request, res: Response): Promise<void> 
             }
             return res.sendFile(filePath, (err) => {
                 if (err) {
-                    LOG.error('API.report.getReport: error sending file inline.', LOG.LS.eHTTP, err);
+                    RK.logError(RK.LogSection.eHTTP,'get report file failed',` error sending file inline: ${err}`,{ filePath },'HTTP.Route.Report');
                     res.status(200).json({ success: false, message: 'Error sending report inline' });
                 }
             });
         } else {
             // Default behavior: trigger a file download.
-            return res.download(filePath, filename, (err) => {
+            return res.download(filePath, fileName, (err) => {
                 if (err) {
-                    LOG.error('API.report.getReport: error triggering download.', LOG.LS.eHTTP, err);
+                    RK.logError(RK.LogSection.eHTTP,'get report file failed',`error triggering download: ${err}`,{ filePath, fileName },'HTTP.Route.Report');
                     res.status(200).json({ success: false, message: 'Error downloading report' });
                 }
             });
         }
     } catch (err) {
         // If the file doesn't exist or another error occurs, return a "report not available" message.
+        RK.logWarning(RK.LogSection.eHTTP,'get report file failed',`report not available: ${err}`,{ ...H.Helpers.cleanExpressRequest(req) },'HTTP.Route.Report');
         res.status(404).send(JSON.stringify({ success: false, message: 'Report not available' }));
     }
 
+    RK.logInfo(RK.LogSection.eHTTP,'get report file success','report generated successfully',{ ...H.Helpers.cleanExpressRequest(req) },'HTTP.Route.Report');
     res.status(200).send(JSON.stringify({ success: true, message: 'report generated successfully', data: '' }));
 }
 //#endregion

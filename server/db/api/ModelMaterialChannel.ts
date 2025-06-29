@@ -2,8 +2,8 @@
 import { ModelMaterialChannel as ModelMaterialChannelBase, Prisma } from '@prisma/client';
 import { ModelMaterial } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase> implements ModelMaterialChannelBase {
     idModelMaterialChannel!: number;
@@ -71,7 +71,8 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            return false;
         }
     }
 
@@ -98,7 +99,8 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            return false;
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
@@ -109,7 +111,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 where: { idModelMaterialChannel, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialChannel.delete', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
             return false;
         }
     }
@@ -121,7 +123,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyObject<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findUnique({ where: { idModelMaterialChannel, }, }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialChannel.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
             return null;
         }
     }
@@ -133,7 +135,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterial } }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterial', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterial failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
             return null;
         }
     }
@@ -158,7 +160,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 modelMaterialChannelList.push(ModelMaterialChannel.constructFromPrisma(modelMaterialChannelBase));
             return modelMaterialChannelList;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterials', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterials failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
             return null;
         }
     }
@@ -170,7 +172,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterialUVMap } }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterialUVMap failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
             return null;
         }
     }

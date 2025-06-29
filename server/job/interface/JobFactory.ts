@@ -1,7 +1,6 @@
 import { IJobEngine } from './IJobEngine';
 import { JobEngine } from '../impl/NS';
 import { JOB_TYPE } from '../../config';
-// import * as LOG from '../../utils/logger';
 
 export class JobFactory {
     private static instance: IJobEngine | null = null;

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, camelcase */
 import * as fs from 'fs-extra';
 import * as COL from '../../collections/interface/';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import * as L from 'lodash';
 // import { join } from 'path';
 
@@ -279,7 +279,7 @@ function executeTestCreateMDMWorker(ICol: COL.ICollection, edanmdm: COL.EdanMDMC
     test(`Collections: EdanCollection.createEdanMDM ${edanmdm.descriptiveNonRepeating.title.content}`, async () => {
         const edanRecord: COL.EdanRecord | null = await ICol.createEdanMDM(edanmdm, status, publicSearch);
         expect(edanRecord).toBeTruthy();
-        LOG.info(`EdanCollection.test.executeTestCreateMDM created record ${JSON.stringify(edanRecord, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'execute test create MDM','created record',{ edanRecord },'Tests.Collections.EDAN');
 
         if (edanRecord) {
             expect(edanRecord.status).toEqual(status);
@@ -321,7 +321,7 @@ function executeTestCreateEdan3DPackageWorker(ICol: COL.ICollection, path: strin
     test(`Collections: EdanCollection.createEdan3DPackage ${path}, ${scene}`, async () => {
         const edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(path);
         expect(edanRecord).toBeTruthy();
-        LOG.info(`EdanCollection.test.executeTestCreateEdan3DPackage created record ${JSON.stringify(edanRecord, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'create 3D package','created record',{ edanRecord },'Tests.Collections.EDAN');
 
         // if (edanRecord)
         //     expect(edanRecord.content).toMatch(path);
@@ -345,7 +345,7 @@ export async function scrapeEdan(ICol: COL.ICollection, fileName: string, rowSta
         const unitMap: Map<string, number> = new Map<string, number>();
         writeStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
         if (!writeStream)
-            LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
+            RK.logWarning(RK.LogSection.eTEST,'scrape EDAN',`Unable to create writeStream for ${fileName}`,{},'Tests.Collections.EDAN');
 
         for (; rowStart < scrapeEndRecord; ) {
             // run EDAN_SIMUL requests at once:
@@ -358,15 +358,15 @@ export async function scrapeEdan(ICol: COL.ICollection, fileName: string, rowSta
             await Promise.all(promiseArray).then(resultArray => {
                 for (const results of resultArray) {
                     if (!results) {
-                        LOG.info('*** Edan Scrape: query returned no results', LOG.LS.eTEST);
+                        RK.logWarning(RK.LogSection.eTEST,'scrape EDAN','query returned no results',{ fileName },'Tests.Collections.EDAN');
                         continue;
                     }
 
                     if (results.error)
-                        LOG.info(`*** Edan Scrape: encountered error ${results.error}`, LOG.LS.eTEST);
+                        RK.logError(RK.LogSection.eTEST,'scrape EDAN failed',`encountered error ${results.error}`,{ fileName },'Tests.Collections.EDAN');
                     else if (scrapeEndRecord < results.rowCount) {
                         scrapeEndRecord = results.rowCount;
-                        LOG.info(`*** Edan Scrape: Increasing scrape end record to ${scrapeEndRecord}`, LOG.LS.eTEST);
+                        RK.logInfo(RK.LogSection.eTEST,'scrape EDAN',`Increasing scrape end record to ${scrapeEndRecord}`,{ fileName },'Tests.Collections.EDAN');
                     }
 
                     for (const record of results.records) {
@@ -401,7 +401,7 @@ function logUnitMap(unitMap: Map<string, number>, queryNumber: number, resultCou
     logArray.splice(0, 0, `${new Date().toISOString()} Edan Scrape [${QN}]: ${resultCount} Results; Unit Counts:`);
     logArray.push('\n');
 
-    LOG.info(logArray.join('\n'), LOG.LS.eTEST);
+    RK.logWarning(RK.LogSection.eTEST,'log unit map',undefined,{ logArray },'Tests.Collections.EDAN');
 }
 // #endregion
 
@@ -419,7 +419,7 @@ async function scrapeDPOIDs(ICol: COL.ICollection, eTYPE: eTestType, fileName: s
 
     const WS: NodeJS.WritableStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
     if (!WS) {
-        LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'scape DPO id failed',`Unable to create writeStream for ${fileName}`,{},'Tests.Collections.EDAN');
         return;
     }
 
@@ -495,7 +495,7 @@ async function scrapeDPOEdanLists(ICol: COL.ICollection, fileName: string): Prom
 
     const WS: NodeJS.WritableStream = await fs.createWriteStream(fileName, { 'flags': 'a' });
     if (!WS)
-        LOG.info(`Unable to create writeStream for ${fileName}`, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'scape DPO EDAN lists failed',`Unable to create writeStream for ${fileName}`,{},'Tests.Collections.EDAN');
     WS.write('id\tname\tunit\tidentifierPublic\tidentifierCollection\trecords\n');
 
     await handleResultsEdanLists(ICol, WS, 'edanlists:p2b-1601389276209-1602191757227-0', '115', 'SI');
@@ -2452,12 +2452,12 @@ async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.Writable
         // LOG.info(`*** Edan Scrape: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eTEST);
         if (results) {
             if (results.error)
-                LOG.info(`*** Edan Scrape [${id}] ERROR for '${query}': ${results.error}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'EDAN list results failed',H.Helpers.getErrorString(results.error),{ query },'Tests.Collections.EDAN');
 
             for (const record of results.records) {
                 const items = record?.raw?.content?.items;
                 if (!WS)
-                    LOG.info(`EDAN Query(${query}): ${H.Helpers.JSONStringify(record)}`, LOG.LS.eTEST);
+                    RK.logError(RK.LogSection.eTEST,'EDAN list results','no writeable stream',{ query, record },'Tests.Collections.EDAN');
                 else if (items) {
                     for (const item of items) {
                         if (!unitFilter || record.unit == unitFilter)
@@ -2469,7 +2469,8 @@ async function handleResultsEdanLists(ICol: COL.ICollection, WS: NodeJS.Writable
             return true;
         }
     }
-    LOG.error(`*** Edan Scrape [${id}] failed for '${query}'`, LOG.LS.eTEST);
+
+    RK.logError(RK.LogSection.eTEST,'EDAN list results failed','unknown error',{ query },'Tests.Collections.EDAN');
     return false;
 }
 
@@ -2481,7 +2482,7 @@ async function handleResultsWithIDs(ICol: COL.ICollection, query: string, id: st
         // LOG.info(`*** Edan Scrape: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eTEST);
         if (results) {
             if (results.error)
-                LOG.info(`*** Edan Scrape [${id}] ERROR for '${query}': ${results.error}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'results with id failed',H.Helpers.getErrorString(results.error),{ query },'Tests.Collections.EDAN');
 
             for (const record of results.records) {
                 const IDMap: Map<string, string> = new Map<string, string>();
@@ -2511,7 +2512,8 @@ async function handleResultsWithIDs(ICol: COL.ICollection, query: string, id: st
             return true;
         }
     }
-    LOG.error(`*** Edan Scrape [${id}] failed for '${query}'`, LOG.LS.eTEST);
+
+    RK.logError(RK.LogSection.eTEST,'results with id failed',undefined,{ id, query },'Tests.Collections.EDAN');
     return false;
 }
 // #endregion
@@ -2535,18 +2537,19 @@ async function handle3DContentQuery(ICol: COL.ICollection, _WS: NodeJS.WritableS
     for (let retry: number = 1; retry <= 5; retry++) {
         const edanRecord: COL.EdanRecord | null = await ICol.fetchContent(id, url);
         if (edanRecord) {
-            LOG.info(`Content Query ${id ? id : ''}${url ? url : ''}: ${H.Helpers.JSONStringify(edanRecord)}`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'3D content query',`record: ${id ? id : ''}${url ? url : ''}`,{ edanRecord },'Tests.Collections.EDAN');
             const edan3DResources: COL.Edan3DResource[] | undefined = edanRecord?.content?.resources;
             if (edan3DResources) {
                 for (const resource of edan3DResources)
-                    LOG.info(`Content Query ${id ? id : ''}${url ? url : ''} resource: ${H.Helpers.JSONStringify(resource)}`, LOG.LS.eTEST);
+                    RK.logInfo(RK.LogSection.eTEST,'3D content query',`resource: ${id ? id : ''}${url ? url : ''}`,{ resource },'Tests.Collections.EDAN');
             }
             return true;
         }
         if (retry < 5)
             await H.Helpers.sleep(2000); // wait and try again
     }
-    LOG.error(`Content Query ${id ? id : ''}${url ? url : ''} [${queryID}] failed`, LOG.LS.eTEST);
+
+    RK.logError(RK.LogSection.eTEST,'3D content query',`error on: ${id ? id : ''}${url ? url : ''}`,{ queryID },'Tests.Collections.EDAN');
     return false;
 }
 // #endregion

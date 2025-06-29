@@ -15,7 +15,7 @@ module.exports = {
         // '**/tests/collections/*.test.ts',
         // '**/tests/db/**/*.test.ts',
         // '**/tests/graphql/graphql.test.ts',
-        // '**/tests/metadata/*.test.ts'
+        // '**/tests/metadata/*.test.ts',
         // '**/tests/navigation/**/*.test.ts',
         // '**/tests/storage/**/*.test.ts',
         // '**/tests/utils/**/*.test.ts',
@@ -49,6 +49,7 @@ module.exports = {
     ],
     testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/build/'],
     setupFiles: ['<rootDir>/tests/setEnvVars.ts'],
+    setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],
     moduleNameMapper: { '^axios$': require.resolve('axios'), },
     globalTeardown: '<rootDir>/tests/teardown.ts'
 };
