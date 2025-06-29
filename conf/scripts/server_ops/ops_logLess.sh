@@ -1,8 +1,4 @@
 #!/bin/bash
-# Linux Server helper script that opens Packrat's structured JSON logs into LESS
-# Usage:
-#     ops_logLess.sh /3ddigip01/Packrat/Logs                                    // finds the most recent log file to open
-#     ops_logLess.sh /3ddigip01/Packrat/Logs/2024/09/PackratLog_2024-09-26.log  // opens a specific log file
 
 # Function to apply color based on custom log levels
 colorize_level() {
