@@ -4,7 +4,9 @@ import { WorkflowSet, WorkflowStep, WorkflowStepSystemObjectXref } from '..';
 import * as DBC from '../connection';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
+
 
 export class WorkflowConstellation {
     workflow: Workflow | null = null;
@@ -16,27 +18,27 @@ export class WorkflowConstellation {
         const WFC: WorkflowConstellation = new WorkflowConstellation();
         WFC.workflow = await Workflow.fetch(idWorkflow);
         if (!WFC.workflow) {
-            LOG.error(`WorkflowConstellation.fetch failed to retrieve Workflow ${idWorkflow}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch failed',`failed to retrieve Workflow ${idWorkflow}`,{ ...this },'DB.Workflow.Constellation');
             return null;
         }
 
         if (WFC.workflow.idWorkflowSet) {
             WFC.workflowSet = await WorkflowSet.fetch(WFC.workflow.idWorkflowSet); /* istanbul ignore next */
             if (!WFC.workflowSet) {
-                LOG.error(`WorkflowConstellation.fetch failed to retrieve WorkflowSet ${WFC.workflow.idWorkflowSet}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed',`failed to retrieve WorkflowSet ${WFC.workflow.idWorkflowSet}`,{ ...this },'DB.Workflow.Constellation');
                 return null;
             }
         }
 
         WFC.workflowStep = await WorkflowStep.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
         if (!WFC.workflowStep) {
-            LOG.error(`WorkflowConstellation.fetch failed to retrieve WorkflowSteps from workflow ${idWorkflow}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch failed',`failed to retrieve WorkflowSteps from workflow ${idWorkflow}`,{ ...this },'DB.Workflow.Constellation');
             return null;
         }
 
         WFC.workflowStepXref = await WorkflowStepSystemObjectXref.fetchFromWorkflow(idWorkflow); /* istanbul ignore next */
         if (!WFC.workflowStepXref) {
-            LOG.error(`WorkflowConstellation.fetch failed to retrieve WorkflowStepSystemObjectXrefs from workflow ${idWorkflow}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch failed',`failed to retrieve WorkflowStepSystemObjectXrefs from workflow ${idWorkflow}`,{ ...this },'DB.Workflow.Constellation');
             return null;
         }
         return WFC;
@@ -79,7 +81,8 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
+            return false;
         }
     }
 
@@ -101,7 +104,8 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
+            return  false;
         }
     }
 
@@ -112,7 +116,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyObject<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findUnique({ where: { idWorkflow, }, }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Workflow.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }
@@ -124,7 +128,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idProject } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Workflow.fetchFromProject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Project failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }
@@ -136,20 +140,20 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idUserInitiator } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Workflow.fetchFromUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }
 
     static async fetchFromWorkflowType(eWorkType: COMMON.eVocabularyID): Promise<Workflow[] | null> {
         if (!await CACHE.VocabularyCache.isVocabularyInSet(eWorkType, COMMON.eVocabularySetID.eWorkflowType)) {
-            LOG.error(`Workflow.fetchFromWorkflowType ${COMMON.eVocabularyID[eWorkType]} is not from the correct vocabulary set`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from WorkflowType failed',`${COMMON.eVocabularyID[eWorkType]} is not from the correct vocabulary set`,{ ...this },'DB.Workflow');
             return null;
         }
 
         const idVWorkflowType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eWorkType); /* istanbul ignore next */
         if (!idVWorkflowType) {
-            LOG.error(`Workflow.fetchFromWorkflowType ${eWorkType} is missing from Vocabulary`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from WorkflowType failed',`${eWorkType} is missing from Vocabulary`,{ ...this },'DB.Workflow');
             return null;
         }
 
@@ -157,7 +161,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idVWorkflowType } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Workflow.fetchFromWorkflowType', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from WorkflowType failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }
@@ -169,7 +173,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
             return DBC.CopyArray<WorkflowBase, Workflow>(
                 await DBC.DBConnection.prisma.workflow.findMany({ where: { idWorkflowSet } }), Workflow);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Workflow.fetchFromWorkflowSet', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from WorkflowSet failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }
@@ -183,7 +187,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                 JOIN Workflow AS w ON w.idWorkflow = wStep.idWorkflow
                 WHERE jRun.idJobRun = ${idJobRun};`,Workflow);
         } catch (error) {
-            LOG.error('DBAPI.Workflow.fetchFromJobRun', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from JobRun failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }
@@ -200,7 +204,7 @@ export class Workflow extends DBC.DBObject<WorkflowBase> implements WorkflowBase
                 JOIN Workflow AS w ON wStep.idWorkflow = w.idWorkflow
                 WHERE (wStep.State = 5 ${(includeCancelled?'OR wStep.State = 6 ':'')}${includeUninitialized?'OR wStep.State = 0':''});`,Workflow);
         } catch (error) {
-            LOG.error('DBAPI.Workflow.fetchAllWithError', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all with error failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow');
             return null;
         }
     }

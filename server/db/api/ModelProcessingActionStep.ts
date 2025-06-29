@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { ModelProcessingActionStep as ModelProcessingActionStepBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActionStepBase> implements ModelProcessingActionStepBase {
     idModelProcessingActionStep!: number;
@@ -30,7 +31,8 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
+            return false;
         }
     }
 
@@ -46,7 +48,8 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
+            return false;
         }
     }
 
@@ -57,7 +60,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return DBC.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBC.DBConnection.prisma.modelProcessingActionStep.findUnique({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelProcessingActionStep.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
             return null;
         }
     }
@@ -69,7 +72,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return DBC.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBC.DBConnection.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
             return null;
         }
     }

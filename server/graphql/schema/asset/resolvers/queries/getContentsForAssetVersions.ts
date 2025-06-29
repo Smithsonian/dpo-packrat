@@ -2,7 +2,7 @@ import { QueryGetContentsForAssetVersionsArgs, GetContentsForAssetVersionsResult
 import { Parent, Context } from '../../../../../types/resolvers';
 import { AssetStorageAdapter } from '../../../../../storage/interface';
 import { AssetVersion } from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getContentsForAssetVersions(_: Parent, args: QueryGetContentsForAssetVersionsArgs, _context: Context): Promise<GetContentsForAssetVersionsResult> {
     const { idAssetVersions } = args.input;
@@ -13,7 +13,7 @@ export default async function getContentsForAssetVersions(_: Parent, args: Query
         if (assetVersion)
             result.push(await AssetStorageAdapter.getAssetVersionContents(assetVersion));
         else
-            LOG.error(`GraphQL getContentsForAssetVersions unable to load AssetVersion from ID ${idAssetVersion}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'get contents for asset versions failed',`unable to load AssetVersion from ID ${idAssetVersion}`,{},'GraphQL.Asset');
     }
 
     // LOG.info(`GraphQL getContentsForAssetVersions(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`, LOG.LS.eGQL);

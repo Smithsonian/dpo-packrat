@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { AccessRoleAccessActionXref as AccessRoleAccessActionXrefBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessActionXrefBase> implements AccessRoleAccessActionXrefBase {
     idAccessRoleAccessActionXref!: number;
@@ -28,7 +29,8 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Role.Xref');
+            return false;
         }
     }
 
@@ -43,7 +45,8 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Role.Xref');
+            return false;
         }
     }
 
@@ -54,7 +57,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
             return DBC.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
                 await DBC.DBConnection.prisma.accessRoleAccessActionXref.findUnique({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRoleAccessActionXref.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessRoleAccessActionXref, ...this },'DB.Access.Role.Xref');
             return null;
         }
     }

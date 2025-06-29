@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { Sentinel as SentinelBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase {
     idSentinel!: number;
@@ -29,7 +30,8 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
+            return false;
         }
     }
 
@@ -45,7 +47,8 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
+            return  false;
         }
     }
 
@@ -56,7 +59,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
             return DBC.CopyObject<SentinelBase, Sentinel>(
                 await DBC.DBConnection.prisma.sentinel.findUnique({ where: { idSentinel, }, }), Sentinel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Sentinel.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
             return null;
         }
     }
@@ -66,7 +69,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
             return DBC.CopyArray<SentinelBase, Sentinel>(
                 await DBC.DBConnection.prisma.sentinel.findMany({ where: { URLBase, }, }), Sentinel);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Sentinel.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by URL base failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
             return null;
         }
     }

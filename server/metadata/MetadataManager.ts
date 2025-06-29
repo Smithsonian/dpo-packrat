@@ -2,7 +2,7 @@ import { MetadataExtractor } from './MetadataExtractor';
 import * as DBAPI from '../db';
 import * as NAV from '../navigation/interface';
 import * as H from '../utils/helpers';
-import * as LOG from '../utils/logger';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 export class MetadataManager {
     static async persistExtractor(idSystemObject: number, idSystemObjectParent: number, extractor: MetadataExtractor, idUser: number | null): Promise<H.IOResults> {
@@ -10,7 +10,7 @@ export class MetadataManager {
         if (metadataCount === 0)
             return { success: true };
 
-        LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) persisting ${metadataCount} key/value pairs`, LOG.LS.eMETA);
+        RK.logInfo(RK.LogSection.eMETA,'persist extractor',`persisting ${metadataCount} key/value pairs`,{ idSystemObject, idSystemObjectParent, metadataCount },'Metadata.Manager');
 
         /* istanbul ignore next */
         const idVMetadataSource: number | null = await extractor.idVMetadataSource() ?? null;
@@ -34,7 +34,7 @@ export class MetadataManager {
 
         if (!await DBAPI.Metadata.createMany(metadataList)) {
             const error: string = `MetadataManager.persistExtractor failed creating metadata ${JSON.stringify(metadataList, H.Helpers.saferStringify)}`;
-            LOG.error(error, LOG.LS.eMETA);
+            RK.logError(RK.LogSection.eMETA,'persist extractor failed','failed creating metadata',{ metadataList },'Metadata.Manager');
             return { success: false, error };
         }
         // LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) wrote ${metadataCount} DB Records`, LOG.LS.eMETA);
@@ -48,7 +48,7 @@ export class MetadataManager {
             return { success, error: success ? '' : /* istanbul ignore next */ 'IIndexer.indexMetadata failed' };
         } else {
             const error: string = 'MetadataManager.persistExtractor unable to fetch navigation indexer';
-            LOG.error(error, LOG.LS.eMETA);
+            RK.logError(RK.LogSection.eMETA,'persist extractor failed','unable to fetch navigation indexer',{ metadataList },'Metadata.Manager');
             return { success: false, error };
         }
     }

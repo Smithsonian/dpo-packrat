@@ -1,17 +1,22 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as DBAPI from '../db';
+import path from 'path';
 import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
-import { Logger as LOG, LogSection } from './logger/log';
+import { Logger as LOG, LogSection, LogLevel  } from './logger/log';
 import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
 
 // temp definition for where IOResults will be
-type IOResults = {
+export type IOResults = {
     success: boolean,
     message: string,
     data?: any
 };
+export enum SubSystem {
+    LOGGER = 'logger',
+    NOTIFY_EMAIL = 'notify email',
+    NOTIFY_SLACK = 'notify slack'
+}
 
 // cache for individual group IDs and emails
 type GroupConfig = {
@@ -23,7 +28,9 @@ type GroupConfig = {
 
 export class RecordKeeper {
 
+    static SubSystem = SubSystem;
     static LogSection = LogSection;
+    static LogLevel = LogLevel;
     static NotifyGroup = NotifyUserGroup;
     static NotifyType = NotifyType;
     static SlackChannel = SlackChannel;
@@ -35,112 +42,155 @@ export class RecordKeeper {
         slackAdmin: undefined,
         slackAll: undefined,
     };
+    private static systemConfig: { logger: boolean, notifyEmail: boolean, notifySlack: boolean } = { logger: false, notifyEmail: false, notifySlack: false };
 
-    static async configure(): Promise<IOResults> {
+    static async initialize(system: SubSystem): Promise<IOResults> {
 
-        let targetRate: number = Config.log.targetRate;   // targeted posts per second (100-500)
-        let burstRate: number = targetRate * 5;           // target rate when in burst mode and playing catchup
-        let burstThreshold: number = burstRate;           // when queue is bigger than this size, trigger 'burst mode'
+        const environment: ENVIRONMENT_TYPE = Config.environment.type;
+
+        let targetRate: number = Config.log.targetRate;     // targeted posts per second (100-500)
+        let burstRate: number = targetRate * 5;             // target rate when in burst mode and playing catchup
+        let burstThreshold: number = burstRate;             // when queue is bigger than this size, trigger 'burst mode'
 
         //#region CONFIG:LOGGER
-        // get our log path from the config
-        const environment: ENVIRONMENT_TYPE = Config.environment.type;
-        const logPath: string = Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs';
+        if(system===SubSystem.LOGGER) {
+            // get our log path from the config
+            const logPath: string = path.resolve(Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs');
 
-        // our default Logger configuration options
-        const useRateManager: boolean = true;             // do we manage our log output for greater consistency
-        targetRate = Config.log.targetRate;   // 100-500/sec
-        burstRate = targetRate * 2;
-        burstThreshold = burstRate;
+            // our default Logger configuration options
+            const useRateManager: boolean = true;           // do we manage our log output for greater consistency
+            targetRate = Config.log.targetRate;             // 100-500/sec
+            burstRate = targetRate * 2;
+            burstThreshold = burstRate;
 
-        // initialize logger sub-system
-        const logResults = LOG.configure(logPath, environment, useRateManager, targetRate, burstRate, burstThreshold);
-        if(logResults.success===false)
-            return logResults;
-        this.logInfo(LogSection.eSYS, logResults.message, { environment, path: logPath, useRateManager, targetRate, burstRate, burstThreshold }, 'Recordkeeper');
+            // initialize logger sub-system
+            const logResults = LOG.configure(logPath, environment, useRateManager, targetRate, burstRate, burstThreshold);
+            if(logResults.success===false) {
+                // RecordKeeper.logFallback(RecordKeeper.LogSection.eSYS, 'system config failed', `Logger failed: ${logResults.message}`, { environment, path: logPath, useRateManager, targetRate, burstRate, burstThreshold }, 'Recordkeeper');
+                RecordKeeper.systemConfig.logger = false;
+                return logResults;
+            }
+
+            RecordKeeper.systemConfig.logger = true;
+            return { success: true, message: 'Logger initialized ', data: { path: logPath, useRateManager, targetRate, burstRate, burstThreshold } };
+        }
         //#endregion
 
         //#region CONFIG:NOTIFY:EMAIL
-        targetRate = 1;   // sending too many triggers spam filters on network, delays are acceptable
-        burstRate = 5;
-        burstThreshold = 10;
+        if(system===SubSystem.NOTIFY_EMAIL) {
+            targetRate = 1;   // sending too many triggers spam filters on network, delays are acceptable
+            burstRate = 5;
+            burstThreshold = 10;
 
-        // update our default email to always 'dev' since something went wrong
-        RecordKeeper.defaultEmail = ['packrat-dev@si.edu'];
+            // update our default email to always 'dev' since something went wrong
+            RecordKeeper.defaultEmail = ['packrat-dev@si.edu'];
 
-        const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
-        if(emailResults.success===false)
-            return emailResults;
-        this.logInfo(LogSection.eSYS, emailResults.message, { environment, ...emailResults.data }, 'Recordkeeper');
+            RecordKeeper.logDebug(LogSection.eSYS,'system initialize','configuring email notifications',{ targetRate, burstRate, burstThreshold },'RecordKeeper');
 
-        // get our email addresses from the system. these can be cached because they will be
-        // the same for all users and sessions.
-        this.notifyGroupConfig.emailAdmin = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ADMIN) ?? this.defaultEmail;
-        this.notifyGroupConfig.emailAll = await this.getEmailsFromGroup(NotifyUserGroup.EMAIL_ALL) ?? this.defaultEmail;
+            const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
+            if(emailResults.success===false) {
+                RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'Recordkeeper');
+                RecordKeeper.systemConfig.notifyEmail = false;
+                return emailResults;
+            }
+            // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', emailResults.message, { environment, ...emailResults.data }, 'Recordkeeper');
+
+            //initialize our group emails to the default. expecting them to be set externally during system initialization
+            RecordKeeper.notifyGroupConfig.emailAdmin = RecordKeeper.defaultEmail;
+            RecordKeeper.notifyGroupConfig.emailAll = RecordKeeper.defaultEmail;
+
+            RecordKeeper.systemConfig.notifyEmail = true;
+            return { success: true, message: 'Email notifications configured', data: { targetRate, burstRate, burstThreshold } };
+        }
         //#endregion
 
         //#region CONFIG:NOTIFY:SLACK
-        // Slack API limits throughput to 1 message/sec. Not using burst mode here
-        targetRate = 1;
-        const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,targetRate);
-        if(slackResults.success===false)
-            return slackResults;
-        this.logInfo(LogSection.eSYS, slackResults.message, { environment, ...slackResults.data }, 'Recordkeeper');
+        if(system===SubSystem.NOTIFY_SLACK) {
+            // Slack API limits throughput to 1 message/sec. Not using burst mode here
+            targetRate = 1;
 
-        // get our slack addresses from the system. they are cached as they will be the same
-        // for all users and sessions.
-        this.notifyGroupConfig.slackAdmin = await this.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ADMIN);
-        this.notifyGroupConfig.slackAll = await this.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ALL);
+            RecordKeeper.logDebug(LogSection.eSYS,'system initialize','configuring slack notifications',{ targetRate, burstRate, burstThreshold },'RecordKeeper');
+
+            const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,targetRate);
+            if(slackResults.success===false) {
+                RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'Recordkeeper');
+                RecordKeeper.systemConfig.notifySlack = false;
+                return slackResults;
+            }
+            // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', slackResults.message, { environment, ...slackResults.data }, 'Recordkeeper');
+
+            // get our slack addresses from the system. they are cached as they will be the same
+            // for all users and sessions.
+            RecordKeeper.notifyGroupConfig.slackAdmin = await RecordKeeper.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ADMIN);
+            RecordKeeper.notifyGroupConfig.slackAll = await RecordKeeper.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ALL);
+
+            RecordKeeper.systemConfig.notifySlack = true;
+            return { success: true, message: 'Slack notifications configured', data: { targetRate, burstRate, burstThreshold } };
+        }
         //#endregion
 
-        return { success: true, message: 'configured record keeper' };
+        return { success: false, message: `cannot configure system. unsupported system: ${system}` };
     }
-    static cleanup(): IOResults {
+
+    static async shutdown(): Promise<IOResults> {
+
+        await LOG.shutdown();
+
         return { success: true, message: 'record keeper cleaned up' };
     }
-    private static getContext(): { idUser: number, idRequest: number } {
+    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null } {
         // get our user and request ids from the local store
         // TEST: does it maintain store context since static and not async
         const LS: LocalStore | undefined = ASL?.getStore();
         if(!LS)
-            return { idUser: -1, idRequest: -1 };
+            return { idUser: -1, idRequest: -1, userEmail: null };
 
         // if no user, return an error id. otherwise, return what we got
-        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest };
+        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail };
     }
 
     //#region LOG
     // Log routines for specific levels
-    static async logCritical(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = this.getContext();
-        return LOG.critical(sec,message,data,caller,audit,idUser,idRequest);
+    static async logCritical(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.critical(sec,message,reason,data,caller,audit,idUser,idRequest);
     }
-    static async logError(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = this.getContext();
-        return LOG.error(sec,message,data,caller,audit,idUser,idRequest);
+    static async logError(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.error(sec,message,reason,data,caller,audit,idUser,idRequest);
     }
-    static async logWarning(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = this.getContext();
-        return LOG.warning(sec,message,data,caller,audit,idUser,idRequest);
+    static async logWarning(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.warning(sec,message,reason,data,caller,audit,idUser,idRequest);
     }
-    static async logInfo(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = this.getContext();
-        return LOG.info(sec,message,data,caller,audit,idUser,idRequest);
+    static async logInfo(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.info(sec,message,reason,data,caller,audit,idUser,idRequest);
     }
-    static async logDebug(sec: LogSection, message: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = this.getContext();
-        return LOG.debug(sec,message,data,caller,audit,idUser,idRequest);
+    static async logDebug(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.debug(sec,message,reason,data,caller,audit,idUser,idRequest);
+    }
+    static async logPerformance(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
+        const { idUser, idRequest } = RecordKeeper.getContext();
+        return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest);
+    }
+    static logFallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
+        LOG.fallback(level,sec,message,reason,data,caller);
     }
 
     // profiler functions
     // Usage: call 'profile' with a unique label and any needed metadata. This creates/starts a timer.
     //        to stop the timer and log the result, call profileEnd with the same label used to create it.
     static async profile(label: string, sec: LogSection, message: string, data?: any, caller?: string): Promise<IOResults> {
-        const { idUser, idRequest } = this.getContext();
+        const { idUser, idRequest } = RecordKeeper.getContext();
         return LOG.profile(label, sec, message, data, caller, idUser, idRequest);
     }
     static async profileEnd(label: string): Promise<IOResults> {
         return LOG.profileEnd(label);
+    }
+    static async profileUpdate(label: string, data: any): Promise<IOResults> {
+        return LOG.profileUpdate(label, data);
     }
 
     // stats and utilities
@@ -149,6 +199,9 @@ export class RecordKeeper {
     }
     static async logTest(numLogs: number): Promise<IOResults> {
         return LOG.testLogs(numLogs);
+    }
+    static async logWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return LOG.waitForQueueToDrain(timeout);
     }
     //#endregion
 
@@ -184,59 +237,51 @@ export class RecordKeeper {
     }
 
     // emails
+    static async setEmailsForGroup(group: NotifyUserGroup, emails: string[]): Promise<IOResults> {
+
+        switch(group) {
+            case NotifyUserGroup.EMAIL_ALL: {
+                RecordKeeper.notifyGroupConfig.emailAll = (emails.length>0) ? [...emails] : RecordKeeper.defaultEmail;
+            } break;
+
+            case NotifyUserGroup.EMAIL_ADMIN: {
+                RecordKeeper.notifyGroupConfig.emailAdmin = (emails.length>0) ? [...emails] : RecordKeeper.defaultEmail;
+            } break;
+        }
+
+        return { success: true, message: `${emails.length} emails set for group: ${this.NotifyGroup[group]}` };
+    }
     private static async getEmailsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
 
         switch(group) {
 
             case NotifyUserGroup.EMAIL_ALL: {
                 // see if we already initialized this
-                if(this.notifyGroupConfig.emailAll.length>0 && forceUpdate===true)
-                    return this.notifyGroupConfig.emailAll;
-
-                // fetch all users
-                const allUsers: DBAPI.User[] | null = await DBAPI.User.fetchUserList('',DBAPI.eUserStatus.eActive);
-                if(!allUsers || allUsers.length===0)
-                    return this.defaultEmail;
-
-                // build array of email addresses but only for those active
-                const allEmails: string[] = allUsers.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
-                this.notifyGroupConfig.emailAll = [...allEmails];
-
-                // otherwise, grab all active Users from DB and their emails
-                return this.notifyGroupConfig.emailAll;
+                if(RecordKeeper.notifyGroupConfig.emailAll.length>0 && forceUpdate===true)
+                    return RecordKeeper.notifyGroupConfig.emailAll;
+                else
+                    return RecordKeeper.defaultEmail;
             }
 
             case NotifyUserGroup.EMAIL_ADMIN: {
 
                 // see if we already initialized this
-                if(this.notifyGroupConfig.emailAdmin.length>0 && forceUpdate===true)
-                    return this.notifyGroupConfig.emailAdmin;
-
-                // grab all admin users
-                const adminIDs: number[] = Config.auth.users.admin;
-                const adminUsers: DBAPI.User[] | null = await DBAPI.User.fetchByIDs(adminIDs);
-                if(!adminUsers || adminUsers.length===0)
-                    return this.defaultEmail;
-
-                // build array of email addresses but only for those active
-                const adminEmails: string[] = adminUsers.filter(u => u.Active && u.WorkflowNotificationTime).map(u => u.EmailAddress);
-                this.notifyGroupConfig.emailAdmin = [...adminEmails];
-
-                // get ids from Config and then get their emails
-                return this.notifyGroupConfig.emailAdmin;
+                if(RecordKeeper.notifyGroupConfig.emailAdmin.length>0 && forceUpdate===true)
+                    return RecordKeeper.notifyGroupConfig.emailAdmin;
+                else
+                    return RecordKeeper.defaultEmail;
             }
 
             case NotifyUserGroup.EMAIL_USER: {
-                const { idUser } = this.getContext();
-                const user: DBAPI.User | null = await DBAPI.User.fetch(idUser);
+                const { idUser, userEmail } = RecordKeeper.getContext();
 
                 // if no notification settings or user, nothing so email not sent
-                if(!user || !user.WorkflowNotificationTime) {
-                    this.logCritical(LogSection.eSYS,'email user not found',{ idUser, user },'RecordKeeper.getEmailsFromGroup');
-                    return [];
+                if(!idUser || !userEmail) {
+                    RecordKeeper.logError(LogSection.eSYS,'get user failed','user or email does not exist', { idUser, userEmail },'RecordKeeper.getEmailsFromGroup');
+                    return RecordKeeper.defaultEmail;
                 }
 
-                return [user.EmailAddress];
+                return [userEmail];
             }
         }
 
@@ -250,7 +295,7 @@ export class RecordKeeper {
             message: subject,
             detailsMessage: body,
             startDate: startDate ?? new Date(),
-            sendTo: await this.getEmailsFromGroup(group)
+            sendTo: await RecordKeeper.getEmailsFromGroup(group)
         };
 
         // our optional elements
@@ -263,10 +308,11 @@ export class RecordKeeper {
 
         // send our message out.
         // we await the result so we can catch and audit the failure
-        this.logDebug(LogSection.eSYS,'sending email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
+        RecordKeeper.logDebug(LogSection.eSYS,'sending email attempt',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
         const emailResult = await NOTIFY.sendEmailMessage(params);
         if(emailResult.success===false)
-            this.logError(LogSection.eSYS,'failed to send email',{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
+            RecordKeeper.logError(LogSection.eSYS,'sending email failed',emailResult.message,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
+        RecordKeeper.logInfo(LogSection.eSYS,'sending email success',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
 
         // return the results
         return emailResult;
@@ -279,15 +325,19 @@ export class RecordKeeper {
 
         // send our email but also log it for auditing
         // we wait for results so we can log the failure
-        this.logDebug(LogSection.eSYS,'sending raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
+        RecordKeeper.logDebug(LogSection.eSYS,'sending email attempt',undefined,{ sendTo },'RecordKeeper.sendEmailRaw',true);
         const emailResult = await NOTIFY.sendEmailMessageRaw(type, sendTo, subject, textBody, htmlBody);
         if(emailResult.success===false)
-            this.logError(LogSection.eSYS,'failed to send raw email',{ sendTo },'RecordKeeper.sendEmailRaw',true);
+            RecordKeeper.logError(LogSection.eSYS,'sending email failed',emailResult.message,{ sendTo },'RecordKeeper.sendEmailRaw',true);
+        RecordKeeper.logInfo(LogSection.eSYS,'sending email success',undefined,{ sendTo },'RecordKeeper.sendEmailRaw',true);
 
         return emailResult;
     }
     static async emailTest(numEmails: number): Promise<IOResults> {
         return NOTIFY.testEmail(numEmails);
+    }
+    static async emailWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return NOTIFY.waitEmptyEmailQueue(timeout);
     }
 
     // slack
@@ -296,8 +346,8 @@ export class RecordKeeper {
 
             case NotifyUserGroup.SLACK_ALL: {
                 // see if we already initialized this
-                if(this.notifyGroupConfig.slackAll && this.notifyGroupConfig.slackAll.length>0 && forceUpdate===true)
-                    return this.notifyGroupConfig.slackAll;
+                if(RecordKeeper.notifyGroupConfig.slackAll && RecordKeeper.notifyGroupConfig.slackAll.length>0 && forceUpdate===true)
+                    return RecordKeeper.notifyGroupConfig.slackAll;
 
                 // otherwise, grab all active Users from DB and their emails
                 return ['everyone'];
@@ -305,15 +355,15 @@ export class RecordKeeper {
 
             case NotifyUserGroup.SLACK_ADMIN: {
                 // see if we already initialized this
-                if(this.notifyGroupConfig.slackAdmin && this.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
-                    return this.notifyGroupConfig.slackAdmin;
+                if(RecordKeeper.notifyGroupConfig.slackAdmin && RecordKeeper.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
+                    return RecordKeeper.notifyGroupConfig.slackAdmin;
 
                 // get ids from Config and then get their emails
                 return ['ericmaslowski'];
             }
 
             case NotifyUserGroup.SLACK_USER: {
-                // const { idUser } = this.getContext();
+                // const { idUser } = RecordKeeper.getContext();
                 // TODO: from current user id
                 return ['undefined'];
             }
@@ -335,10 +385,11 @@ export class RecordKeeper {
 
         // send our message out.
         // we await the result so we can catch the failure.
-        RecordKeeper.logDebug(LogSection.eSYS,'sending slack message',{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+        RecordKeeper.logDebug(LogSection.eSYS,'sending slack attempt',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
         const slackResult = await NOTIFY.sendSlackMessage(params,channel);
         if(slackResult.success===false)
-            RecordKeeper.logError(LogSection.eSYS,'failed to send slack message',{ error: slackResult.data.error, sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+            RecordKeeper.logError(LogSection.eSYS,'sending slack failed',slackResult.message,{ error: slackResult.data.error, sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+        RecordKeeper.logInfo(LogSection.eSYS,'sending slack success',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
 
         // return the results
         return slackResult;
@@ -346,9 +397,9 @@ export class RecordKeeper {
     private static async clearSlackChannel(channel?: SlackChannel): Promise<IOResults> {
         const clearResult = await NOTIFY.clearSlackChannel(channel);
         if(clearResult.success===false)
-            RecordKeeper.logDebug(LogSection.eSYS, 'failed to clear Slack channel', { error: clearResult.data.error }, 'RecordKeeper.clearSlackChannel' );
+            RecordKeeper.logDebug(LogSection.eSYS, 'clear slack channel failed', clearResult.message, { error: clearResult.data.error }, 'RecordKeeper.clearSlackChannel' );
         else
-            RecordKeeper.logDebug(LogSection.eSYS, 'cleared Slack channel', { channel: clearResult.data.channel, count: clearResult.data.count }, 'RecordKeeper.clearSlackChannel');
+            RecordKeeper.logDebug(LogSection.eSYS, 'clear slack channel success', undefined, { channel: clearResult.data.channel, count: clearResult.data.count }, 'RecordKeeper.clearSlackChannel');
 
         return clearResult;
     }
@@ -358,6 +409,117 @@ export class RecordKeeper {
             await RecordKeeper.clearSlackChannel(channel);
 
         return NOTIFY.testSlack(numMessages,channel);
+    }
+    static async slackWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return NOTIFY.waitEmptySlackQueue(timeout);
+    }
+    //#endregion
+
+    //#region UTILITY
+    static convertResults(src: any, message?: string, data?: any): IOResults {
+        if(!src)
+            return { success: false, message: 'invalid conversion', data: src };
+
+        const result: IOResults = {
+            success: src?.success ?? false,
+            message: message ?? src.message ?? 'unknown message',
+            data: data ?? src?.data ?? undefined
+        };
+
+        // if we have an error message prepend it to the data property
+        if(src.error)
+            result.data = { reason: src.error, ...data };
+
+        return result;
+    }
+    static async drainAllQueues(timeout: number = 10000): Promise<IOResults> {
+
+        const errors: string[] = [];
+
+        let result = await RecordKeeper.logWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`log: ${result.message}`);
+
+        result = await RecordKeeper.emailWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`email: ${result.message}`);
+
+        result = await RecordKeeper.slackWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`slack: ${result.message}`);
+
+        if(errors.length === 0)
+            return { success: true, message: 'all queues drained' };
+        else
+            return { success: false, message: 'cannot drain all queues', data: { errors } };
+    }
+    static getStatus(system: SubSystem, doLog: boolean = true): IOResults {
+
+        switch(system) {
+            case SubSystem.LOGGER: {
+                const logStatus = LOG.getStatus();
+
+                if(!logStatus.success || !logStatus.data || !logStatus.data.isActive) {
+                    if(doLog)
+                        RecordKeeper.logFallback(LogLevel.ERROR,LogSection.eSYS,'Logger status','system not available',{},'RecordKeeper');
+                    return RecordKeeper.convertResults(logStatus);
+                }
+
+                if(logStatus.data.numTransports<=0) {
+                    if(doLog)
+                        RecordKeeper.logInfo(LogSection.eSYS,'Logger status','no writeable transports',{ path: logStatus.data.path, transports: logStatus.data.transports },'RecordKeeper');
+                    return RecordKeeper.convertResults(logStatus);
+                }
+
+                // TODO: notices if high backpressure
+
+                // output status
+                if(doLog)
+                    RecordKeeper.logPerformance(LogSection.eSYS,'Logger status',undefined,logStatus.data,'RecordKeeper');
+                return RecordKeeper.convertResults(logStatus);
+            }
+
+            case SubSystem.NOTIFY_EMAIL: {
+                const emailStatus = NOTIFY.getEmailStatus();
+
+                if(!emailStatus.success || !emailStatus.data || !emailStatus.data.isActive) {
+                    if(doLog)
+                        RecordKeeper.logError(LogSection.eSYS,'Email status','system not available',{},'RecordKeeper');
+                    return RecordKeeper.convertResults(emailStatus);
+                }
+
+                // TODO: notices if high backpressure
+
+                // output status
+                if(doLog)
+                    RecordKeeper.logPerformance(LogSection.eSYS,'Email status',undefined,emailStatus.data,'RecordKeeper');
+                return RecordKeeper.convertResults(emailStatus);
+            }
+
+            case SubSystem.NOTIFY_SLACK: {
+                const slackStatus = NOTIFY.getSlackStatus();
+
+                if(!slackStatus.success || !slackStatus.data || !slackStatus.data.isActive) {
+                    if(doLog)
+                        RecordKeeper.logError(LogSection.eSYS,'Slack status','system not available',{},'RecordKeeper');
+                    return RecordKeeper.convertResults(slackStatus);
+                }
+
+                // TODO: notices if high backpressure
+
+                // output status
+                if(doLog)
+                    RecordKeeper.logPerformance(LogSection.eSYS,'Slack status',undefined,slackStatus.data,'RecordKeeper');
+                return RecordKeeper.convertResults(slackStatus);
+            } break;
+        }
+
+        return { success: false, message: 'invalid status request' };
+    }
+    static checkStatus(intervalMs: number): void {
+        setInterval(() => {
+            const result = RecordKeeper.getStatus(SubSystem.LOGGER, true);
+            // console.log(`>>>> checkStatus interval (${result.data.queueSize})`);
+            if(!result.success)
+                RecordKeeper.logError(LogSection.eSYS,'check status failed',result.message,result.data,'RecordKeeper');
+        }, intervalMs);
     }
     //#endregion
 }

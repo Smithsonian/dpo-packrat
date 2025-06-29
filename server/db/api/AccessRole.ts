@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { AccessRole as AccessRoleBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRoleBase {
     idAccessRole!: number;
@@ -22,7 +23,8 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Role');
+            return false;
         }
     }
 
@@ -34,7 +36,8 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
                 data: { Name, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Role');
+            return false;
         }
     }
 
@@ -45,7 +48,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
             return DBC.CopyObject<AccessRoleBase, AccessRole>(
                 await DBC.DBConnection.prisma.accessRole.findUnique({ where: { idAccessRole, }, }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRole.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessRole, ...this },'DB.Access.Role');
             return null;
         }
     }
@@ -63,7 +66,7 @@ export class AccessRole extends DBC.DBObject<AccessRoleBase> implements AccessRo
                     },
                 }), AccessRole);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessRole.fetchFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ idAccessAction, ...this },'DB.Access.Role');
             return null;
         }
     }

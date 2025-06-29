@@ -1,8 +1,6 @@
 // import {  Unit, Project, Subject, Item, Actor, Asset, AssetVersion, CaptureData, IntermediaryFile, Model, ProjectDocumentation, Scene, Stakeholder, SystemObject } from '../..';
 import { SystemObjectIDType } from '../..';
 import * as COMMON from '@dpo-packrat/common';
-// import * as LOG from '../../../utils/logger';
-// import * as H from '../../../utils/helpers';
 // import * as CACHE from '../../../cache';
 
 export enum eApplyGraphStateDirection {

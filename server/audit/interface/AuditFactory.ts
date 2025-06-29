@@ -5,7 +5,6 @@ import { Config, AUDIT_TYPE } from '../../config';
 
 import { ObjectIDAndType } from '../../db/api/ObjectType';
 import { eEventKey } from '../../event/interface/EventEnums';
-// import * as LOG from '../../utils/logger';
 
 export class AuditFactory {
     private static instance: IAuditEngine | null = null;

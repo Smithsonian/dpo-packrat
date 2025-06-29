@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../../../db';
-// import * as LOG from '../../../../../utils/logger';
 import * as H from '../../../../../utils/helpers';
 import { RouteBuilder } from '../../../../../http/routes/routeBuilder';
 import { AssetGridDetailBase, ColumnObject, LinkObject } from './AssetGridCommon';

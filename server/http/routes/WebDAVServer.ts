@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
-import * as LOG from '../../utils/logger';
 import * as STORE from '../../storage/interface';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
+import * as H from '../../utils/helpers';
 import { BufferStream } from '../../utils/bufferStream';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL, ASR, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
-
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { Readable, Writable } from 'stream';
 
 import { v2 as webdav } from 'webdav-server';
@@ -54,7 +54,7 @@ export class WebDAVServer {
             if (success)
                 this.WDFS = WDFS;
             else {
-                LOG.info('WebDAVServer.initializeFileSystem failed to set WebDAV file system', LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'initialize file system failed','cannot set WebDAV file system',{},'HTTP.Route.WebDAV');
                 ret = false;
             }
         });
@@ -70,12 +70,12 @@ export class WebDAVServer {
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
-            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} START`, LOG.LS.eHTTP);
+            RK.logDebug(RK.LogSection.eHTTP,'before request',`${ctx.request.method} ${ctx.request.url} start`,{},'HTTP.Route.WebDAV');
             next();
         });
         this.server.afterRequest((ctx, next) => {
             // Display the method, the URI, the returned status code and the returned message
-            LOG.info(`WEBDAV ${ctx.request.method} ${ctx.request.url} END ${ctx.response.statusCode} ${ctx.response.statusMessage}`, LOG.LS.eHTTP);
+            RK.logInfo(RK.LogSection.eHTTP,'request',`${ctx.request.method} ${ctx.request.url}`,{ statusCode: ctx.response.statusCode, statusText: ctx.response.statusMessage, writeable: ctx.response.writable },'HTTP.Route.WebDAV');
             next();
         });
     }
@@ -92,14 +92,14 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
             const idUser: number | undefined | null = LS?.idUser;
             const user: DBAPI.User | undefined = idUser ? await CACHE.UserCache.getUser(idUser) : undefined;
             if (user) {
-                // LOG.info(`WEBDAV ${ctx.request.url} authenticated for UserID ${user.idUser}`, LOG.LS.eHTTP);
+                RK.logInfo(RK.LogSection.eHTTP,'get user','authenticated for user',{ idUser: user.idUser, name: user.Name },'HTTP.Route.WebDAV');
                 // @ts-ignore: ts(2345)
                 callback(null, { uid: user.idUser.toString(), username: user.Name });
                 return;
             }
         }
 
-        LOG.error(`WEBDAV ${ctx.request.url} not authenticated`, LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'ask for authentication failed',`${ctx.request.url} not authenticated`,{},'HTTP.Route.WebDAV');
         AuditFactory.audit({ url: ctx.request.url, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
         callback(new Error('Not Authenticated'), { uid: '', username: 'Default', isDefaultUser: true });
         return;
@@ -112,12 +112,12 @@ class WebDAVSerializer implements webdav.FileSystemSerializer {
     uid(): string { return 'Packrat-WebDAVSerializer-v1.0.0'; }
 
     serialize(fs: WebDAVFileSystem, callback: webdav.ReturnCallback<any>): void {
-        LOG.info('WebDAVSerializer.serialize', LOG.LS.eHTTP);
+        RK.logDebug(RK.LogSection.eHTTP,'serialize',undefined,{},'HTTP.Route.WebDAV');
         callback(undefined, { fs });
     }
 
     unserialize(serializedData: any, callback: webdav.ReturnCallback<WebDAVFileSystem>): void {
-        LOG.info('WebDAVSerializer.unserialize', LOG.LS.eHTTP);
+        RK.logDebug(RK.LogSection.eHTTP,'unserialize',undefined,{},'HTTP.Route.WebDAV');
         const fs = new WebDAVFileSystem(serializedData);
         callback(undefined, fs);
     }
@@ -219,6 +219,8 @@ class WebDAVFileSystem extends webdav.FileSystem {
     /** Returns true if caller should try again, calling callback when done */
     protected async getPropertyFromResource(pathWD: webdav.Path, propertyName: string, allowMissing: boolean, callback: webdav.ReturnCallback<any>): Promise<void> {
         try {
+            // RK.logInfo(RK.LogSection.eHTTP,'get property from resource','START',{ pathWD, propertyName },'HTTP.Route.WebDAV');
+
             const pathS: string = pathWD.toString();
             const logPrefix: string = `WebDAVFileSystem._${propertyName}(${pathS})`;
             let resource: FileSystemResource | undefined = this.getResource(pathS);
@@ -227,7 +229,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 const DPResults: DownloaderParserResults = await DP.parseArguments(true, true); // true, true -> collect all paths
                 if (!DPResults.success || !DP.idSystemObjectV) {
                     const error: string = `${logPrefix} failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
-                    LOG.error(error, LOG.LS.eHTTP);
+                    RK.logError(RK.LogSection.eHTTP,'get property from resource failed',DPResults.message,{ path: pathS, propertyName },'HTTP.Route.WebDAV');
                     callback(new Error(error));
                     return;
                 }
@@ -255,11 +257,11 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 if (!resource) {
                     if (!allowMissing) {
                         const error: string = `${logPrefix} failed to compute resource`;
-                        LOG.error(error, LOG.LS.eHTTP);
+                        RK.logError(RK.LogSection.eHTTP,'get property from resource failed','cannot compute resource',{},'HTTP.Route.WebDAV');
                         callback(new Error(error));
                         return;
                     }
-                    LOG.info(`${logPrefix} failed to compute resource, adding (${pathS})`, LOG.LS.eHTTP);
+                    RK.logWarning(RK.LogSection.eHTTP,'get property from resource failed',`failed to compute resource, adding: ${pathS}`,{},'HTTP.Route.WebDAV');
 
                     const utcMS: number = (new Date()).getTime();
                     resource = new FileSystemResource(webdav.ResourceType.File, 0, '', utcMS, utcMS);
@@ -276,12 +278,13 @@ class WebDAVFileSystem extends webdav.FileSystem {
             else
                 LOG.info(logPrefix, LOG.LS.eHTTP);
             */
+            RK.logDebug(RK.LogSection.eHTTP,'get property from resource','DONE',{ pathWD, propertyName },'HTTP.Route.WebDAV');
             if (propertyName !== 'create')
                 callback(undefined, resource[propertyName]);
             else
                 callback(undefined);
         } catch (error) {
-            LOG.error(`WebDAVFileSystem.getPropertyFromResource(${pathWD})`, LOG.LS.eHTTP, error);
+            RK.logError(RK.LogSection.eHTTP,'get property from resource failed',H.Helpers.getErrorString(error),{ pathWebDAV: pathWD },'HTTP.Route.WebDAV');
         }
     }
 
@@ -342,13 +345,13 @@ class WebDAVFileSystem extends webdav.FileSystem {
     async _openReadStream(pathWD: webdav.Path, _info: webdav.OpenReadStreamInfo, callback: webdav.ReturnCallback<Readable>): Promise<void> {
         try {
             const pathS: string = pathWD.toString();
-            LOG.info(`WebDAVFileSystem._openReadStream(${pathS})`, LOG.LS.eHTTP);
+            RK.logInfo(RK.LogSection.eHTTP,'open read stream',undefined,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
 
             const DP: DownloaderParser = new DownloaderParser('', pathS);
             const DPResults: DownloaderParserResults = await DP.parseArguments();
             if (!DPResults.success) {
                 const error: string = `WebDAVFileSystem._openReadStream(${pathS}) failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
-                LOG.error(error, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'open read stream failed',DPResults.message,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 return;
             }
@@ -360,7 +363,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
             if (!DPResults.assetVersion) {
                 const error: string = `WebDAVFileSystem._openReadStream(${pathS}) called without an assetVersion`;
-                LOG.error(error, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'open read stream failed','called without an assetVersion',{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 return;
             }
@@ -368,13 +371,13 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(DPResults.assetVersion);
             if (!res.success || !res.readStream) {
                 const error: string = `WebDAVFileSystem._openReadStream(${pathS}) idAssetVersion=${DPResults.assetVersion} unable to read from storage: ${res.error}`;
-                LOG.error(error, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'open read stream failed',`unable to read from storage: ${res.error}`,{ pathSource: pathS, pathWebDAV: pathWD, assetVersion: DPResults.assetVersion },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 return;
             }
             callback(undefined, (res.readStream as any) as Readable);
         } catch (error) {
-            LOG.error(`WebDAVFileSystem._openReadStream(${pathWD})`, LOG.LS.eHTTP, error);
+            RK.logError(RK.LogSection.eHTTP,'open read stream failed',`catch error: ${H.Helpers.getErrorString(error)}`,{ pathWebDAV: pathWD },'HTTP.Route.WebDAV');
         }
     }
 
@@ -393,6 +396,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
         const writers: number = (this.writeSemaphoreCountMap.get(idSystemObject) ?? 0) + 1;
         this.writeSemaphoreCountMap.set(idSystemObject, writers);
         // LOG.info(`WebDAVFileSystem._openWriteStream(${_pathS}) Record ${writers}`, LOG.LS.eHTTP);
+
         releaser();
         return writeLock;
     }
@@ -417,6 +421,8 @@ class WebDAVFileSystem extends webdav.FileSystem {
     async _openWriteStream(pathWD: webdav.Path, _info: webdav.OpenWriteStreamInfo,
         callback: webdav.ReturnCallback<Writable>, callbackComplete: webdav.SimpleCallback): Promise<void> {
 
+        RK.logInfo(RK.LogSection.eHTTP,'open write stream',undefined,{ pathWebDAV: pathWD },'HTTP.Route.WebDAV');
+
         try {
             /*
             const lockUUID: string | undefined = await this.setLock<Writable>(pathWD, _info.context, callback);
@@ -429,7 +435,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const DPResults: DownloaderParserResults = await DP.parseArguments();
             if (!DPResults.success && !DP.idSystemObjectV) {
                 const error: string = `WebDAVFileSystem._openWriteStream(${pathS}) failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
-                LOG.error(error, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'open write stream failed',DPResults.message,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
@@ -444,7 +450,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const SOBased: DBAPI.SystemObjectBased | null = SOP ? SOP.SystemObjectBased : null;
             if (!SOBased) {
                 const error: string = `WebDAVFileSystem._openWriteStream(${pathS}) failed: unable to fetch system object details with idSystemObject ${DP.idSystemObjectV}`;
-                LOG.error(error, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'open write stream failed',`unable to fetch system object details with idSystemObject ${DP.idSystemObjectV}`,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
@@ -465,7 +471,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
             const VAssetType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(eVocab);
             if (VAssetType === undefined) {
                 const error: string = `WebDAVFileSystem._openWriteStream(${pathS}) failed: unable to compute asset type for ${FileName}`;
-                LOG.error(error, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'open write stream failed',`unable to compute asset type for ${FileName}`,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
@@ -522,19 +528,18 @@ class WebDAVFileSystem extends webdav.FileSystem {
                                 if (error === E_TIMEOUT) {
                                     const finalTry: boolean = (lockAttempt === 5);
                                     if (finalTry) {
-                                        LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream timeout write lock`, LOG.LS.eHTTP);
+                                        RK.logError(RK.LogSection.eHTTP,'open write stream failed','onFinish ingestStream timeout write lock',{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                                         return;
                                     }
-                                    LOG.info(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream timeout write lock`, LOG.LS.eHTTP);
                                 } else
-                                    LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}): (W) onFinish ingestStream`, LOG.LS.eHTTP, error);
+                                    RK.logError(RK.LogSection.eHTTP,'open write stream failed',`onFinish ingestStream: ${error}`,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                             }
                         }
                     } else {
                         return await this.ingestStream(ISI, pathS);
                     }
                 } catch (error) {
-                    LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD}) (W) onFinish`, LOG.LS.eHTTP, error);
+                    RK.logError(RK.LogSection.eHTTP,'open write stream failed',`onFinish catch error: ${error}`,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 } finally {
                     callbackComplete(undefined);
                 }
@@ -543,24 +548,24 @@ class WebDAVFileSystem extends webdav.FileSystem {
             // LOG.info('WebDAVFileSystem._openWriteStream callback()', LOG.LS.eHTTP);
             callback(undefined, BS);
         } catch (error) {
-            LOG.error(`WebDAVFileSystem._openWriteStream(${pathWD})`, LOG.LS.eHTTP, error);
+            RK.logError(RK.LogSection.eHTTP,'open write stream failed',`catch error: ${error}`,{ pathWebDAV: pathWD },'HTTP.Route.WebDAV');
         }
     }
 
     private async ingestStream(ISI: STORE.IngestStreamOrFileInput, pathS: string): Promise<void> {
         const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
         if (!IAR.success)
-            LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to ingest new asset version: ${IAR.error}`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'ingest stream failed',`onFinish failed to ingest new asset version: ${IAR.error}`,{ pathSource: pathS, ingestSource: ISI },'HTTP.Route.WebDAV');
 
         const assetVersions: DBAPI.AssetVersion[] | null | undefined = IAR.assetVersions;
         if (!assetVersions || assetVersions.length === 0) {
-            LOG.error(`WebDAVFileSystem._openWriteStream(${pathS}) (W) onFinish failed to create new asset version`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'ingest stream failed','onFinish failed to create new asset version',{ pathSource: pathS, ingestSource: ISI },'HTTP.Route.WebDAV');
             // await this.removeLock(pathWD, info.context, lockUUID);
             return;
         }
 
         if (assetVersions.length > 1)
-            LOG.error(`WebDAVFileSystem.ingestStream(${pathS}) created multiple asset versions, unexpectedly`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'ingest stream failed','created multiple asset versions, unexpectedly',{ pathSource: pathS, ingestSource: ISI },'HTTP.Route.WebDAV');
 
         const assetVersion: DBAPI.AssetVersion = assetVersions[0];
         // Update WebDAV resource

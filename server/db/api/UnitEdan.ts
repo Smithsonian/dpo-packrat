@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { UnitEdan as UnitEdanBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase {
     idUnitEdan!: number;
@@ -29,7 +30,8 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
+            return false;
         }
     }
 
@@ -45,7 +47,8 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
+            return  false;
         }
     }
 
@@ -56,7 +59,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyObject<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findUnique({ where: { idUnitEdan, }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UnitEdan.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
             return null;
         }
     }
@@ -69,7 +72,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyArray<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findMany({ where: { idUnit } }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UnitEdan.fetchFromUnit', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Unit failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
             return null;
         }
     }
@@ -81,7 +84,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyObject<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findUnique({ where: { Abbreviation }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchFromAbbreviation', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Abbreviation failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
             return null;
         }
     }
@@ -93,7 +96,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyArray<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findMany({ where: { Name }, }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Unit.fetchFromName', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from name failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
             return null;
         }
     }
@@ -104,7 +107,7 @@ export class UnitEdan extends DBC.DBObject<UnitEdanBase> implements UnitEdanBase
             return DBC.CopyArray<UnitEdanBase, UnitEdan>(
                 await DBC.DBConnection.prisma.unitEdan.findMany({ where: { Name: { not: null, } }, orderBy: { Abbreviation: 'asc', } }), UnitEdan);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.UnitEdan.fetchNamed', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch named failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit.EDAN');
             return null;
         }
     }

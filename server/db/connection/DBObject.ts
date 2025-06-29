@@ -1,7 +1,7 @@
 import { eDBObjectType, eNonSystemObjectType, ObjectIDAndType, DBObjectNameToType } from '../api/ObjectType';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
-import * as LOG from '../../utils/logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import * as H from '../../utils/helpers';
 
 const DB_OPERATION_RETRIES: number = 3;
@@ -80,15 +80,9 @@ export abstract class DBObject<T> {
         return false;
     }
 
-    protected logError(method: string, error?: any): boolean { // eslint-disable-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-        const errorMessage: string = (H.Helpers.safeString(error?.message) ?? '').replace(/(\n|\r)/g, ' ');
-        LOG.error(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)}: ${errorMessage}`, LOG.LS.eDB);
-        return false;
-    }
-
     private logSuccess(method: string, retry: number): boolean {
         if (retry > 1)
-            LOG.info(`DBAPI.${this.fetchTableName()}.${method} ${H.Helpers.JSONStringify(this)} succeeded on retry ${retry}`, LOG.LS.eDB);
+            RK.logInfo(RK.LogSection.eDB,`${this.fetchTableName()}.${method}`,`succeeded on retry ${retry}`,{ ...this },'DB.Object');
         return true;
     }
 }

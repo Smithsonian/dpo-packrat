@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { Vocabulary as VocabularyBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Vocabulary extends DBC.DBObject<VocabularyBase> implements VocabularyBase {
     idVocabulary!: number;
@@ -29,7 +30,8 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary');
+            return false;
         }
     }
 
@@ -45,7 +47,8 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary');
+            return  false;
         }
     }
 
@@ -56,7 +59,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return DBC.CopyObject<VocabularyBase, Vocabulary>(
                 await DBC.DBConnection.prisma.vocabulary.findUnique({ where: { idVocabulary, }, }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Vocabulary.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary');
             return null;
         }
     }
@@ -68,7 +71,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return DBC.CopyArray<VocabularyBase, Vocabulary>(
                 await DBC.DBConnection.prisma.vocabulary.findMany({ where: { idVocabularySet } }), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Vocabulary.fetchFromVocabularySet', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from VocabularySet failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary');
             return null;
         }
     }
@@ -78,7 +81,7 @@ export class Vocabulary extends DBC.DBObject<VocabularyBase> implements Vocabula
             return DBC.CopyArray<VocabularyBase, Vocabulary>(
                 await DBC.DBConnection.prisma.vocabulary.findMany(), Vocabulary);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Vocabulary.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary');
             return null;
         }
     }

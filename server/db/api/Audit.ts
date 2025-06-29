@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 import { Audit as AuditBase, User as UserBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
-// import * as H from '../../utils/helpers';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { eDBObjectType, eAuditType /*, eSystemObjectType */ } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
 import { User } from './User';
 
@@ -36,7 +36,8 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Audit');
+            return false;
         }
     }
 
@@ -53,7 +54,8 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Audit');
+            return false;
         }
     }
 
@@ -92,7 +94,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             return DBC.CopyObject<AuditBase, Audit>(
                 await DBC.DBConnection.prisma.audit.findUnique({ where: { idAudit, }, }), Audit);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Audit.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAudit, ...this },'DB.Audit');
             return null;
         }
     }
@@ -113,7 +115,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             // LOG.info(`DBAPI.Audit.fetchLastUser(${idSystemObject}, ${eAudit}) raw ${JSON.stringify(userBaseList, H.Helpers.saferStringify)}`, LOG.LS.eDB);
             return (userBaseList && userBaseList.length > 0) ? User.constructFromPrisma(userBaseList[0]) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Audit.fetchLastUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch last User failed',H.Helpers.getErrorString(error),{ idSystemObject, eAudit, ...this },'DB.Audit');
             return null;
         }
     }

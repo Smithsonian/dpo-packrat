@@ -4,8 +4,9 @@ import { ApolloServerExpressConfig, AuthenticationError } from 'apollo-server-ex
 import GraphQLApi from './api';
 import schema from './schema';
 import { isAuthenticated } from '../http/auth';
-import * as LOG from '../utils/logger';
 import * as COMMON from '@dpo-packrat/common';
+import * as H from '../utils/helpers';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 const unauthenticatedGQLQueries: Set<string> = new Set<string>([
     'getCurrentUser',
@@ -29,7 +30,7 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
         };
     },
     formatError: (err) => {
-        LOG.error('ApolloServer Error:', LOG.LS.eGQL, err);
+        RK.logError(RK.LogSection.eGQL,'Apollo server failed',`format error: ${H.Helpers.getErrorString(err)}`,{},'GraphQL.Apollo.ServerOptions');
         return err;
     }
 };

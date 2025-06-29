@@ -4,8 +4,8 @@ import * as STORE from '../storage/interface';
 import * as META from '../metadata';
 import * as COL from '../collections/interface/';
 import * as H from './helpers';
-import * as LOG from './logger';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 import { IngestSceneAttachmentInput } from '../types/graphql';
 import { SvxReader, SvxExtraction } from './parser';
 import { JobCookSIPackratInspectOutput } from '../job/impl/Cook';
@@ -172,7 +172,7 @@ export class SceneHelpers {
                         sceneAsset = asset;
                         sceneAssetVersion = assetVersionMap.get(asset.idAsset);
                     } else
-                        LOG.error(`sceneHelper handleComplexIngestionScene skipping unexpected scene ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eSYS);
+                        RK.logError(RK.LogSection.eSYS,'handle complex scene ingestion failed','skipping unexpected scene',{ asset },'Utils.Scene');
                     break;
 
                 case COMMON.eVocabularyID.eAssetAssetTypeModel:
@@ -181,7 +181,7 @@ export class SceneHelpers {
                     modelAssetMap.set(asset.FileName.toLowerCase(), { asset, assetVersion });
                 } break;
                 case undefined:
-                    LOG.error(`sceneHelper handleComplexIngestionScene unable to detect asset type for ${H.Helpers.JSONStringify(asset)}`, LOG.LS.eSYS);
+                    RK.logError(RK.LogSection.eSYS,'handle complex scene ingestion failed','unable to detect asset type',{ asset },'Utils.Scene');
                     break;
             }
         }
@@ -244,7 +244,7 @@ export class SceneHelpers {
                         success = false;
                         continue;
                     }
-                    LOG.info(`sceneHelper handleComplexIngestionScene found existing ModelSceneXref=${H.Helpers.JSONStringify(MSXSource)} from referenced model ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eSYS);
+                    RK.logInfo(RK.LogSection.eSYS,'handle complex scene ingestion','found existing ModelSceneXref from reference model',{ MSX, MSXSource },'Utils.Scene');
 
                     if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
                         SceneHelpers.extractModelMetrics(model, JCOutput.modelConstellation.Model);
@@ -263,7 +263,7 @@ export class SceneHelpers {
                         success = false;
                         continue;
                     }
-                    LOG.info(`sceneHelper handleComplexIngestionScene created model=${H.Helpers.JSONStringify(model)} from referenced model ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eSYS);
+                    RK.logInfo(RK.LogSection.eSYS,'handle complex scene ingestion','created model from reference model',{ model, MSX },'Utils.Scene');
 
                     // Create ModelSceneXref for model and scene
                     /* istanbul ignore else */
@@ -296,7 +296,7 @@ export class SceneHelpers {
 
                 const assetPair: AssetPair | undefined = modelAssetMap.get(MSX.Name.toLowerCase());
                 if (!assetPair || !assetPair.asset || !assetPair.assetVersion) {
-                    LOG.info(`sceneHelper handleComplexIngestionScene unable to locate assets for SVX model ${H.Helpers.JSONStringify(MSX)}`, LOG.LS.eSYS);
+                    RK.logWarning(RK.LogSection.eSYS,'populate model metrics','unable to locate assets for SVX model',{ assetPair, MSX },'Utils.Scene');
                     continue;
                 }
 
@@ -348,7 +348,8 @@ export class SceneHelpers {
     }
 
     private static logAndAccumulateError(error: string, accum: string | undefined): string {
-        LOG.error(error, LOG.LS.eSYS);
+        RK.logError(RK.LogSection.eSYS,'log error',error,{ accum },'Utils.Scene');
+
         if (!accum)
             accum = error;
         else
@@ -357,43 +358,43 @@ export class SceneHelpers {
     }
 
     private static returnError(error: string): H.IOResults & { transformUpdated: boolean } {
-        LOG.error(error, LOG.LS.eSYS);
+        RK.logError(RK.LogSection.eSYS,'return error',error,{},'Utils.Scene');
         return { success: false, error, transformUpdated: false };
     }
 
     private static async populateModelMetrics(idModel: number, assetPair: AssetPair, MSX: DBAPI.ModelSceneXref, idUser: number | undefined): Promise<boolean> {
         if (!assetPair.assetVersion) {
-            LOG.error('sceneHelper populateModelMetrics called without assetVersion', LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'populate model metrics failed','called without assetVersion',{ idModel, assetPair, MSX },'Utils.Scene');
             return false;
         }
         if (!MSX.Name) {
-            LOG.error('sceneHelper populateModelMetrics called without ModelSceneXref Name', LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'populate model metrics failed','called without ModelSceneXref Name',{},'Utils.Scene');
             return false;
         }
 
         const SOModelAssetVersion: DBAPI.SystemObject | null = await assetPair.assetVersion.fetchSystemObject();
         if (!SOModelAssetVersion) {
-            LOG.error(`sceneHelper populateModelMetrics unable to fetch system object from model asset version ${H.Helpers.JSONStringify(assetPair.assetVersion)}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'populate model metrics failed','unable to fetch system object from model asset version',{ idModel, assetPair, MSX },'Utils.Scene');
             return false;
         }
 
         const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, idModel, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined, undefined /* idProject */, idUser);
         if (!results.success)
-            LOG.error(`sceneHelper populateModelMetrics failed to compute JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}: ${results.error}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'populate model metrics failed',`cannot compute JobCookSIPackratInspectOutput from idAssetVersion: ${results.error}`,{ idModel, assetPair, MSX },'Utils.Scene');
 
         const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(assetPair.assetVersion.idAssetVersion, MSX.Name);
         if (JCOutput && !JCOutput.success)
-            LOG.error(`sceneHelper populateModelMetrics failed to extract JobCookSIPackratInspectOutput from idAssetVersion ${assetPair.assetVersion.idAssetVersion}, model ${MSX.Name}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'populate model metrics failed','cannot extract JobCookSIPackratInspectOutput from idAssetVersion',{ idModel, assetPair, MSX },'Utils.Scene');
 
         if (JCOutput && JCOutput.success && JCOutput.modelConstellation && JCOutput.modelConstellation.Model) {
             const model: DBAPI.Model | null = await DBAPI.Model.fetch(idModel);
             if (!model) {
-                LOG.error(`sceneHelper populateModelMetrics unable to fetch model ${idModel}`, LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'populate model metrics failed','unable to fetch model',{ idModel },'Utils.Scene');
                 return false;
             }
             SceneHelpers.extractModelMetrics(model, JCOutput.modelConstellation.Model);
             if (!await model.update()) {
-                LOG.error(`sceneHelper handleComplexIngestionScene unable to update model ${model.idModel} with metrics`, LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'populate model metrics failed','unable to update model',{ idModel },'Utils.Scene');
                 return false;
             }
         }
@@ -453,7 +454,7 @@ export class SceneHelpers {
         if (!SceneHelpers.vocabularyPurposeVoyagerSceneModel) {
             SceneHelpers.vocabularyPurposeVoyagerSceneModel = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel);
             if (!SceneHelpers.vocabularyPurposeVoyagerSceneModel) {
-                LOG.error('sceneHelper unable to fetch vocabulary for Voyager Scene Model Model Purpose', LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eSYS,'get vocab voyager scene failed','unable to fetch vocabulary for Voyager Scene Model Model Purpose',{},'Utils.Scene');
                 return undefined;
             }
         }
@@ -466,7 +467,7 @@ export class SceneHelpers {
     }
 
     private static recordError(error: string | undefined): H.IOResults {
-        LOG.error(`SceneHelpers ${error}`, LOG.LS.eSYS);
+        RK.logError(RK.LogSection.eSYS,'record error',error,{},'Utils.Scene');
         return { success: false, error };
     }
 }

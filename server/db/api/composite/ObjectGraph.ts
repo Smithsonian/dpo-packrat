@@ -1,8 +1,9 @@
 import { Actor, Asset, AssetVersion, CaptureData, Identifier, IntermediaryFile, Item, Model,
     Project, ProjectDocumentation, Scene, Stakeholder, Subject, SystemObject,
     SystemObjectPairs, Unit } from '../..';
-import * as LOG from '../../../utils/logger';
 import * as L from 'lodash';
+import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 import * as COMMON from '@dpo-packrat/common';
 
@@ -116,7 +117,7 @@ export class ObjectGraph {
                     if (identifierDB)
                         identifier = identifierDB.IdentifierValue;
                     else
-                        LOG.error(`ObjectGraph.toPersist unable to fetch identifier for subject ${JSON.stringify(sub)}`, LOG.LS.eDB);
+                        RK.logError(RK.LogSection.eDB,'to persist failed','unable to fetch identifier for subject',{ subejct: sub },'DB.Composite.ObjectGraph');
                 }
                 subject.push({ ...sub, identifier });
             }
@@ -163,20 +164,20 @@ export class ObjectGraph {
 
             /* istanbul ignore if */
             if (eMode != eObjectGraphMode.eAncestors && eMode != eObjectGraphMode.eDescendents) {
-                LOG.error(`DBAPI.ObjectGraph.fetchWorker called with invalid mode ${eMode}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed','called with invalid mode',{ idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
                 return true;
             }
             // detect cycle; if so, record and short-circuit
             if (relatedType && idSystemObject == this.idSystemObject) {
                 this.noCycles = false;
                 this.validHierarchy = false;
-                LOG.error(`DBAPI.ObjectGraph.fetchWorker Detected Cycle via ${idSystemObject}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed','Detected Cycle via SystemObject',{ idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
                 return true;
             }
 
             /* istanbul ignore if */
             if (this.pushCount++ >= this.maxPushCount) {
-                LOG.error(`DBAPI.ObjectGraph.fetchWorker reached maxPushCount, related=${JSON.stringify(relatedType)}; ${idSystemObject}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed','reached maxPushCount',{ idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
                 return true;
             }
 
@@ -197,7 +198,7 @@ export class ObjectGraph {
             const SOP: SystemObjectPairs | null = await SystemObjectPairs.fetch(idSystemObject);
             /* istanbul ignore next */
             if (!SOP) {
-                LOG.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject ${idSystemObject}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed','unidentified SystemObject',{ idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
                 return true;
             } else {
                 // Determine what kind of object this is; perform type-specific validity checks; push to the appropriate list; gather explicitly related objects
@@ -231,7 +232,7 @@ export class ObjectGraph {
 
             /* istanbul ignore if */
             if (sourceType.eObjectType == COMMON.eSystemObjectType.eUnknown)
-                LOG.error(`DBAPI.ObjectGraph.fetchWorker Unidentified SystemObject type ${JSON.stringify(SOP)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed','unidentified SystemObject type',{ SOP, idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
 
             this.systemObjectProcessed.set(idSystemObject, sourceType);
             this.systemObjectAdded.set(idSystemObject, sourceType);
@@ -272,7 +273,7 @@ export class ObjectGraph {
                         if (SO)
                             this.systemObjectList.push(SO.idSystemObject);
                         else
-                            LOG.error(`Missing SystemObject for asset ${JSON.stringify(asset)}`, LOG.LS.eDB);
+                            RK.logError(RK.LogSection.eDB,'fetch failed','Missing SystemObject for asset',{ asset, idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
                     }
                 }
             }
@@ -289,7 +290,7 @@ export class ObjectGraph {
                 }
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ObjectGraph.fetchWorker', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSystemObject, relatedType, eMode, recurseDepth },'DB.Composite.ObjectGraph');
             return false;
         }
 
@@ -342,7 +343,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.error(`Missing SystemObject for unit ${actor.idUnit} linked from ${JSON.stringify(actor)}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'push Actor failed','Missing SystemObject for unit linked from Actor',{ actor },'DB.Composite.ObjectGraph');
             }
         } // else ... no children
         return true;
@@ -382,7 +383,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.error(`Missing SystemObject for assetVersion ${assetVersion.idAssetVersion} linked from ${JSON.stringify(assetVersion)}`, LOG.LS.eDB);
+                        RK.logError(RK.LogSection.eDB,'push Asset failed','missing SystemObject for assetVersion linked from AssetVersion',{ assetVersion },'DB.Composite.ObjectGraph');
                 }
             }
         }
@@ -419,7 +420,7 @@ export class ObjectGraph {
             if (SO)
                 this.systemObjectList.push(SO.idSystemObject);
             else
-                LOG.error(`Missing SystemObject for asset ${assetVersion.idAsset} linked from ${JSON.stringify(assetVersion)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'push AssetVersion failed','Missing SystemObject for asset linked from AssetVersion',{ assetVersion },'DB.Composite.ObjectGraph');
         } // else ... no children
         return true;
     }
@@ -462,7 +463,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.error(`Missing SystemObject for asset ${captureData.idAssetThumbnail} linked from ${JSON.stringify(captureData)}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'push CaptureDate failed','missing SystemObject for asset linked from CaptureData',{ captureData },'DB.Composite.ObjectGraph');
             }
         }
         return true;
@@ -535,7 +536,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.error(`Missing SystemObject for asset ${item.idAssetThumbnail} linked from ${JSON.stringify(item)}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'push Item failed','Missing SystemObject for thumbnail asset linked from Item',{ item },'DB.Composite.ObjectGraph');
             }
         }
 
@@ -582,7 +583,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.error(`Missing SystemObject for asset ${model.idAssetThumbnail} linked from ${JSON.stringify(model)}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'push Model failed','missing SystemObject for thumbnail asset linked from model',{ model },'DB.Composite.ObjectGraph');
             }
         }
         return true;
@@ -628,7 +629,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.error(`Missing SystemObject for project documentation ${JSON.stringify(PD)}`, LOG.LS.eDB);
+                        RK.logError(RK.LogSection.eDB,'push Project failed','missing SystemObject for project documentation',{ documentation: PD },'DB.Composite.ObjectGraph');
                 }
             }
         }
@@ -665,7 +666,7 @@ export class ObjectGraph {
             if (SO)
                 this.systemObjectList.push(SO.idSystemObject);
             else
-                LOG.error(`Missing SystemObject for project ${projectDocumentation.idProject} linked from ${JSON.stringify(projectDocumentation)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'push ProjectDocumentation failed','Missing SystemObject for project linked from ProjectDocumentation',{ projectDocumentation },'DB.Composite.ObjectGraph');
         } // else ... no children
         return true;
     }
@@ -708,7 +709,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.error(`Missing SystemObject for asset ${scene.idAssetThumbnail} linked from ${JSON.stringify(scene)}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'psuh Scene failed','Missing SystemObject for thumbnail asset linked from',{ scene },'DB.Composite.ObjectGraph');
             }
         }
 
@@ -776,7 +777,8 @@ export class ObjectGraph {
             if (SO)
                 this.systemObjectList.push(SO.idSystemObject);
             else
-                LOG.error(`Missing SystemObject for unit ${subject.idUnit} linked from ${JSON.stringify(subject)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'push Subject failed','Missing SystemObject for unit linked from Subject',{ subject },'DB.Composite.ObjectGraph');
+
         } else { // if (eMode == eObjectGraphMode.eDescendents) { // children
             if (subject.idAssetThumbnail) {
                 const SO: SystemObject | null = await SystemObject.fetchFromAssetID(subject.idAssetThumbnail);
@@ -784,7 +786,7 @@ export class ObjectGraph {
                 if (SO)
                     this.systemObjectList.push(SO.idSystemObject);
                 else
-                    LOG.error(`Missing SystemObject for asset ${subject.idAssetThumbnail} linked from ${JSON.stringify(subject)}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'push Subject failed','Missing SystemObject for thumbnail asset linked from subject',{ subject },'DB.Composite.ObjectGraph');
             }
         }
         return true;
@@ -828,7 +830,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.error(`Missing SystemObject for subject ${JSON.stringify(subject)}`, LOG.LS.eDB);
+                        RK.logError(RK.LogSection.eDB,'push Unit failed','Missing SystemObject for subject',{ subject },'DB.Composite.ObjectGraph');
                 }
             }
 
@@ -841,7 +843,7 @@ export class ObjectGraph {
                     if (SO)
                         this.systemObjectList.push(SO.idSystemObject);
                     else
-                        LOG.error(`Missing SystemObject for subject ${JSON.stringify(actor)}`, LOG.LS.eDB);
+                        RK.logError(RK.LogSection.eDB,'push Unit failed','Missing SystemObject for Actor',{ actor },'DB.Composite.ObjectGraph');
                 }
             }
         }

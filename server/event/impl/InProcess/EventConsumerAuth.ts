@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as EVENT from '../../interface';
 import { EventConsumer } from './EventConsumer';
 import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
-import * as LOG from '../../../utils/logger';
+import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class EventConsumerAuth extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -14,7 +16,7 @@ export class EventConsumerAuth extends EventConsumer {
         // inform audit interface of authentication event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
-                LOG.error(`EventConsumerAuth.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unknown key',{ key: dataItem.key },'Event.Consumer.Auth');
                 continue;
             }
 
@@ -24,13 +26,43 @@ export class EventConsumerAuth extends EventConsumer {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
-                    LOG.info(`EventConsumerAuth.eventWorker Login idUser ${audit.idUser} ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'succeeded' : 'failed'}`, LOG.LS.eEVENT);
+
+                    RK.logDebug(RK.LogSection.eEVENT,`login event ${dataItem.key === EVENT.eEventKey.eAuthLogin ? 'success' : 'failed'}`,undefined,this.parseAuditData(audit.Data),'Event.Consumer.Auth');
                 } break;
 
                 default:
-                    LOG.error(`EventConsumerAuth.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                    RK.logError(RK.LogSection.eEVENT,'send event failed','sent event with unsupported key',{ key: dataItem.key },'Event.Consumer.Auth');
                     break;
             }
         }
     }
+
+    private parseAuditData(data: string | null): Record<string, any> | null {
+        if (!data) return null;
+
+        try {
+            const parsed = H.Helpers.JSONParse(data);
+
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                const result: Record<string, any> = {};
+
+                if ('error' in parsed) {
+                    result.reason = parsed.error;
+                    delete parsed.error;
+                }
+
+                // Add remaining properties
+                for (const [key, value] of Object.entries(parsed)) {
+                    result[key] = value;
+                }
+
+                return result;
+            }
+        } catch {
+            return { reason: 'Invalid JSON in audit.Data' };
+        }
+
+        return null;
+    }
+
 }

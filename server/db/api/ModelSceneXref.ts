@@ -1,8 +1,8 @@
 /* eslint-disable camelcase */
 import { ModelSceneXref as ModelSceneXrefBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements ModelSceneXrefBase {
     idModelSceneXref!: number;
@@ -83,7 +83,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
         if (transformUpdated)
             updated = true;
         if (updated)
-            LOG.info(`ModelSceneXref.updateTransformIfNeeded ${transformUpdated ? 'TRANSFORM UPDATED' : 'UPDATED'}: ${logContext}`, LOG.LS.eDB);
+            RK.logInfo(RK.LogSection.eDB,'update if needed',`${logContext} - ${transformUpdated ? 'Transform Updated' : 'Updated'}`,{ ...this },'DB.Model.Scene.Xref');
         return { transformUpdated, updated };
     }
 
@@ -114,7 +114,8 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
+            return false;
         }
     }
 
@@ -134,7 +135,8 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
+            return false;
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
@@ -145,7 +147,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
                 where: { idModelSceneXref, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.delete', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return false;
         }
     }
@@ -157,7 +159,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyObject<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findUnique({ where: { idModelSceneXref, }, }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return null;
         }
     }
@@ -169,7 +171,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idScene } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetchFromScene', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Scene failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return null;
         }
     }
@@ -181,7 +183,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetchFromModel', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return null;
         }
     }
@@ -193,7 +195,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetchFromModelAndScene', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model and Scene failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return null;
         }
     }
@@ -205,7 +207,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idModel, idScene, Name } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetchFromModelSceneAndName', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model, Scene, and name failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return null;
         }
     }
@@ -218,7 +220,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return DBC.CopyArray<ModelSceneXrefBase, ModelSceneXref>(
                 await DBC.DBConnection.prisma.modelSceneXref.findMany({ where: { idScene, Name, Usage, Quality, UVResolution } }), ModelSceneXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Scene properties failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Scene.Xref');
             return null;
         }
     }
@@ -226,7 +228,7 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
     /** is this a downloadable asset? returns the idSystemObject if so */
     public isDownloadable(): boolean {
         if(!this.Name || !this.Usage) {
-            LOG.error(`DBAPI.ModelSceneXref.isDownloadable cannot run check due to missing info (${this.Name} | ${this.Usage})`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'is downloadable failed','cannot run check due to missing name and usage',{ ...this },'DB.Model.Scene.Xref');
             return false;
         }
 

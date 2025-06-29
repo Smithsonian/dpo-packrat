@@ -1,7 +1,7 @@
 import { IExtractor, IExtractorResults } from './IExtractor';
-import * as LOG from '../utils/logger';
 import * as H from '../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 import * as path from 'path';
 import exifr from 'exifr';
@@ -35,8 +35,10 @@ export class ExtractorImageExifr implements IExtractor  {
             let extractions: any = { }; // eslint-disable-line @typescript-eslint/no-explicit-any
             if (inputStream) {
                 const buffer: Buffer | null = await H.Helpers.readFileFromStream(inputStream); /* istanbul ignore next */
-                if (!buffer)
+                if (!buffer) {
+                    RK.logError(RK.LogSection.eMETA,'extract metadata failed','could not load buffer from inputstream',{ fileName },'Metadata.Extractor.ImageEXIF');
                     return { success: false, error: 'ExtractorImageExifr.extractMetadata could not load buffer from inputstream' };
+                }
                 extractions = await exifr.parse(buffer, ExtractorImageExifr.exifrOptions);
             } else
                 extractions = await exifr.parse(fileName, ExtractorImageExifr.exifrOptions);
@@ -55,7 +57,7 @@ export class ExtractorImageExifr implements IExtractor  {
                     value = String(valueU); /* istanbul ignore next */
 
                 if (metadata.has(name))
-                    LOG.info(`ExtractorImageExifr.extractMetadata already has value for ${name}`, LOG.LS.eMETA);
+                    RK.logWarning(RK.LogSection.eMETA,'extract metadata failed',`already has value for ${name}`,{ fileName },'Metadata.Extractor.ImageEXIF');
                 metadata.set(name, value);
             }
 
@@ -68,6 +70,7 @@ export class ExtractorImageExifr implements IExtractor  {
                     metadata.set('ImageWidth', dimensions.width.toString());
             }
         } catch (err) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eMETA,'extract metadata failed',H.Helpers.getErrorString(err),{ fileName },'Metadata.Extractor.ImageEXIF');
             return { success: false, error: `ExtractorImageExifr.extractMetadata failed: ${JSON.stringify(err, H.Helpers.saferStringify)}` };
         }
 

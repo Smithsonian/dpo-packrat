@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import * as DBC from '../../connection';
-import * as LOG from '../../../utils/logger';
 import * as COMMON from '@dpo-packrat/common';
+import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class WorkflowListResult {
     idWorkflow: number = 0;
@@ -147,7 +148,7 @@ export class WorkflowListResult {
             // LOG.info(`DBAPI.WorkflowListResult.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
             return await DBC.DBConnection.prisma.$queryRawUnsafe<WorkflowListResult[] | null>(sql, ...queryRawParams);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.WorkflowListResult.search', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,' failed',H.Helpers.getErrorString(error),{ ...this },'DB.Composite.WorkflowListResult');
             return null;
         }
     }

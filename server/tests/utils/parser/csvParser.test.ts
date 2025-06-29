@@ -1,7 +1,7 @@
 import fs from 'fs';
 import { join } from 'path';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { CSVParser, CSVTypes, CaptureDataPhotoCSVFields, ModelsCSVFields, ScenesCSVFields } from '../../../utils/parser';
 
 const mockPath = (type: CSVTypes) => join(__dirname, `../../mock/utils/parser/mock.${type}.csv`);
@@ -21,7 +21,7 @@ describe('CSVParser', () => {
             const result = await CSVParser.parse<CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
             expect(result).toBeTruthy();
         } catch (error) {
-            LOG.error('CSVParser.parse failed', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'csv parser',`capture data: ${H.Helpers.getErrorString(error)}`,{},'Tests.Utils.Parser.CSV');
             expect('Exception not expected!').toBeFalsy();
         }
     });
@@ -34,7 +34,7 @@ describe('CSVParser', () => {
             const result = await CSVParser.parse<ModelsCSVFields>(fileStream, CSVTypes.models);
             expect(result).toBeTruthy();
         } catch (error) {
-            LOG.error('CSVParser.parse failed', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'csv parser',`models: ${H.Helpers.getErrorString(error)}`,{},'Tests.Utils.Parser.CSV');
             expect('Exception not expected!').toBeFalsy();
         }
     });
@@ -47,7 +47,7 @@ describe('CSVParser', () => {
             const result = await CSVParser.parse<ScenesCSVFields>(fileStream, CSVTypes.scenes);
             expect(result).toBeTruthy();
         } catch (error) {
-            LOG.error('CSVParser.parse failed', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'csv parser',`scenes: ${H.Helpers.getErrorString(error)}`,{},'Tests.Utils.Parser.CSV');
             expect('Exception not expected!').toBeFalsy();
         }
     });

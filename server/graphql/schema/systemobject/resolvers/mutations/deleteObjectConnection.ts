@@ -1,7 +1,7 @@
 import { DeleteObjectConnectionResult, MutationDeleteObjectConnectionArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { getRelatedObjects } from '../queries/getSystemObjectDetails';
 import { RelatedObjectType } from '../../../../../types/graphql';
 import * as COMMON from '@dpo-packrat/common';
@@ -16,6 +16,7 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
         const sourceObjectsOfChild = await getRelatedObjects(idSystemObjectDerived, RelatedObjectType.Source);
         const sourceItemCount = sourceObjectsOfChild.filter(source => source.objectType === COMMON.eSystemObjectType.eItem).length;
         if (sourceItemCount <= 1) {
+            RK.logError(RK.LogSection.eGQL,'delete object connection failed','Cannot delete last media group parent',{ idSystemObjectXrefs },'GraphQL.SystemObject.ObjectConnection');
             return { success: false, details: 'Cannot delete last media group parent' };
         }
     }
@@ -25,16 +26,15 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
             const xref = idSystemObjectXrefs[i];
             const { success, error } = await DBAPI.SystemObjectXref.deleteIfAllowed(xref.idSystemObjectXref);
             if (success) {
-                LOG.info(`deleted SystemObjectXref ${xref.idSystemObjectXref}`, LOG.LS.eGQL);
+                RK.logInfo(RK.LogSection.eGQL,'delete object connection success',undefined,{ xref },'GraphQL.SystemObject.ObjectConnection');
             } else {
-                const details: string = `unable to delete SystemObjectXref ${xref.idSystemObjectXref} ${error}`;
-                LOG.error(details, LOG.LS.eGQL);
-                result = { success: false, details };
+                RK.logError(RK.LogSection.eGQL,'delete object connection failed',`unable to delete SystemObjectXref: ${error}`,{ xref },'GraphQL.SystemObject.ObjectConnection');
+                result = { success: false, details: `unable to delete SystemObjectXref: ${error}`  };
                 break;
             }
         }
     } else {
-        LOG.error(`deleteObjectConnection failed to fetch idSystemObjectXref for ${idSystemObjectMaster} and ${idSystemObjectDerived}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'delete object connection failed','failed to fetch idSystemObjectXref',{ idSystemObjectMaster, idSystemObjectDerived },'GraphQL.SystemObject.ObjectConnection');
         return { success: false, details: 'Failed to fetch idSystemObjectXref for ' + idSystemObjectMaster + ' and ' + idSystemObjectDerived };
     }
 

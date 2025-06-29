@@ -2,7 +2,7 @@ import { ClearLicenseAssignmentResult, MutationClearLicenseAssignmentArgs } from
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 
@@ -23,20 +23,22 @@ export default async function clearLicenseAssignment(_: Parent, args: MutationCl
     // If this is a scene, handle license changes:
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
     if (!oID) {
-        LOG.error(`clearLicenseAssignment unable to load object info for idSystemObject ${idSystemObject}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'clear license assignment failed',`unable to load object info for idSystemObject ${idSystemObject}`,{},'GraphQL.License.Assignment');
         return { success: false, message: 'Unable to handle impact of license update' };
     }
 
     if (oID.eObjectType === COMMON.eSystemObjectType.eScene) {
         const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
         if (!scene) {
-            LOG.error(`clearLicenseAssignment unable to load scene with id ${oID.idObject}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'clear license assignment failed',`unable to load scene with id ${oID.idObject}`,{},'GraphQL.License.Assignment');
             return { success: false, message: 'Unable to handle impact of license update' };
         }
         const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(oID.idObject, idSystemObject, user?.idUser,
             scene.PosedAndQCd, scene.PosedAndQCd, LicenseOld, LicenseNew);
-        if (!res.success)
+        if (!res.success) {
+            RK.logError(RK.LogSection.eGQL,'clear license assignment failed',res.error,{ ...oID },'GraphQL.License.Assignment');
             return { success: false, message: res.error };
+        }
         return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
     }
 

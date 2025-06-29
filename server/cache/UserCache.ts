@@ -1,7 +1,7 @@
-import * as LOG from '../utils/logger';
 import * as DBAPI from '../db';
 import { CacheControl } from './CacheControl';
 import { User } from '../db';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
 export class UserCache {
     private static singleton: UserCache | null = null;
@@ -32,17 +32,17 @@ export class UserCache {
     // Cache Construction
     // **************************
     private async flushInternalWorker(): Promise<boolean> {
-        LOG.info('CACHE UserCache.flushInternalWorker() start', LOG.LS.eCACHE );
         // TODO: replace with paged output
         const UserFetch: User[] | null = await User.fetchUserList('', DBAPI.eUserStatus.eAll); /* istanbul ignore next */
         if (!UserFetch) {
-            LOG.error('UserCache.flushInternalWorker unable to fetch Users', LOG.LS.eCACHE );
+            RK.logError(RK.LogSection.eCACHE,'flush internal cache failed','unable to fetch users',undefined,'Cache.User');
             return false;
         }
 
         for (const user of UserFetch)
             this.userMap.set(user.idUser, user);
-        LOG.info('CACHE UserCache.flushInternalWorker() done', LOG.LS.eCACHE );
+
+        RK.logDebug(RK.LogSection.eCACHE,'flush internal cache success',undefined,undefined,'LicenseCache');
         return true;
     }
 

@@ -2,8 +2,8 @@ import { GetUploadedAssetVersionResult, UpdatedAssetVersionMetadata, UpdatePhoto
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
-import * as LOG from '../../../../../utils/logger';
-import * as H from '../../../../../utils/helpers';
+// import * as H from '../../../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getUploadedAssetVersion(_: Parent, __: unknown, context: Context): Promise<GetUploadedAssetVersionResult> {
     const { user } = context;
@@ -16,7 +16,7 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
     // these have been uploaded but are still being processed in a post-upload workflow
     const AssetVersion: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromUserByIngested(idUser, false, false);
     if (!AssetVersion) {
-        LOG.error(`getUploadedAssetVersion failed on AssetVersion.fetchFromUserByIngested(${idUser}, false, false)`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get uploaded asset version failed','cannot fetch asset versions by user',{},'GraphQL.Asset');
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
     if (AssetVersion.length == 0)
@@ -31,7 +31,7 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
     const idAssets: number[] = [ ...assetMap.keys() ];
     const versionCountMap: Map<number, number> | null = await DBAPI.Asset.computeVersionCountMap(idAssets);
     if (!versionCountMap) {
-        LOG.error(`getUploadedAssetVersion failed on Asset.computeVersionCountMap(${JSON.stringify(idAssets)})`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get uploaded asset version failed','cannot compute version counts',{ idAssets },'GraphQL.Asset');
         return { AssetVersion: [], idAssetVersionsUpdated: [], UpdatedAssetVersionMetadata: [] };
     }
 
@@ -44,7 +44,7 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
         if (versionCount > 1) {
             const idAssetVersion: number | undefined = assetMap.get(idAsset);
             if (idAssetVersion === undefined) {
-                LOG.error(`getUploadedAssetVersion skipping unexpected idAsset ${idAsset}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'get uploaded asset version failed',`skipping unexpected idAsset ${idAsset}`,{},'GraphQL.Asset');
                 continue;
             }
             idAssetVersionsUpdated.push(idAssetVersion);
@@ -63,14 +63,14 @@ export default async function getUploadedAssetVersion(_: Parent, __: unknown, co
 async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: number): Promise<UpdatedAssetVersionMetadata | null> {
     const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
     if (!asset) {
-        LOG.error(`getUploadedAssetVersion failed to retrieve idAsset ${idAsset}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute updated version metadata failed',`cannot retrieve idAsset ${idAsset}`,{ idAssetVersion },'GraphQL.Asset');
         return null;
     }
     if (!asset.idSystemObject)
         return null;
     const SOP: DBAPI.SystemObjectPairs | null = await DBAPI.SystemObjectPairs.fetch(asset.idSystemObject);
     if (!SOP) {
-        LOG.error(`getUploadedAssetVersion failed to retrieve system object info from ${JSON.stringify(asset, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute updated version metadata failed','failed to retrieve system object info from asset',{ idAssetVersion, asset },'GraphQL.Asset');
         return null;
     }
 
@@ -83,7 +83,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
         if (OG.item && OG.item.length === 1)
             Item = OG.item[0];
     } else
-        LOG.error(`getUploadedAssetVersion failed to retrieve object graph for asset owner ${asset.idSystemObject}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute updated version metadata failed',`failed to retrieve object graph for asset owner ${asset.idSystemObject}`,{ idAssetVersion },'GraphQL.Asset');
 
 
     let CaptureDataPhoto: UpdatePhotogrammetryMetadata | undefined = undefined;
@@ -119,7 +119,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
                 datasetUse: CDP.CaptureDatasetUse ?? '[207,208,209]' // indices into Vocabulary: alignment, reconstruction, texture generation
             };
         } else {
-            LOG.error(`getUploadedAssetVersion failed to retrieve CaptureDataPhoto from ${JSON.stringify(SOP.CaptureData, H.Helpers.saferStringify)}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'compute updated version metadata failed','failed to retrieve CaptureDataPhoto from system object pair',{ idAssetVersion, captureData: SOP.CaptureData },'GraphQL.Asset');
             return null;
         }
     } else if (SOP.Model) {

@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export type VerifyUserResult = {
     success: boolean;
     error?: string | null;
+    data?: any;
 };
 
 export interface IAuth {

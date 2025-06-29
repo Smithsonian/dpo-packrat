@@ -3,8 +3,8 @@ import { PrismaClient, SystemObjectVersion as SystemObjectVersionBase } from '@p
 import { SystemObjectVersionAssetVersionXref } from '..';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
-// import * as H from '../../utils/helpers';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> implements SystemObjectVersionBase {
     idSystemObjectVersion!: number;
@@ -58,7 +58,8 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            return false;
         }
     }
 
@@ -75,7 +76,8 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            return  false;
         }
     }
 
@@ -86,7 +88,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findUnique({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectVersion.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -98,7 +100,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject }, orderBy: { idSystemObjectVersion: 'asc' } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectVersion.fetchFromSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -121,7 +123,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             // Manually construct SystemObjectVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return SystemObjectVersion.constructFromPrisma(systemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectVersion.fetchLatestFromSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch latest from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -161,7 +163,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 return retValue;
             },transactionOptions);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectVersion.cloneObjectAndXrefs', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -181,7 +183,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
 
             /* istanbul ignore next */
             if (!assetVersionMap) {
-                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`,{ ...this },'DB.SystemObject.Version');
                 return null;
             }
 
@@ -195,7 +197,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             }); /* istanbul ignore next */
 
             if (!await SOV.create()) {
-                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans failed to create new SystemObjectVersion for ${idSystemObject}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create new SystemObjectVersion for ${idSystemObject}`,{ ...this },'DB.SystemObject.Version');
                 return null;
             }
 
@@ -221,12 +223,12 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             } /* istanbul ignore next */
 
             if (!success) {
-                LOG.error(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`,{ ...this },'DB.SystemObject.Version');
                 return null;
             }
             return SOV;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
             return null;
         }
     }

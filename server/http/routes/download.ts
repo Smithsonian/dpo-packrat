@@ -1,6 +1,5 @@
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
@@ -9,6 +8,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
 import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import { Request, Response } from 'express';
 import * as mime from 'mime-types';
@@ -39,7 +39,7 @@ export async function download(request: Request, response: Response): Promise<bo
     try {
         return await DL.execute();
     } catch (error) {
-        LOG.error(Downloader.httpRoute, LOG.LS.eHTTP, error);
+        RK.logError(RK.LogSection.eHTTP,'download error',H.Helpers.getErrorString(error),H.Helpers.cleanExpressRequest(request),'HTTP.Route.Download');
         return false;
     }
 }
@@ -60,13 +60,15 @@ export class Downloader {
     async execute(): Promise<boolean> {
         if (!isAuthenticated(this.request)) {
             AuditFactory.audit({ url: this.request.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
-            LOG.error(`${Downloader.httpRoute} not authenticated`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'download error','not authenticated',{ url: this.request.path },'HTTP.Route.Download');
             return this.sendError(403);
         }
 
         const DPResults: DownloaderParserResults = await this.downloaderParser.parseArguments();
-        if (!DPResults.success)
+        if (!DPResults.success) {
+            RK.logError(RK.LogSection.eHTTP,'execute failed',DPResults.message,{},'HTTP.Route.Download');
             return this.sendError(DPResults.statusCode ?? 200, DPResults.message);
+        }
 
         // Audit download
         if (this.downloaderParser.eModeV !== eDownloadMode.eSitemap) {
@@ -85,9 +87,12 @@ export class Downloader {
                 return (DPResults.assetVersion) ? await this.emitDownload(DPResults.assetVersion) : this.sendError(404);
 
             case eDownloadMode.eAsset:
-                return (DPResults.assetVersion)
-                    ? await this.emitDownload(DPResults.assetVersion)
-                    : this.sendError(404, `${Downloader.httpRoute}?idAsset=${this.downloaderParser.idAssetV} unable to fetch asset version`);
+                if(DPResults.assetVersion)
+                    return await this.emitDownload(DPResults.assetVersion);
+                else {
+                    RK.logError(RK.LogSection.eHTTP,'execute failed','unable to fetch asset version',{ idAssetV: this.downloaderParser.idAssetV },'HTTP.Route.Download');
+                    return this.sendError(404, `${Downloader.httpRoute}?idAsset=${this.downloaderParser.idAssetV} unable to fetch asset version`);
+                }
 
             case eDownloadMode.eSystemObject:
                 if (DPResults.assetVersions)
@@ -107,8 +112,10 @@ export class Downloader {
                     return await this.emitDownloadContent(DPResults.content, `MetadataContent.${this.downloaderParser.idMetadataV}.htm`);
                 else if (DPResults.assetVersion)
                     return await this.emitDownload(DPResults.assetVersion);
-                else
+                else {
+                    RK.logError(RK.LogSection.eHTTP,'execute failed','invalid metadata. not found',{},'HTTP.Route.Download');
                     return this.sendError(404);
+                }
 
             case eDownloadMode.eWorkflow:
             case eDownloadMode.eWorkflowReport:
@@ -131,10 +138,9 @@ export class Downloader {
     }
 
     private async emitDownload(assetVersion: DBAPI.AssetVersion): Promise<boolean> {
-        const idAssetVersion: number = assetVersion.idAssetVersion;
         const res: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersion(assetVersion);
         if (!res.success || !res.readStream) {
-            LOG.error(`download idAssetVersion=${idAssetVersion} unable to read from storage: ${res.error}`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'emit download failed',`unable to read from storage: ${res.error}`,{ assetVersion },'HTTP.Route.Download');
             return this.sendError(500);
         }
         const fileName: string = assetVersion.FileName;
@@ -143,7 +149,6 @@ export class Downloader {
     }
 
     private async emitDownloadZip(assetVersions: DBAPI.AssetVersion[]): Promise<boolean> {
-        const errorMsgBase: string = this.downloaderParser.requestURLV;
         let idSystemObject: number = this.downloaderParser.idSystemObjectV ?? 0;
 
         if (this.downloaderParser.idSystemObjectVersionV) {
@@ -151,11 +156,11 @@ export class Downloader {
             if (SOV)
                 idSystemObject = SOV.idSystemObject;
             else {
-                LOG.error(`${errorMsgBase} failed to laod SystemObjectVersion by id ${this.downloaderParser.idSystemObjectVersionV}`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'emit download zip failed','cannot to load SystemObjectVersion by id',{ url: this.downloaderParser.requestURLV, idSystemObject, idSystemObjectVersionV: this.downloaderParser.idSystemObjectVersionV },'HTTP.Route.Download');
                 return false;
             }
         } else if (!this.downloaderParser.idSystemObjectV) {
-            LOG.error(`${Downloader.httpRoute} emitDownloadZip called with unexpected parameters`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'emit download zip failed','called with unexpected parameters',{ ...this.downloaderParser },'HTTP.Route.Download');
             return false;
         }
 
@@ -163,27 +168,27 @@ export class Downloader {
         for (const assetVersion of assetVersions) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
             if (!asset) {
-                LOG.error(`${errorMsgBase} failed to identify asset by id ${assetVersion.idAsset}`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'emit download zip failed',`cannot identify asset by id ${assetVersion.idAsset}`,{ url: this.downloaderParser.requestURLV },'HTTP.Route.Download');
                 return this.sendError(500);
             }
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(asset, assetVersion);
             if (!RSR.success || !RSR.readStream) {
-                LOG.error(`${errorMsgBase} failed to extract stream for asset version ${assetVersion.idAssetVersion}: ${RSR.error}`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'emit download zip failed',`cannot extract stream for asset version: ${RSR.error}`,{ url: this.downloaderParser.requestURLV, assetVersion },'HTTP.Route.Download');
                 return this.sendError(500);
             }
 
             const fileNameAndPath: string = path.posix.join(assetVersion.FilePath, assetVersion.FileName);
             const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
             if (!res.success) {
-                LOG.error(`${errorMsgBase} failed to add asset version ${assetVersion.idAssetVersion} to zip: ${res.error}`, LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'emit download zip failed',`cannot add asset version to zip: ${res.error}`,{ url: this.downloaderParser.requestURLV, assetVersion },'HTTP.Route.Download');
                 return this.sendError(500);
             }
         }
 
         const zipStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
         if (!zipStream) {
-            LOG.error(`${errorMsgBase} failed to extract stream from zip`, LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'emit download zip failed','cannot extract stream from zip',{ url: this.downloaderParser.requestURLV },'HTTP.Route.Download');
             return this.sendError(500);
         }
 
@@ -233,7 +238,7 @@ export class Downloader {
         const fileName: string = fileNameIn.replace(/,/g, '_'); // replace commas with underscores to avoid ERR_RESPONSE_HEADERS_MULTIPLE_CONTENT_DISPOSITION browser error
         if (!mimeType)
             mimeType = mime.lookup(fileName) || 'application/octet-stream';
-        LOG.info(`${Downloader.httpRoute} emitDownloadFromStream filename=${fileName}, mimetype=${mimeType}`, LOG.LS.eHTTP);
+        RK.logInfo(RK.LogSection.eHTTP,'emit download from stream',undefined,{ fileName, mimeType },'HTTP.Route.Download');
 
         this.response.setHeader('Content-disposition', 'attachment; filename=' + fileName);
         if (mimeType)

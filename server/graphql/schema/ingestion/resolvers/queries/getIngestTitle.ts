@@ -2,7 +2,7 @@ import { GetIngestTitleResult, QueryGetIngestTitleArgs, IngestTitle } from '../.
 import { Parent, Context } from '../../../../../types/resolvers';
 import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as DBAPI from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitleArgs, _context: Context): Promise<GetIngestTitleResult> {
 
@@ -15,7 +15,8 @@ export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitl
         if (item.id) {
             itemDB = await DBAPI.Item.fetch(item.id);
             if (!itemDB)
-                LOG.error(`getIngestTitle unable to load Item from ${item.id}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eRPT,'get ingest title failed',`unable to load Item from ${item.id}`,{ args },'GraphQL.Schema.Ingestion');
+
         }
 
         if (!itemDB) {

@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { AccessPolicy as AccessPolicyBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements AccessPolicyBase {
     idAccessPolicy!: number;
@@ -30,7 +31,8 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Policy');
+            return false;
         }
     }
 
@@ -46,7 +48,8 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Policy');
+            return false;
         }
     }
 
@@ -57,7 +60,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return DBC.CopyObject<AccessPolicyBase, AccessPolicy>(
                 await DBC.DBConnection.prisma.accessPolicy.findUnique({ where: { idAccessPolicy, }, }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessPolicy.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessPolicy, ...this },'DB.Access.Policy');
             return null;
         }
     }
@@ -69,7 +72,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return DBC.CopyArray<AccessPolicyBase, AccessPolicy>(
                 await DBC.DBConnection.prisma.accessPolicy.findMany({ where: { idAccessContext } }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessPolicy.fetchFromAccessContext', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from AccessContext failed',H.Helpers.getErrorString(error),{ idAccessContext, ...this },'DB.Access.Policy');
             return null;
         }
     }
@@ -81,7 +84,7 @@ export class AccessPolicy extends DBC.DBObject<AccessPolicyBase> implements Acce
             return DBC.CopyArray<AccessPolicyBase, AccessPolicy>(
                 await DBC.DBConnection.prisma.accessPolicy.findMany({ where: { idUser } }), AccessPolicy);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessPolicy.fetchFromUser', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUser, ...this },'DB.Access.Policy');
             return null;
         }
     }

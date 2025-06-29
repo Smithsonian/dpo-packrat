@@ -1,7 +1,6 @@
 import * as DBAPI from '../..';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
-import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
@@ -136,7 +135,7 @@ export class ObjectAncestors {
             else if (object instanceof DBAPI.Stakeholder)
                 idObject = object.idStakeholder;
             else {
-                LOG.error(`ObjectAncestors.compute unable to determine type and id from ${JSON.stringify(object, H.Helpers.saferStringify)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'object to repository path failed','unable to determine type and id from object',{ object },'DB.Composite.ObjectAncestors');
                 continue;
             }
 
@@ -160,7 +159,7 @@ export class ObjectAncestors {
                         ancestors.push(path);                               //      push onto the current ancestor list
                 }
             } else
-                LOG.error(`ObjectAncestors.compute could not compute system object info from ${JSON.stringify(oID)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'object to repository path failed','could not compute system object info from object',{ ...oID },'DB.Composite.ObjectAncestors');
         }
 
         if (ancestors.length <= 0)

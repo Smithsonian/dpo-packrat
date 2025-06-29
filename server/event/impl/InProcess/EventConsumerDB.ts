@@ -5,9 +5,9 @@ import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as NAV from '../../../navigation/interface';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import { eAuditType } from '../../../db';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class EventConsumerDB extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -19,7 +19,7 @@ export class EventConsumerDB extends EventConsumer {
         // inform cache and solr of systemobject events
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
-                LOG.error(`EventConsumerDB.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                RK.logError(RK.LogSection.eEVENT,'event worker failed','sent event with unknown key',{ ...dataItem },'Event.Consumer.DB');
                 continue;
             }
             // LOG.info(`EventConsumerDB.eventWorker ${JSON.stringify(dataItem, H.Helpers.stringifyDatabaseRow)}`, LOG.LS.eEVENT);
@@ -60,7 +60,7 @@ export class EventConsumerDB extends EventConsumer {
                 } break;
 
                 default:
-                    LOG.error(`EventConsumerDB.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                    RK.logError(RK.LogSection.eEVENT,'event worker failed','unsupported key',{ ...dataItem },'Event.Consumer.DB');
                     break;
             }
         }

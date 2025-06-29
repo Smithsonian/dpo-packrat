@@ -1,7 +1,6 @@
 import { IWorkflowEngine } from './IWorkflowEngine';
 import { WorkflowEngine } from '../impl/Packrat';
 import { Config, WORKFLOW_TYPE } from '../../config';
-// import * as LOG from '../../utils/logger';
 
 export class WorkflowFactory {
     private static instance: IWorkflowEngine | null = null;

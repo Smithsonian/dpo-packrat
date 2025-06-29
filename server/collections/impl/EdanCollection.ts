@@ -8,10 +8,10 @@ import { PublishSubject } from './PublishSubject';
 import { Config } from '../../config';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { EdanLicenseInfo } from '../interface';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 interface HttpRequestResult {
     output: string;
@@ -71,15 +71,15 @@ export class EdanCollection implements COL.ICollection {
         const params: string = `q=${encodeURIComponent(query).replace(/'/g, '%27')}${filter}&rows=${rows}&start=${start}`;
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
         if (!reqResult.success) {
-            LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed',`request error: ${reqResult.statusText}`,{ query },'Publish.Subject');
             return null;
         }
 
-        let jsonResult: any | null          = null;
+        let jsonResult: any | null = null;
         try {
-            jsonResult                      = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+            jsonResult = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error(`EdanCollection.queryCollection ${query}`, LOG.LS.eCOLL, error);
+            RK.logError(RK.LogSection.eCOLL,'publish failed',H.Helpers.getErrorString(error),{ query },'Publish.Subject');
             return null;
         }
 
@@ -145,7 +145,8 @@ export class EdanCollection implements COL.ICollection {
     }
 
     async fetchContent(id?: string, url?: string): Promise<COL.EdanRecord | null> {
-        LOG.info(`EdanCollection.fetchContent(${id}, ${url})`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'fetch content',undefined,{ id, url },'Collection.EDAN');
+
         let params: string = '';
         if (id)
             params = `id=${encodeURIComponent(id)}`;
@@ -156,15 +157,15 @@ export class EdanCollection implements COL.ICollection {
 
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, 'content/v2.0/content/getContent.htm', params);
         if (!reqResult.success) {
-            LOG.error(`EdanCollection.fetchContent(${id}, ${url})`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'fetch content failed','request failed',{ id, url },'Collection.EDAN');
             return null;
         }
 
         let jsonResult: any | null  = null;
         try {
-            jsonResult              = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
+            jsonResult = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error(`EdanCollection.fetchContent(${id}, ${url})`, LOG.LS.eCOLL, error);
+            RK.logError(RK.LogSection.eCOLL,'fetch content failed','parse failed',{ id, url },'Collection.EDAN');
             return null;
         }
         return jsonResult;
@@ -172,7 +173,7 @@ export class EdanCollection implements COL.ICollection {
 
     async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
 
-        LOG.info(`EdanCollection.publish (idSystemObject: ${idSystemObject} | state: ${COMMON.ePublishedState[ePublishState]})`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eCOLL,'publish',undefined,{ idSystemObject, publishState: COMMON.ePublishedState[ePublishState] },'Collection.EDAN');
 
         switch (ePublishState) {
             case COMMON.ePublishedState.eNotPublished:
@@ -181,13 +182,13 @@ export class EdanCollection implements COL.ICollection {
             case COMMON.ePublishedState.eInternal:
                 break;
             default:
-                LOG.error(`EdanCollection.publish called with invalid ePublishState ${ePublishState} for idSystemObject ${idSystemObject}`, LOG.LS.eCOLL);
+                RK.logError(RK.LogSection.eCOLL,'publish failed','called with invalid ePublishState for idSystemObject',{ idSystemObject, publishState: COMMON.ePublishedState[ePublishState] },'Collection.EDAN');
                 return false;
         }
 
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
         if (!oID) {
-            LOG.error(`EdanCollection.publish(${idSystemObject}) unable to compute object id and type`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'publish failed','unable to compute object id and type',{ idSystemObject, publishState: COMMON.ePublishedState[ePublishState] },'Collection.EDAN');
             return false;
         }
 
@@ -219,7 +220,7 @@ export class EdanCollection implements COL.ICollection {
     async createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<COL.EdanRecord | null> {
         // const body: any = sceneFile ? { resource: path.replace(/\.zip|-zip$/, ''), document: sceneFile } : { resource: path.replace(/\.zip|-zip$/, '') };
         const body: any = sceneFile ? { resource: path, document: sceneFile } : { resource: path };
-        LOG.info(`createEdan3DPackage body:\n${H.Helpers.JSONStringify(body)}`,LOG.LS.eDEBUG);
+        RK.logDebug(RK.LogSection.eCOLL,'create EDAN package',undefined,{ path, body },'Collection.EDAN');
 
         const edanRecord: COL.EdanRecord | null = await this.upsertResource(body, 'createEdan3DPackage');
         if(!edanRecord)
@@ -229,7 +230,7 @@ export class EdanCollection implements COL.ICollection {
         // only seems to happen when running locally with a Proxy
         const packageUrl: string = edanRecord.url.replace(/\.zip|-zip$/, '');
         if(edanRecord.url!==packageUrl)
-            LOG.info(`EdanCollection.createEdan3DPackage returned url needed correction. (${edanRecord.url} -> ${packageUrl})`,LOG.LS.eCOLL);
+            RK.logWarning(RK.LogSection.eCOLL,'create EDAN package','returned url needed correction',{ path, edanRecord },'Collection.EDAN');
 
         return { ...edanRecord, url: packageUrl };
     }
@@ -241,7 +242,7 @@ export class EdanCollection implements COL.ICollection {
         // only seems to happen when running locally with a Proxy
         const packageUrl: string = url.replace(/\.zip|-zip$/, '');
         if(url!==packageUrl)
-            LOG.info(`EdanCollection.updateEdan3DPackage incoming url needed correction. (${url} -> ${packageUrl})`,LOG.LS.eCOLL);
+            RK.logInfo(RK.LogSection.eCOLL,'update EDAN 3D package','incoming url needed correction',{ url, packageUrl, title },'Collection.EDAN');
 
         const body: any = {
             url: packageUrl,
@@ -257,19 +258,18 @@ export class EdanCollection implements COL.ICollection {
 
     /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertContent */
     private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
-        LOG.info(`EdanCollection.upsertContent: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
+        RK.logInfo(RK.LogSection.eCOLL,'upsert content',undefined,{ body },'Collection.EDAN');
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
-        LOG.info(`EdanCollection.upsertContent result:\n${H.Helpers.JSONStringify(H.Helpers.JSONParse(reqResult.output))}`, LOG.LS.eCOLL);
 
         if (!reqResult.success) {
-            LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'upsert content failed','request failed',{ ...reqResult, caller },'Collection.EDAN');
             return null;
         }
 
         try {
             return JSON.parse(reqResult.output)?.response ?? null;
         } catch (error) {
-            LOG.error(`EdanCollection.${caller} parse error: ${JSON.stringify(reqResult)}`, LOG.LS.eCOLL, error);
+            RK.logError(RK.LogSection.eCOLL,'upsert content failed',`parse error: ${error}`,{ ...reqResult, caller },'Collection.EDAN');
             return null;
         }
     }
@@ -278,17 +278,17 @@ export class EdanCollection implements COL.ICollection {
     private async upsertResource(body: any, caller: string): Promise<COL.EdanRecord | null> {
         // LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertResource', '', JSON.stringify(body), 'application/json');
-        LOG.info(`EdanCollection.upsertResource result:\n${H.Helpers.JSONStringify(H.Helpers.JSONParse(reqResult.output))}`, LOG.LS.eDEBUG);
+        RK.logInfo(RK.LogSection.eCOLL,'upsert resource',reqResult.output,{ body },'Collection.EDAN');
 
         if (!reqResult.success) {
-            LOG.error(`EdanCollection.${caller} failed with ${reqResult.statusText}: ${reqResult.output}`, LOG.LS.eCOLL);
+            RK.logError(RK.LogSection.eCOLL,'upsert resource',reqResult.output,{ ...reqResult, caller, body },'Collection.EDAN');
             return null;
         }
 
         try {
             return JSON.parse(reqResult.output)?.response ?? null;
         } catch (error) {
-            LOG.error(`EdanCollection.${caller} parse error: ${JSON.stringify(reqResult)}`, LOG.LS.eCOLL, error);
+            RK.logError(RK.LogSection.eCOLL,'upsert resource',`parse error: ${error}`,{ ...reqResult, caller, body },'Collection.EDAN');
             return null;
         }
     }
@@ -385,8 +385,7 @@ export class EdanCollection implements COL.ICollection {
 
         const url: string = `${server}${path}${params ? '?' + params : ''}`;
         try {
-            // LOG.info(`EdanCollection.sendRequest: ${url}, ${body}`, LOG.LS.eCOLL);
-            LOG.info(`EdanCollection.sendRequest: ${url}`, LOG.LS.eCOLL);
+            RK.logDebug(RK.LogSection.eCOLL,'send request',undefined,{ url, eType, eMethod, path, params },'Collection.EDAN');
             const init: RequestInit = { method, body: body ?? undefined, headers: this.encodeHeader(params, contentType) };
             const res = await fetch(url, init);
 
@@ -401,7 +400,8 @@ export class EdanCollection implements COL.ICollection {
                 success: res.ok
             };
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('EdanCollection.sendRequest', LOG.LS.eCOLL, error);
+            RK.logError(RK.LogSection.eCOLL,'send request',H.Helpers.getErrorString(error),{ url, eType, eMethod, path, params },'Collection.EDAN');
+
             return {
                 output: JSON.stringify(error),
                 statusText: 'node-fetch error',

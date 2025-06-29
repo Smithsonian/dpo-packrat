@@ -2,7 +2,6 @@ import { IEventEngine } from './IEventEngine';
 import { EventEngine } from '../impl/InProcess';
 import { AuditEventGenerator } from '../../audit/impl/AuditEventGenerator';
 import { Config, EVENT_TYPE } from '../../config';
-// import * as LOG from '../../utils/logger';
 
 export class EventFactory {
     private static instance: IEventEngine | null = null;

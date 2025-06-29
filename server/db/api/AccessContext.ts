@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { AccessContext as AccessContextBase }from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class AccessContext extends DBC.DBObject<AccessContextBase> implements AccessContextBase {
     idAccessContext!: number;
@@ -29,7 +30,8 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Context');
+            return false;
         }
     }
 
@@ -41,7 +43,8 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Context');
+            return false;
         }
     }
 
@@ -52,7 +55,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
             return DBC.CopyObject<AccessContextBase, AccessContext>(
                 await DBC.DBConnection.prisma.accessContext.findUnique({ where: { idAccessContext, }, }), AccessContext);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.AccessContext.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessContext, ...this },'DB.Access.Context');
             return null;
         }
     }

@@ -2,7 +2,7 @@ import { License, LicenseAssignment } from '../..';
 import { eObjectGraphMode, ObjectGraph } from './ObjectGraph';
 import { ObjectGraphDatabase } from './ObjectGraphDatabase';
 import { ObjectGraphDataEntry } from './ObjectGraphDataEntry';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class LicenseResolver {
     public License: License | null = null;
@@ -24,7 +24,7 @@ export class LicenseResolver {
             OGD = new ObjectGraphDatabase();
             const OG: ObjectGraph = new ObjectGraph(idSystemObject, eObjectGraphMode.eAncestors, 32, OGD); /* istanbul ignore if */
             if (!await OG.fetch()) {
-                LOG.error(`LicenseResolver unable to fetch object graph for ${idSystemObject}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'fetch failed','unable to fetch object graph',{ idSystemObject, OGD },'DB.Composite.License.Resolver');
                 return null;
             }
         }
@@ -43,7 +43,7 @@ export class LicenseResolver {
 
             const license: License | null = await License.fetch(assignment.idLicense); /* istanbul ignore if */
             if (!license) {
-                LOG.error(`LicenseResolver.pickMostRestrictiveAssignment unable to compute license from ${JSON.stringify(assignment)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'pick most restrictive license failed','unable to compute license',{ assignment },'DB.Composite.License.Resolver');
                 continue;
             }
 

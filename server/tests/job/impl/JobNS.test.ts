@@ -9,10 +9,10 @@ import * as WFP from '../../../workflow/impl/Packrat';
 import * as REP from '../../../report/interface';
 import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
-import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as TESTMODEL from '../../db/composite/Model.setup';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 class JobData {
     dbJobRun: DBAPI.JobRun;
@@ -62,7 +62,7 @@ describe('JobNS Init', () => {
         modelTestAvailable = await MTS.initialize(); // ['dae','obj'] to select specific test cases
         expect(modelTestAvailable === null || modelTestAvailable).toBeTruthy(); // null means that model test files were not available, which is ok
         if (!modelTestAvailable)
-            LOG.info('JobNS Skipping Cook Job and Workflow Tests, missing test models', LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'describe','Skipping Cook Job and Workflow Tests, missing test models',{},'Tests.Job.Init');
     });
 });
 
@@ -138,14 +138,16 @@ describe('JobNS Cook Test Completion', () => {
         for (const job of JobMap.values())
             jobFinalizationList.push(job.waitForCompletion(testTimeout));
 
-        LOG.info(`JobNS Cook awaiting job completion of ${JobMap.size} jobs`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'describe',`Cook awaiting job completion of ${JobMap.size} jobs`,{},'Tests.Job');
+
         try {
             const resultsArray = await Promise.all(jobFinalizationList);
             for (const res of resultsArray)
                 expect(res.success).toBeTruthy();
-            LOG.info(`JobNS Cook received job completion of ${resultsArray.length} jobs`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'describe',`Cook received job completion of ${resultsArray.length} jobs`,{},'Tests.Job');
+
         } catch (error) {
-            LOG.error('JobNS Cook Job Completion failed', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'Cook job completion',H.Helpers.getErrorString(error),{},'Tests.Job');
         }
     });
 
@@ -168,14 +170,15 @@ describe('JobNS IWorkflow Completion', () => {
         for (const WF of WorkflowMap.values())
             wfFinalizationList.push(WF.waitForCompletion(testTimeout));
 
-        LOG.info(`JobNS IWorkflow Completion awaiting completion of ${WorkflowMap.size} workflows`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'IWorkflow completion',`awaiting completion of ${WorkflowMap.size} workflows`,{},'Tests.Job.IWorkflow');
+
         try {
             const resultsArray = await Promise.all(wfFinalizationList);
             for (const res of resultsArray)
                 expect(res.success).toBeTruthy();
-            LOG.info(`JobNS IWorkflow Completion received completion of ${resultsArray.length} workflows`, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'IWorkflow completion',`received completion of ${resultsArray.length} workflows`,{},'Tests.Job.IWorkflow');
         } catch (error) {
-            LOG.error('JobNS IWorkflow Completion failed', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'IWorkflow completion',H.Helpers.getErrorString(error),{},'Tests.Job.IWorkflow');
         }
     });
 
@@ -208,7 +211,7 @@ describe('JobNS IWorkflow Completion', () => {
                 } break;
 
                 default:
-                    LOG.error(`JobNS IWorkflow Job Results encountered Unexpected Workflow Type: ${eWorkflowType ? COMMON.eVocabularyID[eWorkflowType] : 'undefined'}`, LOG.LS.eTEST);
+                    RK.logError(RK.LogSection.eTEST,'IWorkflow job results',`encountered Unexpected Workflow Type: ${eWorkflowType ? COMMON.eVocabularyID[eWorkflowType] : 'undefined'}`,{},'Tests.Job.IWorkflow');
                     expect(false).toBeTruthy();
                     break;
             }
@@ -222,7 +225,8 @@ function testCookExplicit(testCase: string, eJobType: COMMON.eVocabularyID): voi
         if (!modelTestAvailable)
             return;
 
-        LOG.info(`JobNS.test testCook(${testCase}): ${COMMON.eVocabularyID[eJobType]} explicit IJob.executeJob`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'cook explicit',`${COMMON.eVocabularyID[eJobType]} explicit IJob.executeJob`,{ testCase },'Tests.Job.Utils');
+
         const assetVersionIDs: number[] | undefined = MTS.getTestCase(testCase)?.assetVersionIDs();
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
@@ -240,11 +244,12 @@ function testCookExplicit(testCase: string, eJobType: COMMON.eVocabularyID): voi
 }
 
 function testCookImplicit(testCase: string, eJobType: COMMON.eVocabularyID): void {
-    test(`IJob.Cook ${COMMON.eVocabularyID[eJobType]} ${testCase} Implicit`, async () => {
+    test(`IJob.Cook ${COMMON.eVocabularyID[eJobType]} ${ testCase } Implicit`, async () => {
         if (!modelTestAvailable)
             return;
 
-        LOG.info(`JobNS.test testCook(${testCase}): ${COMMON.eVocabularyID[eJobType]} implicit IJob.executeJob`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'cook implicit',`${COMMON.eVocabularyID[eJobType]} implicit IJob.executeJob`,{ testCase },'Tests.Job.Utils');
+
         const assetVersionIDs: number[] | undefined = MTS.getTestCase(testCase)?.assetVersionIDs();
         expect(assetVersionIDs).toBeTruthy();
         const parameters: any = computeJobParameters(testCase, eJobType);
@@ -302,14 +307,14 @@ async function testCreateJob(idJob: number | null, eJobType: COMMON.eVocabularyI
 async function computeVocabularyDBID(eJobType: COMMON.eVocabularyID): Promise<number | undefined> {
     const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eJobType);
     if (!idVJobType)
-        LOG.error(`computeVocabularyDBID unable to fetch Job type from ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'compute vocabulary DBID',`unable to fetch Job type from ${COMMON.eVocabularyID[eJobType]}`,{},'Tests.Job.Utils');
     return idVJobType;
 }
 
 async function computeVocabularyDBEnum(idVJobType: number): Promise<COMMON.eVocabularyID | undefined> {
     const eJobType: number | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(idVJobType);
     if (!eJobType)
-        LOG.error(`computeVocabularyDBEnum unable to fetch Job enum from ${idVJobType}`, LOG.LS.eTEST);
+        RK.logError(RK.LogSection.eTEST,'compute vocabulary by DB enum',`unable to fetch Job enum from ${idVJobType}`,{},'Tests.Job.Utils');
     return eJobType;
 }
 
@@ -321,13 +326,14 @@ function computeJobParameters(testCase: string, eJobType: COMMON.eVocabularyID):
     switch (eJobType) {
         case COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect: return new COOK.JobCookSIPackratInspectParameters(modelName);
         default:
-            LOG.error(`JobNS.test computeJobParameters: unexpected job type ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'compute job parameters',`unexpected job type ${COMMON.eVocabularyID[eJobType]}`,{},'Tests.Job.Utils');
             expect(false).toBeTruthy();
     }
 }
 
 async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null): Promise<boolean> {
-    LOG.info(`JobNS Test validateJobOutput(${testcase}): idJobRun ${dbJobRun?.idJobRun}`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'validate job output',`idJobRun ${dbJobRun?.idJobRun}`,{ testcase },'Tests.Job.Utils');
+
     expect(dbJobRun).toBeTruthy();
     if (!dbJobRun)
         return false;
@@ -335,7 +341,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
         expect(dbJobRun.Result).toBeTruthy();
     else {
         if (!dbJobRun.Result) {
-            LOG.error(`JobNS Test validateJobOutput(${testcase}) failed: idJobRun ${dbJobRun.idJobRun}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'validate job output',`${testcase} failed: idJobRun ${dbJobRun.idJobRun}`,{},'Tests.Job.Utils');
             return true;
         }
     }
@@ -354,7 +360,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
             try {
                 JCOutput = await COOK.JobCookSIPackratInspectOutput.extract(JSON.parse(output || ''), null, null);
             } catch (error) {
-                LOG.error(`JobNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output}`, LOG.LS.eTEST, error);
+                RK.logError(RK.LogSection.eTEST,'validate job output',`${COMMON.eVocabularyID[jobData.eJobType]}: ${error}`,{ testcase, output },'Tests.Job.Utils');
                 expect(true).toBeFalsy();
             }
             expect(JCOutput).toBeTruthy();
@@ -364,7 +370,7 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
                 expect(JCOutput.success).toBeTruthy();
             else {
                 if (!JCOutput.success)
-                    LOG.error(`JobNS Test validateJobOutput(${testcase}) ${COMMON.eVocabularyID[jobData.eJobType]}: ${output} FAILED`, LOG.LS.eTEST);
+                    RK.logError(RK.LogSection.eTEST,'validate job output',`${COMMON.eVocabularyID[jobData.eJobType]}: FAILED`,{ testcase, output },'Tests.Job.Utils');
             }
 
             normalizeOutput(JCOutput);
@@ -374,14 +380,15 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
             const MTC: TESTMODEL.ModelTestCase | undefined = MTS.getTestCase(jobData.testCase);
             expect(MTC).toBeTruthy();
             if (!MTC) {
-                LOG.error(`Unable to find testcase ${jobData.testCase}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'validate job output',`Unable to find testcase ${jobData.testCase}`,{},'Tests.Job.Utils');
                 return false;
             }
 
             const inspectJSON: string | undefined = MTC.inspectJSON;
             expect(inspectJSON).toBeTruthy();
             if (JCOutputStr !== inspectJSON)
-                LOG.info(`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`, LOG.LS.eTEST);
+                RK.logInfo(RK.LogSection.eTEST,'validate job output',`si-packrat-inspect output of ${jobData.testCase}:\n${JCOutputStr}`,{},'Tests.Job.Utils');
+
             if (!IGNORE_FAILURES)
                 expect(JCOutputStr).toEqual(inspectJSON);
 
@@ -389,19 +396,19 @@ async function validateJobOutput(testcase: string, dbJobRun: DBAPI.JobRun | null
             const assetFileNameMap: Map<string, number> = MTC.assetFileNameMap();
             const res: H.IOResults = await JCOutput.persist(MTC.model.idModel, assetFileNameMap);
             if (!res.success) {
-                LOG.error(`JobNS Persisting ${MTC.testCase} FAILED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}: ${res.error}`, LOG.LS.eTEST);
+                RK.logError(RK.LogSection.eTEST,'validate job output',`idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}: ${res.error}`,{ testCase: MTC.testCase },'Tests.Job.Utils.Utils');
                 expect(res.success).toBeTruthy();
             } else {
                 expect(JCOutput.modelConstellation).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model).toBeTruthy();
                 expect(JCOutput.modelConstellation?.Model?.idModel).toBeTruthy();
-                LOG.info(`JobNS Persisting ${MTC.testCase} SUCCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`, LOG.LS.eTEST);
+                RK.logInfo(RK.LogSection.eTEST,'validate job output',`Persisting ${MTC.testCase} SUCCEEDED: idModel ${MTC.model.idModel}, asset map ${JSON.stringify(assetFileNameMap, H.Helpers.saferStringify)}`,{},'Tests.Job.Utils');
             }
             return (!IGNORE_FAILURES) ? (JCOutputStr === inspectJSON) : true;
         }
 
         default:
-            LOG.error(`JobNS validateJobOutput encountered Unexpected Job Type: ${jobData.eJobType ? COMMON.eVocabularyID[jobData.eJobType] : 'undefined'}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'validate job output',`encountered Unexpected Job Type: ${jobData.eJobType ? COMMON.eVocabularyID[jobData.eJobType] : 'undefined'}`,{},'Tests.Job.Utils');
             expect(false).toBeTruthy();
             return false;
     }
@@ -425,7 +432,7 @@ function testWorkflow(testCase: string, eWorkflowType: COMMON.eVocabularyID, eJo
         if (!modelTestAvailable || !workflowEngine)
             return;
 
-        LOG.info(`JobNS.test IWorkflow(${testCase}): ${COMMON.eVocabularyID[eWorkflowType]} ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'workflow',`${COMMON.eVocabularyID[eWorkflowType]} ${COMMON.eVocabularyID[eJobType]}`,{ testCase },'Tests.Job.Workflow');
         const idSystemObject: number[] | undefined = (await MTS?.getTestCase(testCase)?.computeSystemObjectIDs()) ?? undefined;
         expect(idSystemObject).toBeTruthy();
 
@@ -487,7 +494,7 @@ function computeWorkflowParameters(testCase: string, eWorkflowType: COMMON.eVoca
         case COMMON.eVocabularyID.eWorkflowTypeCookJob:
             return new WFP.WorkflowJobParameters(eJobType, computeJobParameters(testCase, eJobType));
         default:
-            LOG.error(`JobNS.test computeWorkflowParameters: unexpected workflow type ${COMMON.eVocabularyID[eWorkflowType]}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'compute workflow parameters',`unexpected workflow type ${COMMON.eVocabularyID[eWorkflowType]}`,{},'Tests.Job.Workflow');
             expect(false).toBeTruthy();
     }
 }

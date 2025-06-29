@@ -1,13 +1,14 @@
 import { License, LicenseAssignment } from '../..';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { LicenseResolver } from './LicenseResolver';
 
 /** LicenseManager exists to manage the setting and clearing of license data from system objects. */
 export class LicenseManager {
     /** Clears license assignment from idSystemObject by setting LicenseAssignment.DateEnd to now; returns false if clear fails */
     static async clearAssignment(idSystemObject: number, clearAll?: boolean | undefined): Promise<boolean> {
-        LOG.info(`LicenseManager.clearAssignment(${idSystemObject}, clearAll ${clearAll})`, LOG.LS.eDB);
+        RK.logInfo(RK.LogSection.eDB,'clear assignmemt',undefined,{ idSystemObject, clearAll },'DB.Composite.License.Manager',true);
+
         const assignments: LicenseAssignment[] | null = await LicenseAssignment.fetchFromSystemObject(idSystemObject); /* istanbul ignore if */
         if (!assignments)
             return true;
@@ -29,10 +30,10 @@ export class LicenseManager {
         DateStart?: Date | null | undefined, DateEnd?: Date | null | undefined): Promise<boolean> {
         /* istanbul ignore if */
         if (!await LicenseManager.clearAssignment(idSystemObject, false)) {
-            LOG.error(`LicenseManager.clearAssignment failed to clear active assignments for ${idSystemObject}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'set assignment failed','failed to clear active assignments',{ idSystemObject, license },'DB.Composite.License.Manager');
             return false;
         }
-        LOG.info(`LicenseManager.setAssignment(${idSystemObject}, license ${license.idLicense}, idUserCreator ${idUserCreator}, DateStart ${DateStart}, DateEnd ${DateEnd})`, LOG.LS.eDB);
+        RK.logInfo(RK.LogSection.eDB,'set assignment',undefined,{ idSystemObject, license, idUserCreator, start: DateStart, end: DateEnd },'DB.Composite.License.Manager',true);
 
         if (!idUserCreator)
             idUserCreator = null;

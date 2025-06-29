@@ -2,7 +2,8 @@
 import { CaptureData as CaptureDataBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class CaptureData extends DBC.DBObject<CaptureDataBase> implements CaptureDataBase, SystemObjectBased {
     idCaptureData!: number;
@@ -36,7 +37,8 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData');
+            return false;
         }
     }
 
@@ -55,7 +57,8 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData');
+            return false;
         }
     }
 
@@ -65,7 +68,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idCaptureData, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData');
             return null;
         }
     }
@@ -77,7 +80,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return DBC.CopyObject<CaptureDataBase, CaptureData>(
                 await DBC.DBConnection.prisma.captureData.findUnique({ where: { idCaptureData, }, }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idCaptureData, ...this },'DB.CaptureData');
             return null;
         }
     }
@@ -87,7 +90,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
             return DBC.CopyArray<CaptureDataBase, CaptureData>(
                 await DBC.DBConnection.prisma.captureData.findMany(), CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData');
             return null;
         }
     }
@@ -108,7 +111,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
 
             return null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchBySystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch by SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject, ...this },'DB.CaptureData');
             return null;
         }
     }
@@ -120,7 +123,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 await DBC.DBConnection.prisma.captureData.findMany({ where: { CaptureDataPhoto: { some: { idCaptureDataPhoto, }, }, }, }), CaptureData);
             return (retValue && retValue.length > 0) ? retValue[0] : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchFromCaptureDataPhoto', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from CaptureDataPhoto failed',H.Helpers.getErrorString(error),{ idCaptureDataPhoto, ...this },'DB.CaptureData');
             return null;
         }
     }
@@ -139,7 +142,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 JOIN CaptureData AS cd ON (cd.idCaptureData=cdSO.idCaptureData)
                 WHERE m.idModel=${idModel};`, CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchFromModel', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ idModel, ...this },'DB.CaptureData');
             return null;
         }
 
@@ -159,7 +162,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                     },
                 }), CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchFromXref', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ idCaptureDataGroup, ...this },'DB.CaptureData');
             return null;
         }
     }
@@ -183,7 +186,7 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, CaptureData);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.CaptureData.fetchDerivedFromItems', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from Items failed',H.Helpers.getErrorString(error),{ idItem, ...this },'DB.CaptureData');
             return null;
         }
     }

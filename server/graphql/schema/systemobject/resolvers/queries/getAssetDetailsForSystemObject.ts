@@ -2,8 +2,6 @@
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import * as NAV from '../../../../../navigation/interface';
-import * as LOG from '../../../../../utils/logger';
-// import * as H from '../../../../../utils/helpers';
 import { ColumnDefinition, GetAssetDetailsForSystemObjectResult, QueryGetAssetDetailsForSystemObjectArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { VocabularyCache } from '../../../../../cache';
@@ -12,6 +10,7 @@ import { AssetGridDetail } from './AssetGridDetail';
 import { AssetGridDetailCaptureData } from './AssetGridDetailCaptureData';
 import { AssetGridDetailScene } from './AssetGridDetailScene';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 enum eAssetGridType {
     eStandard,
@@ -27,13 +26,13 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
     const assetDetailRows: any[] = [];
     const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObject);
     if (!assetVersions) {
-        LOG.info(`getAssetDetailsForSystemObject retrieved no asset versions for ${idSystemObject}`, LOG.LS.eGQL);
+        RK.logWarning(RK.LogSection.eGQL,'get asset details for SystemObject','retrieved no asset versions',{ idSystemObject },'GraphQL.Schema.SystemObject');
         return { columns, assetDetailRows };
     }
 
     const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if (!SO) {
-        LOG.info(`getAssetDetailsForSystemObject unable to retrieve system object for ${idSystemObject}`, LOG.LS.eGQL);
+        RK.logWarning(RK.LogSection.eGQL,'get asset details for SystemObject','unable to retrieve system object',{ idSystemObject },'GraphQL.Schema.SystemObject');
         return { columns, assetDetailRows };
     }
 
@@ -59,13 +58,13 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
         const oID: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset };
         const sID: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID);
         if (!sID) {
-            LOG.error(`getAssetDetailsForSystemObject could not retrieve system object info for ${JSON.stringify(oID)}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'get asset details for SystemObject failed','could not retrieve system object info',{ ...oID },'GraphQL.Schema.SystemObject');
             continue;
         }
 
         const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
         if (!asset) {
-            LOG.error(`getAssetDetailsForSystemObject could not retrieve asset for id ${JSON.stringify(assetVersion.idAsset)}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'get asset details for SystemObject failed','could not retrieve asset for id',{ assetVersion },'GraphQL.Schema.SystemObject');
             continue;
         }
 
@@ -75,7 +74,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
             case eAssetGridType.eStandard: {
                 const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabulary(asset.idVAssetType);
                 if (!vocabulary) {
-                    LOG.error(`vocabularyCache could not retrieve vocabulary for asset ${JSON.stringify(asset.idAsset)}`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'get asset details for SystemObject failed','vocabularyCache could not retrieve vocabulary for asset',{ asset },'GraphQL.Schema.SystemObject');
                     continue;
                 }
 
@@ -95,7 +94,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
                 const metadataMap: Map<string, string> = await computeMetadataSet(oIDAV, metadataMetaMap);
                 const vocabulary: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabulary(asset.idVAssetType);
                 if (!vocabulary) {
-                    LOG.error(`vocabularyCache could not retrieve vocabulary for asset ${JSON.stringify(asset.idAsset)}`, LOG.LS.eGQL);
+                    RK.logError(RK.LogSection.eGQL,'get asset details for SystemObject failed','vocabularyCache could not retrieve vocabulary for asset',{ asset },'GraphQL.Schema.SystemObject');
                     continue;
                 }
                 assetDetail = new AssetGridDetailScene(asset, assetVersion, sID.idSystemObject, vocabulary, metadataMap);
@@ -126,7 +125,7 @@ async function computeMetadataSet(oIDAV: DBAPI.ObjectIDAndType, metadataMetaMap:
     if (sIDAV)
         metadataMap = metadataMetaMap.get(sIDAV.idSystemObject);
     else
-        LOG.error(`getAssetDetailsForSystemObject could not retrieve system object info for ${JSON.stringify(oIDAV)}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'compute metadat set failed','could not retrieve system object info',{ ...oIDAV },'GraphQL.Schema.SystemObject');
 
     if (!metadataMap)
         metadataMap = new Map<string, string>();
@@ -144,13 +143,13 @@ async function extractMetadata(idSystemObject: number, metadataColumns: string[]
     const metadataResult: NAV.MetadataResult = await navigation.getMetadata(metadataFilter);
     const metadataColLen: number = metadataFilter.metadataColumns.length;
     if (!metadataResult.success) {
-        LOG.error(`getAssetDetailsForSystemObject extractMetadata failed: ${metadataResult.error}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'extract metadata failed',metadataResult.error, { idSystemObject, metadataColumns },'GraphQL.Schema.SystemObject');
         return false;
     }
 
     for (const metadataEntry of metadataResult.entries) {
         if (metadataEntry.metadata.length != metadataColLen) {
-            LOG.error(`getAssetDetailsForSystemObject extractMetadata returned the wrong number of columns (${metadataEntry.metadata.length} instead of ${metadataColLen})`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'extract metadata failed',`returned the wrong number of columns (${metadataEntry.metadata.length} instead of ${metadataColLen})`,{ idSystemObject },'GraphQL.Schema.SystemObject');
             continue;
         }
 
@@ -170,14 +169,14 @@ async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: 
     const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
     // LOG.info(`getAssetDetailsForSystemObject MSXs ${H.Helpers.JSONStringify(MSXs)}`, LOG.LS.eGQL);
     if (!MSXs) {
-        LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch ModelSceneXref for scene ${idScene}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'extract scene attachment metadata failed',`failed to fetch ModelSceneXref for scene ${idScene}`,{},'GraphQL.Schema.SystemObject');
         return false;
     }
 
     for (const MSX of MSXs) {
         const SOIModel: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ idObject: MSX.idModel, eObjectType: COMMON.eSystemObjectType.eModel });
         if (!SOIModel) {
-            LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch system object info for model ${MSX.idModel}`, LOG.LS.eGQL);
+            RK.logError(RK.LogSection.eGQL,'extract scene attachment metadata failed','failed to fetch system object info for model',{ MSX },'GraphQL.Schema.SystemObject');
             continue;
         }
 
@@ -188,7 +187,7 @@ async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: 
         for (const assetVersion of assetVersions) {
             const SOIAV: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
             if (!SOIAV) {
-                LOG.error(`getAssetDetailsForSystemObject extractSceneAttachmentMetadata failed to fetch system object info for asset version ${assetVersion.idAssetVersion}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'extract scene attachment metadata failed','failed to fetch system object info for asset version',{ assetVersion },'GraphQL.Schema.SystemObject');
                 continue;
             }
 

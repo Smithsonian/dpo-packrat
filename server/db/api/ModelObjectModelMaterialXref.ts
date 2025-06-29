@@ -2,7 +2,8 @@
 import { ModelObjectModelMaterialXref as ModelObjectModelMaterialXrefBase, Prisma } from '@prisma/client';
 import { ModelObject, ModelMaterial } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelMaterialXrefBase> implements ModelObjectModelMaterialXrefBase {
     idModelObjectModelMaterialXref!: number;
@@ -28,7 +29,8 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
+            return false;
         }
     }
 
@@ -44,7 +46,8 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
+            return false;
         }
     }
     /** Don't call this directly; instead, let DBObject.delete() call this. Code needing to delete a record should call this.delete(); */
@@ -55,7 +58,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 where: { idModelObjectModelMaterialXref, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.delete', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
             return false;
         }
     }
@@ -67,7 +70,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return DBC.CopyObject<ModelObjectModelMaterialXrefBase, ModelObjectModelMaterialXref>(
                 await DBC.DBConnection.prisma.modelObjectModelMaterialXref.findUnique({ where: { idModelObjectModelMaterialXref, }, }), ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
             return null;
         }
     }
@@ -79,7 +82,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return DBC.CopyArray<ModelObjectModelMaterialXrefBase, ModelObjectModelMaterialXref>(
                 await DBC.DBConnection.prisma.modelObjectModelMaterialXref.findMany({ where: { idModelObject } }), ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
             return null;
         }
     }
@@ -98,7 +101,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 FROM ModelObjectModelMaterialXref
                 WHERE idModelObject IN (${Prisma.join(idModelObjects)})`, ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelObjects failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
             return null;
         }
     }
@@ -110,7 +113,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
             return DBC.CopyArray<ModelObjectModelMaterialXrefBase, ModelObjectModelMaterialXref>(
                 await DBC.DBConnection.prisma.modelObjectModelMaterialXref.findMany({ where: { idModelMaterial } }), ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterial failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
             return null;
         }
     }
@@ -129,7 +132,7 @@ export class ModelObjectModelMaterialXref extends DBC.DBObject<ModelObjectModelM
                 FROM ModelObjectModelMaterialXref
                 WHERE idModelMaterial IN (${Prisma.join(idModelMaterials)})`, ModelObjectModelMaterialXref);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterials failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject.MaterialXref');
             return null;
         }
     }

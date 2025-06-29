@@ -1,7 +1,6 @@
-import * as LOG from './logger';
 import * as os from 'os';
 import * as process from 'process';
-// import * as H from './helpers';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 // import * as heapdump from 'heapdump';
 // const memwatch = require('@airbnb/node-memwatch');
 
@@ -190,7 +189,7 @@ export class UsageMonitor {
         if (this.verboseSamples) {
             if (++this.verboseCount >= this.verboseSamples) {
                 this.verboseCount = 0;
-                LOG.info(`UsageMonitor.sample ${this.emitInfo()}`, LOG.LS.eSYS);
+                RK.logPerformance(RK.LogSection.eSYS,'system usage stats',undefined,this.emitInfo(),'UsageMonitor');
             }
         }
     }
@@ -211,9 +210,11 @@ export class UsageMonitor {
         this.cpuAlertCount = 0;
         this.memAlertCount = 0;
         if (emitCPUAlert)
-            LOG.error(`UsageMonitor exceeded ${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
+            RK.logWarning(RK.LogSection.eSYS,'utilization exceeded',`${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples`,this.emitInfo(),'UsageMonitor');
+            // LOG.error(`UsageMonitor exceeded ${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
         if (emitMemAlert)
-            LOG.error(`UsageMonitor exceeded ${this.memAlertThreshold}% Mem utilization for ${this.memAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
+            RK.logWarning(RK.LogSection.eSYS,'utilization exceeded',`${this.memAlertThreshold}% Memory utilization for ${this.memAlertAlarm} consecutive samples`,this.emitInfo(),'UsageMonitor');
+            // LOG.error(`UsageMonitor exceeded ${this.memAlertThreshold}% Mem utilization for ${this.memAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
     }
 }
 

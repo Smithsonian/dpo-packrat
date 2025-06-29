@@ -1,8 +1,8 @@
 import { QueryGetModelConstellationForAssetVersionArgs, GetModelConstellationForAssetVersionResult } from '../../../../../types/graphql';
 import { Parent, Context } from '../../../../../types/resolvers';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook/JobCookSIPackratInspect';
-import * as LOG from '../../../../../utils/logger';
 // import * as H from '../../../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getModelConstellationForAssetVersion(_: Parent, args: QueryGetModelConstellationForAssetVersionArgs,
     __: Context): Promise<GetModelConstellationForAssetVersionResult> {
@@ -10,7 +10,7 @@ export default async function getModelConstellationForAssetVersion(_: Parent, ar
 
     const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
     if (!JCOutput || !JCOutput.success) {
-        LOG.error(`getModelConstellationForAssetVersion failed extracting job output: ${JCOutput ? JCOutput.error : ''}`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get model constellation for asset version failed',`failed extracting job output: ${JCOutput ? JCOutput.error : 'unknown error'}`,{ ...args.input },'GraphQL.Asset');
         return { idAssetVersion };
     }
 

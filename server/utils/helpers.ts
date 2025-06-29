@@ -8,9 +8,10 @@ import { Stats } from 'fs';
 import * as fs from 'fs-extra';
 import { promises as fsp } from 'fs';
 import * as crypto from 'crypto';
+import { RecordKeeper as RK } from '../records/recordKeeper';
 
-import * as LOG from './logger';
 import { Readable, Writable } from 'stream';
+import { Request } from 'express';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -109,7 +110,7 @@ export class Helpers {
         try {
             await fsp.copyFile(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.copyFile', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'copy file failed',this.getErrorString(error),{ nameSource, nameDestination },'Utils.Helpers');
             return { success: false, error: `Unable to copy ${nameSource} to ${nameDestination} (cwd = ${process.cwd()}): ${error}` };
         }
         return { success: true };
@@ -120,9 +121,9 @@ export class Helpers {
             await fsp.rename(nameSource, nameDestination);
         } catch (error) /* istanbul ignore next */ {
             if (allowedToFail)
-                LOG.info(`Helpers.moveFile: ${Helpers.JSONStringify(error)}`, LOG.LS.eSYS);
+                RK.logWarning(RK.LogSection.eSYS,'move file failed',this.getErrorString(error),{ nameSource, nameDestination },'Utils.Helpers');
             else
-                LOG.error('Helpers.moveFile', LOG.LS.eSYS, error);
+                RK.logError(RK.LogSection.eSYS,'move file failed',this.getErrorString(error),{ nameSource, nameDestination },'Utils.Helpers');
             return { success: false, error: `Unable to move ${nameSource} to ${nameDestination}: ${error}` };
         }
         return { success: true };
@@ -135,7 +136,7 @@ export class Helpers {
             if (!stats.isFile && !stats.isDirectory)
                 return { success: false, error: `${name} does not exist` };
         } catch (error) /* istanbul ignore next */ {
-            // LOG.error('Helpers.fileOrDirExists', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'file exists failed',this.getErrorString(error),{ name },'Utils.Helpers');
             return { success: false, error: `${name} does not exist: ${error}` };
         }
         return { success: true };
@@ -146,7 +147,7 @@ export class Helpers {
             const fileHandle: fsp.FileHandle = await fsp.open(filename, 'a');
             await fileHandle.close();
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.ensureFileExists', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'ensure file exists failed',this.getErrorString(error),{ filename },'Utils.Helpers');
             return { success: false, error: `Unable to ensure existence of ${filename}: ${error}` };
         }
         return { success: true };
@@ -158,11 +159,11 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.info(`${description} Creating ${dest}`, LOG.LS.eSYS);
+        RK.logDebug(RK.LogSection.eSYS,'initialize file',`creating: ${dest}`,{ source, description },'Utils.Helpers');
         ioResults = source ? await Helpers.copyFile(source, dest) : await Helpers.ensureFileExists(dest);
         /* istanbul ignore if */
         if (!ioResults.success)
-            LOG.error(`${description} Unable to create ${dest}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'initialize file failed',`cannot create: ${dest}`,{ description },'Utils.Helpers');
         return ioResults;
     }
 
@@ -181,7 +182,7 @@ export class Helpers {
             const file2Buf = await fsp.readFile(file2);
             ioResults.success = file1Buf.equals(file2Buf);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.ensureFileExists', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'files match failed',this.getErrorString(error),{ file1, file2 },'Utils.Helpers');
             ioResults.success = false;
             ioResults.error = `Unable to test if files match: ${error}`;
         }
@@ -207,9 +208,12 @@ export class Helpers {
 
                 stream.end();
                 stream.on('finish', () => { resolve(hash.digest('hex')); });
-                stream.on('error', (err) => { LOG.error(`Helpers.createRandomFile error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); reject(); });
+                stream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'create random file stream failed',this.getErrorString(err),{ path: stream?.['path'] ?? 'unknown', fileSize },'Utils.Helpers');
+                    reject(err);
+                });
             } catch (error) /* istanbul ignore next */ {
-                LOG.error('Helpers.createRandomFile() error', LOG.LS.eSYS, error);
+                RK.logError(RK.LogSection.eSYS,'create random file failed',this.getErrorString(error),{ path: stream?.['path'] ?? 'unknown', fileSize },'Utils.Helpers');
                 reject(error);
             }
         });
@@ -219,7 +223,7 @@ export class Helpers {
         try {
             await fsp.unlink(filename);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.removeFile', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'remove file failed',this.getErrorString(error),{ filename },'Utils.Helpers');
             return { success: false, error: `Unable to remove file ${filename}: ${error}` };
         }
         return { success: true };
@@ -231,7 +235,7 @@ export class Helpers {
             // if (!fs.existsSync(directory))
             //     fs.mkdirsSync(directory);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.createDirectory', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'create directory failed',this.getErrorString(error),{ directory },'Utils.Helpers');
             return { success: false, error: `Unable to create directory ${directory}: ${error}` };
         }
         return { success: true };
@@ -242,7 +246,7 @@ export class Helpers {
             await fsp.rmdir(directory, { recursive }); // await fsp.rm(directory, { recursive });
         } catch (error) /* istanbul ignore next */ {
             if (logErrors)
-                LOG.error('Helpers.removeDirectory', LOG.LS.eSYS, error);
+                RK.logError(RK.LogSection.eSYS,'remove directory failed',this.getErrorString(error),{ directory, recursive },'Utils.Helpers');
             return { success: false, error: `Unable to remove directory ${directory}: ${error}` };
         }
         return { success: true };
@@ -253,11 +257,11 @@ export class Helpers {
         if (ioResults.success)
             return ioResults;
 
-        LOG.info(`${description} Creating ${directory}`, LOG.LS.eSYS);
+        RK.logDebug(RK.LogSection.eSYS,'initialize directory',`creating: ${directory}`,{ description },'Utils.Helpers');
         ioResults = await Helpers.createDirectory(directory);
         /* istanbul ignore if */
         if (!ioResults.success)
-            LOG.error(`${description} Unable to create ${directory}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'initialize directory failed',`cannot create: ${directory}`,{ description },'Utils.Helpers');
         return ioResults;
     }
 
@@ -281,7 +285,7 @@ export class Helpers {
                     dirEntries.push(fullPath);
             }
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.getDirectoryEntriesRecursive', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'get directory entries failed',this.getErrorString(error),{ directory, maxDepth },'Utils.Helpers');
             return null;
         }
         return dirEntries;
@@ -297,6 +301,7 @@ export class Helpers {
             res.stat = await fsp.stat(filePath);
             res.success = true;
         } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eSYS,'stat failed',this.getErrorString(error),{ filePath },'Utils.Helpers');
             res.success = false;
             res.error = JSON.stringify(error);
         }
@@ -308,6 +313,7 @@ export class Helpers {
         try {
             return await Helpers.computeHashFromStream(fs.createReadStream(filePath), hashMethod);
         } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eSYS,'compute file hash failed',this.getErrorString(error),{ filePath, hashMethod },'Utils.Helpers');
             return {
                 hash: '',
                 dataLength: 0,
@@ -327,11 +333,14 @@ export class Helpers {
 
                 stream.on('data', (chunk: Buffer) => { dataLength += chunk.length; });
                 stream.on('end', () => { resolve({ hash: hash.digest('hex'), dataLength, success: true }); });
-                stream.on('error', (err) => { resolve({ hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile() Stream Error ${Helpers.JSONStringify(err)}` }); });
+                stream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'compute stream hash failed',`stream error: ${this.getErrorString(err)}`,{ path: stream?.['path'] ?? 'unknown', hashMethod },'Utils.Helpers');
+                    resolve({ hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile() Stream Error ${Helpers.JSONStringify(err)}` });
+                });
                 stream.pipe(hash);
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.computeHashFromFile', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'compute stream hash',this.getErrorString(error),{ path: stream?.['path'] ?? 'unknown', hashMethod },'Utils.Helpers');
             return { hash: '', dataLength: 0, success: false, error: `Helpers.computeHashFromFile: ${JSON.stringify(error)}` };
         }
     }
@@ -347,10 +356,13 @@ export class Helpers {
             return new Promise<Buffer | null>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
                 stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
-                stream.on('error', (err) => { LOG.error(`Helpers.readFileFromStream error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); resolve(null); });
+                stream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'read file from stream failed',`stream error: ${this.getErrorString(err)}`,{ path: stream?.['path'] ?? 'unknown' },'Utils.Helpers');
+                    resolve(null);
+                });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.readFileFromStream', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'read file from stream failed',this.getErrorString(error),{ path: stream?.['path'] ?? 'unknown' },'Utils.Helpers');
             return null;
         }
     }
@@ -361,10 +373,13 @@ export class Helpers {
             return new Promise<Buffer>((resolve, reject) => {
                 stream.on('data', (chunk: Buffer) => { bufArray.push(chunk); });
                 stream.on('end', () => { resolve(Buffer.concat(bufArray)); }); /* istanbul ignore next */
-                stream.on('error', (err) => { LOG.error(`Helpers.readFileFromStreamThrowErrors error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); reject(); });
+                stream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'read file from stream with errors failed',`stream error: ${this.getErrorString(err)}`,{ path: stream?.['path'] ?? 'unknown' },'Utils.Helpers');
+                    reject();
+                });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.readFileFromStreamThrowErrors', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'read file from stream with errors failed',this.getErrorString(error),{ path: stream?.['path'] ?? 'unknown' },'Utils.Helpers');
             throw error;
         }
     }
@@ -375,10 +390,13 @@ export class Helpers {
             return new Promise<number | null>((resolve) => {
                 stream.on('data', (chunk: Buffer) => { size += chunk.length; });
                 stream.on('end', () => { resolve(size); }); /* istanbul ignore next */
-                stream.on('error', (err) => { LOG.error(`Helpers.computeSizeOfStream error ${Helpers.JSONStringify(err)}`, LOG.LS.eSYS); resolve(null); });
+                stream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'compute stream size failed',`stream error: ${this.getErrorString(err)}`,{ path: stream?.['path'] ?? 'unknown' },'Utils.Helpers');
+                    resolve(null);
+                });
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.computeSizeOfStream', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'compute stream size failed',this.getErrorString(error),{ path: stream?.['path'] ?? 'unknown' },'Utils.Helpers');
             return null;
         }
     }
@@ -396,7 +414,7 @@ export class Helpers {
             const retValue: IOResults = await Helpers.writeStreamToStream(readStream, writeStream);
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.writeStreamToFile', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'write stream to file failed',this.getErrorString(error),{ path: readStream?.['path'] ?? 'unknown', fileName },'Utils.Helpers');
             return { success: false, error: `Helpers.writeStreamToFile: ${JSON.stringify(error)}` };
         } finally {
             if (writeStream)
@@ -409,7 +427,7 @@ export class Helpers {
             const readStream: NodeJS.ReadableStream = await fs.createReadStream(fileName);
             return await Helpers.writeStreamToStream(readStream, writeStream);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.writeFileToStream', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'write file to stream failed',this.getErrorString(error),{ path: writeStream?.['path'] ?? 'unknown', fileName },'Utils.Helpers');
             return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}` };
         }
     }
@@ -433,13 +451,19 @@ export class Helpers {
                     readStream.on('end', () => { resolve({ success: true, size }); });
                     writeStream.on('end', () => { resolve({ success: true, size }); });
                 } /* istanbul ignore next */
-                readStream.on('error', (err) => { resolve({ success: false, error: `readstream error: ${Helpers.JSONStringify(err)}`, size }); });
-                writeStream.on('error', (err) => { resolve({ success: false, error: `writestream error: ${Helpers.JSONStringify(err)}`, size }); });
+                readStream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'stream to stream compute size failed',`read stream error: ${this.getErrorString(err)}`,{ readPath: readStream?.['path'] ?? 'unknown', writePath: writeStream?.['path'] ?? 'unknown', size },'Utils.Helpers');
+                    resolve({ success: false, error: `readstream error: ${Helpers.JSONStringify(err)}`, size });
+                });
+                writeStream.on('error', (err) => {
+                    RK.logError(RK.LogSection.eSYS,'stream to stream compute size failed',`write stream error: ${this.getErrorString(err)}`,{ readPath: readStream?.['path'] ?? 'unknown', writePath: writeStream?.['path'] ?? 'unknown', size },'Utils.Helpers');
+                    resolve({ success: false, error: `writestream error: ${Helpers.JSONStringify(err)}`, size });
+                });
 
                 readStream.pipe(writeStream);
             });
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.writeStreamToStream', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'stream to stream compute size failed',this.getErrorString(error),{ readPath: readStream?.['path'] ?? 'unknown', writePath: writeStream?.['path'] ?? 'unknown' },'Utils.Helpers');
             return { success: false, error: `Helpers.writeFileToStream: ${JSON.stringify(error)}`, size: 0 };
         }
     }
@@ -464,7 +488,7 @@ export class Helpers {
                 await fs.writeJson(dest, obj, { replacer });
             return await Helpers.computeHashFromFile(dest, hashMethod);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.writeJsonAndComputeHash', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'write JSON and compute hash failed',this.getErrorString(error),{ destination: dest, hashMethod },'Utils.Helpers');
             return { hash: '', dataLength: 0, success: false, error: JSON.stringify(error) };
         }
     }
@@ -481,7 +505,7 @@ export class Helpers {
             const date: Date = new Date(dateString);
             return isNaN(date.getTime()) ? null : date;
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('Helpers.convertStringToDate', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'convert string to date failed',this.getErrorString(error),{ dateString },'Utils.Helpers');
             return null;
         }
     }
@@ -556,8 +580,7 @@ export class Helpers {
                 const json = JSON.parse(input);
                 return json;
             } catch(error) {
-                const message = error instanceof Error ? error.message : String(error);
-                LOG.error(`JSON Failure: ${this.JSONStringify(message)}`,LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'JSON parse failed',this.getErrorString(error),{ input },'Utils.Helpers');
                 return undefined;
             }
         }
@@ -580,8 +603,7 @@ export class Helpers {
                 });
                 return json;
             } catch (error) {
-                const message = error instanceof Error ? error.message : String(error);
-                LOG.error(`JSONParse Failure: ${message}`,LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'safe JSON parse failed',this.getErrorString(error),{ input },'Utils.Helpers');
                 return undefined;
             }
         }
@@ -636,8 +658,7 @@ export class Helpers {
             });
             return result;
         } catch(error) {
-            const message = error instanceof Error ? error.message : String(error);
-            LOG.error(`JSON number processing failed: ${this.JSONStringify(message)}`,LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'JSON remove large numbers failed',this.getErrorString(error),{ jsonString },'Utils.Helpers');
             return '';
         }
     }
@@ -767,4 +788,106 @@ export class Helpers {
             return value; // Return valid float as-is
         }
     }
+
+    static removeEmptyFields<T extends Record<string, any>>(input: T): Partial<T> {
+        const output: Partial<T> = {};
+
+        for (const [key, value] of Object.entries(input)) {
+            if (
+                value === null ||
+                value === undefined ||
+                (typeof value === 'string' && value.trim() === '') ||
+                (Array.isArray(value) && value.length === 0)
+            ) {
+                continue; // Skip empty fields
+            }
+
+            output[key as keyof T] = value;
+        }
+
+        return output;
+    }
+
+    static extractProperties(obj: any): any {
+        return Object.fromEntries(
+            Object.entries(obj).filter(([_, v]) => typeof v !== 'function')
+        );
+    }
+
+    // errors
+    static getErrorString = (error: any) => {
+        // Check if the error is an instance of Error and has a message
+        if (error instanceof Error) {
+            // check if has code too and append to message
+            if('code' in error && error.code === 'ENOENT')
+                return `${error.code}: ${error.message}`;
+            return error.message;
+        }
+
+        // Handle common GraphQL error format
+        if (error?.errors && Array.isArray(error.errors)) {
+            // Return the first error message in the GraphQL errors array, or join all messages
+            return error.errors.map((e: any) => e.message || 'Unknown error').join('; ');
+        }
+
+        // Handle Prisma errors (e.g., PrismaClientKnownRequestError)
+        if (error?.meta && error?.message) {
+            return `Prisma error: ${error.message}`;
+        }
+
+        // Handle Solr errors (Solr may have nested messages under responseHeader or error)
+        if (error?.responseHeader || error?.error) {
+            return error?.error?.msg || error?.error?.message || 'Unknown Solr error';
+        }
+
+        // Fallback to a string representation of the error
+        return String(error);
+    };
+    static getNetworkError = (code: string, status: number) => {
+        let message = '';
+
+        switch(code) {
+            case 'ECONNABORTED': 	message = 'request timed out'; break;
+            case 'ENOTFOUND':		message = 'server hostname not found'; break;
+            case 'EAI_AGAIN':		message = 'DNS lookup error'; break;
+            case 'ECONNREFUSED':	message = 'connection refused'; break; 	 // if server is offline, but coming back online
+            case 'ETIMEDOUT':		message = 'connection timed out'; break;
+            case 'ENETUNREACH':		message = 'local network issue'; break;
+            case 'ECONNRESET': 		message = 'host closed connection'; break; // remote host forced the connection closed
+            case 'EPIPE':			message = 'attempt to write to closed connection'; break;
+            case 'ERR_NETWORK':
+            case 'ENETDOWN':		message = 'network is down'; break;
+
+            default:
+                return { success: false, message: 'unretryable network error', data: { error: code, status, retry: false } };
+        }
+
+        if(status >= 500 && status < 600)
+            message += `(${status})`;
+
+        return { success: true, message, data: { retry: true } };
+    };
+
+    // Express
+    static getUserDetailsFromRequest = (req: Request): { id: number | null, name: string, email: string, isActive: boolean, ip: string } => {
+        // helper routine to extract meaningful user information from a request (if it exists)
+        const user = req.user as {
+            id?: number | string;
+            idUser?: number | string;
+            Name?: string;
+            EmailAddress?: string;
+            Active?: boolean | string;
+        } || null;
+        if(!user)
+            return { id: null, name: '', email: '', isActive: false, ip: '0.0.0.0' };
+
+
+        const id = Number(user.id ?? user.idUser ?? null);
+        const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || req.socket.remoteAddress || '0.0.0.0';
+        const name: string = user.Name ?? '';
+        const email: string = user.EmailAddress ?? '';
+        const isActive: boolean = user.Active === true || user.Active === 'true';
+
+        return { id, name, email, isActive, ip: (ip==='::1') ? '127.0.0.1' : ip };
+    };
 }

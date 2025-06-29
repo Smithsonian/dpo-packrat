@@ -2,12 +2,12 @@
 import * as JOB from '../../interface';
 import { JobPackrat } from './JobPackrat';
 import * as COOK from '../Cook';
-import * as LOG from '../../../utils/logger';
 import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
 import * as REP from '../../../report/interface';
 import * as COMMON from '@dpo-packrat/common';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import * as NS from 'node-schedule';
 
@@ -40,52 +40,58 @@ export class JobEngine implements JOB.IJobEngine {
             // look up job type
             dbJob = await DBAPI.Job.fetch(idJob);
             if (!dbJob) {
-                LOG.error(`JobEngine.create unable to fetch Job with ID ${idJob}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'create job failed','unable to fetch Job with ID',{ idJob },'Job.Engine');
                 return null;
             }
             const eJobType2: COMMON.eVocabularyID | undefined = await CACHE.VocabularyCache.vocabularyIdToEnum(dbJob.idVJobType);
             if (!eJobType2) {
-                LOG.error(`JobEngine.createByID unable to fetch Job type from ${JSON.stringify(dbJob)}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'create job failed','unable to fetch Job type',{ idJob, dbJob },'Job.Engine');
                 return null;
             }
 
             if (eJobType === null)
                 eJobType = eJobType2;
             else if (eJobType != eJobType2) {
-                LOG.error(`JobEngine.create called with contradictory idJob (job type ${COMMON.eVocabularyID[eJobType2]}) vs. job type ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'create job failed','called with contradictory idJob',{ idJob, jobType: COMMON.eVocabularyID[eJobType2] ?? 'undefined' },'Job.Engine');
                 return null;
             }
         } else {
             if (!eJobType) {
-                LOG.error('JobEngine.create called with null values for idJob and eJobType', LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'create job failed','called with null values for idJob and eJobType',{ ...jobParams },'Job.Engine');
                 return null;
             }
 
             dbJob = await this.createJobDBRecord(eJobType, frequency);
-            if (!dbJob)
+            if (!dbJob) {
+                RK.logError(RK.LogSection.eJOB,'create job failed','cannot create job db record',{ idJob, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', frequency },'Job.Engine');
                 return null;
+            }
         }
 
         const dbJobRun: DBAPI.JobRun | null = await this.createJobRunDBRecord(dbJob, null, parameters);
         if (!dbJobRun) {
-            LOG.error('JobEngine.createWorker unable to create JobRun', LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'create job failed','unable to create JobRun',{ idJob, dbJob, parameters },'Job.Engine');
             return null;
         }
 
         const job: JobPackrat | null = await this.createJob(eJobType, idAssetVersions, report, parameters, frequency, dbJobRun);
         if (!job) {
-            LOG.error('JobEngine.createWorker unable to create Job', LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'create job failed','unable to create Job',{ idJob, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', idAssetVersions },'Job.Engine');
             return null;
         }
 
         const configuration: string = JSON.stringify(job.configuration());
         if (configuration) {
             dbJobRun.Configuration = configuration;
-            await dbJobRun.update();
+            const result: boolean = await dbJobRun.update();
+            if(!result) {
+                RK.logError(RK.LogSection.eJOB,'create job failed','cannot update JobRun',{ idJob, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined' },'Job.Engine');
+                return null;
+            }
         }
 
         this.jobMap.set(dbJobRun.idJobRun, new JobData(job, dbJob, dbJobRun));
-        LOG.info(`JobEngine.create [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
+        RK.logInfo(RK.LogSection.eJOB,'create job success',undefined,{ idJob, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', name: job.name() },'Job.Engine');
         return job;
     }
 
@@ -93,7 +99,7 @@ export class JobEngine implements JOB.IJobEngine {
         const dbJobRun: DBAPI.JobRun | null = await job.dbJobRun();
         if (dbJobRun) {
             this.jobMap.delete(dbJobRun.idJobRun);
-            LOG.info(`JobEngine.jobCompleted [${this.jobMap.size}]: job ${dbJobRun.idJobRun}: ${job.name()}`, LOG.LS.eJOB);
+            RK.logInfo(RK.LogSection.eJOB,'job completed',undefined,{ name: job.name(), idJobRun: dbJobRun.idJobRun },'Job.Engine');
         }
     }
     // #endregion
@@ -102,7 +108,7 @@ export class JobEngine implements JOB.IJobEngine {
     private async createJobDBRecord(eJobType: COMMON.eVocabularyID, frequency: string | null): Promise<DBAPI.Job | null> {
         const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(eJobType);
         if (!idVJobType) {
-            LOG.error(`JobEngine.createDBJob unable to fetch Job type from ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'create Job record failed','unable to fetch Job type',{ jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined' },'Job.Engine');
             return null;
         }
 
@@ -123,7 +129,7 @@ export class JobEngine implements JOB.IJobEngine {
         if (!dbJob) {
             dbJob = new DBAPI.Job({ idJob: 0, idVJobType, Name, Status: DBAPI.eJobStatus.eActive, Frequency: frequency || '' });
             if (!await dbJob.create()) {
-                LOG.error('JobEngine.createJobDBRecord failed', LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'create Job record failed','unknown db error creating dbJob',{ name: Name, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined' },'Job.Engine');
                 return null;
             }
         }
@@ -140,7 +146,7 @@ export class JobEngine implements JOB.IJobEngine {
         });
 
         if (!await dbJobRun.create()) {
-            LOG.error('JobEngine.createJobRunDBRecord failed', LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'create JobRun record failed','unknown db error creating dbJobRun',{ name: dbJob.Name, jobType: COMMON.eVocabularyID[dbJob.idVJobType] ?? 'undefined' },'Job.Engine');
             return null;
         }
         return dbJobRun;
@@ -160,7 +166,7 @@ export class JobEngine implements JOB.IJobEngine {
             return job;
 
         if (frequency === '') { // empty frequency means run it once, now
-            LOG.info(`JobEngine.createJob running now ${job.name()}`, LOG.LS.eJOB);
+            RK.logInfo(RK.LogSection.eJOB,'create job','immediate job start',{ idJobRun: dbJobRun.idJobRun, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', parameters },'Job.Engine');
             if (report)
                 await report.append(`JobEngine running ${job.name()}`);
             job.executeJob(new Date()); // do not use await here, so that we remain unblocked while the job starts
@@ -195,12 +201,12 @@ export class JobEngine implements JOB.IJobEngine {
                     job = new COOK.JobCookSIGenerateDownloads(this, idAssetVersions, report, parameters, dbJobRun);
                 break;
             default:
-                LOG.error(`JobEngine.createJobWorker unknown job type ${COMMON.eVocabularyID[eJobType]}`, LOG.LS.eJOB);
+                RK.logError(RK.LogSection.eJOB,'create job worker failed','unknow job type',{ idJobRun: dbJobRun.idJobRun, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', parameters },'Job.Engine');
                 return null;
         }
 
         if (!job)
-            LOG.error(`JobEngine.createJobWorker called with parameters not consistent with job type ${expectedJob}${context}`, LOG.LS.eJOB);
+            RK.logError(RK.LogSection.eJOB,'create job worker failed','called with parameters not consistent with job type',{ idJobRun: dbJobRun.idJobRun, expectedJob, parameters },'Job.Engine');
         else if (report)
             await report.append(`JobEngine creating ${expectedJob}${context}`);
 

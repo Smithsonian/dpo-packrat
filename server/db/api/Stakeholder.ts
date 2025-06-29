@@ -2,7 +2,8 @@
 import { Stakeholder as StakeholderBase, SystemObject as SystemObjectBase, Prisma } from '@prisma/client';
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Stakeholder extends DBC.DBObject<StakeholderBase> implements StakeholderBase, SystemObjectBased {
     idStakeholder!: number;
@@ -39,7 +40,8 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            return false;
         }
     }
 
@@ -58,7 +60,8 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            return  false;
         }
     }
 
@@ -68,7 +71,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idStakeholder, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.stakeholder.fetchSystemObject', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
             return null;
         }
     }
@@ -80,7 +83,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return DBC.CopyObject<StakeholderBase, Stakeholder>(
                 await DBC.DBConnection.prisma.stakeholder.findUnique({ where: { idStakeholder, }, }), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Stakeholder.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
             return null;
         }
     }
@@ -90,7 +93,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return DBC.CopyArray<StakeholderBase, Stakeholder>(
                 await DBC.DBConnection.prisma.stakeholder.findMany(), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Stakeholder.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
             return null;
         }
     }
@@ -114,7 +117,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Stakeholder);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.Stakeholder.fetchDerivedFromProjects', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch derived from projects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
             return null;
         }
     }

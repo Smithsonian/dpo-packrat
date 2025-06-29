@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as LOG from '../../../utils/logger';
 import * as DBAPI from '../../../db';
 // import * as H from '../../../utils/helpers';
-// import * as COMMON from '@dpo-packrat/common';
-// import * as COL from '../../../collections/interface';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { ASL, LocalStore } from '../../../utils/localStore';
 
 import { eEventKey } from '../../../event/interface/EventEnums';
@@ -64,7 +62,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
     // get SystemObject from DB
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if(!systemObject) {
-        LOG.error(`API.generateScene failed. cannot find SystemObject. (id:${idSystemObject})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create generate scene op failed',`cannot find SystemObject: ${ idSystemObject }`,{},'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,`cannot find SystemObject: ${idSystemObject}`,idSystemObject);
     }
 
@@ -75,7 +73,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
     if(systemObject.idModel) {
         model = await DBAPI.Model.fetchBySystemObject(idSystemObject);
         if(!model) {
-            LOG.error(`API.generateScene failed. cannot find required model. (id:${idSystemObject})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed',`cannot find required model: ${idSystemObject}`,{},'HTTP.Route.GenVoyagerScene');
             return generateResponse(false,`cannot find required model: ${idSystemObject}`,idSystemObject);
         }
 
@@ -84,7 +82,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
         const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
         if(scenes) {
             if(scenes.length>1)
-                LOG.error(`API.generateScene warning. master model has multiple parent scenes (id:${idSystemObject} | count: ${scenes?.length})`,LOG.LS.eHTTP);
+                RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','master model has multiple parent scenes',{ idSystemObject, numScenes: scenes?.length ?? -1 },'HTTP.Route.GenVoyagerScene');
             scene = scenes[0];
         }
 
@@ -92,14 +90,14 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
         // grab it and make sure it's a scene
         scene = await DBAPI.Scene.fetchBySystemObject(idSystemObject);
         if(!scene) {
-            LOG.error(`API.generateScene failed. cannot find Scene. (id:${idSystemObject})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed',`cannot find Scene :${idSystemObject}`,{},'HTTP.Route.GenVoyagerScene');
             return generateResponse(false,`cannot find scene: ${idSystemObject}`,idSystemObject);
         }
 
         // get our master model
         const models: DBAPI.Model[] | null = await DBAPI.Model.fetchMasterFromScene(scene.idScene);
         if(!models || models.length>1) {
-            LOG.error(`API.generateScene failed. cannot get scene's master model (id:${idSystemObject} | count: ${models?.length})`,LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','cannot get scene master model',{ idSystemObject, numModels: models?.length ?? -1 },'HTTP.Route.GenVoyagerScene');
             return generateResponse(false,`cannot get scene's master model: ${idSystemObject}`,idSystemObject);
         }
         model = models[0];
@@ -107,15 +105,14 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
 
     // if we don't have either throw an error
     if(!model) {
-        LOG.error(`API.generateScene failed. Don't have prerequisites (idSystemObject: ${idSystemObject})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','invalid prerequisites',{ idSystemObject },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,'missing prerequisites',idSystemObject);
     }
-    LOG.info(`API.generateScene found prerequisites (${model.idModel} | scene: ${scene?.idScene ?? 'null'})`,LOG.LS.eDEBUG);
 
     // if we're here then we want to try and initiate the workflow
     const wfEngine: IWorkflowEngine | null = await WorkflowFactory.getInstance();
     if(!wfEngine) {
-        LOG.error(`API.generateScene failed to get WorkflowEngine. (id: ${model.idModel} | model: ${model.Name})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','failed to get WorkflowEngine',{ idSystemObject, ...model },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,'failed to get WorkflowEngine',idSystemObject);
     }
 
@@ -126,16 +123,14 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
 
     // create our workflow for generating downloads
     const result: WorkflowCreateResult = await wfEngine.generateScene(model.idModel, scene?.idScene ?? null, workflowParams);
-    // LOG.info(`API.generateScene post creation. (result: ${H.Helpers.JSONStringify(result)})`,LOG.LS.eDEBUG);
-
     const isValid: boolean = result.data.isValid ?? false;
-    const isJobRunning: boolean = (result.data.activeJobs?.length>0) ?? false;
+    const isJobRunning: boolean = (result.data.activeJobs?.length ?? 0) > 1;
     const idWorkflow: number | undefined = (result.data.workflow?.idWorkflow) ?? undefined;
     const idWorkflowReport: number | undefined = (result.data.workflowReport?.idWorkflowReport) ?? undefined;
 
     // make sure we saw success, otherwise bail
     if(result.success===false) {
-        LOG.error(`API.generateScene failed to generate scene: ${result.message}`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'create generate scene op failed',result.message,{ idSystemObject, isJobRunning, idWorkflow, idWorkflowReport },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
     }
 
@@ -146,7 +141,7 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResp
     // grab it and make sure it's a scene
     const model: DBAPI.Model | null = await DBAPI.Model.fetchBySystemObject(idSystemObject);
     if(!model) {
-        LOG.error(`API.generateScene failed. cannot find required model. (id:${idSystemObject})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed',`cannot find required model:${idSystemObject}`,{},'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,`cannot find required model: ${idSystemObject}`,idSystemObject);
     }
 
@@ -157,7 +152,7 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResp
     // get any active jobs
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,model.idModel);
     if(!activeJobs) {
-        LOG.error(`API.generateScene failed. cannot determine if job is running. (idModel: ${model.idModel})`,LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot determine if job is running',{ ...model },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,'failed to get active jobs from DB',idSystemObject,{ isValid, isJobRunning: false });
     }
 
@@ -172,15 +167,15 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResp
             idWorkflowReport = workflowReport[0].idWorkflowReport;
             idWorkflow = workflowReport[0].idWorkflow;
         } else
-            LOG.info(`API.generateScene unable to get workflowReport (idModel: ${model.idModel} | idJobRun: ${activeJobs[0].idJobRun}}).`,LOG.LS.eHTTP);
+            RK.logWarning(RK.LogSection.eHTTP,'get scene op status','unable to get workflowReport',{ idModel: model.idModel, idJobRun: activeJobs[0].idJobRun },'HTTP.Route.GenVoyagerScene');
 
         // return our response and log it
-        LOG.info(`API.generateScene job already running (idModel: ${model.idModel} | idJobRun: ${idActiveJobRun.join(',')}}).`,LOG.LS.eHTTP);
+        RK.logWarning(RK.LogSection.eHTTP,'get scene op status','job already running',{ idModel: model.idModel, idJobRuns: idActiveJobRun },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,'job already running', idSystemObject, { isValid, isJobRunning: (activeJobs.length>0), idWorkflow, idWorkflowReport });
     }
 
     // send our info back to the client
-    LOG.info(`API.generateScene job is not running but valid. (id: ${model.idModel} | scene: ${model.Name})`,LOG.LS.eHTTP);
+    RK.logInfo(RK.LogSection.eHTTP,'get scene op status success','job is not running but valid',{ ...model },'HTTP.Route.GenVoyagerScene');
     return generateResponse(true,'scene is valid and no job is running', idSystemObject,{ isValid, isJobRunning: (activeJobs.length>0) });
 };
 
@@ -189,7 +184,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
     // make sure we're authenticated (i.e. see if request has a 'user' object)
     if (!isAuthenticated(req)) {
         AuditFactory.audit({ url: req.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eGenDownloads);
-        LOG.error('API.generateScene failed. not authenticated.', LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'generate scene failed','not authenticated',{},'HTTP.Route.GenVoyagerScene');
         res.status(403).send('no authenticated');
         return;
     }
@@ -197,7 +192,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
     // get our LocalStore. If we don't have one then bail. it is needed for the user id, auditing, and workflows
     const LS: LocalStore | undefined = ASL.getStore();
     if(!LS || !LS.idUser){
-        LOG.error('API.generateScene failed. cannot get LocalStore or idUser',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'generate scene failed','cannot get LocalStore or idUser',{},'HTTP.Route.GenVoyagerScene');
         res.status(200).send(JSON.stringify(generateResponse(false,'missing store/user')));
         return;
     }
@@ -226,11 +221,11 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
 
                 // post message if a count difference meaning we got bad data
                 if(idSystemObjects.length != body.idSystemObject.length)
-                    LOG.error(`API.generateScene received ${body.idSystemObject.length-idSystemObjects.length} bad IDs. (${body.idSystemObject.join(', ')})`,LOG.LS.eHTTP);
+                    RK.logError(RK.LogSection.eHTTP,'generate scene failed',`received ${body.idSystemObject.length-idSystemObjects.length} bad IDs`,{ idSystewmObjects: body.idSystemObject },'HTTP.Route.GenVoyagerScene');
             }
         } break;
         default: {
-            LOG.error('API.generateScene failed. unsupported HTTP method',LOG.LS.eHTTP);
+            RK.logError(RK.LogSection.eHTTP,'generate scene failed','unsupported HTTP method',{ method: req.method },'HTTP.Route.GenVoyagerScene');
             res.status(400).send(JSON.stringify(generateResponse(false,'invalid HTTP method')));
             return;
         }
@@ -238,7 +233,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
 
     // make sure we have ids to work with
     if(idSystemObjects.length === 0) {
-        LOG.error('API.generateScene failed. no IDs found in request.',LOG.LS.eHTTP);
+        RK.logError(RK.LogSection.eHTTP,'generate scene failed','no IDs found in request',{},'HTTP.Route.GenVoyagerScene');
         res.status(200).send(JSON.stringify(generateResponse(false,'invalid id parameters/body. none found.')));
         return;
     }
@@ -247,7 +242,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
     let messageSuffix: string | null = null;
     const maxIDs: number = 10;
     if(idSystemObjects.length>maxIDs) {
-        LOG.info('API.generateScene too many scenes submitted. limiting to 10',LOG.LS.eHTTP);
+        RK.logWarning(RK.LogSection.eHTTP,'generate scene',`too many scenes submitted. limiting to ${maxIDs}`,{},'HTTP.Route.GenVoyagerScene');
         messageSuffix = `(Capped to ${maxIDs})`;
         idSystemObjects.splice(10);
     }
@@ -268,7 +263,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
             // will create a new Scene version that is unpublished, affecting our ability to re-publish
             const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject ?? -1);
             if(!sceneSOV) {
-                LOG.error(`API.generateScene failed to get SystemObjectVersion for scene (${idSystemObject ?? -1})`,LOG.LS.eDB);
+                RK.logError(RK.LogSection.eHTTP,'generate scene failed','cannot get system object version for scene',{ idSystemObject },'HTTP.Route.GenVoyagerScene');
                 continue;
             }
 
@@ -280,5 +275,6 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
     }
 
     // create our combined response and return info to client
+    RK.logInfo(RK.LogSection.eHTTP,'generate scene success',`${messagePrefix} ${responses.length} scenes ${messageSuffix ?? ''}`,{ responses },'HTTP.Route.GenVoyagerScene');
     res.status(200).send(JSON.stringify(buildOpResponse(`${messagePrefix} ${responses.length} scenes ${messageSuffix ?? ''}`,responses)));
 }

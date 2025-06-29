@@ -4,7 +4,7 @@ import { EventConsumerDB } from './EventConsumerDB';
 import { EventEngine } from './EventEngine';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class EventConsumerHTTP extends EventConsumer {
     constructor(engine: EventEngine) {
@@ -15,7 +15,7 @@ export class EventConsumerHTTP extends EventConsumer {
         // inform audit interface of authentication event
         for (const dataItem of data) {
             if (typeof(dataItem.key) !== 'number') {
-                LOG.error(`EventConsumerHTTP.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                RK.logError(RK.LogSection.eEVENT,'event worker failed','sent event with unknown key',{ ...dataItem },'Event.Consumer.HTTP');
                 continue;
             }
 
@@ -33,11 +33,12 @@ export class EventConsumerHTTP extends EventConsumer {
 
                     if (audit.idAudit === 0)
                         audit.create(); // don't use await so this happens asynchronously
-                    LOG.info(`EventConsumerHTTP.eventWorker ${EVENT.eEventKey[dataItem.key]} ${JSON.stringify(oID)} by idUser ${audit.idUser}`, LOG.LS.eEVENT);
+
+                    RK.logInfo(RK.LogSection.eEVENT,'event worker success',undefined,{ dataItem, objectID: oID },'Event.Consumer.HTTP');
                 } break;
 
                 default:
-                    LOG.error(`EventConsumerHTTP.eventWorker sent event with unknown key ${JSON.stringify(dataItem)}`, LOG.LS.eEVENT);
+                    RK.logError(RK.LogSection.eEVENT,'event worker failed','unsupported key',{ ...dataItem },'Event.Consumer.HTTP');
                     break;
             }
         }

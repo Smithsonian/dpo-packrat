@@ -1,15 +1,20 @@
-import * as LOG from '../../utils/logger';
 import { IAuth, VerifyUserResult } from '../interface';
 
+/**
+ * Local authentication implementation. Does simple/naive comparison to check for
+ * email and password are equal. Checking the user exists in the system is done
+ * in AuthFactory so the email here needs to be a valid Packrat user email. For this
+ * reason we simply return needed information to AuthFactory vs. logging here.
+ */
 class LocalAuth implements IAuth {
     async verifyUser(email: string, password: string): Promise<VerifyUserResult> {
         if (password !== email) {
-            LOG.error(`LocalAuth.verifyUser invalid password for ${email}`, LOG.LS.eAUTH);
-            return { success: false, error: 'Invalid password for user' };
+            // RK.logDebug(RK.LogSection.eAUTH,'verify user failed','invalid password',{ email },'LocalAuth');
+            return { success: false, error: 'invalid password', data: { auth: 'local' } };
         }
 
-        LOG.info(`LocalAuth.verifyUser successful login for ${email}`, LOG.LS.eAUTH);
-        return { success: true };
+        // RK.logDebug(RK.LogSection.eAUTH,'verify user success',undefined,{ email },'LocalAuth');
+        return { success: true, data: { auth: 'local' } };
     }
 }
 

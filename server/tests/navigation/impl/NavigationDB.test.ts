@@ -1,6 +1,5 @@
 import { INavigation, NavigationFactory, NavigationResult, NavigationResultEntry, NavigationFilter } from '../../../navigation/interface';
 // import * as H from '../../../utils/helpers';
-import * as LOG from '../../../utils/logger';
 import * as CACHE from '../../../cache';
 import { ObjectIDAndType, SystemObjectBased, SystemObject } from '../../../db';
 import { ObjectGraphTestSetup } from '../../db/composite/ObjectGraph.setup';
@@ -10,7 +9,6 @@ import * as COMMON from '@dpo-packrat/common';
 let nav: INavigation | null = null;
 const OHTS: ObjectGraphTestSetup = new ObjectGraphTestSetup();
 const metadataColumns: COMMON.eMetadata[] = [COMMON.eMetadata.eHierarchyUnit, COMMON.eMetadata.eHierarchySubject, COMMON.eMetadata.eHierarchyItem];
-LOG;
 
 afterAll(async done => {
     // await H.Helpers.sleep(2000);

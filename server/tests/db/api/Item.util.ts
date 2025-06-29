@@ -1,7 +1,6 @@
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
-// import * as LOG from '../../../utils/logger';
 import { createIdentifierForSystemObject } from './Identifier.util';
 import { Item as ItemBase } from '@prisma/client';
 

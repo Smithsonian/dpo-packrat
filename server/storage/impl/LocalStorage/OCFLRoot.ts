@@ -1,9 +1,8 @@
 import * as path from 'path';
-//import * as STORE from '../../interface';
 import * as ST from './SharedTypes';
 import * as H from '../../../utils/helpers';
-import * as LOG from '../../../utils/logger';
 import * as OO from './OCFLObject';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export type ComputeWriteStreamLocationResults = {
     locationPublic: string,     // partial path, safe to share
@@ -66,20 +65,31 @@ export class OCFLRoot {
     async initialize(rootRepository: string, rootStaging: string): Promise<H.IOResults> {
         this.storageRootRepo = rootRepository;  // root of OCFL repository
         this.storageRootStaging = rootStaging;  // root of staging area
-        LOG.info(`OCFL Storage initialization: Repo Root    = ${this.storageRootRepo}`, LOG.LS.eSTR);
-        LOG.info(`OCFL Storage initialization: Staging Root = ${this.storageRootStaging}`, LOG.LS.eSTR);
+        RK.logInfo(RK.LogSection.eSTR,'OCFL initialize failed',undefined,{ rootRepository, rootStaging },'OCFL.Root');
 
         let ioResults: H.IOResults;
         ioResults = await H.Helpers.initializeDirectory(this.storageRootRepo, 'Storage OCFLRoot');
         /* istanbul ignore if */
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'directory initialize failed',`repository directory error: ${ioResults.error}`,{ rootRepository, rootStaging },'OCFL.Root');
             return ioResults;
+        }
+
         ioResults = await H.Helpers.initializeDirectory(this.storageRootStaging, 'Storage Staging Root');
         /* istanbul ignore if */
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'initialize failed',`staging directory error: ${ioResults.error}`,{ rootRepository, rootStaging },'OCFL.Root');
             return ioResults;
+        }
 
-        return await this.initializeStorageRoot();
+        ioResults = await this.initializeStorageRoot();
+        /* istanbul ignore if */
+        if(!ioResults.success)
+            RK.logError(RK.LogSection.eSTR,'initialize failed',ioResults.error,{ rootRepository, rootStaging },'OCFL.Root');
+        else
+            RK.logInfo(RK.LogSection.eSTR,'initialize success',undefined,{ rootRepository, rootStaging },'OCFL.Root');
+
+        return ioResults;
     }
 
     async ocflObject(storageKey: string, createIfMissing: boolean): Promise<OO.OCFLObjectInitResults> {
@@ -94,22 +104,28 @@ export class OCFLRoot {
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
         let ioResults: H.IOResults  = await H.Helpers.initializeFile(source, dest, 'OCFL Root Namaste File');
         /* istanbul ignore if */
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'initialize storage root failed',`OCFL Root Namaste file error: ${ioResults.error}`,{ source, destination: dest },'OCFL.Root');
             return ioResults;
+        }
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
         ioResults   = await H.Helpers.initializeFile(source, dest, 'OCFL Root Layout File');
         /* istanbul ignore if */
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'initialize storage root failed',`OCFL Root Layout file error: ${ioResults.error}`,{ source, destination: dest },'OCFL.Root');
             return ioResults;
+        }
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
         ioResults   = await H.Helpers.initializeFile(source, dest, 'OCFL Root Spec File');
         /* istanbul ignore if */
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'initialize storage root failed',`OCFL Root Spec file error: ${ioResults.error}`,{ source, destination: dest },'OCFL.Root');
             return ioResults;
+        }
 
         return ioResults;
     }
@@ -118,20 +134,26 @@ export class OCFLRoot {
         let source: string          = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootNamasteFilename);
         let dest: string            = path.join(this.storageRootRepo, ST.OCFLStorageRootNamasteFilename);
         let ioResults: H.IOResults  = await H.Helpers.filesMatch(source, dest);
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'validate failed',`OCFL Root Namaster file error: ${ioResults.error}`,{ source, destination: dest },'OCFL.Root');
             return ioResults;
+        }
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootLayoutFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootLayoutFilename);
         ioResults   = await H.Helpers.filesMatch(source, dest);
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'validate failed',`OCFL Root Layout file error: ${ioResults.error}`,{ source, destination: dest },'OCFL.Root');
             return ioResults;
+        }
 
         source      = path.join(ST.OCFLSourceDocsPath, ST.OCFLStorageRootSpecFilename);
         dest        = path.join(this.storageRootRepo, ST.OCFLStorageRootSpecFilename);
         ioResults   = await H.Helpers.filesMatch(source, dest);
-        if (!ioResults.success)
+        if (!ioResults.success) {
+            RK.logError(RK.LogSection.eSTR,'validate failed',`OCFL Root Spec file error: ${ioResults.error}`,{ source, destination: dest },'OCFL.Root');
             return ioResults;
+        }
 
         return ioResults;
     }

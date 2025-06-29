@@ -4,7 +4,7 @@
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 const ModelMaterialChannel = {
     ModelMaterial: async (parent: Parent): Promise<DBAPI.ModelMaterial | null> => {
@@ -32,12 +32,12 @@ const ModelMaterialChannel = {
         if (parent.idModelMaterialUVMap) {
             const uvMap: DBAPI.ModelMaterialUVMap | null = await DBAPI.ModelMaterialUVMap.fetch(parent.idModelMaterialUVMap);
             if (!uvMap) {
-                LOG.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap from ${JSON.stringify(parent)}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'material channel source failed','unable to load ModelMaterialUVMap from praent',{ parent },'GraphQL.Model.MaterialChannel');
                 return null;
             }
             const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(uvMap.idAsset);
             if (!assetVersion) {
-                LOG.error(`ModelMaterialChannel.Source unable to load ModelMaterialUVMap's asset from ${JSON.stringify(parent)} -> ${JSON.stringify(uvMap)}`, LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'material channel source failed','unable to load ModelMaterialUVMap asset from parent',{ parent, uvMap },'GraphQL.Model.MaterialChannel');
                 return null;
             }
             return assetVersion.FileName;

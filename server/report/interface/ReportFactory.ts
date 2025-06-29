@@ -1,7 +1,7 @@
 import { IReport } from './IReport';
 import { Report } from '../impl/Report';
 import * as DBAPI from '../../db';
-import * as LOG from '../../utils/logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { ASL, LocalStore } from '../../utils/localStore';
 
 export class ReportFactory {
@@ -13,14 +13,14 @@ export class ReportFactory {
         if (idWorkflowReport) {
             workflowReport = await DBAPI.WorkflowReport.fetch(idWorkflowReport);
             if (!workflowReport)
-                LOG.error(`ReportFactory.getReport() unable to fetch report with id ${idWorkflowReport}`, LOG.LS.eRPT);
+                RK.logError(RK.LogSection.eRPT,'get report failed',`unable to fetch report with id ${idWorkflowReport}`,{},'Report.Factory');
         }
 
         const idWorkflow: number | undefined = LS.getWorkflowID();
         if ((!workflowReport || workflowReport.idWorkflow !== idWorkflow) && idWorkflow) {
             const workflowReports: DBAPI.WorkflowReport[] | null = await DBAPI.WorkflowReport.fetchFromWorkflow(idWorkflow);
             if (!workflowReports)
-                LOG.error(`ReportFactory.getReport() unable to fetch reports from workflow with ID ${idWorkflow}`, LOG.LS.eRPT);
+                RK.logError(RK.LogSection.eRPT,'get report failed',`unable to fetch reports from workflow with ID ${idWorkflow}`,{},'Report.Factory');
             else if (workflowReports.length > 0)
                 workflowReport = workflowReports[0];
             else {
@@ -32,7 +32,7 @@ export class ReportFactory {
                     Name: ''
                 });
                 if (!await workflowReport.create()) {
-                    LOG.error(`ReportFactory.getReport() unable to create WorkflowReport for workflow with ID ${JSON.stringify(idWorkflow)}`, LOG.LS.eRPT);
+                    RK.logError(RK.LogSection.eRPT,'get report failed','unable to create WorkflowReport for workflow with ID',{ idWorkflow },'Report.Factory');
                     workflowReport = null;
                 }
             }
@@ -42,7 +42,8 @@ export class ReportFactory {
             LS.setWorkflowReportID(workflowReport.idWorkflowReport);
             return new Report(workflowReport);
         }
-        LOG.error('ReportFactory.getReport() unable to locate active workflow report from LocalStorage', LOG.LS.eRPT);
+
+        RK.logError(RK.LogSection.eRPT,'get report failed','unable to locate active workflow report from LocalStorage',{ idWorkflow, idWorkflowReport },'Report.Factory');
         return null;
     }
 }

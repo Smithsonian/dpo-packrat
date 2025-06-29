@@ -2,15 +2,14 @@
 import * as EVENT from '../../event/interface';
 
 import { eDBObjectType, ObjectIDAndType, eAuditType /*, eSystemObjectType, DBObjectTypeToName */ } from '../../db/api/ObjectType';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { Audit } from '@prisma/client';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 //** Audit.idSystemObject is not populated here, to avoid using CACHE.SystemObjectCache */
 export class AuditEventGenerator {
     static setEventEngine(eventEngine: EVENT.IEventEngine): void {
-        LOG.info('AuditEventGenerator.setEventEngine called', LOG.LS.eAUDIT);
         AuditEventGenerator.eventEngine = eventEngine;
     }
     private static eventEngine: EVENT.IEventEngine | null = null;   // don't import EventFactory to avoid circular dependencies
@@ -26,8 +25,10 @@ export class AuditEventGenerator {
         if (!this.eventProducer) {
             if (AuditEventGenerator.eventEngine)
                 this.eventProducer = await AuditEventGenerator.eventEngine.createProducer();
-            else
-                return true; // LOG.error(`AuditEventGenerator.audit unable to fetch event engine instance: ${JSON.stringify(oID)}-${EVENT.eEventKey[key]}\n${JSON.stringify(dbObject, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eEVENT);
+            else {
+                RK.logError(RK.LogSection.eEVENT,'audit event failed','unable to fetch event engine instance',{ objectID: oID, key },'Audit.EventGenerator');
+                return true;
+            }
         }
 
         if (this.eventProducer) {
@@ -70,7 +71,7 @@ export class AuditEventGenerator {
             this.eventProducer.send(eventTopic, [data]);
             return true;
         } else {
-            LOG.error('AuditEventGenerator.audit unable to fetch event producer', LOG.LS.eEVENT);
+            RK.logError(RK.LogSection.eEVENT,'audit event failed','unable to fetch event producer',{ objectID: oID, key },'Audit.EventGenerator');
             return false;
         }
 

@@ -7,7 +7,7 @@ import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import * as STORE from '../../storage/interface';
 import * as H from '../helpers';
-import * as LOG from '../logger';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { IngestPhotogrammetry, IngestModel, IngestScene, IngestFolder, Item } from '../../types/graphql';
 import { IZip } from '../IZip';
 import { CSVTypes, SubjectsCSVFields, ItemsCSVFields, CaptureDataPhotoCSVFields, ModelsCSVFields, ScenesCSVFields } from './csvTypes';
@@ -143,7 +143,7 @@ export class BulkIngestReader {
         try {
             bagitCDPs = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & CaptureDataPhotoCSVFields>(fileStream, CSVTypes.captureDataPhoto);
         } catch (error) {
-            LOG.info('BulkIngestReader.computeCaptureDataPhotos capture_data_photos.csv not found', LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'compute capture data photos failed',`CSV not found: ${error}`,{},'Utils.BagIt.IngestReader');
             return { success: true };
         }
 
@@ -174,7 +174,7 @@ export class BulkIngestReader {
         try {
             bagitModels = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ModelsCSVFields>(fileStream, CSVTypes.models);
         } catch (error) {
-            LOG.info('BulkIngestReader.computeModels models.csv not found', LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'compute models failed',`CSV not found: ${error}`,{},'Utils.BagIt.IngestReader');
             return { success: true };
         }
 
@@ -205,12 +205,12 @@ export class BulkIngestReader {
         try {
             bagitScenes = await CSVParser.parse<SubjectsCSVFields & ItemsCSVFields & ScenesCSVFields>(fileStream, CSVTypes.scenes);
         } catch (error) {
-            LOG.error('BulkIngestReader.computeScenes scenes.csv not found', LOG.LS.eSYS, error);
+            RK.logError(RK.LogSection.eSYS,'compute scenes failed',`CSV not found: ${error}`,{},'Utils.BagIt.IngestReader');
             return { success: true };
         }
 
         for (const bagitScene of bagitScenes) {
-            LOG.info(`Processing scene ${JSON.stringify(bagitScene, H.Helpers.saferStringify)}`, LOG.LS.eSYS);
+            RK.logInfo(RK.LogSection.eSYS,'processing scnee',undefined,{ bagitScene },'Utils.BagIt.IngestReader');
             if (BulkIngestReader.isEmptyRow(bagitScene))
                 continue;
 
@@ -258,7 +258,7 @@ export class BulkIngestReader {
         const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromNameSearch(bagitSubject.unit_name); /* istanbul ignore next */
         if (!units || units.length == 0) {
             this._errorField = 'unit_name';
-            LOG.error(`BulkIngestReader.extractSubjectFromCSV unable to load unit from ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'extract subjectfrom csv failed','unable to load unit',{ bagitSubject },'Utils.BagIt.IngestReader');
             return null;
         }
 
@@ -270,18 +270,18 @@ export class BulkIngestReader {
         bagitSubject: SubjectsCSVFields): Promise<DBAPI.SubjectUnitIdentifier | null> {
         /* istanbul ignore next */
         if (!subject) {
-            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load subject from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'extract Subject Unit ID failed','unable to load subject from local_subject_id',{ subject, bagitSubject },'Utils.BagIt.IngestReader');
             return null;
         }
         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit); /* istanbul ignore next */
         if (!unit) {
-            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load unit from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'extract Subject Unit ID failed','unable to fetch unit',{ subject, bagitSubject },'Utils.BagIt.IngestReader');
             return null;
         }
 
         const SO: DBAPI.SystemObject | null = await subject.fetchSystemObject();
         if (!SO) {
-            LOG.error(`BulkIngestReader.extractSubjectUnitIDFromSubject unable to load system object from local_subject_id in ${JSON.stringify(bagitSubject)}`, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'extract Subject Unit ID failed','unable to fetch subject SystemObject',{ subject, bagitSubject },'Utils.BagIt.IngestReader');
             return null;
         }
 
@@ -305,11 +305,10 @@ export class BulkIngestReader {
             });
 
         // try to load from guid as a item identifier
-        const error: string = `Unable to find identifiers for items from ${bagitItem.item_guid}`;
         const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(bagitItem.item_guid);
         if (!identifiers) {
             this._errorField = 'item_guid';
-            LOG.error(error, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'extract item from csv failed',`unable to find identifiers for items from: ${bagitItem.item_guid}`,{ bagitItem },'Utils.BagIt.IngestReader');
             return null;
         }
 
@@ -321,13 +320,13 @@ export class BulkIngestReader {
                 return SOPair.Item;
             } else {
                 this._errorField = 'item_guid';
-                LOG.error(error, LOG.LS.eSYS);
+                RK.logError(RK.LogSection.eSYS,'extract item from csv failed','unable to fetch SystemObjectPairs',{ identifier, bagitItem },'Utils.BagIt.IngestReader');
                 return null;
             }
         }
 
         this._errorField = 'item_guid';
-        LOG.error(error, LOG.LS.eSYS);
+        RK.logError(RK.LogSection.eSYS,'extract item from csv failed','unable to find identifiers',{ bagitItem },'Utils.BulkIngest.Reader');
         return null;
     }
 
@@ -336,32 +335,32 @@ export class BulkIngestReader {
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataDatasetType, bagitCDP.capture_dataset_type);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'capture_dataset_type'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract capture data from csv failed',vocabResult.error ?? 'unknown error',{ bagitCDP },'Utils.BulkIngest.Reader'); this._errorField = 'capture_dataset_type'; return null; }
         const datasetType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataItemPositionType, bagitCDP.item_position_type);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'item_position_type'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract capture data from csv failed',vocabResult.error ?? 'unknown error',{ bagitCDP },'Utils.BulkIngest.Reader'); this._errorField = 'item_position_type'; return null; }
         const itemPositionType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataFocusType, bagitCDP.focus_type);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'focus_type'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract capture data from csv failed',vocabResult.error ?? 'unknown error',{ bagitCDP },'Utils.BulkIngest.Reader');this._errorField = 'focus_type'; return null; }
         const focusType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataLightSourceType, bagitCDP.light_source_type);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'light_source_type'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract capture data from csv failed',vocabResult.error ?? 'unknown error',{ bagitCDP },'Utils.BulkIngest.Reader');this._errorField = 'light_source_type'; return null; }
         const lightsourceType: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, bagitCDP.background_removal_method);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'background_removal_method'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract capture data from csv failed',vocabResult.error ?? 'unknown error',{ bagitCDP },'Utils.BulkIngest.Reader');this._errorField = 'background_removal_method'; return null; }
         const backgroundRemovalMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eCaptureDataClusterType, bagitCDP.cluster_type);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'cluster_type'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract capture data from csv failed',vocabResult.error ?? 'unknown error',{ bagitCDP },'Utils.BulkIngest.Reader');this._errorField = 'cluster_type'; return null; }
         const clusterType: number = vocabResult.idVocabulary;
 
         const folders: IngestFolder[] = [];
@@ -370,7 +369,7 @@ export class BulkIngestReader {
             for (const directory of directories) {
                 if (directory.toLowerCase().includes(bagitCDP.directory_path.toLowerCase())) {
                     const finalPathElement: string = path.basename(directory);
-                    LOG.info(`BIR directory: ${directory}: ${finalPathElement}`, LOG.LS.eSYS);
+                    RK.logDebug(RK.LogSection.eSYS,'extract capture data from csv',`BIR directory: ${directory}: ${finalPathElement}`,{},'Utils.BulkIngest.Reader');
                     const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapPhotogrammetryVariantType(finalPathElement);
                     folders.push({ name: finalPathElement, variantType: vocabulary ? vocabulary.idVocabulary : /* istanbul ignore next */ 0 });
                 }
@@ -409,22 +408,22 @@ export class BulkIngestReader {
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelCreationMethod, bagitModel.creation_method);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'creation_method'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract model from csv failed',vocabResult.error ?? 'unknown error',{ bagitModel },'Utils.BulkIngest.Reader'); this._errorField = 'creation_method'; return null; }
         const creationMethod: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelModality, bagitModel.modality);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'modality'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract model from csv failed',vocabResult.error ?? 'unknown error',{ bagitModel },'Utils.BulkIngest.Reader'); this._errorField = 'modality'; return null; }
         const modality: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelPurpose, bagitModel.purpose);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'purpose'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract model from csv failed',vocabResult.error ?? 'unknown error',{ bagitModel },'Utils.BulkIngest.Reader'); this._errorField = 'purpose'; return null; }
         const purpose: number = vocabResult.idVocabulary;
 
         vocabResult = await this.computeVocabulary(COMMON.eVocabularySetID.eModelUnits, bagitModel.units);
         if (vocabResult.error)
-        { LOG.error(vocabResult.error, LOG.LS.eSYS); this._errorField = 'units'; return null; }
+        { RK.logError(RK.LogSection.eSYS,'extract model from csv failed',vocabResult.error ?? 'unknown error',{ bagitModel },'Utils.BulkIngest.Reader'); this._errorField = 'units'; return null; }
         const units: number = vocabResult.idVocabulary;
 
         return {
@@ -465,7 +464,7 @@ export class BulkIngestReader {
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyBySetAndTerm(eVocabSetID, term); /* istanbul ignore next */
         if (!vocabulary) {
             const error: string = `Unable to locate ${COMMON.eVocabularySetID[eVocabSetID]} ${term}`;
-            LOG.error(error, LOG.LS.eSYS);
+            RK.logError(RK.LogSection.eSYS,'compute vocabulary failed',error,{},'Utils.BulkIngest.Reader');
             return { idVocabulary: 0, error };
         }
         return { idVocabulary: vocabulary.idVocabulary };

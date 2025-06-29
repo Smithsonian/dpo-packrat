@@ -1,7 +1,7 @@
 import { GetWorkflowListResult, QueryGetWorkflowListArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getWorkflowList(_: Parent, args: QueryGetWorkflowListArgs): Promise<GetWorkflowListResult> {
     const { input } = args;
@@ -10,7 +10,7 @@ export default async function getWorkflowList(_: Parent, args: QueryGetWorkflowL
             input.DateFrom, input.DateTo, input.idUserInitiator, input.idUserOwner,
             input.pageNumber, input.rowCount, input.sortBy, input.sortOrder);
     if (!WorkflowList) {
-        LOG.error(`getWorkflowList(${JSON.stringify(input)}) failed`, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'get workflow list failed','list does not exist',{ input },'GraphQL.Workflow.List');
         return { WorkflowList: [] };
     }
     return { WorkflowList };

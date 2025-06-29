@@ -6,7 +6,7 @@ import * as STORE from '../../../../storage/interface/IStorage';
 import * as LS from '../../../../storage/impl/LocalStorage/LocalStorage';
 import * as DBAPI from '../../../../db';
 import * as H from '../../../../utils/helpers';
-import * as LOG from '../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../records/recordKeeper';
 import { ObjectGraphTestSetup } from '../../../db/composite/ObjectGraph.setup';
 
 type LocalStorageTestCase = {
@@ -36,11 +36,11 @@ let nextID: number = 1;
 beforeAll(() => {
     ls = new LS.LocalStorage();
     testStorageRoot = path.join('var', 'test', H.Helpers.randomSlug());
-    LOG.info(`Creating test storage root in ${path.resolve(testStorageRoot)}`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'before all',`Creating test storage root in ${path.resolve(testStorageRoot)}`,{},'Tests.Storage.Local');
 });
 
 afterAll(async done => {
-    LOG.info(`Removing test storage root from ${path.resolve(testStorageRoot)}`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'after all',`Removing test storage root from ${path.resolve(testStorageRoot)}`,{},'Tests.Storage.Local');
     await H.Helpers.removeDirectory(testStorageRoot, true);
     // await H.Helpers.sleep(2000);
     done();
@@ -262,7 +262,7 @@ async function readStreamAndComputeHash(stream: NodeJS.ReadableStream): Promise<
             stream.on('end', () => { resolve(hash.digest('hex')); });
             stream.on('error', error => reject(error));
         } catch (error) {
-            LOG.error('LocalStorage.test.ts readStreamAndComputeHash() error', LOG.LS.eTEST, error);
+            RK.logError(RK.LogSection.eTEST,'read stream and compute hash',H.Helpers.getErrorString(error),{},'Tests.Storage.Local');
             reject(error);
         }
     });
@@ -285,7 +285,7 @@ async function testWriteStream(fileSize: number): Promise<LocalStorageTestCase> 
         uniqueID: nextID++
     };
 
-    LOG.info('LocalStorage.writeStream', LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'write stream',undefined,{},'Tests.Storage.Local');
     const WSR: STORE.WriteStreamResult = await ls.writeStream(LSTC.fileName);
     expect(WSR.success).toBeTruthy();
     expect(WSR.writeStream).toBeTruthy();
@@ -310,8 +310,7 @@ async function testCommitWriteStream(LSTC: LocalStorageTestCase, expectSuccess: 
         storageHash: LSTC.storageHash
     };
 
-    LOG.info(`LocalStorage.commitWriteStream: ${JSON.stringify(CWSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
-    const CWSR: STORE.CommitWriteStreamResult = await ls.commitWriteStream(CWSI);
+    RK.logInfo(RK.LogSection.eTEST,'commit write stream',`${JSON.stringify(CWSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');    const CWSR: STORE.CommitWriteStreamResult = await ls.commitWriteStream(CWSI);
     expect(CWSR.success).toEqual(expectSuccess);
     if (expectSuccess) {
         expect(CWSR.storageHash).toBeTruthy();
@@ -326,7 +325,7 @@ async function testDiscardWriteStream(LSTC: LocalStorageTestCase, expectSuccess:
         storageKey: LSTC.storageKeyStaging,
     };
 
-    LOG.info(`LocalStorage.discardWriteStream: ${JSON.stringify(DWSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'discard write stream',`${JSON.stringify(DWSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');
     const DWSR: STORE.DiscardWriteStreamResult = await ls.discardWriteStream(DWSI);
     expect(DWSR.success).toEqual(expectSuccess);
     return DWSR.success;
@@ -340,7 +339,7 @@ async function testReadStream(LSTC: LocalStorageTestCase, expectSuccess: boolean
         staging: LSTC.staging
     };
 
-    LOG.info(`LocalStorage.readStream: ${JSON.stringify(RSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'read stream',`${JSON.stringify(RSI)} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');
     const RSR: STORE.ReadStreamResult = await ls.readStream(RSI);
     expect(RSR.success).toEqual(expectSuccess);
     if (expectSuccess) {
@@ -354,11 +353,12 @@ async function testReadStream(LSTC: LocalStorageTestCase, expectSuccess: boolean
 }
 
 async function testComputeStorageKey(uniqueID: string): Promise<string> {
-    LOG.info(`LocalStorage.computeStorageKey: ${uniqueID}`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'compute storage key',undefined,{ uniqueID },'Tests.Storage.Local');
     const res = await ls.computeStorageKey(uniqueID);
     expect(res.success).toBeTruthy();
     expect(res.storageKey).toBeTruthy();
-    LOG.info(`LocalStorage.computeStorageKey: ${res.storageKey}`, LOG.LS.eTEST);
+
+    RK.logInfo(RK.LogSection.eTEST,'compute storage key',undefined,{ storageKey: res.storageKey },'Tests.Storage.Local');
     return res.storageKey;
 }
 
@@ -372,7 +372,7 @@ async function testPromoteStagedAsset(LSTC: LocalStorageTestCase, SOBased: DBAPI
         opInfo
     };
 
-    LOG.info(`LocalStorage.promoteStagedAsset: ${PSAI.storageKeyStaged} -> ${PSAI.storageKeyFinal} (Expect ${expectSuccess ? 'Success' : 'Failure'}) ${LSTC.inputStream ? ' (using InputStream)' : ''}`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'promote stage asset',`${PSAI.storageKeyStaged} -> ${PSAI.storageKeyFinal} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');
     const PSAR: STORE.PromoteStagedAssetResult = await ls.promoteStagedAsset(PSAI);
     expect(PSAR.success).toEqual(expectSuccess);
     if (PSAR.success) {
@@ -389,8 +389,8 @@ async function testRenameAsset(LSTC: LocalStorageTestCase, expectSuccess: boolea
         fileNameNew: H.Helpers.randomSlug(),
         opInfo
     };
+    RK.logInfo(RK.LogSection.eTEST,'rename asset',`${RAI.storageKey} ${RAI.fileNameOld} -> ${RAI.fileNameNew} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');
 
-    LOG.info(`LocalStorage.renameAsset: ${RAI.storageKey} ${RAI.fileNameOld} -> ${RAI.fileNameNew} (Expect ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
     const RAR: STORE.RenameAssetResult = await ls.renameAsset(RAI);
     expect(RAR.success).toEqual(expectSuccess);
     if (RAR.success) {
@@ -407,7 +407,8 @@ async function testHideAsset(LSTC: LocalStorageTestCase, expectSuccess: boolean)
         opInfo
     };
 
-    LOG.info(`LocalStorage.hideAsset: ${HAI.storageKey} ${HAI.fileName} (Expect ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'hide asset',`${HAI.storageKey} ${HAI.fileName} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');
+
     const HAR: STORE.HideAssetResult = await ls.hideAsset(HAI);
     expect(HAR.success).toEqual(expectSuccess);
     if (HAR.success)
@@ -423,7 +424,8 @@ async function testReinstateAsset(LSTC: LocalStorageTestCase, expectSuccess: boo
         opInfo
     };
 
-    LOG.info(`LocalStorage.reinstateAsset: ${RAI.storageKey} ${RAI.fileName} (Expect ${expectSuccess ? 'Success' : 'Failure'})`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'reinstate asset',`${RAI.storageKey} ${RAI.fileName} (Expect ${expectSuccess ? 'Success' : 'Failure'}`,{},'Tests.Storage.Local');
+
     const RAR: STORE.ReinstateAssetResult = await ls.reinstateAsset(RAI);
     expect(RAR.success).toEqual(expectSuccess);
     if (RAR.success)
@@ -438,7 +440,7 @@ async function testUpdateMetadata(LSTC: LocalStorageTestCase, SOBased: DBAPI.Sys
         opInfo
     };
 
-    LOG.info(`LocalStorage.updateMetadata: ${UMI.storageKey}`, LOG.LS.eTEST);
+    RK.logInfo(RK.LogSection.eTEST,'update metadata',undefined,{ storageKey: UMI.storageKey },'Tests.Storage.Local');
     const UMR: STORE.UpdateMetadataResult = await ls.updateMetadata(UMI);
     expect(UMR.success).toBeTruthy();
     if (UMR.success)

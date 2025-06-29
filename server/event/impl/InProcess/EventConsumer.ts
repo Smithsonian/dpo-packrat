@@ -2,7 +2,8 @@
 
 import * as EVENT from '../../interface';
 import { EventEngine } from './EventEngine';
-import * as LOG from '../../../utils/logger';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import * as H from '../../../utils/helpers';
 
 import { Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
 
@@ -34,11 +35,13 @@ export abstract class EventConsumer implements EVENT.IEventConsumer {
             if (error === E_CANCELED) {                  // we're done
                 const eventData = this.eventData;
                 this.eventData = [];
+                RK.logWarning(RK.LogSection.eEVENT,'poll','cancelled',{ eTopic, eventData },'Event.Consumer');
                 return eventData;
-            } else if (error === E_TIMEOUT)               // we timed out
+            } else if (error === E_TIMEOUT) {               // we timed out
+                RK.logError(RK.LogSection.eEVENT,'poll failed','timedout',{ eTopic, timeout },'Event.Consumer');
                 return [];
-            else {
-                LOG.error('EventConsumer.poll', LOG.LS.eEVENT, error);
+            } else {
+                RK.logError(RK.LogSection.eEVENT,'poll failed',`cannot acquire mutex: ${H.Helpers.getErrorString(error)}`,{ eTopic, timeout },'Event.Consumer');
                 return [];
             }
         } finally {

@@ -4,8 +4,8 @@ import { ObjectGraphDataEntry, eApplyGraphStateDirection, ObjectGraphState } fro
 import { ObjectGraph, eObjectGraphMode } from './ObjectGraph';
 import * as COMMON from '@dpo-packrat/common';
 import * as CACHE from '../../../cache';
-import * as LOG from '../../../utils/logger';
-// import * as H from '../../../utils/helpers';
+import * as H from '../../../utils/helpers';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export class ObjectGraphDatabase {
     objectMap: Map<number, ObjectGraphDataEntry> = new Map<number, ObjectGraphDataEntry>(); // map from SystemObject.idSystemObject to graph entry details
@@ -19,7 +19,7 @@ export class ObjectGraphDatabase {
         if (!parentData) {
             const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(parent); /* istanbul ignore if */
             if (!sID)
-                LOG.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(parent)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'record relationship failed','unable to compute idSystemObject for parent',{ parent, child, ...this },'DB.Composite.ObjectGraph.Database');
 
             parentData = new ObjectGraphDataEntry(parent, sID ? sID.Retired : false);
             // LOG.info(`this.objectmap.set parent(${parent.idSystemObject}, ${JSON.stringify(parent)})`, LOG.LS.eDB);
@@ -28,7 +28,7 @@ export class ObjectGraphDatabase {
         if (!childData) {
             const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(child); /* istanbul ignore if */
             if (!sID)
-                LOG.error(`ObjectGraphDatabase.recordRelationship unable to compute idSystemObject for ${JSON.stringify(child)}`, LOG.LS.eDB);
+                RK.logError(RK.LogSection.eDB,'record relationship failed','unable to compute idSystemObject for child',{ parent, child, ...this },'DB.Composite.ObjectGraph.Database');
 
             childData = new ObjectGraphDataEntry(child, sID ? sID.Retired : false);
             // LOG.info(`this.objectmap.set child (${child.idSystemObject}, ${JSON.stringify(child)})`, LOG.LS.eDB);
@@ -53,23 +53,43 @@ export class ObjectGraphDatabase {
     }
 
     async fetch(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.fetch starting', LOG.LS.eDB);
-        if (!await this.computeGraphDataFromUnits()) return false;
-        if (!await this.computeGraphDataFromProjects()) return false;
-        if (!await this.computeGraphDataFromSubjects()) return false;
-        if (!await this.computeGraphDataFromItems()) return false;
-        if (!await this.computeGraphDataFromCaptureDatas()) return false;
-        if (!await this.computeGraphDataFromModels()) return false;
-        if (!await this.computeGraphDataFromScenes()) return false;
-        if (!await this.computeGraphDataFromIntermediaryFiles()) return false;
-        if (!await this.computeGraphDataFromProjectDocumentations()) return false;
-        if (!await this.computeGraphDataFromAssets()) return false;
-        if (!await this.computeGraphDataFromAssetVersions()) return false;
-        if (!await this.computeGraphDataFromActors()) return false;
-        if (!await this.computeGraphDataFromStakeholders()) return false;
+        const profileKey: string = `fetch_${H.Helpers.randomSlug()}`;
+        RK.profile(profileKey,RK.LogSection.eDB,'fetching ObjectGraph',{},'DB.Composite.ObjectGraph.Database');
+        RK.logInfo(RK.LogSection.eDB,'fetch','start',{},'DB.Composite.ObjectGraph.Database');
 
-        if (!(await this.applyGraphData())) return false;
-        LOG.info('ObjectGraphDatabase.fetch completed successfully', LOG.LS.eDB);
+        // define each step including a label for logging
+        const steps: [string, () => Promise<boolean>][] = [
+            ['computeGraphDataFromUnits', () => this.computeGraphDataFromUnits()],
+            ['computeGraphDataFromProjects', () => this.computeGraphDataFromProjects()],
+            ['computeGraphDataFromSubjects', () => this.computeGraphDataFromSubjects()],
+            ['computeGraphDataFromItems', () => this.computeGraphDataFromItems()],
+            ['computeGraphDataFromCaptureDatas', () => this.computeGraphDataFromCaptureDatas()],
+            ['computeGraphDataFromModels', () => this.computeGraphDataFromModels()],
+            ['computeGraphDataFromScenes', () => this.computeGraphDataFromScenes()],
+            ['computeGraphDataFromIntermediaryFiles', () => this.computeGraphDataFromIntermediaryFiles()],
+            ['computeGraphDataFromProjectDocumentations', () => this.computeGraphDataFromProjectDocumentations()],
+            ['computeGraphDataFromAssets', () => this.computeGraphDataFromAssets()],
+            ['computeGraphDataFromAssetVersions', () => this.computeGraphDataFromAssetVersions()],
+            ['computeGraphDataFromActors', () => this.computeGraphDataFromActors()],
+            ['computeGraphDataFromStakeholders', () => this.computeGraphDataFromStakeholders()],
+            ['applyGraphData', () => this.applyGraphData()]
+        ];
+
+        // cycle through all steps calling the function and exiting on failure after logging results
+        for (const [name, fn] of steps) {
+            try {
+                const result = await fn();
+                if (!result) throw new Error(`${name} returned false`);
+            } catch (err) {
+                RK.logError(RK.LogSection.eDB,'fetch failed',`step failed: ${name}`,{ error: err, ...this },'DB.Composite.ObjectGraph.Database');
+                RK.profileUpdate(profileKey, { error: `${name} failed` });
+                RK.profileEnd(profileKey);
+                return false;
+            }
+        }
+
+        RK.logInfo(RK.LogSection.eDB,'fetch','success',{},'DB.Composite.ObjectGraph.Database');
+        RK.profileEnd(profileKey);
         return true;
     }
 
@@ -78,11 +98,11 @@ export class ObjectGraphDatabase {
         // LOG.info(`ObjectGraphDatabase.fetchFromSystemObject ${idSystemObject}`, LOG.LS.eDB);
         const oIDsID: SystemObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectAndSystemFromSystem(idSystemObject);
         if (!oIDsID) {
-            LOG.error(`ObjectGraphDatabase.fetchFromSystemObject unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',`unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`,{ ...this },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         if (!await this.computeGraphDataFromObjectWorker(oIDsID, 'computeGraphDataFromSystemObject', eObjectGraphMode.eAll)) {
-            LOG.error(`ObjectGraphDatabase.fetchFromSystemObject unable to compute graph for ${idSystemObject}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',`unable to compute graph for ${idSystemObject}`,{ ...this },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         return await this.applyGraphData();
@@ -92,7 +112,7 @@ export class ObjectGraphDatabase {
         const oID: ObjectIDAndType = { idObject, eObjectType };
         const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
         if (!sID) {
-            LOG.error(`ObjectGraphDatabase.${functionName} unable to compute idSystemObject for ${JSON.stringify(oID)}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'compute graph data from object failed',`${functionName} unable to compute idSystemObject for ${JSON.stringify(oID)}`,{ ...this },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         // LOG.info(`ObjectGraphDatabase.computeGraphDataFromObject ${JSON.stringify(oID)} -> ${JSON.stringify(sID)}`, LOG.LS.eDB);
@@ -102,7 +122,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromObjectWorker(oIDsID: SystemObjectIDAndType, functionName: string, eOGMode: eObjectGraphMode): Promise<boolean> {
         const OG: ObjectGraph = new ObjectGraph(oIDsID.sID.idSystemObject, eOGMode, 32, this); // this -> gather relationships for all objects!
         if (!await OG.fetch()) {
-            LOG.error(`ObjectGraphDatabase.${functionName} unable to compute ObjectGraph for ${JSON.stringify(oIDsID)}`, LOG.LS.eDB);
+            RK.logError(RK.LogSection.eDB,'compute graph data from object worker failed',`${functionName} unable to compute ObjectGraph for ${JSON.stringify(oIDsID)}`,{ ...this },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         // LOG.info(`ObjectGraphDatabase.${functionName} (${JSON.stringify(oIDsID)}) fetched OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eDB);
@@ -116,15 +136,16 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromUnits(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromUnits', LOG.LS.eDB);
         // iterate across all Units; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const units: Unit[] | null = await Unit.fetchAllWithSubjects(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Units',undefined,{ units: units?.map(i=> { return { id: i.idUnit, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!units)
             return false;
         let count: number = 0;
         const total: number = units.length;
         for (const unit of units) {
-            LOG.info(`ObjectGraphDatabase.computeGraphDataFromUnits ${++count}/${total}`, LOG.LS.eDB);
+            RK.logDebug(RK.LogSection.eDB,'compute graph data from units',`${++count}/${total}`,{ },'DB.Composite.ObjectGraph.Database');
             if (!await this.computeGraphDataFromObject(unit.idUnit, COMMON.eSystemObjectType.eUnit, 'computeGraphDataFromUnits'))
                 continue;
         }
@@ -132,9 +153,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromProjects(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromProjects', LOG.LS.eDB);
         // iterate across all Projects; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const projects: Project[] | null = await Project.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Projects',undefined,{ projects: projects?.map(i=> { return { id: i.idProject, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!projects)
             return false;
         // let count: number = 0;
@@ -148,9 +170,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromSubjects(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromSubjects', LOG.LS.eDB);
         // iterate across all Subjects; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const subjects: Subject[] | null = await Subject.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Subjects',undefined,{ subjects: subjects?.map(i=> { return { id: i.idSubject, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!subjects)
             return false;
         // let count: number = 0;
@@ -164,9 +187,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromItems(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromItems', LOG.LS.eDB);
         // iterate across all Items; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const items: Item[] | null = await Item.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Items',undefined,{ items: items?.map(i=> { return { id: i.idItem, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!items)
             return false;
         // let count: number = 0;
@@ -180,9 +204,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromCaptureDatas(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromCaptureDatas', LOG.LS.eDB);
         // iterate across all CaptureDatas; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const CaptureDatas: CaptureData[] | null = await CaptureData.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from CaptureData',undefined,{ captureData: CaptureDatas?.map(i=> { return { id: i.idCaptureData, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!CaptureDatas)
             return false;
         for (const CaptureData of CaptureDatas) {
@@ -193,9 +218,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromModels(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromModels', LOG.LS.eDB);
         // iterate across all Models; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Models: Model[] | null = await Model.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Models',undefined,{ models: Models?.map(i=> { return { id: i.idModel, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!Models)
             return false;
         for (const Model of Models) {
@@ -206,9 +232,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromScenes(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromScenes', LOG.LS.eDB);
         // iterate across all Scenes; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Scenes: Scene[] | null = await Scene.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Scenes',undefined,{ scenes: Scenes?.map(i=> { return { id: i.idScene, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!Scenes)
             return false;
         for (const Scene of Scenes) {
@@ -219,9 +246,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromIntermediaryFiles(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromIntermediaryFiles', LOG.LS.eDB);
         // iterate across all IntermediaryFiles; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const IntermediaryFiles: IntermediaryFile[] | null = await IntermediaryFile.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from IntermediaryFiles',undefined,{ intermediaryFiles: IntermediaryFiles?.map(i=> { return { id: i.idIntermediaryFile };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!IntermediaryFiles)
             return false;
         for (const IntermediaryFile of IntermediaryFiles) {
@@ -232,9 +260,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromProjectDocumentations(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromProjectDocumentations', LOG.LS.eDB);
         // iterate across all ProjectDocumentations; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const ProjectDocumentations: ProjectDocumentation[] | null = await ProjectDocumentation.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Documentations',undefined,{ documentations: ProjectDocumentations?.map(i=> { return { id: i.idProjectDocumentation, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!ProjectDocumentations)
             return false;
         for (const ProjectDocumentation of ProjectDocumentations) {
@@ -246,9 +275,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromAssets(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromAssets', LOG.LS.eDB);
         // iterate across all Assets; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Assets: Asset[] | null = await Asset.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Assets',undefined,{ asets: Assets?.map(i=> { return { id: i.idAsset, name: i.FileName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!Assets)
             return false;
         for (const Asset of Assets) {
@@ -259,9 +289,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromAssetVersions(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromAssetVersions', LOG.LS.eDB);
         // iterate across all AssetVersions; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const AssetVersions: AssetVersion[] | null = await AssetVersion.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from AssetVersions',undefined,{ assetVersions: AssetVersions?.map(i=> { return { id: i.idAssetVersion, name: i.FileName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!AssetVersions)
             return false;
         for (const AssetVersion of AssetVersions) {
@@ -272,9 +303,10 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromActors(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromActors', LOG.LS.eDB);
         // iterate across all Actors; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Actors: Actor[] | null = await Actor.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Actors',undefined,{ actors: Actors?.map(i=> { return { id: i.idActor, name: i.IndividualName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!Actors)
             return false;
         for (const Actor of Actors) {
@@ -285,9 +317,12 @@ export class ObjectGraphDatabase {
     }
 
     private async computeGraphDataFromStakeholders(): Promise<boolean> {
-        LOG.info('ObjectGraphDatabase.computeGraphDataFromStakeholders', LOG.LS.eDB);
+
+
         // iterate across all Stakeholders; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Stakeholders: Stakeholder[] | null = await Stakeholder.fetchAll(); /* istanbul ignore if */
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Stakeholders',undefined,{ stakeholders: Stakeholders?.map(i=> { return { id: i.idStakeholder, name: i.IndividualName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+
         if (!Stakeholders)
             return false;
         for (const Stakeholder of Stakeholders) {
@@ -302,7 +337,7 @@ export class ObjectGraphDatabase {
     private async applyGraphData(): Promise<boolean> {
         const log: boolean = (this.objectMap.size > 20);
         if (log)
-            LOG.info('ObjectGraphDatabase.applyGraphData', LOG.LS.eDB);
+            RK.logInfo(RK.LogSection.eDB,'apply graph data','start',{},'DB.Composite.ObjectGraph.Database');
         // walk across all entries
         //      for each entry, extract state: compute unit, project, subject, item, capture method, variant type, model purpose, and model file type
         //      walk all children
@@ -324,7 +359,7 @@ export class ObjectGraphDatabase {
             retValue = await this.applyGraphState(objectGraphDataEntry, objectGraphState, ++entry, entries) && retValue;
         }
         if (log)
-            LOG.info('ObjectGraphDatabase.applyGraphData finished', LOG.LS.eDB);
+            RK.logInfo(RK.LogSection.eDB,'apply graph data','done',{},'DB.Composite.ObjectGraph.Database');
         return retValue;
     }
 
@@ -347,8 +382,7 @@ export class ObjectGraphDatabase {
             return false;
 
         if ((entry % 1000) == 0)
-            LOG.info(`ObjectGraphDatabase.applyGraphStateRecursive ${entry}/${entries}: [${32 - depth}] ${JSON.stringify(objectGraphDataEntry.systemObjectIDType)} [${eApplyGraphStateDirection[eDirection]}]`,
-                LOG.LS.eDB);
+            RK.logInfo(RK.LogSection.eDB,'apply graph state recursive',`${entry}/${entries}`,{ depth: (32 - depth), systemObjectIDType: objectGraphDataEntry.systemObjectIDType },'DB.Composite.ObjectGraph.Database');
         const relationMap: Map<number, SystemObjectIDType> | undefined =
             eDirection == eApplyGraphStateDirection.eChild ? objectGraphDataEntry.childMap : objectGraphDataEntry.parentMap;
         if (!relationMap)
@@ -393,7 +427,7 @@ export class ObjectGraphDatabase {
                                 objectGraphState.variantTypes.set(captureDataFile.idVVariantType, true);
                     }
                 } else
-                    LOG.error(`ObjectGraphDatabase.applyGraphData() Unable to load CaptureData from ${systemObjectIDType}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'extract state failed',`Unable to load CaptureData from ${systemObjectIDType}`,{ ...this },'DB.Composite.ObjectGraph.Database');
             } break;
 
             case COMMON.eSystemObjectType.eModel: {
@@ -403,7 +437,7 @@ export class ObjectGraphDatabase {
                     objectGraphState.modelFileType = model.idVFileType;
                     objectGraphState.commonDateCreated = model.DateCreated;
                 } else
-                    LOG.error(`ObjectGraphDatabase.applyGraphData() Unable to load Model from ${systemObjectIDType}`, LOG.LS.eDB);
+                    RK.logError(RK.LogSection.eDB,'extract state failed',`Unable to load Model from ${systemObjectIDType}`,{ ...this },'DB.Composite.ObjectGraph.Database');
             } break;
 
             case COMMON.eSystemObjectType.eIntermediaryFile: {

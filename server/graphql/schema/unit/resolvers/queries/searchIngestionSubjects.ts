@@ -2,7 +2,7 @@ import { QuerySearchIngestionSubjectsArgs, SearchIngestionSubjectsResult } from 
 import { Parent } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
 import * as DBAPI from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 // import * as H from '../../../../../utils/helpers';
 
 export default async function searchIngestionSubjects(_: Parent, args: QuerySearchIngestionSubjectsArgs): Promise<SearchIngestionSubjectsResult> {
@@ -37,7 +37,7 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
 
         if (identifierSubjectMap.size > 0)
             if (!await DBAPI.Subject.populateIdentifierSubjectMap(identifierSubjectMap))
-                LOG.error('searchIngestionSubjects received failure when calling populateIdentifierSubjectMap', LOG.LS.eGQL);
+                RK.logError(RK.LogSection.eGQL,'search ingest subjects failed','received failure when calling populateIdentifierSubjectMap',{ identifierSubjectMap, resultsCOL },'GraphQL.Unit.IngestionSubjects');
 
         for (const record of resultsCOL.records) {
             if (resultSet.has(record.identifierPublic))

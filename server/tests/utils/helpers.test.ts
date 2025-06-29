@@ -1,9 +1,9 @@
 import * as path from 'path';
 // import { /* PassThrough */ } from 'stream';
 import * as fs from 'fs';
-import * as LOG from '../../utils/logger';
 import * as H from '../../utils/helpers';
 import * as T from '../../utils/types';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 const n1: number = 3;
 const n2: number = 5;
@@ -156,7 +156,7 @@ describe('Utils: Helpers', () => {
     test('Utils: Helpers.copyFile', async () => {
         let res: H.IOResults = await H.Helpers.copyFile(filePath, filePath2);
         expect(res.success).toBeTruthy();
-        LOG.info('NOTICE: The logged error that should follow is expected!', LOG.LS.eTEST);
+        RK.logInfo(RK.LogSection.eTEST,'copy file','NOTICE: The logged error that should follow is expected!',{},'Tests.Utils.Helpers');
         res = await H.Helpers.copyFile(filePath, filePath2, false);
         expect(res.success).toBeFalsy();
     });
@@ -203,7 +203,7 @@ describe('Utils: Helpers', () => {
             WS.end();
             expect(hash).toBeTruthy();
         } catch (error) {
-            LOG.error(`Helpers.createRandomeFile test failed: ${JSON.stringify(error)}`, LOG.LS.eTEST);
+            RK.logError(RK.LogSection.eTEST,'create random file',`Helpers.createRandomeFile test failed: ${error}`,{},'Tests.Utils.Helpers');
             expect(false).toBeTruthy();
         }
     });
@@ -245,7 +245,7 @@ describe('Utils: Helpers', () => {
         let ioResults: H.IOResults = await H.Helpers.writeFileToStream(filePath, writeStream);
         writeStream.end();
         if (!ioResults.success)
-            LOG.info(ioResults.error, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'write file to stream',ioResults.error,{},'Tests.Utils.Helpers');
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await H.Helpers.removeFile(filePathTemp);
@@ -260,7 +260,7 @@ describe('Utils: Helpers', () => {
         let ioResults: H.IOResults = await H.Helpers.writeStreamToStream(readStream, writeStream);
         writeStream.end();
         if (!ioResults.success)
-            LOG.info(ioResults.error, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'write stream to stream',ioResults.error,{},'Tests.Utils.Helpers');
         expect(ioResults.success).toBeTruthy();
 
         ioResults = await H.Helpers.removeFile(filePathTemp);
@@ -275,7 +275,7 @@ describe('Utils: Helpers', () => {
         const ioResultsSized: H.IOResultsSized = await H.Helpers.writeStreamToStreamComputeSize(readStream, writeStream);
         writeStream.end();
         if (!ioResultsSized.success)
-            LOG.info(ioResultsSized.error, LOG.LS.eTEST);
+            RK.logInfo(RK.LogSection.eTEST,'compute size stream to stream',ioResultsSized.error,{},'Tests.Utils.Helpers');
         expect(ioResultsSized.success).toBeTruthy();
         expect(ioResultsSized.size).toEqual(RANDOM_FILE_SIZE);
 

@@ -1,7 +1,8 @@
 /* eslint-disable camelcase */
 import { License as LicenseBase } from '@prisma/client';
 import * as DBC from '../connection';
-import * as LOG from '../../utils/logger';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
     idLicense!: number;
@@ -23,7 +24,8 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 await DBC.DBConnection.prisma.license.create({ data: { Name, Description, RestrictLevel }, }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('create', error);
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            return false;
         }
     }
 
@@ -35,7 +37,8 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 data: { Name, Description, RestrictLevel, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            return this.logError('update', error);
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            return false;
         }
     }
 
@@ -46,7 +49,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return DBC.CopyObject<LicenseBase, License>(
                 await DBC.DBConnection.prisma.license.findUnique({ where: { idLicense, }, }), License);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.License.fetch', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
             return null;
         }
     }
@@ -56,7 +59,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return DBC.CopyArray<LicenseBase, License>(
                 await DBC.DBConnection.prisma.license.findMany({ orderBy: { Name: 'asc' } }), License);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.License.fetchAll', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
             return null;
         }
     }
@@ -70,7 +73,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 where: { Name: { contains: search }, },
             }), License);
         } catch (error) /* istanbul ignore next */ {
-            LOG.error('DBAPI.License.fetchLicenseList', LOG.LS.eDB, error);
+            RK.logError(RK.LogSection.eDB,'fetch License list failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
             return null;
         }
     }

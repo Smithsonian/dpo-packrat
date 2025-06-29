@@ -1,7 +1,6 @@
 import { CreateUserResult, MutationUpdateUserArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
-// import * as LOG from '../../../../utils/logger';
 
 export default async function updateUser(_: Parent, args: MutationUpdateUserArgs): Promise<CreateUserResult> {
     const { input } = args;

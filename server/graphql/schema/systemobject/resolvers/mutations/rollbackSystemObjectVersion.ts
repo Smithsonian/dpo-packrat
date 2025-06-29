@@ -1,7 +1,7 @@
 import { RollbackSystemObjectVersionResult, MutationRollbackSystemObjectVersionArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
-import * as LOG from '../../../../../utils/logger';
+import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function rollbackSystemObjectVersion(_: Parent, args: MutationRollbackSystemObjectVersionArgs): Promise<RollbackSystemObjectVersionResult> {
     const { input } = args;
@@ -10,7 +10,7 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
     const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetch(idSystemObjectVersion);
     if (!SOV) {
         const message: string = `rollbackSystemObjectVersion Unable to load SystemObjectVersion for ${idSystemObjectVersion}`;
-        LOG.error(message, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'rollback system object version failed',`Unable to load SystemObjectVersion for ${idSystemObjectVersion}`,{},'GraphQL.SystemObject.ObjectVersion');
         return { success: false, message };
     }
 
@@ -18,7 +18,7 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
     const SOVRollback: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(SOV.idSystemObject, SOV.idSystemObjectVersion, timestampedRollbackNotes);
     if (!SOVRollback) {
         const message: string = 'rollbackSystemObjectVersion SystemObjectVersion.cloneObjectAndXrefs failed';
-        LOG.error(message, LOG.LS.eGQL);
+        RK.logError(RK.LogSection.eGQL,'rollback system object version failed','cannot clone object and xrefs',{ ...SOV },'GraphQL.SystemObject.ObjectVersion');
         return { success: false, message };
     }
 
