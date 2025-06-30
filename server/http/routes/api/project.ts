@@ -621,7 +621,7 @@ const getStatusARModels = (models: AssetSummary[]): string => {
         // if any model is too old or prior to known error return error
         if(model.dateCreated < targetDate) {
             RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateCreated} - ${targetDate})`,{},'HTTP.Route.Project');
-            return (model.downloadable===true)?'Error: NativeAR':'Error:`${model.name} (${model.dateCreated} - ${targetDate})` WebAR';
+            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateCreated} - ${targetDate}) WebAR`;
         }
 
         // build our counts for comparison
