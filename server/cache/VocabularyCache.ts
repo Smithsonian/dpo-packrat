@@ -71,6 +71,7 @@ export class VocabularyCache {
                 case 'Model.Modality':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelModality; break;
                 case 'Model.Units':                             eVocabSetEnum = COMMON.eVocabularySetID.eModelUnits; break;
                 case 'Model.Purpose':                           eVocabSetEnum = COMMON.eVocabularySetID.eModelPurpose; break;
+                case 'Model.ModelUse':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelUse; break;
                 case 'Model.FileType':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelFileType; break;
                 case 'ModelProcessingActionStep.ActionMethod':  eVocabSetEnum = COMMON.eVocabularySetID.eModelProcessingActionStepActionMethod; break;
                 case 'ModelMaterialChannel.MaterialType':       eVocabSetEnum = COMMON.eVocabularySetID.eModelMaterialChannelMaterialType; break;
@@ -199,6 +200,14 @@ export class VocabularyCache {
                     }
                 } break;
 
+                case COMMON.eVocabularySetID.eCaptureDataDatasetUse: {
+                    switch (vocabulary.Term) {
+                        case 'Alignment':                       eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetUseAlignment; break;
+                        case 'Reconstruction':                  eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetUseReconstruction; break;
+                        case 'Texture Generation':              eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetUseTextureGeneration; break;
+                    }
+                } break;
+
                 case COMMON.eVocabularySetID.eMetadataMetadataSource: {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':      eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
@@ -241,6 +250,13 @@ export class VocabularyCache {
                         case 'Voyager Scene Model':             eVocabEnum = COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel; break;
                         case 'Download':                        eVocabEnum = COMMON.eVocabularyID.eModelPurposeDownload; break;
                         case 'Intermediate Processing Step':    eVocabEnum = COMMON.eVocabularyID.eModelPurposeIntermediateProcessingStep; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eModelUse: {
+                    switch (vocabulary.Term) {
+                        case 'Raw Clean':                       eVocabEnum = COMMON.eVocabularyID.eModelUseRawClean; break;
+                        case 'Presentation':                    eVocabEnum = COMMON.eVocabularyID.eModelUsePresentation; break;
                     }
                 } break;
 

@@ -70,6 +70,7 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eEdanMDMFields,
                     eVocabularySetID.eMetadataMetadataSource,
                     eVocabularySetID.eCaptureDataDatasetUse,
+                    eVocabularySetID.eModelUse,
                 ]
             }
         };

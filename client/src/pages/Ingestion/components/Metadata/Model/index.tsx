@@ -7,7 +7,7 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip, IconButton, Collapse } from '@material-ui/core';
+import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip, IconButton, Collapse, Input, Chip } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
@@ -100,6 +100,27 @@ const useStyles = makeStyles(({ palette }) => ({
         padding: 0,
         marginBottom: '1rem',
     },
+    fieldLabel: {
+        width: '7rem'
+    },
+    fieldSizing: {
+        width: '240px',
+        padding: 0,
+        boxSizing: 'border-box',
+        textAlign: 'center'
+    },
+    chip: {
+        margin: 2,
+        height: 'auto',
+    },
+    chips: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    chipSelect: {
+        width: 'auto',
+        minWidth: '240px'
+    }
 }));
 
 interface ModelProps {
@@ -266,6 +287,33 @@ function Model(props: ModelProps): React.ReactElement {
     const setNameField = ({ target }): void => {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
+    };
+
+    const setModelUseField = (event) => {
+        const  { value, name } = event.target;
+        // make sure we got an array as value
+        if(!Array.isArray(value))
+            return console.error('did not receive array', value);
+
+        // convert array into JSON array and feed to metadata update
+        const arrayString = JSON.stringify(value);
+        updateMetadataField(metadataIndex, name, arrayString, MetadataType.photogrammetry);
+    };
+    const getSelectedIDsFromJSON = (value: string): number[] => {
+        console.log('[Model.getSelectedIDs] values',value,model);
+
+        // used to extract array from JSON
+        try {
+            const data = JSON.parse(value);
+            if(Array.isArray(data) === false)
+                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
+            return data.sort();
+        } catch(error) {
+            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
+        }
+
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Use. Unsupported value. (${value})`);
+        return [];
     };
 
     const openSourceObjectModal = async () => {
@@ -486,6 +534,40 @@ function Model(props: ModelProps): React.ReactElement {
                                                     disabled={ingestionLoading}
                                                 >
                                                     {getEntries(eVocabularySetID.eModelPurpose).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                        <TableRow className={tableClasses.tableRow}>
+                                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                                <Typography className={tableClasses.labelText}>Model Use*</Typography>
+                                            </TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Select
+                                                    multiple
+                                                    value={getSelectedIDsFromJSON(model.ModelUse)}
+                                                    name='ModelUse'
+                                                    onChange={setModelUseField}
+                                                    disableUnderline
+                                                    className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
+                                                    input={<Input id='select-multiple-chip' />}
+                                                    renderValue={(selected) => {
+                                                        // get our entries and cycle through what's selected drawing as Chips,
+                                                        // and pulling the name from the entries.
+                                                        const entries = getEntries(eVocabularySetID.eModelUse);
+                                                        return (<div className={classes.chips}>
+                                                            {(selected as number[]).map((value) => {
+                                                                const entry = entries.find(entry => entry.idVocabulary === value);
+                                                                return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                            })}
+                                                        </div>);
+                                                    }}
+                                                    disabled={ingestionLoading}
+                                                >
+                                                    { getEntries(eVocabularySetID.eModelUse)
+                                                        .map(({ idVocabulary, Term }, index) =>
+                                                            <MenuItem key={index} value={idVocabulary}>
+                                                                {Term}
+                                                            </MenuItem>)}
                                                 </Select>
                                             </TableCell>
                                         </TableRow>

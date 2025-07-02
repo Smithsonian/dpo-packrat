@@ -34,12 +34,14 @@ export enum eVocabularySetID {
     eWorkflowType,
     eWorkflowEvent,
     eEdan3DResourceAttributeUnits,
+    eEdan3DResourceAttributeModelUse,
     eEdan3DResourceAttributeModelFileType,
     eEdan3DResourceAttributeFileType,
     eEdan3DResourceType,
     eEdan3DResourceCategory,
     eEdanMDMFields,
     eCaptureDataDatasetUse,
+    eModelUse,
     eNone = -1
 }
 
@@ -226,6 +228,11 @@ export enum eVocabularyID {
     eEdanMDMFieldsTaxonomicNameFT,
     eEdanMDMFieldsNotesFT,
     eEdanMDMFieldsPhysicalDescriptionFT,
+    eCaptureDataDatasetUseAlignment,
+    eCaptureDataDatasetUseReconstruction,
+    eCaptureDataDatasetUseTextureGeneration,
+    eModelUseRawClean,
+    eModelUsePresentation,
     eNone = -1
 }
 

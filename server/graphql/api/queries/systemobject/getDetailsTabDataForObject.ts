@@ -80,6 +80,7 @@ const getDetailsTabDataForObject = gql`
                     idVUnits
                     idVPurpose
                     idVFileType
+                    ModelUse
                 }
                 ModelObjects {
                     idModelObject

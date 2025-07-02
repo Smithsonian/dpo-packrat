@@ -52,6 +52,7 @@ function Attachment(props: AttachmentProps): React.ReactElement {
         { name: 'type', label: 'Type', type: 'index', index: eVocabularySetID.eEdan3DResourceType },
         { name: 'category', label: 'Category', type: 'index', index: eVocabularySetID.eEdan3DResourceCategory },
         { name: 'units', label: 'Units', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeUnits },
+        { name: 'ModelUse', label: 'Model Use', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeModelUse },
         { name: 'modelType', label: 'Model Type', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeModelFileType },
         { name: 'fileType', label: 'File Type', type: 'index', index: eVocabularySetID.eEdan3DResourceAttributeFileType },
         { name: 'gltfStandardized', label: 'glTF Standardized', type: 'boolean' },

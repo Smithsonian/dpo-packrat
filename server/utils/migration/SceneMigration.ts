@@ -783,7 +783,8 @@ export class SceneMigration {
             idVFileType: vFileType ? vFileType.idVocabulary : null,
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
-            AutomationTag, CountTriangles: null
+            AutomationTag, CountTriangles: null,
+            ModelUse: this.modelSource?.ModelUse ?? '[]'
         });
 
         if (!await model.create()) {

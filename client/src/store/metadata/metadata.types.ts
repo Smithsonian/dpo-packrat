@@ -58,6 +58,7 @@ export type FieldErrors = {
         purpose: boolean;
         modelFileType: boolean;
         subtitles: boolean;
+        ModelUse: boolean;
     };
     scene: {
         subtitles: boolean;
@@ -96,7 +97,6 @@ export type PhotogrammetryFields = {
     description: string;
     dateCaptured: Date;
     datasetType: number | null;
-    datasetUse: string;
     datasetFieldId: number | null;
     itemPositionType: number | null;
     itemPositionFieldId: number | null;
@@ -110,6 +110,7 @@ export type PhotogrammetryFields = {
     directory: string;
     idAsset?: number;
     updateNotes?: string;
+    datasetUse: string;
 };
 
 export type ModelFields = {
@@ -123,6 +124,7 @@ export type ModelFields = {
     modality: number | null;
     units: number | null;
     purpose: number | null;
+    ModelUse: string;
     modelFileType: number | null;
     directory: string;
     idAsset?: number;

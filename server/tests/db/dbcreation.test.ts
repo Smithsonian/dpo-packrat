@@ -1095,7 +1095,8 @@ describe('DB Creation Test Suite', () => {
                 idAssetThumbnail: assetThumbnail.idAsset,
                 CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountTriangles: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
                 CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
-                idModel: 0
+                idModel: 0,
+                ModelUse: '[]'
             });
         expect(model).toBeTruthy();
     });
@@ -1113,7 +1114,8 @@ describe('DB Creation Test Suite', () => {
             idAssetThumbnail: null,
             CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountTriangles: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
             CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
-            idModel: 0
+            idModel: 0,
+            ModelUse: '[]'
         });
         expect(modelNulls).toBeTruthy();
     });
@@ -5119,7 +5121,8 @@ describe('DB Fetch Special Test Suite', () => {
             idAssetThumbnail: null,
             CountAnimations: 0, CountCameras: 0, CountFaces: 0, CountTriangles: 0, CountLights: 0, CountMaterials: 0, CountMeshes: 0, CountVertices: 0,
             CountEmbeddedTextures: 0, CountLinkedTextures: 0, FileEncoding: 'BINARY', IsDracoCompressed: false, AutomationTag: null,
-            idModel: 0
+            idModel: 0,
+            ModelUse: '[]'
         });
         expect(modelClone).toBeTruthy();
         expect(model).toBeTruthy();

@@ -475,7 +475,7 @@ function DetailsView(): React.ReactElement {
         try {
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
-                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType, ModelUse } = ModelDetails;
 
                 updatedData.Model = {
                     Name: updatedData?.Name,
@@ -484,7 +484,8 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCreated
+                    DateCreated,
+                    ModelUse,
                 };
             }
 

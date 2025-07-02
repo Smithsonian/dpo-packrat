@@ -336,6 +336,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eModelModality:
                     case COMMON.eVocabularySetID.eModelUnits:
                     case COMMON.eVocabularySetID.eModelPurpose:
+                    case COMMON.eVocabularySetID.eModelUse:
                     case COMMON.eVocabularySetID.eModelFileType:
                     case COMMON.eVocabularySetID.eModelProcessingActionStepActionMethod:
                     case COMMON.eVocabularySetID.eModelMaterialChannelMaterialType:

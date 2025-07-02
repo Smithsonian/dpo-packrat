@@ -984,6 +984,7 @@ input IngestItemInput {
 }
 
 type IngestModel {
+  ModelUse: String!
   creationMethod: Int!
   dateCreated: String!
   derivedObjects: [RelatedObject!]!
@@ -1001,6 +1002,7 @@ type IngestModel {
 }
 
 input IngestModelInput {
+  ModelUse: String!
   creationMethod: Int!
   dateCreated: String!
   derivedObjects: [RelatedObjectInput!]!
@@ -1290,6 +1292,7 @@ type Model {
   ModelObject: [ModelObject]
   ModelProcessingAction: [ModelProcessingAction]
   ModelSceneXref: [ModelSceneXref]
+  ModelUse: String!
   Name: String!
   SystemObject: SystemObject
   VCreationMethod: Vocabulary
@@ -1328,6 +1331,7 @@ input ModelDetailFieldsInput {
   DateCreated: DateTime
   Modality: Int
   ModelFileType: Int
+  ModelUse: String
   Name: String
   Purpose: Int
   Units: Int
@@ -1934,6 +1938,7 @@ input UpdateLicenseInput {
 }
 
 type UpdateModelMetadata {
+  ModelUse: String!
   creationMethod: Int!
   dateCreated: String!
   modality: Int!

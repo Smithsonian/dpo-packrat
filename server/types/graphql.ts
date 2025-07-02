@@ -1088,6 +1088,7 @@ export type IngestItemInput = {
 
 export type IngestModel = {
   __typename?: 'IngestModel';
+  ModelUse: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObject>;
@@ -1105,6 +1106,7 @@ export type IngestModel = {
 };
 
 export type IngestModelInput = {
+  ModelUse: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
@@ -1406,6 +1408,7 @@ export type Model = {
   ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
   ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
+  ModelUse: Scalars['String'];
   Name: Scalars['String'];
   SystemObject?: Maybe<SystemObject>;
   VCreationMethod?: Maybe<Vocabulary>;
@@ -1446,6 +1449,7 @@ export type ModelDetailFieldsInput = {
   DateCreated?: InputMaybe<Scalars['DateTime']>;
   Modality?: InputMaybe<Scalars['Int']>;
   ModelFileType?: InputMaybe<Scalars['Int']>;
+  ModelUse?: InputMaybe<Scalars['String']>;
   Name?: InputMaybe<Scalars['String']>;
   Purpose?: InputMaybe<Scalars['Int']>;
   Units?: InputMaybe<Scalars['Int']>;
@@ -2444,6 +2448,7 @@ export type UpdateLicenseInput = {
 
 export type UpdateModelMetadata = {
   __typename?: 'UpdateModelMetadata';
+  ModelUse: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   modality: Scalars['Int'];
