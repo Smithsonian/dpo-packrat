@@ -24,7 +24,7 @@ export interface ModelDetailsType {
     idVPurpose: number | null;
     idVUnits: number | null;
     idVFileType: number | null;
-    ModelUse: string | null;
+    ModelUse: string;
 }
 
 export interface ItemDetailsType extends SubjectDetailFields {

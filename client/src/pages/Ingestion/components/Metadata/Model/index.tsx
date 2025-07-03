@@ -297,7 +297,7 @@ function Model(props: ModelProps): React.ReactElement {
 
         // convert array into JSON array and feed to metadata update
         const arrayString = JSON.stringify(value);
-        updateMetadataField(metadataIndex, name, arrayString, MetadataType.photogrammetry);
+        updateMetadataField(metadataIndex, name, arrayString, MetadataType.model);
     };
     const getSelectedIDsFromJSON = (value: string): number[] => {
         console.log('[Model.getSelectedIDs] values',value,model);
@@ -537,7 +537,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow}>
+                                        {<TableRow className={tableClasses.tableRow}>
                                             <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
                                                 <Typography className={tableClasses.labelText}>Model Use*</Typography>
                                             </TableCell>
@@ -570,7 +570,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                             </MenuItem>)}
                                                 </Select>
                                             </TableCell>
-                                        </TableRow>
+                                        </TableRow>}
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modelFileType || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>

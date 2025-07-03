@@ -85,7 +85,7 @@ input ModelDetailFieldsInput {
     Units: Int
     DateCreated: DateTime
     ModelFileType: Int
-    ModelUse: String
+    ModelUse: String!
 }
 
 input SceneDetailFieldsInput {

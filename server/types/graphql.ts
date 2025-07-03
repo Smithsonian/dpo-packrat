@@ -1449,7 +1449,7 @@ export type ModelDetailFieldsInput = {
   DateCreated?: InputMaybe<Scalars['DateTime']>;
   Modality?: InputMaybe<Scalars['Int']>;
   ModelFileType?: InputMaybe<Scalars['Int']>;
-  ModelUse?: InputMaybe<Scalars['String']>;
+  ModelUse: Scalars['String'];
   Name?: InputMaybe<Scalars['String']>;
   Purpose?: InputMaybe<Scalars['Int']>;
   Units?: InputMaybe<Scalars['Int']>;

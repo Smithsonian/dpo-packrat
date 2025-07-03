@@ -751,7 +751,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, CountTriangles: null, // Note: moved triangles from end
             FileEncoding: null, IsDracoCompressed: null,
-            ModelUse: modelSource.ModelUse,
+            ModelUse: modelSource.ModelUse ?? '[]',
 
             // we try to assign best guess values when first created assuming they will be overwritten
             // by ModelSceneXref if the model has a scene reference.

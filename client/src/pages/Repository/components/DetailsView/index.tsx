@@ -485,7 +485,7 @@ function DetailsView(): React.ReactElement {
                     Units: idVUnits,
                     ModelFileType: idVFileType,
                     DateCreated,
-                    ModelUse,
+                    ModelUse: ModelUse ?? '[]',
                 };
             }
 

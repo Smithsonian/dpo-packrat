@@ -1331,7 +1331,7 @@ input ModelDetailFieldsInput {
   DateCreated: DateTime
   Modality: Int
   ModelFileType: Int
-  ModelUse: String
+  ModelUse: String!
   Name: String
   Purpose: Int
   Units: Int

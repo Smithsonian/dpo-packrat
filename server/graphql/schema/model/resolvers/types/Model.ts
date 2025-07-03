@@ -38,9 +38,6 @@ const Model = {
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromModelID(parent.idModel);
     },
-    ModelUse: async (parent: Parent): Promise<DBAPI.Vocabulary[] | null> => {
-        return await DBAPI.Vocabulary.fetchFromVocabularySet(parent.idVocabularySet);
-    }
 };
 
 export default Model;
