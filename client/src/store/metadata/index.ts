@@ -113,7 +113,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             errors.model.purpose = lodash.isNull(metadata.model.purpose);
             errors.model.modelFileType = lodash.isNull(metadata.model.modelFileType);
             errors.model.subtitles = getSubtitlesError(metadata.model.subtitles);
-            errors.model.ModelUse = lodash.isNull(metadata.model.ModelUse);
+            errors.model.ModelUse = lodash.isNull(metadata.model.ModelUse) || metadata.model.ModelUse.length <= ('[]').length;
         }
 
         if (assetType.scene) {

@@ -119,7 +119,7 @@ const useStyles = makeStyles(({ palette }) => ({
     },
     chipSelect: {
         width: 'auto',
-        minWidth: '240px'
+        minWidth: '212px'
     }
 }));
 
@@ -300,8 +300,6 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, arrayString, MetadataType.model);
     };
     const getSelectedIDsFromJSON = (value: string): number[] => {
-        console.log('[Model.getSelectedIDs] values',value,model);
-
         // used to extract array from JSON
         try {
             const data = JSON.parse(value);
@@ -315,6 +313,12 @@ function Model(props: ModelProps): React.ReactElement {
         console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Use. Unsupported value. (${value})`);
         return [];
     };
+    const isMasterModel = (): boolean => {
+        // hard coding the value since common constants does not align with the DB values
+        // (constants) eVocabularyID.eModelPurposeMaster = 85
+        // (database) idVocabulary.Master = 45
+        return (model.purpose===45);
+    }
 
     const openSourceObjectModal = async () => {
         await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
@@ -537,40 +541,42 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
-                                        {<TableRow className={tableClasses.tableRow}>
-                                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                <Typography className={tableClasses.labelText}>Model Use*</Typography>
-                                            </TableCell>
-                                            <TableCell className={tableClasses.tableCell}>
-                                                <Select
-                                                    multiple
-                                                    value={getSelectedIDsFromJSON(model.ModelUse)}
-                                                    name='ModelUse'
-                                                    onChange={setModelUseField}
-                                                    disableUnderline
-                                                    className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
-                                                    input={<Input id='select-multiple-chip' />}
-                                                    renderValue={(selected) => {
-                                                        // get our entries and cycle through what's selected drawing as Chips,
-                                                        // and pulling the name from the entries.
-                                                        const entries = getEntries(eVocabularySetID.eModelUse);
-                                                        return (<div className={classes.chips}>
-                                                            {(selected as number[]).map((value) => {
-                                                                const entry = entries.find(entry => entry.idVocabulary === value);
-                                                                return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
-                                                            })}
-                                                        </div>);
-                                                    }}
-                                                    disabled={ingestionLoading}
-                                                >
-                                                    { getEntries(eVocabularySetID.eModelUse)
-                                                        .map(({ idVocabulary, Term }, index) =>
-                                                            <MenuItem key={index} value={idVocabulary}>
-                                                                {Term}
-                                                            </MenuItem>)}
-                                                </Select>
-                                            </TableCell>
-                                        </TableRow>}
+                                        { isMasterModel() &&
+                                            <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.ModelUse || false)}>
+                                                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                                    <Typography className={tableClasses.labelText}>Model Use*</Typography>
+                                                </TableCell>
+                                                <TableCell className={tableClasses.tableCell}>
+                                                    <Select
+                                                        multiple
+                                                        value={getSelectedIDsFromJSON(model.ModelUse)}
+                                                        name='ModelUse'
+                                                        onChange={setModelUseField}
+                                                        disableUnderline
+                                                        className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
+                                                        input={<Input id='select-multiple-chip' />}
+                                                        renderValue={(selected) => {
+                                                            // get our entries and cycle through what's selected drawing as Chips,
+                                                            // and pulling the name from the entries.
+                                                            const entries = getEntries(eVocabularySetID.eModelUse);
+                                                            return (<div className={classes.chips}>
+                                                                {(selected as number[]).map((value) => {
+                                                                    const entry = entries.find(entry => entry.idVocabulary === value);
+                                                                    return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                                })}
+                                                            </div>);
+                                                        }}
+                                                        disabled={ingestionLoading}
+                                                    >
+                                                        { getEntries(eVocabularySetID.eModelUse)
+                                                            .map(({ idVocabulary, Term }, index) =>
+                                                                <MenuItem key={index} value={idVocabulary}>
+                                                                    {Term}
+                                                                </MenuItem>)}
+                                                    </Select>
+                                                </TableCell>
+                                            </TableRow>
+                                        }
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modelFileType || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>
