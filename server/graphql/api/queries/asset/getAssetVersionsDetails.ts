@@ -67,7 +67,7 @@ const getAssetVersionsDetails = gql`
                         identifierType
                         idIdentifier
                     }
-                    ModelUse
+                    Variant
                 }
                 Scene {
                     idAssetVersion

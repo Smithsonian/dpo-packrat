@@ -1088,7 +1088,7 @@ export type IngestItemInput = {
 
 export type IngestModel = {
   __typename?: 'IngestModel';
-  ModelUse: Scalars['String'];
+  Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObject>;
@@ -1106,7 +1106,7 @@ export type IngestModel = {
 };
 
 export type IngestModelInput = {
-  ModelUse: Scalars['String'];
+  Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
@@ -1408,7 +1408,6 @@ export type Model = {
   ModelObject?: Maybe<Array<Maybe<ModelObject>>>;
   ModelProcessingAction?: Maybe<Array<Maybe<ModelProcessingAction>>>;
   ModelSceneXref?: Maybe<Array<Maybe<ModelSceneXref>>>;
-  ModelUse: Scalars['String'];
   Name: Scalars['String'];
   SystemObject?: Maybe<SystemObject>;
   VCreationMethod?: Maybe<Vocabulary>;
@@ -1416,6 +1415,7 @@ export type Model = {
   VModality?: Maybe<Vocabulary>;
   VPurpose?: Maybe<Vocabulary>;
   VUnits?: Maybe<Vocabulary>;
+  Variant: Scalars['String'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   idModel: Scalars['Int'];
   idVCreationMethod?: Maybe<Scalars['Int']>;
@@ -1449,10 +1449,10 @@ export type ModelDetailFieldsInput = {
   DateCreated?: InputMaybe<Scalars['DateTime']>;
   Modality?: InputMaybe<Scalars['Int']>;
   ModelFileType?: InputMaybe<Scalars['Int']>;
-  ModelUse: Scalars['String'];
   Name?: InputMaybe<Scalars['String']>;
   Purpose?: InputMaybe<Scalars['Int']>;
   Units?: InputMaybe<Scalars['Int']>;
+  Variant: Scalars['String'];
 };
 
 export type ModelMaterial = {
@@ -2448,7 +2448,7 @@ export type UpdateLicenseInput = {
 
 export type UpdateModelMetadata = {
   __typename?: 'UpdateModelMetadata';
-  ModelUse: Scalars['String'];
+  Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   modality: Scalars['Int'];

@@ -108,7 +108,7 @@ function TreeViewPage(): React.ReactElement {
             captureMethod: [],
             variantType: [],
             modelPurpose: [],
-            ModelUse: [],
+            Variant: [],
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null,

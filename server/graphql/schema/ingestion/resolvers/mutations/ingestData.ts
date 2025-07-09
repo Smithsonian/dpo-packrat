@@ -951,7 +951,7 @@ class IngestDataWorker extends ResolverBase {
         modelDB.idVPurpose = model.purpose;
         modelDB.idVUnits = model.units;
         modelDB.idVFileType = model.modelFileType;
-        modelDB.ModelUse = model.ModelUse ?? '[]';
+        modelDB.Variant = model.Variant ?? '[]';
 
         // if we cloned, put our updates back into the modelConstellation ... as this may get used later
         if (cloned)

@@ -441,7 +441,7 @@ export class BulkIngestReader {
             identifiers: [],
             sourceObjects: [],
             derivedObjects: [],
-            ModelUse: '[]'
+            Variant: '[]'
         };
     }
 

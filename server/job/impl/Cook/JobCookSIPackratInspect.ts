@@ -619,7 +619,7 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             AutomationTag: null,
             CountTriangles: modelStats ? maybe<number>(modelStats?.numTriangles) : null,
             idModel,
-            ModelUse: modelStats?.ModelUse ?? '[]',
+            Variant: modelStats?.Variant ?? '[]',
         });
     }
 

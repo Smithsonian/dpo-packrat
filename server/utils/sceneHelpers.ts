@@ -430,7 +430,7 @@ export class SceneHelpers {
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
             AutomationTag: MSX.computeModelAutomationTag(), CountTriangles: null,
-            ModelUse: modelSource?.ModelUse ?? '[]',
+            Variant: modelSource?.Variant ?? '[]',
         });
     }
 

@@ -350,7 +350,7 @@ export class ModelMigration {
             idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null,CountMaterials: null,
             CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
             AutomationTag: null, CountTriangles: null,
-            ModelUse: '[]'
+            Variant: '[]'
         });
 
         if (!await model.create())

@@ -84,7 +84,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 modality: false,
                 units: false,
                 purpose: false,
-                ModelUse: false,
+                Variant: false,
                 modelFileType: false,
                 subtitles: false,
             },
@@ -113,7 +113,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             errors.model.purpose = lodash.isNull(metadata.model.purpose);
             errors.model.modelFileType = lodash.isNull(metadata.model.modelFileType);
             errors.model.subtitles = getSubtitlesError(metadata.model.subtitles);
-            errors.model.ModelUse = lodash.isNull(metadata.model.ModelUse) || metadata.model.ModelUse.length <= ('[]').length;
+            errors.model.Variant = lodash.isNull(metadata.model.Variant) || metadata.model.Variant.length <= ('[]').length;
         }
 
         if (assetType.scene) {
@@ -358,7 +358,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (datasetUse) metadataStep.photogrammetry.datasetUse = datasetUse;
                         }
                         if (existingIdAssetVersion && updateModel) {
-                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated, ModelUse } = updateModel;
+                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated, Variant } = updateModel;
                             if (creationMethod) metadataStep.model.creationMethod = creationMethod;
                             if (modality) metadataStep.model.modality = modality;
                             if (units) metadataStep.model.units = units;
@@ -366,7 +366,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (modelFileType) metadataStep.model.creationMethod = creationMethod;
                             if (name) metadataStep.model.name = name;
                             if (dateCreated) metadataStep.model.dateCreated = dateCreated;
-                            if (ModelUse) metadataStep.model.ModelUse = ModelUse;
+                            if (Variant) metadataStep.model.Variant = Variant;
                         }
                         if (existingIdAssetVersion && updateScene) {
                             const { name, posedAndQCd, referenceModels, approvedForPublication } = updateScene;

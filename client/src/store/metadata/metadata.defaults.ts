@@ -183,7 +183,7 @@ export const defaultModelFields: ModelFields = {
         id: 0
     }],
     skipSceneGenerate: false,
-    ModelUse: '[]',     // used for master models and includes raw_clean/presentation
+    Variant: '[]',     // used for master models and includes raw_clean/presentation
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({
@@ -215,7 +215,7 @@ export const modelFieldsSchemaUpdate = yup.object().shape({
     boundingBoxP2Z: yup.number().nullable(true),
     directory: yup.string(),
     updateNotes: yup.string().when('idAsset', notesWhenUpdate),
-    ModelUse: yup
+    Variant: yup
         .string()
         .typeError('Must select at least one Use for Master models')
         .test('not-empty-or-brackets', 'Must select at least one Use for Master models', value => {

@@ -54,7 +54,7 @@ const getUploadedAssetVersion = gql`
                     units
                     dateCreated
                     modelFileType
-                    ModelUse
+                    Variant
                 }
                 Scene {
                     name

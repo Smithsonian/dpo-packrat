@@ -165,6 +165,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeMasks: testVocabulary(vocabulary, 'Masks'); break;
 
+                    case COMMON.eVocabularyID.eCaptureDataDatasetUseAlignment: testVocabulary(vocabulary, 'Alignment'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetUseReconstruction: testVocabulary(vocabulary, 'Reconstruction'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetUseTextureGeneration: testVocabulary(vocabulary, 'Texture Generation'); break;
+
                     case COMMON.eVocabularyID.eModelCreationMethodScanToMesh: testVocabulary(vocabulary, 'Scan To Mesh'); break;
                     case COMMON.eVocabularyID.eModelCreationMethodCAD: testVocabulary(vocabulary, 'CAD'); break;
 
@@ -186,6 +190,9 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel: testVocabulary(vocabulary, 'Voyager Scene Model'); break;
                     case COMMON.eVocabularyID.eModelPurposeDownload: testVocabulary(vocabulary, 'Download'); break;
                     case COMMON.eVocabularyID.eModelPurposeIntermediateProcessingStep: testVocabulary(vocabulary, 'Intermediate Processing Step'); break;
+
+                    case COMMON.eVocabularyID.eModelVariantPresentation: testVocabulary(vocabulary, 'Presentation'); break;
+                    case COMMON.eVocabularyID.eModelVariantRawClean: testVocabulary(vocabulary, 'Raw Clean'); break;
 
                     case COMMON.eVocabularyID.eModelFileTypeobj: testVocabulary(vocabulary, 'obj - Alias Wavefront Object'); break;
                     case COMMON.eVocabularyID.eModelFileTypeply: testVocabulary(vocabulary, 'ply - Stanford Polygon File Format'); break;
@@ -336,7 +343,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eModelModality:
                     case COMMON.eVocabularySetID.eModelUnits:
                     case COMMON.eVocabularySetID.eModelPurpose:
-                    case COMMON.eVocabularySetID.eModelUse:
+                    case COMMON.eVocabularySetID.eModelVariant:
                     case COMMON.eVocabularySetID.eModelFileType:
                     case COMMON.eVocabularySetID.eModelProcessingActionStepActionMethod:
                     case COMMON.eVocabularySetID.eModelMaterialChannelMaterialType:
@@ -356,8 +363,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eEdanMDMFields:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
-                        if (vocabularySet)
+                        if (vocabularySet) {
+                            // RK.logDebug(RK.LogSection.eTEST,'vocabulary check',undefined,{ received: vocabularySet.Name, converted: ('e' + vocabularySet.Name.replace('.', '')), expected: sVocabSetID },'Test.VocabularyCache');
                             expect('e' + vocabularySet.Name.replace('.', '')).toEqual(sVocabSetID);
+                        }
                         break;
 
                     case COMMON.eVocabularySetID.eNone:

@@ -118,7 +118,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eModel, name, idFieldValue);
     };
 
-    const setModelUseField = (event) => {
+    const setVariantField = (event) => {
         const  { value, name } = event.target;
         // make sure we got an array as value
         if(!Array.isArray(value))
@@ -142,7 +142,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
             console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
         }
 
-        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Use. Unsupported value. (${value})`);
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Variant. Unsupported value. (${value})`);
         return [];
     };
 
@@ -151,7 +151,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
         // (constants) eVocabularyID.eModelPurposeMaster = 85
         // (database) idVocabulary.Master = 45
         return (ModelDetails.idVPurpose===45);
-    }
+    };
 
     const readOnlyContainerProps: React.CSSProperties = {
         height: 26,
@@ -233,15 +233,15 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                     { isMasterModel() &&
                         <SelectMultiField
                             required
-                            label='Model Use'
-                            value={getSelectedIDsFromJSON(ModelDetails.ModelUse)}
-                            name='ModelUse'
-                            onChange={setModelUseField}
-                            options={getEntries(eVocabularySetID.eModelUse)}
+                            label='Model Variant'
+                            value={getSelectedIDsFromJSON(ModelDetails.Variant)}
+                            name='Variant'
+                            onChange={setVariantField}
+                            options={getEntries(eVocabularySetID.eModelVariant)}
                             selectHeight='24px'
                             valueLeftAligned
                             selectFitContent
-                            updated={isFieldUpdated(ModelDetails, ingestionModel, 'ModelUse')}
+                            updated={isFieldUpdated(ModelDetails, ingestionModel, 'Variant')}
                         />
                     }
                     <SelectField
@@ -334,7 +334,7 @@ function SelectMultiField(props: SelectFieldProps): React.ReactElement {
             <Select
                 multiple
                 value={value || []}
-                name='ModelUse'
+                name='Variant'
                 onChange={onChange}
                 disabled={disabled}
                 disableUnderline

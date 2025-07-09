@@ -289,7 +289,7 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
-    const setModelUseField = (event) => {
+    const setModelVariantField = (event) => {
         const  { value, name } = event.target;
         // make sure we got an array as value
         if(!Array.isArray(value))
@@ -310,7 +310,7 @@ function Model(props: ModelProps): React.ReactElement {
             console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
         }
 
-        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Use. Unsupported value. (${value})`);
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Variant. Unsupported value. (${value})`);
         return [];
     };
     const isMasterModel = (): boolean => {
@@ -318,7 +318,7 @@ function Model(props: ModelProps): React.ReactElement {
         // (constants) eVocabularyID.eModelPurposeMaster = 85
         // (database) idVocabulary.Master = 45
         return (model.purpose===45);
-    }
+    };
 
     const openSourceObjectModal = async () => {
         await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
@@ -542,23 +542,23 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         { isMasterModel() &&
-                                            <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.ModelUse || false)}>
+                                            <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.Variant || false)}>
                                                 <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                    <Typography className={tableClasses.labelText}>Model Use*</Typography>
+                                                    <Typography className={tableClasses.labelText}>Model Variant*</Typography>
                                                 </TableCell>
                                                 <TableCell className={tableClasses.tableCell}>
                                                     <Select
                                                         multiple
-                                                        value={getSelectedIDsFromJSON(model.ModelUse)}
-                                                        name='ModelUse'
-                                                        onChange={setModelUseField}
+                                                        value={getSelectedIDsFromJSON(model.Variant)}
+                                                        name='Variant'
+                                                        onChange={setModelVariantField}
                                                         disableUnderline
                                                         className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
                                                         input={<Input id='select-multiple-chip' />}
                                                         renderValue={(selected) => {
                                                             // get our entries and cycle through what's selected drawing as Chips,
                                                             // and pulling the name from the entries.
-                                                            const entries = getEntries(eVocabularySetID.eModelUse);
+                                                            const entries = getEntries(eVocabularySetID.eModelVariant);
                                                             return (<div className={classes.chips}>
                                                                 {(selected as number[]).map((value) => {
                                                                     const entry = entries.find(entry => entry.idVocabulary === value);
@@ -568,7 +568,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                         }}
                                                         disabled={ingestionLoading}
                                                     >
-                                                        { getEntries(eVocabularySetID.eModelUse)
+                                                        { getEntries(eVocabularySetID.eModelVariant)
                                                             .map(({ idVocabulary, Term }, index) =>
                                                                 <MenuItem key={index} value={idVocabulary}>
                                                                     {Term}

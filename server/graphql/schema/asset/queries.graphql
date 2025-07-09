@@ -74,7 +74,7 @@ type IngestModel {
     identifiers: [IngestIdentifier!]!
     sourceObjects: [RelatedObject!]!
     derivedObjects: [RelatedObject!]!
-    ModelUse: String!
+    Variant: String!
 }
 
 enum ReferenceModelAction {
@@ -162,7 +162,7 @@ type UpdateModelMetadata {
     units: Int!
     dateCreated: String!
     modelFileType: Int!
-    ModelUse: String!
+    Variant: String!
 }
 
 type UpdateSceneMetadata {

@@ -36,7 +36,7 @@ const getModelConstellation = gql`
                     CountLinkedTextures
                     FileEncoding
                     IsDracoCompressed
-                    ModelUse
+                    Variant
                 }
                 ModelObjects {
                     idModelObject

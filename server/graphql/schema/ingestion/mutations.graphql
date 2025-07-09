@@ -84,7 +84,7 @@ input IngestModelInput {
     derivedObjects: [RelatedObjectInput!]!
     updateNotes: String
     skipSceneGenerate: Boolean
-    ModelUse: String!
+    Variant: String!
 }
 
 input IngestSceneInput {

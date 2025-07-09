@@ -33,7 +33,7 @@ type Model {
     ModelProcessingAction: [ModelProcessingAction]
     ModelSceneXref: [ModelSceneXref]
     SystemObject: SystemObject
-    ModelUse: String!
+    Variant: String!
 }
 
 type ModelObjectModelMaterialXref {

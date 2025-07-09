@@ -58,7 +58,7 @@ export type FieldErrors = {
         purpose: boolean;
         modelFileType: boolean;
         subtitles: boolean;
-        ModelUse: boolean;
+        Variant: boolean;
     };
     scene: {
         subtitles: boolean;
@@ -124,7 +124,7 @@ export type ModelFields = {
     modality: number | null;
     units: number | null;
     purpose: number | null;
-    ModelUse: string;
+    Variant: string;
     modelFileType: number | null;
     directory: string;
     idAsset?: number;

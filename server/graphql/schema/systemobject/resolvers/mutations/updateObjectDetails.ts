@@ -326,7 +326,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Units,
                     Purpose,
                     ModelFileType,
-                    ModelUse
+                    Variant
                 } = data.Model;
 
                 const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
@@ -339,7 +339,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (Units) Model.idVUnits = Units;
                 if (ModelFileType) Model.idVFileType = ModelFileType;
                 Model.DateCreated = new Date(DateCreated);
-                if (ModelUse) Model.ModelUse = ModelUse;
+                if (Variant) Model.Variant = Variant;
 
                 if (!await Model.update())
                     return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);

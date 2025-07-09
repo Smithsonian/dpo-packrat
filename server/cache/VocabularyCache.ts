@@ -71,7 +71,7 @@ export class VocabularyCache {
                 case 'Model.Modality':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelModality; break;
                 case 'Model.Units':                             eVocabSetEnum = COMMON.eVocabularySetID.eModelUnits; break;
                 case 'Model.Purpose':                           eVocabSetEnum = COMMON.eVocabularySetID.eModelPurpose; break;
-                case 'Model.ModelUse':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelUse; break;
+                case 'Model.Variant':                           eVocabSetEnum = COMMON.eVocabularySetID.eModelVariant; break;
                 case 'Model.FileType':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelFileType; break;
                 case 'ModelProcessingActionStep.ActionMethod':  eVocabSetEnum = COMMON.eVocabularySetID.eModelProcessingActionStepActionMethod; break;
                 case 'ModelMaterialChannel.MaterialType':       eVocabSetEnum = COMMON.eVocabularySetID.eModelMaterialChannelMaterialType; break;
@@ -253,10 +253,10 @@ export class VocabularyCache {
                     }
                 } break;
 
-                case COMMON.eVocabularySetID.eModelUse: {
+                case COMMON.eVocabularySetID.eModelVariant: {
                     switch (vocabulary.Term) {
-                        case 'Raw Clean':                       eVocabEnum = COMMON.eVocabularyID.eModelUseRawClean; break;
-                        case 'Presentation':                    eVocabEnum = COMMON.eVocabularyID.eModelUsePresentation; break;
+                        case 'Raw Clean':                       eVocabEnum = COMMON.eVocabularyID.eModelVariantRawClean; break;
+                        case 'Presentation':                    eVocabEnum = COMMON.eVocabularyID.eModelVariantPresentation; break;
                     }
                 } break;
 
