@@ -12,6 +12,7 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 
 import { Readable, Writable } from 'stream';
 import { Request } from 'express';
+import { computeGQLQuery } from '../graphql';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -697,7 +698,7 @@ export class Helpers {
         }
     }
 
-    static cleanExpressRequest(req: any, includeBody: boolean = true, reduceHeaders: boolean = false): any {
+    static cleanExpressRequest(req: any, includeBody: boolean = true, reduceHeaders: boolean = false, minimized: boolean = false): any {
         // returns a JSON object holding properties that can be easily used with console.log.
         // feeding a standard Request to console causes a stack overflow due to circular dependencies.
         if (!req || typeof req !== 'object') {
@@ -720,7 +721,7 @@ export class Helpers {
             params: req.params && typeof req.params === 'object' ? req.params : {},
             query: req.query && typeof req.query === 'object' ? req.query : {},
             body: req.body && typeof req.body === 'object' ? req.body : {},
-            ip: req.ip || 'UNKNOWN',
+            ip: ((req.ip || 'UNKNOWN')==='::1') ? 'LocalHost' : req.ip,
         };
 
         // include the body or not
@@ -746,7 +747,25 @@ export class Helpers {
             }, {});
         }
 
-        return result;
+        // if w'ere a GraphQL request we need to dig a little further to get a meaningful name
+        const queryGQL = computeGQLQuery(req);
+        if(queryGQL && queryGQL !== '__schema') {
+            result.url += '/' + queryGQL;
+            result.params = { ...result.params, variables: req.body.variables };
+        } else {
+            result.url += '/' + 'Unknown';
+        }
+
+        // if we want minimal output, then we simplify
+        if(minimized)
+            return {
+                method: result.method,
+                url: result.url,
+                params: result.params,
+                headers: result.headers
+            };
+        else
+            return result;
     }
 
     static showAllCharactersWithEscapes(input: string): string {
