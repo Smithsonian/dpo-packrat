@@ -183,8 +183,8 @@ export const waitUntilFileExists = (path: string, timeoutMs = 10000): Promise<vo
 export const renameFile = (path: string, newPath: string): { success: boolean, message: string } => {
     try {
         fs.renameSync(path, newPath);
-        return { success: true, message: `renamed '${path}' to '${newPath}'` }
+        return { success: true, message: `renamed '${path}' to '${newPath}'` };
     } catch(err) {
-        return { success: false, message: `rename error: ${getErrorString(err)}`}
+        return { success: false, message: `rename error: ${getErrorString(err)}` };
     }
-}
+};

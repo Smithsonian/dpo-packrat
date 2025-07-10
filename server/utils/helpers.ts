@@ -763,7 +763,7 @@ export class Helpers {
                 url: result.url,
                 params: result.params,
                 headers: result.headers
-             }
+            };
         else
             return result;
     }

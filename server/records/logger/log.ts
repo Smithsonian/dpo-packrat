@@ -423,7 +423,7 @@ export class Logger {
                 const dirResult = createPath(path.dirname(newPath));
                 if(dirResult.success===false)
                     throw new Error(`cannot create path: ${dirResult.message}`);
-                
+
                 // build our new transport (see configuration() for details)
                 const newFileTransport = new transports.File({
                     filename: newPath,
