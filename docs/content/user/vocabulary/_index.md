@@ -59,6 +59,8 @@ Packrat makes use of the following controlled vocabularies:
 | Model | Purpose | Voyager Scene Model |
 | Model | Purpose | Download |
 | Model | Purpose | Intermediate Processing Step |
+| Model | Use | Raw Clean |
+| Model | Use | Presentation |
 | Model | FileType | obj - Alias Wavefront Object |
 | Model | FileType | ply - Stanford Polygon File Format |
 | Model | FileType | stl - StereoLithography |

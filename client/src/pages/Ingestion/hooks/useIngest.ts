@@ -190,7 +190,8 @@ function useIngest(): UseIngest {
                         derivedObjects,
                         updateNotes,
                         subtitles,
-                        skipSceneGenerate
+                        skipSceneGenerate,
+                        Variant,
                     } = model;
 
                     let {
@@ -220,7 +221,8 @@ function useIngest(): UseIngest {
                         systemCreated,
                         sourceObjects,
                         derivedObjects,
-                        skipSceneGenerate
+                        skipSceneGenerate,
+                        Variant,
                     };
                     // console.log('modelData', modelData);
 

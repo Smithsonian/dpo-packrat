@@ -179,14 +179,14 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         const SOMaster: SystemObject | null = masterSOBased ? await masterSOBased.fetchSystemObject() :
             await SystemObject.fetch(masterID!); /* istanbul ignore next */ // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!SOMaster) {
-            RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject for ${JSON.stringify(master)}`,{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject master: ${masterID}`,{ master, masterSOBased },'DB.SystemObject.Xref');
             return null;
         }
 
         const SODerived: SystemObject | null = derivedSOBased ? await derivedSOBased.fetchSystemObject():
             await SystemObject.fetch(derivedID!) ; /* istanbul ignore next */ // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!SODerived) {
-            RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject for ${JSON.stringify(derived)}`,{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject derived: ${derivedID}`,{ derived, ...this },'DB.SystemObject.Xref');
             return null;
         }
 

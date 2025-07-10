@@ -440,7 +440,8 @@ export class BulkIngestReader {
             modelFileType: 0,
             identifiers: [],
             sourceObjects: [],
-            derivedObjects: []
+            derivedObjects: [],
+            Variant: '[]'
         };
     }
 

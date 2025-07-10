@@ -310,6 +310,7 @@ CREATE TABLE IF NOT EXISTS `Model` (
   `AutomationTag` varchar(256) NULL,
   `CountTriangles` int(11) DEFAULT NULL,
   `Title` varchar(255) DEFAULT NULL,
+  `Variant` longtext NOT NULL DEFAULT '[]',
   PRIMARY KEY (`idModel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 

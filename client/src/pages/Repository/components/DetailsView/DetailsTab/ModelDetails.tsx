@@ -6,7 +6,7 @@
  *
  * This component renders details tab for Model specific details used in DetailsTab component.
  */
-import { Typography, Box, makeStyles, Select, MenuItem, fade, createStyles } from '@material-ui/core';
+import { Typography, Box, makeStyles, Select, MenuItem, fade, createStyles, Chip, Input } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader, ReadOnlyRow, } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
@@ -82,7 +82,7 @@ export const useStyles = makeStyles(({ palette, typography }) => createStyles({
         flexDirection: 'column',
         backgroundColor: palette.secondary.light,
         width: '200px'
-    }
+    },
 }));
 
 function ModelDetails(props: DetailComponentProps): React.ReactElement {
@@ -116,6 +116,41 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
         updateDetailField(eSystemObjectType.eModel, name, idFieldValue);
+    };
+
+    const setVariantField = (event) => {
+        const  { value, name } = event.target;
+        // make sure we got an array as value
+        if(!Array.isArray(value))
+            return console.error('did not receive array', value);
+
+        // convert array into JSON array and feed to metadata update
+        const arrayString = JSON.stringify(value);
+        updateDetailField(eSystemObjectType.eModel, name, arrayString);
+    };
+    const getSelectedIDsFromJSON = (value: string | undefined | null): number[] => {
+        // used to extract array from JSON
+        try {
+            if(!value)
+                throw new Error('[PACKRAT:ERROR] cannot get selected IDs. undefined value');
+
+            const data = JSON.parse(value);
+            if(Array.isArray(data) === false)
+                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
+            return data.sort();
+        } catch(error) {
+            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
+        }
+
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Variant. Unsupported value. (${value})`);
+        return [];
+    };
+
+    const isMasterModel = (): boolean => {
+        // hard coding the value since common constants does not align with the DB values
+        // (constants) eVocabularyID.eModelPurposeMaster = 85
+        // (database) idVocabulary.Master = 45
+        return (ModelDetails.idVPurpose===45);
     };
 
     const readOnlyContainerProps: React.CSSProperties = {
@@ -171,7 +206,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectFitContent
                         updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVModality')}
                     />
-
                     <SelectField
                         required
                         label='Units'
@@ -184,7 +218,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectFitContent
                         updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVUnits')}
                     />
-
                     <SelectField
                         required
                         label='Purpose'
@@ -197,7 +230,20 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         selectFitContent
                         updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVPurpose')}
                     />
-
+                    { isMasterModel() &&
+                        <SelectMultiField
+                            required
+                            label='Model Variant'
+                            value={getSelectedIDsFromJSON(ModelDetails.Variant)}
+                            name='Variant'
+                            onChange={setVariantField}
+                            options={getEntries(eVocabularySetID.eModelVariant)}
+                            selectHeight='24px'
+                            valueLeftAligned
+                            selectFitContent
+                            updated={isFieldUpdated(ModelDetails, ingestionModel, 'Variant')}
+                        />
+                    }
                     <SelectField
                         required
                         label='Model File Type'
@@ -262,6 +308,51 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
                 inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}
                 style={{ minWidth: '100%', width: 'fit-content', ...updatedFieldStyling(updated) }}
                 SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+            >
+                {options.map(({ idVocabulary, Term }, index) => (
+                    <MenuItem key={index} value={idVocabulary}>
+                        {Term}
+                    </MenuItem>
+                ))}
+            </Select>
+        </div>
+    );
+}
+
+function SelectMultiField(props: SelectFieldProps): React.ReactElement {
+    const { value, name, options, onChange, disabled = false, label, updated = false } = props;
+    const classes = useSelectStyles(props);
+
+    return (
+        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
+            <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
+                <Typography style={{ color: 'black' }} variant='caption'>
+                    {label}
+                </Typography>
+            </div>
+
+            <Select
+                multiple
+                value={value || []}
+                name='Variant'
+                onChange={onChange}
+                disabled={disabled}
+                disableUnderline
+                className={classes.select}
+                inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}
+                input={<Input id='select-multiple-chip' />}
+                style={{ minWidth: '100%', width: 'fit-content', ...updatedFieldStyling(updated) }}
+                renderValue={(selected) => {
+                    // get our entries and cycle through what's selected drawing as Chips,
+                    // and pulling the name from the entries.
+                    const entries = options;
+                    return (<div className={classes.chips}>
+                        {(selected as number[]).map((value) => {
+                            const entry = entries.find(entry => entry.idVocabulary === value);
+                            return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                        })}
+                    </div>);
+                }}
             >
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>

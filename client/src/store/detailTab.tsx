@@ -24,6 +24,7 @@ export interface ModelDetailsType {
     idVPurpose: number | null;
     idVUnits: number | null;
     idVFileType: number | null;
+    Variant: string;
 }
 
 export interface ItemDetailsType extends SubjectDetailFields {
@@ -133,7 +134,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         idVModality: null,
         idVPurpose: null,
         idVUnits: null,
-        idVFileType: null
+        idVFileType: null,
+        Variant: '[]', // indices into Vocabulary: raw_clean, presentation
     },
     CaptureDataDetails: {
         captureMethod: null,
@@ -423,7 +425,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         if (objectType === eSystemObjectType.eModel) {
             const {
                 Model: {
-                    Model: { DateCreated, idVModality, idVPurpose, idVUnits, idVFileType, idVCreationMethod }
+                    Model: { DateCreated, idVModality, idVPurpose, idVUnits, idVFileType, idVCreationMethod, Variant }
                 }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eModel, 'DateCreated', DateCreated);
@@ -432,6 +434,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eModel, 'idVUnits', idVUnits);
             updateDetailField(eSystemObjectType.eModel, 'idVFileType', idVFileType);
             updateDetailField(eSystemObjectType.eModel, 'idVCreationMethod', idVCreationMethod);
+            updateDetailField(eSystemObjectType.eModel, 'Variant', Variant);
         }
 
         if (objectType === eSystemObjectType.eCaptureData) {
