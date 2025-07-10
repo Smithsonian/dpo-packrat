@@ -19,7 +19,7 @@ export class ObjectGraphDatabase {
         if (!parentData) {
             const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(parent); /* istanbul ignore if */
             if (!sID)
-                RK.logError(RK.LogSection.eDB,'record relationship failed','unable to compute idSystemObject for parent',{ parent, child, ...this },'DB.Composite.ObjectGraph.Database');
+                RK.logError(RK.LogSection.eDB,'record relationship failed','unable to compute idSystemObject for parent',{ parent, child, mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
 
             parentData = new ObjectGraphDataEntry(parent, sID ? sID.Retired : false);
             // LOG.info(`this.objectmap.set parent(${parent.idSystemObject}, ${JSON.stringify(parent)})`, LOG.LS.eDB);
@@ -28,7 +28,7 @@ export class ObjectGraphDatabase {
         if (!childData) {
             const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(child); /* istanbul ignore if */
             if (!sID)
-                RK.logError(RK.LogSection.eDB,'record relationship failed','unable to compute idSystemObject for child',{ parent, child, ...this },'DB.Composite.ObjectGraph.Database');
+                RK.logError(RK.LogSection.eDB,'record relationship failed','unable to compute idSystemObject for child',{ parent, child, mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
 
             childData = new ObjectGraphDataEntry(child, sID ? sID.Retired : false);
             // LOG.info(`this.objectmap.set child (${child.idSystemObject}, ${JSON.stringify(child)})`, LOG.LS.eDB);
@@ -81,7 +81,7 @@ export class ObjectGraphDatabase {
                 const result = await fn();
                 if (!result) throw new Error(`${name} returned false`);
             } catch (err) {
-                RK.logError(RK.LogSection.eDB,'fetch failed',`step failed: ${name}`,{ error: err, ...this },'DB.Composite.ObjectGraph.Database');
+                RK.logError(RK.LogSection.eDB,'fetch failed',`step failed: ${name}`,{ error: err, mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
                 RK.profileUpdate(profileKey, { error: `${name} failed` });
                 RK.profileEnd(profileKey);
                 return false;
@@ -98,11 +98,11 @@ export class ObjectGraphDatabase {
         // LOG.info(`ObjectGraphDatabase.fetchFromSystemObject ${idSystemObject}`, LOG.LS.eDB);
         const oIDsID: SystemObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectAndSystemFromSystem(idSystemObject);
         if (!oIDsID) {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',`unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`,{ ...this },'DB.Composite.ObjectGraph.Database');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',`unable to compute ObjectUDAndType / SystemObjectInfo for ${idSystemObject}`,{ mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         if (!await this.computeGraphDataFromObjectWorker(oIDsID, 'computeGraphDataFromSystemObject', eObjectGraphMode.eAll)) {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',`unable to compute graph for ${idSystemObject}`,{ ...this },'DB.Composite.ObjectGraph.Database');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',`unable to compute graph for ${idSystemObject}`,{ mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         return await this.applyGraphData();
@@ -112,7 +112,7 @@ export class ObjectGraphDatabase {
         const oID: ObjectIDAndType = { idObject, eObjectType };
         const sID: SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID(oID); /* istanbul ignore if */
         if (!sID) {
-            RK.logError(RK.LogSection.eDB,'compute graph data from object failed',`${functionName} unable to compute idSystemObject for ${JSON.stringify(oID)}`,{ ...this },'DB.Composite.ObjectGraph.Database');
+            RK.logError(RK.LogSection.eDB,'compute graph data from object failed',`${functionName} unable to compute idSystemObject for ${JSON.stringify(oID)}`,{ mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         // LOG.info(`ObjectGraphDatabase.computeGraphDataFromObject ${JSON.stringify(oID)} -> ${JSON.stringify(sID)}`, LOG.LS.eDB);
@@ -122,7 +122,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromObjectWorker(oIDsID: SystemObjectIDAndType, functionName: string, eOGMode: eObjectGraphMode): Promise<boolean> {
         const OG: ObjectGraph = new ObjectGraph(oIDsID.sID.idSystemObject, eOGMode, 32, this); // this -> gather relationships for all objects!
         if (!await OG.fetch()) {
-            RK.logError(RK.LogSection.eDB,'compute graph data from object worker failed',`${functionName} unable to compute ObjectGraph for ${JSON.stringify(oIDsID)}`,{ ...this },'DB.Composite.ObjectGraph.Database');
+            RK.logError(RK.LogSection.eDB,'compute graph data from object worker failed',`${functionName} unable to compute ObjectGraph for ${JSON.stringify(oIDsID)}`,{ mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
             return false;
         }
         // LOG.info(`ObjectGraphDatabase.${functionName} (${JSON.stringify(oIDsID)}) fetched OG ${JSON.stringify(OG, H.Helpers.saferStringify)}`, LOG.LS.eDB);
@@ -427,7 +427,7 @@ export class ObjectGraphDatabase {
                                 objectGraphState.variantTypes.set(captureDataFile.idVVariantType, true);
                     }
                 } else
-                    RK.logError(RK.LogSection.eDB,'extract state failed',`Unable to load CaptureData from ${systemObjectIDType}`,{ ...this },'DB.Composite.ObjectGraph.Database');
+                    RK.logError(RK.LogSection.eDB,'extract state failed',`Unable to load CaptureData from ${systemObjectIDType}`,{ mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
             } break;
 
             case COMMON.eSystemObjectType.eModel: {
@@ -437,7 +437,7 @@ export class ObjectGraphDatabase {
                     objectGraphState.modelFileType = model.idVFileType;
                     objectGraphState.commonDateCreated = model.DateCreated;
                 } else
-                    RK.logError(RK.LogSection.eDB,'extract state failed',`Unable to load Model from ${systemObjectIDType}`,{ ...this },'DB.Composite.ObjectGraph.Database');
+                    RK.logError(RK.LogSection.eDB,'extract state failed',`Unable to load Model from ${systemObjectIDType}`,{ mapSize: this.objectMap.size },'DB.Composite.ObjectGraph.Database');
             } break;
 
             case COMMON.eSystemObjectType.eIntermediaryFile: {

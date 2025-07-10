@@ -9,7 +9,7 @@ import * as path from 'path';
 import { createLogger, format, transports, addColors } from 'winston';
 // console.log('Winston version:', require('winston/package.json').version);
 import { RateManager, RateManagerConfig, RateManagerMetrics, RateManagerResult } from '../utils/rateManager';
-import { getErrorString, safeFlattenObject, delay, stripErrors, waitUntilFileExists, stripCircular, createPath, safeInspect, renameFile } from '../utils/utils';
+import { getErrorString, safeFlattenObject, delay, stripErrors, waitUntilFileExists, stripCircular, createPath, safeInspect } from '../utils/utils';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { LogLevel, LogSection } from './logTypes';
 
@@ -141,7 +141,7 @@ export class Logger {
     });
 
     // rolling log variables
-    private static currentDate: Date = new Date(2025, 0, 1);
+    private static currentDate: Date = new Date();
     private static readonly transportCheckInterval = 60 * 1000;     // check for a new month every minute
     private static isTransportUpdatePending = false;                // are we waiting for an update
     private static transportMonitor: NodeJS.Timeout | null = null;  // reference to our timer
@@ -231,6 +231,7 @@ export class Logger {
                 // handleExceptions: false  // used to disable buffering for higher volume support at risk of errors
                 maxsize: 150 * 1024 * 1024, // 150 MB in bytes
                 maxFiles: 20,               // Keep a maximum of 20 log files (3GB)
+                tailable: true,             // true = new logs always written to filePath, otherwise goes into rolled file
             });
             const consoleTransport = new transports.Console({
                 format: format.combine(
@@ -423,12 +424,13 @@ export class Logger {
                 if(dirResult.success===false)
                     throw new Error(`cannot create path: ${dirResult.message}`);
                 
-                // build our new transport
+                // build our new transport (see configuration() for details)
                 const newFileTransport = new transports.File({
                     filename: newPath,
                     format: Logger.customJsonFormat,
                     maxsize: 150 * 1024 * 1024,
-                    maxFiles: 20
+                    maxFiles: 20,
+                    tailable: true,
                 });
 
                 Logger.logger.add(newFileTransport);
