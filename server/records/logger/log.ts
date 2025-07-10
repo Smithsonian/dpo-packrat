@@ -7,8 +7,9 @@
  */
 import * as path from 'path';
 import { createLogger, format, transports, addColors } from 'winston';
+// console.log('Winston version:', require('winston/package.json').version);
 import { RateManager, RateManagerConfig, RateManagerMetrics, RateManagerResult } from '../utils/rateManager';
-import { getErrorString, safeFlattenObject, delay, stripErrors, waitUntilFileExists, stripCircular, createPath, safeInspect } from '../utils/utils';
+import { getErrorString, safeFlattenObject, delay, stripErrors, waitUntilFileExists, stripCircular, createPath, safeInspect, renameFile } from '../utils/utils';
 import { ENVIRONMENT_TYPE } from '../../config';
 import { LogLevel, LogSection } from './logTypes';
 
@@ -421,7 +422,7 @@ export class Logger {
                 const dirResult = createPath(path.dirname(newPath));
                 if(dirResult.success===false)
                     throw new Error(`cannot create path: ${dirResult.message}`);
-
+                
                 // build our new transport
                 const newFileTransport = new transports.File({
                     filename: newPath,
