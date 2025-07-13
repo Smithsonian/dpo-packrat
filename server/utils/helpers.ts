@@ -747,13 +747,16 @@ export class Helpers {
             }, {});
         }
 
-        // if w'ere a GraphQL request we need to dig a little further to get a meaningful name
+        // if we're a GraphQL request we need to dig a little further to get a meaningful name
         const queryGQL = computeGQLQuery(req);
         if(queryGQL && queryGQL !== '__schema') {
-            result.url += '/' + queryGQL;
+            // need to collapse the whitespace
+            result.url += '/' + this.collapseWhitespace(queryGQL);
             result.params = { ...result.params, variables: req.body.variables };
         } else {
-            result.url += '/' + 'Unknown';
+            // special handling since upload/download sdon't have the graphql 
+            // prefix in their url but are fundamentally graphql requests
+            result.url += '/' + (req.url.endsWith('graphql') ?? 'Unknown');
         }
 
         // if we want minimal output, then we simplify
@@ -766,6 +769,15 @@ export class Helpers {
             };
         else
             return result;
+    }
+
+    static collapseWhitespace(str: string): string {
+        return str
+            // replace all runs of CR/LF with a single space
+            .replace(/[\r\n]+/g, ' ')
+            // collapse any remaining runs of whitespace into a single space
+            .replace(/\s+/g, ' ')
+            .trim();
     }
 
     static showAllCharactersWithEscapes(input: string): string {

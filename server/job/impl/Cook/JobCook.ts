@@ -488,9 +488,6 @@ export abstract class JobCook<T> extends JobPackrat {
             return { success: false, allowRetry: false, error: cookJobReport['error'] };
         }
 
-        // if we're successful then we remove the Cook job
-        await this.removeCookJob();
-
         // we made it here so the job appears successful
         return { success: true, allowRetry: false };
     }
@@ -812,4 +809,16 @@ export abstract class JobCook<T> extends JobPackrat {
         return baseName;
     }
 
+    protected async recordSuccess(output: string): Promise<boolean> {
+        
+        // make sure underlying job has updated
+        const updated: boolean = await super.recordSuccess(output);
+
+        // if it did update that means we had success and finished job specific cleanup
+        // so it should be safe to remove the cook resources used
+        if(updated)
+            await this.removeCookJob();
+
+        return updated;
+    }
 }
