@@ -754,7 +754,7 @@ export class Helpers {
             result.url += '/' + this.collapseWhitespace(queryGQL);
             result.params = { ...result.params, variables: req.body.variables };
         } else {
-            // special handling since upload/download sdon't have the graphql 
+            // special handling since upload/download sdon't have the graphql
             // prefix in their url but are fundamentally graphql requests
             result.url += '/' + (req.url.endsWith('graphql') ?? 'Unknown');
         }

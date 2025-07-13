@@ -484,7 +484,8 @@ function Model(props: ModelProps): React.ReactElement {
                                                 <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>How was this model created.
                                                     <p><b><u>Scan to Mesh:</u></b> If coming from reconstruction or photogrammetry software.</p>
                                                     <p><b><u>CAD</u></b> The model was created, often manually, in a CAD or 3D Modeling package.</p>
-                                                </span>}>
+                                                </span>}
+                                                >
                                                     <Typography className={tableClasses.labelText}>Creation Method*</Typography>
                                                 </Tooltip>
                                             </TableCell>
@@ -506,7 +507,7 @@ function Model(props: ModelProps): React.ReactElement {
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modality || false)}>
                                             <TableCell className={tableClasses.tableCell}>
-                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What 'type' of model is this. In most cases this should be <u>Mesh</u></span>}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What type of model is this. In most cases this should be <u>Mesh</u></span>}>
                                                     <Typography className={tableClasses.labelText}>Modality*</Typography>
                                                 </Tooltip>
                                             </TableCell>
@@ -547,11 +548,12 @@ function Model(props: ModelProps): React.ReactElement {
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.purpose || false)}>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What role does this model serve in the system.
-                                                        <p><b><u>Master:</u></b> A source model that is used to generate scenes/downloads.</p>
-                                                        <p><b><u>Voyager Scene Model:</u></b> A derivative of the master model. Only used if a derivative was manually modified/updated.</p>
-                                                        <p><b><u>Download:</u></b> A model representing a downloadable version. Only used if a generated download was manually modified/updated.</p>
-                                                        <p><b><u>Intermediate Processing Step:</u></b> A model that represents a step in a larger process. Rarely used. Contact support if you feel this is a fit.</p>
-                                                    </span>}>
+                                                    <p><b><u>Master:</u></b> A source model that is used to generate scenes/downloads.</p>
+                                                    <p><b><u>Voyager Scene Model:</u></b> A derivative of the master model. Only used if a derivative was manually modified/updated.</p>
+                                                    <p><b><u>Download:</u></b> A model representing a downloadable version. Only used if a generated download was manually modified/updated.</p>
+                                                    <p><b><u>Intermediate Processing Step:</u></b> A model that represents a step in a larger process. Rarely used. Contact support if you feel this is a fit.</p>
+                                                </span>}
+                                                >
                                                     <Typography className={tableClasses.labelText}>Purpose*</Typography>
                                                 </Tooltip>
                                             </TableCell>
@@ -572,7 +574,7 @@ function Model(props: ModelProps): React.ReactElement {
                                         { isMasterModel() &&
                                             <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.Variant || false)}>
                                                 <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                    <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>Model 'variants' represent what state this model is in. <b><u>Select one or more.</u></b><p><b><u>Raw_Clean: </u></b>Often the output from scanning software. It is intended to accurately represent <u>the scanning process</u>. SDpikes and holes may still exist in the mesh.</p><p><b><u>Presentation:</u></b> The model has been cleaned and/or modified. It is intended to accurately represent <u>how the real object may look on display</u>. An artist may have smoothed out spikes, adjusted texture colors, etc.</p></span>}>
+                                                    <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>Model variants represent what state this model is in. <b><u>Select one or more.</u></b><p><b><u>Raw_Clean: </u></b>Often the output from scanning software. It is intended to accurately represent <u>the scanning process</u>. SDpikes and holes may still exist in the mesh.</p><p><b><u>Presentation:</u></b> The model has been cleaned and/or modified. It is intended to accurately represent <u>how the real object may look on display</u>. An artist may have smoothed out spikes, adjusted texture colors, etc.</p></span>}>
                                                         <Typography className={tableClasses.labelText}>Model Variant*</Typography>
                                                     </Tooltip>
                                                 </TableCell>

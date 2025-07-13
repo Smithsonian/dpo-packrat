@@ -810,7 +810,7 @@ export abstract class JobCook<T> extends JobPackrat {
     }
 
     protected async recordSuccess(output: string): Promise<boolean> {
-        
+
         // make sure underlying job has updated
         const updated: boolean = await super.recordSuccess(output);
 
