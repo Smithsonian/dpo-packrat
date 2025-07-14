@@ -61,7 +61,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     },
                     fetchPolicy: 'no-cache'
                 });
-                
+
                 updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
                 updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
                 updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
@@ -102,7 +102,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         // get our urls that are of the desired type
         const url = links
             .map(item => {
-                const [type, url] = item.split("|", 2);
+                const [type, url] = item.split('|', 2);
                 return { type, url };
             })
             .filter(entry => entry.type === 'scene_'+linkType)

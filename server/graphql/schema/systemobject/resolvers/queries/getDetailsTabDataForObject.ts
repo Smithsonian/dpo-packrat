@@ -122,8 +122,8 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 if(fields.EdanUUID) {
                     // different prefix/paths depending on development environment
                     const uriPath = (Config.environment.type===ENVIRONMENT_TYPE.DEVELOPMENT)
-                    ? 'https://api-internal.edan.si.edu/3d-api-dev/'
-                    : 'https://3d.si.edu/object/3d/';
+                        ? 'https://api-internal.edan.si.edu/3d-api-dev/'
+                        : 'https://3d.si.edu/object/3d/';
 
                     // add our EDAN UUID
                     fields.Links.push('scene_published'+'|'+uriPath+fields.EdanUUID);

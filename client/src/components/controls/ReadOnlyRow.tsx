@@ -46,9 +46,9 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
                     {linkLabel ? (
                         <Link
                             href={typeof value === 'string' ? value : ''}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            underline="hover"
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            underline='hover'
                         >
                             {linkLabel}
                         </Link>
