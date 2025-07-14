@@ -748,15 +748,17 @@ export class Helpers {
         }
 
         // if we're a GraphQL request we need to dig a little further to get a meaningful name
-        const queryGQL = computeGQLQuery(req);
-        if(queryGQL && queryGQL !== '__schema') {
-            // need to collapse the whitespace
-            result.url += '/' + this.collapseWhitespace(queryGQL);
-            result.params = { ...result.params, variables: req.body.variables };
-        } else {
-            // special handling since upload/download sdon't have the graphql
-            // prefix in their url but are fundamentally graphql requests
-            result.url += '/' + (req.url.endsWith('graphql') ?? 'Unknown');
+        if(req.originalUrl.includes('graphql')) {
+            const queryGQL = computeGQLQuery(req);
+            if(queryGQL && queryGQL !== '__schema') {
+                // need to collapse the whitespace
+                result.url += '/' + this.collapseWhitespace(queryGQL);
+                result.params = { ...result.params, variables: req.body.variables };
+            } else {
+                // special handling since upload/download sdon't have the graphql
+                // prefix in their url but are fundamentally graphql requests
+                result.url += '/' + (req.path+'\Unknown');
+            }
         }
 
         // if we want minimal output, then we simplify

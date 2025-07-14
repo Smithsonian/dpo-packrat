@@ -247,7 +247,8 @@ export const defaultSceneFields: SceneFields = {
         selected: true,
         subtitleOption: eSubtitleOption.eInput,
         id: 0
-    }]
+    }],
+    Links: []
 };
 
 export const referenceModelSchema = yup.object().shape({

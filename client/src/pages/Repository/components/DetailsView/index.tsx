@@ -779,6 +779,7 @@ function DetailsView(): React.ReactElement {
                         detailQuery={detailQuery}
                         metadata={metadata}
                         onUploaderOpen={onUploaderOpen}
+                        publishedState={publishedState}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (
