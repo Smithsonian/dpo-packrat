@@ -78,7 +78,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             LicenseNew = undefined;
         }
     }
-    RK.logError(RK.LogSection.eGQL,'update object details','changing license',{ oldLicense: LicenseOld, newLicense: LicenseNew },'GraphQL.SystemObject.ObjectDetails');
+    RK.logDebug(RK.LogSection.eGQL,'update object details','changing license',{ oldLicense: LicenseOld, newLicense: LicenseNew },'GraphQL.SystemObject.ObjectDetails');
 
     const metadataRes: H.IOResults = await handleMetadata(idSystemObject, data.Metadata, user);
     if (!metadataRes.success)
