@@ -42,9 +42,10 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const isMounted = useRef(false);
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle, publishedState } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
     const sceneData = data?.getDetailsTabDataForObject.Scene;
+
     useEffect(() => {
         const retrieveSceneData = async () => {
             if (data && !loading) {
@@ -60,6 +61,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     },
                     fetchPolicy: 'no-cache'
                 });
+                
                 updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
                 updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
                 updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
@@ -70,11 +72,13 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                 updateDetailField(eSystemObjectType.eScene, 'CountSetup', getScene?.Scene?.CountSetup);
                 updateDetailField(eSystemObjectType.eScene, 'CountTour', getScene?.Scene?.CountTour);
                 updateDetailField(eSystemObjectType.eScene, 'EdanUUID', getScene?.Scene?.EdanUUID);
+                updateDetailField(eSystemObjectType.eScene, 'Links', getScene?.Scene?.Links);
                 isMounted.current = true;
             }
         };
 
         retrieveSceneData();
+        console.log(data,props,publishedState);
     }, []);
 
     useEffect(() => {
@@ -90,13 +94,31 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
+    const getLinkURL = (linkType: string): string | null => {
+        const links: string[] = sceneData?.Links ?? [];
+        if(links.length===0 || publishedState.toLowerCase()==='not published')
+            return null;
+
+        // get our urls that are of the desired type
+        const url = links
+            .map(item => {
+                const [type, url] = item.split("|", 2);
+                return { type, url };
+            })
+            .filter(entry => entry.type === 'scene_'+linkType)
+            .map(entry => entry.url);
+
+        return url[0] ?? null;
+    };
+
     const readOnlyContainerProps: React.CSSProperties = {
         height: 22,
         alignItems: 'center'
     };
+    const publishedUrl = getLinkURL('published');
 
     return (
-        <Box>
+        <Box display='flex' flexDirection='row'>
             <Box display='flex' flexDirection='column' className={classes.container}>
                 <InputField
                     value={subtitle}
@@ -203,6 +225,18 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     paddingString='1px 10px'
                     padding={10}
                     containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px', ...readOnlyContainerProps }}
+                />
+            </Box>
+            <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
+                <ReadOnlyRow
+                    label='Published URL'
+                    {...(publishedUrl
+                        ? { linkLabel: publishedUrl, value: publishedUrl }
+                        : { value: 'None' }
+                    )}
+                    padding={10}
+                    paddingString='1px 10px'
+                    containerStyle={readOnlyContainerProps}
                 />
             </Box>
         </Box>

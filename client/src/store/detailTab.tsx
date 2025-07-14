@@ -60,6 +60,7 @@ export interface SceneDetailsType {
     PosedAndQCd: boolean;
     CanBeQCd: boolean;
     ModelSceneXref: any[];
+    Links: string[];
 }
 
 export type DetailsTabType =
@@ -89,7 +90,7 @@ type DetailTabStore = {
     AssetDetails: AssetDetailFields;
     ActorDetails: ActorDetailFields;
     StakeholderDetails: StakeholderDetailFields;
-    updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | boolean | Date | null | IngestFolder[]) => void;
+    updateDetailField: (metadataType: eSystemObjectType, fieldName: string, value: number | string | string[] | boolean | Date | null | IngestFolder[]) => void;
     getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType) => string[];
@@ -189,7 +190,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                 idModelSceneXref: 0,
                 idScene: 0
             }
-        ]
+        ],
+        Links: []
     },
     ProjectDocumentationDetails: {
         Description: ''
@@ -486,13 +488,14 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eScene) {
             const {
-                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, CanBeQCd, EdanUUID }
+                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, CanBeQCd, EdanUUID, Links }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eScene, 'ApprovedForPublication', ApprovedForPublication);
             updateDetailField(eSystemObjectType.eScene, 'PublicationApprover', PublicationApprover);
             updateDetailField(eSystemObjectType.eScene, 'PosedAndQCd', PosedAndQCd);
             updateDetailField(eSystemObjectType.eScene, 'CanBeQCd', CanBeQCd);
             updateDetailField(eSystemObjectType.eScene, 'EdanUUID', EdanUUID);
+            updateDetailField(eSystemObjectType.eScene, 'Links', Links);
         }
 
         if (objectType === eSystemObjectType.eProjectDocumentation) {

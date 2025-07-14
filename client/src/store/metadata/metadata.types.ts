@@ -65,7 +65,7 @@ export type FieldErrors = {
     }
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
+export type MetadataFieldValue = string | number | boolean | null | Date | string[] | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -148,6 +148,7 @@ export type SceneFields = {
     idAsset?: number;
     updateNotes?: string;
     subtitles: SubtitleFields;
+    Links: string[];
 };
 
 export type OtherFields = {
