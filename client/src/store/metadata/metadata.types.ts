@@ -58,13 +58,14 @@ export type FieldErrors = {
         purpose: boolean;
         modelFileType: boolean;
         subtitles: boolean;
+        Variant: boolean;
     };
     scene: {
         subtitles: boolean;
     }
 };
 
-export type MetadataFieldValue = string | number | boolean | null | Date | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
+export type MetadataFieldValue = string | number | boolean | null | Date | string[] | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
 
 export type MetadataUpdate = {
     valid: boolean;
@@ -96,7 +97,6 @@ export type PhotogrammetryFields = {
     description: string;
     dateCaptured: Date;
     datasetType: number | null;
-    datasetUse: string;
     datasetFieldId: number | null;
     itemPositionType: number | null;
     itemPositionFieldId: number | null;
@@ -110,6 +110,7 @@ export type PhotogrammetryFields = {
     directory: string;
     idAsset?: number;
     updateNotes?: string;
+    datasetUse: string;
 };
 
 export type ModelFields = {
@@ -123,6 +124,7 @@ export type ModelFields = {
     modality: number | null;
     units: number | null;
     purpose: number | null;
+    Variant: string;
     modelFileType: number | null;
     directory: string;
     idAsset?: number;
@@ -146,6 +148,7 @@ export type SceneFields = {
     idAsset?: number;
     updateNotes?: string;
     subtitles: SubtitleFields;
+    Links: string[];
 };
 
 export type OtherFields = {

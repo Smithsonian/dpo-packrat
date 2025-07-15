@@ -1,9 +1,4 @@
 #!/bin/bash
-#!/bin/bash
-# Linux Server helper script that opens Packrat's structured JSON logs into TAIL
-# Usage:
-#     ops_logTail.sh /3ddigip01/Packrat/Logs                                    // finds the most recent log file to open
-#     ops_logTail.sh /3ddigip01/Packrat/Logs/2024/09/PackratLog_2024-09-26.log  // opens a specific log file
 
 # Function to apply color based on custom log levels
 colorize_level() {
@@ -43,8 +38,8 @@ process_line() {
   message=$(echo "$line" | jq -r '.message')
   caller=$(echo "$line" | jq -r '.context.caller // ""')
 
-  # Stringify the data field, forcing it to be displayed in a single line
-  data=$(echo "$line" | jq -c '.data // ""')
+  # Stringify the data field, forcing it to be displayed in a single line, compact format
+  data=$(echo "$line" | jq -c 'if .data then .data else empty end' 2>/dev/null)
 
   # Format requestId with leading zeros
   requestId=$(printf "%05d" "$requestId")
@@ -67,8 +62,18 @@ process_line() {
   level_pad=$(printf "%*s" $((5 - ${#raw_level})) "")
 
   # Format data field if it exists
-  if [ -n "$data" ] && [ "$data" != "\"\"" ]; then
-    data=$(dim_data "($data)")  # Apply dimming to the data field
+  if [ -n "$data" ]; then
+    # Clean up escape sequences and extra quotes
+    clean_data=$(echo "$data" | sed 's/\\n/ /g; s/\\t/ /g; s/\\"/"/g')
+  
+    # Truncate if necessary
+    max_length=160
+    if [ ${#clean_data} -gt $max_length ]; then
+      short_data=$(echo "$clean_data" | cut -c1-$max_length)
+      data=$(dim_data "($short_data...)")
+    else
+      data=$(dim_data "($clean_data)")
+    fi
   else
     data=""
   fi

@@ -581,5 +581,5 @@ export default CaptureDataDetails;
 
 
 export const updatedFieldStyling = (isUpdated: boolean): React.CSSProperties => {
-    return isUpdated ? { backgroundColor: palette.secondary.light, border: `1px solid ${fade(palette.secondary.main, 0.4)}` } : {};
+    return isUpdated ? { backgroundColor: palette.secondary.main, border: `1px solid ${fade(palette.secondary.main, 0.4)}` } : {};
 };

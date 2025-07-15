@@ -40,6 +40,7 @@ export enum eVocabularySetID {
     eEdan3DResourceCategory,
     eEdanMDMFields,
     eCaptureDataDatasetUse,
+    eModelVariant,
     eNone = -1
 }
 
@@ -226,6 +227,11 @@ export enum eVocabularyID {
     eEdanMDMFieldsTaxonomicNameFT,
     eEdanMDMFieldsNotesFT,
     eEdanMDMFieldsPhysicalDescriptionFT,
+    eCaptureDataDatasetUseAlignment,
+    eCaptureDataDatasetUseReconstruction,
+    eCaptureDataDatasetUseTextureGeneration,
+    eModelVariantRawClean,
+    eModelVariantPresentation,
     eNone = -1
 }
 

@@ -110,7 +110,7 @@ export class IndexSolr implements NAV.IIndexer {
         const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
         const documentCount: number = await this.indexMetadataWorker(solrClient, metadataList, false);
         if (documentCount >= -1) {
-            RK.logInfo(RK.LogSection.eNAV,'index metadata success',`updating ${documentCount} documents`,{ metadataList },'Navigation.Solr.Index');
+            RK.logInfo(RK.LogSection.eNAV,'index metadata success',`updating ${documentCount} documents`,undefined,'Navigation.Solr.Index');
             return true;
         } else {
             RK.logError(RK.LogSection.eNAV,'index metadata failed','metadata worker error',{ metadataList },'Navigation.Solr.Index');

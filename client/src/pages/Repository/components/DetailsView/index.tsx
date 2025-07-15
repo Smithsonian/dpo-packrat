@@ -475,7 +475,7 @@ function DetailsView(): React.ReactElement {
         try {
             if (objectType === eSystemObjectType.eModel) {
                 const ModelDetails = getDetail(objectType) as ModelDetailsType;
-                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType } = ModelDetails;
+                const { DateCreated, idVCreationMethod, idVModality, idVPurpose, idVUnits, idVFileType, Variant } = ModelDetails;
 
                 updatedData.Model = {
                     Name: updatedData?.Name,
@@ -484,7 +484,8 @@ function DetailsView(): React.ReactElement {
                     Purpose: idVPurpose,
                     Units: idVUnits,
                     ModelFileType: idVFileType,
-                    DateCreated
+                    DateCreated,
+                    Variant: Variant ?? '[]',
                 };
             }
 
@@ -778,6 +779,7 @@ function DetailsView(): React.ReactElement {
                         detailQuery={detailQuery}
                         metadata={metadata}
                         onUploaderOpen={onUploaderOpen}
+                        publishedState={publishedState}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (

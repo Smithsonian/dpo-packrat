@@ -984,6 +984,7 @@ input IngestItemInput {
 }
 
 type IngestModel {
+  Variant: String!
   creationMethod: Int!
   dateCreated: String!
   derivedObjects: [RelatedObject!]!
@@ -1001,6 +1002,7 @@ type IngestModel {
 }
 
 input IngestModelInput {
+  Variant: String!
   creationMethod: Int!
   dateCreated: String!
   derivedObjects: [RelatedObjectInput!]!
@@ -1297,6 +1299,7 @@ type Model {
   VModality: Vocabulary
   VPurpose: Vocabulary
   VUnits: Vocabulary
+  Variant: String!
   idAssetThumbnail: Int
   idModel: Int!
   idVCreationMethod: Int
@@ -1331,6 +1334,7 @@ input ModelDetailFieldsInput {
   Name: String
   Purpose: Int
   Units: Int
+  Variant: String!
 }
 
 type ModelMaterial {
@@ -1934,6 +1938,7 @@ input UpdateLicenseInput {
 }
 
 type UpdateModelMetadata {
+  Variant: String!
   creationMethod: Int!
   dateCreated: String!
   modality: Int!

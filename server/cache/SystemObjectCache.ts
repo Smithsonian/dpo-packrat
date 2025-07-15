@@ -208,7 +208,7 @@ export class SystemObjectCache {
     private async flushObjectWorker(idSystemObject: number): Promise<DBAPI.ObjectIDAndType | undefined> {
         const SO: SystemObject | null = await SystemObject.fetch(idSystemObject);
         if (!SO) {
-            RK.logError(RK.LogSection.eCACHE,'fl;ush object failed','unable to fetch system object',{ idSystemObject },'Cache.SystemObject');
+            RK.logError(RK.LogSection.eCACHE,'flush object failed','unable to fetch system object',{ idSystemObject },'Cache.SystemObject');
             return undefined;
         }
 
