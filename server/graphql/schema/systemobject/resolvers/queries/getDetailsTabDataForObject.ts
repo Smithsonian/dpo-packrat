@@ -14,6 +14,7 @@ import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import * as H from '../../../../../utils/helpers';
 import * as SH from '../../../../../utils/sceneHelpers';
+import { Config, ENVIRONMENT_TYPE } from '../../../../../config';
 
 export default async function getDetailsTabDataForObject(_: Parent, args: QueryGetDetailsTabDataForObjectArgs): Promise<GetDetailsTabDataForObjectResult> {
     const { input } = args;
@@ -116,6 +117,18 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CanBeQCd: sceneCanBeQCdRes.success,
                     idScene: systemObject.idScene,
                 };
+
+                // add our published links to the 'links' tab w/ delimeter of '|'
+                if(fields.EdanUUID) {
+                    // different prefix/paths depending on development environment
+                    const uriPath = (Config.environment.type===ENVIRONMENT_TYPE.DEVELOPMENT)
+                        ? 'https://api-internal.edan.si.edu/3d-api-dev/'
+                        : 'https://3d.si.edu/object/3d/';
+
+                    // add our EDAN UUID
+                    fields.Links.push('scene_published'+'|'+uriPath+fields.EdanUUID);
+                }
+
                 result.Scene = fields;
             }
             break;

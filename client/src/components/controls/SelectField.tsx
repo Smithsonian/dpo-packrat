@@ -28,12 +28,24 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
         '& .MuiSelect-selectMenu': {
             textOverflow: 'clip'
         }
-    }
+    },
+    chips: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    chip: {
+        margin: 2,
+        height: 'auto',
+    },
+    chipSelect: {
+        width: 'auto',
+        minWidth: '240px'
+    },
 }));
 
 export interface SelectFieldProps extends ViewableProps {
     label: string;
-    value: number | null;
+    value: number | number[] | null;
     name: string;
     options: VocabularyOption[];
     error?: boolean;

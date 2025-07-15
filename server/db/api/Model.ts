@@ -29,6 +29,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     AutomationTag!: string | null;
     CountTriangles!: number | null;
     Title!: string | null;
+    Variant!: string;
 
     constructor(input: ModelBase) {
         super(input);
@@ -59,6 +60,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
         this.AutomationTag = model.AutomationTag;
         this.CountTriangles = model.CountTriangles;
         this.Title = model.Title;
+        this.Variant = model.Variant;
     }
 
     protected async createWorker(): Promise<boolean> {
@@ -66,7 +68,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             const { Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose, idVFileType,
                 idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
                 CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
-                AutomationTag, CountTriangles, Title } = this;
+                AutomationTag, CountTriangles, Title, Variant } = this;
             ({ idModel: this.idModel, Name: this.Name, DateCreated: this.DateCreated, idVCreationMethod: this.idVCreationMethod,
                 idVModality: this.idVModality, idVUnits: this.idVUnits,
                 idVPurpose: this.idVPurpose, idVFileType: this.idVFileType, idAssetThumbnail: this.idAssetThumbnail,
@@ -74,7 +76,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 CountLights: this.CountLights, CountMaterials: this.CountMaterials, CountMeshes: this.CountMeshes,
                 CountVertices: this.CountVertices, CountEmbeddedTextures: this.CountEmbeddedTextures, CountLinkedTextures: this.CountLinkedTextures,
                 FileEncoding: this.FileEncoding, IsDracoCompressed: this.IsDracoCompressed, AutomationTag: this.AutomationTag, CountTriangles: this.CountTriangles,
-                Title: this.Title } =
+                Title: this.Title, Variant: this.Variant } =
                 await DBC.DBConnection.prisma.model.create({
                     data: {
                         Name,
@@ -88,7 +90,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                         CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
                         CountLinkedTextures, FileEncoding,
                         IsDracoCompressed: H.Helpers.safeBoolean(IsDracoCompressed),
-                        AutomationTag, CountTriangles, Title,
+                        AutomationTag, CountTriangles, Title, Variant,
                         SystemObject:   { create: { Retired: false }, },
                     },
                 }));
@@ -104,7 +106,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
             const { idModel, Name, DateCreated, idVCreationMethod, idVModality, idVUnits, idVPurpose, idVFileType,
                 idAssetThumbnail, CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials,
                 CountMeshes, CountVertices, CountEmbeddedTextures, CountLinkedTextures, FileEncoding, IsDracoCompressed,
-                AutomationTag, CountTriangles, Title } = this;
+                AutomationTag, CountTriangles, Title, Variant } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.model.update({
                 where: { idModel, },
                 data: {
@@ -119,7 +121,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                     CountAnimations, CountCameras, CountFaces, CountLights, CountMaterials, CountMeshes, CountVertices, CountEmbeddedTextures,
                     CountLinkedTextures, FileEncoding,
                     IsDracoCompressed: H.Helpers.safeBoolean(IsDracoCompressed),
-                    AutomationTag, CountTriangles, Title,
+                    AutomationTag, CountTriangles, Title, Variant
                 },
             }) ? true : /* istanbul ignore next */ false;
             return retValue;

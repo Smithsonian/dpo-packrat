@@ -525,7 +525,15 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 1, 'Alignm
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Reconstruction');     -- 208
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation'); -- 209
 
--- update tables for the field (where needed)
+-- update CaptureDataPhoto tables for the field (where needed)
 UPDATE CaptureDataPhoto SET CaptureDatasetUse = "[207,208,209]" WHERE CaptureDatasetUse = "[]";
+
+-- 2025-06-30 Add 'Model Variant' to vocabulary and table for Model (Eric)
+ALTER TABLE Model ADD COLUMN Variant longtext NOT NULL DEFAULT '[]';
+
+-- define vocab set and values
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (31, 'Model.Variant', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 1, 'Raw Clean');        -- 210
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 2, 'Presentation');     -- 211
 
 ------

@@ -1,5 +1,5 @@
 import { passport, authCorsConfig, authSession, AuthRouter } from '../auth';
-import { ApolloServerOptions, computeGQLQuery } from '../graphql';
+import { ApolloServerOptions } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Config } from '../config';
@@ -138,10 +138,11 @@ export class HttpServer {
 
         // DEBUG: early stage request debugging middleware
         // this.app.use(HttpServer.logRequestDetailed);
-        // TEMP: inside apolloServer setup
+
+        // DEBUG: inside apolloServer setup
         this.app.use((req, _res, next) => {
-            req.on('close', () => RK.logDebug(RK.LogSection.eHTTP,'Request CLOSED',undefined,H.Helpers.cleanExpressRequest(req),'Express.ConfigMiddleware'));
-            req.on('aborted', () => RK.logDebug(RK.LogSection.eHTTP,'Request ABORTED',undefined,H.Helpers.cleanExpressRequest(req),'Express.ConfigMiddleware'));
+            req.on('close', () => RK.logDebug(RK.LogSection.eHTTP,'request CLOSED',undefined,H.Helpers.cleanExpressRequest(req,false,true),'HttpServer'));
+            req.on('aborted', () => RK.logDebug(RK.LogSection.eHTTP,'request ABORTED',undefined,H.Helpers.cleanExpressRequest(req,false,true),'HttpServer'));
             next();
         });
 
@@ -164,7 +165,7 @@ export class HttpServer {
         // authentication and graphQL endpoints
         this.app.use('/auth', AuthRouter);
         this.app.use('/graphql', graphqlUploadExpress({
-            maxFileSize: 40 * 1024 * 1024 * 1024, // 40 Gb
+            maxFileSize: 64 * 1024 * 1024 * 1024, // 64 Gb
             maxFiles: 10,
             tmpdir: path.join(Config.storage.rootStaging,'tmp'),
             debug: true,
@@ -252,25 +253,9 @@ export class HttpServer {
     // utility routines and middleware
     private static logRequest(req: Request, _res, next): void {
         // figure out who is calling this
-        const { id, ip } = H.Helpers.getUserDetailsFromRequest(req);
+        const { id } = H.Helpers.getUserDetailsFromRequest(req);
 
-        // our method (GET, POST, ...)
-        let method = req.method.toUpperCase();
-
-        // get our query
-        let query = req.originalUrl;
-        let queryParams = H.Helpers.JSONStringify(req.query);
-        if(req.originalUrl.includes('/graphql')) {
-            method = 'GQL';
-            const queryGQL = computeGQLQuery(req);
-            if(queryGQL && queryGQL !== '__schema') {
-                query = queryGQL;
-                queryParams = H.Helpers.JSONStringify(req.body.variables);
-            } else
-                query = `Unknown GraphQL: ${query}|${req.path}`;
-        }
-
-        RK.logInfo(RK.LogSection.eHTTP,'request made',undefined,{ method, query, idUser: id, source: ip, queryParams },'HttpServer',true);
+        RK.logInfo(RK.LogSection.eHTTP,'request made',undefined,{ idUser: id, ...H.Helpers.cleanExpressRequest(req,false,true) },'HttpServer',true);
         next();
     }
     // private static logRequestDetailed(req: Request, _res, next): void {

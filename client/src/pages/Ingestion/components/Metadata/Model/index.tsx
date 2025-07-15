@@ -7,7 +7,7 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip, IconButton, Collapse } from '@material-ui/core';
+import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip, IconButton, Collapse, Input, Chip } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
@@ -100,6 +100,27 @@ const useStyles = makeStyles(({ palette }) => ({
         padding: 0,
         marginBottom: '1rem',
     },
+    fieldLabel: {
+        width: '7rem'
+    },
+    fieldSizing: {
+        width: '240px',
+        padding: 0,
+        boxSizing: 'border-box',
+        textAlign: 'center'
+    },
+    chip: {
+        margin: 2,
+        height: 'auto',
+    },
+    chips: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
+    chipSelect: {
+        width: 'auto',
+        minWidth: '212px'
+    }
 }));
 
 interface ModelProps {
@@ -268,6 +289,37 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
+    const setModelVariantField = (event) => {
+        const  { value, name } = event.target;
+        // make sure we got an array as value
+        if(!Array.isArray(value))
+            return console.error('did not receive array', value);
+
+        // convert array into JSON array and feed to metadata update
+        const arrayString = JSON.stringify(value);
+        updateMetadataField(metadataIndex, name, arrayString, MetadataType.model);
+    };
+    const getSelectedIDsFromJSON = (value: string): number[] => {
+        // used to extract array from JSON
+        try {
+            const data = JSON.parse(value);
+            if(Array.isArray(data) === false)
+                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
+            return data.sort();
+        } catch(error) {
+            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
+        }
+
+        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Variant. Unsupported value. (${value})`);
+        return [];
+    };
+    const isMasterModel = (): boolean => {
+        // hard coding the value since common constants does not align with the DB values
+        // (constants) eVocabularyID.eModelPurposeMaster = 85
+        // (database) idVocabulary.Master = 45
+        return (model.purpose===45);
+    };
+
     const openSourceObjectModal = async () => {
         await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
         await setObjectRelationship(RelatedObjectType.Source);
@@ -418,13 +470,25 @@ function Model(props: ModelProps): React.ReactElement {
                                 <Table className={tableClasses.table}>
                                     <TableBody>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.dateCreated || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Date Created*</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>When was this model generated or created. This date is often the same as the capture date to help in finding it in the repository.</span>}>
+                                                    <Typography className={tableClasses.labelText}>Date Created*</Typography>
+                                                </Tooltip>
+                                            </TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <DateInputField value={model.dateCreated} onChange={(_, value) => setDateField('dateCreated', value)} dateHeight='22px' />
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.creationMethod || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Creation Method*</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>How was this model created.
+                                                    <p><b><u>Scan to Mesh:</u></b> If coming from reconstruction or photogrammetry software.</p>
+                                                    <p><b><u>CAD</u></b> The model was created, often manually, in a CAD or 3D Modeling package.</p>
+                                                </span>}
+                                                >
+                                                    <Typography className={tableClasses.labelText}>Creation Method*</Typography>
+                                                </Tooltip>
+                                            </TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.creationMethod ?? ''}
@@ -442,7 +506,11 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modality || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Modality*</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What type of model is this. In most cases this should be <u>Mesh</u></span>}>
+                                                    <Typography className={tableClasses.labelText}>Modality*</Typography>
+                                                </Tooltip>
+                                            </TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.modality ?? ''}
@@ -458,7 +526,11 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.units || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Units*</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What units was the mesh reconstructed in. This is often <u>meters</u> unless explicitly changed when reconstructing.</span>}>
+                                                    <Typography className={tableClasses.labelText}>Units*</Typography>
+                                                </Tooltip>
+                                            </TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.units ?? ''}
@@ -474,7 +546,17 @@ function Model(props: ModelProps): React.ReactElement {
                                             </TableCell>
                                         </TableRow>
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.purpose || false)}>
-                                            <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Purpose*</Typography></TableCell>
+                                            <TableCell className={tableClasses.tableCell}>
+                                                <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>What role does this model serve in the system.
+                                                    <p><b><u>Master:</u></b> A source model that is used to generate scenes/downloads.</p>
+                                                    <p><b><u>Voyager Scene Model:</u></b> A derivative of the master model. Only used if a derivative was manually modified/updated.</p>
+                                                    <p><b><u>Download:</u></b> A model representing a downloadable version. Only used if a generated download was manually modified/updated.</p>
+                                                    <p><b><u>Intermediate Processing Step:</u></b> A model that represents a step in a larger process. Rarely used. Contact support if you feel this is a fit.</p>
+                                                </span>}
+                                                >
+                                                    <Typography className={tableClasses.labelText}>Purpose*</Typography>
+                                                </Tooltip>
+                                            </TableCell>
                                             <TableCell className={tableClasses.tableCell}>
                                                 <Select
                                                     value={model.purpose ?? ''}
@@ -489,6 +571,44 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
+                                        { isMasterModel() &&
+                                            <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.Variant || false)}>
+                                                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                                    <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>Model variants represent what state this model is in. <b><u>Select one or more.</u></b><p><b><u>Raw_Clean: </u></b>Often the output from scanning software. It is intended to accurately represent <u>the scanning process</u>. SDpikes and holes may still exist in the mesh.</p><p><b><u>Presentation:</u></b> The model has been cleaned and/or modified. It is intended to accurately represent <u>how the real object may look on display</u>. An artist may have smoothed out spikes, adjusted texture colors, etc.</p></span>}>
+                                                        <Typography className={tableClasses.labelText}>Model Variant*</Typography>
+                                                    </Tooltip>
+                                                </TableCell>
+                                                <TableCell className={tableClasses.tableCell}>
+                                                    <Select
+                                                        multiple
+                                                        value={getSelectedIDsFromJSON(model.Variant)}
+                                                        name='Variant'
+                                                        onChange={setModelVariantField}
+                                                        disableUnderline
+                                                        className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
+                                                        input={<Input id='select-multiple-chip' />}
+                                                        renderValue={(selected) => {
+                                                            // get our entries and cycle through what's selected drawing as Chips,
+                                                            // and pulling the name from the entries.
+                                                            const entries = getEntries(eVocabularySetID.eModelVariant);
+                                                            return (<div className={classes.chips}>
+                                                                {(selected as number[]).map((value) => {
+                                                                    const entry = entries.find(entry => entry.idVocabulary === value);
+                                                                    return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                                })}
+                                                            </div>);
+                                                        }}
+                                                        disabled={ingestionLoading}
+                                                    >
+                                                        { getEntries(eVocabularySetID.eModelVariant)
+                                                            .map(({ idVocabulary, Term }, index) =>
+                                                                <MenuItem key={index} value={idVocabulary}>
+                                                                    {Term}
+                                                                </MenuItem>)}
+                                                    </Select>
+                                                </TableCell>
+                                            </TableRow>
+                                        }
                                         <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.modelFileType || false)}>
                                             <TableCell className={tableClasses.tableCell}><Typography className={tableClasses.labelText}>Model File Type</Typography></TableCell>
                                             <TableCell className={tableClasses.tableCell}>

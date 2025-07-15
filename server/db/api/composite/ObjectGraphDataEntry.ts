@@ -202,4 +202,19 @@ export class ObjectGraphDataEntry {
         objectGraphDataEntryHierarchy.childrenDateCreated = [...this.childrenDateCreated.keys()];
         return objectGraphDataEntryHierarchy;
     }
+
+    getSummary(): {
+        idType: SystemObjectIDType;
+        retired: boolean;
+        childrenCount: number;
+        parentsCount: number;
+    } {
+        // returns a simple summary for logging purposes
+        return {
+            idType:     this.systemObjectIDType,
+            retired:    this.retired,
+            childrenCount: this.childMap.size,
+            parentsCount:  this.parentMap.size
+        };
+    }
 }

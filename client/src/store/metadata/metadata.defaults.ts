@@ -182,7 +182,8 @@ export const defaultModelFields: ModelFields = {
         subtitleOption: eSubtitleOption.eNone,
         id: 0
     }],
-    skipSceneGenerate: false
+    skipSceneGenerate: false,
+    Variant: '[]',     // used for master models and includes raw_clean/presentation
 };
 
 export const modelFieldsSchemaUpdate = yup.object().shape({
@@ -213,7 +214,13 @@ export const modelFieldsSchemaUpdate = yup.object().shape({
     boundingBoxP2Y: yup.number().nullable(true),
     boundingBoxP2Z: yup.number().nullable(true),
     directory: yup.string(),
-    updateNotes: yup.string().when('idAsset', notesWhenUpdate)
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate),
+    Variant: yup
+        .string()
+        .typeError('Must select at least one Use for Master models')
+        .test('not-empty-or-brackets', 'Must select at least one Use for Master models', value => {
+            return (value !== '') && (value !== '[]'); // indices into Vocabulary: raw_clean, presentation
+        }),
 });
 
 export const modelFieldsSchema = modelFieldsSchemaUpdate.shape({
@@ -240,7 +247,8 @@ export const defaultSceneFields: SceneFields = {
         selected: true,
         subtitleOption: eSubtitleOption.eInput,
         id: 0
-    }]
+    }],
+    Links: []
 };
 
 export const referenceModelSchema = yup.object().shape({

@@ -98,7 +98,8 @@ function Scene(props: SceneProps): React.ReactElement {
         ApprovedForPublication: false,
         PosedAndQCd: false,
         CanBeQCd: false,
-        UpdateNotes: ''
+        UpdateNotes: '',
+        Links: []
     });
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);

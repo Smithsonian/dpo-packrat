@@ -618,7 +618,8 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
             IsDracoCompressed: modelStats ? H.Helpers.safeBoolean(modelStats?.isDracoCompressed) : null,
             AutomationTag: null,
             CountTriangles: modelStats ? maybe<number>(modelStats?.numTriangles) : null,
-            idModel
+            idModel,
+            Variant: modelStats?.Variant ?? '[]',
         });
     }
 

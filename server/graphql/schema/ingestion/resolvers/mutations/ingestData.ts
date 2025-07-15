@@ -602,7 +602,7 @@ class IngestDataWorker extends ResolverBase {
 
         const xref: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(projectDB, itemDB);
         if (!xref) {
-            RK.logError(RK.LogSection.eGQL,'wire project failed','unable to wire project to item',{ project: projectDB, item: itemDB },'GraphQL.Ingestion.Data');
+            RK.logError(RK.LogSection.eGQL,'wire project failed','unable to wire project to item',{ idProject, idItem: itemDB.idItem, projectDB, itemDB },'GraphQL.Ingestion.Data');
             return null;
         }
         return projectDB;
@@ -951,6 +951,8 @@ class IngestDataWorker extends ResolverBase {
         modelDB.idVPurpose = model.purpose;
         modelDB.idVUnits = model.units;
         modelDB.idVFileType = model.modelFileType;
+        modelDB.Variant = model.Variant ?? '[]';
+
         // if we cloned, put our updates back into the modelConstellation ... as this may get used later
         if (cloned)
             JCOutput.modelConstellation.Model.cloneData(modelDB);

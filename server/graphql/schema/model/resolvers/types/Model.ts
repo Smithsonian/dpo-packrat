@@ -37,7 +37,7 @@ const Model = {
     },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromModelID(parent.idModel);
-    }
+    },
 };
 
 export default Model;

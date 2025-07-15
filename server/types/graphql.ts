@@ -1088,6 +1088,7 @@ export type IngestItemInput = {
 
 export type IngestModel = {
   __typename?: 'IngestModel';
+  Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObject>;
@@ -1105,6 +1106,7 @@ export type IngestModel = {
 };
 
 export type IngestModelInput = {
+  Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
@@ -1413,6 +1415,7 @@ export type Model = {
   VModality?: Maybe<Vocabulary>;
   VPurpose?: Maybe<Vocabulary>;
   VUnits?: Maybe<Vocabulary>;
+  Variant: Scalars['String'];
   idAssetThumbnail?: Maybe<Scalars['Int']>;
   idModel: Scalars['Int'];
   idVCreationMethod?: Maybe<Scalars['Int']>;
@@ -1449,6 +1452,7 @@ export type ModelDetailFieldsInput = {
   Name?: InputMaybe<Scalars['String']>;
   Purpose?: InputMaybe<Scalars['Int']>;
   Units?: InputMaybe<Scalars['Int']>;
+  Variant: Scalars['String'];
 };
 
 export type ModelMaterial = {
@@ -2444,6 +2448,7 @@ export type UpdateLicenseInput = {
 
 export type UpdateModelMetadata = {
   __typename?: 'UpdateModelMetadata';
+  Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
   modality: Scalars['Int'];

@@ -403,6 +403,7 @@ model Model {
   AutomationTag                                  String?                 @mariasql.VarChar(256)
   CountTriangles                                 Int?
   Title                                          String?                 @mariasql.VarChar(255)
+  Variant                                        String                  @default("[]") @mariasql.LongText
   Asset                                          Asset?                  @relation(fields: [idAssetThumbnail], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_asset1")
   Vocabulary_Model_idVCreationMethodToVocabulary Vocabulary?             @relation("Model_idVCreationMethodToVocabulary", fields: [idVCreationMethod], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary1")
   Vocabulary_Model_idVModalityToVocabulary       Vocabulary?             @relation("Model_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_model_vocabulary2")
