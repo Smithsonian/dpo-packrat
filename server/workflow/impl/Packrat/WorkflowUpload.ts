@@ -273,7 +273,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     private async validateFileScene(fileName: string, readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
         const svxReader: SvxReader = new SvxReader();
         const svxRes: H.IOResults = await svxReader.loadFromStream(readStream);
-        RK.logError(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'Workflow.Upload');
+        RK.logDebug(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'Workflow.Upload');
         return (svxRes.success)
             ? this.appendToWFReport(`Upload validated ${fileName}`)
             : this.handleError(`WorkflowUpload.validateFile failed to parse svx file ${fileName}: ${svxRes.error}`);
