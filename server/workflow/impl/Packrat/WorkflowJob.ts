@@ -84,7 +84,7 @@ export class WorkflowJob implements WF.IWorkflow {
             parameters: this.workflowJobParameters.cookJobParameters,
             frequency: null               // null means create but don't run
         };
-        RK.logDebug(RK.LogSection.eWF,'workflow job start','job creation parameters', { 
+        RK.logDebug(RK.LogSection.eWF,'workflow job start','job creation parameters', {
             ...this.getWorkflowContext(),
             jobType: jobCreationParameters.eJobType,
             frequency: jobCreationParameters.frequency,
