@@ -89,7 +89,7 @@ export class RecordKeeper {
 
             const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
             if(emailResults.success===false) {
-                RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'Recordkeeper');
+                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'Recordkeeper');
                 RecordKeeper.systemConfig.notifyEmail = false;
                 return emailResults;
             }
@@ -111,9 +111,9 @@ export class RecordKeeper {
 
             RecordKeeper.logDebug(LogSection.eSYS,'system initialize','configuring slack notifications',{ targetRate, burstRate, burstThreshold },'RecordKeeper');
 
-            const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,targetRate);
+            const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,Config.slack.channels,targetRate);
             if(slackResults.success===false) {
-                RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'Recordkeeper');
+                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'Recordkeeper');
                 RecordKeeper.systemConfig.notifySlack = false;
                 return slackResults;
             }
@@ -359,7 +359,7 @@ export class RecordKeeper {
                     return RecordKeeper.notifyGroupConfig.slackAdmin;
 
                 // get ids from Config and then get their emails
-                return ['ericmaslowski'];
+                return ['U04CBA4NZ6U'];  // test: eric maslowski
             }
 
             case NotifyUserGroup.SLACK_USER: {
@@ -394,8 +394,8 @@ export class RecordKeeper {
         // return the results
         return slackResult;
     }
-    private static async clearSlackChannel(channel?: SlackChannel): Promise<IOResults> {
-        const clearResult = await NOTIFY.clearSlackChannel(channel);
+    static async clearSlackChannel(channel?: SlackChannel, forceAll?: boolean): Promise<IOResults> {
+        const clearResult = await NOTIFY.clearSlackChannel(channel,forceAll);
         if(clearResult.success===false)
             RecordKeeper.logDebug(LogSection.eSYS, 'clear slack channel failed', clearResult.message, { error: clearResult.data.error }, 'RecordKeeper.clearSlackChannel' );
         else

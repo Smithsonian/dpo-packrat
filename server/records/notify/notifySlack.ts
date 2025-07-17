@@ -27,17 +27,17 @@ interface SlackEntry {
     details: Array<any>,    // blocks for message details
 }
 
-export enum SlackChannel {
-    PACKRAT_OPS = 'C07NCJE9FJM',        // packrat-ops: for user focused messages and system updates
-    PACKRAT_DEV = 'C07MKBKGNTZ',        // packrat-dev: for testing and development messages
-    PACKRAT_SYSTEM = 'C07R86MRPMM',     // packrat-system: for admin only notices
+export class SlackChannel {
+    static PACKRAT_OPS:    string = ''; // packrat-ops: for user focused messages and system updates
+    static PACKRAT_DEV:    string = ''; // packrat-dev: for testing and development messages
+    static PACKRAT_SYSTEM: string = ''; // packrat-system: for admin only notices
 }
 //#endregion
 
 export class NotifySlack {
     private static rateManager: RateManager<SlackEntry> | null =  null;
-    private static defaultChannel: SlackChannel = SlackChannel.PACKRAT_DEV;
     private static apiKey: string;
+    private static defaultChannel: SlackChannel = SlackChannel.PACKRAT_DEV;
 
     public static isActive(): boolean {
         // we're initialized if we have a logger running
@@ -46,9 +46,17 @@ export class NotifySlack {
     public static getRateManager(): RateManager<SlackEntry> | null {
         return NotifySlack.rateManager;
     }
-    public static configure(env: ENVIRONMENT_TYPE, apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
+    public static configure(env: ENVIRONMENT_TYPE, apiKey: string, channels: string[], targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
 
+        // assign our channels
+        if(channels.length !=3)
+            return { success: false, message: 'Slack notifier configuration failed', data: { error: 'invalid channels. set your environment with 3 channel IDs separated buy comma for: dev, ops, and admin.', channels }};
+        SlackChannel.PACKRAT_OPS = channels[0];
+        SlackChannel.PACKRAT_DEV = channels[1];        
+        SlackChannel.PACKRAT_SYSTEM = channels[2];
         NotifySlack.defaultChannel = (env && env===ENVIRONMENT_TYPE.PRODUCTION) ? SlackChannel.PACKRAT_OPS: SlackChannel.PACKRAT_DEV;
+
+        // assign our key
         NotifySlack.apiKey = apiKey;
 
         // if we want a rate limiter then we build it
@@ -69,7 +77,7 @@ export class NotifySlack {
     }
 
     //#region UTILS
-    public static async clearChannel(channel?: SlackChannel): Promise<SlackResult> {
+    public static async clearChannel(channel?: SlackChannel, forceAll: boolean = false): Promise<SlackResult> {
 
         const getMessagesByChannel = async (channel: SlackChannel, cursor?: string): Promise<SlackResult> => {
             try {
@@ -107,14 +115,15 @@ export class NotifySlack {
                 };
             }
         };
-        const getRepliesByMessage = async (channel: SlackChannel, ts: string): Promise<SlackResult> => {
+        const getRepliesByMessage = async (channel: SlackChannel, ts: string, cursor?: string): Promise<SlackResult> => {
             try {
                 const response = await axios.get('https://slack.com/api/conversations.replies', {
                     ...NotifySlack.formatHeaders(),
                     params: {
                         channel,
-                        ts,  // Message timestamp for fetching replies
+                        ts,          // Message timestamp for fetching replies
                         limit: 100,
+                        cursor,      // For pagination
                     }
                 });
 
@@ -156,43 +165,61 @@ export class NotifySlack {
         };
 
         channel = channel ?? NotifySlack.defaultChannel;
-        let cursor: string | undefined = undefined;
-        let iteration = 0;
         let totalDeleted = 0;
-        const maxIterations = 5;
+        let cursor: string | undefined = undefined;
+        let hasMore = true;
 
-        // Fetch and delete messages with their replies, capped at 5 iterations
-        while (iteration < maxIterations) {
-            const msgResult: SlackResult = await getMessagesByChannel(channel, cursor);
+        // compute cut-off (3 days in seconds)
+        const cutoffTimestamp = Date.now() / 1000 - 3 * 24 * 60 * 60;
 
-            if (!msgResult.success) return msgResult;
+        while (hasMore) {
+            // 1) fetch one page of history
+            const history = await getMessagesByChannel(channel, cursor);
+            if (!history.success) return history;
 
-            const messages = msgResult.data.messages;
-            if (messages.length === 0) break;  // No more messages to process
+            const { messages, nextCursor } = history.data;
 
-            for (const message of messages) {
-                if (message.ts) {
-                    // Fetch and delete replies (thread messages) first
-                    const replyResult = await getRepliesByMessage(channel, message.ts);
-                    if (replyResult.success) {
-                        for (const reply of replyResult.data.replies) {
-                            if (reply.ts !== message.ts) {  // Avoid deleting the original message in this loop
-                                const deleteReplyResult = await deleteMessage(channel, reply.ts);
-                                if (deleteReplyResult.success) totalDeleted++;
+            // 2) for each message, delete full thread then parent
+            for (const msg of messages) {
+
+                // see if the message is old enough
+                const msgTs = parseFloat(msg.ts);
+                if (forceAll || msgTs < cutoffTimestamp) {
+
+                    // delete replies (paged with while)
+                    let threadCursor: string | undefined = undefined;
+                    let threadHasMore = true;
+
+                    while (threadHasMore) {
+                        const repliesRes = await getRepliesByMessage(channel, msg.ts, threadCursor);
+                        if (!repliesRes.success) break;
+                        const { replies, nextCursor: nextReplyCursor } = repliesRes.data;
+
+                        for (const reply of replies) {
+                            const replyTs = parseFloat(reply.ts);
+                            if (forceAll || (reply.ts !== msg.ts &&  replyTs < cutoffTimestamp)) {
+                                const del = await deleteMessage(channel, reply.ts);
+                                if (del.success) totalDeleted++;
+                                await UTIL.delay(1300);          // ~50 deletions/min
                             }
                         }
+
+                        threadCursor = nextReplyCursor;
+                        threadHasMore = Boolean(threadCursor);
+                        if (threadHasMore) await UTIL.delay(61000);  // ~1 history/min
                     }
 
-                    // Delete the original message after its replies are deleted
-                    const deleteResult = await deleteMessage(channel, message.ts);
-                    if (deleteResult.success) totalDeleted++;
+                    // now delete the parent
+                    const delParent = await deleteMessage(channel, msg.ts);
+                    if (delParent.success) totalDeleted++;
+                    await UTIL.delay(1300);
                 }
             }
 
-            cursor = msgResult.data.nextCursor;
-            iteration++;
-
-            if (!cursor) break;  // Exit if no more messages are left to fetch
+            // prepare next page of top-level history
+            cursor = nextCursor;
+            hasMore = Boolean(cursor);
+            if (hasMore) await UTIL.delay(61000);  // ~1 history/min
         }
 
         return { success: true, message: 'deleted slack messages & replies from channel', data: { channel, count: totalDeleted } };
@@ -248,6 +275,13 @@ export class NotifySlack {
         // const msgPrefix: string = getMessagePrefixByType(params.type);
         const duration: string | undefined = (params.endDate) ? UTIL.getDurationString(params.startDate,params.endDate) : undefined;
 
+        // figure out who we're attaching this to
+        let who: string = '';
+        if(params.sendTo && params.sendTo.length>0) {
+            who = '\n*Who:* ';
+            who += (params.sendTo.includes('everyone')) ? '<!channel>' : `<@${params.sendTo[0]}>`;
+        }
+
         // build our blocks based on the package received
         const mainBlocks: Array<any> = [
             {
@@ -264,7 +298,7 @@ export class NotifySlack {
             fields: [
                 {
                     type: 'mrkdwn',
-                    text: `*Started:* ${UTIL.getFormattedDate(params.startDate)}${ (duration) ? '\n*Duration:* '+duration : ''}${ (params.sendTo && params.sendTo.length>0) ? '\n*Who:* '+ ((params.sendTo.length>0) ? `<@${params.sendTo[0]}>` : 'NA') : '' }`
+                    text: `*Started:* ${UTIL.getFormattedDate(params.startDate)}${ (duration) ? '\n*Duration:* '+duration : ''}${who}`
                 },
                 {
                     type: 'mrkdwn',
@@ -311,6 +345,7 @@ export class NotifySlack {
             const slackHeaders: any = NotifySlack.formatHeaders();
 
             // build our body for the message to be sent
+            // Note: we override the username in favor of a meaningful title/message
             const slackBody: any = {
                 icon_url: entry.iconUrl,
                 username: `${getTypeString(entry.type).replace(' ',': ')}${UTIL.getRandomWhitespace()+'.'}`, //`Packrat: ${getMessageCategoryByType(entry.type)}`+UTIL.getRandomWhitespace()+'.', // need random whitespace so icon always shows
@@ -327,11 +362,13 @@ export class NotifySlack {
 
             // grab our timestamp to use it for a reply response w/ details and update body
             slackBody.thread_ts = mainResponse.data.ts;
-            slackBody.text = 'Context';
+            slackBody.text = slackBody.text;        // Reply notification message
             slackBody.blocks = entry.details;
-            slackBody.username = 'Context';
+            slackBody.username = slackBody.text;    // Reply title/header
 
             // send our reply and wait
+            // Note: 'replies' are used here to keep details out of the main thread, which can make it difficult to navigate.
+            //       Slack API does not support collapsible content unless stored remotely (e.g. a web page or separate request).
             const detailsResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(detailsResponse.data.ok===false)
                 return { success: false, message: 'failed to send slack message details', data: { error: `Slack - ${detailsResponse.data?.error}` } };
@@ -354,7 +391,7 @@ export class NotifySlack {
 
         const entry: SlackEntry = {
             type,
-            channel: channel ?? NotifySlack.defaultChannel,
+            channel: (channel ?? NotifySlack.defaultChannel) as string,
             iconUrl: iconUrl ?? getMessageIconUrlByType(type,'slack'),
             subject,
             blocks,
