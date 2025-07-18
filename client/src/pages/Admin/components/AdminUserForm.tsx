@@ -123,6 +123,7 @@ function AdminUserForm(): React.ReactElement {
     const { idUser } = parameters;
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [slack, setSlack] = useState('');
     const [active, setActive] = useState<boolean>(true);
     const [dateActivated, setDateActivated] = useState('');
     const [dateDisabled, setDateDisabled] = useState<string | null>('');
@@ -159,6 +160,7 @@ function AdminUserForm(): React.ReactElement {
             setDateDisabled(fetchedUser?.DateDisabled);
             setWorkflowNotificationType(fetchedUser?.EmailSettings);
             setWorkflowNotificationTime(formatISOToHoursMinutes(fetchedUser?.WorkflowNotificationTime));
+            setSlack(fetchedUser?.SlackID);
         }
     }, [fetchedUser]);
 
@@ -198,7 +200,8 @@ function AdminUserForm(): React.ReactElement {
                         Name: name,
                         Active: active,
                         EmailSettings: workflowNotificationType,
-                        WorkflowNotificationTime: manipulatedTime
+                        WorkflowNotificationTime: manipulatedTime,
+                        SlackID: slack
                     }
                 },
                 refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
@@ -230,7 +233,8 @@ function AdminUserForm(): React.ReactElement {
                     input: {
                         EmailAddress: email,
                         Name: name,
-                        EmailSettings: workflowNotificationType
+                        EmailSettings: workflowNotificationType,
+                        SlackID: slack
                     }
                 },
                 refetchQueries: [{ query: GetAllUsersDocument, variables: { input: { active: User_Status.EAll, search: '' } } }],
@@ -279,6 +283,17 @@ function AdminUserForm(): React.ReactElement {
                             onChange={e => setEmail(e.target.value)}
                         />
                         {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
+                    </FormControl>
+                </Box>
+                 <Box className={classes.row}>
+                    <InputLabel htmlFor='userSlack' className={classes.formLabel}>Slack ID</InputLabel>
+                    <FormControl>
+                        <DebounceInput
+                            id='userSlack'
+                            className={classes.formField}
+                            value={slack}
+                            onChange={e => setSlack(e.target.value)}
+                        />
                     </FormControl>
                 </Box>
                 <Box className={classes.row}>

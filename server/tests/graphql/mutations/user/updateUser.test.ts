@@ -22,7 +22,8 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 DateDisabled: null,
                 WorkflowNotificationTime: new Date(),
                 EmailSettings: 0,
-                idUser: 0
+                idUser: 0,
+                SlackID: ''
             };
 
             const newTime = new Date();
@@ -36,6 +37,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                     EmailSettings: 2,
                     WorkflowNotificationTime: newTime,
                     Active: true,
+                    SlackID: ''
                 };
 
                 const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
@@ -58,7 +60,8 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 DateDisabled: null,
                 WorkflowNotificationTime: new Date(),
                 EmailSettings: 0,
-                idUser: 0
+                idUser: 0,
+                SlackID: ''
             };
 
             const user = await new DBAPI.User(userArgs);
@@ -71,7 +74,8 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                     EmailAddress: randomStorageKey('test@si.edu'),
                     EmailSettings: 2,
                     WorkflowNotificationTime: newTime,
-                    Active: false
+                    Active: false,
+                    SlackID: ''
                 };
 
                 const { User: updatedUser }: GetUserResult = await graphQLApi.updateUser(updateUserInput);

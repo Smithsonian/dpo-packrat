@@ -11,6 +11,7 @@ input CreateUserInput {
     SecurityID: String
     WorkflowNotificationTime: DateTime
     EmailSettings: Int
+    SlackID: String!
 }
 
 type CreateUserResult {
@@ -24,4 +25,5 @@ input UpdateUserInput {
     Active: Boolean!
     EmailSettings: Int
     WorkflowNotificationTime: DateTime!
+    SlackID: String!
 }
