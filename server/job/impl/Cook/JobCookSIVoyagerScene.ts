@@ -556,9 +556,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 Config.http.clientUrl +'/workflow';
 
             // send email out
-            await RK.sendEmail(
+            await RK.sendMessage(
                 RK.NotifyType.JOB_PASSED,
-                RK.NotifyGroup.EMAIL_USER,
+                RK.NotifyGroup.USER,
                 'Scene Generation Finished',
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
@@ -596,9 +596,9 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             const url: string = Config.http.clientUrl +'/workflow';
 
             // send email out
-            await RK.sendEmail(
+            await RK.sendMessage(
                 RK.NotifyType.JOB_FAILED,
-                RK.NotifyGroup.EMAIL_USER,
+                RK.NotifyGroup.USER,
                 'Scene Generation Failed',
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),

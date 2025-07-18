@@ -58,7 +58,6 @@ export class NotifySlack {
         return NotifySlack.rateManager;
     }
     public static configure(env: ENVIRONMENT_TYPE, apiKey: string, channels: string[], targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
-
         // assign our channels
         if(channels.length !=3)
             return { success: false, message: 'Slack notifier configuration failed', data: { error: 'invalid channels. set your environment with 3 channel IDs separated buy comma for: dev, ops, and admin.', channels }};
@@ -246,7 +245,6 @@ export class NotifySlack {
 
         return { success: true, message: result.message };
     }
-    // get status of slack system
     public static getStatus(): SlackResult {
 
         if(NotifySlack.isActive()===false)
@@ -364,7 +362,7 @@ export class NotifySlack {
                 text: entry.subject,
                 blocks: entry.blocks,
             };
-
+            
             // send the main message and wait for it to return
             const mainResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(mainResponse.data.ok===false) {

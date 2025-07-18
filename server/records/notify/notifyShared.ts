@@ -8,6 +8,9 @@ export enum NotifyType {
     SECURITY_NOTICE = 20,
 }
 export enum NotifyUserGroup {
+    ADMIN           = 'admin',
+    ALL             = 'all',
+    USER            = 'user',
     SLACK_ADMIN     = 'slack-admin',
     SLACK_ALL       = 'slack-all',
     SLACK_USER      = 'slack-user',

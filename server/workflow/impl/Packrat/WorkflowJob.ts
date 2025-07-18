@@ -282,9 +282,9 @@ export class WorkflowJob implements WF.IWorkflow {
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_PASSED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     `${workflowType} Finished`,
                     detailsMessage,
                     startDate,
@@ -295,9 +295,9 @@ export class WorkflowJob implements WF.IWorkflow {
 
             case COMMON.eWorkflowJobRunStatus.eError: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_FAILED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     `${workflowType} Failed`,
                     detailsMessage,
                     startDate,

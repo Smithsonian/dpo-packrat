@@ -208,27 +208,39 @@ export class RecordKeeper {
     //#region NOTIFY
     static async sendMessage(type: NotifyType, group: NotifyUserGroup, subject: string, body: string, startDate?: Date, endDate?: Date, link?: { url: string, label: string }): Promise<IOResults> {
         // sends a message to both email and slack
-
+        
         // send our message to email
-        const emailResult = await RecordKeeper.sendEmail(type,group,subject,body,startDate,endDate,link);
+        let emailResult;
+        if(RecordKeeper.isGroupValid('email',group))
+            emailResult = await RecordKeeper.sendEmail(type,group,subject,body,startDate,endDate,link);
+        else
+            emailResult = { success: false, message: 'invalid email group', data: { group: NotifyUserGroup[group] }};            
+        if(!emailResult.success)
+            RecordKeeper.logWarning(LogSection.eSYS,'failed to send email',emailResult.message,emailResult.data,'RecordKeeper.sendMessage');
 
         // figure out our slack channel based on message type if in production
-        let slackChannel: SlackChannel = SlackChannel.PACKRAT_DEV;
-        if(Config.environment.type===ENVIRONMENT_TYPE.PRODUCTION) {
-            slackChannel = SlackChannel.PACKRAT_OPS;
-            switch(type) {
-                case NotifyType.SECURITY_NOTICE:
-                case NotifyType.SYSTEM_ERROR:
-                case NotifyType.UNDEFINED:
-                    slackChannel = SlackChannel.PACKRAT_SYSTEM;
+        let slackResult;
+        if(RecordKeeper.isGroupValid('slack',group)) {
+            let slackChannel: SlackChannel = SlackChannel.PACKRAT_DEV;
+            if(Config.environment.type===ENVIRONMENT_TYPE.PRODUCTION) {
+                slackChannel = SlackChannel.PACKRAT_OPS;
+                switch(type) {
+                    case NotifyType.SECURITY_NOTICE:
+                    case NotifyType.SYSTEM_ERROR:
+                    case NotifyType.UNDEFINED:
+                        slackChannel = SlackChannel.PACKRAT_SYSTEM;
+                }
             }
-        }
 
-        // send our message to slack
-        const slackResult = await RecordKeeper.sendSlack(type,group,subject,body,slackChannel,startDate,endDate,link);
+            // send our message to slack
+            slackResult = await RecordKeeper.sendSlack(type,group,subject,body,slackChannel,startDate,endDate,link);
+        } else
+            slackResult = { success: false, message: 'invalid slack group', data: { group: NotifyUserGroup[group] }};
+        if(!slackResult.success)
+            RecordKeeper.logWarning(LogSection.eSYS,'failed to send slack message',slackResult.message,slackResult.data,'ReceordKeeper.sendMessage');
 
-        // determine if successful or not
-        if(emailResult.success===false || slackResult.success===false) {
+        // determine if successful or not. Only throw if both delivery systems failed
+        if(emailResult.success===false && slackResult.success===false) {
             const error: string = [emailResult.data?.error, slackResult.data?.error].filter(Boolean).join('| ');
             return { success: false, message: 'failed to send message', data: { error } };
         }
@@ -254,7 +266,7 @@ export class RecordKeeper {
     private static async getEmailsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
 
         switch(group) {
-
+            case NotifyUserGroup.ALL:
             case NotifyUserGroup.EMAIL_ALL: {
                 // see if we already initialized this
                 if(RecordKeeper.notifyGroupConfig.emailAll.length>0 && forceUpdate===true)
@@ -263,6 +275,7 @@ export class RecordKeeper {
                     return RecordKeeper.defaultEmail;
             }
 
+            case NotifyUserGroup.ADMIN:
             case NotifyUserGroup.EMAIL_ADMIN: {
 
                 // see if we already initialized this
@@ -272,6 +285,7 @@ export class RecordKeeper {
                     return RecordKeeper.defaultEmail;
             }
 
+            case NotifyUserGroup.USER:
             case NotifyUserGroup.EMAIL_USER: {
                 const { idUser, userEmail } = RecordKeeper.getContext();
 
@@ -308,11 +322,11 @@ export class RecordKeeper {
 
         // send our message out.
         // we await the result so we can catch and audit the failure
-        RecordKeeper.logDebug(LogSection.eSYS,'sending email attempt',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
+        // RecordKeeper.logDebug(LogSection.eSYS,'sending email attempt',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
         const emailResult = await NOTIFY.sendEmailMessage(params);
         if(emailResult.success===false)
-            RecordKeeper.logError(LogSection.eSYS,'sending email failed',emailResult.message,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
-        RecordKeeper.logInfo(LogSection.eSYS,'sending email success',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendEmail',true);
+            RecordKeeper.logError(LogSection.eSYS,'sending email failed',emailResult.message,{ sendTo: params.sendTo, subject },'RecordKeeper.sendEmail',true);
+        RecordKeeper.logInfo(LogSection.eSYS,'sending email success',undefined,{ sendTo: params.sendTo, subject },'RecordKeeper.sendEmail',true);
 
         // return the results
         return emailResult;
@@ -325,11 +339,11 @@ export class RecordKeeper {
 
         // send our email but also log it for auditing
         // we wait for results so we can log the failure
-        RecordKeeper.logDebug(LogSection.eSYS,'sending email attempt',undefined,{ sendTo },'RecordKeeper.sendEmailRaw',true);
+        // RecordKeeper.logDebug(LogSection.eSYS,'sending email attempt',undefined,{ sendTo },'RecordKeeper.sendEmailRaw',true);
         const emailResult = await NOTIFY.sendEmailMessageRaw(type, sendTo, subject, textBody, htmlBody);
         if(emailResult.success===false)
-            RecordKeeper.logError(LogSection.eSYS,'sending email failed',emailResult.message,{ sendTo },'RecordKeeper.sendEmailRaw',true);
-        RecordKeeper.logInfo(LogSection.eSYS,'sending email success',undefined,{ sendTo },'RecordKeeper.sendEmailRaw',true);
+            RecordKeeper.logError(LogSection.eSYS,'sending email failed',emailResult.message,{ sendTo, subject },'RecordKeeper.sendEmailRaw',true);
+        RecordKeeper.logInfo(LogSection.eSYS,'sending email success',undefined,{ sendTo, subject },'RecordKeeper.sendEmailRaw',true);
 
         return emailResult;
     }
@@ -360,6 +374,7 @@ export class RecordKeeper {
     private static async getSlackIDsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
         switch(group) {
 
+            case NotifyUserGroup.ALL:
             case NotifyUserGroup.SLACK_ALL: {
                 // see if we already initialized this
                 if(RecordKeeper.notifyGroupConfig.slackAll && RecordKeeper.notifyGroupConfig.slackAll.length>0 && forceUpdate===true)
@@ -369,6 +384,7 @@ export class RecordKeeper {
                 return ['everyone'];
             }
 
+            case NotifyUserGroup.ADMIN:
             case NotifyUserGroup.SLACK_ADMIN: {
                 // see if we already initialized this
                 if(RecordKeeper.notifyGroupConfig.slackAdmin && RecordKeeper.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
@@ -381,6 +397,7 @@ export class RecordKeeper {
                     return RecordKeeper.defaultSlackID;
             }
 
+            case NotifyUserGroup.USER:
             case NotifyUserGroup.SLACK_USER: {
                 const { idUser, userSlack } = RecordKeeper.getContext();
 
@@ -400,10 +417,8 @@ export class RecordKeeper {
         
         // figure out who we send to
         const sendTo = await RecordKeeper.getSlackIDsFromGroup(group);
-        if(!sendTo) {
-            RecordKeeper.logError(LogSection.eSYS,'sending slack failed','no one to send to',{ type: NotifyType[type], group, channel: (channel) ? SlackChannel.getString(channel as string) : undefined },'RecordKeeper.sendSlack');
-            return { success: false, message: 'cannot send slack message. no one to send to' };
-        }
+        if(!sendTo)
+            return { success: false, message: 'cannot send slack message. no one to send to', data: { type: NotifyType[type], group, channel: (channel) ? SlackChannel.getString(channel as string) : undefined }};
 
         // build our package
         const params: NotifyPackage = {
@@ -418,11 +433,11 @@ export class RecordKeeper {
 
         // send our message out.
         // we await the result so we can catch the failure.
-        RecordKeeper.logDebug(LogSection.eSYS,'sending slack attempt',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+        // RecordKeeper.logDebug(LogSection.eSYS,'sending slack attempt',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
         const slackResult = await NOTIFY.sendSlackMessage(params,channel);
         if(slackResult.success===false)
-            RecordKeeper.logError(LogSection.eSYS,'sending slack failed',slackResult.message,{ error: slackResult.data.error, sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
-        RecordKeeper.logInfo(LogSection.eSYS,'sending slack success',undefined,{ sendTo: params.sendTo },'RecordKeeper.sendSlack',false);
+            RecordKeeper.logError(LogSection.eSYS,'sending slack failed',slackResult.message,{ error: slackResult.data.error, sendTo: params.sendTo, subject },'RecordKeeper.sendSlack',false);
+        RecordKeeper.logInfo(LogSection.eSYS,'sending slack success',undefined,{ sendTo: params.sendTo, subject },'RecordKeeper.sendSlack',false);
 
         // return the results
         return slackResult;
@@ -553,6 +568,28 @@ export class RecordKeeper {
             if(!result.success)
                 RecordKeeper.logError(LogSection.eSYS,'check status failed',result.message,result.data,'RecordKeeper');
         }, intervalMs);
+    }
+    static isGroupValid(target: 'email'|'slack', group: NotifyUserGroup): boolean {
+
+        switch(group) {
+            case NotifyUserGroup.ADMIN:
+            case NotifyUserGroup.ALL:
+            case NotifyUserGroup.USER:
+                return true;
+
+            case NotifyUserGroup.EMAIL_ADMIN:
+            case NotifyUserGroup.EMAIL_ALL:
+            case NotifyUserGroup.EMAIL_USER:
+                return (target==='email');
+
+            case NotifyUserGroup.SLACK_ADMIN:
+            case NotifyUserGroup.SLACK_ALL:
+            case NotifyUserGroup.SLACK_USER:
+                return (target==='slack');
+
+            default:
+                return false;
+        }
     }
     //#endregion
 }
