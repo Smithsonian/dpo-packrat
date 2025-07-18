@@ -208,13 +208,13 @@ export class RecordKeeper {
     //#region NOTIFY
     static async sendMessage(type: NotifyType, group: NotifyUserGroup, subject: string, body: string, startDate?: Date, endDate?: Date, link?: { url: string, label: string }): Promise<IOResults> {
         // sends a message to both email and slack
-        
+
         // send our message to email
         let emailResult;
         if(RecordKeeper.isGroupValid('email',group))
             emailResult = await RecordKeeper.sendEmail(type,group,subject,body,startDate,endDate,link);
         else
-            emailResult = { success: false, message: 'invalid email group', data: { group: NotifyUserGroup[group] }};            
+            emailResult = { success: false, message: 'invalid email group', data: { group: NotifyUserGroup[group] } };
         if(!emailResult.success)
             RecordKeeper.logWarning(LogSection.eSYS,'failed to send email',emailResult.message,emailResult.data,'RecordKeeper.sendMessage');
 
@@ -235,7 +235,7 @@ export class RecordKeeper {
             // send our message to slack
             slackResult = await RecordKeeper.sendSlack(type,group,subject,body,slackChannel,startDate,endDate,link);
         } else
-            slackResult = { success: false, message: 'invalid slack group', data: { group: NotifyUserGroup[group] }};
+            slackResult = { success: false, message: 'invalid slack group', data: { group: NotifyUserGroup[group] } };
         if(!slackResult.success)
             RecordKeeper.logWarning(LogSection.eSYS,'failed to send slack message',slackResult.message,slackResult.data,'ReceordKeeper.sendMessage');
 
@@ -390,7 +390,7 @@ export class RecordKeeper {
                 if(RecordKeeper.notifyGroupConfig.slackAdmin && RecordKeeper.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
                     return RecordKeeper.notifyGroupConfig.slackAdmin;
 
-                 // see if we already initialized this
+                // see if we already initialized this
                 if(RecordKeeper.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
                     return RecordKeeper.notifyGroupConfig.slackAdmin;
                 else
@@ -414,11 +414,11 @@ export class RecordKeeper {
         return undefined;
     }
     static async sendSlack(type: NotifyType, group: NotifyUserGroup, subject: string, body: string, channel?: SlackChannel, startDate?: Date, endDate?: Date, link?: { url: string, label: string }): Promise<IOResults> {
-        
+
         // figure out who we send to
         const sendTo = await RecordKeeper.getSlackIDsFromGroup(group);
         if(!sendTo)
-            return { success: false, message: 'cannot send slack message. no one to send to', data: { type: NotifyType[type], group, channel: (channel) ? SlackChannel.getString(channel as string) : undefined }};
+            return { success: false, message: 'cannot send slack message. no one to send to', data: { type: NotifyType[type], group, channel: (channel) ? SlackChannel.getString(channel as string) : undefined } };
 
         // build our package
         const params: NotifyPackage = {

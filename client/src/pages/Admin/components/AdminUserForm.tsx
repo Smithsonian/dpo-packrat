@@ -285,7 +285,7 @@ function AdminUserForm(): React.ReactElement {
                         {validEmailInput === false && <FormHelperText style={{ backgroundColor: '#EFF2FC', color: '#f44336' }}>Required</FormHelperText>}
                     </FormControl>
                 </Box>
-                 <Box className={classes.row}>
+                <Box className={classes.row}>
                     <InputLabel htmlFor='userSlack' className={classes.formLabel}>Slack ID</InputLabel>
                     <FormControl>
                         <DebounceInput

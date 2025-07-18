@@ -60,9 +60,9 @@ export class NotifySlack {
     public static configure(env: ENVIRONMENT_TYPE, apiKey: string, channels: string[], targetRate?: number, burstRate?: number, burstThreshold?: number): SlackResult {
         // assign our channels
         if(channels.length !=3)
-            return { success: false, message: 'Slack notifier configuration failed', data: { error: 'invalid channels. set your environment with 3 channel IDs separated buy comma for: dev, ops, and admin.', channels }};
+            return { success: false, message: 'Slack notifier configuration failed', data: { error: 'invalid channels. set your environment with 3 channel IDs separated buy comma for: dev, ops, and admin.', channels } };
         SlackChannel.PACKRAT_OPS = channels[0];
-        SlackChannel.PACKRAT_DEV = channels[1];        
+        SlackChannel.PACKRAT_DEV = channels[1];
         SlackChannel.PACKRAT_SYSTEM = channels[2];
         NotifySlack.defaultChannel = (env && env===ENVIRONMENT_TYPE.PRODUCTION) ? SlackChannel.PACKRAT_OPS: SlackChannel.PACKRAT_DEV;
 
@@ -359,10 +359,10 @@ export class NotifySlack {
                 icon_url: entry.iconUrl,
                 username: `${getTypeString(entry.type).replace(' ',': ')}${UTIL.getRandomWhitespace()+'.'}`, //`Packrat: ${getMessageCategoryByType(entry.type)}`+UTIL.getRandomWhitespace()+'.', // need random whitespace so icon always shows
                 channel: entry.channel,
-                text: entry.subject,
+                text: entry.subject,    // Reply notification message
                 blocks: entry.blocks,
             };
-            
+
             // send the main message and wait for it to return
             const mainResponse: AxiosResponse = await axios.post('https://slack.com/api/chat.postMessage', slackBody, slackHeaders);
             if(mainResponse.data.ok===false) {
@@ -371,7 +371,6 @@ export class NotifySlack {
 
             // grab our timestamp to use it for a reply response w/ details and update body
             slackBody.thread_ts = mainResponse.data.ts;
-            slackBody.text = slackBody.text;        // Reply notification message
             slackBody.blocks = entry.details;
             slackBody.username = slackBody.text;    // Reply title/header
 

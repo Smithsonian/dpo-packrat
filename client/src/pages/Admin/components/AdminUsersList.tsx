@@ -40,7 +40,7 @@ const useStyles = makeStyles({
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
-console.log(users);
+    console.log(users);
 
     const dataTableOptions: DataTableOptions = {
         filter: false,
