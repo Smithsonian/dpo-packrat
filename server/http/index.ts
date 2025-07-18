@@ -114,6 +114,10 @@ export class HttpServer {
         RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
         RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyResult.data,'HttpServer');
 
+        // set our slack ID groups, pulling from the database
+        RK.setSlackIDsForGroup(RK.NotifyGroup.SLACK_ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
+        RK.logInfo(RK.LogSection.eSYS,'system started: Slack Notifications',undefined,notifyResult.data,'HttpServer');
+
         // return our response
         RK.logInfo(RK.LogSection.eSYS,'Packrat server running...',undefined,{ environment: Config.environment.type, port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
         return res;
@@ -236,7 +240,7 @@ export class HttpServer {
             if(user) {
                 const doNotify: boolean = user.Active && (user.WorkflowNotificationTime!=null);
                 if(user && user.EmailAddress.length>0)
-                    LS.setUserNotify(user.EmailAddress,doNotify);
+                    LS.setUserNotify(user.EmailAddress,doNotify,user.SlackID);
             } else {
                 RK.logError(RK.LogSection.eSYS,'creating new LocalStore failed','cannot get user from ID',{ idUser: id },'HttpServer');
             }

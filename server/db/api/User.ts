@@ -209,4 +209,22 @@ export class User extends DBObject<UserBase> implements UserBase {
     }
 
     // TODO: fetchSlackByIDs()
+    static async fetchSlackByIDs(userIDs: number[] = [], eStatus: eUserStatus = eUserStatus.eActive): Promise<string[] | null> {
+
+        let users: User[] | null = [];
+
+        // if no users provided then we grab all of them
+        if(!userIDs || userIDs.length==0)
+            users = await User.fetchUserList('',eStatus);
+        else
+            users = await User.fetchByIDs(userIDs);
+
+        // make sure we have something to return
+        if(!users || users.length===0)
+            return null;
+
+        // build array of slack IDs addresses but only for those active
+        const slackIDs: string[] = users.filter(u => u.Active && u.SlackID.length>0).map(u => u.SlackID);
+        return slackIDs;
+    }
 }

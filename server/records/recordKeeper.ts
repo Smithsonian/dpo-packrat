@@ -22,8 +22,8 @@ export enum SubSystem {
 type GroupConfig = {
     emailAdmin:    string[],
     emailAll:      string[],
-    slackAdmin:    string[] | undefined,
-    slackAll:      string[] | undefined,
+    slackAdmin:    string[],
+    slackAll:      string[],
 };
 
 export class RecordKeeper {
@@ -36,11 +36,12 @@ export class RecordKeeper {
     static SlackChannel = SlackChannel;
 
     private static defaultEmail: string[] = ['packrat@si.edu'];
+    private static defaultSlackID: string[] = ['U04CBA4NZ6U']; // administrator: Eric Maslowski
     private static notifyGroupConfig: GroupConfig = {
         emailAdmin: [],
         emailAll: [],
-        slackAdmin: undefined,
-        slackAll: undefined,
+        slackAdmin: [],
+        slackAll: [],
     };
     private static systemConfig: { logger: boolean, notifyEmail: boolean, notifySlack: boolean } = { logger: false, notifyEmail: false, notifySlack: false };
 
@@ -95,7 +96,7 @@ export class RecordKeeper {
             }
             // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', emailResults.message, { environment, ...emailResults.data }, 'Recordkeeper');
 
-            //initialize our group emails to the default. expecting them to be set externally during system initialization
+            // initialize our group emails to the default. expecting them to be set externally during system initialization
             RecordKeeper.notifyGroupConfig.emailAdmin = RecordKeeper.defaultEmail;
             RecordKeeper.notifyGroupConfig.emailAll = RecordKeeper.defaultEmail;
 
@@ -119,10 +120,9 @@ export class RecordKeeper {
             }
             // RecordKeeper.logInfo(RecordKeeper.LogSection.eSYS, 'system config success', slackResults.message, { environment, ...slackResults.data }, 'Recordkeeper');
 
-            // get our slack addresses from the system. they are cached as they will be the same
-            // for all users and sessions.
-            RecordKeeper.notifyGroupConfig.slackAdmin = await RecordKeeper.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ADMIN);
-            RecordKeeper.notifyGroupConfig.slackAll = await RecordKeeper.getSlackIDsFromGroup(NotifyUserGroup.SLACK_ALL);
+            //initialize our group emails to the default. expecting them to be set externally during system initialization
+            RecordKeeper.notifyGroupConfig.slackAdmin = RecordKeeper.defaultSlackID;
+            RecordKeeper.notifyGroupConfig.slackAll = ['everyone'];
 
             RecordKeeper.systemConfig.notifySlack = true;
             return { success: true, message: 'Slack notifications configured', data: { targetRate, burstRate, burstThreshold } };
@@ -138,15 +138,15 @@ export class RecordKeeper {
 
         return { success: true, message: 'record keeper cleaned up' };
     }
-    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null } {
+    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null, userSlack: string | null } {
         // get our user and request ids from the local store
         // TEST: does it maintain store context since static and not async
         const LS: LocalStore | undefined = ASL?.getStore();
         if(!LS)
-            return { idUser: -1, idRequest: -1, userEmail: null };
+            return { idUser: -1, idRequest: -1, userEmail: null, userSlack: null };
 
         // if no user, return an error id. otherwise, return what we got
-        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail };
+        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail, userSlack: LS.userSlack };
     }
 
     //#region LOG
@@ -341,6 +341,22 @@ export class RecordKeeper {
     }
 
     // slack
+    static async setSlackIDsForGroup(group: NotifyUserGroup, slackIDs: string[]): Promise<IOResults> {
+
+        switch(group) {
+            case NotifyUserGroup.SLACK_ALL: {
+                // since slack requires the use of special tags like !everyone instead of including multiple IDs
+                // we force this to 'everyone' which is caught inside of NotifySlack to add the proper tags
+                RecordKeeper.notifyGroupConfig.slackAll = ['everyone'];
+            } break;
+
+            case NotifyUserGroup.EMAIL_ADMIN: {
+                RecordKeeper.notifyGroupConfig.slackAdmin = (slackIDs.length>0) ? [...slackIDs] : RecordKeeper.defaultSlackID;
+            } break;
+        }
+
+        return { success: true, message: `${slackIDs.length} slack IDs set for group: ${this.NotifyGroup[group]}` };
+    }
     private static async getSlackIDsFromGroup(group: NotifyUserGroup, forceUpdate: boolean = false): Promise<string[] | undefined> {
         switch(group) {
 
@@ -358,20 +374,37 @@ export class RecordKeeper {
                 if(RecordKeeper.notifyGroupConfig.slackAdmin && RecordKeeper.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
                     return RecordKeeper.notifyGroupConfig.slackAdmin;
 
-                // get ids from Config and then get their emails
-                return ['U04CBA4NZ6U'];  // test: eric maslowski
+                 // see if we already initialized this
+                if(RecordKeeper.notifyGroupConfig.slackAdmin.length>0 && forceUpdate===true)
+                    return RecordKeeper.notifyGroupConfig.slackAdmin;
+                else
+                    return RecordKeeper.defaultSlackID;
             }
 
             case NotifyUserGroup.SLACK_USER: {
-                // const { idUser } = RecordKeeper.getContext();
-                // TODO: from current user id
-                return ['undefined'];
+                const { idUser, userSlack } = RecordKeeper.getContext();
+
+                // if no notification settings or user, nothing so email not sent
+                if(!idUser || !userSlack) {
+                    RecordKeeper.logError(LogSection.eSYS,'get user failed','user or slackID does not exist', { idUser, userSlack },'RecordKeeper.getSlackIDsFromGroup');
+                    return undefined;
+                }
+
+                return [userSlack];
             }
         }
 
         return undefined;
     }
     static async sendSlack(type: NotifyType, group: NotifyUserGroup, subject: string, body: string, channel?: SlackChannel, startDate?: Date, endDate?: Date, link?: { url: string, label: string }): Promise<IOResults> {
+        
+        // figure out who we send to
+        const sendTo = await RecordKeeper.getSlackIDsFromGroup(group);
+        if(!sendTo) {
+            RecordKeeper.logError(LogSection.eSYS,'sending slack failed','no one to send to',{ type: NotifyType[type], group, channel: (channel) ? SlackChannel.getString(channel as string) : undefined },'RecordKeeper.sendSlack');
+            return { success: false, message: 'cannot send slack message. no one to send to' };
+        }
+
         // build our package
         const params: NotifyPackage = {
             type,
@@ -380,7 +413,7 @@ export class RecordKeeper {
             startDate: startDate ?? new Date(),
             endDate,
             detailsLink: link,
-            sendTo: await RecordKeeper.getSlackIDsFromGroup(group)
+            sendTo
         };
 
         // send our message out.

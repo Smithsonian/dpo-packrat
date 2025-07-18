@@ -31,6 +31,17 @@ export class SlackChannel {
     static PACKRAT_OPS:    string = ''; // packrat-ops: for user focused messages and system updates
     static PACKRAT_DEV:    string = ''; // packrat-dev: for testing and development messages
     static PACKRAT_SYSTEM: string = ''; // packrat-system: for admin only notices
+
+    static getString(channel: string): string {
+        if(SlackChannel.PACKRAT_OPS===channel)
+            return 'PACKRAT_OPS';
+        if(SlackChannel.PACKRAT_DEV===channel)
+            return 'PACKRAT_DEV';
+        if(SlackChannel.PACKRAT_SYSTEM===channel)
+            return 'PACKRAT_SYSTEM';
+
+        return `unknown: ${channel}`;
+    }
 }
 //#endregion
 
