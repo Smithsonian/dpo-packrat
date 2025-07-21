@@ -775,6 +775,7 @@ model User {
   DateDisabled                    DateTime?                         @mariasql.DateTime(0)
   WorkflowNotificationTime        DateTime?                         @mariasql.Time(0)
   EmailSettings                   Int?
+  SlackID                         String                            @default("") @mariasql.LongText
   AccessPolicy                    AccessPolicy[]
   AssetVersion                    AssetVersion[]
   Audit                           Audit[]

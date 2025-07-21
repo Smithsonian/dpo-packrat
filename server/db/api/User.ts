@@ -21,6 +21,7 @@ export class User extends DBObject<UserBase> implements UserBase {
     DateDisabled!: Date | null;
     WorkflowNotificationTime!: Date | null; // null = None | Date exists means a property other than none
     EmailSettings!: number | null;          // if above is !Null then 0 = Daily & 1 = Immediate
+    SlackID!: string;
 
     private ActiveOrig!: boolean;
 
@@ -41,7 +42,8 @@ export class User extends DBObject<UserBase> implements UserBase {
             DateActivated: userBase.DateActivated,
             DateDisabled: userBase.DateDisabled,
             WorkflowNotificationTime: userBase.WorkflowNotificationTime,
-            EmailSettings: userBase.EmailSettings
+            EmailSettings: userBase.EmailSettings,
+            SlackID: userBase.SlackID
         });
     }
 
@@ -52,14 +54,14 @@ export class User extends DBObject<UserBase> implements UserBase {
     protected async createWorker(): Promise<boolean> {
         try {
             let { DateActivated, DateDisabled } = this;
-            const { Name, EmailAddress, SecurityID, Active, WorkflowNotificationTime, EmailSettings } = this;
+            const { Name, EmailAddress, SecurityID, Active, WorkflowNotificationTime, EmailSettings, SlackID } = this;
             DateActivated = new Date();
             DateDisabled = (!Active) ? DateActivated : null;
 
             ({
                 idUser: this.idUser, Name: this.Name, EmailAddress: this.EmailAddress, SecurityID: this.SecurityID,
                 Active: this.Active, DateActivated: this.DateActivated, DateDisabled: this.DateDisabled,
-                WorkflowNotificationTime: this.WorkflowNotificationTime, EmailSettings: this.EmailSettings
+                WorkflowNotificationTime: this.WorkflowNotificationTime, EmailSettings: this.EmailSettings, SlackID: this.SlackID
             } =
                 await DBConnection.prisma.user.create({
                     data: {
@@ -70,7 +72,8 @@ export class User extends DBObject<UserBase> implements UserBase {
                         DateActivated,
                         DateDisabled,
                         WorkflowNotificationTime,
-                        EmailSettings
+                        EmailSettings,
+                        SlackID
                     },
                 }));
             return true;
@@ -83,7 +86,7 @@ export class User extends DBObject<UserBase> implements UserBase {
     protected async updateWorker(): Promise<boolean> {
         try {
             let { DateActivated, DateDisabled } = this;
-            const { idUser, Name, EmailAddress, SecurityID, Active, WorkflowNotificationTime, EmailSettings, ActiveOrig } = this;
+            const { idUser, Name, EmailAddress, SecurityID, Active, WorkflowNotificationTime, EmailSettings, ActiveOrig, SlackID } = this;
 
             // handle disabling and activating by detecting a change in the Active state:
             if (Active != ActiveOrig) {
@@ -105,7 +108,8 @@ export class User extends DBObject<UserBase> implements UserBase {
                     DateActivated,
                     DateDisabled,
                     WorkflowNotificationTime,
-                    EmailSettings
+                    EmailSettings,
+                    SlackID
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
@@ -204,5 +208,23 @@ export class User extends DBObject<UserBase> implements UserBase {
         return emails;
     }
 
+    // TODO: fetchSlackByIDs()
+    static async fetchSlackByIDs(userIDs: number[] = [], eStatus: eUserStatus = eUserStatus.eActive): Promise<string[] | null> {
 
+        let users: User[] | null = [];
+
+        // if no users provided then we grab all of them
+        if(!userIDs || userIDs.length==0)
+            users = await User.fetchUserList('',eStatus);
+        else
+            users = await User.fetchByIDs(userIDs);
+
+        // make sure we have something to return
+        if(!users || users.length===0)
+            return null;
+
+        // build array of slack IDs addresses but only for those active
+        const slackIDs: string[] = users.filter(u => u.Active && u.SlackID.length>0).map(u => u.SlackID);
+        return slackIDs;
+    }
 }

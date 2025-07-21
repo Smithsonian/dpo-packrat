@@ -475,10 +475,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 Config.http.clientUrl +'/workflow';
 
             // send email out
-            await RK.sendEmail(
+            await RK.sendMessage(
                 RK.NotifyType.JOB_PASSED,
-                RK.NotifyGroup.EMAIL_USER,
-                'Download Generation Finished',
+                RK.NotifyGroup.USER,
+                `Download Generation Finished: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name}`,
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,
@@ -515,10 +515,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             const url: string = Config.http.clientUrl +'/workflow';
 
             // send email out
-            await RK.sendEmail(
+            await RK.sendMessage(
                 RK.NotifyType.JOB_FAILED,
-                RK.NotifyGroup.EMAIL_USER,
-                'Download Generation Failed',
+                RK.NotifyGroup.USER,
+                `Download Generation Failed: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name}`,
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,

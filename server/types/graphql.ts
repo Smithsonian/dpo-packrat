@@ -432,6 +432,7 @@ export type CreateUserInput = {
   EmailSettings?: InputMaybe<Scalars['Int']>;
   Name: Scalars['String'];
   SecurityID?: InputMaybe<Scalars['String']>;
+  SlackID: Scalars['String'];
   WorkflowNotificationTime?: InputMaybe<Scalars['DateTime']>;
 };
 
@@ -2539,6 +2540,7 @@ export type UpdateUserInput = {
   EmailAddress: Scalars['String'];
   EmailSettings?: InputMaybe<Scalars['Int']>;
   Name: Scalars['String'];
+  SlackID: Scalars['String'];
   WorkflowNotificationTime: Scalars['DateTime'];
   idUser: Scalars['Int'];
 };
@@ -2587,6 +2589,7 @@ export type User = {
   Metadata?: Maybe<Array<Maybe<Metadata>>>;
   Name: Scalars['String'];
   SecurityID: Scalars['String'];
+  SlackID: Scalars['String'];
   UserPersonalizationSystemObject?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
   UserPersonalizationUrl?: Maybe<Array<Maybe<UserPersonalizationUrl>>>;
   Workflow?: Maybe<Array<Maybe<Workflow>>>;

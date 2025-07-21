@@ -95,7 +95,7 @@ export class ObjectGraphTestSetup {
         if (!this.v1)
             return;
         /* #region Object Creation */
-        this.user1 = await UTIL.createUserTest({ Name: 'OA Test user1', EmailAddress: 'oatest@si.edu', SecurityID: 'OA Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
+        this.user1 = await UTIL.createUserTest({ Name: 'OA Test user1', EmailAddress: 'oatest@si.edu', SecurityID: 'OA Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0, SlackID: '' });
 
         this.unit1 = await UTIL.createUnitTest({ Name: 'OA Test unit1', Abbreviation: 'DPO', ARKPrefix: 'http://dpo/', idUnit: 0 });
         this.unit2 = await UTIL.createUnitTest({ Name: 'OA Test unit2', Abbreviation: 'NMNH', ARKPrefix: 'http://nmnh/', idUnit: 0 });

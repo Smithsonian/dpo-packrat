@@ -435,6 +435,7 @@ export type CreateUserInput = {
   EmailSettings?: InputMaybe<Scalars['Int']>;
   Name: Scalars['String'];
   SecurityID?: InputMaybe<Scalars['String']>;
+  SlackID: Scalars['String'];
   WorkflowNotificationTime?: InputMaybe<Scalars['DateTime']>;
 };
 
@@ -2542,6 +2543,7 @@ export type UpdateUserInput = {
   EmailAddress: Scalars['String'];
   EmailSettings?: InputMaybe<Scalars['Int']>;
   Name: Scalars['String'];
+  SlackID: Scalars['String'];
   WorkflowNotificationTime: Scalars['DateTime'];
   idUser: Scalars['Int'];
 };
@@ -2590,6 +2592,7 @@ export type User = {
   Metadata?: Maybe<Array<Maybe<Metadata>>>;
   Name: Scalars['String'];
   SecurityID: Scalars['String'];
+  SlackID: Scalars['String'];
   UserPersonalizationSystemObject?: Maybe<Array<Maybe<UserPersonalizationSystemObject>>>;
   UserPersonalizationUrl?: Maybe<Array<Maybe<UserPersonalizationUrl>>>;
   Workflow?: Maybe<Array<Maybe<Workflow>>>;
@@ -2890,14 +2893,14 @@ export type CreateUserMutationVariables = Exact<{
 }>;
 
 
-export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'CreateUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, WorkflowNotificationTime?: any | null, EmailSettings?: number | null } | null } };
+export type CreateUserMutation = { __typename?: 'Mutation', createUser: { __typename?: 'CreateUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, WorkflowNotificationTime?: any | null, EmailSettings?: number | null, SlackID: string } | null } };
 
 export type UpdateUserMutationVariables = Exact<{
   input: UpdateUserInput;
 }>;
 
 
-export type UpdateUserMutation = { __typename?: 'Mutation', updateUser: { __typename?: 'CreateUserResult', User?: { __typename?: 'User', idUser: number, EmailAddress: string, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailSettings?: number | null, WorkflowNotificationTime?: any | null } | null } };
+export type UpdateUserMutation = { __typename?: 'Mutation', updateUser: { __typename?: 'CreateUserResult', User?: { __typename?: 'User', idUser: number, EmailAddress: string, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailSettings?: number | null, WorkflowNotificationTime?: any | null, SlackID: string } | null } };
 
 export type CreateVocabularyMutationVariables = Exact<{
   input: CreateVocabularyInput;
@@ -3192,19 +3195,19 @@ export type GetAllUsersQueryVariables = Exact<{
 }>;
 
 
-export type GetAllUsersQuery = { __typename?: 'Query', getAllUsers: { __typename?: 'GetAllUsersResult', User: Array<{ __typename?: 'User', idUser: number, Active: boolean, DateActivated: any, EmailAddress: string, Name: string, SecurityID: string, DateDisabled?: any | null, EmailSettings?: number | null, WorkflowNotificationTime?: any | null }> } };
+export type GetAllUsersQuery = { __typename?: 'Query', getAllUsers: { __typename?: 'GetAllUsersResult', User: Array<{ __typename?: 'User', idUser: number, Active: boolean, DateActivated: any, EmailAddress: string, Name: string, SecurityID: string, DateDisabled?: any | null, EmailSettings?: number | null, WorkflowNotificationTime?: any | null, SlackID: string }> } };
 
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser: { __typename?: 'GetCurrentUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailAddress: string, EmailSettings?: number | null, SecurityID: string, WorkflowNotificationTime?: any | null } | null } };
+export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser: { __typename?: 'GetCurrentUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailAddress: string, EmailSettings?: number | null, SecurityID: string, WorkflowNotificationTime?: any | null, SlackID: string } | null } };
 
 export type GetUserQueryVariables = Exact<{
   input: GetUserInput;
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'GetUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailSettings?: number | null, EmailAddress: string, WorkflowNotificationTime?: any | null } | null } };
+export type GetUserQuery = { __typename?: 'Query', getUser: { __typename?: 'GetUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailSettings?: number | null, EmailAddress: string, WorkflowNotificationTime?: any | null, SlackID: string } | null } };
 
 export type GetVocabularyQueryVariables = Exact<{
   input: GetVocabularyInput;
@@ -4056,6 +4059,7 @@ export const CreateUserDocument = gql`
       DateActivated
       WorkflowNotificationTime
       EmailSettings
+      SlackID
     }
   }
 }
@@ -4098,6 +4102,7 @@ export const UpdateUserDocument = gql`
       DateDisabled
       EmailSettings
       WorkflowNotificationTime
+      SlackID
     }
   }
 }
@@ -6429,6 +6434,7 @@ export const GetAllUsersDocument = gql`
       DateDisabled
       EmailSettings
       WorkflowNotificationTime
+      SlackID
     }
   }
 }
@@ -6474,6 +6480,7 @@ export const GetCurrentUserDocument = gql`
       EmailSettings
       SecurityID
       WorkflowNotificationTime
+      SlackID
     }
   }
 }
@@ -6517,6 +6524,7 @@ export const GetUserDocument = gql`
       EmailSettings
       EmailAddress
       WorkflowNotificationTime
+      SlackID
     }
   }
 }

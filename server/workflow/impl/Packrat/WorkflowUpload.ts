@@ -124,9 +124,9 @@ export class WorkflowUpload implements WF.IWorkflow {
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/ingestion/uploads';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_PASSED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     'Upload and Inspection Finished',
                     detailsMessage,
                     startDate,
@@ -137,9 +137,9 @@ export class WorkflowUpload implements WF.IWorkflow {
 
             case COMMON.eWorkflowJobRunStatus.eError: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_FAILED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     'Upload and Inspection Failed',
                     detailsMessage,
                     startDate,
