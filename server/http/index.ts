@@ -110,8 +110,8 @@ export class HttpServer {
             RK.logError(RK.LogSection.eSYS,'system failed: Email Notifications',notifyEmailResult.message,notifyEmailResult.data,'HttpServer');
 
         // NOTIFY: set our email groups, pulling from the database
-        RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ALL, await User.fetchEmailsByIDs() ?? []);
-        RK.setEmailsForGroup(RK.NotifyGroup.EMAIL_ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
+        RK.setEmailsForGroup(RK.NotifyGroup.ALL, await User.fetchEmailsByIDs() ?? []);
+        RK.setEmailsForGroup(RK.NotifyGroup.ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
         RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyEmailResult.data,'HttpServer');
 
         // NOTIFY: initialize Slack
@@ -120,7 +120,7 @@ export class HttpServer {
             RK.logError(RK.LogSection.eSYS,'system failed: Slack Notifications',notifySlackResult.message,notifySlackResult.data,'HttpServer');
 
         // NOTIFY: set our slack ID groups, pulling from the database
-        RK.setSlackIDsForGroup(RK.NotifyGroup.SLACK_ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
+        RK.setSlackIDsForGroup(RK.NotifyGroup.ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
         RK.logInfo(RK.LogSection.eSYS,'system started: Slack Notifications',undefined,notifySlackResult.data,'HttpServer');
 
         // return our response

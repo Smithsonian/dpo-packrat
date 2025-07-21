@@ -27,7 +27,7 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
 
     // individual message
     const result = await RK.sendSlack(RK.NotifyType.JOB_FAILED,
-        RK.NotifyGroup.SLACK_USER,
+        RK.NotifyGroup.USER,
         'Cook Inspection Failed for: Whale Bowl (Test User)',
         'Some description of the error message',
         RK.SlackChannel.PACKRAT_DEV,

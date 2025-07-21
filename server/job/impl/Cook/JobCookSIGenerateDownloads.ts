@@ -478,7 +478,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             await RK.sendMessage(
                 RK.NotifyType.JOB_PASSED,
                 RK.NotifyGroup.USER,
-                'Download Generation Finished',
+                `Download Generation Finished: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name}`,
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,
@@ -518,7 +518,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             await RK.sendMessage(
                 RK.NotifyType.JOB_FAILED,
                 RK.NotifyGroup.USER,
-                'Download Generation Failed',
+                `Download Generation Failed: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name}`,
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,

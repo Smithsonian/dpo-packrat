@@ -559,7 +559,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             await RK.sendMessage(
                 RK.NotifyType.JOB_PASSED,
                 RK.NotifyGroup.USER,
-                'Scene Generation Finished',
+                `Scene Generation Finished: : ${this.parameterHelper?.OG?.subject?.[0]?.Name}`,
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,
@@ -599,7 +599,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             await RK.sendMessage(
                 RK.NotifyType.JOB_FAILED,
                 RK.NotifyGroup.USER,
-                'Scene Generation Failed',
+                `Scene Generation Failed: ${this.parameterHelper?.OG?.subject?.[0]?.Name}`,
                 detailsMessage,
                 this._dbJobRun.DateStart ?? new Date(),
                 this._dbJobRun.DateEnd ?? undefined,

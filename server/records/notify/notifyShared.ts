@@ -11,12 +11,12 @@ export enum NotifyUserGroup {
     ADMIN           = 'admin',
     ALL             = 'all',
     USER            = 'user',
-    SLACK_ADMIN     = 'slack-admin',
-    SLACK_ALL       = 'slack-all',
-    SLACK_USER      = 'slack-user',
-    EMAIL_ADMIN     = 'email-admin',
-    EMAIL_USER      = 'email-user',
-    EMAIL_ALL       = 'email-all',
+    // SLACK_ADMIN     = 'slack-admin',
+    // SLACK_ALL       = 'slack-all',
+    // SLACK_USER      = 'slack-user',
+    // EMAIL_ADMIN     = 'email-admin',
+    // EMAIL_USER      = 'email-user',
+    // EMAIL_ALL       = 'email-all',
 }
 export interface NotifyResult {
     success: boolean,
