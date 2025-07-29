@@ -15,7 +15,6 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
     // test email notifications
     // const result = await RK.emailTest(5);
 
-
     //#region SLACK
     // clear out channels (may require multiple runs)
     // RK.clearSlackChannel(RK.SlackChannel.PACKRAT_OPS,true);
@@ -34,9 +33,8 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
         new Date(),
     );
     //#endregion
-
     // const result = 'done';
-
+    
     // return our results
     res.status(200).send(H.Helpers.JSONStringify(result));
 };
