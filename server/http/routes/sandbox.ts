@@ -34,7 +34,7 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
     );
     //#endregion
     // const result = 'done';
-    
+
     // return our results
     res.status(200).send(H.Helpers.JSONStringify(result));
 };
