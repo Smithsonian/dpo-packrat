@@ -45,7 +45,8 @@ class TestSuiteUtils {
         return {
             Name: 'Test User',
             EmailAddress: 'test@si.edu',
-            SecurityID: 'SECURITY_ID'
+            SecurityID: 'SECURITY_ID',
+            SlackID: ''
         };
     };
 

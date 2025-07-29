@@ -386,6 +386,7 @@ input CreateUserInput {
   EmailSettings: Int
   Name: String!
   SecurityID: String
+  SlackID: String!
   WorkflowNotificationTime: DateTime
 }
 
@@ -2025,6 +2026,7 @@ input UpdateUserInput {
   EmailAddress: String!
   EmailSettings: Int
   Name: String!
+  SlackID: String!
   WorkflowNotificationTime: DateTime!
   idUser: Int!
 }
@@ -2071,6 +2073,7 @@ type User {
   Metadata: [Metadata]
   Name: String!
   SecurityID: String!
+  SlackID: String!
   UserPersonalizationSystemObject: [UserPersonalizationSystemObject]
   UserPersonalizationUrl: [UserPersonalizationUrl]
   Workflow: [Workflow]

@@ -709,9 +709,9 @@ export abstract class JobCook<T> extends JobPackrat {
         }
 
         if (sendNotification) {
-            await RK.sendEmail(
+            await RK.sendMessage(
                 RK.NotifyType.JOB_PASSED,
-                RK.NotifyGroup.EMAIL_USER,
+                RK.NotifyGroup.USER,
                 'Cook Connection Failure',
                 error,
                 new Date(),

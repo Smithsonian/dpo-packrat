@@ -584,6 +584,7 @@ CREATE TABLE IF NOT EXISTS `User` (
   `DateDisabled` datetime DEFAULT NULL,
   `WorkflowNotificationTime` time DEFAULT NULL,
   `EmailSettings` int(11) DEFAULT NULL,
+  `SlackID` varchar(255) NOT NULL,
   PRIMARY KEY (`idUser`),
   KEY `user_EmailAddress` (`EmailAddress`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;

@@ -84,7 +84,13 @@ export class WorkflowJob implements WF.IWorkflow {
             parameters: this.workflowJobParameters.cookJobParameters,
             frequency: null               // null means create but don't run
         };
-        RK.logDebug(RK.LogSection.eWF,'workflow job start','job creation parameters', { ...this.getWorkflowContext(), ...jobCreationParameters },'Workflow.Job');
+        RK.logDebug(RK.LogSection.eWF,'workflow job start','job creation parameters', {
+            ...this.getWorkflowContext(),
+            jobType: jobCreationParameters.eJobType,
+            frequency: jobCreationParameters.frequency,
+            idAssetVersions: jobCreationParameters.idAssetVersions,
+            idJob: jobCreationParameters.idJob
+        },'Workflow.Job');
 
         // create our job, but don't start it so we can hook it up to the WorkflowStep first
         // this is done to ensure the Job can reference the associated WorkflowStep.
@@ -276,9 +282,9 @@ export class WorkflowJob implements WF.IWorkflow {
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_PASSED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     `${workflowType} Finished`,
                     detailsMessage,
                     startDate,
@@ -289,9 +295,9 @@ export class WorkflowJob implements WF.IWorkflow {
 
             case COMMON.eWorkflowJobRunStatus.eError: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_FAILED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     `${workflowType} Failed`,
                     detailsMessage,
                     startDate,

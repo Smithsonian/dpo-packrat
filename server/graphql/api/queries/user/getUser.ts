@@ -12,6 +12,7 @@ const getUser = gql`
                 EmailSettings
                 EmailAddress
                 WorkflowNotificationTime
+                SlackID
             }
         }
     }

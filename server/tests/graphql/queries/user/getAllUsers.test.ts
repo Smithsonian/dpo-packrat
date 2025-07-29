@@ -68,7 +68,8 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
                 DateDisabled: null,
                 WorkflowNotificationTime: new Date(),
                 EmailSettings: 0,
-                idUser: 0
+                idUser: 0,
+                SlackID: ''
             };
 
             const user = new DBAPI.User(userArgs);

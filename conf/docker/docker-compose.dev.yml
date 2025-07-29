@@ -79,6 +79,8 @@ services:
             - PACKRAT_LOG_ROOT=$PACKRAT_LOG_ROOT
             - PACKRAT_SOLR_HOST=$PACKRAT_SOLR_HOST
             - PACKRAT_SOLR_PORT=$PACKRAT_SOLR_PORT
+            - PACKRAT_SLACK_KEY=$PACKRAT_SLACK_KEY
+            - PACKRAT_SLACK_CHANNELS=$PACKRAT_SLACK_CHANNELS
             - SHARP_IGNORE_GLOBAL_LIBVIPS=1
             - npm_config_arch=x64
             - npm_config_platform=linux

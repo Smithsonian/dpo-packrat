@@ -4,7 +4,7 @@ import * as DBAPI from '../../../../../db';
 
 export default async function createUser(_: Parent, args: MutationCreateUserArgs): Promise<CreateUserResult> {
     const { input } = args;
-    const { Name, EmailAddress, EmailSettings } = input;
+    const { Name, EmailAddress, EmailSettings, SlackID } = input;
 
     const userArgs = {
         idUser: 0,
@@ -15,7 +15,8 @@ export default async function createUser(_: Parent, args: MutationCreateUserArgs
         DateActivated: new Date(),
         DateDisabled: null,
         WorkflowNotificationTime: null,
-        EmailSettings: EmailSettings ?? null
+        EmailSettings: EmailSettings ?? null,
+        SlackID: SlackID ?? '',
     };
 
     const User = new DBAPI.User(userArgs);

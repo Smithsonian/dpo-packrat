@@ -4,7 +4,7 @@ import * as DBAPI from '../../../../../db';
 
 export default async function updateUser(_: Parent, args: MutationUpdateUserArgs): Promise<CreateUserResult> {
     const { input } = args;
-    const { idUser, Name, EmailAddress, Active, EmailSettings, WorkflowNotificationTime } = input;
+    const { idUser, Name, EmailAddress, Active, EmailSettings, WorkflowNotificationTime, SlackID } = input;
 
 
     const User = await DBAPI.User.fetch(idUser);
@@ -19,6 +19,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
     User.Active = Active;
     User.EmailSettings = EmailSettings ?? null;
     User.WorkflowNotificationTime = WorkflowNotificationTime;
+    User.SlackID = SlackID;
 
     const success = await User.update();
     if (!success) {

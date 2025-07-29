@@ -13,6 +13,7 @@ const getCurrentUser = gql`
                 EmailSettings
                 SecurityID
                 WorkflowNotificationTime
+                SlackID
             }
         }
     }

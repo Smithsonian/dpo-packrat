@@ -13,6 +13,7 @@ const getAllUsers = gql`
                 DateDisabled
                 EmailSettings
                 WorkflowNotificationTime
+                SlackID
             }
         }
     }

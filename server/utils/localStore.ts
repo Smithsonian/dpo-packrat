@@ -8,6 +8,7 @@ export class LocalStore {
     idUser: number | null; // User.idUser
     userEmail: string | null;
     userNotify: boolean;
+    userSlack: string | null;
     private idWorkflow: number[];
     private idWorkflowStep?: number | undefined;
     private idWorkflowReport?: number | undefined;
@@ -26,10 +27,12 @@ export class LocalStore {
         this.idWorkflow = [];
         this.userEmail = null;
         this.userNotify = false;
+        this.userSlack = null;
     }
 
-    setUserNotify(email: string, doNotify: boolean = false): void {
+    setUserNotify(email: string, doNotify: boolean = false, slackID?: string): void {
         this.userEmail = email;
+        this.userSlack = slackID ?? null;
         this.userNotify = doNotify;
     }
 

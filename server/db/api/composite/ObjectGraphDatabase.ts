@@ -138,7 +138,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromUnits(): Promise<boolean> {
         // iterate across all Units; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const units: Unit[] | null = await Unit.fetchAllWithSubjects(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Units',undefined,{ units: units?.map(i=> { return { id: i.idUnit, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Units',undefined,{ count: units?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!units)
             return false;
@@ -155,7 +155,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromProjects(): Promise<boolean> {
         // iterate across all Projects; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const projects: Project[] | null = await Project.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Projects',undefined,{ projects: projects?.map(i=> { return { id: i.idProject, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Projects',undefined,{ count: projects?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!projects)
             return false;
@@ -172,7 +172,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromSubjects(): Promise<boolean> {
         // iterate across all Subjects; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const subjects: Subject[] | null = await Subject.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Subjects',undefined,{ subjects: subjects?.map(i=> { return { id: i.idSubject, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Subjects',undefined,{ count: subjects?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!subjects)
             return false;
@@ -189,7 +189,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromItems(): Promise<boolean> {
         // iterate across all Items; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const items: Item[] | null = await Item.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Items',undefined,{ items: items?.map(i=> { return { id: i.idItem, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Items',undefined,{ count: items?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!items)
             return false;
@@ -206,7 +206,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromCaptureDatas(): Promise<boolean> {
         // iterate across all CaptureDatas; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const CaptureDatas: CaptureData[] | null = await CaptureData.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from CaptureData',undefined,{ captureData: CaptureDatas?.map(i=> { return { id: i.idCaptureData, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from CaptureData',undefined,{ count: CaptureDatas?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!CaptureDatas)
             return false;
@@ -220,7 +220,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromModels(): Promise<boolean> {
         // iterate across all Models; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Models: Model[] | null = await Model.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Models',undefined,{ models: Models?.map(i=> { return { id: i.idModel, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Models',undefined,{ count: Models?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!Models)
             return false;
@@ -234,7 +234,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromScenes(): Promise<boolean> {
         // iterate across all Scenes; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Scenes: Scene[] | null = await Scene.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Scenes',undefined,{ scenes: Scenes?.map(i=> { return { id: i.idScene, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Scenes',undefined,{ count: Scenes?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!Scenes)
             return false;
@@ -248,7 +248,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromIntermediaryFiles(): Promise<boolean> {
         // iterate across all IntermediaryFiles; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const IntermediaryFiles: IntermediaryFile[] | null = await IntermediaryFile.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from IntermediaryFiles',undefined,{ intermediaryFiles: IntermediaryFiles?.map(i=> { return { id: i.idIntermediaryFile };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from IntermediaryFiles',undefined,{ count: IntermediaryFiles?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!IntermediaryFiles)
             return false;
@@ -262,7 +262,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromProjectDocumentations(): Promise<boolean> {
         // iterate across all ProjectDocumentations; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const ProjectDocumentations: ProjectDocumentation[] | null = await ProjectDocumentation.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Documentations',undefined,{ documentations: ProjectDocumentations?.map(i=> { return { id: i.idProjectDocumentation, name: i.Name };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Documentations',undefined,{ count: ProjectDocumentation?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!ProjectDocumentations)
             return false;
@@ -277,7 +277,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromAssets(): Promise<boolean> {
         // iterate across all Assets; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Assets: Asset[] | null = await Asset.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Assets',undefined,{ asets: Assets?.map(i=> { return { id: i.idAsset, name: i.FileName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Assets',undefined,{ count: Assets?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!Assets)
             return false;
@@ -291,7 +291,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromAssetVersions(): Promise<boolean> {
         // iterate across all AssetVersions; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const AssetVersions: AssetVersion[] | null = await AssetVersion.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from AssetVersions',undefined,{ assetVersions: AssetVersions?.map(i=> { return { id: i.idAssetVersion, name: i.FileName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from AssetVersions',undefined,{ count: AssetVersions?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!AssetVersions)
             return false;
@@ -305,7 +305,7 @@ export class ObjectGraphDatabase {
     private async computeGraphDataFromActors(): Promise<boolean> {
         // iterate across all Actors; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Actors: Actor[] | null = await Actor.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Actors',undefined,{ actors: Actors?.map(i=> { return { id: i.idActor, name: i.IndividualName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Actors',undefined,{ count: Actor?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!Actors)
             return false;
@@ -321,7 +321,7 @@ export class ObjectGraphDatabase {
 
         // iterate across all Stakeholders; for each, compute ObjectGraph; extract ObjectGraph data into a "database"
         const Stakeholders: Stakeholder[] | null = await Stakeholder.fetchAll(); /* istanbul ignore if */
-        RK.logDebug(RK.LogSection.eDB,'compute graph data from Stakeholders',undefined,{ stakeholders: Stakeholders?.map(i=> { return { id: i.idStakeholder, name: i.IndividualName };}) ?? null },'DB.Composite.ObjectGraph.Database');
+        RK.logDebug(RK.LogSection.eDB,'compute graph data from Stakeholders',undefined,{ count: Stakeholder?.length ?? -1 },'DB.Composite.ObjectGraph.Database');
 
         if (!Stakeholders)
             return false;

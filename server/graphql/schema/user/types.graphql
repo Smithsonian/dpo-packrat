@@ -18,6 +18,7 @@ type User {
     UserPersonalizationUrl: [UserPersonalizationUrl]
     Workflow: [Workflow]
     WorkflowStep: [WorkflowStep]
+    SlackID: String!
 }
 
 type UserPersonalizationSystemObject {

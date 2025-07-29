@@ -8,12 +8,15 @@ export enum NotifyType {
     SECURITY_NOTICE = 20,
 }
 export enum NotifyUserGroup {
-    SLACK_ADMIN     = 'slack-admin',
-    SLACK_ALL       = 'slack-all',
-    SLACK_USER      = 'slack-user',
-    EMAIL_ADMIN     = 'email-admin',
-    EMAIL_USER      = 'email-user',
-    EMAIL_ALL       = 'email-all',
+    ADMIN           = 'admin',
+    ALL             = 'all',
+    USER            = 'user',
+    // SLACK_ADMIN     = 'slack-admin',
+    // SLACK_ALL       = 'slack-all',
+    // SLACK_USER      = 'slack-user',
+    // EMAIL_ADMIN     = 'email-admin',
+    // EMAIL_USER      = 'email-user',
+    // EMAIL_ALL       = 'email-all',
 }
 export interface NotifyResult {
     success: boolean,
