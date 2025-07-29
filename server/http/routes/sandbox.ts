@@ -13,10 +13,27 @@ export const play = async (_req: Request, res: Response): Promise<void> => {
     // const result = await RK.logTest(numLogs);
 
     // test email notifications
-    const result = await RK.emailTest(5);
+    // const result = await RK.emailTest(5);
 
-    // test slack notifications
-    // const result = await RK.slackTest(1,true,RK.SlackChannel.PACKRAT_OPS);
+    //#region SLACK
+    // clear out channels (may require multiple runs)
+    // RK.clearSlackChannel(RK.SlackChannel.PACKRAT_OPS,true);
+    RK.clearSlackChannel(RK.SlackChannel.PACKRAT_DEV,true);
+    // RK.clearSlackChannel(RK.SlackChannel.PACKRAT_SYSTEM,true);
+
+    // test routine
+    // const result = await RK.slackTest(10,true,RK.SlackChannel.PACKRAT_DEV);
+
+    // individual message
+    const result = await RK.sendSlack(RK.NotifyType.JOB_FAILED,
+        RK.NotifyGroup.USER,
+        'Cook Inspection Failed for: Whale Bowl (Test User)',
+        'Some description of the error message',
+        RK.SlackChannel.PACKRAT_DEV,
+        new Date(),
+    );
+    //#endregion
+    // const result = 'done';
 
     // return our results
     res.status(200).send(H.Helpers.JSONStringify(result));

@@ -68,7 +68,7 @@ export class ObjectGraph {
     noCycles: boolean = true;
 
     pushCount: number = 0;
-    maxPushCount: number = 250000;
+    maxPushCount: number = 2500000; // cap for number of items pushed into graph (why?)
     depth: number = 32;
 
     systemObjectList: number[] = []; // array of idSystemObjects to be processed

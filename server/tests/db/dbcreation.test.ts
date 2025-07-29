@@ -327,7 +327,8 @@ describe('DB Creation Test Suite', () => {
             DateDisabled: null,
             WorkflowNotificationTime: UTIL.nowCleansed(),
             EmailSettings: 0,
-            idUser: 0
+            idUser: 0,
+            SlackID: ''
         });
         expect(userActive.DateDisabled).toBeFalsy();
 
@@ -340,7 +341,8 @@ describe('DB Creation Test Suite', () => {
             DateDisabled: null,
             WorkflowNotificationTime: UTIL.nowCleansed(),
             EmailSettings: 0,
-            idUser: 0
+            idUser: 0,
+            SlackID: ''
         });
         expect(userInactive.DateDisabled).toBeTruthy();
         expect(userInactive.DateDisabled).toEqual(userInactive.DateActivated);

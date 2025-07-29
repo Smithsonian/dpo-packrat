@@ -115,6 +115,7 @@ export type ConfigType = {
     },
     slack: {
         apiKey: string;
+        channels: string[];
     },
     storage: {
         type: STORAGE_TYPE;
@@ -213,6 +214,7 @@ export const Config: ConfigType = {
     },
     slack: {
         apiKey: process.env.PACKRAT_SLACK_KEY ? process.env.PACKRAT_SLACK_KEY: 'undefined',
+        channels: process.env.PACKRAT_SLACK_CHANNELS ? process.env.PACKRAT_SLACK_CHANNELS.split(',') : [],
     },
     storage: {
         type: STORAGE_TYPE.LOCAL,

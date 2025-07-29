@@ -40,6 +40,7 @@ const useStyles = makeStyles({
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
+    console.log(users);
 
     const dataTableOptions: DataTableOptions = {
         filter: false,
@@ -88,6 +89,13 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
         {
             name: 'EmailAddress',
             label: 'Email',
+            options: {
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
+            name: 'SlackID',
+            label: 'Slack ID',
             options: {
                 setCellHeaderProps: setCenterHeader
             }

@@ -80,7 +80,7 @@ export class ModelTestSetup {
     async initialize(testCase: string[]): Promise<boolean | null>;
     async initialize(testCase: string | string[] | undefined): Promise<boolean | null> {
         // let assigned: boolean = true;
-        this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0 });
+        this.userOwner = await UTIL.createUserTest({ Name: 'Model Test', EmailAddress: 'modeltest@si.edu', SecurityID: 'Model Test', Active: true, DateActivated: UTIL.nowCleansed(), DateDisabled: null, WorkflowNotificationTime: UTIL.nowCleansed(), EmailSettings: 0, idUser: 0, SlackID: '' });
         if (!this.userOwner) {
             RK.logInfo(RK.LogSection.eTEST,'initialize','failed to create user',{},'Tests.DB.Model.Setup');
             return false;

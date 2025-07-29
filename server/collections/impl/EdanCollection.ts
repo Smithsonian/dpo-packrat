@@ -220,7 +220,7 @@ export class EdanCollection implements COL.ICollection {
     async createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<COL.EdanRecord | null> {
         // const body: any = sceneFile ? { resource: path.replace(/\.zip|-zip$/, ''), document: sceneFile } : { resource: path.replace(/\.zip|-zip$/, '') };
         const body: any = sceneFile ? { resource: path, document: sceneFile } : { resource: path };
-        RK.logDebug(RK.LogSection.eCOLL,'create EDAN package',undefined,{ path, body },'Collection.EDAN');
+        RK.logDebug(RK.LogSection.eCOLL,'create EDAN package',undefined,{ path, response: EdanCollection.cleanEdanResponse(body) },'Collection.EDAN');
 
         const edanRecord: COL.EdanRecord | null = await this.upsertResource(body, 'createEdan3DPackage');
         if(!edanRecord)
@@ -258,7 +258,7 @@ export class EdanCollection implements COL.ICollection {
 
     /** c.f. http://dev.3d.api.si.edu/apidocs/#api-admin-upsertContent */
     private async upsertContent(body: any, caller: string): Promise<COL.EdanRecord | null> {
-        RK.logInfo(RK.LogSection.eCOLL,'upsert content',undefined,{ body },'Collection.EDAN');
+        RK.logInfo(RK.LogSection.eCOLL,'upsert content',undefined,{ response: EdanCollection.cleanEdanResponse(body) },'Collection.EDAN');
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertContent', '', JSON.stringify(body), 'application/json');
 
         if (!reqResult.success) {
@@ -278,17 +278,17 @@ export class EdanCollection implements COL.ICollection {
     private async upsertResource(body: any, caller: string): Promise<COL.EdanRecord | null> {
         // LOG.info(`EdanCollection.upsertResource: ${JSON.stringify(body)}`, LOG.LS.eCOLL);
         const reqResult: HttpRequestResult = await this.sendRequest(eAPIType.eEDAN3dApi, eHTTPMethod.ePost, 'api/v1.0/admin/upsertResource', '', JSON.stringify(body), 'application/json');
-        RK.logInfo(RK.LogSection.eCOLL,'upsert resource',reqResult.output,{ body },'Collection.EDAN');
+        RK.logInfo(RK.LogSection.eCOLL,'upsert resource',reqResult.output,{ response: EdanCollection.cleanEdanResponse(body) },'Collection.EDAN');
 
         if (!reqResult.success) {
-            RK.logError(RK.LogSection.eCOLL,'upsert resource',reqResult.output,{ ...reqResult, caller, body },'Collection.EDAN');
+            RK.logError(RK.LogSection.eCOLL,'upsert resource',reqResult.output,{ ...reqResult, caller, response: EdanCollection.cleanEdanResponse(body) },'Collection.EDAN');
             return null;
         }
 
         try {
             return JSON.parse(reqResult.output)?.response ?? null;
         } catch (error) {
-            RK.logError(RK.LogSection.eCOLL,'upsert resource',`parse error: ${error}`,{ ...reqResult, caller, body },'Collection.EDAN');
+            RK.logError(RK.LogSection.eCOLL,'upsert resource',`parse error: ${error}`,{ ...reqResult, caller, response: EdanCollection.cleanEdanResponse(body) },'Collection.EDAN');
             return null;
         }
     }
@@ -417,6 +417,12 @@ export class EdanCollection implements COL.ICollection {
             codes: licenseCodes ?? '',
             text: usageText ?? '',
         };
+    }
+
+    static cleanEdanResponse(body: string): any {
+        // try converting to JSON otherwise just return string
+        const result = H.Helpers.JSONParse(body);
+        return (result) ?? body;
     }
     // #endregion
 }

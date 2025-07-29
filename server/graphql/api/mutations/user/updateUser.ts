@@ -12,6 +12,7 @@ const createUser = gql`
                 DateDisabled
                 EmailSettings
                 WorkflowNotificationTime
+                SlackID
             }
         }
     }

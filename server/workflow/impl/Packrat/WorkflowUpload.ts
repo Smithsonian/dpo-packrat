@@ -124,9 +124,9 @@ export class WorkflowUpload implements WF.IWorkflow {
         switch(eStatus) {
             case COMMON.eWorkflowJobRunStatus.eDone: {
                 const url: string = Config.http.clientUrl +'/ingestion/uploads';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_PASSED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     'Upload and Inspection Finished',
                     detailsMessage,
                     startDate,
@@ -137,9 +137,9 @@ export class WorkflowUpload implements WF.IWorkflow {
 
             case COMMON.eWorkflowJobRunStatus.eError: {
                 const url: string = Config.http.clientUrl +'/workflow';
-                await RK.sendEmail(
+                await RK.sendMessage(
                     RK.NotifyType.JOB_FAILED,
-                    RK.NotifyGroup.EMAIL_USER,
+                    RK.NotifyGroup.USER,
                     'Upload and Inspection Failed',
                     detailsMessage,
                     startDate,
@@ -273,7 +273,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     private async validateFileScene(fileName: string, readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
         const svxReader: SvxReader = new SvxReader();
         const svxRes: H.IOResults = await svxReader.loadFromStream(readStream);
-        RK.logError(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'Workflow.Upload');
+        RK.logDebug(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'Workflow.Upload');
         return (svxRes.success)
             ? this.appendToWFReport(`Upload validated ${fileName}`)
             : this.handleError(`WorkflowUpload.validateFile failed to parse svx file ${fileName}: ${svxRes.error}`);

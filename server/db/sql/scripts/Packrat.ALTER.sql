@@ -536,4 +536,7 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (31, 
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 1, 'Raw Clean');        -- 210
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 2, 'Presentation');     -- 211
 
+-- 2025-07-18 Add Slack ID to User Table (Eric)
+ALTER TABLE User ADD COLUMN SlackID longtext NOT NULL DEFAULT '';
+
 ------

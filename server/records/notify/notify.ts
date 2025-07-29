@@ -68,14 +68,14 @@ export class Notify {
     //#endregion
 
     //#region SLACK
-    public static configureSlack(env: ENVIRONMENT_TYPE, apiKey: string, targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
-        return NotifySlack.configure(env,apiKey,targetRate,burstRate,burstThreshold);
+    public static configureSlack(env: ENVIRONMENT_TYPE, apiKey: string, channels: string[], targetRate?: number, burstRate?: number, burstThreshold?: number): NotifyResult {
+        return NotifySlack.configure(env,apiKey,channels,targetRate,burstRate,burstThreshold);
     }
 
     // cast the returns to NotifyResult so it's consistent with what is exported
     // NOTE: not exporting raw variant currently due to the specialized knowledge of blocks required for it to work
     public static sendSlackMessage = NotifySlack.sendMessage as (params: NotifyPackage, channel?: SlackChannel) => Promise<NotifyResult>;
-    public static clearSlackChannel = NotifySlack.clearChannel as (channel?: SlackChannel) => Promise<NotifyResult>;
+    public static clearSlackChannel = NotifySlack.clearChannel as (channel?: SlackChannel, forceAll?: boolean) => Promise<NotifyResult>;
 
     // testing slack messages
     public static async testSlack(numMessages: number, channel?: SlackChannel): Promise<NotifyResult> {
