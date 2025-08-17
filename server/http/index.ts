@@ -22,6 +22,7 @@ import { generateDownloads } from './routes/api/generateDownloads';
 import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
+import { getSceneState } from './routes/api/object';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -201,6 +202,7 @@ export class HttpServer {
 
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
+        this.app.get('/api/scene/:id/state', getSceneState);
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);

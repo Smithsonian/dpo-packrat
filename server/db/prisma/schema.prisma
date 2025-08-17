@@ -675,6 +675,7 @@ model SystemObject {
   LicenseAssignment                                                     LicenseAssignment[]
   Metadata_Metadata_idSystemObjectToSystemObject                        Metadata[]                        @relation("Metadata_idSystemObjectToSystemObject")
   Metadata_Metadata_idSystemObjectParentToSystemObject                  Metadata[]                        @relation("Metadata_idSystemObjectParentToSystemObject")
+  ObjectProperty                                                        ObjectProperty[]
   Actor                                                                 Actor?                            @relation(fields: [idActor], references: [idActor], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_actor1")
   Asset_AssetToSystemObject_idAsset                                     Asset?                            @relation("AssetToSystemObject_idAsset", fields: [idAsset], references: [idAsset], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_asset1")
   AssetVersion_AssetVersionToSystemObject_idAssetVersion                AssetVersion?                     @relation("AssetVersionToSystemObject_idAssetVersion", fields: [idAssetVersion], references: [idAssetVersion], onDelete: NoAction, onUpdate: NoAction, map: "fk_systemobject_assetversion1")
@@ -779,6 +780,7 @@ model User {
   AccessPolicy                    AccessPolicy[]
   AssetVersion                    AssetVersion[]
   Audit                           Audit[]
+  Contact                         Contact[]
   LicenseAssignment               LicenseAssignment[]
   Metadata                        Metadata[]
   Sentinel                        Sentinel[]
@@ -935,4 +937,37 @@ model CookResource {
   Photogrammetry    Int
   LargeFiles        Int
   MachineType       String @mariasql.VarChar(256)
+}
+
+model Contact {
+  idContact      Int              @id @default(autoincrement())
+  idUser         Int?
+  Name           String           @mariasql.VarChar(255)
+  EmailAddress   String           @unique(map: "Contact_EmailAddress") @mariasql.VarChar(255)
+  Title          String?          @mariasql.VarChar(255)
+  idUnit         Int?
+  Department     String?          @mariasql.VarChar(255)
+  User           User?            @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_contact_user1")
+  ObjectProperty ObjectProperty[]
+
+  @@index([idUser], map: "Contact_idUser")
+}
+
+model ObjectProperty {
+  idObjectProperty Int                         @id @default(autoincrement())
+  idSystemObject   Int
+  PropertyType     ObjectProperty_PropertyType
+  Level            Int                         @default(0)
+  Rationale        String?                     @mariasql.Text
+  idContact        Int?
+  Contact          Contact?                    @relation(fields: [idContact], references: [idContact], onDelete: NoAction, onUpdate: NoAction, map: "fk_objectproperty_contact1")
+  SystemObject     SystemObject                @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_objectproperty_systemobject1")
+
+  @@unique([idSystemObject, PropertyType], map: "ObjectProperty_idSystemObject_Type")
+  @@index([idContact], map: "ObjectProperty_idContact")
+  @@index([idSystemObject], map: "ObjectProperty_idSystemObject")
+}
+
+enum ObjectProperty_PropertyType {
+  sensitivity
 }
