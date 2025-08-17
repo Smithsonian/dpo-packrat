@@ -906,6 +906,7 @@ export type GetSystemObjectDetailsResult = {
   metadata: Array<Metadata>;
   name: Scalars['String'];
   objectAncestors: Array<Array<RepositoryPath>>;
+  objectProperties: Array<ObjectPropertyResult>;
   objectType: Scalars['Int'];
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
@@ -1759,6 +1760,16 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+};
+
+export type ObjectPropertyResult = {
+  __typename?: 'ObjectPropertyResult';
+  contactDescription?: Maybe<Scalars['String']>;
+  contactName?: Maybe<Scalars['String']>;
+  contactUserId?: Maybe<Scalars['Int']>;
+  level: Scalars['Int'];
+  propertyType: Scalars['String'];
+  rationale: Scalars['String'];
 };
 
 export type PaginationInput = {

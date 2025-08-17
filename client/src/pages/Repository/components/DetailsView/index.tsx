@@ -24,6 +24,7 @@ import {
     CaptureDataDetailFieldsInput,
     ItemDetailFieldsInput,
     ModelDetailFieldsInput,
+    ObjectPropertyResult,
     ProjectDetailFieldsInput,
     ProjectDocumentationDetailFieldsInput,
     RelatedObjectType,
@@ -211,6 +212,8 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
+            console.log('use effect: ',data.getSystemObjectDetails);
+
             const { name, retired, license, metadata, subTitle } = data.getSystemObjectDetails;
             setDetails({ name, retired, idLicense: license?.idLicense || 0, subtitle: subTitle ?? '' });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
@@ -271,7 +274,8 @@ function DetailsView(): React.ReactElement {
         derivedObjects,
         objectVersions,
         metadata,
-        licenseInheritance = null
+        licenseInheritance = null,
+        objectProperties = null,
     } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
@@ -427,6 +431,8 @@ function DetailsView(): React.ReactElement {
     };
 
     const updateData = async (): Promise<boolean> => {
+        console.log('update data: ',data);
+
         toast.dismiss();
         setIsUpdatingData(true);
         const identifierCheck = checkIdentifiersBeforeUpdate();
@@ -678,7 +684,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
-    const notice = getSensitivityNotice(updatedData);
+    const notice = getSensitivityNotice(objectProperties ?? null);
 
     return (
         <Box className={classes.container}>
@@ -840,12 +846,12 @@ type NoticeConfig = {
     messageText?: string;
 };
 
-export function getSensitivityNotice(properties: UpdateObjectDetailsDataInput | undefined | null): NoticeConfig | null {
+export function getSensitivityNotice(properties: ObjectPropertyResult[] | null): NoticeConfig | null {
     if(!properties)
         return { show: false, state: 'info', title: '' };
 
-    console.log(properties.Retired);
-    return { show: properties.Retired ?? false, state: 'error', title: 'test notice', messageHTML: 'some message for the <b>notice</b>', messageText: 'some text message' };
+    console.log(properties);
+    return { show: false, state: 'error', title: 'test notice', messageHTML: 'some message for the <b>notice</b>', messageText: 'some text message' };
 
     // if (!properties?.length) return null;
 

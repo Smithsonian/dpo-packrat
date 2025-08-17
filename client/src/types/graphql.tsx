@@ -909,6 +909,7 @@ export type GetSystemObjectDetailsResult = {
   metadata: Array<Metadata>;
   name: Scalars['String'];
   objectAncestors: Array<Array<RepositoryPath>>;
+  objectProperties: Array<ObjectPropertyResult>;
   objectType: Scalars['Int'];
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
@@ -1762,6 +1763,16 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+};
+
+export type ObjectPropertyResult = {
+  __typename?: 'ObjectPropertyResult';
+  contactDescription?: Maybe<Scalars['String']>;
+  contactName?: Maybe<Scalars['String']>;
+  contactUserId?: Maybe<Scalars['Int']>;
+  level: Scalars['Int'];
+  propertyType: Scalars['String'];
+  rationale: Scalars['String'];
 };
 
 export type PaginationInput = {
@@ -3085,7 +3096,7 @@ export type GetSystemObjectDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, publishedState: string, publishedEnum: number, publishable: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null } };
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, publishedState: string, publishedEnum: number, publishable: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, contactName?: string | null, contactDescription?: string | null, contactUserId?: number | null }> } };
 
 export type GetVersionsForAssetQueryVariables = Exact<{
   input: GetVersionsForAssetInput;
@@ -5778,6 +5789,14 @@ export const GetSystemObjectDetailsDocument = gql`
       Name
       Description
       RestrictLevel
+    }
+    objectProperties {
+      propertyType
+      level
+      rationale
+      contactName
+      contactDescription
+      contactUserId
     }
   }
 }

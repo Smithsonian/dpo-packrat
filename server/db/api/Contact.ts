@@ -6,12 +6,12 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
     idContact!: number;
-    idUser: number | null;
-    Name: string;
-    EmailAddress: string;
-    Title: string | null;
-    idUnit: number | null;
-    Department: string | null;
+    idUser!: number | null;
+    Name!: string;
+    EmailAddress!: string;
+    Title!: string | null;
+    idUnit!: number | null;
+    Department!: string | null;
 
     constructor(input: ContactBase) {
         super(input);
@@ -65,6 +65,7 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
         if (!idContact)
             return null;
         try {
+            console.log('db: ',idContact);
             return DBC.CopyObject<ContactBase, Contact>(
                 await DBC.DBConnection.prisma.contact.findUnique({ where: { idContact, }, }), Contact);
         } catch (error) /* istanbul ignore next */ {

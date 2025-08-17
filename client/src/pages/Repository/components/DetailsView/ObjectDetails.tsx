@@ -8,7 +8,7 @@ import { Box, Checkbox, Typography, Select, MenuItem, Tooltip } from '@material-
 import { withStyles, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
-import { GetSystemObjectDetailsResult, RepositoryPath, License } from '../../../../types/graphql';
+import { GetSystemObjectDetailsResult, RepositoryPath, License, ObjectPropertyResult } from '../../../../types/graphql';
 import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
 import { useLicenseStore } from '../../../../store';
@@ -111,6 +111,7 @@ interface ObjectDetailsProps {
     idSystemObject: number;
     license?: number;
     licenseInheritance?: number | null;
+    objectProperties?: ObjectPropertyResult[] | null;
 }
 
 function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {

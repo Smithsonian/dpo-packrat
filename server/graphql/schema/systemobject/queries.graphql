@@ -186,6 +186,16 @@ type GetSystemObjectDetailsResult {
     assetOwner: RepositoryPath
     license: License
     licenseInheritance: Int
+    objectProperties: [ObjectPropertyResult!]!
+}
+
+type ObjectPropertyResult {
+  propertyType: String!
+  level: Int!
+  rationale: String!
+  contactName: String
+  contactDescription: String
+  contactUserId: Int
 }
 
 input GetSourceObjectIdentiferInput {

@@ -6,11 +6,11 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements ObjectPropertyBase {
     idObjectProperty!: number;
-    idSystemObject:  number;
-    PropertyType: ('sensitivity');
-    Level: number;
-    Rationale: string | null;
-    idContact: number | null;
+    idSystemObject!:  number;
+    PropertyType!: ('sensitivity');
+    Level!: number;
+    Rationale!: string | null;
+    idContact!: number | null;
 
     constructor(input: ObjectPropertyBase) {
         super(input);
@@ -90,6 +90,7 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
         if (!idSystemObjects || idSystemObjects.length == 0)
             return null;
         try {
+            console.log('DB fetch: ',idSystemObjects);
             return DBC.CopyArray<ObjectPropertyBase, ObjectProperty>(
                 await DBC.DBConnection.prisma.$queryRaw<ObjectProperty[]>`
                 SELECT DISTINCT O.*

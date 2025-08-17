@@ -818,6 +818,7 @@ type GetSystemObjectDetailsResult {
   metadata: [Metadata!]!
   name: String!
   objectAncestors: [[RepositoryPath!]!]!
+  objectProperties: [ObjectPropertyResult!]!
   objectType: Int!
   objectVersions: [SystemObjectVersion!]!
   project: [RepositoryPath!]
@@ -1493,6 +1494,15 @@ type NavigationResultEntry {
   metadata: [String!]!
   name: String!
   objectType: Int!
+}
+
+type ObjectPropertyResult {
+  contactDescription: String
+  contactName: String
+  contactUserId: Int
+  level: Int!
+  propertyType: String!
+  rationale: String!
 }
 
 input PaginationInput {
