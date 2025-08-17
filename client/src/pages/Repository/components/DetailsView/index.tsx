@@ -1,5 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 /**
  * DetailsView
@@ -45,6 +46,7 @@ import ObjectNotFoundView from './ObjectNotFoundView';
 import { eIngestionMode } from '../../../../constants';
 import SpecialUploadList from '../../../Ingestion/components/Uploads/SpecialUploadList';
 import { UploadReferences } from '../../../../store';
+import NoticeBanner from './NoticeBanner';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -676,10 +678,20 @@ function DetailsView(): React.ReactElement {
     };
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
+    const notice = getSensitivityNotice(updatedData);
 
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
+                {notice?.show && (
+                    <NoticeBanner
+                        state={notice.state}
+                        title={notice.title}
+                        messageHTML={notice.messageHTML}
+                        messageText={notice.messageText}
+                    />
+                )}
+
                 <DetailsHeader
                     originalFields={data.getSystemObjectDetails}
                     name={details.name}
@@ -809,5 +821,68 @@ function DetailsView(): React.ReactElement {
         </Box>
     );
 }
+
+//#region SENSITIVITY NOTICE
+// type ObjectProperty = {
+//     type: string;
+//     value: string | number | boolean | null;
+//     title?: string | null;
+//     messageHTML?: string | null;
+//     message?: string | null;
+//     state?: 'error' | 'warning' | 'info' | null;
+// };
+
+type NoticeConfig = {
+    show: boolean;
+    state: 'error' | 'warning' | 'info';
+    title: string;
+    messageHTML?: string;
+    messageText?: string;
+};
+
+export function getSensitivityNotice(properties: UpdateObjectDetailsDataInput | undefined | null): NoticeConfig | null {
+    if(!properties)
+        return { show: false, state: 'info', title: '' };
+
+    console.log(properties.Retired);
+    return { show: properties.Retired ?? false, state: 'error', title: 'test notice', messageHTML: 'some message for the <b>notice</b>', messageText: 'some text message' };
+
+    // if (!properties?.length) return null;
+
+    // const sens = properties.find(p => p?.type?.toLowerCase() === 'sensitivity');
+    // if (!sens) return null;
+
+    // const rawVal = sens.value;
+    // const valNum = typeof rawVal === 'number' ? rawVal : Number(rawVal);
+    // if (!(valNum > 0)) return null;
+
+    // const titleProp       = properties.find(p => p.type?.toLowerCase() === 'sensitivitytitle');
+    // const msgHTMLProp     = properties.find(p => p.type?.toLowerCase() === 'sensitivitymessagehtml');
+    // const msgTextProp     = properties.find(p => p.type?.toLowerCase() === 'sensitivitymessage');
+    // const explicitState   = (properties.find(p => p.type?.toLowerCase() === 'sensitivitystate')?.value ?? null) as ('error'|'warning'|'info'|null);
+
+    // const title =
+    // (typeof sens.title === 'string' && sens.title) ||
+    // (typeof titleProp?.value === 'string' && titleProp?.value) ||
+    // 'Restricted Access';
+
+    // const messageHTML =
+    // (typeof sens.messageHTML === 'string' && sens.messageHTML) ||
+    // (typeof msgHTMLProp?.value === 'string' && msgHTMLProp?.value) ||
+    // undefined;
+
+    // const messageText =
+    // (typeof sens.message === 'string' && sens.message) ||
+    // (typeof msgTextProp?.value === 'string' && msgTextProp?.value) ||
+    // (messageHTML ? undefined : 'This object has a restricted sensitivity level.');
+
+    // const state: 'error' | 'warning' | 'info' =
+    //     explicitState && (explicitState === 'error' || explicitState === 'warning' || explicitState === 'info')
+    //         ? explicitState
+    //         : (valNum >= 3 ? 'error' : valNum === 2 ? 'warning' : 'info');
+
+    // return { show: true, state, title, messageHTML, messageText };
+}
+//#endregion
 
 export default DetailsView;
