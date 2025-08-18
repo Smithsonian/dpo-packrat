@@ -1289,31 +1289,11 @@ export type Item = {
 
 export type ItemDetailFields = {
   __typename?: 'ItemDetailFields';
-  Altitude?: Maybe<Scalars['Float']>;
   EntireSubject?: Maybe<Scalars['Boolean']>;
-  Latitude?: Maybe<Scalars['Float']>;
-  Longitude?: Maybe<Scalars['Float']>;
-  R0?: Maybe<Scalars['Float']>;
-  R1?: Maybe<Scalars['Float']>;
-  R2?: Maybe<Scalars['Float']>;
-  R3?: Maybe<Scalars['Float']>;
-  TS0?: Maybe<Scalars['Float']>;
-  TS1?: Maybe<Scalars['Float']>;
-  TS2?: Maybe<Scalars['Float']>;
 };
 
 export type ItemDetailFieldsInput = {
-  Altitude?: InputMaybe<Scalars['Float']>;
   EntireSubject?: InputMaybe<Scalars['Boolean']>;
-  Latitude?: InputMaybe<Scalars['Float']>;
-  Longitude?: InputMaybe<Scalars['Float']>;
-  R0?: InputMaybe<Scalars['Float']>;
-  R1?: InputMaybe<Scalars['Float']>;
-  R2?: InputMaybe<Scalars['Float']>;
-  R3?: InputMaybe<Scalars['Float']>;
-  TS0?: InputMaybe<Scalars['Float']>;
-  TS1?: InputMaybe<Scalars['Float']>;
-  TS2?: InputMaybe<Scalars['Float']>;
 };
 
 export type Job = {

@@ -44,16 +44,6 @@ input SubjectDetailFieldsInput {
 
 input ItemDetailFieldsInput {
     EntireSubject: Boolean
-    Altitude: Float
-    Latitude: Float
-    Longitude: Float
-    R0: Float
-    R1: Float
-    R2: Float
-    R3: Float
-    TS0: Float
-    TS1: Float
-    TS2: Float
 }
 
 input CaptureDataDetailFieldsInput {

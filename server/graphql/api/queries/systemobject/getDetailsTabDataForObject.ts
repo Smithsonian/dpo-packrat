@@ -25,16 +25,6 @@ const getDetailsTabDataForObject = gql`
             }
             Item {
                 EntireSubject
-                Altitude
-                Latitude
-                Longitude
-                R0
-                R1
-                R2
-                R3
-                TS0
-                TS1
-                TS2
             }
             CaptureData {
                 captureMethod

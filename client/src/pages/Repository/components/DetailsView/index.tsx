@@ -515,19 +515,19 @@ function DetailsView(): React.ReactElement {
                 updatedData.Subject.R3 = R3 ? Number(R3) : null;
             }
 
-            if (objectType === eSystemObjectType.eItem && updatedData.Item) {
-                const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
-                updatedData.Item.Latitude = Latitude ? Number(Latitude) : null;
-                updatedData.Item.Longitude = Longitude ? Number(Longitude) : null;
-                updatedData.Item.Altitude = Altitude ? Number(Altitude) : null;
-                updatedData.Item.TS0 = TS0 ? Number(TS0) : null;
-                updatedData.Item.TS1 = TS1 ? Number(TS1) : null;
-                updatedData.Item.TS2 = TS2 ? Number(TS2) : null;
-                updatedData.Item.R0 = R0 ? Number(R0) : null;
-                updatedData.Item.R1 = R1 ? Number(R1) : null;
-                updatedData.Item.R2 = R2 ? Number(R2) : null;
-                updatedData.Item.R3 = R3 ? Number(R3) : null;
-            }
+            // if (objectType === eSystemObjectType.eItem && updatedData.Item) {
+            //     const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
+            //     updatedData.Item.Latitude = Latitude ? Number(Latitude) : null;
+            //     updatedData.Item.Longitude = Longitude ? Number(Longitude) : null;
+            //     updatedData.Item.Altitude = Altitude ? Number(Altitude) : null;
+            //     updatedData.Item.TS0 = TS0 ? Number(TS0) : null;
+            //     updatedData.Item.TS1 = TS1 ? Number(TS1) : null;
+            //     updatedData.Item.TS2 = TS2 ? Number(TS2) : null;
+            //     updatedData.Item.R0 = R0 ? Number(R0) : null;
+            //     updatedData.Item.R1 = R1 ? Number(R1) : null;
+            //     updatedData.Item.R2 = R2 ? Number(R2) : null;
+            //     updatedData.Item.R3 = R3 ? Number(R3) : null;
+            // }
 
             if (objectType === eSystemObjectType.eCaptureData) {
                 const CaptureDataDetails = getDetail(objectType) as CaptureDataDetailFields;
@@ -834,12 +834,10 @@ type NoticeConfig = {
     messageHTML?: string;
     messageText?: string;
 };
-
 export function getNoticeConfig(properties: ObjectPropertyResult[] | null): NoticeConfig | null {
     // creates notices from the object's properties.
     // currently limited to one notice (sensitivity), but can later
     // support other notices/flags to the user.
-
     if(!properties)
         return { show: false, state: 'info', title: '' };
 

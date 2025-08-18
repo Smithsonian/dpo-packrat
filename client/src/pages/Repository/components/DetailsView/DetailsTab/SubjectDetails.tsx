@@ -5,10 +5,10 @@
  *
  * This component renders details tab for Subject specific details used in DetailsTab component.
  */
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
-import { ItemDetailFields, SubjectDetailFields } from '../../../../../types/graphql';
+import { SubjectDetailFields } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { DetailComponentProps } from './index';
 import { eSystemObjectType } from '@dpo-packrat/common';
@@ -46,15 +46,8 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
 
 interface SubjectFieldsProps extends SubjectDetailFields {
     disabled: boolean;
-    originalFields?: SubjectDetailFields | ItemDetailFields | null;
+    originalFields?: SubjectDetailFields | null;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    isItemView?: boolean;
-    setCheckboxField?: (event) => void;
-    ItemDetails?: any;
-    itemData?: any;
-    subtitle?: string;
-    originalSubtitle?: string;
-    onSubtitleUpdate?: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
@@ -72,13 +65,6 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
         R3,
         disabled,
         onChange,
-        isItemView = false,
-        setCheckboxField,
-        ItemDetails,
-        itemData,
-        subtitle,
-        originalSubtitle,
-        onSubtitleUpdate
     } = props;
     const classes = useStyles();
     const details = {
@@ -91,8 +77,7 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
         R0,
         R1,
         R2,
-        R3,
-        subtitle
+        R3
     };
 
     return (
@@ -101,134 +86,76 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
                 <TableContainer style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px' }}>
                     <Table className={classes.table}>
                         <TableBody>
-                            {(isItemView && setCheckboxField && ItemDetails && itemData) && (
-                                <React.Fragment>
-                                    <TableRow>
-                                        <TableCell className={classes.tableCell}>
-                                            {/* <Typography className={classes.labelText}>Subtitle</Typography> */}
-                                            <LabelTooltipText
-                                                label='Subtitle'
-                                                labelTooltipTxt='This is the subtitle of this media asset.'
-                                            />
-                                        </TableCell>
-                                        <TableCell className={classes.tableCell}>
-                                            <DebounceInput
-                                                element='input'
-                                                title='Subtitle-input'
-                                                value={subtitle}
-                                                type='string'
-                                                name='Subtitle'
-                                                onChange={onSubtitleUpdate as (event: React.ChangeEvent<HTMLInputElement>) => void}
-                                                className={clsx(classes.input, classes.datasetFieldInput)}
-                                                style={{
-                                                    height: 22,
-                                                    fontSize: '0.8rem',
-                                                    padding: '0px 10px',
-                                                    borderRadius: 5,
-                                                    border: '1px solid rgba(141, 171, 196, 0.4)',
-                                                    ...updatedFieldStyling(subtitle !== originalSubtitle)
-                                                }}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                        <TableCell className={classes.tableCell}>
-                                            {/* <Typography className={classes.labelText}>Entire Subject</Typography> */}
-                                            <LabelTooltipText
-                                                label='Entire Subject'
-                                                labelTooltipTxt='This is the assigned subject of the media asset'
-                                            />
-                                        </TableCell>
-                                        <TableCell className={classes.tableCell} style={{ verticalAlign: 'middle' }}>
-                                            <Checkbox
-                                                className={classes.checkbox}
-                                                name='EntireSubject'
-                                                onChange={setCheckboxField}
-                                                checked={ItemDetails?.EntireSubject}
-                                                title='EntireSubject-input'
-                                                disabled={disabled}
-                                                size='small'
-                                                style={{ ...updatedFieldStyling(isFieldUpdated(ItemDetails, itemData, 'EntireSubject')) }}
-                                                color='primary'
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                </React.Fragment>
-                            )}
-                            {
-                                isItemView ? null : (
-                                    <>
-                                        <TableRow className={classes.tableRow}>
-                                            <TableCell className={classes.tableCell}>
-                                                {/* <Typography className={classes.labelText}>Latitude</Typography> */}
-                                                <LabelTooltipText
-                                                    label='Lattitude'
-                                                    labelTooltipTxt='This is the Lattitude of the Subject.'
-                                                />
-                                            </TableCell>
-                                            <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='Latitude-input'
-                                                    disabled={disabled}
-                                                    value={details.Latitude || ''}
-                                                    type='number'
-                                                    name='Latitude'
-                                                    onChange={onChange}
-                                                    className={clsx(classes.input, classes.datasetFieldInput)}
-                                                    style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={classes.tableRow}>
-                                            <TableCell className={classes.tableCell}>
-                                                {/* <Typography className={classes.labelText}>Longitude</Typography> */}
-                                                <LabelTooltipText
-                                                    label='Longitude'
-                                                    labelTooltipTxt='This is the Longitude of the Subject.'
-                                                />
-                                            </TableCell>
-                                            <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='Longitude-input'
-                                                    disabled={disabled}
-                                                    value={details.Longitude || ''}
-                                                    type='number'
-                                                    name='Longitude'
-                                                    onChange={onChange}
-                                                    className={clsx(classes.input, classes.datasetFieldInput)}
-                                                    style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Longitude')) }}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={classes.tableRow}>
-                                            <TableCell className={classes.tableCell}>
-                                                {/* <Typography className={classes.labelText}>Altitude</Typography> */}
-                                                <LabelTooltipText
-                                                    label='Altitude'
-                                                    labelTooltipTxt='This is the altitude of the subject.'
-                                                />
-                                            </TableCell>
-                                            <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='Altitude-input'
-                                                    disabled={disabled}
-                                                    value={details.Altitude || ''}
-                                                    type='number'
-                                                    name='Altitude'
-                                                    onChange={onChange}
-                                                    className={clsx(classes.input, classes.datasetFieldInput)}
-                                                    style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Altitude')) }}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                        <RotationOriginInput originalFields={originalFields} TS0={details.TS0} TS1={details.TS1} TS2={details.TS2} onChange={onChange} />
-                                        <RotationQuaternionInput originalFields={originalFields} R0={details.R0} R1={details.R1} R2={details.R2} R3={details.R3} onChange={onChange} />
-                                    </>
-                                )
-                            }
+                            <>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        {/* <Typography className={classes.labelText}>Latitude</Typography> */}
+                                        <LabelTooltipText
+                                            label='Lattitude'
+                                            labelTooltipTxt='This is the Lattitude of the Subject.'
+                                        />
+                                    </TableCell>
+                                    <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Latitude-input'
+                                            disabled={disabled}
+                                            value={details.Latitude || ''}
+                                            type='number'
+                                            name='Latitude'
+                                            onChange={onChange}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                            style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        {/* <Typography className={classes.labelText}>Longitude</Typography> */}
+                                        <LabelTooltipText
+                                            label='Longitude'
+                                            labelTooltipTxt='This is the Longitude of the Subject.'
+                                        />
+                                    </TableCell>
+                                    <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Longitude-input'
+                                            disabled={disabled}
+                                            value={details.Longitude || ''}
+                                            type='number'
+                                            name='Longitude'
+                                            onChange={onChange}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                            style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Longitude')) }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={classes.tableCell}>
+                                        {/* <Typography className={classes.labelText}>Altitude</Typography> */}
+                                        <LabelTooltipText
+                                            label='Altitude'
+                                            labelTooltipTxt='This is the altitude of the subject.'
+                                        />
+                                    </TableCell>
+                                    <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                        <DebounceInput
+                                            element='input'
+                                            title='Altitude-input'
+                                            disabled={disabled}
+                                            value={details.Altitude || ''}
+                                            type='number'
+                                            name='Altitude'
+                                            onChange={onChange}
+                                            className={clsx(classes.input, classes.datasetFieldInput)}
+                                            style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Altitude')) }}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                                <RotationOriginInput originalFields={originalFields} TS0={details.TS0} TS1={details.TS1} TS2={details.TS2} onChange={onChange} />
+                                <RotationQuaternionInput originalFields={originalFields} R0={details.R0} R1={details.R1} R2={details.R2} R3={details.R3} onChange={onChange} />
+                            </>
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -241,7 +168,7 @@ interface RotationOriginInputProps {
     TS0?: number | null;
     TS1?: number | null;
     TS2?: number | null;
-    originalFields?: SubjectDetailFields | ItemDetailFields | null;
+    originalFields?: SubjectDetailFields | null;
     ignoreUpdate?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -330,7 +257,7 @@ interface RotationQuaternionInputProps {
     R1?: number | null;
     R2?: number | null;
     R3?: number | null;
-    originalFields?: SubjectDetailFields | ItemDetailFields | null;
+    originalFields?: SubjectDetailFields | null;
     ignoreUpdate?: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     classes?: string;
