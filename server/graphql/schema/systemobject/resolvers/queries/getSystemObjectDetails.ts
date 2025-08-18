@@ -78,28 +78,26 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const cleanedProperties: ObjectPropertyResult[] = [];
     const properties: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSystemObject,4079]);
     if(properties) {
-        console.log('fetch obj properties; ',properties,idSystemObject);
+        // console.log('fetch obj properties; ',properties,idSystemObject);
 
         // grab the contact if set
         for(let i=0; i<properties.length; i++) {
             const prop = properties[i];
             console.log(prop.idContact);
             const contact: DBAPI.Contact | null = await DBAPI.Contact.fetch(prop.idContact ?? 0);
-            console.log('contact: ',contact);
-            const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(contact?.idUnit ?? 0);
 
             cleanedProperties.push({
                 propertyType: prop.PropertyType,
                 level: prop.Level,
                 rationale: prop.Rationale ?? 'Not Defined',
                 contactName: contact?.Name ?? 'Unknown',
-                contactDescription: `${unit?.Abbreviation ?? 'NA'}: ${contact?.Department ?? 'NA'}`,
+                contactEmail: contact?.EmailAddress ?? 'NA',
+                //contactDescription: `${unit?.Abbreviation ?? 'NA'}: ${contact?.Department ?? 'NA'}`,
                 contactUserId: contact?.idUser ?? -1
             });
         }
     }
 
-    console.log('cleaned props: ',cleanedProperties);
     return {
         idSystemObject,
         idObject: oID.idObject,

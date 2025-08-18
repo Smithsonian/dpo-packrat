@@ -30,7 +30,6 @@ export async function getSceneState(req: Request, res: Response): Promise<void> 
 
     // get our scene object and system object
     const { id } = req.params;
-    console.log('<<< ',id);
     const idSystemObject: number = parseInt(id);
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if(!systemObject || !systemObject.idScene) {

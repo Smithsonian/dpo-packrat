@@ -65,7 +65,6 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
         if (!idContact)
             return null;
         try {
-            console.log('db: ',idContact);
             return DBC.CopyObject<ContactBase, Contact>(
                 await DBC.DBConnection.prisma.contact.findUnique({ where: { idContact, }, }), Contact);
         } catch (error) /* istanbul ignore next */ {

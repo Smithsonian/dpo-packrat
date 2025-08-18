@@ -1497,7 +1497,7 @@ type NavigationResultEntry {
 }
 
 type ObjectPropertyResult {
-  contactDescription: String
+  contactEmail: String
   contactName: String
   contactUserId: Int
   level: Int!

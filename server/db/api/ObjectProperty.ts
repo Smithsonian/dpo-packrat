@@ -90,7 +90,6 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
         if (!idSystemObjects || idSystemObjects.length == 0)
             return null;
         try {
-            console.log('DB fetch: ',idSystemObjects);
             return DBC.CopyArray<ObjectPropertyBase, ObjectProperty>(
                 await DBC.DBConnection.prisma.$queryRaw<ObjectProperty[]>`
                 SELECT DISTINCT O.*

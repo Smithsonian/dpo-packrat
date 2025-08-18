@@ -96,7 +96,7 @@ const getSystemObjectDetails = gql`
                 level
                 rationale
                 contactName
-                contactDescription
+                contactEmail
                 contactUserId
             }
         }

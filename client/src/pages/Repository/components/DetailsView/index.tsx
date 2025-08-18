@@ -212,8 +212,6 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data && !loading) {
-            console.log('use effect: ',data.getSystemObjectDetails);
-
             const { name, retired, license, metadata, subTitle } = data.getSystemObjectDetails;
             setDetails({ name, retired, idLicense: license?.idLicense || 0, subtitle: subTitle ?? '' });
             initializeIdentifierState(data.getSystemObjectDetails.identifiers);
@@ -684,7 +682,7 @@ function DetailsView(): React.ReactElement {
     };
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
-    const notice = getSensitivityNotice(objectProperties ?? null);
+    const notice = getNoticeConfig(objectProperties ?? null);
 
     return (
         <Box className={classes.container}>
@@ -828,16 +826,7 @@ function DetailsView(): React.ReactElement {
     );
 }
 
-//#region SENSITIVITY NOTICE
-// type ObjectProperty = {
-//     type: string;
-//     value: string | number | boolean | null;
-//     title?: string | null;
-//     messageHTML?: string | null;
-//     message?: string | null;
-//     state?: 'error' | 'warning' | 'info' | null;
-// };
-
+//#region NOTICE
 type NoticeConfig = {
     show: boolean;
     state: 'error' | 'warning' | 'info';
@@ -846,48 +835,38 @@ type NoticeConfig = {
     messageText?: string;
 };
 
-export function getSensitivityNotice(properties: ObjectPropertyResult[] | null): NoticeConfig | null {
+export function getNoticeConfig(properties: ObjectPropertyResult[] | null): NoticeConfig | null {
+    // creates notices from the object's properties.
+    // currently limited to one notice (sensitivity), but can later
+    // support other notices/flags to the user.
+
     if(!properties)
         return { show: false, state: 'info', title: '' };
 
-    console.log(properties);
-    return { show: false, state: 'error', title: 'test notice', messageHTML: 'some message for the <b>notice</b>', messageText: 'some text message' };
+    // see if we have a sensitivity notice
+    const sensitiveProps: ObjectPropertyResult | undefined = properties.filter(p => p.propertyType.toLowerCase() === 'sensitivity' && p.level > 0)
+        .reduce<ObjectPropertyResult | undefined>((max, cur) => {
+        if (!max || cur.level > max.level) return cur;
+        return max;
+    }, undefined);
 
-    // if (!properties?.length) return null;
+    // if we have nothing return, otherwise, take first
+    if(!sensitiveProps)
+        return { show: false, state: 'info', title: 'no notices need showing' };
+    const prop: ObjectPropertyResult = sensitiveProps;
 
-    // const sens = properties.find(p => p?.type?.toLowerCase() === 'sensitivity');
-    // if (!sens) return null;
+    // build our notice for return
+    let messageHTML = 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
+    messageHTML += '</br>For more info: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
+    messageHTML += `</br></br><b>Reason</b>: ${prop.rationale}`;
+    messageHTML += `</br><b>Contact</b>: ${prop.contactName} (${prop.contactEmail})`;
 
-    // const rawVal = sens.value;
-    // const valNum = typeof rawVal === 'number' ? rawVal : Number(rawVal);
-    // if (!(valNum > 0)) return null;
-
-    // const titleProp       = properties.find(p => p.type?.toLowerCase() === 'sensitivitytitle');
-    // const msgHTMLProp     = properties.find(p => p.type?.toLowerCase() === 'sensitivitymessagehtml');
-    // const msgTextProp     = properties.find(p => p.type?.toLowerCase() === 'sensitivitymessage');
-    // const explicitState   = (properties.find(p => p.type?.toLowerCase() === 'sensitivitystate')?.value ?? null) as ('error'|'warning'|'info'|null);
-
-    // const title =
-    // (typeof sens.title === 'string' && sens.title) ||
-    // (typeof titleProp?.value === 'string' && titleProp?.value) ||
-    // 'Restricted Access';
-
-    // const messageHTML =
-    // (typeof sens.messageHTML === 'string' && sens.messageHTML) ||
-    // (typeof msgHTMLProp?.value === 'string' && msgHTMLProp?.value) ||
-    // undefined;
-
-    // const messageText =
-    // (typeof sens.message === 'string' && sens.message) ||
-    // (typeof msgTextProp?.value === 'string' && msgTextProp?.value) ||
-    // (messageHTML ? undefined : 'This object has a restricted sensitivity level.');
-
-    // const state: 'error' | 'warning' | 'info' =
-    //     explicitState && (explicitState === 'error' || explicitState === 'warning' || explicitState === 'info')
-    //         ? explicitState
-    //         : (valNum >= 3 ? 'error' : valNum === 2 ? 'warning' : 'info');
-
-    // return { show: true, state, title, messageHTML, messageText };
+    return {
+        show: true,
+        state: (prop.level===1) ? 'warning' : 'error',
+        title: 'Sensitive Object',
+        messageHTML
+    };
 }
 //#endregion
 
