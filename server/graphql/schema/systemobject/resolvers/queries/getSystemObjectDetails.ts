@@ -74,27 +74,39 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         throw new Error(message);
     }
 
+    console.log('source: ',sourceObjects);
+    console.log('derived: ',derivedObjects);
+    console.log('subject: ',subject);
+
+    // if subject is null, then we may be a subject and need to
+    let idSubject: number = subject?.[0]?.idSystemObject ?? -1;
+    if(idSubject<0 && systemObject.idSubject)
+        idSubject = systemObject.idSystemObject;
+    else
+        console.log('no subject found: ',systemObject);
+
     // gather and build our object properties
     const cleanedProperties: ObjectPropertyResult[] = [];
-    const properties: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSystemObject,4079]);
-    if(properties) {
-        // console.log('fetch obj properties; ',properties,idSystemObject);
+    if(idSubject>0) {
+        const properties: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSubject]);
+        if(properties) {
+            console.log('fetch obj properties; ',properties,idSystemObject);
 
-        // grab the contact if set
-        for(let i=0; i<properties.length; i++) {
-            const prop = properties[i];
-            console.log(prop.idContact);
-            const contact: DBAPI.Contact | null = await DBAPI.Contact.fetch(prop.idContact ?? 0);
+            // grab the contact if set
+            for(let i=0; i<properties.length; i++) {
+                const prop = properties[i];
+                console.log(prop.idContact);
+                const contact: DBAPI.Contact | null = await DBAPI.Contact.fetch(prop.idContact ?? 0);
 
-            cleanedProperties.push({
-                propertyType: prop.PropertyType,
-                level: prop.Level,
-                rationale: prop.Rationale ?? 'Not Defined',
-                contactName: contact?.Name ?? 'Unknown',
-                contactEmail: contact?.EmailAddress ?? 'NA',
-                //contactDescription: `${unit?.Abbreviation ?? 'NA'}: ${contact?.Department ?? 'NA'}`,
-                contactUserId: contact?.idUser ?? -1
-            });
+                cleanedProperties.push({
+                    propertyType: prop.PropertyType,
+                    level: prop.Level,
+                    rationale: prop.Rationale ?? 'Not Defined',
+                    contactName: contact?.Name ?? 'Unknown',
+                    contactEmail: contact?.EmailAddress ?? 'NA',
+                    contactUserId: contact?.idUser ?? -1
+                });
+            }
         }
     }
 
