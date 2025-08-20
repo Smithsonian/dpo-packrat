@@ -411,8 +411,10 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                     { label: 'Restricted', value: 2 },
                 ];
             } break;
+
+            default:
+                return [];
         }
-        return [];
     };
     const onLevelChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
         setCurrentLevel(Number(e.target.value));

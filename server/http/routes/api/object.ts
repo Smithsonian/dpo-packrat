@@ -57,6 +57,88 @@ export async function getSceneState(req: Request, res: Response): Promise<void> 
 }
 //#endregion
 
+//#region CONTACT
+export async function createContact(req: Request, res: Response): Promise<void> {
+    // make sure we're authorized to run this routine
+    const authResult = await isAuthorized(req);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`createContact failed: ${authResult.error}`)));
+        return;
+    }
+
+    res.status(200).send(JSON.stringify(generateResponse(true,'[MOCK] created contact')));
+}
+export async function getContact(req: Request, res: Response): Promise<void> {
+    // make sure we're authorized to run this routine
+    const authResult = await isAuthorized(req);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`getContact failed: ${authResult.error}`)));
+        return;
+    }
+
+    let contacts: DBAPI.Contact[] | null = [];
+    try {
+        const { id } = req.params;
+        const idContact = id ? parseInt(id, 10) : NaN;
+
+        if (!id || isNaN(idContact) || idContact <= 0) {
+            // fetch all
+            contacts = await DBAPI.Contact.fetchAll();
+            if(!contacts)
+                throw new Error('cannot fetch from DB');
+        } else {
+            // fetch one
+            const contact = await DBAPI.Contact.fetch(idContact);
+            if(!contact)
+                throw new Error('invalid id');
+            contacts = [contact];
+        }
+    } catch (err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'get contact failed',error,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`no contacts: ${error}`)));
+        return;
+    }
+
+    // return success
+    res.status(200).send(JSON.stringify(generateResponse(true,'returned contacts',contacts)));
+}
+export async function updateContact(req: Request, res: Response): Promise<void> {
+
+    // make sure we're authorized to run this routine
+    const authResult = await isAuthorized(req);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`updateContact failed: ${authResult.error}`)));
+        return;
+    }
+
+    try {
+        const { id } = req.params;
+        const idContact = id ? parseInt(id, 10) : NaN;
+        const doCreate: boolean = (!id || isNaN(idContact) || idContact <= 0) ? false : true;
+
+        if(doCreate) {
+            console.log('create');
+        } else {
+            console.log('update');
+        }
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'update contact failed',error,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`cannot create/update contact: ${error}`)));
+        return;
+    }
+
+    // check validity of body/params
+
+    // see if it already exists and update if needed
+
+    // else, create a new one in the database
+
+    // return success
+}
+//#endregion
+
 //#region Utility
 const generateResponse = (success: boolean, message?: string | undefined, data?): ProjectResponse => {
     return {

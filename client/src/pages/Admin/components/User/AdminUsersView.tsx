@@ -6,10 +6,10 @@ import AdminUsersList from './AdminUsersList';
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
-import { GetAllUsersDocument, User_Status } from '../../../types/graphql';
-import { GetAllUsersResult } from '../../../types/graphql';
-import { apolloClient } from '../../../graphql/index';
-import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
+import { GetAllUsersDocument, User_Status } from '../../../../types/graphql';
+import { GetAllUsersResult } from '../../../../types/graphql';
+import { apolloClient } from '../../../../graphql/index';
+import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 
 const useStyles = makeStyles({
