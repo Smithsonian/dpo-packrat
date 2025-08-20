@@ -27,7 +27,8 @@ import {
     UnitDetailFieldsInput,
     SystemObjectVersion,
     RepositoryPath,
-    Metadata
+    Metadata,
+    ObjectPropertyResult
 } from '../../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
@@ -86,6 +87,7 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     onSubtitleUpdate: (e) => void;
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     publishedState: string;
+    objectProperties?: ObjectPropertyResult[] | null;
 }
 
 export type UpdateDataFields =
@@ -120,6 +122,7 @@ type DetailsTabParams = {
     metadata: Metadata[];
     onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
     publishedState: string;
+    objectProperties: ObjectPropertyResult[];
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -140,7 +143,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         detailQuery,
         metadata,
         onUploaderOpen,
-        publishedState
+        publishedState,
+        objectProperties
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
@@ -227,7 +231,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const detailsProps = {
         ...detailsQueryResult,
         ...sharedProps,
-        publishedState
+        publishedState,
+        objectProperties
     };
 
     let onAddVersion = () => {};

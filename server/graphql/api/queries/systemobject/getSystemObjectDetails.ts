@@ -98,6 +98,8 @@ const getSystemObjectDetails = gql`
                 contactName
                 contactEmail
                 contactUserId
+                contactUnit
+                contactDepartment
             }
         }
     }

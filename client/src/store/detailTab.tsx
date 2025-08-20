@@ -117,16 +117,6 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         R3: null
     },
     ItemDetails: {
-        // Latitude: null,
-        // Longitude: null,
-        // Altitude: null,
-        // TS0: null,
-        // TS1: null,
-        // TS2: null,
-        // R0: null,
-        // R1: null,
-        // R2: null,
-        // R3: null,
         EntireSubject: null
     },
     ModelDetails: {
@@ -411,16 +401,6 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             const {
                 Item: { EntireSubject }
             } = getDetailsTabDataForObject;
-            // updateDetailField(eSystemObjectType.eItem, 'Latitude', Latitude);
-            // updateDetailField(eSystemObjectType.eItem, 'Altitude', Altitude);
-            // updateDetailField(eSystemObjectType.eItem, 'Longitude', Longitude);
-            // updateDetailField(eSystemObjectType.eItem, 'TS0', TS0);
-            // updateDetailField(eSystemObjectType.eItem, 'TS1', TS1);
-            // updateDetailField(eSystemObjectType.eItem, 'TS2', TS2);
-            // updateDetailField(eSystemObjectType.eItem, 'R0', R0);
-            // updateDetailField(eSystemObjectType.eItem, 'R1', R1);
-            // updateDetailField(eSystemObjectType.eItem, 'R2', R2);
-            // updateDetailField(eSystemObjectType.eItem, 'R3', R3);
             updateDetailField(eSystemObjectType.eItem, 'EntireSubject', EntireSubject);
         }
 
@@ -624,17 +604,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                     errorMessages.push(error.message);
             }
         }
-        // if (objectType === eSystemObjectType.eItem) {
-        //     try {
-        //         schemaItemAndSubject.validateSync(
-        //             {},
-        //             option
-        //         );
-        //     } catch (error) {
-        //         if (error instanceof Error)
-        //             errorMessages.push(error.message);
-        //     }
-        // }
+        // if (objectType === eSystemObjectType.eItem) {}
 
         return errorMessages;
     }

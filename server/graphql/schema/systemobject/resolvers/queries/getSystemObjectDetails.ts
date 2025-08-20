@@ -100,7 +100,9 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
                     rationale: prop.Rationale ?? 'Not Defined',
                     contactName: contact?.Name ?? 'Unknown',
                     contactEmail: contact?.EmailAddress ?? 'NA',
-                    contactUserId: contact?.idUser ?? -1
+                    contactUserId: contact?.idUser ?? -1,
+                    contactUnit: contact?.idUnit ?? -1,
+                    contactDepartment: contact?.Department ?? 'NA'
                 });
             }
         }

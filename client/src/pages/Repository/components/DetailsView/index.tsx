@@ -115,6 +115,7 @@ function DetailsView(): React.ReactElement {
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const [uploadReferences, setUploadReferences] = useState<UploadReferences | null>(null);
+    // const [pendingObjectProperties, setPendingObjectProperties] = useState<ObjectPropertyResult[] | null>(null);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
@@ -424,6 +425,7 @@ function DetailsView(): React.ReactElement {
             default:
                 break;
         }
+        console.log('details view.onUpdateDetail: ',updatedDataFields);
 
         setUpdatedData(updatedDataFields);
     };
@@ -500,7 +502,7 @@ function DetailsView(): React.ReactElement {
                 const { ApprovedForPublication, PosedAndQCd } = SceneDetails;
                 updatedData.Scene = { PosedAndQCd, ApprovedForPublication };
             }
-            // convert subject and item inputs to numbers to handle scientific notation
+            // convert subject inputs to numbers to handle scientific notation
             if (objectType === eSystemObjectType.eSubject && updatedData.Subject) {
                 const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Subject;
                 updatedData.Subject.Latitude = Latitude ? Number(Latitude) : null;
@@ -514,20 +516,6 @@ function DetailsView(): React.ReactElement {
                 updatedData.Subject.R2 = R2 ? Number(R2) : null;
                 updatedData.Subject.R3 = R3 ? Number(R3) : null;
             }
-
-            // if (objectType === eSystemObjectType.eItem && updatedData.Item) {
-            //     const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = updatedData.Item;
-            //     updatedData.Item.Latitude = Latitude ? Number(Latitude) : null;
-            //     updatedData.Item.Longitude = Longitude ? Number(Longitude) : null;
-            //     updatedData.Item.Altitude = Altitude ? Number(Altitude) : null;
-            //     updatedData.Item.TS0 = TS0 ? Number(TS0) : null;
-            //     updatedData.Item.TS1 = TS1 ? Number(TS1) : null;
-            //     updatedData.Item.TS2 = TS2 ? Number(TS2) : null;
-            //     updatedData.Item.R0 = R0 ? Number(R0) : null;
-            //     updatedData.Item.R1 = R1 ? Number(R1) : null;
-            //     updatedData.Item.R2 = R2 ? Number(R2) : null;
-            //     updatedData.Item.R3 = R3 ? Number(R3) : null;
-            // }
 
             if (objectType === eSystemObjectType.eCaptureData) {
                 const CaptureDataDetails = getDetail(objectType) as CaptureDataDetailFields;
@@ -683,7 +671,7 @@ function DetailsView(): React.ReactElement {
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
     const notice = getNoticeConfig(objectProperties ?? null);
-
+    console.log('detail view: ',data.getSystemObjectDetails);
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -796,6 +784,7 @@ function DetailsView(): React.ReactElement {
                         metadata={metadata}
                         onUploaderOpen={onUploaderOpen}
                         publishedState={publishedState}
+                        objectProperties={data.getSystemObjectDetails?.objectProperties ?? []}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (

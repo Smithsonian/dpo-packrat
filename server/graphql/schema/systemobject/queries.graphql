@@ -186,6 +186,8 @@ type ObjectPropertyResult {
   contactName: String
   contactEmail: String
   contactUserId: Int
+  contactUnit: Int
+  contactDepartment: String
 }
 
 input GetSourceObjectIdentiferInput {
