@@ -85,13 +85,6 @@ export const useStyles = makeStyles(({ palette }) => ({
     fieldLabel: {
         width: '7rem'
     },
-    // collapseContainer: {
-    //     border: `1px dotted ${palette.primary.main}`,
-    //     borderTop: 0,
-    //     boxSizing: 'border-box',
-    //     borderRadius: 5,
-    //     paddingBottom: '20px'
-    // },
     visuallyHidden: {
         border: 0,
         clip: 'rect(0 0 0 0)',

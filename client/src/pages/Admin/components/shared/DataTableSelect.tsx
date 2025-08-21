@@ -1,4 +1,4 @@
-// import API, { RequestResponse } from '../../../../api';
+/* eslint-disable @typescript-eslint/indent */
 import React, { useEffect } from 'react';
 import { Box, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Tooltip, Checkbox, Typography, LinearProgress } from '@material-ui/core';
 import { DBReference, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
@@ -12,10 +12,26 @@ export type SelectTableProps<T> = {
     columns: ColumnHeader[];
     resetSelection?: boolean;
     isLoading?: boolean;
+    renderExpanded?: (row: T) => React.ReactNode;
+    expandable?: boolean;
+    selectable?: boolean;
 };
-export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data, columns, resetSelection, isLoading }: SelectTableProps<T>): React.ReactElement => {
+
+export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T>): React.ReactElement => {
 
     type Order = 'asc' | 'desc';
+
+    // extract our props
+    const {
+        onUpdateSelection,
+        data,
+        columns,
+        resetSelection,
+        isLoading,
+        renderExpanded,
+        expandable = false,
+        selectable = true,
+     } = props;
 
     const classes = useToolsStyles();
     const tableClasses = useTableStyles();
@@ -24,6 +40,7 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
     const [orderBy, setOrderBy] = React.useState<string>('id');
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const [expandedRow, setExpandedRow] = React.useState(-1);
 
     // utility
     const convertDateToString = (date: Date): string => {
@@ -96,13 +113,26 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
         return path.split('.').reduce((value, key) => value[key], obj);
     };
 
+    // open/close a row
+    const openRow = (row: T) => {
+        console.log('open row: ', row);
+        setExpandedRow(row.id);
+    };
+    const closeRows = () => {
+        console.log('close all rows');
+        setExpandedRow(-1);
+    };
+
     // selection
     const updateSelected = (selected: T[]) => {
+        if (!selectable) return;
         setSelected(selected);
         onUpdateSelection(selected);
     };
-    const isSelected = (item: T) => selected.findIndex((selectedItem) => selectedItem.id === item.id) !== -1;
+    const isSelected = (item: T) => selectable && selected.findIndex((s) => s.id === item.id) !== -1;
     const handleRowSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!selectable) return;
+
         if (event.target.checked) {
             // now we update our selection and propogate changes to calling component
             updateSelected([...data]);
@@ -113,6 +143,8 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
         updateSelected([]);
     };
     const handleRowSelect = (_event: React.MouseEvent<unknown>, item: T) => {
+        if (!selectable) return;
+
         // expecting a full object to be passed in
         const selectedIndex = selected.findIndex((selectedItem) => selectedItem.id === item.id);
         let newSelected: T[] = [];
@@ -210,7 +242,7 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
 
     // JSX
     return (
-        <Box style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+        <Box style={{ boxSizing: 'border-box', padding: '1rem', marginTop: '2rem', marginBottom: '2rem' }}>
             <>
                 <TableContainer>
                     <Table
@@ -221,14 +253,17 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
                     >
                         <TableHead>
                             <TableRow>
-                                <TableCell padding='checkbox'>
-                                    <Checkbox
-                                        indeterminate={selected.length > 0 && selected.length < data.length}
-                                        checked={data.length > 0 && selected.length === data.length}
-                                        onChange={handleRowSelectAll}
-                                        inputProps={{ 'aria-label': 'select all items' }}
-                                    />
-                                </TableCell>
+                                {selectable && (
+                                    <TableCell padding='checkbox'>
+                                        <Checkbox
+                                            indeterminate={selected.length > 0 && selected.length < data.length}
+                                            checked={data.length > 0 && selected.length === data.length}
+                                            onChange={handleRowSelectAll}
+                                            inputProps={{ 'aria-label': 'select all items' }}
+                                        />
+                                    </TableCell>
+                                )}
+
                                 { columns.map((columnHeading) => (
                                     <Tooltip key={columnHeading.key} title={columnHeading.tooltip ?? columnHeading.key} disableHoverListener={!columnHeading.tooltip}>
                                         <TableCell
@@ -252,6 +287,12 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
                                         </TableCell>
                                     </Tooltip>
                                 ))}
+
+                                {expandable && (
+                                    <TableCell padding='checkbox'>
+                                        <span className={classes.visuallyHidden}>Expand row</span>
+                                    </TableCell>
+                                )}
                             </TableRow>
                         </TableHead>
 
@@ -281,61 +322,106 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
                                         .map((row: T, index: number) => {
                                             const isItemSelected = isSelected(row);
                                             const labelId = `table-checkbox-${index}`;
+                                            // base colSpan: data columns that render (id + non-id)
+                                            const expandColSpan = columns.length
+                                                + (selectable ? 1 : 0)  // header checkbox col (if present)
+                                                + (expandable ? 1 : 0); // chevron col (if present)
                                             return (
-                                                <TableRow
-                                                    hover
-                                                    onClick={(event) => handleRowSelect(event, row)}
-                                                    role='checkbox'
-                                                    aria-checked={isItemSelected}
-                                                    tabIndex={-1}
-                                                    key={row.id}
-                                                    selected={isItemSelected}
-                                                >
-                                                    <TableCell padding='checkbox'>
-                                                        <Checkbox
-                                                            checked={isItemSelected}
-                                                            inputProps={{ 'aria-labelledby': labelId }}
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell component='th' id={labelId} scope='row' padding='none'>
-                                                        {row.id}
-                                                    </TableCell>
-                                                    {columns.map((column) => (
-                                                        column.key !== 'id' && (
-                                                            <Tooltip
-                                                                key={column.key}
-                                                                title={resolveProperty(row, column.key)}
-                                                            >
-                                                                <TableCell
-                                                                    align={column.align ?? 'center'}
-                                                                    style={{
-                                                                        whiteSpace: 'nowrap',
-                                                                        textOverflow: 'ellipsis',
-                                                                        overflow: 'hidden',
-                                                                        maxWidth: '10rem',
-                                                                    }}
+                                                <React.Fragment key={row.id}>
+                                                    <TableRow
+                                                        hover
+                                                        onClick={selectable ? (event) => handleRowSelect(event, row) : undefined}
+                                                        role='checkbox'
+                                                        aria-checked={selectable ? isItemSelected : undefined}
+                                                        tabIndex={-1}
+                                                        key={row.id}
+                                                        selected={isItemSelected}
+                                                    >
+                                                        {selectable && (
+                                                            <TableCell padding='checkbox'>
+                                                                <Checkbox
+                                                                    checked={isItemSelected}
+                                                                    inputProps={{ 'aria-labelledby': labelId }}
+                                                                />
+                                                            </TableCell>
+                                                        )}
+
+                                                        <TableCell component='th' id={labelId} scope='row' padding='none'>
+                                                            {row.id}
+                                                        </TableCell>
+
+                                                        {columns.map((column) => (
+                                                            column.key !== 'id' && (
+                                                                <Tooltip
+                                                                    key={column.key}
+                                                                    title={resolveProperty(row, column.key)}
                                                                 >
-                                                                    {column.link ? (() => {
-                                                                        const link = resolveProperty(row, `${column.key}_link`);
-                                                                        const displayText = resolveProperty(row, column.key);
-                                                                        return link.includes('#') ? (
-                                                                            displayText
-                                                                        ) : (
-                                                                            <a
-                                                                                href={link}
-                                                                                target='_blank'
-                                                                                rel='noopener noreferrer'
-                                                                                onClick={handleElementClick}
-                                                                            >
-                                                                                {displayText}
-                                                                            </a>
-                                                                        );
-                                                                    })() : resolveProperty(row, column.key)}
-                                                                </TableCell>
-                                                            </Tooltip>
-                                                        )
-                                                    ))}
-                                                </TableRow>
+                                                                    <TableCell
+                                                                        align={column.align ?? 'center'}
+                                                                        style={{
+                                                                            whiteSpace: 'nowrap',
+                                                                            textOverflow: 'ellipsis',
+                                                                            overflow: 'hidden',
+                                                                            maxWidth: '10rem',
+                                                                        }}
+                                                                    >
+                                                                        {column.link ? (() => {
+                                                                            const link = resolveProperty(row, `${column.key}_link`);
+                                                                            const displayText = resolveProperty(row, column.key);
+                                                                            return link.includes('#') ? (
+                                                                                displayText
+                                                                            ) : (
+                                                                                <a
+                                                                                    href={link}
+                                                                                    target='_blank'
+                                                                                    rel='noopener noreferrer'
+                                                                                    onClick={handleElementClick}
+                                                                                >
+                                                                                    {displayText}
+                                                                                </a>
+                                                                            );
+                                                                        })() : resolveProperty(row, column.key)}
+                                                                    </TableCell>
+                                                                </Tooltip>
+                                                            )
+                                                        ))}
+
+                                                        {expandable && (
+                                                            <TableCell padding='checkbox'>
+                                                                <button
+                                                                    aria-label='Expand row'
+                                                                    aria-expanded={expandedRow === row.id}
+                                                                    aria-controls={`exp-${row.id}`}
+                                                                    onClick={(e) => { e.stopPropagation(); expandedRow === row.id ? closeRows() : openRow(row); }}
+                                                                >
+                                                                    {expandedRow === row.id ? '▾' : '▸'}
+                                                                </button>
+                                                            </TableCell>
+                                                        )}
+                                                    </TableRow>
+
+                                                    {expandable && expandedRow === row.id && (
+                                                        <TableRow>
+                                                            <TableCell
+                                                                id={`exp-${row.id}`}
+                                                                colSpan={expandColSpan}
+                                                                style={{ background: '#fafafa', padding: 0 }}
+                                                            >
+                                                                <Box
+                                                                    role='region'
+                                                                    aria-label={`Expanded content for row ${row.id}`}
+                                                                    p={2}
+                                                                    borderTop='1px solid rgba(0,0,0,0.12)'
+                                                                    borderBottom='1px solid rgba(0,0,0,0.12)'
+                                                                    minHeight='64px'
+                                                                    style={{ backgroundColor: 'rgba(0, 54, 97, 0.12)' }}
+                                                                >
+                                                                    { renderExpanded ? renderExpanded(row) : <Typography>{`No renderer provided for row ${row.id}: ${row.name}`}</Typography> }
+                                                                </Box>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    )}
+                                                </React.Fragment>
                                             );
                                         })
                                     }
@@ -363,5 +449,3 @@ export const DataTableSelect = <T extends DBReference>({ onUpdateSelection, data
         </Box>
     );
 };
-
-// export default DataTableSelect;
