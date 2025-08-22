@@ -101,3 +101,32 @@ export function formatDateAndTime(value: any): string {
         return '';
     return date.toLocaleString();
 }
+
+export const getErrorString = (error: any) => {
+    // Check if the error is an instance of Error and has a message
+    if (error instanceof Error) {
+        // check if has code too and append to message
+        if('code' in error && error.code === 'ENOENT')
+            return `${error.code}: ${error.message}`;
+        return error.message;
+    }
+
+    // Handle common GraphQL error format
+    if (error?.errors && Array.isArray(error.errors)) {
+        // Return the first error message in the GraphQL errors array, or join all messages
+        return error.errors.map((e: any) => e.message || 'Unknown error').join('; ');
+    }
+
+    // Handle Prisma errors (e.g., PrismaClientKnownRequestError)
+    if (error?.meta && error?.message) {
+        return `Prisma error: ${error.message}`;
+    }
+
+    // Handle Solr errors (Solr may have nested messages under responseHeader or error)
+    if (error?.responseHeader || error?.error) {
+        return error?.error?.msg || error?.error?.message || 'Unknown Solr error';
+    }
+
+    // Fallback to a string representation of the error
+    return String(error);
+};

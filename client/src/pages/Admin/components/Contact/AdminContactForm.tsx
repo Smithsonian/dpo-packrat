@@ -12,6 +12,7 @@ import {
 } from '@material-ui/core';
 import API, { RequestResponse } from '../../../../api'; // adjust path as needed
 import { DBReference } from '../shared/DataTypesStyles';
+import { getErrorString } from '../../../../utils/shared';
 
 type Mode = 'create' | 'update';
 export type UpdateResult = {
@@ -43,6 +44,16 @@ const EMPTY_BASELINE: Contact = {
     role: '',
     department: '',
     unit: { idUnit: -1, name: '', abbreviation: '' },
+};
+const normalizeUnits = (units): UnitOption[] => {
+    const result = units.map((u)=> {
+        return {
+            id: u.idUnit ?? -1,
+            name: u.Name ?? 'NA',
+            abbreviation: u.Abbreviation ?? 'NA',
+        };
+    });
+    return result;
 };
 
 const emailRegex =
@@ -102,7 +113,6 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
         setError(null);
         setSuccessMsg(null);
     }, [baseline, mode]);
-
     const onUpdateClick = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (mode !== 'update') return;
@@ -173,7 +183,6 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
             setSubmitting(false);
         }
     }, [baseline, department, dirty, email, mode, name, onUpdate, role, unitId, units, valid]);
-
     const onCreateClick = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (mode !== 'create') return;
@@ -244,85 +253,27 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
         }
     }, [baseline, department, email, mode, name, onUpdate, role, unitId, units, valid]);
 
-    const normalizeUnits = (units): UnitOption[] => {
-        const result = units.map((u)=> {
-            return {
-                id: u.idUnit ?? -1,
-                name: u.Name ?? 'NA',
-                abbreviation: u.Abbreviation ?? 'NA',
-            };
-        });
-        return result;
-    };
-
-    useEffect(() => {
-        // let mounted = true;
-        // (async () => {
-        //     setUnitsLoading(true);
-        //     setUnitsError(null);
-        //     try {
-        //         const resp: RequestResponse = await API.request('api/unit', { method: 'GET' });
-        //         if (!resp?.success) {
-        //             if (mounted) {
-        //                 setUnits([]);
-        //                 setUnitsError(resp?.message ?? 'Failed to fetch units.');
-        //             }
-        //         } else {
-        //             const rows: any[] = Array.isArray(resp.data) ? resp.data : [];
-        //             const opts: UnitOption[] = rows.map((u) => ({
-        //                 id: u.idUnit,
-        //                 name: u.Name,
-        //                 abbreviation: u.Abbreviation,
-        //             }));
-        //             if (mounted) setUnits(opts);
-        //         }
-        //     } catch (ex: any) {
-        //         if (mounted) setUnitsError(`Unexpected error: ${ex?.message ?? ex}`);
-        //     } finally {
-        //         if (mounted) setUnitsLoading(false);
-        //     }
-        // })();
-        // return () => { mounted = false; };
+    const fetchUnits = useCallback(async () => {
         setUnitsLoading(true);
         setUnitsError(null);
-        const tempUnits = [
-            { idUnit: 1, Name: 'Anacostia Community Museum', Abbreviation: 'ACM' },
-            { idUnit: 2, Name: 'Architectural History and Historic Preservation', Abbreviation: 'AHHP' },
-            { idUnit: 3, Name: 'Archives of American Art', Abbreviation: 'AAA' },
-            { idUnit: 4, Name: 'Center for Folklife and Cultural Heritage', Abbreviation: 'CFCH' },
-            { idUnit: 5, Name: 'Cooper-Hewitt, National Design Museum', Abbreviation: 'C-HNDM' },
-            { idUnit: 6, Name: 'Freer Gallery of Art and Arthur M. Sackler Gallery', Abbreviation: 'FSG' },
-            { idUnit: 7, Name: 'Hirshhorn Museum and Sculpture Garden', Abbreviation: 'HMSG' },
-            { idUnit: 8, Name: 'Horticulture Services Division', Abbreviation: 'HSD' },
-            { idUnit: 9, Name: 'Human Resources Research Organization', Abbreviation: 'HumRRO' },
-            { idUnit: 10, Name: 'Museum Conservation Institute', Abbreviation: 'MCI' },
-            { idUnit: 11, Name: 'National Air and Space Museum', Abbreviation: 'NASM' },
-            { idUnit: 12, Name: 'National Collections Program', Abbreviation: 'NCP' },
-            { idUnit: 13, Name: 'National Museum of African American History and Culture', Abbreviation: 'NMAAHC' },
-            { idUnit: 14, Name: 'National Museum of African Art', Abbreviation: 'NMAfA' },
-            { idUnit: 15, Name: 'National Museum of American History', Abbreviation: 'NMAH' },
-            { idUnit: 16, Name: 'National Museum of Natural History', Abbreviation: 'NMNH' },
-            { idUnit: 17, Name: 'National Museum of the American Indian', Abbreviation: 'NMAI' },
-            { idUnit: 18, Name: 'National Museum of the American Latino', Abbreviation: 'NMAL' },
-            { idUnit: 19, Name: 'National Portrait Gallery', Abbreviation: 'NPG' },
-            { idUnit: 20, Name: 'National Postal Museum', Abbreviation: 'NPM' },
-            { idUnit: 21, Name: 'National Zoological Park', Abbreviation: 'NZP' },
-            { idUnit: 22, Name: 'Office of Digital Transformation', Abbreviation: 'ODT' },
-            { idUnit: 23, Name: 'Office of Policy and Analysis', Abbreviation: 'OP&A' },
-            { idUnit: 24, Name: 'Office of the Chief Information Officer', Abbreviation: 'OCIO' },
-            { idUnit: 25, Name: 'Smithsonian American Art Museum', Abbreviation: 'SAAM' },
-            { idUnit: 26, Name: 'Smithsonian Asian Pacific American Center', Abbreviation: 'APAC' },
-            { idUnit: 27, Name: 'Smithsonian Astrophysical Observatory', Abbreviation: 'SAO' },
-            { idUnit: 28, Name: 'Smithsonian Center for Materials Research and Education', Abbreviation: 'SCMRE' },
-            { idUnit: 29, Name: 'Smithsonian Environmental Research Center', Abbreviation: 'SERC' },
-            { idUnit: 30, Name: 'Smithsonian Gardens', Abbreviation: 'SG' },
-            { idUnit: 31, Name: 'Smithsonian Institution Archives', Abbreviation: 'SIA' },
-            { idUnit: 32, Name: 'Smithsonian Libraries', Abbreviation: 'SIL' },
-            { idUnit: 33, Name: 'Smithsonian Tropical Research Institute', Abbreviation: 'STRI' }
-        ];
-        setUnits(normalizeUnits(tempUnits));
-        setUnitsLoading(false);
+        try {
+            const resp: RequestResponse = await API.getUnits(); // no signal
+            if (!resp?.success)
+                throw new Error(resp?.message ?? 'Failed to fetch units.');
+
+            const rows: any[] = Array.isArray(resp.data) ? resp.data : [];
+            setUnits(normalizeUnits(rows));
+        } catch (err: any) {
+            setUnitsError(getErrorString(err));
+            setUnits([]);
+        } finally {
+            setUnitsLoading(false);
+        }
     }, []);
+    useEffect(() => {
+        // fetch our list of units
+        fetchUnits();
+    }, [fetchUnits]);
 
     useEffect(() => {
         if (mode === 'create') {
@@ -446,7 +397,7 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                     >
                         {units.map((u) => (
                             <MenuItem key={u.id} value={u.id}>
-                                {u.abbreviation ? `${u.abbreviation} — ${u.name}` : u.name} ({u.id})
+                                {u.abbreviation ? `${u.abbreviation} — ${u.name}` : u.name}
                             </MenuItem>
                         ))}
                     </TextField>

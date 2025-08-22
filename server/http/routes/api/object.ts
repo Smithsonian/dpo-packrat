@@ -106,15 +106,18 @@ export async function getContact(req: Request, res: Response): Promise<void> {
                 throw new Error('invalid id');
             contacts = [contact];
         }
+
+        console.log(contacts);
+
+        // success
+        RK.logInfo(RK.LogSection.eHTTP,'get units',`success: ${contacts.length}`,null,'HTTP.Object.GetUnit',false);
+        res.status(200).send(JSON.stringify(generateResponse(true,`returned ${contacts.length} contacts`,contacts)));
     } catch (err) {
         const error = H.Helpers.getErrorString(err);
         RK.logError(RK.LogSection.eHTTP,'get contact',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
         res.status(200).send(JSON.stringify(generateResponse(false,`no contacts: ${error}`)));
         return;
     }
-
-    // return success
-    res.status(200).send(JSON.stringify(generateResponse(true,'returned contacts',contacts)));
 }
 export async function updateContact(req: Request, res: Response): Promise<void> {
 
@@ -162,6 +165,47 @@ export async function updateContact(req: Request, res: Response): Promise<void> 
         const error = H.Helpers.getErrorString(err);
         RK.logError(RK.LogSection.eHTTP,'update contact',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
         res.status(200).send(JSON.stringify(generateResponse(false,`cannot create/update contact: ${error}`)));
+        return;
+    }
+}
+//#endregion
+
+//#region UNIT
+export async function getUnit(req: Request, res: Response): Promise<void> {
+    // make sure we're authorized to run this routine
+    const authResult = await isAuthorized(req);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`getUnit failed: ${authResult.error}`)));
+        return;
+    }
+
+    let units: DBAPI.Unit[] | null = [];
+    try {
+        const { id } = req.params;
+        const idUnit = id ? parseInt(id, 10) : NaN;
+
+        if (!id || isNaN(idUnit) || idUnit <= 0) {
+            // fetch all
+            units = await DBAPI.Unit.fetchAll();
+            if(!units)
+                throw new Error('cannot fetch from DB');
+        } else {
+            // fetch one
+            const unit = await DBAPI.Unit.fetch(idUnit);
+            if(!unit)
+                throw new Error('invalid id');
+            units = [unit];
+        }
+
+        // sort our list by id
+        const sorted = [...units]; //[...units].sort((a, b) => a.idUnit - b.idUnit);
+
+        RK.logInfo(RK.LogSection.eHTTP,'get units',`success: ${units.length}`,null,'HTTP.Object.GetUnit',false);
+        res.status(200).send(JSON.stringify(generateResponse(true,`returned ${units.length} units`,sorted)));
+    } catch (err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'get unit',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`no units: ${error}`)));
         return;
     }
 }

@@ -22,7 +22,9 @@ import { generateDownloads } from './routes/api/generateDownloads';
 import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
-import { getSceneState, getContact, updateContact, createContact } from './routes/api/object';
+import { getSceneState } from './routes/api/object';
+import { getContact, updateContact, createContact } from './routes/api/object';
+import { getUnit } from './routes/api/object';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -208,6 +210,9 @@ export class HttpServer {
         this.app.get('/api/contact/:id',getContact);                    // get a specific contact
         this.app.post('/api/contact',createContact);                    // create a contact
         this.app.put('/api/contact/:id',updateContact);                 // update an existing contact
+
+        this.app.get('/api/unit',getUnit);
+        this.app.get('/api/unit/:id',getUnit);
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);

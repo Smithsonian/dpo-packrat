@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Box, Typography } from '@material-ui/core';
-// import API, { RequestResponse } from '../../../../api';
+import API, { RequestResponse } from '../../../../api';
 import { AdminContactForm } from './AdminContactForm';
 import { DataTableSelect } from '../shared/DataTableSelect';
 import { ColumnHeader, DBReference } from '../shared/DataTypesStyles';
+import { getErrorString } from '../../../../utils/shared';
 
 type Contact = DBReference & {
     email: string;
@@ -24,7 +25,7 @@ const AdminContactView: React.FC = () => {
     const [resetSelection, setResetSelection] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    const normalize = (rows: any[]): Contact[] => {
+    const normalizeContacts = (rows: any[]): Contact[] => {
         // Map server results to the shape DataTableSelect expects (must include id & name)
         return rows.map((c) => {
             if(!c) return null;
@@ -35,48 +36,14 @@ const AdminContactView: React.FC = () => {
             const email = c.EmailAddress ?? 'NA';
             const role = c.Title ?? 'NA';
             const unit = {
-                idUnit: c.Unit.idUnit ?? -1,
-                name: c.Unit.Name ?? 'NA',
-                abbreviation: c.Unit.Abbreviation ?? 'NA'
+                idUnit: c.idUnit ?? -1,
+                name: 'NA',
+                abbreviation: 'NA'
             };
 
             return { id, name, email, unit, department, role } as Contact;
         }).filter((r) => r != null);
     };
-
-    const fetchContacts = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            // const resp: RequestResponse = await API.request('api/contact', { method: 'GET' });
-            // if (!resp?.success) {
-            //     setContacts([]);
-            //     setError(resp?.message ?? 'Failed to fetch contacts.');
-            // } else {
-            //     setContacts(normalize(resp.data ?? []));
-            // }
-            const tempContacts = [
-                { idContact: 1,  Name: 'Eric Maslowski',    Unit: { idUnit: 24, Name: 'Office of Digital Information', Abbreviation: 'ODI' }, Department: 'Digital Programs Office',     EmailAddress: 'maslowskiec@si.edu',  Title: 'Project Lead' },
-                { idContact: 2,  Name: 'Karen Osborn',      Unit: { idUnit: 31, Name: 'Department of Paleobiology', Abbreviation: 'Paleo' }, Department: 'Paleobiology',               EmailAddress: 'osbornk@si.edu',      Title: 'Research Scientist' },
-                { idContact: 4,  Name: 'William Moser',     Unit: { idUnit: 31, Name: 'Department of Invertebrate Zoology', Abbreviation: 'IZ' }, Department: 'Invertebrate Zoology',   EmailAddress: 'moserw@si.edu',       Title: 'Curator' },
-                { idContact: 5,  Name: 'Yuuki Niimi',       Unit: { idUnit: 42, Name: 'Office of International Relations', Abbreviation: 'OIR' }, Department: 'Collections & International Programs', EmailAddress: 'niimiy@si.edu', Title: 'Collections Specialist' },
-                { idContact: 7,  Name: 'Chris Meyer',       Unit: { idUnit: 31, Name: 'Department of Invertebrate Zoology', Abbreviation: 'IZ' }, Department: 'Invertebrate Zoology',   EmailAddress: 'meyerc@si.edu',       Title: 'Curator' },
-                { idContact: 9,  Name: 'Cathy Maslowski',   Unit: { idUnit: 24, Name: 'Office of Digital Information', Abbreviation: 'ODI' }, Department: 'Digital Programs Office', EmailAddress: 'maslowskic@si.edu',   Title: 'Program Manager' },
-                { idContact: 10, Name: 'David Johnson',     Unit: { idUnit: 37, Name: 'Archives Center', Abbreviation: 'ARCH' }, Department: 'Archives & Special Collections',          EmailAddress: 'johnsond@si.edu',     Title: 'Archivist' },
-                { idContact: 12, Name: 'Sarah Lee',         Unit: { idUnit: 18, Name: 'Office of Communications & Marketing', Abbreviation: 'OCM' }, Department: 'Digital Media',      EmailAddress: 'lees@si.edu',         Title: 'Digital Media Specialist' },
-                { idContact: 13, Name: 'James Smith',       Unit: { idUnit: 19, Name: 'National Museum of the American Indian', Abbreviation: 'NMAI' }, Department: 'Collections Management', EmailAddress: 'smithj@si.edu', Title: 'Registrar' },
-                { idContact: 15, Name: 'Maria Garcia',      Unit: { idUnit: 22, Name: 'Hirshhorn Museum and Sculpture Garden', Abbreviation: 'HMSG' }, Department: 'Conservation',       EmailAddress: 'garciam@si.edu',      Title: 'Conservator' }
-            ];
-
-            setContacts(normalize(tempContacts)); //normalize(tempContacts ?? []));
-
-        } catch (e: any) {
-            setError(`Unexpected error: ${e?.message ?? e}`);
-            setContacts([]);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
     const getColumnHeader = (): ColumnHeader[] => {
         return [
             { key: 'id',        label: 'ID',        align: 'center', tooltip: 'System ID for the contact' },
@@ -88,12 +55,59 @@ const AdminContactView: React.FC = () => {
         ];
     };
 
+    const fetchContacts = useCallback(async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const contactResponse: RequestResponse = await API.getContacts(); // no signal
+            if (!contactResponse?.success)
+                throw new Error(contactResponse?.message ?? 'Failed to fetch units.');
+
+            // extract our contacts and normalize them (units filled in next)
+            const rows: any[] = Array.isArray(contactResponse.data) ? contactResponse.data : [];
+            const normalized: Contact[] = normalizeContacts(rows);
+
+            // get our units since we need to match their details so we can populate the table
+            // with something other than their IDs.
+            const unitResponse: RequestResponse = await API.getUnits();
+            const units = Array.isArray(unitResponse.data) ? unitResponse.data : [];
+            if(unitResponse.success && units.length>0) {
+
+                // build a map from the ids. we do this to ensure safety indepedent of sorting
+                const unitById = new Map<number, { name: string; abbreviation: string }>();
+                for (const u of units) {
+                    const id = Number(u?.idUnit);
+                    if (Number.isFinite(id)) {
+                        unitById.set(id, {
+                            name: String(u?.Name ?? 'NA'),
+                            abbreviation: String(u?.Abbreviation ?? 'NA'),
+                        });
+                    }
+                }
+
+                // cycle through contacts updating units
+                normalized.forEach((c)=>{
+                    const u = unitById.get(c.unit.idUnit);
+                    if (u) {
+                        c.unit.name = u.name;
+                        c.unit.abbreviation = u.abbreviation;
+                    }
+                });
+            }
+
+            setContacts(normalized);
+        } catch (err) {
+            setError(getErrorString(err));
+            setContacts([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
     useEffect(() => {
         fetchContacts();
     }, [fetchContacts]);
 
     const expandedRowRenderer = (row): React.ReactNode => {
-        console.log('expanded row renderer: ',row);
         // build a full UI for this row to display when expanded
         return (
             <>
