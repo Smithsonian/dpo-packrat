@@ -35,6 +35,7 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
 
     const classes = useToolsStyles();
     const tableClasses = useTableStyles();
+
     const [selected, setSelected] = React.useState<T[]>([]);
     const [order, setOrder] = React.useState<Order>('asc');
     const [orderBy, setOrderBy] = React.useState<string>('id');
@@ -329,13 +330,13 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
                                             return (
                                                 <React.Fragment key={row.id}>
                                                     <TableRow
-                                                        hover
                                                         onClick={selectable ? (event) => handleRowSelect(event, row) : undefined}
                                                         role='checkbox'
                                                         aria-checked={selectable ? isItemSelected : undefined}
                                                         tabIndex={-1}
                                                         key={row.id}
                                                         selected={isItemSelected}
+                                                        className={expandable && expandedRow === row.id ? classes.expandedRow : undefined}
                                                     >
                                                         {selectable && (
                                                             <TableCell padding='checkbox'>
@@ -346,7 +347,14 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
                                                             </TableCell>
                                                         )}
 
-                                                        <TableCell component='th' id={labelId} scope='row' padding='none'>
+                                                        <TableCell
+                                                            component='th'
+                                                            id={labelId}
+                                                            scope='row'
+                                                            padding='none'
+                                                            align={'center'}
+                                                            style={{ color: `${ expandable && expandedRow === row.id ? 'white' : 'black' }` }}
+                                                        >
                                                             {row.id}
                                                         </TableCell>
 
@@ -363,6 +371,7 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
                                                                             textOverflow: 'ellipsis',
                                                                             overflow: 'hidden',
                                                                             maxWidth: '10rem',
+                                                                            color: `${ expandable && expandedRow === row.id ? 'white' : 'black' }`
                                                                         }}
                                                                     >
                                                                         {column.link ? (() => {
@@ -414,7 +423,7 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
                                                                     borderTop='1px solid rgba(0,0,0,0.12)'
                                                                     borderBottom='1px solid rgba(0,0,0,0.12)'
                                                                     minHeight='64px'
-                                                                    style={{ backgroundColor: 'rgba(0, 54, 97, 0.12)' }}
+                                                                    className={classes.expandedPanel}
                                                                 >
                                                                     { renderExpanded ? renderExpanded(row) : <Typography>{`No renderer provided for row ${row.id}: ${row.name}`}</Typography> }
                                                                 </Box>

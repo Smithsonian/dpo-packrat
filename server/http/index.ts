@@ -207,7 +207,7 @@ export class HttpServer {
         this.app.get('/api/contact',getContact);                        // get all contacts
         this.app.get('/api/contact/:id',getContact);                    // get a specific contact
         this.app.post('/api/contact',createContact);                    // create a contact
-        this.app.put('/api/contact/:id',updateContact);                // update an existing contact
+        this.app.put('/api/contact/:id',updateContact);                 // update an existing contact
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);

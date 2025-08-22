@@ -53,7 +53,6 @@ export type SceneSummary = DBReference & {
     }
 };
 export type ValidationSummary = DBReference & {
-
 };
 
 export const useStyles = makeStyles(({ palette }) => ({
@@ -96,4 +95,13 @@ export const useStyles = makeStyles(({ palette }) => ({
         top: 20,
         width: 1,
     },
+    expandedRow: {
+        border: `1px solid ${palette.primary.dark}`,
+        borderStyle: 'double',
+        backgroundColor: palette.primary.main,
+        color: 'white'
+    },
+    expandedPanel: {
+        backgroundColor: 'rgba(0, 54, 97, 0.12)'
+    }
 }));

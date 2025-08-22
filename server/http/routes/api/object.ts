@@ -66,7 +66,20 @@ export async function createContact(req: Request, res: Response): Promise<void> 
         return;
     }
 
-    res.status(200).send(JSON.stringify(generateResponse(true,'[MOCK] created contact')));
+    try {
+        // get our body
+        const body = req.body;
+        if(!body)
+            throw new Error('invalid body');
+
+        RK.logInfo(RK.LogSection.eHTTP,'create contact',`success: ${body.Name} (${body.idContact})`,body,'HTTP.Object.CreateContact' ,true);
+        res.status(200).send(JSON.stringify(generateResponse(true,'[MOCK] created contact',body)));
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'update contact',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`cannot create/update contact: ${error}`)));
+        return;
+    }
 }
 export async function getContact(req: Request, res: Response): Promise<void> {
     // make sure we're authorized to run this routine
@@ -95,7 +108,7 @@ export async function getContact(req: Request, res: Response): Promise<void> {
         }
     } catch (err) {
         const error = H.Helpers.getErrorString(err);
-        RK.logError(RK.LogSection.eHTTP,'get contact failed',error,H.Helpers.cleanExpressRequest(req,false,true,true));
+        RK.logError(RK.LogSection.eHTTP,'get contact',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
         res.status(200).send(JSON.stringify(generateResponse(false,`no contacts: ${error}`)));
         return;
     }
@@ -115,27 +128,42 @@ export async function updateContact(req: Request, res: Response): Promise<void> 
     try {
         const { id } = req.params;
         const idContact = id ? parseInt(id, 10) : NaN;
-        const doCreate: boolean = (!id || isNaN(idContact) || idContact <= 0) ? false : true;
+        if(!id || isNaN(idContact) || idContact <= 0)
+            throw new Error(`invalid id for update: ${id}`);
 
-        if(doCreate) {
-            console.log('create');
-        } else {
-            console.log('update');
-        }
+        // get our body
+        const body = req.body;
+        if(!body)
+            throw new Error('invalid body');
+
+        // grab our DB object
+        const contact: DBAPI.Contact | null = await DBAPI.Contact.fetch(body.idContact);
+        if(!contact)
+            throw new Error(`no Contact found for id: ${body.idContact}`);
+
+        // fill it with changes
+        contact.Name = body.Name;
+        contact.EmailAddress = body.EmailAddress;
+        contact.Title = body.Title;
+        contact.Department = body.Department;
+        contact.idUnit = body.idUnit;
+
+        // TODO: validate new values
+        // ...
+
+        // update DB item
+        const result: boolean = await contact.update();
+        if(result===false)
+            throw new Error('failed to update Contact');
+
+        RK.logInfo(RK.LogSection.eHTTP,'update contact',`success: ${body.Name} (${body.idContact})`,body,'HTTP.Object.UpdateContact' ,true);
+        res.status(200).send(JSON.stringify(generateResponse(true,`updated contact: ${body.Name} (${body.idContact})`)));
     } catch(err) {
         const error = H.Helpers.getErrorString(err);
-        RK.logError(RK.LogSection.eHTTP,'update contact failed',error,H.Helpers.cleanExpressRequest(req,false,true,true));
+        RK.logError(RK.LogSection.eHTTP,'update contact',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
         res.status(200).send(JSON.stringify(generateResponse(false,`cannot create/update contact: ${error}`)));
         return;
     }
-
-    // check validity of body/params
-
-    // see if it already exists and update if needed
-
-    // else, create a new one in the database
-
-    // return success
 }
 //#endregion
 
