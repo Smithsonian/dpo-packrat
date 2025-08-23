@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
 import API, { RequestResponse } from '../../../../api';
 import { AdminContactForm } from './AdminContactForm';
-import { DataTableSelect } from '../shared/DataTableSelect';
+import { DataTableSelect, DataTableSelectHandle } from '../shared/DataTableSelect';
 import { ColumnHeader, DBReference } from '../shared/DataTypesStyles';
 import { getErrorString } from '../../../../utils/shared';
 
@@ -26,6 +26,7 @@ const AdminContactView: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
     const [resetKey, setResetKey] = useState(0);
+    const tableRef = useRef<DataTableSelectHandle<Contact>>(null);
 
     const normalizeContacts = (rows: any[]): Contact[] => {
         // Map server results to the shape DataTableSelect expects (must include id & name)
@@ -52,8 +53,8 @@ const AdminContactView: React.FC = () => {
             { key: 'name',      label: 'Name',      align: 'center', tooltip: 'Contact name' },
             { key: 'email',     label: 'Email',     align: 'center', tooltip: 'Primary email' },
             { key: 'role',      label: 'Role',      align: 'center', tooltip: 'Title / Role' },
+            { key: 'department',label: 'Department',align: 'center', tooltip: 'Department' },
             { key: 'unit.abbreviation',      label: 'Unit',      align: 'center', tooltip: 'Unit' },
-            { key: 'department',label: 'Department',align: 'center', tooltip: 'Department' }
         ];
     };
 
@@ -111,6 +112,7 @@ const AdminContactView: React.FC = () => {
 
     const expandedRowRenderer = (row): React.ReactNode => {
         // build a full UI for this row to display when expanded
+        console.log('row: ',row);
         return (
             <>
                 <AdminContactForm
@@ -137,6 +139,11 @@ const AdminContactView: React.FC = () => {
         // keep UI snappy & clear selection to prevent acting on stale rows
         setResetSelection(true);
         setTimeout(() => setResetSelection(false), 0);
+
+        // cleanup the UI by closing all
+        tableRef.current?.closeAll();
+
+        // refresh our contacts
         fetchContacts();
 
         console.log('onRefresh: ',contact,status,message);
@@ -171,7 +178,8 @@ const AdminContactView: React.FC = () => {
                 </Typography>
             )}
 
-            <DataTableSelect<Contact>
+            <DataTableSelect
+                ref={tableRef}
                 onUpdateSelection={onUpdateSelection}
                 data={contacts}
                 columns={getColumnHeader()}

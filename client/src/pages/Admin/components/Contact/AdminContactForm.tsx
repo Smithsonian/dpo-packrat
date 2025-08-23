@@ -351,6 +351,7 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                         variant='outlined'
                         size='small'
                         fullWidth
+                        value={role}
                         onChange={(e) => { if (!touched.role) markTouched('role'); setRole(e.target.value); }}
                         onBlur={() => markTouched('role')}
                         required

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/indent */
-import React, { useEffect } from 'react';
+import React, { useEffect, useImperativeHandle } from 'react';
 import { Box, Table, TableContainer, TableCell, TableRow, TableBody, TableHead, TableSortLabel, TablePagination, Tooltip, Checkbox, Typography, LinearProgress } from '@material-ui/core';
 import { DBReference, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 
@@ -16,8 +16,26 @@ export type SelectTableProps<T> = {
     expandable?: boolean;
     selectable?: boolean;
 };
+export type DataTableSelectHandle<T extends DBReference> = {
+    closeAll: () => void;
+    openRowById: (id: number) => void;
+    clearSelection: () => void;
+    selectByIds: (ids: number[], additive?: boolean) => void;
+    getSelection: () => T[];
+};
 
-export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T>): React.ReactElement => {
+// we need to jump through some hoops because we want to useRef to get a
+// handle on this table so the parent can procedurally call it. However,
+// when using forwardRef Typescript loses generics. So we need to do this
+// to allow for generic use and the type gets inferred from the props.
+type DataTableSelectComponent = <T extends DBReference>(
+  props: SelectTableProps<T> & React.RefAttributes<DataTableSelectHandle<T>>
+) => React.ReactElement;
+
+function DataTableSelectInner<T extends DBReference>(
+  props: SelectTableProps<T>,
+  ref: React.Ref<DataTableSelectHandle<T>>
+): React.ReactElement {
 
     type Order = 'asc' | 'desc';
 
@@ -241,6 +259,20 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
 
     }, [resetSelection]);
 
+    // expose a small imperative API
+    useImperativeHandle(ref, () => ({
+        closeAll: () => setExpandedRow(-1),
+        openRowById: (id: number) => setExpandedRow(id),
+        clearSelection: () => setSelected([]),
+        selectByIds: (ids: number[], additive = false) => {
+            if (!selectable) return;
+            const toSelect = data.filter(d => ids.includes(d.id));
+            setSelected(prev => additive ? [...prev, ...toSelect.filter(x => !prev.some(p => p.id === x.id))] : toSelect);
+            onUpdateSelection(additive ? [...selected, ...toSelect] : toSelect);
+        },
+        getSelection: () => selected
+    }));
+
     // JSX
     return (
         <Box style={{ boxSizing: 'border-box', padding: '1rem', marginTop: '2rem', marginBottom: '2rem' }}>
@@ -457,4 +489,7 @@ export const DataTableSelect = <T extends DBReference>(props: SelectTableProps<T
             </>
         </Box>
     );
-};
+}
+
+export const DataTableSelect = React.forwardRef(DataTableSelectInner) as DataTableSelectComponent;
+(DataTableSelect as any).displayName = 'DataTableSelect';
