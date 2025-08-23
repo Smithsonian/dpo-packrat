@@ -72,8 +72,22 @@ export async function createContact(req: Request, res: Response): Promise<void> 
         if(!body)
             throw new Error('invalid body');
 
-        RK.logInfo(RK.LogSection.eHTTP,'create contact',`success: ${body.Name} (${body.idContact})`,body,'HTTP.Object.CreateContact' ,true);
-        res.status(200).send(JSON.stringify(generateResponse(true,'[MOCK] created contact',body)));
+        const contactArgs = {
+            idContact: 0,
+            idUser: body.idUser ?? null,         // null, not -1
+            Name: body.Name ?? 'NA',
+            EmailAddress: body.EmailAddress ?? 'NA',
+            Title: body.Title ?? null,           // null if optional
+            idUnit: body.idUnit ?? null,         // null, not -1
+            Department: body.Department ?? null, // null if optional
+        };
+        const Contact = new DBAPI.Contact(contactArgs);
+        const result: boolean = await Contact.create();
+        if(!result)
+            throw new Error('failed to create DB row');
+
+        RK.logInfo(RK.LogSection.eHTTP,'create contact',`success: ${body.Name} (${body.idContact})`,Contact,'HTTP.Object.CreateContact' ,true);
+        res.status(200).send(JSON.stringify(generateResponse(true,`create contact success for: ${Contact.idContact}`,Contact)));
     } catch(err) {
         const error = H.Helpers.getErrorString(err);
         RK.logError(RK.LogSection.eHTTP,'update contact',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));

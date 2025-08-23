@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
 import API, { RequestResponse } from '../../../../api';
 import { AdminContactForm } from './AdminContactForm';
 import { DataTableSelect } from '../shared/DataTableSelect';
@@ -24,6 +24,8 @@ const AdminContactView: React.FC = () => {
     const [selected, setSelected] = useState<Contact[]>([]);
     const [resetSelection, setResetSelection] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [createOpen, setCreateOpen] = useState(false);
+    const [resetKey, setResetKey] = useState(0);
 
     const normalizeContacts = (rows: any[]): Contact[] => {
         // Map server results to the shape DataTableSelect expects (must include id & name)
@@ -129,9 +131,9 @@ const AdminContactView: React.FC = () => {
 
     const onUpdateSelection = (selection: Contact[]) => {
         setSelected(selection);
-        console.log('selection updated: ',selection);
+        console.log('selection updated: ',selected);
     };
-    const onRefresh = (contact, status, message) => {
+    const onRefresh = (contact: Contact | null, status: 'create' | 'update', message: string) => {
         // keep UI snappy & clear selection to prevent acting on stale rows
         setResetSelection(true);
         setTimeout(() => setResetSelection(false), 0);
@@ -139,9 +141,29 @@ const AdminContactView: React.FC = () => {
 
         console.log('onRefresh: ',contact,status,message);
     };
+    const onRefreshClick = () => {
+        onRefresh(null,'update','button press');
+    };
+    const onOpenCreate = () => setCreateOpen(true);
+    const onCloseCreate = () => setCreateOpen(false);
+    const onCreateFinished = (contact: Contact | null, status: 'create' | 'update', message: string) => {
+        console.log('[create-result]', { contact, status, message });
+
+        // if successfully created
+        if (status === 'create' && typeof contact?.id === 'number' && contact.id > 0) {
+            onCloseCreate();
+            fetchContacts(); // refresh list
+        }
+        // else: keep modal open, error messages handled by form
+    };
 
     return (
         <Box display='flex' flexDirection='column' style={{ gap: '1rem', width: '95%' }}>
+
+            <Box display='flex' alignItems='center' flexDirection='column'>
+                <Typography variant='h6'>Contacts</Typography>
+                <Typography align='center' style={{ padding: '1rem' }}>This page lets administrators view, edit, and add contacts in a single interface. It provides a table of existing contacts with inline editing and a modal form for creating new ones.</Typography>
+            </Box>
 
             {error && (
                 <Typography variant='body2' color='error'>
@@ -160,9 +182,48 @@ const AdminContactView: React.FC = () => {
                 renderExpanded={expandedRowRenderer}
             />
 
-            <Typography variant='caption' color='textSecondary'>
-                Selected: {selected.length}
-            </Typography>
+            <Box display='flex' alignItems='center' justifyContent='center' style={{ marginTop: '-5rem' }}>
+                <Button
+                    variant='contained'
+                    color='primary'
+                    disableElevation
+                    onClick={onRefreshClick}
+                    style={{ margin: '1rem', color: 'white' }}
+                >
+                    Refresh
+                </Button>
+                <Button
+                    variant='contained'
+                    color='primary'
+                    disableElevation
+                    onClick={onOpenCreate}
+                    style={{ margin: '1rem', color: 'white' }}
+                >
+                    Create
+                </Button>
+            </Box>
+
+            <Dialog
+                open={createOpen}
+                onClose={onCloseCreate}
+                aria-labelledby='create-contact-title'
+                fullWidth
+                maxWidth='md'
+                keepMounted
+                onExited={() => setResetKey((k) => k + 1)}
+            >
+                <DialogTitle id='create-contact-title'>Create Contact</DialogTitle>
+                <DialogContent dividers>
+                    <AdminContactForm
+                        key={resetKey}
+                        mode='create'
+                        onUpdate={onCreateFinished}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onCloseCreate}>Close</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

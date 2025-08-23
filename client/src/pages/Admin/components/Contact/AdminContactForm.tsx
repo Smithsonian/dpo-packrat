@@ -14,13 +14,6 @@ import API, { RequestResponse } from '../../../../api'; // adjust path as needed
 import { DBReference } from '../shared/DataTypesStyles';
 import { getErrorString } from '../../../../utils/shared';
 
-type Mode = 'create' | 'update';
-export type UpdateResult = {
-    contact: Contact;
-    status: 'created' | 'updated';
-    message: string;
-};
-
 export type UnitOption = { id: number; name: string; abbreviation: string };
 type Contact = DBReference & {
     email: string;
@@ -33,9 +26,9 @@ type Contact = DBReference & {
     department: string;
 };
 type ContactFormProps = {
-    mode?: Mode;                       // NEW: defaults to 'update'
-    contact?: Contact;                 // now optional (create mode can start empty)
-    onUpdate?: (contact: Contact, status: 'created' | 'updated', message: string) => void;  // NEW preferred callback
+    mode?: 'create' | 'update'
+    contact?: Contact;
+    onUpdate?: (contact: Contact | null, status: 'create' | 'update', message: string) => void;  // NEW preferred callback
 };
 const EMPTY_BASELINE: Contact = {
     id: -1,
@@ -86,6 +79,16 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+    const [touched, setTouched] = useState({
+        name: false,
+        email: false,
+        role: false,
+        department: false,
+        unit: false,
+    });
+    const markTouched = (k: keyof typeof touched) =>
+        setTouched((t) => (t[k] ? t : { ...t, [k]: true }));
 
     const dirty =
     name !== baseline.name ||
@@ -140,7 +143,7 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
             if (!resp?.success) {
                 const message = resp?.message ?? 'Failed to update contact.';
                 setError(message);
-                onUpdate?.(baseline, 'updated', message);
+                onUpdate?.(baseline, 'update', message);
             } else {
                 const message = 'Contact Updated';
                 setSuccessMsg(message);
@@ -173,12 +176,12 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                 setUnitId(updated.unit.idUnit);
 
                 // NEW unified update callback
-                onUpdate?.(updated, 'updated', message);
+                onUpdate?.(updated, 'update', message);
             }
         } catch (ex: any) {
             const message = `Unexpected error: ${ex?.message ?? ex}`;
             setError(message);
-            onUpdate?.(baseline, 'updated', message);
+            onUpdate?.(baseline, 'update', message);
         } finally {
             setSubmitting(false);
         }
@@ -211,7 +214,7 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
             if (!resp?.success) {
                 setError(message);
                 // still report to parent so it can notify
-                onUpdate?.(baseline, 'created', message);
+                onUpdate?.(baseline, 'create', message);
             } else {
                 // infer id & unit from server if present; fallback to our local selection
                 const server = (resp.data ?? {}) as any;
@@ -242,12 +245,12 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                 setUnitId(created.unit.idUnit);
 
                 // report to new unified callback
-                onUpdate?.(created, 'created', message);
+                onUpdate?.(created, 'create', message);
             }
         } catch (ex: any) {
             const message = `Unexpected error: ${ex?.message ?? ex}`;
             setError(message);
-            onUpdate?.(baseline, 'created', message);
+            onUpdate?.(baseline, 'create', message);
         } finally {
             setSubmitting(false);
         }
@@ -310,11 +313,12 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                         variant='outlined'
                         size='small'
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        fullWidth
+                        onChange={(e) => { if (!touched.name) markTouched('name'); setName(e.target.value); }}
+                        onBlur={() => markTouched('name')}
                         required
-                        error={name.trim().length === 0}
-                        helperText={name.trim().length === 0 ? 'Required' : ' '}
+                        error={touched.name && name.trim().length === 0}
+                        helperText={touched.name && name.trim().length === 0 ? 'Required' : ' '}
+                        fullWidth
                         InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
                         InputProps={{ style: { backgroundColor: 'white' }, }}
                     />
@@ -326,12 +330,13 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                         variant='outlined'
                         size='small'
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
                         fullWidth
+                        onChange={(e) => { if (!touched.email) markTouched('email'); setEmail(e.target.value); }}
+                        onBlur={() => markTouched('email')}
                         required
-                        error={email.trim().length > 0 && !emailRegex.test(email.trim())}
+                        error={touched.email && email.trim().length > 0 && !emailRegex.test(email.trim())}
                         helperText={
-                            email.trim().length > 0 && !emailRegex.test(email.trim())
+                            touched.email && email.trim().length > 0 && !emailRegex.test(email.trim())
                                 ? 'Invalid email format'
                                 : ' '
                         }
@@ -345,12 +350,12 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                         label='Title / Role'
                         variant='outlined'
                         size='small'
-                        value={role}
-                        onChange={(e) => setRole(e.target.value)}
                         fullWidth
+                        onChange={(e) => { if (!touched.role) markTouched('role'); setRole(e.target.value); }}
+                        onBlur={() => markTouched('role')}
                         required
-                        error={role.trim().length === 0}
-                        helperText={role.trim().length === 0 ? 'Required' : ' '}
+                        error={touched.role && role.trim().length === 0}
+                        helperText={touched.role && role.trim().length === 0 ? 'Required' : ' '}
                         InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
                         InputProps={{ style: { backgroundColor: 'white' }, }}
                     />
@@ -362,11 +367,12 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                         variant='outlined'
                         size='small'
                         value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
                         fullWidth
+                        onChange={(e) => { if (!touched.department) markTouched('department'); setDepartment(e.target.value); }}
+                        onBlur={() => markTouched('department')}
                         required
-                        error={department.trim().length === 0}
-                        helperText={department.trim().length === 0 ? 'Required' : ' '}
+                        error={touched.department && department.trim().length === 0}
+                        helperText={touched.department && department.trim().length === 0 ? 'Required' : ' '}
                         InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
                         InputProps={{ style: { backgroundColor: 'white' }, }}
                     />
@@ -379,7 +385,8 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                         variant='outlined'
                         size='small'
                         value={units.length > 0 ? (unitId > 0 ? unitId : '') : ''}
-                        onChange={(e) => setUnitId(Number(e.target.value))}
+                        onChange={(e) => { if (!touched.unit) markTouched('unit'); setUnitId(Number(e.target.value)); }}
+                        onBlur={() => markTouched('unit')}
                         fullWidth
                         required
                         disabled={unitsLoading || units.length === 0}

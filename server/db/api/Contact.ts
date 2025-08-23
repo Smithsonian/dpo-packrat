@@ -20,23 +20,73 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
     public fetchTableName(): string { return 'Contact'; }
     public fetchID(): number { return this.idContact; }
 
+    // protected async createWorker(): Promise<boolean> {
+    //     try {
+    //         let { idUser, Name, EmailAddress, Title, idUnit, Department } = this;
+    //         ({ idUser = this.idUser, Name = this.Name, EmailAddress = this.EmailAddress, Title = this.Title, idUnit = this.idUnit, Department = this.Department } =
+    //             await DBC.DBConnection.prisma.contact.create({
+    //                 data: {
+    //                     idUser,
+    //                     Name,
+    //                     EmailAddress,
+    //                     Title,
+    //                     idUnit,
+    //                     Department
+    //                 },
+    //             }));
+    //         return true;
+    //     } catch (error) /* istanbul ignore next */ {
+    //         RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Contact');
+    //         return false;
+    //     }
+    // }
+
     protected async createWorker(): Promise<boolean> {
         try {
-            let { idUser, Name, EmailAddress, Title, idUnit, Department } = this;
-            ({ idUser, Name, EmailAddress, Title, idUnit, Department } =
-                await DBC.DBConnection.prisma.contact.create({
-                    data: {
-                        idUser,
-                        Name,
-                        EmailAddress,
-                        Title,
-                        idUnit,
-                        Department
-                    },
-                }));
+            // Sanitize helpers
+            const fkOrNull = (n: number | null | undefined) =>
+                (typeof n === 'number' && n > 0) ? n : null;
+
+            const strOrNull = (s: string | null | undefined) => {
+                if (s === null || s === undefined) return null;
+                const t = String(s).trim();
+                return t.length ? t : null;
+            };
+
+            // Build payload WITHOUT idContact
+            const data = {
+                idUser: fkOrNull(this.idUser as number | null | undefined),
+                Name: String(this.Name ?? '').trim(),                // assume required
+                EmailAddress: String(this.EmailAddress ?? '').trim(),// assume required
+                Title: strOrNull(this.Title),
+                idUnit: fkOrNull(this.idUnit as number | null | undefined),
+                Department: strOrNull(this.Department),
+            };
+
+            // Basic guardrails if Name/Email are required in your schema
+            if (!data.Name) throw new Error('Name is required');
+            if (!data.EmailAddress) throw new Error('EmailAddress is required');
+
+            const created = await DBC.DBConnection.prisma.contact.create({ data });
+
+            // Reflect DB-generated / canonical values back onto the instance
+            this.idContact   = created.idContact;
+            this.idUser      = created.idUser;
+            this.Name        = created.Name;
+            this.EmailAddress= created.EmailAddress;
+            this.Title       = created.Title;
+            this.idUnit      = created.idUnit;
+            this.Department  = created.Department;
+
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Contact');
+            RK.logError(
+                RK.LogSection.eDB,
+                'create failed',
+                H.Helpers.getErrorString(error),
+                { ...this },
+                'DB.Contact'
+            );
             return false;
         }
     }
