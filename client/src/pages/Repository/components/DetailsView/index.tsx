@@ -846,7 +846,7 @@ export function getNoticeConfig(properties: ObjectPropertyResult[] | null): Noti
     let messageHTML = 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
     messageHTML += '</br>For more info: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
     messageHTML += `</br></br><b>Reason</b>: ${prop.rationale}`;
-    messageHTML += `</br><b>Contact</b>: ${prop.contactName} (${prop.contactEmail})`;
+    messageHTML += `</br><b>Contact</b>: ${prop.idContact}`; //${prop.contactName} (${prop.contactEmail})`;
 
     return {
         show: true,

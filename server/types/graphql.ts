@@ -1744,11 +1744,7 @@ export type NavigationResultEntry = {
 
 export type ObjectPropertyResult = {
   __typename?: 'ObjectPropertyResult';
-  contactDepartment?: Maybe<Scalars['String']>;
-  contactEmail?: Maybe<Scalars['String']>;
-  contactName?: Maybe<Scalars['String']>;
-  contactUnit?: Maybe<Scalars['Int']>;
-  contactUserId?: Maybe<Scalars['Int']>;
+  idContact?: Maybe<Scalars['Int']>;
   level: Scalars['Int'];
   propertyType: Scalars['String'];
   rationale: Scalars['String'];

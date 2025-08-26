@@ -20,27 +20,6 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
     public fetchTableName(): string { return 'Contact'; }
     public fetchID(): number { return this.idContact; }
 
-    // protected async createWorker(): Promise<boolean> {
-    //     try {
-    //         let { idUser, Name, EmailAddress, Title, idUnit, Department } = this;
-    //         ({ idUser = this.idUser, Name = this.Name, EmailAddress = this.EmailAddress, Title = this.Title, idUnit = this.idUnit, Department = this.Department } =
-    //             await DBC.DBConnection.prisma.contact.create({
-    //                 data: {
-    //                     idUser,
-    //                     Name,
-    //                     EmailAddress,
-    //                     Title,
-    //                     idUnit,
-    //                     Department
-    //                 },
-    //             }));
-    //         return true;
-    //     } catch (error) /* istanbul ignore next */ {
-    //         RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Contact');
-    //         return false;
-    //     }
-    // }
-
     protected async createWorker(): Promise<boolean> {
         try {
             // Sanitize helpers

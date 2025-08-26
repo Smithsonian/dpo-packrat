@@ -192,10 +192,8 @@ export function RotationOriginInput(props: RotationOriginInputProps): React.Reac
 
     return (
         <TableRow className={tableClasses.tableRow}>
-            <TableCell style={{ border: 'none', padding: '1px 10px' }}>
-                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                    <Typography className={tableClasses.labelText}>Rotation Origin</Typography>
-                </TableCell>
+            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                <Typography className={tableClasses.labelText}>Rotation Origin</Typography>
             </TableCell>
             <TableCell style={{ border: 'none', padding: '1px 10px' }}>
                 <Box display='flex' flex={1}>
@@ -395,10 +393,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
         propertyType: objectProperty.propertyType,
         level: objectProperty.level,
         rationale: objectProperty.rationale,
-        contactName: objectProperty.contactName,
-        contactEmail: objectProperty.contactEmail,
-        contactDepartment: objectProperty.contactDepartment,
-        contactUnit: objectProperty.contactUnit,
+        idContact: objectProperty.idContact,
         disabled
     };
 
@@ -416,6 +411,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                 return [];
         }
     };
+
     const onLevelChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
         setCurrentLevel(Number(e.target.value));
 
@@ -488,18 +484,18 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                                             <TableCell className={clsx(tableClasses.tableCell)}>
                                                 <DebounceInput
                                                     element='input'
-                                                    title='ContactName-input'
+                                                    title='ContactID-input'
                                                     disabled={disabled}
-                                                    value={details.contactName || ''}
-                                                    type='string'
-                                                    name='contactName'
+                                                    value={details.idContact || ''}
+                                                    type='number'
+                                                    name='idContact'
                                                     onChange={onChange}
                                                     className={clsx(classes.input, classes.datasetFieldInput)}
                                                     // style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
                                                 />
                                             </TableCell>
                                         </TableRow>
-                                        <TableRow className={tableClasses.tableRow}>
+                                        {/* <TableRow className={tableClasses.tableRow}>
                                             <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
                                                 <Typography className={tableClasses.labelText}>Contact Email</Typography>
                                             </TableCell>
@@ -542,7 +538,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                                                     // style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
                                                 />
                                             </TableCell>
-                                        </TableRow>
+                                        </TableRow> */}
                                     </>
                                 )}
                             </>
@@ -553,167 +549,6 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
         </React.Fragment>
     );
 }
-
-// type SensitivityForm = {
-//     level: 0 | 1 | 2 | 3;
-//     rationale: string;
-//     contactName?: string | null;
-//     contactEmail?: string | null;
-//     contactDepartment?: string | null;
-//     contactUnit?: number | null;
-//     contactUserId?: number | null;
-// };
-
-// const SENSITIVITY_OPTIONS = [
-//     { label: 'none',         value: 0 as const },
-//     { label: 'sensitive',    value: 1 as const },
-//     { label: 'restricted',   value: 2 as const },
-//     { label: 'confidential', value: 3 as const },
-// ];
-
-// function pickSensitivity(ops: ObjectPropertyResult[] | null | undefined): ObjectPropertyResult | null {
-//     if (!ops) return null;
-//     return ops.find(op => op.propertyType?.toLowerCase() === 'sensitivity') ?? null;
-// }
-
-// function SensitivityEditor({
-//     disabled,
-//     objectProperties,
-//     onChange
-// }: {
-//     disabled: boolean;
-//     objectProperties: ObjectPropertyResult[];
-//     onChange?: (ops: ObjectPropertyResult[] | null) => void;
-// }) {
-//     const existing = pickSensitivity(objectProperties);
-//     const [form, setForm] = React.useState<SensitivityForm>({
-//         level: (existing?.level ?? 0) as 0|1|2|3,
-//         rationale: existing?.rationale ?? '',
-//         contactName: existing?.contactName ?? '',
-//         contactEmail: existing?.contactEmail ?? '',
-//         contactDepartment: existing?.contactDepartment ?? '',
-//         contactUnit: existing?.contactUnit ?? null,
-//         contactUserId: existing?.contactUserId ?? null
-//     });
-
-//     // keep internal state in sync if parent props change
-//     React.useEffect(() => {
-//         const fresh = pickSensitivity(objectProperties);
-//         setForm({
-//             level: (fresh?.level ?? 0) as 0|1|2|3,
-//             rationale: fresh?.rationale ?? '',
-//             contactName: fresh?.contactName ?? '',
-//             contactEmail: fresh?.contactEmail ?? '',
-//             contactDepartment: fresh?.contactDepartment ?? '',
-//             contactUnit: fresh?.contactUnit ?? null,
-//             contactUserId: fresh?.contactUserId ?? null
-//         });
-//     }, [JSON.stringify(objectProperties)]);
-
-//     const pushUp = (next: SensitivityForm) => {
-//         if (!onChange) return;
-//         // Build a NEW ObjectPropertyResult[] containing just the sensitivity property for now.
-//         // Future: you can merge with other property types here.
-//         const payload: ObjectPropertyResult = {
-//             __typename: 'ObjectPropertyResult',
-//             propertyType: 'sensitivity',
-//             level: next.level,
-//             rationale: next.rationale,
-//             contactName: next.contactName ?? null,
-//             contactEmail: next.contactEmail ?? null,
-//             contactDepartment: next.contactDepartment ?? null,
-//             contactUnit: next.contactUnit ?? null,
-//             contactUserId: next.contactUserId ?? null
-//         };
-//         // Convention: if level === 0 (none), still send the property with level=0 so the server can clear it.
-//         onChange([payload]);
-//     };
-
-//     const setField =
-//         <K extends keyof SensitivityForm>(key: K) =>
-//             (value: SensitivityForm[K]) => {
-//                 const next = { ...form, [key]: value };
-//                 setForm(next);
-//                 pushUp(next);
-//             };
-
-//     const showExtra = form.level > 0;
-
-//     return (
-//         <Box style={{ background: 'rgba(236,245,253,0.6)', padding: 12, borderRadius: 8 }}>
-//             <Typography variant='subtitle2' style={{ marginBottom: 8 }}>Sensitivity</Typography>
-
-//             <Select
-//                 value={form.level}
-//                 onChange={(e) => setField('level')(e.target.value as 0|1|2|3)}
-//                 disabled={disabled}
-//                 fullWidth
-//                 style={{ marginBottom: 12 }}
-//             >
-//                 {SENSITIVITY_OPTIONS.map(opt => (
-//                     <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-//                 ))}
-//             </Select>
-
-//             {showExtra && (
-//                 <>
-//                     <LabelTooltipText label='Rationale' labelTooltipTxt='Why is this object sensitive?' />
-//                     <input
-//                         value={form.rationale}
-//                         onChange={(e) => setField('rationale')(e.target.value)}
-//                         disabled={disabled}
-//                         className='MuiInputBase-input'
-//                         style={{ width: '100%', height: 28, marginBottom: 12, border: '1px solid rgba(141,171,196,0.4)', borderRadius: 5, padding: '0 8px' }}
-//                     />
-
-//                     <LabelTooltipText label='Contact Name' labelTooltipTxt='Name for questions about access.' />
-//                     <input
-//                         value={form.contactName ?? ''}
-//                         onChange={(e) => setField('contactName')(e.target.value)}
-//                         disabled={disabled}
-//                         className='MuiInputBase-input'
-//                         style={{ width: '100%', height: 28, marginBottom: 12, border: '1px solid rgba(141,171,196,0.4)', borderRadius: 5, padding: '0 8px' }}
-//                     />
-
-//                     <LabelTooltipText label='Contact Email' labelTooltipTxt='Email for questions about access.' />
-//                     <input
-//                         value={form.contactEmail ?? ''}
-//                         onChange={(e) => setField('contactEmail')(e.target.value)}
-//                         disabled={disabled}
-//                         className='MuiInputBase-input'
-//                         style={{ width: '100%', height: 28, marginBottom: 12, border: '1px solid rgba(141,171,196,0.4)', borderRadius: 5, padding: '0 8px' }}
-//                     />
-
-//                     {/* Optional: if you surface a user picker later, wire it to contactUserId */}
-//                     {/* <Hidden for now /> */}
-
-//                     <LabelTooltipText label='Unit' labelTooltipTxt='Primary SI Unit for this contact.' />
-//                     <Select
-//                         value={form.contactUnit ?? ''}
-//                         onChange={(e) => setField('contactUnit')(e.target.value === '' ? null : Number(e.target.value))}
-//                         disabled={disabled}
-//                         fullWidth
-//                         displayEmpty
-//                         style={{ marginBottom: 12 }}
-//                     >
-//                         <MenuItem value=''><em>Select unit…</em></MenuItem>
-//                         {/* Populate these options from parent or a tiny Units hook if you have it */}
-//                         {/* {units.map(u => <MenuItem key={u.idUnit} value={u.idUnit}>{u.Name}</MenuItem>)} */}
-//                     </Select>
-
-//                     <LabelTooltipText label='Department' labelTooltipTxt='Department within the unit.' />
-//                     <input
-//                         value={form.contactDepartment ?? ''}
-//                         onChange={(e) => setField('contactDepartment')(e.target.value)}
-//                         disabled={disabled}
-//                         className='MuiInputBase-input'
-//                         style={{ width: '100%', height: 28, border: '1px solid rgba(141,171,196,0.4)', borderRadius: 5, padding: '0 8px' }}
-//                     />
-//                 </>
-//             )}
-//         </Box>
-//     );
-// }
 //#endregion
 
 export default SubjectDetails;

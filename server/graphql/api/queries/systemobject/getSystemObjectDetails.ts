@@ -95,11 +95,7 @@ const getSystemObjectDetails = gql`
                 propertyType
                 level
                 rationale
-                contactName
-                contactEmail
-                contactUserId
-                contactUnit
-                contactDepartment
+                idContact
             }
         }
     }

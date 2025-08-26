@@ -1477,11 +1477,7 @@ type NavigationResultEntry {
 }
 
 type ObjectPropertyResult {
-  contactDepartment: String
-  contactEmail: String
-  contactName: String
-  contactUnit: Int
-  contactUserId: Int
+  idContact: Int
   level: Int!
   propertyType: String!
   rationale: String!
