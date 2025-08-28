@@ -2462,6 +2462,7 @@ export type UpdateObjectDetailsDataInput = {
   Metadata?: InputMaybe<Array<MetadataInput>>;
   Model?: InputMaybe<ModelDetailFieldsInput>;
   Name?: InputMaybe<Scalars['String']>;
+  ObjectProperties?: InputMaybe<Array<UpdateObjectPropertyInput>>;
   Project?: InputMaybe<ProjectDetailFieldsInput>;
   ProjectDocumentation?: InputMaybe<ProjectDocumentationDetailFieldsInput>;
   Retired?: InputMaybe<Scalars['Boolean']>;
@@ -2483,6 +2484,13 @@ export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
+};
+
+export type UpdateObjectPropertyInput = {
+  idContact?: InputMaybe<Scalars['Int']>;
+  level?: InputMaybe<Scalars['Int']>;
+  propertyType: Scalars['String'];
+  rationale?: InputMaybe<Scalars['String']>;
 };
 
 export type UpdatePhotogrammetryMetadata = {

@@ -141,11 +141,19 @@ input UpdateObjectDetailsDataInput {
     Stakeholder: StakeholderDetailFieldsInput
     Metadata: [MetadataInput!]
     Identifiers: [UpdateIdentifier!]
+    ObjectProperties: [UpdateObjectPropertyInput!]
 }
 
 type UpdateObjectDetailsResult {
     success: Boolean!
     message: String
+}
+
+input UpdateObjectPropertyInput {
+  propertyType: String!
+  level: Int
+  rationale: String
+  idContact: Int
 }
 
 input ExistingRelationship {

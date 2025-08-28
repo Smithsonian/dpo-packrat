@@ -5,7 +5,7 @@
  *
  * This component renders details tab for Subject specific details used in DetailsTab component.
  */
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography, Tooltip, Select, MenuItem } from '@material-ui/core';
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography, Tooltip, MenuItem, TextField } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
 import { Loader } from '../../../../../components';
 import { SubjectDetailFields, ObjectPropertyResult } from '../../../../../types/graphql';
@@ -15,12 +15,14 @@ import { eSystemObjectType } from '@dpo-packrat/common';
 import { useDetailTabStore } from '../../../../../store';
 import clsx from 'clsx';
 import { DebounceInput } from 'react-debounce-input';
+import API from '../../../../../api';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 
 function SubjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType, objectProperties } = props;
     const [SubjectDetails, updateDetailField] = useDetailTabStore(state => [state.SubjectDetails, state.updateDetailField]);
+    const onFieldBlur = () => onUpdateDetail(objectType, SubjectDetails);
 
     useEffect(() => {
         onUpdateDetail(objectType, SubjectDetails);
@@ -57,7 +59,12 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
             </Box>
 
             <Box flex={1} minWidth={420}>
-                <ObjectPropertyFields objectProperty={ getSensitivityObjectProperty(objectProperties) } disabled={disabled} onChange={onSetField} />
+                <ObjectPropertyFields
+                    objectProperty={ getSensitivityObjectProperty(objectProperties) }
+                    disabled={disabled}
+                    onChange={onSetField}
+                    onBlurRefresh={onFieldBlur}
+                />
             </Box>
         </Box>
     );
@@ -372,9 +379,23 @@ interface ObjectPropertyProps {
     objectProperty?: ObjectPropertyResult | null;
     disabled: boolean;
     onChange: (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onBlurRefresh?: () => void;
 }
 export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactElement {
+    type ContactOption = {
+        idContact: number;
+        Name: string;
+        EmailAddress?: string | null;
+        Title?: string | null;
+        Department?: string | null;
+        idUnit?: number | null;
+    };
+    type UnitOption = { idUnit: number; Name: string; Abbreviation?: string | null };
+
     const [currentLevel, setCurrentLevel] = useState(0);
+    const [contacts, setContacts] = useState<ContactOption[]>([]);
+    const [units, setUnits] = useState<UnitOption[]>([]);
+    const [selectedContact, setSelectedContact] = useState<ContactOption | null>(null);
 
     const classes = useStyles();
     const tableClasses = useTableStyles();
@@ -382,18 +403,14 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
     const {
         objectProperty,
         disabled,
-        onChange
+        onChange,
+        onBlurRefresh
     } = props;
-
-    // if no object property provided, render nothing
-    if(!objectProperty)
-        return <>No Object Properties</>;
-
     const details = {
-        propertyType: objectProperty.propertyType,
-        level: objectProperty.level,
-        rationale: objectProperty.rationale,
-        idContact: objectProperty.idContact,
+        propertyType: objectProperty?.propertyType ?? '',
+        level: objectProperty?.level ?? -1,
+        rationale: objectProperty?.rationale ?? '',
+        idContact: objectProperty?.idContact ?? -1,
         disabled
     };
 
@@ -411,15 +428,69 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                 return [];
         }
     };
-
     const onLevelChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
-        setCurrentLevel(Number(e.target.value));
+        const next = Number(e.target.value);
+        setCurrentLevel(next);
 
-        // wrap the values to match what onChange expects
-        onChange({
-            target: { name: 'level', value: e.target.value }
-        } as unknown as React.ChangeEvent<HTMLInputElement>);
+        // Update level
+        onChange({ target: { name: 'level', value: next } } as unknown as React.ChangeEvent<HTMLInputElement>);
+
+        if (next === 0) {
+            // Clear subordinate fields when not sensitive
+            onChange({ target: { name: 'rationale', value: '' } } as unknown as React.ChangeEvent<HTMLInputElement>);
+            onChange({ target: { name: 'idContact', value: null } } as unknown as React.ChangeEvent<HTMLInputElement>);
+            setSelectedContact(null); // (see step 5)
+        }
+
+        onBlurRefresh?.(); // update notice on change+blur
     };
+    const unitFor = (id?: number | null): string => {
+        if (!id) return '';
+        const u = units.find(u => u.idUnit === id);
+        return u ? (u.Abbreviation || u.Name) : '';
+    };
+    const onContactChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
+        const id = Number(e.target.value);
+        const found = contacts.find(c => c.idContact === id) || null;
+        setSelectedContact(found);
+
+        // propagate to data model
+        onChange({ target: { name: 'idContact', value: found ? found.idContact : null } } as unknown as React.ChangeEvent<HTMLInputElement>);
+    };
+
+    useEffect(() => {
+        setCurrentLevel(objectProperty?.level ?? 0);
+    }, [objectProperty?.level]);
+    useEffect(() => {
+        let isMounted = true;
+
+        const load = async () => {
+            const [cRes, uRes] = await Promise.all([
+                API.getContacts(),
+                API.getUnits()
+            ]);
+
+            if (!isMounted) return;
+
+            const cList: ContactOption[] = cRes?.data ?? [];
+            const uList: UnitOption[] = uRes?.data ?? [];
+            setContacts(cList);
+            setUnits(uList);
+
+            // If a contact is already set on the object, select it
+            if (objectProperty?.idContact) {
+                const found = cList.find(c => c.idContact === objectProperty.idContact) || null;
+                setSelectedContact(found);
+            }
+        };
+
+        load();
+        return () => { isMounted = false; };
+    }, [objectProperty?.idContact]);
+
+    // if no object property provided, render nothing
+    if(!objectProperty)
+        return <>No Object Properties</>;
 
     return (
         <React.Fragment>
@@ -436,23 +507,28 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                                         <Typography className={tableClasses.labelText}>Level</Typography>
                                     </TableCell>
                                     <TableCell className={clsx(tableClasses.tableCell)}>
-                                        <Select
-                                            labelId={details.propertyType}
-                                            label={`${details.propertyType} ${'Level'}`}
+                                        <TextField
+                                            select
+                                            variant='outlined'
+                                            size='small'
+                                            fullWidth
+                                            // label={`${details.propertyType} ${'Level'}`}
                                             disabled={disabled}
                                             value={currentLevel}
                                             onChange={onLevelChange}
-                                            className={clsx(classes.select, classes.datasetFieldSelect)}
-                                            SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                                            onBlur={onBlurRefresh}
+                                            InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
+                                            InputProps={{ style: { backgroundColor: 'white', fontSize: '0.9rem', height: '2rem' } }}
                                         >
                                             { getLevelOptions(details.propertyType).map(opt => (
                                                 <MenuItem key={opt.value} value={opt.value}>
                                                     {opt.label} ({opt.value})
                                                 </MenuItem>
                                             )) }
-                                        </Select>
+                                        </TextField>
                                     </TableCell>
                                 </TableRow>
+
                                 {currentLevel > 0 && (
                                     <>
                                         <TableRow className={tableClasses.tableRow}>
@@ -468,77 +544,65 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                                                     value={details.rationale ?? ''}
                                                     type='string'
                                                     onChange={onChange}
+                                                    onBlur={onBlurRefresh}      // ← add this
                                                     disabled={disabled}
                                                     className={clsx(classes.input, classes.fieldSizing)}
-                                                    // updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'description')}
                                                     forceNotifyByEnter={false}
                                                     debounceTimeout={400}
-                                                    style={{ width: '100%', minWidth: '10rem', minHeight: '2rem', textAlign: 'left', padding: '5px' }}
+                                                    style={{ fontSize: '0.9rem', width: '100%', minWidth: '15rem', minHeight: '2rem', textAlign: 'left', padding: '5px' }}
                                                 />
                                             </TableCell>
                                         </TableRow>
+
                                         <TableRow className={tableClasses.tableRow}>
                                             <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                <Typography className={tableClasses.labelText}>Contact Name</Typography>
+                                                <Typography className={tableClasses.labelText}>Contact</Typography>
                                             </TableCell>
                                             <TableCell className={clsx(tableClasses.tableCell)}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='ContactID-input'
-                                                    disabled={disabled}
-                                                    value={details.idContact || ''}
-                                                    type='number'
-                                                    name='idContact'
-                                                    onChange={onChange}
-                                                    className={clsx(classes.input, classes.datasetFieldInput)}
-                                                    // style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
-                                                />
+                                                <TextField
+                                                    select
+                                                    variant='outlined'
+                                                    size='small'
+                                                    fullWidth
+                                                    disabled={disabled || currentLevel === 0}
+                                                    value={selectedContact?.idContact ?? ''}
+                                                    onChange={onContactChange}
+                                                    onBlur={onBlurRefresh}
+                                                    InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
+                                                    InputProps={{ style: { backgroundColor: 'white', fontSize: '0.9rem', height: '2rem' } }}
+                                                >
+                                                    <MenuItem value=''>
+                                                        <em>None</em>
+                                                    </MenuItem>
+                                                    {contacts.map(c => (
+                                                        <MenuItem key={c.idContact} value={c.idContact}>
+                                                            {c.Name}{unitFor(c.idUnit) ? ` — ${unitFor(c.idUnit)}` : ''}
+                                                        </MenuItem>
+                                                    ))}
+                                                </TextField>
                                             </TableCell>
                                         </TableRow>
-                                        {/* <TableRow className={tableClasses.tableRow}>
-                                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                <Typography className={tableClasses.labelText}>Contact Email</Typography>
-                                            </TableCell>
-                                            <TableCell className={clsx(tableClasses.tableCell)}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='ContactEmail-input'
-                                                    disabled={disabled}
-                                                    value={details.contactEmail || ''}
-                                                    type='string'
-                                                    name='contactEmail'
-                                                    onChange={onChange}
-                                                    className={clsx(classes.input, classes.datasetFieldInput)}
-                                                    // style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow}>
-                                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                <Typography className={tableClasses.labelText}>Contact Unit</Typography>
-                                            </TableCell>
-                                            <TableCell className={clsx(tableClasses.tableCell)}>
-                                                Contact Unit
-                                            </TableCell>
-                                        </TableRow>
-                                        <TableRow className={tableClasses.tableRow}>
-                                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                                <Typography className={tableClasses.labelText}>Contact Department</Typography>
-                                            </TableCell>
-                                            <TableCell className={clsx(tableClasses.tableCell)}>
-                                                <DebounceInput
-                                                    element='input'
-                                                    title='ContactDepartment-input'
-                                                    disabled={disabled}
-                                                    value={details.contactDepartment || ''}
-                                                    type='string'
-                                                    name='contactDepartment'
-                                                    onChange={onChange}
-                                                    className={clsx(classes.input, classes.datasetFieldInput)}
-                                                    // style={{ ...updatedFieldStyling(isFieldUpdated(details, originalFields, 'Latitude')) }}
-                                                />
-                                            </TableCell>
-                                        </TableRow> */}
+
+                                        {selectedContact && (
+                                            <TableRow className={tableClasses.tableRow}>
+                                                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                                    <Typography className={tableClasses.labelText}></Typography>
+                                                </TableCell>
+                                                <TableCell className={clsx(tableClasses.tableCell)}>
+                                                    <Box display='flex' flexDirection='column' style={{ lineHeight: 1.4, padding: '5px', borderRadius: '5px', border: '1px solid lightgrey' }}>
+                                                        <Typography>{selectedContact.Name}</Typography>
+                                                        {selectedContact.EmailAddress && (
+                                                            <Typography>{selectedContact.EmailAddress}</Typography>
+                                                        )}
+                                                        <Typography>{selectedContact.Title}</Typography>
+                                                        {selectedContact.Department && (
+                                                            <Typography>{selectedContact.Department}, {unitFor(selectedContact.idUnit) || '—'}</Typography>
+                                                        )}
+                                                        <Typography>{}</Typography>
+                                                    </Box>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
                                     </>
                                 )}
                             </>

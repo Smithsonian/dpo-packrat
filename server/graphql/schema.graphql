@@ -1948,6 +1948,7 @@ input UpdateObjectDetailsDataInput {
   Metadata: [MetadataInput!]
   Model: ModelDetailFieldsInput
   Name: String
+  ObjectProperties: [UpdateObjectPropertyInput!]
   Project: ProjectDetailFieldsInput
   ProjectDocumentation: ProjectDocumentationDetailFieldsInput
   Retired: Boolean
@@ -1968,6 +1969,13 @@ input UpdateObjectDetailsInput {
 type UpdateObjectDetailsResult {
   message: String
   success: Boolean!
+}
+
+input UpdateObjectPropertyInput {
+  idContact: Int
+  level: Int
+  propertyType: String!
+  rationale: String
 }
 
 type UpdatePhotogrammetryMetadata {

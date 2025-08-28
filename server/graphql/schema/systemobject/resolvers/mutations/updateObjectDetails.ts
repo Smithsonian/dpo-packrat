@@ -118,6 +118,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
         case COMMON.eSystemObjectType.eSubject: {
             console.log('update obj.subject: ',data.Subject);
+            console.log('update obj.ObjectProperty', data.ObjectProperties);
             if (data.Subject) {
                 const { Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Subject;
                 const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||

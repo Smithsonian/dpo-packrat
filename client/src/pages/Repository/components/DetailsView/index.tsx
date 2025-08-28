@@ -115,7 +115,7 @@ function DetailsView(): React.ReactElement {
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const [uploadReferences, setUploadReferences] = useState<UploadReferences | null>(null);
-    // const [pendingObjectProperties, setPendingObjectProperties] = useState<ObjectPropertyResult[] | null>(null);
+    const [pendingObjectProperties, setPendingObjectProperties] = useState<ObjectPropertyResult[] | null>(null);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
@@ -376,12 +376,35 @@ function DetailsView(): React.ReactElement {
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
-        // console.log('onUpdateDetail', objectType, data);
+        console.log('onUpdateDetail', objectType, data);
         const updatedDataFields: UpdateObjectDetailsDataInput = {
             ...updatedData,
             Name: details.name,
             Retired: details.retired
         };
+
+        // if we're a Subject and got data, we need to extract the ObjectProperties.
+        // in the future this could be for all object types if these properties are allowed.
+        if (objectType === eSystemObjectType.eSubject && data) {
+            // Pull out OP fields if they were bubbled up by SubjectDetails
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { level, rationale, idContact, ...rest } = (data as any);
+
+            // If any OP field is present, stage it for update later (only sensitivity for now)
+            if (level !== undefined || rationale !== undefined || idContact !== undefined) {
+                const staged: ObjectPropertyResult = {
+                    propertyType: 'sensitivity',
+                    level: (level !== undefined && level !== null && level !== '') ? Number(level) : 0,
+                    rationale: (rationale ?? '') as string,
+                    idContact: (idContact !== undefined && idContact !== null && idContact !== '') ? Number(idContact) : null
+                };
+                setPendingObjectProperties([staged]);
+
+                // Replace data with the remainder so SubjectDetailFieldsInput stays clean
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                data = rest as any;
+            }
+        }
 
         switch (objectType) {
             case eSystemObjectType.eUnit:
@@ -431,7 +454,6 @@ function DetailsView(): React.ReactElement {
     };
 
     const updateData = async (): Promise<boolean> => {
-        console.log('update data: ',data);
 
         toast.dismiss();
         setIsUpdatingData(true);
@@ -560,9 +582,25 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
+            console.log('update data: ',JSON.stringify(updatedData));
+
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
             updatedData.Metadata = metadata;
+
+            // add our object properties
+            if (pendingObjectProperties && pendingObjectProperties.length > 0) {
+                updatedData = { ...updatedData, ObjectProperties: pendingObjectProperties.map(p => ({
+                    propertyType: p.propertyType,
+                    level: p.level ?? 0,
+                    rationale: p.rationale ?? '',
+                    idContact: p.idContact ?? null
+                })) };
+            }
+            console.log('[index] update data (2): ', JSON.stringify(updatedData));
+
+            // send data to the server
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
+
             if (data?.updateObjectDetails?.success) {
                 const message: string | null | undefined = data?.updateObjectDetails?.message;
                 toast.success(`Data saved successfully${message? ': ' + message : ''}`);
@@ -671,7 +709,7 @@ function DetailsView(): React.ReactElement {
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
     const notice = getNoticeConfig(objectProperties ?? null);
-    console.log('detail view: ',data.getSystemObjectDetails);
+    console.log('[index] detail view: ',data.getSystemObjectDetails);
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
