@@ -48,6 +48,7 @@ import { eIngestionMode } from '../../../../constants';
 import SpecialUploadList from '../../../Ingestion/components/Uploads/SpecialUploadList';
 import { UploadReferences } from '../../../../store';
 import NoticeBanner from './NoticeBanner';
+import { useContactStore, Contact } from '../../../../store/contact';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -272,6 +273,26 @@ function DetailsView(): React.ReactElement {
     useEffect(() => {
         verifyGenerateDownloads();
     }, []);
+    useEffect(() => {
+        // warm the cache once
+        useContactStore.getState().loadAll();
+    }, []);
+
+    // contacts and notice
+    const ops = useDetailTabStore(s => s.getObjectProperties(idSystemObject));
+    const primaryIdContact: number | null = React.useMemo(() => {
+        if (!ops || !ops.length) return null;
+        const sens = ops
+            .filter(p => p.propertyType.toLowerCase() === 'sensitivity' && p.level > 0)
+            .reduce<ObjectPropertyResult | undefined>((max, cur) => (!max || cur.level > max.level ? cur : max), undefined);
+        return sens?.idContact ?? null;
+    }, [ops]);
+    const getContact = useContactStore(s => s.get); // hook used unconditionally ✔
+    const contact: Contact | undefined = getContact(primaryIdContact ?? undefined);
+    const notice = React.useMemo(
+        () => getNoticeConfig(ops, contact),
+        [ops, contact]
+    );
 
     if (!data || !params.idSystemObject) {
         return <ObjectNotFoundView loading={loading} />;
@@ -298,7 +319,6 @@ function DetailsView(): React.ReactElement {
         metadata,
         licenseInheritance = null,
     } = data.getSystemObjectDetails;
-
     const disabled: boolean = !allowed;
 
     const addIdentifer = () => {
@@ -718,7 +738,6 @@ function DetailsView(): React.ReactElement {
     };
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
-    const notice = getNoticeConfig(getObjectProperties(idSystemObject) ?? null);
 
     return (
         <Box className={classes.container}>
@@ -870,12 +889,14 @@ type NoticeConfig = {
     messageHTML?: string;
     messageText?: string;
 };
-export function getNoticeConfig(properties: ObjectPropertyResult[] | null): NoticeConfig | null {
+export function getNoticeConfig(properties: ObjectPropertyResult[] | null, contact?: Contact | null): NoticeConfig | null {
     // creates notices from the object's properties.
     // currently limited to one notice (sensitivity), but can later
     // support other notices/flags to the user.
     if(!properties)
         return { show: false, state: 'info', title: '' };
+
+    console.log(contact);
 
     // see if we have a sensitivity notice
     const sensitiveProps: ObjectPropertyResult | undefined = properties.filter(p => p.propertyType.toLowerCase() === 'sensitivity' && p.level > 0)
@@ -909,7 +930,7 @@ export function getNoticeConfig(properties: ObjectPropertyResult[] | null): Noti
 
     // shared lines (contact/reason)
     messageHTML += `</br></br><b>Reason</b>: ${prop.rationale}`;
-    messageHTML += `</br><b>Contact</b>: ${prop.idContact}`; //${prop.contactName} (${prop.contactEmail})`;
+    messageHTML += `</br><b>Contact</b>: ${contact?.Name ?? 'Anonymous'} (${contact?.EmailAddress ?? 'Unknown'})`;
 
     return {
         show: true,

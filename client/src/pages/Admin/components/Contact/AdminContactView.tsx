@@ -1,187 +1,139 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useCallback, useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
-import API, { RequestResponse } from '../../../../api';
+import API from '../../../../api';
 import { AdminContactForm } from './AdminContactForm';
 import { DataTableSelect, DataTableSelectHandle } from '../shared/DataTableSelect';
 import { ColumnHeader, DBReference } from '../shared/DataTypesStyles';
-import { getErrorString } from '../../../../utils/shared';
+import { useContactStore } from '../../../../store/contact';
 
 type Contact = DBReference & {
     email: string;
-    unit: {
-        idUnit: number,
-        name: string,
-        abbreviation: string
-    };
+    unit: { idUnit: number; name: string; abbreviation: string };
     role: string;
     department: string;
 };
 
 const AdminContactView: React.FC = () => {
-    const [contacts, setContacts] = useState<Contact[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [selected, setSelected] = useState<Contact[]>([]);
-    const [resetSelection, setResetSelection] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [createOpen, setCreateOpen] = useState(false);
-    const [resetKey, setResetKey] = useState(0);
     const tableRef = useRef<DataTableSelectHandle<Contact>>(null);
 
-    const normalizeContacts = (rows: any[]): Contact[] => {
-        // Map server results to the shape DataTableSelect expects (must include id & name)
-        return rows.map((c) => {
-            if(!c) return null;
+    // ⬇️ store hooks
+    const storeContacts = useContactStore((s) => s.all);
+    const loadAll = useContactStore((s) => s.loadAll);
 
-            const id = c.idContact ?? -1;
-            const name = c.Name ?? 'NA';
-            const department = c.Department ?? 'NA';
-            const email = c.EmailAddress ?? 'NA';
-            const role = c.Title ?? 'NA';
-            const unit = {
-                idUnit: c.idUnit ?? -1,
-                name: 'NA',
-                abbreviation: 'NA'
+    // local UI state
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [resetSelection, setResetSelection] = useState<boolean>(false);
+    const [createOpen, setCreateOpen] = useState(false);
+    const [resetKey, setResetKey] = useState(0);
+    const [unitsById, setUnitsById] = useState<Map<number, { name: string; abbreviation: string }>>(new Map());
+
+    // columns
+    const getColumnHeader = (): ColumnHeader[] => [
+        { key: 'id', label: 'ID', align: 'center', tooltip: 'System ID for the contact' },
+        { key: 'name', label: 'Name', align: 'center', tooltip: 'Contact name' },
+        { key: 'email', label: 'Email', align: 'center', tooltip: 'Primary email' },
+        { key: 'role', label: 'Role', align: 'center', tooltip: 'Title / Role' },
+        { key: 'department', label: 'Department', align: 'center', tooltip: 'Department' },
+        { key: 'unit.abbreviation', label: 'Unit', align: 'center', tooltip: 'Unit' },
+    ];
+
+    // translate store rows -> table rows, enriching unit labels
+    const rows: Contact[] = useMemo(() => {
+        if (!storeContacts?.length) return [];
+        return storeContacts.map((c) => {
+            const u = c.idUnit ? unitsById.get(c.idUnit) : undefined;
+            return {
+                id: c.idContact ?? -1,
+                name: c.Name ?? 'NA',
+                email: c.EmailAddress ?? 'NA',
+                role: c.Title ?? 'NA',
+                department: c.Department ?? 'NA',
+                unit: {
+                    idUnit: c.idUnit ?? -1,
+                    name: u?.name ?? 'NA',
+                    abbreviation: u?.abbreviation ?? 'NA',
+                },
             };
+        });
+    }, [storeContacts, unitsById]);
 
-            return { id, name, email, unit, department, role } as Contact;
-        }).filter((r) => r != null);
-    };
-    const getColumnHeader = (): ColumnHeader[] => {
-        return [
-            { key: 'id',        label: 'ID',        align: 'center', tooltip: 'System ID for the contact' },
-            { key: 'name',      label: 'Name',      align: 'center', tooltip: 'Contact name' },
-            { key: 'email',     label: 'Email',     align: 'center', tooltip: 'Primary email' },
-            { key: 'role',      label: 'Role',      align: 'center', tooltip: 'Title / Role' },
-            { key: 'department',label: 'Department',align: 'center', tooltip: 'Department' },
-            { key: 'unit.abbreviation',      label: 'Unit',      align: 'center', tooltip: 'Unit' },
-        ];
-    };
-
-    const fetchContacts = useCallback(async () => {
+    const refreshAll = useCallback(async () => {
         setIsLoading(true);
-        setError(null);
         try {
-            const contactResponse: RequestResponse = await API.getContacts(); // no signal
-            if (!contactResponse?.success)
-                throw new Error(contactResponse?.message ?? 'Failed to fetch units.');
+            // 1) hydrate contacts via store
+            await loadAll();
 
-            // extract our contacts and normalize them (units filled in next)
-            const rows: any[] = Array.isArray(contactResponse.data) ? contactResponse.data : [];
-            const normalized: Contact[] = normalizeContacts(rows);
-
-            // get our units since we need to match their details so we can populate the table
-            // with something other than their IDs.
-            const unitResponse: RequestResponse = await API.getUnits();
-            const units = Array.isArray(unitResponse.data) ? unitResponse.data : [];
-            if(unitResponse.success && units.length>0) {
-
-                // build a map from the ids. we do this to ensure safety indepedent of sorting
-                const unitById = new Map<number, { name: string; abbreviation: string }>();
-                for (const u of units) {
-                    const id = Number(u?.idUnit);
-                    if (Number.isFinite(id)) {
-                        unitById.set(id, {
-                            name: String(u?.Name ?? 'NA'),
-                            abbreviation: String(u?.Abbreviation ?? 'NA'),
-                        });
-                    }
+            // 2) fetch units once & memoize a map for quick lookups
+            const unitResp = await API.getUnits();
+            const units = Array.isArray(unitResp?.data) ? unitResp.data : [];
+            const map = new Map<number, { name: string; abbreviation: string }>();
+            for (const u of units) {
+                const id = Number(u?.idUnit);
+                if (Number.isFinite(id)) {
+                    map.set(id, {
+                        name: String(u?.Name ?? 'NA'),
+                        abbreviation: String(u?.Abbreviation ?? 'NA'),
+                    });
                 }
-
-                // cycle through contacts updating units
-                normalized.forEach((c)=>{
-                    const u = unitById.get(c.unit.idUnit);
-                    if (u) {
-                        c.unit.name = u.name;
-                        c.unit.abbreviation = u.abbreviation;
-                    }
-                });
             }
-
-            setContacts(normalized);
-        } catch (err) {
-            setError(getErrorString(err));
-            setContacts([]);
+            setUnitsById(map);
         } finally {
             setIsLoading(false);
         }
-    }, []);
+    }, [loadAll]);
+
     useEffect(() => {
-        fetchContacts();
-    }, [fetchContacts]);
+        refreshAll();
+    }, [refreshAll]);
 
-    const expandedRowRenderer = (row): React.ReactNode => {
-        // build a full UI for this row to display when expanded
-        console.log('row: ',row);
-        return (
-            <>
-                <AdminContactForm
-                    mode='update'
-                    contact={{
-                        id: row.id,
-                        name: row.name,
-                        email: row.email,
-                        role: row.role,
-                        department: row.department,
-                        unit: row.unit,
-                    }}
-                    onUpdate={onRefresh}
-                />
-            </>
-        );
-    };
+    const expandedRowRenderer = (row: Contact): React.ReactNode => (
+        <AdminContactForm
+            mode='update'
+            contact={{
+                id: row.id,
+                name: row.name,
+                email: row.email,
+                role: row.role,
+                department: row.department,
+                unit: row.unit,
+            }}
+            onUpdate={onRefresh}
+        />
+    );
 
-    const onUpdateSelection = (selection: Contact[]) => {
-        setSelected(selection);
-        console.log('selection updated: ',selected);
-    };
-    const onRefresh = (contact: Contact | null, status: 'create' | 'update', message: string) => {
-        // keep UI snappy & clear selection to prevent acting on stale rows
+    const onRefresh = () => {
+        // clear selection & close expanded
         setResetSelection(true);
         setTimeout(() => setResetSelection(false), 0);
-
-        // cleanup the UI by closing all
         tableRef.current?.closeAll();
-
-        // refresh our contacts
-        fetchContacts();
-
-        console.log('onRefresh: ',contact,status,message);
+        refreshAll();
     };
-    const onRefreshClick = () => {
-        onRefresh(null,'update','button press');
-    };
+    const onRefreshClick = () => onRefresh();
+
     const onOpenCreate = () => setCreateOpen(true);
     const onCloseCreate = () => setCreateOpen(false);
-    const onCreateFinished = (contact: Contact | null, status: 'create' | 'update', message: string) => {
-        console.log('[create-result]', { contact, status, message });
-
-        // if successfully created
-        if (status === 'create' && typeof contact?.id === 'number' && contact.id > 0) {
+    const onCreateFinished = (contact: Contact | null, status: 'create' | 'update') => {
+        if (status === 'create' && contact?.id && contact.id > 0) {
             onCloseCreate();
-            fetchContacts(); // refresh list
+            refreshAll();
         }
-        // else: keep modal open, error messages handled by form
     };
 
     return (
         <Box display='flex' flexDirection='column' style={{ gap: '1rem', width: '95%' }}>
-
             <Box display='flex' alignItems='center' flexDirection='column'>
                 <Typography variant='h6'>Contacts</Typography>
-                <Typography align='center' style={{ padding: '1rem' }}>This page lets administrators view, edit, and add contacts in a single interface. It provides a table of existing contacts with inline editing and a modal form for creating new ones.</Typography>
-            </Box>
-
-            {error && (
-                <Typography variant='body2' color='error'>
-                    {error}
+                <Typography align='center' style={{ padding: '1rem' }}>
+                    This page lets administrators view, edit, and add contacts in a single interface. It provides a table of
+                    existing contacts with inline editing and a modal form for creating new ones.
                 </Typography>
-            )}
+            </Box>
 
             <DataTableSelect
                 ref={tableRef}
-                onUpdateSelection={onUpdateSelection}
-                data={contacts}
+                onUpdateSelection={() => {}}
+                data={rows}
                 columns={getColumnHeader()}
                 resetSelection={resetSelection}
                 isLoading={isLoading}
@@ -222,11 +174,7 @@ const AdminContactView: React.FC = () => {
             >
                 <DialogTitle id='create-contact-title'>Create Contact</DialogTitle>
                 <DialogContent dividers>
-                    <AdminContactForm
-                        key={resetKey}
-                        mode='create'
-                        onUpdate={onCreateFinished}
-                    />
+                    <AdminContactForm key={resetKey} mode='create' onUpdate={onCreateFinished} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={onCloseCreate}>Close</Button>

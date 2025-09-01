@@ -13,6 +13,7 @@ import {
 import API, { RequestResponse } from '../../../../api'; // adjust path as needed
 import { DBReference } from '../shared/DataTypesStyles';
 import { getErrorString } from '../../../../utils/shared';
+import { useContactStore } from '../../../../store/contact';
 
 export type UnitOption = { id: number; name: string; abbreviation: string };
 type Contact = DBReference & {
@@ -30,6 +31,7 @@ type ContactFormProps = {
     contact?: Contact;
     onUpdate?: (contact: Contact | null, status: 'create' | 'update', message: string) => void;  // NEW preferred callback
 };
+
 const EMPTY_BASELINE: Contact = {
     id: -1,
     name: '',
@@ -89,6 +91,16 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
     });
     const markTouched = (k: keyof typeof touched) =>
         setTouched((t) => (t[k] ? t : { ...t, [k]: true }));
+
+    const { upsertOne } = useContactStore.getState();
+    const toStoreContact = (c: Contact) => ({
+        idContact: c.id,
+        Name: c.name,
+        EmailAddress: c.email,
+        Title: c.role,
+        Department: c.department,
+        idUnit: c.unit?.idUnit ?? null,
+    });
 
     const dirty =
     name !== baseline.name ||
@@ -175,7 +187,10 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                 setDepartment(updated.department);
                 setUnitId(updated.unit.idUnit);
 
-                // NEW unified update callback
+                // update the store
+                upsertOne(toStoreContact(updated));
+
+                // unified update callback
                 onUpdate?.(updated, 'update', message);
             }
         } catch (ex: any) {
@@ -185,7 +200,7 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
         } finally {
             setSubmitting(false);
         }
-    }, [baseline, department, dirty, email, mode, name, onUpdate, role, unitId, units, valid]);
+    }, [baseline, department, dirty, email, mode, name, onUpdate, role, unitId, units, valid, upsertOne]);
     const onCreateClick = useCallback(async (e: React.MouseEvent) => {
         e.stopPropagation();
         if (mode !== 'create') return;
@@ -244,6 +259,9 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
                 setDepartment(created.department);
                 setUnitId(created.unit.idUnit);
 
+                // add to the store
+                upsertOne(toStoreContact(created));
+
                 // report to new unified callback
                 onUpdate?.(created, 'create', message);
             }
@@ -254,7 +272,7 @@ export const AdminContactForm: React.FC<ContactFormProps> = ({
         } finally {
             setSubmitting(false);
         }
-    }, [baseline, department, email, mode, name, onUpdate, role, unitId, units, valid]);
+    }, [baseline, department, email, mode, name, onUpdate, role, unitId, units, valid, upsertOne]);
 
     const fetchUnits = useCallback(async () => {
         setUnitsLoading(true);

@@ -22,6 +22,7 @@ import { DebounceInput } from 'react-debounce-input';
 import API from '../../../../../api';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
+import { useContactStore, Contact } from '../../../../../store/contact';
 
 function SubjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType, idSystemObject } = props;
@@ -400,20 +401,15 @@ interface ObjectPropertyProps {
     onBlurRefresh?: () => void;
 }
 export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactElement {
-    type ContactOption = {
-        idContact: number;
-        Name: string;
-        EmailAddress?: string | null;
-        Title?: string | null;
-        Department?: string | null;
-        idUnit?: number | null;
-    };
+
     type UnitOption = { idUnit: number; Name: string; Abbreviation?: string | null };
 
     const [currentLevel, setCurrentLevel] = useState(0);
-    const [contacts, setContacts] = useState<ContactOption[]>([]);
+    const contacts = useContactStore(s => s.all);
+    const getContact = useContactStore(s => s.get);
+    const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+
     const [units, setUnits] = useState<UnitOption[]>([]);
-    const [selectedContact, setSelectedContact] = useState<ContactOption | null>(null);
 
     // modal state for "Create Contact"
     const [createOpen, setCreateOpen] = useState(false);
@@ -421,23 +417,17 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
     const onOpenCreate = () => setCreateOpen(true);
     const onCloseCreate = () => setCreateOpen(false);
 
-    // map AdminContactForm result → your ContactOption + persist idContact
-    const onCreateFinished = (
-        created:
-        | {
-            id: number;
-            name: string;
-            email: string;
-            role: string;
-            department: string;
-            unit: { idUnit: number; name: string; abbreviation: string };
-        }
-        | null,
-        status: 'create' | 'update',
-        message: string
-    ) => {
+    // map AdminContactForm result -> ContactOption + persist idContact
+    const onCreateFinished = (created: {
+        id: number;
+        name: string;
+        email: string;
+        role: string;
+        department: string;
+        unit: { idUnit: number; name: string; abbreviation: string };
+    } | null, status: 'create' | 'update', message: string) => {
         if (status === 'create' && created && created.id > 0) {
-            const newOpt = {
+            const newContact: Contact = {
                 idContact: created.id,
                 Name: created.name,
                 EmailAddress: created.email,
@@ -446,17 +436,18 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                 idUnit: created.unit?.idUnit ?? null,
             };
 
-            setContacts(prev => (prev.some(c => c.idContact === newOpt.idContact) ? prev : [...prev, newOpt]));
-            setSelectedContact(newOpt);
+            console.log(`[Packrat:Status] created contact in context: ${newContact.Name} (${newContact.idContact})`,message);
 
-            // push to store
-            onChange({ target: { name: 'idContact', value: newOpt.idContact } } as unknown as React.ChangeEvent<HTMLInputElement>);
+            // put into the cache and store selected
+            useContactStore.getState().upsertOne(newContact);
+            setSelectedContact(newContact);
+
+            // propagate numeric id to the data model (banner will update via store + ops)
+            onChange({ target: { name: 'idContact', value: newContact.idContact } } as unknown as React.ChangeEvent<HTMLInputElement>);
+
             onBlurRefresh?.();
-
-            console.log(`[Packrat:Status] created contact: ${message}`);
-            onCloseCreate();
+            setCreateOpen(false);
         }
-        // else: AdminContactForm shows errors and stays open
     };
 
     const classes = useStyles();
@@ -501,7 +492,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
             // Clear subordinate fields when not sensitive
             onChange({ target: { name: 'rationale', value: '' } } as unknown as React.ChangeEvent<HTMLInputElement>);
             onChange({ target: { name: 'idContact', value: null } } as unknown as React.ChangeEvent<HTMLInputElement>);
-            setSelectedContact(null); // (see step 5)
+            setSelectedContact(null);
         }
 
         onBlurRefresh?.(); // update notice on change+blur
@@ -512,43 +503,39 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
         return u ? (u.Abbreviation || u.Name) : '';
     };
     const onContactChange = (e: React.ChangeEvent<{ name?: string; value: unknown }>) => {
-        const id = Number(e.target.value);
-        const found = contacts.find(c => c.idContact === id) || null;
+        const id = e.target.value === '' || e.target.value == null ? null : Number(e.target.value);
+        const found = id ? (getContact(id) ?? null) : null;
         setSelectedContact(found);
 
-        // propagate to data model
-        onChange({ target: { name: 'idContact', value: found ? found.idContact : null } } as unknown as React.ChangeEvent<HTMLInputElement>);
+        // propagate numeric id (compact + server-friendly)
+        onChange({ target: { name: 'idContact', value: id } } as unknown as React.ChangeEvent<HTMLInputElement>);
+        onBlurRefresh?.();
     };
+
 
     useEffect(() => {
         setCurrentLevel(objectProperty?.level ?? 0);
     }, [objectProperty?.level]);
     useEffect(() => {
-        let isMounted = true;
+        let mounted = true;
 
-        const load = async () => {
-            const [cRes, uRes] = await Promise.all([
-                API.getContacts(),
-                API.getUnits()
-            ]);
+        // hydrate the contact store once (cached afterwards)
+        useContactStore.getState().loadAll();
 
-            if (!isMounted) return;
-
-            const cList: ContactOption[] = cRes?.data ?? [];
+        const loadUnits = async () => {
+            const uRes = await API.getUnits();
+            if (!mounted) return;
             const uList: UnitOption[] = uRes?.data ?? [];
-            setContacts(cList);
             setUnits(uList);
-
-            // If a contact is already set on the object, select it
-            if (objectProperty?.idContact) {
-                const found = cList.find(c => c.idContact === objectProperty.idContact) || null;
-                setSelectedContact(found);
-            }
         };
 
-        load();
-        return () => { isMounted = false; };
-    }, [objectProperty?.idContact]);
+        loadUnits();
+        return () => { mounted = false; };
+    }, []);
+    useEffect(() => {
+        const id = props.objectProperty?.idContact ?? null;
+        setSelectedContact(id ? (getContact(id) ?? null) : null);
+    }, [props.objectProperty?.idContact, getContact]);
 
     // if no object property provided, render nothing
     if(!objectProperty)
