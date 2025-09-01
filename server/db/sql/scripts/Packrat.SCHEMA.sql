@@ -170,7 +170,6 @@ CREATE TABLE IF NOT EXISTS `CaptureDataPhoto` (
 
 CREATE TABLE IF NOT EXISTS `Contact` (
   `idContact` int(11) NOT NULL AUTO_INCREMENT,
-  `idUser` int(11) DEFAULT NULL,
   `Name` varchar(255) NOT NULL,
   `EmailAddress` varchar(255) NOT NULL,
   `Title` varchar(255) DEFAULT NULL,
@@ -178,7 +177,6 @@ CREATE TABLE IF NOT EXISTS `Contact` (
   `Department` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`idContact`),
   UNIQUE KEY `Contact_EmailAddress` (`EmailAddress`),
-  KEY `Contact_idUser` (`idUser`)
   KEY `Contact_idUnit` (`idUnit`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -880,11 +878,6 @@ ADD CONSTRAINT `fk_capturedataphoto_vocabulary6`
   ON UPDATE NO ACTION;
 
 ALTER TABLE `Contact`
-ADD CONSTRAINT `fk_contact_user1`
-  FOREIGN KEY (`idUser`)
-  REFERENCES `User` (`idUser`)
-  ON DELETE NO ACTION
-  ON UPDATE NO ACTION;
 ADD CONSTRAINT `fk_contact_unit1`
   FOREIGN KEY (`idUnit`)
   REFERENCES `Unit` (`idUnit`)

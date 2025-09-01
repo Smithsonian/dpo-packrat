@@ -27,8 +27,7 @@ import {
     UnitDetailFieldsInput,
     SystemObjectVersion,
     RepositoryPath,
-    Metadata,
-    ObjectPropertyResult
+    Metadata
 } from '../../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import RelatedObjectsList from '../../../../Ingestion/components/Metadata/Model/RelatedObjectsList';
@@ -87,7 +86,7 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     onSubtitleUpdate: (e) => void;
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     publishedState: string;
-    objectProperties?: ObjectPropertyResult[] | null;
+    idSystemObject: number;
 }
 
 export type UpdateDataFields =
@@ -122,7 +121,6 @@ type DetailsTabParams = {
     metadata: Metadata[];
     onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
     publishedState: string;
-    objectProperties: ObjectPropertyResult[];
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -143,8 +141,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         detailQuery,
         metadata,
         onUploaderOpen,
-        publishedState,
-        objectProperties
+        publishedState
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
@@ -232,7 +229,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         ...detailsQueryResult,
         ...sharedProps,
         publishedState,
-        objectProperties
+        idSystemObject
     };
 
     let onAddVersion = () => {};
@@ -269,6 +266,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0} id='tab-0'>
+                        { console.log('[DetailsTab] passing objectProperties:', detailsProps) }
                         <SubjectDetails {...detailsProps} />
                     </TabPanel>
                     {RelatedTab(1)}

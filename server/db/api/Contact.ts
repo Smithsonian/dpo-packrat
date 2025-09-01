@@ -6,7 +6,6 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
     idContact!: number;
-    idUser!: number | null;
     Name!: string;
     EmailAddress!: string;
     Title!: string | null;
@@ -34,7 +33,6 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
 
             // Build payload WITHOUT idContact
             const data = {
-                idUser: fkOrNull(this.idUser as number | null | undefined),
                 Name: String(this.Name ?? '').trim(),                // assume required
                 EmailAddress: String(this.EmailAddress ?? '').trim(),// assume required
                 Title: strOrNull(this.Title),
@@ -50,7 +48,6 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
 
             // Reflect DB-generated / canonical values back onto the instance
             this.idContact   = created.idContact;
-            this.idUser      = created.idUser;
             this.Name        = created.Name;
             this.EmailAddress= created.EmailAddress;
             this.Title       = created.Title;
@@ -72,11 +69,10 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idContact, idUser, Name, EmailAddress, Title, idUnit, Department } = this;
+            const { idContact, Name, EmailAddress, Title, idUnit, Department } = this;
             return await DBC.DBConnection.prisma.contact.update({
                 where: { idContact, },
                 data: {
-                    idUser,
                     Name,
                     EmailAddress,
                     Title,

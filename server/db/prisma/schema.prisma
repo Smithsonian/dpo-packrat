@@ -780,7 +780,6 @@ model User {
   AccessPolicy                    AccessPolicy[]
   AssetVersion                    AssetVersion[]
   Audit                           Audit[]
-  Contact                         Contact[]
   LicenseAssignment               LicenseAssignment[]
   Metadata                        Metadata[]
   Sentinel                        Sentinel[]
@@ -941,16 +940,12 @@ model CookResource {
 
 model Contact {
   idContact      Int              @id @default(autoincrement())
-  idUser         Int?
   Name           String           @mariasql.VarChar(255)
   EmailAddress   String           @unique(map: "Contact_EmailAddress") @mariasql.VarChar(255)
   Title          String?          @mariasql.VarChar(255)
   idUnit         Int?
   Department     String?          @mariasql.VarChar(255)
-  User           User?            @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_contact_user1")
   ObjectProperty ObjectProperty[]
-
-  @@index([idUser], map: "Contact_idUser")
 }
 
 model ObjectProperty {

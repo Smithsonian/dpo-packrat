@@ -74,7 +74,6 @@ export async function createContact(req: Request, res: Response): Promise<void> 
 
         const contactArgs = {
             idContact: 0,
-            idUser: body.idUser ?? null,         // null, not -1
             Name: body.Name ?? 'NA',
             EmailAddress: body.EmailAddress ?? 'NA',
             Title: body.Title ?? null,           // null if optional

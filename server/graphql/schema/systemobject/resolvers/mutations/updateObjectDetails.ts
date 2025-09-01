@@ -18,6 +18,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
+    console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
+
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
 
@@ -117,8 +119,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             break;
         }
         case COMMON.eSystemObjectType.eSubject: {
-            console.log('update obj.subject: ',data.Subject);
-            console.log('update obj.ObjectProperty', data.ObjectProperties);
             if (data.Subject) {
                 const { Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Subject;
                 const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||
@@ -433,6 +433,25 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
         default:
             break;
+    }
+
+    // update shared ObjectProperties, if it exists
+    // NOTE: assuming a single property of each type on an object
+    const sensitivitySrc = data.ObjectProperties?.find( p => p.propertyType.toLowerCase()==='sensitivity');
+    if(sensitivitySrc) {
+        console.log('handling object properties: ',data.ObjectProperties,idSystemObject);
+        const op: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSystemObject]);
+        const sensitivityDst: DBAPI.ObjectProperty | null = op?.find( p => p.PropertyType.toLowerCase()==='sensitivity' ) ?? null;
+        if(!sensitivityDst)
+            return sendResult(false, `Unable to fetch ObjectProperty for 'sensitivity' with id ${idSystemObject}; update failed`);
+
+        sensitivityDst.Level = sensitivitySrc.level ?? sensitivityDst.Level;
+        sensitivityDst.Rationale = sensitivitySrc.rationale ?? sensitivityDst.Rationale;
+        sensitivityDst.idContact = sensitivitySrc.idContact ?? sensitivityDst.idContact;
+
+        const updateResult: boolean = await sensitivityDst.update();
+        if(!updateResult)
+            return sendResult(false, `Unable to update ObjectProperty for 'sensitivity' with id ${idSystemObject}; update failed`);
     }
 
     return { success: true, message: '' };

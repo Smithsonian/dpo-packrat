@@ -115,7 +115,11 @@ function DetailsView(): React.ReactElement {
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
     const [uploadReferences, setUploadReferences] = useState<UploadReferences | null>(null);
-    const [pendingObjectProperties, setPendingObjectProperties] = useState<ObjectPropertyResult[] | null>(null);
+    const [ initializeObjectProperties, getObjectProperties, clearObjectProperties ] = useDetailTabStore(s => [
+        s.initializeObjectProperties,
+        s.getObjectProperties,
+        s.clearObjectProperties
+    ]);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
@@ -157,13 +161,25 @@ function DetailsView(): React.ReactElement {
             initializePreferredIdentifier(detailsTabData?.data?.getDetailsTabDataForObject?.Subject?.idIdentifierPreferred);
             setLoadingIdentifiers(false);
         }
+
+        // init our object properties for this system object
+        const raw = detailsTabData?.data?.getDetailsTabDataForObject?.objectProperties;
+        console.log('[DetailsTabData] objectProperties from query', {
+            idSO: idSystemObject,
+            hasValue: Array.isArray(raw),
+            count: Array.isArray(raw) ? raw.length : 'n/a',
+        });
+        if (Array.isArray(raw)) {
+            useDetailTabStore.getState().initializeObjectProperties(idSystemObject, raw);
+        } else {
+            console.warn('[DetailsTabData] objectProperties missing; NOT overwriting store');
+        }
     };
     const onUploaderReset = () => {
         resetSpecialPending(eIngestionMode.eAttach);
         resetSpecialPending(eIngestionMode.eUpdate);
         setUploadReferences(null);
     };
-
     const onUploaderOpen = (uploadType: eIngestionMode, references: UploadReferences) => {
         if (references.idAsset !== uploadReferences?.idAsset || references.idSOAttachment !== uploadReferences?.idSOAttachment) onUploaderReset();
         if (uploadType === eIngestionMode.eAttach) setUploadReferences({ idSOAttachment: references.idSOAttachment });
@@ -174,7 +190,6 @@ function DetailsView(): React.ReactElement {
         }, 300);
 
     };
-
     const verifyGenerateDownloads = async (): Promise<boolean> => {
         // check whether we can actually generate downloads
         // TODO: check QC checkbox status, (ideally) if a generate downloads is already running, ...
@@ -182,7 +197,7 @@ function DetailsView(): React.ReactElement {
 
         // make a call to our generate downloads endpoint with the current scene id
         const response: RequestResponse = await API.generateDownloads([idSystemObject], true);
-        if(response.success === false || !response.data || response.data.length===0) {
+        if((response.success === false || !response.data || response.data.length===0)) {
             console.log(`[Packrat:ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
             return false;
@@ -204,13 +219,13 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data) {
+            console.log('[DetailsView] getSystemObjectDetails:', JSON.stringify(data.getSystemObjectDetails, null, 2));
             const handleDetailTab = async () => {
                 await fetchDetailTabDataAndSetState();
             };
             handleDetailTab();
         }
     }, [idSystemObject, data]);
-
     useEffect(() => {
         if (data && !loading) {
             const { name, retired, license, metadata, subTitle } = data.getSystemObjectDetails;
@@ -223,6 +238,17 @@ function DetailsView(): React.ReactElement {
             }
         }
     }, [data, loading, initializeIdentifierState]);
+    useEffect(() => {
+        const propsFromServer = data?.getSystemObjectDetails?.objectProperties ?? [];
+        console.log('[DetailsView] init from server', { idSO: idSystemObject, count: propsFromServer.length, types: propsFromServer.map(p => p.propertyType) });
+        initializeObjectProperties(idSystemObject, propsFromServer);
+
+        return () =>  {
+            console.log('[DetailsView] clearing ObjectProperties for', idSystemObject);
+            clearObjectProperties(idSystemObject);
+        };
+
+    }, [idSystemObject, data?.getSystemObjectDetails?.objectProperties]);
 
     // checks for updates to identifiers
     useEffect(() => {
@@ -233,19 +259,16 @@ function DetailsView(): React.ReactElement {
     useEffect(() => {
         setUpdatedMetadata(areMetadataUpdated());
     }, [metadataControl, metadataDisplay]);
-
     useEffect(() => {
         return () => {
             resetMetadata();
         };
     }, []);
-
     useEffect(() => {
         onUploaderReset();
 
         return () => onUploaderReset();
     }, []);
-
     useEffect(() => {
         verifyGenerateDownloads();
     }, []);
@@ -274,7 +297,6 @@ function DetailsView(): React.ReactElement {
         objectVersions,
         metadata,
         licenseInheritance = null,
-        objectProperties = null,
     } = data.getSystemObjectDetails;
 
     const disabled: boolean = !allowed;
@@ -376,34 +398,21 @@ function DetailsView(): React.ReactElement {
     };
 
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
-        console.log('onUpdateDetail', objectType, data);
+
         const updatedDataFields: UpdateObjectDetailsDataInput = {
             ...updatedData,
             Name: details.name,
             Retired: details.retired
         };
+        console.log('[DetailsView.onUpdateDetail] received from child:', data);
 
-        // if we're a Subject and got data, we need to extract the ObjectProperties.
-        // in the future this could be for all object types if these properties are allowed.
-        if (objectType === eSystemObjectType.eSubject && data) {
-            // Pull out OP fields if they were bubbled up by SubjectDetails
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { level, rationale, idContact, ...rest } = (data as any);
-
-            // If any OP field is present, stage it for update later (only sensitivity for now)
-            if (level !== undefined || rationale !== undefined || idContact !== undefined) {
-                const staged: ObjectPropertyResult = {
-                    propertyType: 'sensitivity',
-                    level: (level !== undefined && level !== null && level !== '') ? Number(level) : 0,
-                    rationale: (rationale ?? '') as string,
-                    idContact: (idContact !== undefined && idContact !== null && idContact !== '') ? Number(idContact) : null
-                };
-                setPendingObjectProperties([staged]);
-
-                // Replace data with the remainder so SubjectDetailFieldsInput stays clean
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                data = rest as any;
-            }
+        // we need to extract object properties and append to our data since it is a shared
+        // data and not specific to an object type.
+        if (data && (data as any).ObjectProperties) {
+            const { ObjectProperties, ...rest } = (data as any);
+            // keep exactly the array shape you receive
+            console.log('[DetailsView.onUpdateDetail] extracted ObjectProperties:', ObjectProperties);
+            data = rest as any; // pass the remainder to the per-type input
         }
 
         switch (objectType) {
@@ -448,8 +457,6 @@ function DetailsView(): React.ReactElement {
             default:
                 break;
         }
-        console.log('details view.onUpdateDetail: ',updatedDataFields);
-
         setUpdatedData(updatedDataFields);
     };
 
@@ -582,21 +589,24 @@ function DetailsView(): React.ReactElement {
                 };
             }
 
-            console.log('update data: ',JSON.stringify(updatedData));
-
             const metadata = getAllMetadataEntries().filter(entry => entry.Name);
             updatedData.Metadata = metadata;
 
-            // add our object properties
-            if (pendingObjectProperties && pendingObjectProperties.length > 0) {
-                updatedData = { ...updatedData, ObjectProperties: pendingObjectProperties.map(p => ({
-                    propertyType: p.propertyType,
-                    level: p.level ?? 0,
-                    rationale: p.rationale ?? '',
-                    idContact: p.idContact ?? null
-                })) };
+            // get our object properties
+            console.log('[DetailsView.updateData] final updatedData:', JSON.stringify(updatedData, null, 2));
+            const ops = getObjectProperties(idSystemObject) ?? [];
+            if (ops.length) {
+                updatedData = {
+                    ...updatedData,
+                    ObjectProperties: ops.map(({ propertyType, level, rationale, idContact }) => ({
+                        propertyType,
+                        level,
+                        rationale,
+                        idContact
+                    }))
+                };
             }
-            console.log('[index] update data (2): ', JSON.stringify(updatedData));
+            console.log('[DetailsView.updateData] object properties:', JSON.stringify(ops, null, 2));
 
             // send data to the server
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
@@ -708,8 +718,8 @@ function DetailsView(): React.ReactElement {
     };
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
-    const notice = getNoticeConfig(objectProperties ?? null);
-    console.log('[index] detail view: ',data.getSystemObjectDetails);
+    const notice = getNoticeConfig(getObjectProperties(idSystemObject) ?? null);
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -822,7 +832,6 @@ function DetailsView(): React.ReactElement {
                         metadata={metadata}
                         onUploaderOpen={onUploaderOpen}
                         publishedState={publishedState}
-                        objectProperties={data.getSystemObjectDetails?.objectProperties ?? []}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (
@@ -881,15 +890,31 @@ export function getNoticeConfig(properties: ObjectPropertyResult[] | null): Noti
     const prop: ObjectPropertyResult = sensitiveProps;
 
     // build our notice for return
-    let messageHTML = 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
-    messageHTML += '</br>For more info: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
+    let messageHTML = '';
+    switch(sensitiveProps.level) {
+        case 0: {
+            messageHTML += 'This object is deemed NOT sensitive, but still follows Smithsonian policy for digital assets.';
+            messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
+        } break;
+        case 1: {
+            messageHTML += 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
+            messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
+        } break;
+        case 2: {
+            messageHTML += 'This object is confidential and visible only to selecet members.';
+            messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
+            messageHTML += '</br></br>If you think you should be able to see this object please contact the individual below and Packrat support (<b>packrat@si.edu</b>)';
+        }
+    }
+
+    // shared lines (contact/reason)
     messageHTML += `</br></br><b>Reason</b>: ${prop.rationale}`;
     messageHTML += `</br><b>Contact</b>: ${prop.idContact}`; //${prop.contactName} (${prop.contactEmail})`;
 
     return {
         show: true,
-        state: (prop.level===1) ? 'warning' : 'error',
-        title: 'Sensitive Object',
+        state: (prop.level===1) ? 'warning' : (prop.level===2) ? 'error' : 'info',
+        title: (prop.level===1) ? 'Sensitive Object' : (prop.level===2) ? 'Confidential' : 'Not Sensitive',
         messageHTML
     };
 }

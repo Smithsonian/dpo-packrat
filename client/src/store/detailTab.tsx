@@ -12,7 +12,8 @@ import {
     AssetVersionDetailFields,
     ActorDetailFields,
     UpdateObjectDetailsDataInput,
-    IngestFolder
+    IngestFolder,
+    ObjectPropertyResult
 } from '../types/graphql';
 import * as yup from 'yup';
 import { nullableSelectFields } from '../utils/controls';
@@ -78,6 +79,17 @@ export type DetailsTabType =
     | SceneDetailsType;
 
 type DetailTabStore = {
+
+    // object properties. not using the generics so as to not need to extend all fields with another
+    // type since this is a shared element across all types.
+    ObjectPropertiesBySO: Record<number, ObjectPropertyResult[]>;
+    initializeObjectProperties: (idSO: number, props: ObjectPropertyResult[]) => void;
+    getObjectProperties: (idSO: number) => ObjectPropertyResult[];
+    updateObjectProperty: (idSO: number, propertyType: string, patch: Partial<ObjectPropertyResult>) => void;
+    removeObjectProperty: (idSO: number, propertyType: string) => void;
+    clearObjectProperties: (idSO: number) => void;
+
+    // general field routines
     UnitDetails: UnitDetailFields;
     ProjectDetails: ProjectDetailFields;
     SubjectDetails: SubjectDetailFields;
@@ -207,6 +219,65 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         PhoneNumberMobile: '',
         PhoneNumberOffice: ''
     },
+    ObjectPropertiesBySO: {},
+
+    //#region OBJECT_PROPERTY
+    initializeObjectProperties(idSO: number, props: ObjectPropertyResult[]) {
+        // Strip __typename defensively
+        console.log('[Store] init ObjectProperties', { idSO, count: props?.length ?? 0, sample: props?.[0] });
+
+        const prev = get().ObjectPropertiesBySO[idSO] ?? [];
+        const cleaned = (props ?? []).map(({ __typename, ...rest }) => ({
+            ...rest,
+            propertyType: String(rest.propertyType || '').toLowerCase()
+        } as ObjectPropertyResult));
+        console.log('[Store] initializeObjectProperties', { idSO, prevCount: prev.length, nextCount: cleaned.length });
+
+        // make sure our existing data isn't overwritten by empty payload
+        if (cleaned.length === 0 && (get().ObjectPropertiesBySO[idSO]?.length ?? 0) > 0) {
+            console.warn(`[Store] ignore empty ObjectProperties for ${idSO}; keeping existing`);
+            return;
+        }
+        set(state => ({
+            ObjectPropertiesBySO: { ...state.ObjectPropertiesBySO, [idSO]: cleaned }
+        }));
+    },
+    getObjectProperties(idSO: number) {
+        return get().ObjectPropertiesBySO[idSO] ?? [];
+    },
+    updateObjectProperty(idSO: number, propertyType: string, patch: Partial<ObjectPropertyResult>) {
+        console.log('[Store] update', { idSO, propertyType, patch });
+        const list = get().ObjectPropertiesBySO[idSO] ?? [];
+        const idx = list.findIndex(p => p.propertyType === propertyType);
+
+        const base: ObjectPropertyResult = idx >= 0
+            ? list[idx]
+            : { propertyType, level: 0, rationale: '', idContact: null };
+
+        const merged = { ...base, ...patch };
+        const next = idx >= 0 ? list.map((p, i) => (i === idx ? merged : p)) : [...list, merged];
+
+        set(state => ({
+            ObjectPropertiesBySO: { ...state.ObjectPropertiesBySO, [idSO]: next }
+        }));
+    },
+    removeObjectProperty(idSO: number, propertyType: string) {
+        const list = get().ObjectPropertiesBySO[idSO] ?? [];
+        const next = list.filter(p => p.propertyType !== propertyType);
+        set(state => ({
+            ObjectPropertiesBySO: { ...state.ObjectPropertiesBySO, [idSO]: next }
+        }));
+    },
+    clearObjectProperties(idSO: number) {
+        console.log('[Store] clear', { idSO });
+        const next = { ...get().ObjectPropertiesBySO };
+        delete next[idSO];
+        set({ ObjectPropertiesBySO: next });
+    },
+    //#endregion
+
+
+    //#region GENERAL
     updateDetailField(assetType, fieldName, value) {
         const { getDetail } = get();
         if (value === -1 && nullableSelectFields.has(fieldName)) value = null;
@@ -608,6 +679,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         return errorMessages;
     }
+    //#endregion
 }));
 
 const schemaCD = yup.object().shape({

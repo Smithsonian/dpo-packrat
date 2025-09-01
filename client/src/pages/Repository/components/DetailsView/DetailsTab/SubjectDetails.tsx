@@ -20,8 +20,21 @@ import { useStyles as useTableStyles } from '../../../../Repository/components/D
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 
 function SubjectDetails(props: DetailComponentProps): React.ReactElement {
-    const { data, loading, disabled, onUpdateDetail, objectType, objectProperties } = props;
-    const [SubjectDetails, updateDetailField] = useDetailTabStore(state => [state.SubjectDetails, state.updateDetailField]);
+    const { data, loading, disabled, onUpdateDetail, objectType, idSystemObject } = props;
+    const [ SubjectDetails, updateDetailField, updateObjectProperty ] = useDetailTabStore(s => [
+        s.SubjectDetails,
+        s.updateDetailField,
+        s.updateObjectProperty
+    ]);
+    const ops = useDetailTabStore(s => s.ObjectPropertiesBySO[idSystemObject] ?? []);
+    console.log('[SubjectDetails] render', { idSO: idSystemObject, ops: ops.map(p => p.propertyType) });
+    const sensitivity = ops.find(p => p.propertyType === 'sensitivity') ?? {
+        propertyType: 'sensitivity',
+        level: 0,
+        rationale: '',
+        idContact: null,
+    };
+    console.log('[SubjectDetails] derived sensitivity:', sensitivity);
     const onFieldBlur = () => onUpdateDetail(objectType, SubjectDetails);
 
     useEffect(() => {
@@ -34,22 +47,23 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
 
     const onSetField = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = event.target;
-        console.log('onChange: ',name,'-',value);
 
+        // if the field is part of the sensitivity ObjectProperty, update it generically
+        if (name === 'level' || name === 'rationale' || name === 'idContact') {
+            const normalized =
+                name === 'level' ? Number(value) :
+                    name === 'idContact' ? ((value === '' || value == null) ? null : Number(value)) :
+                        value;
+
+            // insert if missing, merge if present
+            updateObjectProperty(idSystemObject, 'sensitivity', { [name]: normalized });
+            return;
+        }
+
+        // keep the store in sync for regular Subject fields
         updateDetailField(eSystemObjectType.eSubject, name, value);
     };
-    const getSensitivityObjectProperty = (objectProperties: ObjectPropertyResult[] | null | undefined): ObjectPropertyResult | null => {
-
-        if(!objectProperties || objectProperties.length===0)
-            return null;
-
-        const result: ObjectPropertyResult | undefined = objectProperties.find( p => p.propertyType==='sensitivity' );
-        return result ?? null;
-    };
-
     const subjectData = data.getDetailsTabDataForObject?.Subject;
-    console.log('subject data: ',subjectData);
-    console.log('SubjectDetails.objProps: ',objectProperties);
 
     return (
         <Box display='flex' gridGap={16}>
@@ -60,7 +74,7 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
 
             <Box flex={1} minWidth={420}>
                 <ObjectPropertyFields
-                    objectProperty={ getSensitivityObjectProperty(objectProperties) }
+                    objectProperty={ sensitivity }
                     disabled={disabled}
                     onChange={onSetField}
                     onBlurRefresh={onFieldBlur}
@@ -420,7 +434,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                 return [
                     { label: 'None', value: 0 },
                     { label: 'Sensitive', value: 1 },
-                    { label: 'Restricted', value: 2 },
+                    { label: 'Confidential', value: 2 },
                 ];
             } break;
 
