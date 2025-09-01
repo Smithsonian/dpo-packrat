@@ -5,8 +5,12 @@
  *
  * This component renders details tab for Subject specific details used in DetailsTab component.
  */
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography, Tooltip, MenuItem, TextField } from '@material-ui/core';
 import React, { useEffect, useState } from 'react';
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography, Tooltip, MenuItem, TextField } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton } from '@material-ui/core';
+import AddIcon from '@material-ui/icons/Add';
+import { AdminContactForm } from '../../../../Admin/components/Contact/AdminContactForm'; // adjust path if needed
+
 import { Loader } from '../../../../../components';
 import { SubjectDetailFields, ObjectPropertyResult } from '../../../../../types/graphql';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -388,7 +392,7 @@ export function RotationQuaternionInput(props: RotationQuaternionInputProps): Re
 }
 //#endregion
 
-//#region Sensitivity Fields
+//#region ObjectProperty Fields
 interface ObjectPropertyProps {
     objectProperty?: ObjectPropertyResult | null;
     disabled: boolean;
@@ -410,6 +414,50 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
     const [contacts, setContacts] = useState<ContactOption[]>([]);
     const [units, setUnits] = useState<UnitOption[]>([]);
     const [selectedContact, setSelectedContact] = useState<ContactOption | null>(null);
+
+    // modal state for "Create Contact"
+    const [createOpen, setCreateOpen] = useState(false);
+    const [createResetKey, setCreateResetKey] = useState(0);
+    const onOpenCreate = () => setCreateOpen(true);
+    const onCloseCreate = () => setCreateOpen(false);
+
+    // map AdminContactForm result → your ContactOption + persist idContact
+    const onCreateFinished = (
+        created:
+        | {
+            id: number;
+            name: string;
+            email: string;
+            role: string;
+            department: string;
+            unit: { idUnit: number; name: string; abbreviation: string };
+        }
+        | null,
+        status: 'create' | 'update',
+        message: string
+    ) => {
+        if (status === 'create' && created && created.id > 0) {
+            const newOpt = {
+                idContact: created.id,
+                Name: created.name,
+                EmailAddress: created.email,
+                Title: created.role,
+                Department: created.department,
+                idUnit: created.unit?.idUnit ?? null,
+            };
+
+            setContacts(prev => (prev.some(c => c.idContact === newOpt.idContact) ? prev : [...prev, newOpt]));
+            setSelectedContact(newOpt);
+
+            // push to store
+            onChange({ target: { name: 'idContact', value: newOpt.idContact } } as unknown as React.ChangeEvent<HTMLInputElement>);
+            onBlurRefresh?.();
+
+            console.log(`[Packrat:Status] created contact: ${message}`);
+            onCloseCreate();
+        }
+        // else: AdminContactForm shows errors and stays open
+    };
 
     const classes = useStyles();
     const tableClasses = useTableStyles();
@@ -563,7 +611,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                                                     className={clsx(classes.input, classes.fieldSizing)}
                                                     forceNotifyByEnter={false}
                                                     debounceTimeout={400}
-                                                    style={{ fontSize: '0.9rem', width: '100%', minWidth: '15rem', minHeight: '2rem', textAlign: 'left', padding: '5px' }}
+                                                    style={{ fontSize: '0.9rem', width: '100%', minWidth: '15rem', minHeight: '5rem', textAlign: 'left', padding: '5px' }}
                                                 />
                                             </TableCell>
                                         </TableRow>
@@ -573,27 +621,39 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                                                 <Typography className={tableClasses.labelText}>Contact</Typography>
                                             </TableCell>
                                             <TableCell className={clsx(tableClasses.tableCell)}>
-                                                <TextField
-                                                    select
-                                                    variant='outlined'
-                                                    size='small'
-                                                    fullWidth
-                                                    disabled={disabled || currentLevel === 0}
-                                                    value={selectedContact?.idContact ?? ''}
-                                                    onChange={onContactChange}
-                                                    onBlur={onBlurRefresh}
-                                                    InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
-                                                    InputProps={{ style: { backgroundColor: 'white', fontSize: '0.9rem', height: '2rem' } }}
-                                                >
-                                                    <MenuItem value=''>
-                                                        <em>None</em>
-                                                    </MenuItem>
-                                                    {contacts.map(c => (
-                                                        <MenuItem key={c.idContact} value={c.idContact}>
-                                                            {c.Name}{unitFor(c.idUnit) ? ` — ${unitFor(c.idUnit)}` : ''}
-                                                        </MenuItem>
-                                                    ))}
-                                                </TextField>
+                                                <Box display='flex' alignItems='center' gridGap={8}>
+                                                    <TextField
+                                                        select
+                                                        variant='outlined'
+                                                        size='small'
+                                                        fullWidth
+                                                        disabled={disabled || currentLevel === 0}
+                                                        value={selectedContact?.idContact ?? ''}
+                                                        onChange={onContactChange}
+                                                        onBlur={onBlurRefresh}
+                                                        InputLabelProps={{ shrink: true, style: { color: '#333333' } }}
+                                                        InputProps={{ style: { backgroundColor: 'white', fontSize: '0.9rem', height: '2rem' } }}
+                                                        style={{ flex: 1 }}
+                                                    >
+                                                        <MenuItem value=''><em>None</em></MenuItem>
+                                                        {contacts.map(c => (
+                                                            <MenuItem key={c.idContact} value={c.idContact}>
+                                                                {c.Name}{unitFor(c.idUnit) ? ` — ${unitFor(c.idUnit)}` : ''}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </TextField>
+
+                                                    {/* little "+" button */}
+                                                    <IconButton
+                                                        aria-label='Create new contact'
+                                                        size='small'
+                                                        onClick={onOpenCreate}
+                                                        disabled={disabled || currentLevel === 0}
+                                                        title='Create new contact'
+                                                    >
+                                                        <AddIcon fontSize='small' />
+                                                    </IconButton>
+                                                </Box>
                                             </TableCell>
                                         </TableRow>
 
@@ -624,6 +684,29 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                     </Table>
                 </TableContainer>
             </Box>
+
+            <Dialog
+                open={createOpen}
+                onClose={onCloseCreate}
+                aria-labelledby='create-contact-title'
+                fullWidth
+                maxWidth='md'
+                keepMounted
+                onExited={() => setCreateResetKey(k => k + 1)}
+            >
+                <DialogTitle id='create-contact-title'>Create Contact</DialogTitle>
+                <DialogContent dividers>
+                    <AdminContactForm
+                        key={createResetKey}
+                        mode='create'
+                        onUpdate={onCreateFinished}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onCloseCreate}>Close</Button>
+                </DialogActions>
+            </Dialog>
+
         </React.Fragment>
     );
 }
