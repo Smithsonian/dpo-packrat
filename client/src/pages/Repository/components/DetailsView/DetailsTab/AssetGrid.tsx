@@ -240,7 +240,6 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                 default:
                     columnsToDisplay[column.colName] = false;
             }
-            console.log(`${column.colName}:${column.colDisplay}`);
             // columnsToDisplay[column.colName] = column.colDisplay;
         });
         document.cookie = `${cookieName}=${JSON.stringify(columnsToDisplay)};path=/;max-age=34560000`;

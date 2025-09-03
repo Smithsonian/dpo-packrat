@@ -8,7 +8,8 @@ import {
     RelatedObject,
     RelatedObjectType,
     RepositoryPath,
-    SystemObject
+    SystemObject,
+    ObjectPropertyResult
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
@@ -73,6 +74,35 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         throw new Error(message);
     }
 
+    // if subject is null, then we may be a subject and need to
+    let idSubject: number = subject?.[0]?.idSystemObject ?? -1;
+    if(idSubject<0 && systemObject.idSubject)
+        idSubject = systemObject.idSystemObject;
+    else
+        RK.logWarning(RK.LogSection.eGQL,'get system object details warning','no subject found for object',{ systemObject },'GraphQL.SystemObject.Details');
+
+    // gather and build our object properties
+    const cleanedProperties: ObjectPropertyResult[] = [];
+    if(idSubject>0) {
+        const properties: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSubject]);
+        if(properties) {
+            // console.log('fetch obj properties; ',properties,idSystemObject);
+
+            // grab the contact if set
+            for(let i=0; i<properties.length; i++) {
+                const prop = properties[i];
+                const contact: DBAPI.Contact | null = await DBAPI.Contact.fetch(prop.idContact ?? 0);
+
+                cleanedProperties.push({
+                    propertyType: prop.PropertyType,
+                    level: prop.Level,
+                    rationale: prop.Rationale ?? 'Not Defined',
+                    idContact: contact?.idContact ?? null,
+                });
+            }
+        }
+    }
+
     return {
         idSystemObject,
         idObject: oID.idObject,
@@ -99,6 +129,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         assetOwner,
         license: LR?.License,
         licenseInheritance: LR?.inherited ? LR?.LicenseAssignment?.idSystemObject : undefined,
+        objectProperties: cleanedProperties
     };
 }
 

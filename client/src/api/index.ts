@@ -111,6 +111,22 @@ export default class API {
         return this.request(uri, { method: 'POST' });
     }
 
+    // contacts
+    static async getContacts(id?: number): Promise<RequestResponse> {
+        let uri: string = 'api/contact';
+        if(id && id>0 && !isNaN(id))
+            uri += `/${id}`;
+        return this.request(uri, { method: 'GET' });
+    }
+
+    // units
+    static async getUnits(id?: number): Promise<RequestResponse> {
+        let uri: string = 'api/unit';
+        if(id && id>0 && !isNaN(id))
+            uri += `/${id}`;
+        return this.request(uri, { method: 'GET' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
@@ -127,7 +143,7 @@ export default class API {
             .then(response => {
                 // Check if the response returned a successful status code
                 if (!response.ok) {
-                    console.log('response: ',response);
+                    console.log('[Packrat: Error] response: ',response);
                     return { success: false, message: response.statusText };
                 }
                 return response.json(); // Assuming the server responds with JSON

@@ -91,6 +91,12 @@ const getSystemObjectDetails = gql`
                 Description
                 RestrictLevel
             }
+            objectProperties {
+                propertyType
+                level
+                rationale
+                idContact
+            }
         }
     }
 `;

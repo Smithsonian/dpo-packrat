@@ -315,7 +315,6 @@ function useIngest(): UseIngest {
                 other: ingestOther,
                 sceneAttachment: ingestSceneAttachment
             };
-            console.log('** IngestDataInput',input);
 
             //This responsible for initiating sending data to the server.
             const ingestDataMutation: FetchResult<IngestDataMutation> = await apolloClient.mutate({

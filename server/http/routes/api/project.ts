@@ -10,7 +10,6 @@ import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 //#region Types and Definitions
-
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
 //       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type ProjectResponse = {
@@ -35,7 +34,7 @@ type AssetList = {
     items: AssetSummary[];
     expected?: number;               // how many items may be expected or found elsewhere
 };
-type SceneSummary = DBAPI.DBReference & {
+export type SceneSummary = DBAPI.DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
@@ -54,7 +53,6 @@ type SceneSummary = DBAPI.DBReference & {
         captureData: AssetList,
     }
 };
-
 //#endregion
 
 //#region Get Projects & Scenes
@@ -150,7 +148,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
 //#endregion
 
 //#region Build Summary and Defs
-const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
+export const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
 
     // debug for timing routine
     const startTime: number = Date.now();

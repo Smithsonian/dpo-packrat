@@ -78,7 +78,6 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         };
 
         retrieveSceneData();
-        console.log(data,props,publishedState);
     }, []);
 
     useEffect(() => {

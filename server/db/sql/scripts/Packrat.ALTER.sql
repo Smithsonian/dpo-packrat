@@ -539,4 +539,50 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 2, 'Presen
 -- 2025-07-18 Add Slack ID to User Table (Eric)
 ALTER TABLE User ADD COLUMN SlackID longtext NOT NULL DEFAULT '';
 
+-- 2025-08-17 added Contact table for tracking POCs (Eric)
+CREATE TABLE IF NOT EXISTS `Contact` (
+  `idContact` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `EmailAddress` varchar(255) NOT NULL,
+  `Title` varchar(255) DEFAULT NULL,
+  `idUnit` int(11) DEFAULT NULL,
+  `Department` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`idContact`),
+  UNIQUE KEY `Contact_EmailAddress` (`EmailAddress`),
+  KEY `Contact_idUnit` (`idUnit`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `Contact`
+ADD CONSTRAINT `fk_contact_unit1`
+  FOREIGN KEY (`idUnit`)
+  REFERENCES `Unit` (`idUnit`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+-- 2025-08-17 Add ObjectProperties table (Eric)
+CREATE TABLE IF NOT EXISTS `ObjectProperty` (
+  `idObjectProperty` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObject` int(11) NOT NULL,
+  `PropertyType` enum('sensitivity') NOT NULL,
+  `Level` int(11) NOT NULL DEFAULT 0,
+  `Rationale` text DEFAULT NULL,
+  `idContact` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idObjectProperty`),
+  UNIQUE KEY `ObjectProperty_idSystemObject_Type` (`idSystemObject`,`Type`),
+  KEY `ObjectProperty_idSystemObject` (`idSystemObject`),
+  KEY `ObjectProperty_idContact` (`idContact`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `ObjectProperty`
+ADD CONSTRAINT `fk_objectproperty_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_objectproperty_contact1`
+  FOREIGN KEY (`idContact`)
+  REFERENCES `Contact` (`idContact`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ------

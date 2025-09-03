@@ -909,6 +909,7 @@ export type GetSystemObjectDetailsResult = {
   metadata: Array<Metadata>;
   name: Scalars['String'];
   objectAncestors: Array<Array<RepositoryPath>>;
+  objectProperties: Array<ObjectPropertyResult>;
   objectType: Scalars['Int'];
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
@@ -1291,31 +1292,11 @@ export type Item = {
 
 export type ItemDetailFields = {
   __typename?: 'ItemDetailFields';
-  Altitude?: Maybe<Scalars['Float']>;
   EntireSubject?: Maybe<Scalars['Boolean']>;
-  Latitude?: Maybe<Scalars['Float']>;
-  Longitude?: Maybe<Scalars['Float']>;
-  R0?: Maybe<Scalars['Float']>;
-  R1?: Maybe<Scalars['Float']>;
-  R2?: Maybe<Scalars['Float']>;
-  R3?: Maybe<Scalars['Float']>;
-  TS0?: Maybe<Scalars['Float']>;
-  TS1?: Maybe<Scalars['Float']>;
-  TS2?: Maybe<Scalars['Float']>;
 };
 
 export type ItemDetailFieldsInput = {
-  Altitude?: InputMaybe<Scalars['Float']>;
   EntireSubject?: InputMaybe<Scalars['Boolean']>;
-  Latitude?: InputMaybe<Scalars['Float']>;
-  Longitude?: InputMaybe<Scalars['Float']>;
-  R0?: InputMaybe<Scalars['Float']>;
-  R1?: InputMaybe<Scalars['Float']>;
-  R2?: InputMaybe<Scalars['Float']>;
-  R3?: InputMaybe<Scalars['Float']>;
-  TS0?: InputMaybe<Scalars['Float']>;
-  TS1?: InputMaybe<Scalars['Float']>;
-  TS2?: InputMaybe<Scalars['Float']>;
 };
 
 export type Job = {
@@ -1762,6 +1743,14 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+};
+
+export type ObjectPropertyResult = {
+  __typename?: 'ObjectPropertyResult';
+  idContact?: Maybe<Scalars['Int']>;
+  level: Scalars['Int'];
+  propertyType: Scalars['String'];
+  rationale: Scalars['String'];
 };
 
 export type PaginationInput = {
@@ -2473,6 +2462,7 @@ export type UpdateObjectDetailsDataInput = {
   Metadata?: InputMaybe<Array<MetadataInput>>;
   Model?: InputMaybe<ModelDetailFieldsInput>;
   Name?: InputMaybe<Scalars['String']>;
+  ObjectProperties?: InputMaybe<Array<UpdateObjectPropertyInput>>;
   Project?: InputMaybe<ProjectDetailFieldsInput>;
   ProjectDocumentation?: InputMaybe<ProjectDocumentationDetailFieldsInput>;
   Retired?: InputMaybe<Scalars['Boolean']>;
@@ -2494,6 +2484,13 @@ export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
+};
+
+export type UpdateObjectPropertyInput = {
+  idContact?: InputMaybe<Scalars['Int']>;
+  level?: InputMaybe<Scalars['Int']>;
+  propertyType: Scalars['String'];
+  rationale?: InputMaybe<Scalars['String']>;
 };
 
 export type UpdatePhotogrammetryMetadata = {
@@ -3057,7 +3054,7 @@ export type GetDetailsTabDataForObjectQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query', getDetailsTabDataForObject: { __typename?: 'GetDetailsTabDataForObjectResult', Unit?: { __typename?: 'UnitDetailFields', Abbreviation?: string | null, ARKPrefix?: string | null } | null, Project?: { __typename?: 'ProjectDetailFields', Description?: string | null } | null, Subject?: { __typename?: 'SubjectDetailFields', Altitude?: number | null, Latitude?: number | null, Longitude?: number | null, R0?: number | null, R1?: number | null, R2?: number | null, R3?: number | null, TS0?: number | null, TS1?: number | null, TS2?: number | null, idIdentifierPreferred?: number | null } | null, Item?: { __typename?: 'ItemDetailFields', EntireSubject?: boolean | null, Altitude?: number | null, Latitude?: number | null, Longitude?: number | null, R0?: number | null, R1?: number | null, R2?: number | null, R3?: number | null, TS0?: number | null, TS1?: number | null, TS2?: number | null } | null, CaptureData?: { __typename?: 'CaptureDataDetailFields', captureMethod?: number | null, dateCaptured?: string | null, datasetType?: number | null, description?: string | null, cameraSettingUniform?: boolean | null, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, isValidData?: boolean | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'ModelConstellation', Model: { __typename?: 'Model', idModel: number, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountAnimations?: number | null, CountCameras?: number | null, CountLights?: number | null, CountMaterials?: number | null, CountMeshes?: number | null, CountEmbeddedTextures?: number | null, CountLinkedTextures?: number | null, FileEncoding?: string | null, IsDracoCompressed?: boolean | null, Name: string, DateCreated: any, idVCreationMethod?: number | null, idVModality?: number | null, idVUnits?: number | null, idVPurpose?: number | null, idVFileType?: number | null, Variant: string }, ModelObjects?: Array<{ __typename?: 'ModelObject', idModelObject: number, BoundingBoxP1X?: number | null, BoundingBoxP1Y?: number | null, BoundingBoxP1Z?: number | null, BoundingBoxP2X?: number | null, BoundingBoxP2Y?: number | null, BoundingBoxP2Z?: number | null, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountColorChannels?: number | null, CountTextureCoordinateChannels?: number | null, HasBones?: boolean | null, HasFaceNormals?: boolean | null, HasTangents?: boolean | null, HasTextureCoordinates?: boolean | null, HasVertexNormals?: boolean | null, HasVertexColor?: boolean | null, IsTwoManifoldUnbounded?: boolean | null, IsTwoManifoldBounded?: boolean | null, IsWatertight?: boolean | null, SelfIntersecting?: boolean | null }> | null, ModelMaterials?: Array<{ __typename?: 'ModelMaterial', idModelMaterial: number, Name?: string | null }> | null, ModelMaterialChannels?: Array<{ __typename?: 'ModelMaterialChannel', Type?: string | null, Source?: string | null, Value?: string | null, AdditionalAttributes?: string | null, idModelMaterial: number, idModelMaterialChannel: number }> | null, ModelObjectModelMaterialXref?: Array<{ __typename?: 'ModelObjectModelMaterialXref', idModelObjectModelMaterialXref: number, idModelObject: number, idModelMaterial: number }> | null, ModelAssets?: Array<{ __typename?: 'ModelAsset', AssetName: string, AssetType: string }> | null } | null, Scene?: { __typename?: 'SceneDetailFields', Links: Array<string>, AssetType?: number | null, Tours?: number | null, Annotation?: number | null, EdanUUID?: string | null, ApprovedForPublication?: boolean | null, PublicationApprover?: string | null, PosedAndQCd?: boolean | null, CanBeQCd?: boolean | null, idScene?: number | null } | null, IntermediaryFile?: { __typename?: 'IntermediaryFileDetailFields', idIntermediaryFile: number } | null, ProjectDocumentation?: { __typename?: 'ProjectDocumentationDetailFields', Description?: string | null } | null, Asset?: { __typename?: 'AssetDetailFields', AssetType?: number | null, idAsset?: number | null } | null, AssetVersion?: { __typename?: 'AssetVersionDetailFields', Creator?: string | null, DateCreated?: any | null, StorageSize?: any | null, Ingested?: boolean | null, Version?: number | null, idAsset?: number | null, idAssetVersion?: number | null, FilePath?: string | null, StorageHash?: string | null } | null, Actor?: { __typename?: 'ActorDetailFields', OrganizationName?: string | null } | null, Stakeholder?: { __typename?: 'StakeholderDetailFields', OrganizationName?: string | null, EmailAddress?: string | null, PhoneNumberMobile?: string | null, PhoneNumberOffice?: string | null, MailingAddress?: string | null } | null } };
+export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query', getDetailsTabDataForObject: { __typename?: 'GetDetailsTabDataForObjectResult', Unit?: { __typename?: 'UnitDetailFields', Abbreviation?: string | null, ARKPrefix?: string | null } | null, Project?: { __typename?: 'ProjectDetailFields', Description?: string | null } | null, Subject?: { __typename?: 'SubjectDetailFields', Altitude?: number | null, Latitude?: number | null, Longitude?: number | null, R0?: number | null, R1?: number | null, R2?: number | null, R3?: number | null, TS0?: number | null, TS1?: number | null, TS2?: number | null, idIdentifierPreferred?: number | null } | null, Item?: { __typename?: 'ItemDetailFields', EntireSubject?: boolean | null } | null, CaptureData?: { __typename?: 'CaptureDataDetailFields', captureMethod?: number | null, dateCaptured?: string | null, datasetType?: number | null, description?: string | null, cameraSettingUniform?: boolean | null, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, isValidData?: boolean | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'ModelConstellation', Model: { __typename?: 'Model', idModel: number, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountAnimations?: number | null, CountCameras?: number | null, CountLights?: number | null, CountMaterials?: number | null, CountMeshes?: number | null, CountEmbeddedTextures?: number | null, CountLinkedTextures?: number | null, FileEncoding?: string | null, IsDracoCompressed?: boolean | null, Name: string, DateCreated: any, idVCreationMethod?: number | null, idVModality?: number | null, idVUnits?: number | null, idVPurpose?: number | null, idVFileType?: number | null, Variant: string }, ModelObjects?: Array<{ __typename?: 'ModelObject', idModelObject: number, BoundingBoxP1X?: number | null, BoundingBoxP1Y?: number | null, BoundingBoxP1Z?: number | null, BoundingBoxP2X?: number | null, BoundingBoxP2Y?: number | null, BoundingBoxP2Z?: number | null, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountColorChannels?: number | null, CountTextureCoordinateChannels?: number | null, HasBones?: boolean | null, HasFaceNormals?: boolean | null, HasTangents?: boolean | null, HasTextureCoordinates?: boolean | null, HasVertexNormals?: boolean | null, HasVertexColor?: boolean | null, IsTwoManifoldUnbounded?: boolean | null, IsTwoManifoldBounded?: boolean | null, IsWatertight?: boolean | null, SelfIntersecting?: boolean | null }> | null, ModelMaterials?: Array<{ __typename?: 'ModelMaterial', idModelMaterial: number, Name?: string | null }> | null, ModelMaterialChannels?: Array<{ __typename?: 'ModelMaterialChannel', Type?: string | null, Source?: string | null, Value?: string | null, AdditionalAttributes?: string | null, idModelMaterial: number, idModelMaterialChannel: number }> | null, ModelObjectModelMaterialXref?: Array<{ __typename?: 'ModelObjectModelMaterialXref', idModelObjectModelMaterialXref: number, idModelObject: number, idModelMaterial: number }> | null, ModelAssets?: Array<{ __typename?: 'ModelAsset', AssetName: string, AssetType: string }> | null } | null, Scene?: { __typename?: 'SceneDetailFields', Links: Array<string>, AssetType?: number | null, Tours?: number | null, Annotation?: number | null, EdanUUID?: string | null, ApprovedForPublication?: boolean | null, PublicationApprover?: string | null, PosedAndQCd?: boolean | null, CanBeQCd?: boolean | null, idScene?: number | null } | null, IntermediaryFile?: { __typename?: 'IntermediaryFileDetailFields', idIntermediaryFile: number } | null, ProjectDocumentation?: { __typename?: 'ProjectDocumentationDetailFields', Description?: string | null } | null, Asset?: { __typename?: 'AssetDetailFields', AssetType?: number | null, idAsset?: number | null } | null, AssetVersion?: { __typename?: 'AssetVersionDetailFields', Creator?: string | null, DateCreated?: any | null, StorageSize?: any | null, Ingested?: boolean | null, Version?: number | null, idAsset?: number | null, idAssetVersion?: number | null, FilePath?: string | null, StorageHash?: string | null } | null, Actor?: { __typename?: 'ActorDetailFields', OrganizationName?: string | null } | null, Stakeholder?: { __typename?: 'StakeholderDetailFields', OrganizationName?: string | null, EmailAddress?: string | null, PhoneNumberMobile?: string | null, PhoneNumberOffice?: string | null, MailingAddress?: string | null } | null } };
 
 export type GetProjectListQueryVariables = Exact<{
   input: GetProjectListInput;
@@ -3085,7 +3082,7 @@ export type GetSystemObjectDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, publishedState: string, publishedEnum: number, publishable: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null } };
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, publishedState: string, publishedEnum: number, publishable: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
 
 export type GetVersionsForAssetQueryVariables = Exact<{
   input: GetVersionsForAssetInput;
@@ -5390,16 +5387,6 @@ export const GetDetailsTabDataForObjectDocument = gql`
     }
     Item {
       EntireSubject
-      Altitude
-      Latitude
-      Longitude
-      R0
-      R1
-      R2
-      R3
-      TS0
-      TS1
-      TS2
     }
     CaptureData {
       captureMethod
@@ -5778,6 +5765,12 @@ export const GetSystemObjectDetailsDocument = gql`
       Name
       Description
       RestrictLevel
+    }
+    objectProperties {
+      propertyType
+      level
+      rationale
+      idContact
     }
   }
 }

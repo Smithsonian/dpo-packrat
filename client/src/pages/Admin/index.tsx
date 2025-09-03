@@ -21,11 +21,12 @@
  *
  */
 import React from 'react';
-import AdminUsersView from './components/AdminUsersView';
-import AdminUserForm from './components/AdminUserForm';
+import AdminUsersView from './components/User/AdminUsersView';
+import AdminUserForm from './components/User/AdminUserForm';
 import AdminProjectsView from './components/AdminProjectsView';
 import AdminUnitsView from './components/AdminUnitsView';
 import AdminToolsView from './components/AdminToolsView';
+import AdminContactView from './components/Contact/AdminContactView';
 import AddUnitForm from './components/AddUnitForm';
 import AddProjectForm from './components/AddProjectForm';
 import LicenseView from './components/License/LicenseView';
@@ -41,6 +42,7 @@ function Admin(): React.ReactElement {
         <Routes>
             <Route path={resolveRoute(ADMIN_EDIT.USER)} element={<AdminUserForm />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.USERS)} element={<AdminUsersView />} />
+            <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.CONTACTS)} element={<AdminContactView />} />
             <Route path={resolveRoute(ADMIN_EDIT.LICENSE)} element={<LicenseForm />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.LICENSES)} element={<LicenseView />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.CREATEPROJECT)} element={<AddProjectForm />} />

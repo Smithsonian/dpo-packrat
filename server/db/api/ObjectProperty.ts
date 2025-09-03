@@ -1,0 +1,104 @@
+/* eslint-disable camelcase */
+import { ObjectProperty as ObjectPropertyBase, Prisma } from '@prisma/client';
+import * as DBC from '../connection';
+import * as H from '../../utils/helpers';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
+
+export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements ObjectPropertyBase {
+    idObjectProperty!: number;
+    idSystemObject!:  number;
+    PropertyType!: ('sensitivity');
+    Level!: number;
+    Rationale!: string | null;
+    idContact!: number | null;
+
+    constructor(input: ObjectPropertyBase) {
+        super(input);
+    }
+
+    public fetchTableName(): string { return 'ObjectProperty'; }
+    public fetchID(): number { return this.idObjectProperty; }
+
+    protected async createWorker(): Promise<boolean> {
+        try {
+            let { idSystemObject, PropertyType, Level, Rationale, idContact } = this;
+            ({ idObjectProperty: this.idObjectProperty, idSystemObject, PropertyType,
+                Level, Rationale, idContact } =
+                await DBC.DBConnection.prisma.objectProperty.create({
+                    data: {
+                        idSystemObject,
+                        PropertyType,
+                        Level,
+                        Rationale,
+                        idContact
+                    },
+                }));
+            return true;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            return false;
+        }
+    }
+
+    protected async updateWorker(): Promise<boolean> {
+        try {
+            const { idObjectProperty, idSystemObject, PropertyType, Level, Rationale, idContact } = this;
+            return await DBC.DBConnection.prisma.objectProperty.update({
+                where: { idObjectProperty, },
+                data: {
+                    idSystemObject,
+                    PropertyType,
+                    Level,
+                    Rationale,
+                    idContact,
+                },
+            }) ? true : /* istanbul ignore next */ false;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            return  false;
+        }
+    }
+
+    static async fetch(idObjectProperty: number): Promise<ObjectProperty | null> {
+        if (!idObjectProperty)
+            return null;
+        try {
+            return DBC.CopyObject<ObjectPropertyBase, ObjectProperty>(
+                await DBC.DBConnection.prisma.objectProperty.findUnique({ where: { idObjectProperty, }, }), ObjectProperty);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            return null;
+        }
+    }
+
+    static async fetchAll(): Promise<ObjectProperty[] | null> {
+        try {
+            return DBC.CopyArray<ObjectPropertyBase, ObjectProperty>(
+                await DBC.DBConnection.prisma.objectProperty.findMany(), ObjectProperty);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            return null;
+        }
+    }
+
+    /**
+     * Computes the array of ObjectProperties that are connected to any of the specified objects.
+     * ObjectProperties are connected to system objects; This routine is used to gather all assigned properties.
+     * @param idSystemObjects Array of SystemObject.idSystemObject
+     */
+    static async fetchDerivedFromObject(idSystemObjects: number[]): Promise<ObjectProperty[] | null> {
+        if (!idSystemObjects || idSystemObjects.length == 0)
+            return null;
+        try {
+            return DBC.CopyArray<ObjectPropertyBase, ObjectProperty>(
+                await DBC.DBConnection.prisma.$queryRaw<ObjectProperty[]>`
+                SELECT DISTINCT O.*
+                FROM ObjectProperty AS O
+                JOIN SystemObject AS SOO ON (O.idSystemObject = SOO.idSystemObject)
+                WHERE O.idSystemObject IN (${Prisma.join(idSystemObjects)})`, ObjectProperty);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch derived from system object failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            return null;
+        }
+    }
+}
