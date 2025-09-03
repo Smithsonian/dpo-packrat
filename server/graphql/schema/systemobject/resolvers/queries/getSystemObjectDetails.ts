@@ -91,7 +91,6 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
             // grab the contact if set
             for(let i=0; i<properties.length; i++) {
                 const prop = properties[i];
-                console.log(prop.idContact);
                 const contact: DBAPI.Contact | null = await DBAPI.Contact.fetch(prop.idContact ?? 0);
 
                 cleanedProperties.push({

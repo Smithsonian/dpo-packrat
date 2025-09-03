@@ -120,8 +120,6 @@ export async function getContact(req: Request, res: Response): Promise<void> {
             contacts = [contact];
         }
 
-        console.log(contacts);
-
         // success
         RK.logInfo(RK.LogSection.eHTTP,'get units',`success: ${contacts.length}`,null,'HTTP.Object.GetUnit',false);
         res.status(200).send(JSON.stringify(generateResponse(true,`returned ${contacts.length} contacts`,contacts)));

@@ -143,7 +143,7 @@ export default class API {
             .then(response => {
                 // Check if the response returned a successful status code
                 if (!response.ok) {
-                    console.log('response: ',response);
+                    console.log('[Packrat: Error] response: ',response);
                     return { success: false, message: response.statusText };
                 }
                 return response.json(); // Assuming the server responds with JSON

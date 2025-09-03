@@ -221,8 +221,6 @@ function AdminUnitsView(): React.ReactElement {
     const location = useLocation();
     const [unitList, setUnitList] = useState<GetUnitsFromNameSearchResult['Units']>([]);
 
-    console.log('units view');
-
     useEffect(() => {
         async function fetchInitialUnitList() {
             const initialUnitListQuery = await apolloClient.query({
