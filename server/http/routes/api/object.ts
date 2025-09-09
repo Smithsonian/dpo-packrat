@@ -19,26 +19,34 @@ type ProjectResponse = {
 };
 
 //#region SCENE
-export async function getSceneState(req: Request, res: Response): Promise<void> {
+export async function getObjectStatus(req: Request, res: Response): Promise<void> {
 
     // make sure we're authorized to run this routine
     const authResult = await isAuthorized(req);
     if(authResult.success===false) {
-        res.status(200).send(JSON.stringify(generateResponse(false,`getSceneState: ${authResult.error}`)));
+        res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus: ${authResult.error}`)));
         return;
     }
 
-    // get our scene object and system object
+    // get our object and system object
     const { id } = req.params;
     const idSystemObject: number = parseInt(id);
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
-    if(!systemObject || !systemObject.idScene) {
-        res.status(200).send(JSON.stringify(generateResponse(false,`getSceneState failed. no system object for: ${idSystemObject}`)));
+    if(!systemObject) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. no system object for: ${idSystemObject}`)));
         return;
     }
+
+    // currently we only support Scene objects
+    if(!systemObject.idScene) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. only Scene objects supported: ${idSystemObject}`)));
+        return;
+    }
+
+    // get our scene
     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
     if(!scene) {
-        res.status(200).send(JSON.stringify(generateResponse(false,`getSceneState failed. no scene for: ${systemObject.idScene}`)));
+        res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. no scene for: ${systemObject.idScene}`)));
         return;
     }
 
@@ -47,13 +55,79 @@ export async function getSceneState(req: Request, res: Response): Promise<void> 
     RK.profile(profileKey,RK.LogSection.eHTTP,'calculating scene status',{ name: scene.Name, idScene: scene.idScene, idSystemObject });
     const sceneSummary: SceneSummary | null = await buildProjectSceneDef(scene,null);
     if(!sceneSummary) {
-        res.status(200).send(JSON.stringify(generateResponse(false,`getSceneState failed. cannot build scene summary: ${systemObject.idScene}`)));
+        res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. cannot build scene summary: ${systemObject.idScene}`)));
         return;
     }
     RK.profileEnd(profileKey);
 
+    // helpers for determining state
+    const formatResultField = (status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): any => {
+        return { status, level, notes };
+    };
+    const getCaptureDataStatus = (count: number, expected: number): { status: string, level: string, notes: string } => {
+
+        if (count === 0 && expected <= 0)
+            return { status: 'Missing', level: 'warn', notes: 'no datasets found linked to the MediaGroup or source model' };
+        else if(expected > 0 && count < expected)
+            return { status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. more linked to MediaGroup than source model` };
+        else if(count === expected)
+            return { status: 'Found', level: 'pass', notes: `${count}/${expected} datasets found` };
+        else if(count > expected)
+            return { status: 'Warning', level: 'warn', notes: `${count}/${expected} datasets found. source model has unexpected dataset. (CAD?)` };
+        else
+            return { status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. unexpected relationships` };
+    };
+    const getARStatus = (status: string): { status: string, level: string, notes: string } => {
+        // TODO: check if downloads supported by license to determin severity
+        switch(status) {
+            case 'Good':
+                return { status: 'Found', level: 'pass', notes: 'all AR models found' };
+            case 'Missing: WebAR':
+                return { status, level: 'fail', notes: 'WebXR models are generated with the scene. Try regenerating it from the source model page' };
+            case 'Missing: NativeAR':
+                return { status, level: 'warn', notes: 'Native AR models are generated with downloads' };
+            default:
+                return { status: 'Error', level: 'critical', notes: 'unexpected AR model status' };
+        }
+    };
+
+    // figure out QC status
+    const thumbnails = formatResultField('Found','pass','all thumbnails found');
+    const reviewed = sceneSummary.isReviewed ?
+        formatResultField('Reviewed','pass','Marked as reviewed') :
+        formatResultField('Not Reviewed','fail','Valid but not reviewed');
+
+    // our core/base models for Voyager
+    const baseModels = sceneSummary.derivatives.models.status === 'Good' ?
+        formatResultField('Found','pass','all base models found') :
+        formatResultField('Missing','fail',`${sceneSummary.derivatives.models.items.length}/${sceneSummary.derivatives.models.expected} base models found`);
+
+    // figure out AR models
+    const arModels = getARStatus(sceneSummary.derivatives.ar.status);
+
+    // capture data status
+    const captureData = getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1);
+
+    // return object structure
+    const result = {
+        idSystemObject: systemObject.idSystemObject,
+        idScene: systemObject.idScene,
+        isLive: true,
+        liveUrl: 'https://3d.si.edu/object/3d/0f03aac5-f1d3-41be-b19d-caa2ecc2f908',
+        published: { status: 'Public', level: 'pass', notes: 'Latest version published' },
+        license: { status: 'CC0', level: 'pass', notes: 'License assigned correctly' },
+        reviewed,
+        scale: { status: 'Good', level: 'pass', notes: 'Scene scale aligns with units chosen' },
+        thumbnails,
+        baseModels,
+        downloads: { status: 'Missing', level: 'fail', notes: 'downloads not found. license expects them. generate downloads above' },
+        arModels,
+        captureData,
+        network: { status: 'Good', level: 'pass', notes: 'all object relationships are valid' }
+    };
+
     // return success
-    res.status(200).send(JSON.stringify(generateResponse(true,'Returned scene summary',sceneSummary)));
+    res.status(200).send(JSON.stringify(generateResponse(true,'Returned scene summary',result)));
 }
 //#endregion
 

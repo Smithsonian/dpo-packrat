@@ -22,7 +22,7 @@ import { generateDownloads } from './routes/api/generateDownloads';
 import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
-import { getSceneState } from './routes/api/object';
+import { getObjectStatus } from './routes/api/object';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
 
@@ -204,7 +204,8 @@ export class HttpServer {
 
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
-        this.app.get('/api/scene/:id/state', getSceneState);
+
+        this.app.get('/api/object/:id/status', getObjectStatus);
 
         this.app.get('/api/contact',getContact);                        // get all contacts
         this.app.get('/api/contact/:id',getContact);                    // get a specific contact

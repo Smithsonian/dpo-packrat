@@ -18,6 +18,7 @@ import { CheckboxNoPadding } from '../../../../../components/controls/CheckboxFi
 import { getUpdatedCheckboxProps } from '../../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../../utils/shared';
 import { HelpOutline } from '@material-ui/icons';
+import SceneDetailsStatus from './SceneDetailsStatus';
 
 export const useStyles = makeStyles(({ palette }) => ({
     value: {
@@ -42,7 +43,7 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const isMounted = useRef(false);
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle, publishedState } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
     const sceneData = data?.getDetailsTabDataForObject.Scene;
 
@@ -93,28 +94,28 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
-    const getLinkURL = (linkType: string): string | null => {
-        const links: string[] = sceneData?.Links ?? [];
-        if(links.length===0 || publishedState.toLowerCase()==='not published')
-            return null;
+    // const getLinkURL = (linkType: string): string | null => {
+    //     const links: string[] = sceneData?.Links ?? [];
+    //     if(links.length===0 || publishedState.toLowerCase()==='not published')
+    //         return null;
 
-        // get our urls that are of the desired type
-        const url = links
-            .map(item => {
-                const [type, url] = item.split('|', 2);
-                return { type, url };
-            })
-            .filter(entry => entry.type === 'scene_'+linkType)
-            .map(entry => entry.url);
+    //     // get our urls that are of the desired type
+    //     const url = links
+    //         .map(item => {
+    //             const [type, url] = item.split('|', 2);
+    //             return { type, url };
+    //         })
+    //         .filter(entry => entry.type === 'scene_'+linkType)
+    //         .map(entry => entry.url);
 
-        return url[0] ?? null;
-    };
+    //     return url[0] ?? null;
+    // };
 
     const readOnlyContainerProps: React.CSSProperties = {
         height: 22,
         alignItems: 'center'
     };
-    const publishedUrl = getLinkURL('published');
+    // const publishedUrl = getLinkURL('published');
 
     return (
         <Box display='flex' flexDirection='row'>
@@ -227,7 +228,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                 />
             </Box>
             <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
-                <ReadOnlyRow
+                {/* <ReadOnlyRow
                     label='Published URL'
                     {...(publishedUrl
                         ? { linkLabel: publishedUrl, value: publishedUrl }
@@ -236,6 +237,9 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     padding={10}
                     paddingString='1px 10px'
                     containerStyle={readOnlyContainerProps}
+                /> */}
+                <SceneDetailsStatus
+                    idScene={4047}
                 />
             </Box>
         </Box>
