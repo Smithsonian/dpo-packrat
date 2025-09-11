@@ -18,7 +18,13 @@ type ProjectResponse = {
     data?
 };
 
-//#region SCENE
+//#region OBJECT STATUS
+type FieldStatus = {
+    name: string,
+    status: string,
+    level: 'pass' | 'fail' | 'warn' | 'critical',
+    notes: string
+};
 export async function getObjectStatus(req: Request, res: Response): Promise<void> {
 
     // make sure we're authorized to run this routine
@@ -61,69 +67,83 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     RK.profileEnd(profileKey);
 
     // helpers for determining state
-    const formatResultField = (status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): any => {
-        return { status, level, notes };
+    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
+        return { name, status, level, notes };
     };
-    const getCaptureDataStatus = (count: number, expected: number): { status: string, level: string, notes: string } => {
+    const getCaptureDataStatus = (count: number, expected: number): FieldStatus => {
+        const name = 'Capture Data';
 
         if (count === 0 && expected <= 0)
-            return { status: 'Missing', level: 'warn', notes: 'no datasets found linked to the MediaGroup or source model' };
+            return { name, status: 'Missing', level: 'warn', notes: 'no datasets found linked to the MediaGroup or source model' };
         else if(expected > 0 && count < expected)
-            return { status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. more linked to MediaGroup than source model` };
+            return { name, status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. more linked to MediaGroup than source model` };
         else if(count === expected)
-            return { status: 'Found', level: 'pass', notes: `${count}/${expected} datasets found` };
+            return { name, status: 'Found', level: 'pass', notes: `${count}/${expected} datasets found` };
         else if(count > expected)
-            return { status: 'Warning', level: 'warn', notes: `${count}/${expected} datasets found. source model has unexpected dataset. (CAD?)` };
+            return { name, status: 'Warning', level: 'warn', notes: `${count}/${expected} datasets found. source model has unexpected dataset. (CAD?)` };
         else
-            return { status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. unexpected relationships` };
+            return { name, status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. unexpected relationships` };
     };
-    const getARStatus = (status: string): { status: string, level: string, notes: string } => {
+    const getModelARStatus = (status: string): FieldStatus => {
         // TODO: check if downloads supported by license to determin severity
+        const name = 'Models: AR';
+
         switch(status) {
             case 'Good':
-                return { status: 'Found', level: 'pass', notes: 'all AR models found' };
+                return { name, status: 'Found', level: 'pass', notes: 'all AR models found' };
             case 'Missing: WebAR':
-                return { status, level: 'fail', notes: 'WebXR models are generated with the scene. Try regenerating it from the source model page' };
+                return { name, status, level: 'fail', notes: 'WebXR models are generated with the scene. Try regenerating it from the source model page' };
             case 'Missing: NativeAR':
-                return { status, level: 'warn', notes: 'Native AR models are generated with downloads' };
+                return { name, status, level: 'warn', notes: 'Native AR models are generated with downloads' };
             default:
-                return { status: 'Error', level: 'critical', notes: 'unexpected AR model status' };
+                return { name, status: 'Error', level: 'critical', notes: 'unexpected AR model status' };
         }
     };
+    const getModelBaseStatus = (status: string, count: number, expected: number): FieldStatus => {
+        const name = 'Models: Base';
 
-    // figure out QC status
-    const thumbnails = formatResultField('Found','pass','all thumbnails found');
-    const reviewed = sceneSummary.isReviewed ?
-        formatResultField('Reviewed','pass','Marked as reviewed') :
-        formatResultField('Not Reviewed','fail','Valid but not reviewed');
-
-    // our core/base models for Voyager
-    const baseModels = sceneSummary.derivatives.models.status === 'Good' ?
-        formatResultField('Found','pass','all base models found') :
-        formatResultField('Missing','fail',`${sceneSummary.derivatives.models.items.length}/${sceneSummary.derivatives.models.expected} base models found`);
-
-    // figure out AR models
-    const arModels = getARStatus(sceneSummary.derivatives.ar.status);
-
-    // capture data status
-    const captureData = getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1);
+        if(status === 'Good')
+            return formatResultField(name,'Found','pass','all base models found');
+        else
+            return formatResultField(name,'Missing','fail',`${count}/${expected} base models found`);
+    };
+    const getReviewedStatus = (isReviewed: boolean): FieldStatus => {
+        const name = 'Is Reviewed';
+        if(isReviewed)
+            return formatResultField(name,'Reviewed','pass','Marked as reviewed');
+        else
+            return formatResultField(name,'Not Reviewed','fail','Valid but not reviewed');
+    };
+    const getThumbnailsStatus = (): FieldStatus => {
+        const name = 'Thumbnails';
+        return formatResultField(name,'Found','pass','all thumbnails found');
+    };
 
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
         idScene: systemObject.idScene,
-        isLive: true,
-        liveUrl: 'https://3d.si.edu/object/3d/0f03aac5-f1d3-41be-b19d-caa2ecc2f908',
-        published: { status: 'Public', level: 'pass', notes: 'Latest version published' },
-        license: { status: 'CC0', level: 'pass', notes: 'License assigned correctly' },
-        reviewed,
-        scale: { status: 'Good', level: 'pass', notes: 'Scene scale aligns with units chosen' },
-        thumbnails,
-        baseModels,
-        downloads: { status: 'Missing', level: 'fail', notes: 'downloads not found. license expects them. generate downloads above' },
-        arModels,
-        captureData,
-        network: { status: 'Good', level: 'pass', notes: 'all object relationships are valid' }
+
+        publishedUrl:
+            'https://3d.si.edu/object/3d/0f03aac5-f1d3-41be-b19d-caa2ecc2f908',
+        published:
+            formatResultField('Published','Public','pass','Latest version published'),
+        license:
+            formatResultField('License','CC0','pass','License assigned correctly'),
+        reviewed:
+            getReviewedStatus(sceneSummary.isReviewed),
+        scale:
+            formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
+        thumbnails:
+            getThumbnailsStatus(),
+        baseModels:
+            getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
+        downloads:
+            formatResultField('Download Models','Missing','fail','downloads not found. license expects them. generate downloads above'),
+        arModels:
+            getModelARStatus(sceneSummary.derivatives.ar.status),
+        captureData:
+            getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
     };
 
     // return success

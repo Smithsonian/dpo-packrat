@@ -17,6 +17,7 @@ import API, { RequestResponse } from '../../../../../api';
 
 // Define TypeScript interfaces
 interface QCStatus {
+    name: string;
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
@@ -25,8 +26,7 @@ interface QCStatus {
 interface SceneQCData {
     idSystemObject: number,
     idScene: number,
-    isLive: boolean;
-    liveUrl: string;
+    publishedUrl: string;
     published: QCStatus;
     license: QCStatus;
     reviewed: QCStatus;
@@ -36,7 +36,7 @@ interface SceneQCData {
     downloads: QCStatus;
     captureData: QCStatus;
     arModels: QCStatus;
-    network: QCStatus;
+    // network: QCStatus;
 }
 
 interface QCRow {
@@ -114,8 +114,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 const objectData: SceneQCData = {
                     idSystemObject: response.data.idSystemObject,
                     idScene: response.data.idScene,
-                    isLive: response.data.isLive,
-                    liveUrl: response.data.liveUrl,
+                    publishedUrl: response.data.publishedUrl,
                     published: response.data.published,
                     license: response.data.license,
                     reviewed: response.data.reviewed,
@@ -125,82 +124,33 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     downloads: response.data.downloads,
                     arModels: response.data.arModels,
                     captureData: response.data.captureData,
-                    network: response.data.network
+                    // network: response.data.network
                 };
                 setData(objectData);
                 console.log('objectData: ',objectData);
 
-                // map to rows
-                const qcRows: QCRow[] = [
-                    {
-                        property: 'Is Live',
-                        status: objectData.isLive ? 'Live' : 'Not Live',
-                        level: objectData.isLive ? 'pass' : 'warn',
-                        notes: objectData.isLive && objectData.liveUrl
-                            ? `<a href="${objectData.liveUrl}" target="_blank" rel="noopener noreferrer">View on 3d.si.edu</a>`
-                            : 'Scene is not currently live'
-                    },
-                    {
-                        property: 'Published',
-                        status: objectData.published.status,
-                        level: objectData.published.level,
-                        notes: objectData.published.notes
-                    },
-                    {
-                        property: 'License',
-                        status: objectData.license.status,
-                        level: objectData.license.level,
-                        notes: objectData.license.notes
-                    },
-                    {
-                        property: 'Scene was Reviewed',
-                        status: objectData.reviewed.status,
-                        level: objectData.reviewed.level,
-                        notes: objectData.reviewed.notes
-                    },
-                    {
-                        property: 'Scene Scale',
-                        status: objectData.scale.status,
-                        level: objectData.scale.level,
-                        notes: objectData.scale.notes
-                    },
-                    {
-                        property: 'Thumbnails',
-                        status: objectData.thumbnails.status,
-                        level: objectData.thumbnails.level,
-                        notes: objectData.thumbnails.notes
-                    },
-                    {
-                        property: 'Base Models',
-                        status: objectData.baseModels.status,
-                        level: objectData.baseModels.level,
-                        notes: objectData.baseModels.notes
-                    },
-                    {
-                        property: 'Downloads',
-                        status: objectData.downloads.status,
-                        level: objectData.downloads.level,
-                        notes: objectData.downloads.notes
-                    },
-                    {
-                        property: 'Capture Data',
-                        status: objectData.captureData.status,
-                        level: objectData.captureData.level,
-                        notes: objectData.captureData.notes
-                    },
-                    {
-                        property: 'AR Models',
-                        status: objectData.arModels.status,
-                        level: objectData.arModels.level,
-                        notes: objectData.arModels.notes
-                    },
-                    {
-                        property: 'Network',
-                        status: objectData.network.status,
-                        level: objectData.network.level,
-                        notes: objectData.network.notes
-                    }
+                // define rows to be included in the table
+                const qcRowKeys: (keyof SceneQCData)[] = [
+                    'published',
+                    'license',
+                    'reviewed',
+                    'thumbnails',
+                    'baseModels',
+                    'downloads',
+                    'arModels',
+                    'captureData'
                 ];
+
+                // map to rows
+                const qcRows: QCRow[] = qcRowKeys.map((key) => {
+                    const row = objectData[key] as QCStatus;
+                    return {
+                        property: row.name, // or row.name if that's the correct field
+                        status: row.status,
+                        level: row.level,
+                        notes: row.notes,
+                    };
+                });
                 setRows(qcRows);
             } catch (err) {
                 setError('Failed to load QC data');
