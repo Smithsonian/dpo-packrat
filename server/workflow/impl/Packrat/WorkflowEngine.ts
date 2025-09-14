@@ -1283,13 +1283,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             [modelObject.BoundingBoxP1X??Number.NaN,modelObject.BoundingBoxP1Y??Number.NaN,modelObject.BoundingBoxP1Z??Number.NaN],
             [modelObject.BoundingBoxP2X??Number.NaN,modelObject.BoundingBoxP2Y??Number.NaN,modelObject.BoundingBoxP2Z??Number.NaN],
         );
-        RK.logDebug(RK.LogSection.eWF,'bounding box check',valid ? 'no/low FP risk' : 'high FP risk',{ size },'WorkflowEngine');
 
-        // if(CMIR.assetVersionGeometry)
-        //     console.log('>>> asset geom: ',CMIR.assetVersionGeometry);
-        // if(CMIR.units)
-        //     console.log('>>> asset units: ',CMIR.units);
-
+        RK.logDebug(RK.LogSection.eWF,`bounding box check: ${CMIR.assetVersionGeometry?.FileName ?? 'NA'}`,valid ? 'no/low FP risk' : 'high FP risk',{ size },'WorkflowEngine');
         return false;
     }
 }
