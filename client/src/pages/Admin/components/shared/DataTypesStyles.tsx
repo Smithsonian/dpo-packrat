@@ -32,12 +32,15 @@ export type AssetList = {
     items: AssetSummary[],
     expected?: number,
 };
+export type SubjectSummary = DBReference & {
+    arkId: string
+};
 export type SceneSummary = DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
     project: DBReference,
-    subject: DBReference,
+    subject: SubjectSummary,
     mediaGroup: DBReference,
     dateCreated: Date,
     dateModified: Date,
