@@ -123,6 +123,7 @@ export class JobCookSIVoyagerSceneParameters {
     svxFile?: string | undefined;
     metaDataFile?: string | undefined;
     outputFileBaseName?: string | undefined;
+    optimalPlacement?: boolean;
 
     // extract and remove these from the parameter object before passing to Cook
     parameterHelper?: JobCookSIVoyagerSceneParameterHelper;
@@ -134,7 +135,8 @@ export class JobCookSIVoyagerSceneParameters {
         sourceDiffuseMapFile: string | undefined = undefined,
         svxFile: string | undefined = undefined,
         metaDataFile: string | undefined = undefined,
-        outputFileBaseName: string | undefined = undefined) {
+        outputFileBaseName: string | undefined = undefined,
+        optimalPlacement: boolean | undefined = undefined) {
 
         this.parameterHelper = parameterHelper;
         this.sourceMeshFile = path.basename(sourceMeshFile);
@@ -143,6 +145,7 @@ export class JobCookSIVoyagerSceneParameters {
         this.svxFile = svxFile ? path.basename(svxFile) : undefined;
         this.metaDataFile = metaDataFile ? path.basename(metaDataFile) : undefined;
         this.outputFileBaseName = outputFileBaseName ? path.basename(outputFileBaseName) : undefined;
+        this.optimalPlacement = optimalPlacement ?? true; // defaults to true for most models
     }
 }
 

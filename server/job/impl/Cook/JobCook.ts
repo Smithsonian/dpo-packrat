@@ -272,9 +272,12 @@ export abstract class JobCook<T> extends JobPackrat {
         let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
         try {
+            // get our parameters
+            const sceneParams = await this.getParameters();
+
             // Create job via POST to /job
             let requestUrl: string = this.CookServerURL() + 'job';
-            const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, await this.getParameters(), eJobCookPriority.eNormal);
+            const jobCookPostBody: JobCookPostBody<T> = new JobCookPostBody<T>(this._configuration, sceneParams, eJobCookPriority.eNormal);
 
             // submit the Cook job via an axios request, and retry for 'CookRequestRetryCount' times.
             // todo: there's a condition here leading to Cook timeout and repeated attempts even on failure
