@@ -29,6 +29,11 @@ type WorkflowResponse = {       // general response for each
     id?: number,                // optional number for the object this response refers to
     state?: OpState
 };
+type SceneGenParameters = {
+    optimalPlacement: boolean,
+    decimationTool: 'meshlab' | 'rapid_compact',
+    decimationPasses: number
+};
 //#endregion
 
 //#region Utility
@@ -200,6 +205,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
     // get our method to see what we should do, extracting the status and IDs
     let statusOnly: boolean = true;
     let idSystemObjects: number[] = [];
+    let parameters: SceneGenParameters | null = null;
     switch(req.method.toLocaleLowerCase()) {
         case 'get': {
             // GET method only returns status info. used for quick queries/checks on specific scenes
@@ -211,6 +217,10 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
             // POST used for batch operations or creating the job
             const body = req.body;
             statusOnly = body.statusOnly;
+
+            // get parameters (if any)
+            parameters = body.parameters ?? null;
+            console.log('>>> gen scene params: ',parameters);
 
             if(body.idSystemObject && Array.isArray(body.idSystemObject)) {
                 // if we're an array store only numbers and prune out any nulls

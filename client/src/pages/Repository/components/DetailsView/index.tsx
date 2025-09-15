@@ -8,7 +8,19 @@
  * This component renders repository details view for the Repository UI.
  */
 import API, { RequestResponse } from '../../../../api';
-import { Box } from '@material-ui/core';
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    MenuItem,
+    Typography,
+    Tooltip
+} from '@material-ui/core';
+import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
@@ -49,6 +61,7 @@ import SpecialUploadList from '../../../Ingestion/components/Uploads/SpecialUplo
 import { UploadReferences } from '../../../../store';
 import NoticeBanner from './NoticeBanner';
 import { useContactStore, Contact } from '../../../../store/contact';
+import SplitActionButton, { SplitActionOption } from '../../../../components/controls/SplitActionButton';
 
 const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
@@ -83,18 +96,38 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
         [breakpoints.down('lg')]: {
             height: 30
         }
-    }
+    },
+    toggle: {
+        // base styles (optional)
+        textTransform: 'none',
+
+        // selected state
+        '&.Mui-selected': {
+            backgroundColor: palette.primary.main,
+            color: 'white',
+            borderColor: palette.primary.main,
+        },
+        // selected + hover
+        '&.Mui-selected:hover': {
+            backgroundColor: palette.primary.main, // a little darker for hover
+            borderColor: palette.primary.main,
+        },
+    },
 }));
 
 type DetailsParams = {
     idSystemObject: string;
 };
-
 type DetailsFields = {
     name?: string;
     retired?: boolean;
     idLicense?: number;
     subtitle?: string;
+};
+type SceneGeneParameters = {
+    optimalPlacement: boolean,
+    decimationTool: 'meshlab' | 'rapid_compact',
+    decimationPasses: number
 };
 
 function DetailsView(): React.ReactElement {
@@ -121,6 +154,8 @@ function DetailsView(): React.ReactElement {
         s.getObjectProperties,
         s.clearObjectProperties
     ]);
+    const [sceneGenParameters, setSceneGenParameters] = useState<SceneGeneParameters | null>(null);
+    const [sceneGenDialogOpen, setSceneGenDialogOpen] = React.useState(false);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
@@ -706,12 +741,19 @@ function DetailsView(): React.ReactElement {
         return true;
     };
 
-    const generateScene = async (): Promise<boolean> => {
+    //#region SCENE GENERATION
+    const DEFAULT_SCENE_GEN_PARAMS: SceneGeneParameters = {
+        optimalPlacement: true,
+        decimationTool: 'meshlab',
+        decimationPasses: 1,
+    };
+    const generateSceneAdvanced = async(parameters?: any | null): Promise<boolean> => {
+
         console.log('[PACKRAT] Generating Scene...', data.getSystemObjectDetails);
 
         // make a call to our generate scene endpoint with the current scene id
         // return sucess when the job is started or if one is already running
-        const response: RequestResponse = await API.generateScene([idSystemObject]);
+        const response: RequestResponse = await API.generateScene([idSystemObject], parameters ? sceneGenParameters : undefined);
         if(response.success === false) {
 
             // get our message from our first response
@@ -725,17 +767,27 @@ function DetailsView(): React.ReactElement {
                 console.log(`[Packrat - ERROR] cannot generate scene. (${responseMessage})`);
                 toast.error('Cannot generate scene. Check the report.');
             }
-
-            // update our button state
-            // setCanGenerateDownloads(true);
-
-            // set to false to stop 'loading' animation on button. doesn't (currently) represent state of job on server
-            // setIsGeneratingDownloads(false);
             return false;
         }
 
         return true;
     };
+    const generateScene = async (): Promise<boolean> => {
+        // feed null to trigger defaults are to be used
+        return generateSceneAdvanced(null);
+    };
+    const updateSceneGenParams = (partial: Partial<SceneGeneParameters>) => {
+        setSceneGenParameters(prev => ({ ...(prev ?? DEFAULT_SCENE_GEN_PARAMS), ...partial }));
+    };
+    const confirmSceneGenAdvanced = async () => {
+        await generateSceneAdvanced(sceneGenParameters); // null means defaults (simple)
+        setSceneGenDialogOpen(false);
+    };
+    const sceneGenOptions: SplitActionOption[] = [
+        { label: 'Generate Scene', onClick: generateScene },
+        { label: 'Generate Scene (Advanced)', onClick: () => setSceneGenDialogOpen(true) },
+    ];
+    //#endregion
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
 
@@ -824,12 +876,89 @@ function DetailsView(): React.ReactElement {
                         >Generate Downloads</LoadingButton>}
 
                     {(objectType === eSystemObjectType.eModel) &&
-                        <LoadingButton className={classes.updateButton}
-                            loading={false}
-                            disabled={false}
-                            onClick={generateScene}
-                            style={{ marginLeft: 5, width: '200px' }}
-                        >Generate Scene</LoadingButton>}
+                    <>
+                        <SplitActionButton options={sceneGenOptions} defaultIndex={0} />
+
+                        <Dialog
+                            open={sceneGenDialogOpen}
+                            onClose={() => setSceneGenDialogOpen(false)}
+                            aria-labelledby='adv-generate-title'
+                            fullWidth
+                            maxWidth='xs'
+                            PaperProps={{ style: { maxWidth: '30rem' } }}
+                        >
+                            <DialogTitle id='adv-generate-title'>Advanced Scene Generation</DialogTitle>
+
+                            <DialogContent dividers>
+                                <Typography variant='body2' gutterBottom style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                                    If you know your model needs special handling, or you want to torubleshoot poor results, use the settings below to change how the Voyager scene is generated.
+                                    <p><b><a href='mailto:packrat@si.edu' style={{ color: 'black' }}>Contact Packrat Support for Guidance</a></b></p>
+                                </Typography>
+
+                                {/* Optimal Placement (tooltip + toggle group) */}
+                                <Tooltip title='If enabled, the system will attempt to optimally place each vertex after decimation. If seeing "spikes" in your resulting meshes, try disabling this.'>
+                                    <Box mt={2} mb={1} display='flex' flexDirection='column'>
+                                        <Typography variant='subtitle2' style={{ fontSize: '0.875rem' }}>Optimal Placement</Typography>
+                                        <ToggleButtonGroup
+                                            value={(sceneGenParameters?.optimalPlacement ?? true) ? 'on' : 'off'}
+                                            exclusive
+                                            onChange={(_, value) => updateSceneGenParams({ optimalPlacement: value === 'on' })}
+                                            style={{ marginTop: 4 }}
+                                        >
+                                            <ToggleButton value='on' className={classes.toggle}>On</ToggleButton>
+                                            <ToggleButton value='off' className={classes.toggle}>Off</ToggleButton>
+                                        </ToggleButtonGroup>
+                                    </Box>
+                                </Tooltip>
+
+                                {/* Decimation Tool (tooltip + outlined select) */}
+                                <Tooltip title='Select which decimation tool to use when simplifying the model mesh. MeshLab is the default.'>
+                                    <TextField
+                                        select
+                                        variant='outlined'
+                                        fullWidth
+                                        margin='normal'
+                                        label='Decimation Tool'
+                                        value={sceneGenParameters?.decimationTool ?? 'meshlab'}
+                                        onChange={(e) =>
+                                            updateSceneGenParams({
+                                                decimationTool: e.target.value as SceneGeneParameters['decimationTool'],
+                                            })
+                                        }
+                                    >
+                                        <MenuItem value='meshlab'>Meshlab</MenuItem>
+                                        <MenuItem value='rapid_compact'>Rapid Compact</MenuItem>
+                                    </TextField>
+                                </Tooltip>
+
+                                {/* Decimation Passes (tooltip + outlined number field) */}
+                                <Tooltip title='The number of times to run iteratively decimation. This can help with very complex geometry as it progressively tries to reduce the geometry. Default is 1.'>
+                                    <TextField
+                                        variant='outlined'
+                                        label='Decimation Passes'
+                                        type='number'
+                                        margin='normal'
+                                        fullWidth
+                                        inputProps={{ min: 1, step: 1 }}
+                                        value={sceneGenParameters?.decimationPasses ?? 1}
+                                        onChange={(e) =>
+                                            updateSceneGenParams({
+                                                decimationPasses: Math.max(1, parseInt(e.target.value || '1', 10)),
+                                            })
+                                        }
+                                    />
+                                </Tooltip>
+                            </DialogContent>
+
+                            <DialogActions>
+                                <Button onClick={() => setSceneGenDialogOpen(false)}>Cancel</Button>
+                                <Button color='primary' variant='contained' onClick={confirmSceneGenAdvanced} style={{ color: 'white' }}>
+                                    Run Advanced
+                                </Button>
+                            </DialogActions>
+                        </Dialog>
+                    </>
+                    }
                 </Box>
 
                 <Box display='flex'>
