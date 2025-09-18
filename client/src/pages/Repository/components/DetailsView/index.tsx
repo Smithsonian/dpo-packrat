@@ -126,7 +126,7 @@ type DetailsFields = {
 };
 type SceneGeneParameters = {
     optimalPlacement: boolean,
-    decimationTool: 'meshlab' | 'rapid_compact',
+    decimationTool: 'Meshlab' | 'RapidCompact',
     decimationPasses: number
 };
 
@@ -156,6 +156,9 @@ function DetailsView(): React.ReactElement {
     ]);
     const [sceneGenParameters, setSceneGenParameters] = useState<SceneGeneParameters | null>(null);
     const [sceneGenDialogOpen, setSceneGenDialogOpen] = React.useState(false);
+    const [decimationPassesInput, setDecimationPassesInput] = React.useState(
+        String(sceneGenParameters?.decimationPasses ?? 1)
+    );
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
@@ -312,6 +315,10 @@ function DetailsView(): React.ReactElement {
         // warm the cache once
         useContactStore.getState().loadAll();
     }, []);
+    useEffect(() => {
+        // keep in sync if dialog parameters change
+        setDecimationPassesInput(String(sceneGenParameters?.decimationPasses ?? 1));
+    }, [sceneGenParameters?.decimationPasses, sceneGenDialogOpen]);
 
     // contacts and notice
     const ops = useDetailTabStore(s => s.getObjectProperties(idSystemObject));
@@ -744,7 +751,7 @@ function DetailsView(): React.ReactElement {
     //#region SCENE GENERATION
     const DEFAULT_SCENE_GEN_PARAMS: SceneGeneParameters = {
         optimalPlacement: true,
-        decimationTool: 'meshlab',
+        decimationTool: 'Meshlab',
         decimationPasses: 1,
     };
     const generateSceneAdvanced = async(parameters?: any | null): Promise<boolean> => {
@@ -782,6 +789,11 @@ function DetailsView(): React.ReactElement {
     const confirmSceneGenAdvanced = async () => {
         await generateSceneAdvanced(sceneGenParameters); // null means defaults (simple)
         setSceneGenDialogOpen(false);
+    };
+    const commitSceneGenDecimationPasses = () => {
+        const n = Math.max(1, parseInt(decimationPassesInput, 10) || 1);
+        updateSceneGenParams({ decimationPasses: n });
+        setDecimationPassesInput(String(n));
     };
     const sceneGenOptions: SplitActionOption[] = [
         { label: 'Generate Scene', onClick: generateScene },
@@ -919,33 +931,31 @@ function DetailsView(): React.ReactElement {
                                         fullWidth
                                         margin='normal'
                                         label='Decimation Tool'
-                                        value={sceneGenParameters?.decimationTool ?? 'meshlab'}
+                                        value={sceneGenParameters?.decimationTool ?? 'Meshlab'}
                                         onChange={(e) =>
                                             updateSceneGenParams({
                                                 decimationTool: e.target.value as SceneGeneParameters['decimationTool'],
                                             })
                                         }
                                     >
-                                        <MenuItem value='meshlab'>Meshlab</MenuItem>
-                                        <MenuItem value='rapid_compact'>Rapid Compact</MenuItem>
+                                        <MenuItem value='Meshlab'>Meshlab</MenuItem>
+                                        <MenuItem value='RapidCompact'>Rapid Compact</MenuItem>
                                     </TextField>
                                 </Tooltip>
 
                                 {/* Decimation Passes (tooltip + outlined number field) */}
-                                <Tooltip title='The number of times to run iteratively decimation. This can help with very complex geometry as it progressively tries to reduce the geometry. Default is 1.'>
+                                <Tooltip title='The number of times to run iterative decimation. This can help with very complex geometry as it progressively tries to reduce the geometry. Default is 1.'>
                                     <TextField
                                         variant='outlined'
                                         label='Decimation Passes'
-                                        type='number'
+                                        type='number'                   // keep number for scroll/keyboard; string state handles editing
                                         margin='normal'
                                         fullWidth
-                                        inputProps={{ min: 1, step: 1 }}
-                                        value={sceneGenParameters?.decimationPasses ?? 1}
-                                        onChange={(e) =>
-                                            updateSceneGenParams({
-                                                decimationPasses: Math.max(1, parseInt(e.target.value || '1', 10)),
-                                            })
-                                        }
+                                        inputProps={{ min: 1, step: 1, inputMode: 'numeric', pattern: '[0-9]*' }}
+                                        value={decimationPassesInput}   // <-- string
+                                        onChange={(e) => setDecimationPassesInput(e.target.value)} // allow '', '12', etc.
+                                        onBlur={commitSceneGenDecimationPasses}  // clamp/apply when the user is done
+                                        onKeyDown={(e) => { if (e.key === 'Enter') commitSceneGenDecimationPasses(); }}
                                     />
                                 </Tooltip>
                             </DialogContent>

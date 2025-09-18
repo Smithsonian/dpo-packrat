@@ -31,7 +31,7 @@ type WorkflowResponse = {       // general response for each
 };
 type SceneGenParameters = {
     optimalPlacement: boolean,
-    decimationTool: 'meshlab' | 'rapid_compact',
+    decimationTool: 'Meshlab' | 'RapidCompact',
     decimationPasses: number
 };
 //#endregion
@@ -62,7 +62,7 @@ const buildOpResponse = (message: string, responses: WorkflowResponse[]): OpResp
 };
 //#endregion
 
-const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise<WorkflowResponse> => {
+const createGenSceneOp = async (idSystemObject: number, idUser: number, parameters: SceneGenParameters | null): Promise<WorkflowResponse> => {
 
     // get SystemObject from DB
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
@@ -123,7 +123,8 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number): Promise
 
     // build our parameters for the workflow
     const workflowParams: WorkflowParameters = {
-        idUserInitiator: idUser
+        idUserInitiator: idUser,
+        parameters  // our additional config options
     };
 
     // create our workflow for generating downloads
@@ -220,8 +221,12 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
 
             // get parameters (if any)
             parameters = body.parameters ?? null;
-            console.log('>>> gen scene params: ',parameters);
-
+            if(!parameters) {
+                RK.logError(RK.LogSection.eHTTP,'scene generation request failed','no input parameters',{ body },'HTTP.GenerateVoyagerScene');
+                res.status(400).send(JSON.stringify(generateResponse(false,'invalid HTTP method. no parameters')));
+                return;
+            }
+            RK.logDebug(RK.LogSection.eHTTP,'scene generation request','input parameter check',{ parameters },'HTTP.GenerateVoyagerScene');
             if(body.idSystemObject && Array.isArray(body.idSystemObject)) {
                 // if we're an array store only numbers and prune out any nulls
                 idSystemObjects = body.idSystemObject.map(item => {
@@ -278,7 +283,7 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
             }
 
             // create our operation and execute download generation
-            const result: WorkflowResponse = await createGenSceneOp(idSystemObject,LS.idUser);
+            const result: WorkflowResponse = await createGenSceneOp(idSystemObject,LS.idUser,parameters);
             responses.push(result);
             messagePrefix = 'Generating Scene for:';
         }

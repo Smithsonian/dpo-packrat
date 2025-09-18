@@ -123,7 +123,9 @@ export class JobCookSIVoyagerSceneParameters {
     svxFile?: string | undefined;
     metaDataFile?: string | undefined;
     outputFileBaseName?: string | undefined;
-    optimalPlacement?: boolean;
+    optimalPlacement?: boolean | undefined;
+    decimationTool?: 'Meshlab' | 'RapidCompact' | undefined;
+    decimationPasses?: number | undefined;
 
     // extract and remove these from the parameter object before passing to Cook
     parameterHelper?: JobCookSIVoyagerSceneParameterHelper;
@@ -136,7 +138,9 @@ export class JobCookSIVoyagerSceneParameters {
         svxFile: string | undefined = undefined,
         metaDataFile: string | undefined = undefined,
         outputFileBaseName: string | undefined = undefined,
-        optimalPlacement: boolean | undefined = undefined) {
+        optimalPlacement: boolean | undefined = undefined,
+        decimationTool: 'Meshlab' | 'RapidCompact' | undefined = undefined,                     // which software to use for decimation
+        decimationPasses: number | undefined = undefined) {
 
         this.parameterHelper = parameterHelper;
         this.sourceMeshFile = path.basename(sourceMeshFile);
@@ -145,7 +149,15 @@ export class JobCookSIVoyagerSceneParameters {
         this.svxFile = svxFile ? path.basename(svxFile) : undefined;
         this.metaDataFile = metaDataFile ? path.basename(metaDataFile) : undefined;
         this.outputFileBaseName = outputFileBaseName ? path.basename(outputFileBaseName) : undefined;
-        this.optimalPlacement = optimalPlacement ?? true; // defaults to true for most models
+
+        if(optimalPlacement!=undefined)
+            this.optimalPlacement = optimalPlacement;
+
+        if(decimationTool!=undefined)
+            this.decimationTool = decimationTool;
+
+        if(decimationPasses!=undefined)
+            this.decimationPasses = decimationPasses;
     }
 }
 
@@ -450,6 +462,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     }
 
     protected async getParameters(): Promise<JobCookSIVoyagerSceneParameters> {
+        // RK.logDebug(RK.LogSection.eJOB,'voyager scene generation','parameter check',{ parameters: this.parameters },'Job.Cook.VoyagerScene');
         return this.parameters;
     }
 
