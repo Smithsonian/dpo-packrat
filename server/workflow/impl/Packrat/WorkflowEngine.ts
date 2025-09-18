@@ -327,12 +327,6 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         RK.logInfo(RK.LogSection.eWF,'generate scene','started',{ idModel, idScene, ...workflowParams.parameters },'Workflow.Engine');
 
-        // making sure we didn't make it here but user wanted to skip generation
-        // if (workflowParams.parameters.skipSceneGenerate===true) {
-        //     LOG.info(`WorkflowEngine.eventIngestionIngestObjectModel skipping si-voyager-scene per user instruction (idModel: ${idModel} | idSO: ${workflowParams.idSystemObject})`, LOG.LS.eWF);
-        //     return { success: false, message: 'skipped generating scene per user request', data: { isValid: false } };
-        // }
-
         //#region check for duplicate jobs
         // make sure we don't have any jobs running. >0 if a running job was found.
         const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByModel(8,idModel);
@@ -483,7 +477,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         // determine if we need to use 'optimalPlacement' flag.
-        const optimalPlacement: boolean = await WorkflowEngine.calcOptimalPlacement(CMIR);
+        RK.logDebug(RK.LogSection.eWF,'scene generation workflow','parameter check',{ workflowParams },'WorkflowEngine');
+        const optimalPlacement: boolean = workflowParams.parameters?.optimalPlacement ?? undefined;
+        const decimationTool: 'Meshlab' | 'RapidCompact' = workflowParams.parameters?.decimationTool ?? undefined;
+        const decimationPasses: number = workflowParams.parameters?.decimationPasses ?? undefined;
 
         // create parameters for a voyager scene
         const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
@@ -497,9 +494,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     undefined,                          // metadata
                     sceneBaseName,                      // outputFileBaseName
                     optimalPlacement,                   // optimalPlacement
+                    decimationTool,                     // which software to use for decimation
+                    decimationPasses,                   // how many iterative passes to decimate
                 )
             );
-        // console.log('>>> params: ',jobParamSIVoyagerScene);
 
         // create parameters for the workflow based on those created for the job
         const wfParamSIVoyagerScene: WF.WorkflowParameters = {
@@ -695,11 +693,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                 if (workflowParams.parameters.skipSceneGenerate) {
                     RK.logWarning(RK.LogSection.eWF,'ingest model event','skipping si-voyager-scene per user instruction',{ idSystemObject: workflowParams.idSystemObject },'Workflow.Engine');
                 } else {
-                    const optimalPlacement: boolean = await WorkflowEngine.calcOptimalPlacement(CMIR);
+                    // const optimalPlacement: boolean = await WorkflowEngine.calcOptimalPlacement(CMIR);
                     const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
                         new WFP.WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene,
                             new COOK.JobCookSIVoyagerSceneParameters(parameterHelper,CMIR.assetVersionGeometry.FileName, CMIR.units,
-                            CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName, optimalPlacement));
+                            CMIR.assetVersionDiffuse?.FileName, sceneBaseName + '.svx.json', undefined, sceneBaseName)); //, optimalPlacement));
 
                     const wfParamSIVoyagerScene: WF.WorkflowParameters = {
                         eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeCookJob,

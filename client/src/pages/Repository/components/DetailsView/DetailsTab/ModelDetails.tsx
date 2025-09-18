@@ -286,7 +286,6 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
 export default ModelDetails;
 
-
 function SelectField(props: SelectFieldProps): React.ReactElement {
     const { value, name, options, onChange, disabled = false, label, updated = false } = props;
     const classes = useSelectStyles(props);
@@ -318,7 +317,6 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
         </div>
     );
 }
-
 function SelectMultiField(props: SelectFieldProps): React.ReactElement {
     const { value, name, options, onChange, disabled = false, label, updated = false } = props;
     const classes = useSelectStyles(props);
