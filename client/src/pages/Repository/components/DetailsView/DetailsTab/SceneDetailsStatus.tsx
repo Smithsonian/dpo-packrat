@@ -15,14 +15,12 @@ import { Alert } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import API, { RequestResponse } from '../../../../../api';
 
-// Define TypeScript interfaces
 interface QCStatus {
     name: string;
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
 }
-
 interface SceneQCData {
     idSystemObject: number,
     idScene: number,
@@ -38,12 +36,14 @@ interface SceneQCData {
     arModels: QCStatus;
     // network: QCStatus;
 }
-
 interface QCRow {
     property: string;
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
+}
+interface SceneDetailsStatusProps {
+    idSceneSO: number;
 }
 
 // Define styles
@@ -72,6 +72,8 @@ const useStyles = makeStyles(() =>
             '&.info': { backgroundColor: '#e3f2fd', color: '#1565c0' },
         },
         notesCell: {
+            maxWidth: '20rem',
+            wordWrap: 'normal',
             '& a': {
                 color: '#1976d2',
                 textDecoration: 'none',
@@ -94,10 +96,6 @@ const useStyles = makeStyles(() =>
     })
 );
 
-interface SceneDetailsStatusProps {
-    idScene: number;
-}
-
 const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement => {
     const classes = useStyles();
     const [data, setData] = useState<SceneQCData | null>(null);
@@ -108,7 +106,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response: RequestResponse = await API.getObjectDetailsStatus(props.idScene);
+                const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
                 console.log('response: ',response.data);
 
                 const objectData: SceneQCData = {
@@ -134,7 +132,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     'published',
                     'license',
                     'reviewed',
-                    'thumbnails',
+                    // 'thumbnails',
                     'baseModels',
                     'downloads',
                     'arModels',
@@ -144,11 +142,20 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 // map to rows
                 const qcRows: QCRow[] = qcRowKeys.map((key) => {
                     const row = objectData[key] as QCStatus;
+
+                    // adjust the publish one with a link, if available
+                    let publishedNotes: string | null = null;
+                    if(key==='published') {
+                        publishedNotes = row.notes;
+                        if(objectData.publishedUrl && objectData.publishedUrl.length>0)
+                            publishedNotes += ` (<a href='${objectData.publishedUrl}'><b>Link</b></a>)`;
+                    }
+
                     return {
-                        property: row.name, // or row.name if that's the correct field
+                        property: row.name,
                         status: row.status,
                         level: row.level,
-                        notes: row.notes,
+                        notes: (publishedNotes) ?? row.notes,
                     };
                 });
                 setRows(qcRows);
@@ -161,7 +168,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
         };
 
         fetchData();
-    }, [props.idScene]);
+    }, [props.idSceneSO]);
 
     const getStatusClass = (level: 'pass' | 'warn' | 'fail' | 'critical' | 'info') => {
         switch (level) {

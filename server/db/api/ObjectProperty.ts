@@ -101,4 +101,16 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
             return null;
         }
     }
+
+    protected getSensitivityLevel(): { level: number, description: string } {
+        if(this.PropertyType!=='sensitivity')
+            return { level: -1, description: 'no sensitivity' };
+
+        switch(this.Level) {
+            case 0: return { level: 0, description: 'Not Sensitive' };
+            case 1: return { level: 1, description: 'Sensitive' };
+            case 2: return { level: 2, description: 'Restricted' };
+            default: return { level: 3 , description: 'confidential' };
+        }
+    }
 }

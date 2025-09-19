@@ -94,28 +94,10 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eScene, name, checked);
     };
 
-    // const getLinkURL = (linkType: string): string | null => {
-    //     const links: string[] = sceneData?.Links ?? [];
-    //     if(links.length===0 || publishedState.toLowerCase()==='not published')
-    //         return null;
-
-    //     // get our urls that are of the desired type
-    //     const url = links
-    //         .map(item => {
-    //             const [type, url] = item.split('|', 2);
-    //             return { type, url };
-    //         })
-    //         .filter(entry => entry.type === 'scene_'+linkType)
-    //         .map(entry => entry.url);
-
-    //     return url[0] ?? null;
-    // };
-
     const readOnlyContainerProps: React.CSSProperties = {
         height: 22,
         alignItems: 'center'
     };
-    // const publishedUrl = getLinkURL('published');
 
     return (
         <Box display='flex' flexDirection='row'>
@@ -228,18 +210,8 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                 />
             </Box>
             <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
-                {/* <ReadOnlyRow
-                    label='Published URL'
-                    {...(publishedUrl
-                        ? { linkLabel: publishedUrl, value: publishedUrl }
-                        : { value: 'None' }
-                    )}
-                    padding={10}
-                    paddingString='1px 10px'
-                    containerStyle={readOnlyContainerProps}
-                /> */}
                 <SceneDetailsStatus
-                    idScene={4047}
+                    idSceneSO={4047}
                 />
             </Box>
         </Box>
