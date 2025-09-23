@@ -87,6 +87,14 @@ export default class API {
         return this.request(`${API_ROUTES.PROJECTS}/${idProject}/scenes`, { method: 'GET' });
     }
 
+    // object details
+    static async getObjectDetailsStatus(idSystemObject: number): Promise<RequestResponse> {
+        let uri: string = 'api/object';
+        if(idSystemObject && idSystemObject>0 && !isNaN(idSystemObject))
+            uri += `/${idSystemObject}/status`;
+        return this.request(uri, { method: 'GET' });
+    }
+
     // validation reports
     static async getReport(type: 'asset-files', date: Date, format: 'csv' | 'json', inline: boolean = false): Promise<RequestResponse> {
 

@@ -87,6 +87,7 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     publishedState: string;
     idSystemObject: number;
+    refreshTick?: number;
 }
 
 export type UpdateDataFields =
@@ -121,6 +122,7 @@ type DetailsTabParams = {
     metadata: Metadata[];
     onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
     publishedState: string;
+    refreshTick?: number;
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -141,7 +143,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         detailQuery,
         metadata,
         onUploaderOpen,
-        publishedState
+        publishedState,
+        refreshTick
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
@@ -229,7 +232,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         ...detailsQueryResult,
         ...sharedProps,
         publishedState,
-        idSystemObject
+        idSystemObject,
+        refreshTick,
     };
 
     let onAddVersion = () => {};

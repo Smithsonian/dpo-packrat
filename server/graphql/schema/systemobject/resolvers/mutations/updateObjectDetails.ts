@@ -18,7 +18,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
+    // console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
@@ -439,7 +439,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     // NOTE: assuming a single property of each type on an object
     const sensitivitySrc = data.ObjectProperties?.find( p => p.propertyType.toLowerCase()==='sensitivity');
     if(sensitivitySrc) {
-        console.log('handling object properties: ',data.ObjectProperties,idSystemObject);
         const op: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSystemObject]);
         const sensitivityDst: DBAPI.ObjectProperty | null = op?.find( p => p.PropertyType.toLowerCase()==='sensitivity' ) ?? null;
         if(!sensitivityDst)
