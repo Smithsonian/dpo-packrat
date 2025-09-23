@@ -779,7 +779,7 @@ function DetailsView(): React.ReactElement {
     };
     const generateSceneAdvanced = async(parameters?: any | null): Promise<boolean> => {
 
-        console.log('[PACKRAT] Generating Scene...', data.getSystemObjectDetails);
+        console.log('[PACKRAT] Generating Scene...', data.getSystemObjectDetails, parameters, sceneGenParameters);
 
         // make a call to our generate scene endpoint with the current scene id
         // return sucess when the job is started or if one is already running
@@ -797,6 +797,8 @@ function DetailsView(): React.ReactElement {
                 console.log(`[Packrat - ERROR] cannot generate scene. (${responseMessage})`);
                 toast.error('Cannot generate scene. Check the report.');
             }
+
+            console.log(idSystemObject,parameters,sceneGenParameters);
             return false;
         }
 

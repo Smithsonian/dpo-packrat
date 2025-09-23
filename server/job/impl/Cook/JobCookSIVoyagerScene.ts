@@ -462,7 +462,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     }
 
     protected async getParameters(): Promise<JobCookSIVoyagerSceneParameters> {
-        // RK.logDebug(RK.LogSection.eJOB,'voyager scene generation','parameter check',{ parameters: this.parameters },'Job.Cook.VoyagerScene');
+        RK.logDebug(RK.LogSection.eJOB,'voyager scene generation','parameter check',{ parameters: this.parameters },'Job.Cook.VoyagerScene');
         return this.parameters;
     }
 
@@ -600,6 +600,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
                 <b>Unit</b>: ${this.parameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
                 <b>Subject</b>: ${this.parameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
                 <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
+                <p><b>Parameters</b>: ${this.parameters}<p>
             `;
 
             RK.logError(RK.LogSection.eJOB,'scene generation failed',
