@@ -44,6 +44,7 @@ interface QCRow {
 }
 interface SceneDetailsStatusProps {
     idSceneSO: number;
+    refreshTick?: number;
 }
 
 // Define styles
@@ -107,7 +108,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
         const fetchData = async () => {
             try {
                 const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
-                console.log('response: ',response.data);
+                // console.log('response: ',response.data);
 
                 const objectData: SceneQCData = {
                     idSystemObject: response.data.idSystemObject,
@@ -125,7 +126,6 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     // network: response.data.network
                 };
                 setData(objectData);
-                console.log('objectData: ',objectData);
 
                 // define rows to be included in the table
                 const qcRowKeys: (keyof SceneQCData)[] = [
@@ -168,7 +168,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
         };
 
         fetchData();
-    }, [props.idSceneSO]);
+    }, [props.idSceneSO, props.refreshTick]);
 
     const getStatusClass = (level: 'pass' | 'warn' | 'fail' | 'critical' | 'info') => {
         switch (level) {

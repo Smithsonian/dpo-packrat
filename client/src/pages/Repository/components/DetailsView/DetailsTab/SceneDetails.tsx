@@ -43,47 +43,74 @@ export const useStyles = makeStyles(({ palette }) => ({
 function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const isMounted = useRef(false);
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
+    const syncing = useRef(false);
+    const lastSentSig = useRef<string>('');
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle, refreshTick } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
     const sceneData = data?.getDetailsTabDataForObject.Scene;
+    const lastTick = useRef<number|undefined>(undefined);
+
+    const retrieveSceneData = async () => {
+        if (data && !loading) {
+            syncing.current = true;
+            const { Scene } = data.getDetailsTabDataForObject;
+            const {
+                data: { getScene }
+            } = await apolloClient.query({
+                query: GetSceneDocument,
+                variables: {
+                    input: {
+                        idScene: Scene?.idScene
+                    }
+                },
+                fetchPolicy: 'no-cache'
+            });
+
+            updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
+            updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
+            updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
+            updateDetailField(eSystemObjectType.eScene, 'CountCamera', getScene?.Scene?.CountCamera);
+            updateDetailField(eSystemObjectType.eScene, 'CountLight', getScene?.Scene?.CountLight);
+            updateDetailField(eSystemObjectType.eScene, 'CountModel', getScene?.Scene?.CountModel);
+            updateDetailField(eSystemObjectType.eScene, 'CountMeta', getScene?.Scene?.CountMeta);
+            updateDetailField(eSystemObjectType.eScene, 'CountSetup', getScene?.Scene?.CountSetup);
+            updateDetailField(eSystemObjectType.eScene, 'CountTour', getScene?.Scene?.CountTour);
+            updateDetailField(eSystemObjectType.eScene, 'EdanUUID', getScene?.Scene?.EdanUUID);
+            updateDetailField(eSystemObjectType.eScene, 'Links', getScene?.Scene?.Links);
+
+            syncing.current = false;
+            isMounted.current = true;
+        }
+    };
 
     useEffect(() => {
-        const retrieveSceneData = async () => {
-            if (data && !loading) {
-                const { Scene } = data.getDetailsTabDataForObject;
-                const {
-                    data: { getScene }
-                } = await apolloClient.query({
-                    query: GetSceneDocument,
-                    variables: {
-                        input: {
-                            idScene: Scene?.idScene
-                        }
-                    },
-                    fetchPolicy: 'no-cache'
-                });
+        if (!isMounted.current || syncing.current) return;
 
-                updateDetailField(eSystemObjectType.eScene, 'ModelSceneXref', getScene?.Scene?.ModelSceneXref);
-                updateDetailField(eSystemObjectType.eScene, 'CountScene', getScene?.Scene?.CountScene);
-                updateDetailField(eSystemObjectType.eScene, 'CountNode', getScene?.Scene?.CountNode);
-                updateDetailField(eSystemObjectType.eScene, 'CountCamera', getScene?.Scene?.CountCamera);
-                updateDetailField(eSystemObjectType.eScene, 'CountLight', getScene?.Scene?.CountLight);
-                updateDetailField(eSystemObjectType.eScene, 'CountModel', getScene?.Scene?.CountModel);
-                updateDetailField(eSystemObjectType.eScene, 'CountMeta', getScene?.Scene?.CountMeta);
-                updateDetailField(eSystemObjectType.eScene, 'CountSetup', getScene?.Scene?.CountSetup);
-                updateDetailField(eSystemObjectType.eScene, 'CountTour', getScene?.Scene?.CountTour);
-                updateDetailField(eSystemObjectType.eScene, 'EdanUUID', getScene?.Scene?.EdanUUID);
-                updateDetailField(eSystemObjectType.eScene, 'Links', getScene?.Scene?.Links);
-                isMounted.current = true;
-            }
+        // Only user-editable fields from this tab:
+        const payload = {
+            ApprovedForPublication: withDefaultValueBoolean(SceneDetails.ApprovedForPublication, false),
+            PosedAndQCd: withDefaultValueBoolean(SceneDetails.PosedAndQCd, false),
         };
 
-        retrieveSceneData();
-    }, []);
-
+        // Signature to avoid resending the same payload
+        const sig = JSON.stringify(payload);
+        if (sig !== lastSentSig.current) {
+            lastSentSig.current = sig;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            onUpdateDetail(objectType, payload as any);
+        }
+    }, [
+        SceneDetails.ApprovedForPublication,
+        SceneDetails.PosedAndQCd,
+        objectType,
+        onUpdateDetail
+    ]);
     useEffect(() => {
-        if (isMounted.current) onUpdateDetail(objectType, SceneDetails);
-    }, [SceneDetails]);
+        if (refreshTick !== lastTick.current) {
+            lastTick.current = refreshTick;
+            void retrieveSceneData();
+        }
+    }, [refreshTick, retrieveSceneData]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -212,6 +239,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
             <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
                 <SceneDetailsStatus
                     idSceneSO={4047}
+                    refreshTick={refreshTick}
                 />
             </Box>
         </Box>

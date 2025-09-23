@@ -65,7 +65,6 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. cannot build scene summary: ${systemObject.idScene}`)));
         return;
     }
-    console.log(sceneSummary);
     RK.profileEnd(profileKey);
 
     // helpers for determining state
@@ -215,8 +214,6 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         const licenseType: string = license.Name.split(',')[0];
         const allowsDownloads: boolean = doesLicenseAllowDownloads(license.Name);
         const status: string = licenseType + ((allowsDownloads) ? ' (Downloads)' : '');
-
-        console.log(licenseType,allowsDownloads,status,sensitivity);
 
         // extract the license type for status
         switch(licenseType) {

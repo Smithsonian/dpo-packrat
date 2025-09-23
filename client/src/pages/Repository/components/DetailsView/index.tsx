@@ -121,6 +121,7 @@ function DetailsView(): React.ReactElement {
         s.getObjectProperties,
         s.clearObjectProperties
     ]);
+    const [refreshTick, setRefreshTick] = useState(0);
 
     const getEntries = useVocabularyStore(state => state.getEntries);
     const [
@@ -220,7 +221,7 @@ function DetailsView(): React.ReactElement {
 
     useEffect(() => {
         if (data) {
-            console.log('[DetailsView] getSystemObjectDetails:', JSON.stringify(data.getSystemObjectDetails, null, 2));
+            // console.log('[DetailsView] getSystemObjectDetails:', JSON.stringify(data.getSystemObjectDetails, null, 2));
             const handleDetailTab = async () => {
                 await fetchDetailTabDataAndSetState();
             };
@@ -454,9 +455,22 @@ function DetailsView(): React.ReactElement {
             case eSystemObjectType.eModel:
                 updatedDataFields.Model = data as ModelDetailFieldsInput;
                 break;
-            case eSystemObjectType.eScene:
-                updatedDataFields.Scene = data as SceneDetailFieldsInput;
+            case eSystemObjectType.eScene: {
+                // make sure we only update if the values we get back are different
+                const next = data as SceneDetailFieldsInput;
+                const prev = (updatedData.Scene ?? {}) as SceneDetailFieldsInput;
+
+                const same =
+                prev?.ApprovedForPublication === next?.ApprovedForPublication &&
+                prev?.PosedAndQCd === next?.PosedAndQCd;
+
+                // No actual change — skip touching state to avoid churn
+                if (same)
+                    return;
+
+                updatedDataFields.Scene = next;
                 break;
+            }
             case eSystemObjectType.eIntermediaryFile:
                 break;
             case eSystemObjectType.eProjectDocumentation:
@@ -613,7 +627,7 @@ function DetailsView(): React.ReactElement {
             updatedData.Metadata = metadata;
 
             // get our object properties
-            console.log('[DetailsView.updateData] final updatedData:', JSON.stringify(updatedData, null, 2));
+            // console.log('[DetailsView.updateData] final updatedData:', JSON.stringify(updatedData, null, 2));
             const ops = getObjectProperties(idSystemObject) ?? [];
             if (ops.length) {
                 updatedData = {
@@ -626,7 +640,7 @@ function DetailsView(): React.ReactElement {
                     }))
                 };
             }
-            console.log('[DetailsView.updateData] object properties:', JSON.stringify(ops, null, 2));
+            // console.log('[DetailsView.updateData] object properties:', JSON.stringify(ops, null, 2));
 
             // send data to the server
             const { data } = await updateDetailsTabData(idSystemObject, idObject, objectType, updatedData);
@@ -635,6 +649,10 @@ function DetailsView(): React.ReactElement {
                 const message: string | null | undefined = data?.updateObjectDetails?.message;
                 toast.success(`Data saved successfully${message? ': ' + message : ''}`);
                 fetchDetailTabDataAndSetState();
+
+                // tell children to refresh their own data
+                setRefreshTick(t => t + 1);
+
                 return true;
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
@@ -851,6 +869,7 @@ function DetailsView(): React.ReactElement {
                         metadata={metadata}
                         onUploaderOpen={onUploaderOpen}
                         publishedState={publishedState}
+                        refreshTick={refreshTick}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (
