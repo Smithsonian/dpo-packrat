@@ -7,7 +7,7 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements ObjectPropertyBase {
     idObjectProperty!: number;
     idSystemObject!:  number;
-    PropertyType!: ('sensitivity');
+    PropertyType!: 'sensitivity';
     Level!: number;
     Rationale!: string | null;
     idContact!: number | null;

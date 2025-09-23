@@ -568,7 +568,7 @@ CREATE TABLE IF NOT EXISTS `ObjectProperty` (
   `Rationale` text DEFAULT NULL,
   `idContact` int(11) DEFAULT NULL,
   PRIMARY KEY (`idObjectProperty`),
-  UNIQUE KEY `ObjectProperty_idSystemObject_Type` (`idSystemObject`,`Type`),
+  UNIQUE KEY `ObjectProperty_idSystemObject_Type` (`idSystemObject`,`PropertyType`),
   KEY `ObjectProperty_idSystemObject` (`idSystemObject`),
   KEY `ObjectProperty_idContact` (`idContact`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;

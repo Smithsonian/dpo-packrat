@@ -105,7 +105,7 @@ interface ObjectDetailsProps {
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
-    onPublishUpdate?: (event) => void;
+    onPublishUpdate?: (event?) => void;
     path?: RepositoryPath[][] | null;
     updateData?: () => Promise<boolean>;
     idSystemObject: number;
@@ -131,7 +131,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         originalFields,
         onRetiredUpdate,
         onLicenseUpdate,
-        // onPublishUpdate,
+        onPublishUpdate,
         idSystemObject,
         license,
         licenseInheritance,
@@ -214,9 +214,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         }
 
         const { data } = await publish(idSystemObject, eState);
-        if (data?.publish?.success)
+        if (data?.publish?.success) {
             toast.success(`${action} succeeded`);
-        else
+            onPublishUpdate?.();
+        } else
             toast.error(`${action} failed: ${data?.publish?.message}`);
 
         setLoading(false);

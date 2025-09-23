@@ -45,7 +45,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const isMounted = useRef(false);
     const syncing = useRef(false);
     const lastSentSig = useRef<string>('');
-    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle, refreshTick } = props;
+    const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle, idSystemObject, refreshTick } = props;
     const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
     const sceneData = data?.getDetailsTabDataForObject.Scene;
     const lastTick = useRef<number|undefined>(undefined);
@@ -238,7 +238,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
             </Box>
             <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
                 <SceneDetailsStatus
-                    idSceneSO={4047}
+                    idSceneSO={idSystemObject}
                     refreshTick={refreshTick}
                 />
             </Box>

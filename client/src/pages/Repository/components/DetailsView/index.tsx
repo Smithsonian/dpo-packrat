@@ -444,6 +444,9 @@ function DetailsView(): React.ReactElement {
         // console.log(`[PACKRAT] ${JSON.stringify(target)}`);
         console.log(`[PACKRAT:DEBUG] Repository.DetailsView.onPublishUpdate (value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState})`);
 
+        // update our tick so child components update themself
+        setRefreshTick(t => t + 1);
+
         // const pState: ePublishedState = ePublishedState[parseInt(target.value)];
         // if(pState.toString() != publishedState) {
         //     console.warn('published states diff. updating...');

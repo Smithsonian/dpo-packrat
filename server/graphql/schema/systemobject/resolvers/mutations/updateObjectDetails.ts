@@ -440,9 +440,24 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const sensitivitySrc = data.ObjectProperties?.find( p => p.propertyType.toLowerCase()==='sensitivity');
     if(sensitivitySrc) {
         const op: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSystemObject]);
-        const sensitivityDst: DBAPI.ObjectProperty | null = op?.find( p => p.PropertyType.toLowerCase()==='sensitivity' ) ?? null;
-        if(!sensitivityDst)
-            return sendResult(false, `Unable to fetch ObjectProperty for 'sensitivity' with id ${idSystemObject}; update failed`);
+        let sensitivityDst: DBAPI.ObjectProperty | null = op?.find( p => p.PropertyType.toLowerCase()==='sensitivity' ) ?? null;
+        if(!sensitivityDst) {
+            // create a sensitivity row for the object
+            const opArgs = {
+                idObjectProperty: 0,
+                idSystemObject,
+                PropertyType: 'sensitivity' as const,
+                Level: 0,
+                Rationale: '',
+                idContact: null,
+            };
+            const newOP = new DBAPI.ObjectProperty(opArgs);
+            const createOpResult: boolean = await newOP.create();
+            if(!createOpResult)
+                return sendResult(false, `Unable to fetch/create ObjectProperty for 'sensitivity' with id ${idSystemObject}; update failed`);
+
+            sensitivityDst = newOP;
+        }
 
         sensitivityDst.Level = sensitivitySrc.level ?? sensitivityDst.Level;
         sensitivityDst.Rationale = sensitivitySrc.rationale ?? sensitivityDst.Rationale;

@@ -288,14 +288,14 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     };
     const getModelDownloadsStatus = ( status: string, count: number, expected: number, licenseAllows: boolean): FieldStatus => {
         const name = 'Download Models';
-        if(status === ' Good') {
+        if(status === 'Good') {
             if(licenseAllows===true)
                 return formatResultField(name,'Found','pass','all generated downloads found for scene and will be published');
             else
                 return formatResultField(name,'Found','warn','license does not allow for downloads. they <b><u>WILL NOT</u></b> be published.');
         } else {
             if(licenseAllows===true)
-                return formatResultField(name,status,'fail',`downloads not found (${count}/${expected>0?expected:5})`);
+                return formatResultField(name,status,'fail',`downloads not found (${count}/${expected>0?expected:6})`);
             else
                 return formatResultField(name,status,'warn','downloads not found. consider generating them.');
         }
