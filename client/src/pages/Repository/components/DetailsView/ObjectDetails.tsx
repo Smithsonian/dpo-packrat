@@ -105,7 +105,7 @@ interface ObjectDetailsProps {
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
-    onPublishUpdate?: (event?) => void;
+    onPublishUpdate?: () => void;
     path?: RepositoryPath[][] | null;
     updateData?: () => Promise<boolean>;
     idSystemObject: number;
