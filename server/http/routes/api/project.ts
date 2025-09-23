@@ -34,12 +34,15 @@ type AssetList = {
     items: AssetSummary[];
     expected?: number;               // how many items may be expected or found elsewhere
 };
+type SubjectSummary = DBAPI.DBReference & {
+    arkId: string
+};
 export type SceneSummary = DBAPI.DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
     project: DBAPI.DBReference,
-    subject: DBAPI.DBReference,
+    subject: SubjectSummary,
     mediaGroup: DBAPI.DBReference,
     dateCreated: Date,
     dateModified: Date,
@@ -217,6 +220,28 @@ export const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Pr
     }
     const projectSO: DBAPI.SystemObject | null = await project?.fetchSystemObject() ?? null;
 
+    // get identifiers for the Subject (get ARK)
+    let subjectArk: string = '';
+    const subjectIdentifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO?.idSystemObject ?? -1);
+    if(!subjectIdentifiers || subjectIdentifiers.length<=0) {
+        RK.logError(RK.LogSection.eHTTP,'build scene def','no identifiers found on Subject',{ ...scene },'HTTP.Route.Project');
+        subjectArk = 'Not Found';
+    } else {
+        // cycle through identifiers looking for ARK ID
+        const arkIDs: DBAPI.Identifier[] | null = subjectIdentifiers.filter( i => {
+            return i.idVIdentifierType===79; // HACK: should be COMMON.eVocabularyID.eIdentifierIdentifierTypeARK but that returns zero
+        });
+        if(!arkIDs || arkIDs.length<=0) {
+            RK.logError(RK.LogSection.eHTTP,'build scene def','no ARK identifiers found on Subject',{ idScene: scene.idScene, subjectIdentifiers: H.Helpers.JSONStringify(subjectIdentifiers) },'HTTP.Route.Project');
+            subjectArk = 'Not Found';
+        } else {
+            if(arkIDs.length>1)
+                RK.logWarning(RK.LogSection.eHTTP,'build scene def','more than one ARK ID found on subject. using first',{ idScene: scene.idScene, subjectIdentifiers: H.Helpers.JSONStringify(subjectIdentifiers) },'HTTP.Route.Project');
+            const arkID: DBAPI.Identifier = arkIDs[0];
+            subjectArk = arkID.IdentifierValue;
+        }
+    }
+
     // get all models associated with the Scene
     const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
     if (!MSXs) {
@@ -274,7 +299,7 @@ export const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Pr
             ? { id: projectSO?.idSystemObject ?? -1, name: project.Name }
             : { id: -1, name: 'NA' },
         subject:
-            { id: subjectSO?.idSystemObject ?? -1, name: subject.Name },
+            { id: subjectSO?.idSystemObject ?? -1, name: subject.Name, arkId: subjectArk },
         mediaGroup:
             { id: itemSO?.idSystemObject ?? -1, name: getItemName(item) },
         derivatives:

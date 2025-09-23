@@ -295,6 +295,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
             'Project',
             // 'Subject ID',
             'Subject',
+            'Subject ARK',
             // 'Media Group ID',
             'Media Group',
         ];
@@ -321,6 +322,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                 handleNull(sanitizeForCSV(scene.project?.name)),
                 // handleNull(scene.subject?.id),
                 handleNull(sanitizeForCSV(scene.subject?.name)),
+                handleNull(sanitizeForCSV(scene.subject?.arkId)),
                 // handleNull(scene.mediaGroup?.id),
                 handleNull(sanitizeForCSV(scene.mediaGroup?.name)),
             ].join(',');  // Join the row values with commas

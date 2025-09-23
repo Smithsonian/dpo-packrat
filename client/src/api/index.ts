@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * API (REST)
@@ -59,13 +60,13 @@ export default class API {
 
         return this.request(uri, options);
     }
-    static async generateScene(idSystemObject: number[], statusOnly: boolean = false, includeExisting: boolean = false): Promise<RequestResponse> {
+    static async generateScene(idSystemObject: number[], parameters?: any, statusOnly: boolean = false, includeExisting: boolean = false): Promise<RequestResponse> {
         // initiates the generate scene routine and either runs the recipe with the given id or returns its status.
         // idSystemObject = the SystemObject id for the Packrat Model/Scene making this request
-        const body = JSON.stringify({ statusOnly, includeExisting, idSystemObject });
+        const body = JSON.stringify({ statusOnly, parameters, includeExisting, idSystemObject });
         let uri: string = API_ROUTES.GEN_SCENE;
-        console.log('[PACKRAT:DEBUG] body: ',body);
-        console.trace('API.generateScene');
+        // console.log('[PACKRAT:DEBUG] body: ',body);
+        // console.trace('API.generateScene');
 
         let options;
         if(statusOnly) {
