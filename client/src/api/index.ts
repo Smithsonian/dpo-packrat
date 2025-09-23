@@ -65,7 +65,8 @@ export default class API {
         // idSystemObject = the SystemObject id for the Packrat Model/Scene making this request
         const body = JSON.stringify({ statusOnly, parameters, includeExisting, idSystemObject });
         let uri: string = API_ROUTES.GEN_SCENE;
-        // console.log('[PACKRAT:DEBUG] body: ',body);
+        console.log('[PACKRAT:DEBUG] API body: ',body);
+        console.log('[PACKRAT:DEBUG] API: ',parameters);
         // console.trace('API.generateScene');
 
         let options;
