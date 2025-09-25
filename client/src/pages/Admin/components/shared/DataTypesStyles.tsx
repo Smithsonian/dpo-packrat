@@ -32,12 +32,15 @@ export type AssetList = {
     items: AssetSummary[],
     expected?: number,
 };
+export type SubjectSummary = DBReference & {
+    arkId: string
+};
 export type SceneSummary = DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
     project: DBReference,
-    subject: DBReference,
+    subject: SubjectSummary,
     mediaGroup: DBReference,
     dateCreated: Date,
     dateModified: Date,
@@ -53,7 +56,6 @@ export type SceneSummary = DBReference & {
     }
 };
 export type ValidationSummary = DBReference & {
-
 };
 
 export const useStyles = makeStyles(({ palette }) => ({
@@ -85,13 +87,6 @@ export const useStyles = makeStyles(({ palette }) => ({
     fieldLabel: {
         width: '7rem'
     },
-    // collapseContainer: {
-    //     border: `1px dotted ${palette.primary.main}`,
-    //     borderTop: 0,
-    //     boxSizing: 'border-box',
-    //     borderRadius: 5,
-    //     paddingBottom: '20px'
-    // },
     visuallyHidden: {
         border: 0,
         clip: 'rect(0 0 0 0)',
@@ -103,4 +98,13 @@ export const useStyles = makeStyles(({ palette }) => ({
         top: 20,
         width: 1,
     },
+    expandedRow: {
+        border: `1px solid ${palette.primary.dark}`,
+        borderStyle: 'double',
+        backgroundColor: palette.primary.main,
+        color: 'white'
+    },
+    expandedPanel: {
+        backgroundColor: 'rgba(0, 54, 97, 0.12)'
+    }
 }));

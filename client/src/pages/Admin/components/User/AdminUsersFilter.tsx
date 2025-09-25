@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl, IconButton } from '@material-ui/core';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { User_Status } from '../../../types/graphql';
+import { User_Status } from '../../../../types/graphql';
 import { useNavigate } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
 

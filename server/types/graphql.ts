@@ -906,6 +906,7 @@ export type GetSystemObjectDetailsResult = {
   metadata: Array<Metadata>;
   name: Scalars['String'];
   objectAncestors: Array<Array<RepositoryPath>>;
+  objectProperties: Array<ObjectPropertyResult>;
   objectType: Scalars['Int'];
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
@@ -1288,31 +1289,11 @@ export type Item = {
 
 export type ItemDetailFields = {
   __typename?: 'ItemDetailFields';
-  Altitude?: Maybe<Scalars['Float']>;
   EntireSubject?: Maybe<Scalars['Boolean']>;
-  Latitude?: Maybe<Scalars['Float']>;
-  Longitude?: Maybe<Scalars['Float']>;
-  R0?: Maybe<Scalars['Float']>;
-  R1?: Maybe<Scalars['Float']>;
-  R2?: Maybe<Scalars['Float']>;
-  R3?: Maybe<Scalars['Float']>;
-  TS0?: Maybe<Scalars['Float']>;
-  TS1?: Maybe<Scalars['Float']>;
-  TS2?: Maybe<Scalars['Float']>;
 };
 
 export type ItemDetailFieldsInput = {
-  Altitude?: InputMaybe<Scalars['Float']>;
   EntireSubject?: InputMaybe<Scalars['Boolean']>;
-  Latitude?: InputMaybe<Scalars['Float']>;
-  Longitude?: InputMaybe<Scalars['Float']>;
-  R0?: InputMaybe<Scalars['Float']>;
-  R1?: InputMaybe<Scalars['Float']>;
-  R2?: InputMaybe<Scalars['Float']>;
-  R3?: InputMaybe<Scalars['Float']>;
-  TS0?: InputMaybe<Scalars['Float']>;
-  TS1?: InputMaybe<Scalars['Float']>;
-  TS2?: InputMaybe<Scalars['Float']>;
 };
 
 export type Job = {
@@ -1759,6 +1740,14 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+};
+
+export type ObjectPropertyResult = {
+  __typename?: 'ObjectPropertyResult';
+  idContact?: Maybe<Scalars['Int']>;
+  level: Scalars['Int'];
+  propertyType: Scalars['String'];
+  rationale: Scalars['String'];
 };
 
 export type PaginationInput = {
@@ -2470,6 +2459,7 @@ export type UpdateObjectDetailsDataInput = {
   Metadata?: InputMaybe<Array<MetadataInput>>;
   Model?: InputMaybe<ModelDetailFieldsInput>;
   Name?: InputMaybe<Scalars['String']>;
+  ObjectProperties?: InputMaybe<Array<UpdateObjectPropertyInput>>;
   Project?: InputMaybe<ProjectDetailFieldsInput>;
   ProjectDocumentation?: InputMaybe<ProjectDocumentationDetailFieldsInput>;
   Retired?: InputMaybe<Scalars['Boolean']>;
@@ -2491,6 +2481,13 @@ export type UpdateObjectDetailsResult = {
   __typename?: 'UpdateObjectDetailsResult';
   message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
+};
+
+export type UpdateObjectPropertyInput = {
+  idContact?: InputMaybe<Scalars['Int']>;
+  level?: InputMaybe<Scalars['Int']>;
+  propertyType: Scalars['String'];
+  rationale?: InputMaybe<Scalars['String']>;
 };
 
 export type UpdatePhotogrammetryMetadata = {

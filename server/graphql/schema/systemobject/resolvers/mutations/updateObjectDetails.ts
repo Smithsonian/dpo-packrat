@@ -18,6 +18,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
+    // console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
+
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
 
@@ -175,9 +177,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
         case COMMON.eSystemObjectType.eItem: {
             if (data.Item) {
-                const { EntireSubject, Altitude, Latitude, Longitude, R0, R1, R2, R3, TS0, TS1, TS2 } = data.Item;
-                const geoLocationProvided: boolean = Altitude !== null || Latitude !== null || Longitude !== null || R0 !== null ||
-                    R1 !== null || R2 !== null || R3 !== null || TS0 !== null || TS1 !== null || TS2 !== null;
+                const { EntireSubject } = data.Item;
 
                 const Item = await DBAPI.Item.fetch(idObject);
                 if (!Item)
@@ -189,45 +189,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
                     Item.EntireSubject = EntireSubject;
-
-                // update existing geolocation OR create a new one and then connect with item
-                if (Item.idGeoLocation) {
-                    const GeoLocation = await DBAPI.GeoLocation.fetch(Item.idGeoLocation);
-                    if (!GeoLocation)
-                        return sendResult(false,'update object details failed',`Unable to fetch GeoLocation with id ${Item.idGeoLocation}; update failed`);
-
-                    GeoLocation.Altitude = maybe<number>(Altitude);
-                    GeoLocation.Latitude = maybe<number>(Latitude);
-                    GeoLocation.Longitude = maybe<number>(Longitude);
-                    GeoLocation.R0 = maybe<number>(R0);
-                    GeoLocation.R1 = maybe<number>(R1);
-                    GeoLocation.R2 = maybe<number>(R2);
-                    GeoLocation.R3 = maybe<number>(R3);
-                    GeoLocation.TS0 = maybe<number>(TS0);
-                    GeoLocation.TS1 = maybe<number>(TS1);
-                    GeoLocation.TS2 = maybe<number>(TS2);
-                    if (!await GeoLocation.update())
-                        return sendResult(false,'update object details failed',`Unable to update GeoLocation with id ${Item.idGeoLocation}; update failed`);
-                } else if (geoLocationProvided) {
-                    const GeoLocationInput = {
-                        idGeoLocation: 0,
-                        Altitude: maybe<number>(Altitude),
-                        Latitude: maybe<number>(Latitude),
-                        Longitude: maybe<number>(Longitude),
-                        R0: maybe<number>(R0),
-                        R1: maybe<number>(R1),
-                        R2: maybe<number>(R2),
-                        R3: maybe<number>(R3),
-                        TS0: maybe<number>(TS0),
-                        TS1: maybe<number>(TS1),
-                        TS2: maybe<number>(TS2)
-                    };
-                    const GeoLocation = new DBAPI.GeoLocation(GeoLocationInput);
-                    if (!await GeoLocation.create())
-                        return sendResult(false,'update object details failed','Unable to create GeoLocation when updating Media Group; update failed');
-
-                    Item.idGeoLocation = GeoLocation.idGeoLocation;
-                }
 
                 if (!await Item.update())
                     return sendResult(false,'update object details failed',`Unable to update Media Group with id ${idObject}; update failed`);
@@ -472,6 +433,39 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         }
         default:
             break;
+    }
+
+    // update shared ObjectProperties, if it exists
+    // NOTE: assuming a single property of each type on an object
+    const sensitivitySrc = data.ObjectProperties?.find( p => p.propertyType.toLowerCase()==='sensitivity');
+    if(sensitivitySrc) {
+        const op: DBAPI.ObjectProperty[] | null = await DBAPI.ObjectProperty.fetchDerivedFromObject([idSystemObject]);
+        let sensitivityDst: DBAPI.ObjectProperty | null = op?.find( p => p.PropertyType.toLowerCase()==='sensitivity' ) ?? null;
+        if(!sensitivityDst) {
+            // create a sensitivity row for the object
+            const opArgs = {
+                idObjectProperty: 0,
+                idSystemObject,
+                PropertyType: 'sensitivity' as const,
+                Level: 0,
+                Rationale: '',
+                idContact: null,
+            };
+            const newOP = new DBAPI.ObjectProperty(opArgs);
+            const createOpResult: boolean = await newOP.create();
+            if(!createOpResult)
+                return sendResult(false, `Unable to fetch/create ObjectProperty for 'sensitivity' with id ${idSystemObject}; update failed`);
+
+            sensitivityDst = newOP;
+        }
+
+        sensitivityDst.Level = sensitivitySrc.level ?? sensitivityDst.Level;
+        sensitivityDst.Rationale = sensitivitySrc.rationale ?? sensitivityDst.Rationale;
+        sensitivityDst.idContact = sensitivitySrc.idContact ?? sensitivityDst.idContact;
+
+        const updateResult: boolean = await sensitivityDst.update();
+        if(!updateResult)
+            return sendResult(false, `Unable to update ObjectProperty for 'sensitivity' with id ${idSystemObject}; update failed`);
     }
 
     return { success: true, message: '' };

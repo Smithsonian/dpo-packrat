@@ -8,10 +8,10 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import ClearIcon from '@material-ui/icons/Clear';
 import CheckIcon from '@material-ui/icons/Check';
-import { GetAllUsersResult } from '../../../types/graphql';
-import { extractISOMonthDateYear } from '../../../constants/index';
-import DataTable from './shared/DataTable';
-import { DataTableOptions } from '../../../types/component';
+import { GetAllUsersResult } from '../../../../types/graphql';
+import { extractISOMonthDateYear } from '../../../../constants/index';
+import DataTable from '../shared/DataTable';
+import { DataTableOptions } from '../../../../types/component';
 import clsx from 'clsx';
 
 const useStyles = makeStyles({
@@ -40,7 +40,6 @@ const useStyles = makeStyles({
 
 function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.ReactElement {
     const classes = useStyles();
-    console.log(users);
 
     const dataTableOptions: DataTableOptions = {
         filter: false,
