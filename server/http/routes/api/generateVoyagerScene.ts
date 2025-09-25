@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../db';
-import * as H from '../../../utils/helpers';
+// import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { ASL, LocalStore } from '../../../utils/localStore';
 
@@ -202,8 +202,6 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
         res.status(200).send(JSON.stringify(generateResponse(false,'missing store/user')));
         return;
     }
-
-    console.log('generateScene: ',H.Helpers.cleanExpressRequest(req,true,true,true));
 
     // get our method to see what we should do, extracting the status and IDs
     let statusOnly: boolean = true;
