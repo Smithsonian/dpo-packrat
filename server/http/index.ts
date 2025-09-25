@@ -22,6 +22,9 @@ import { generateDownloads } from './routes/api/generateDownloads';
 import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
+import { getObjectStatus } from './routes/api/object';
+import { getContact, updateContact, createContact } from './routes/api/object';
+import { getUnit } from './routes/api/object';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -37,6 +40,7 @@ require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 const monitorCPU: boolean = true;
 const monitorMem: boolean = true;
 const monitorVerboseSamples: number = 300;
+const debugRequests: boolean = true;
 
 /**
  * Singleton instance of HttpServer is retrieved via HttpServer.getInstance()
@@ -145,11 +149,9 @@ export class HttpServer {
         });
         this.app.use(HttpServer.bodyProcessorExclusions, express.urlencoded({ extended: true, limit: '100MB' }) as RequestHandler);
 
-        // DEBUG: early stage request debugging middleware
-        // this.app.use(HttpServer.logRequestDetailed);
-
         // DEBUG: inside apolloServer setup
-        this.app.use((req, _res, next) => {
+        debugRequests && this.app.use(HttpServer.logRequest);
+        debugRequests && this.app.use((req, _res, next) => {
             req.on('close', () => RK.logDebug(RK.LogSection.eHTTP,'request CLOSED',undefined,H.Helpers.cleanExpressRequest(req,false,true),'HttpServer'));
             req.on('aborted', () => RK.logDebug(RK.LogSection.eHTTP,'request ABORTED',undefined,H.Helpers.cleanExpressRequest(req,false,true),'HttpServer'));
             next();
@@ -164,7 +166,6 @@ export class HttpServer {
         this.app.use(passport.session());
 
         // create our LocalStore for all future interactions
-        this.app.use(HttpServer.logRequest);
         this.app.use(HttpServer.assignLocalStore);
 
         // if we have a WebDAV server (always), attach it to express
@@ -201,6 +202,16 @@ export class HttpServer {
 
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
+
+        this.app.get('/api/object/:id/status', getObjectStatus);
+
+        this.app.get('/api/contact',getContact);                        // get all contacts
+        this.app.get('/api/contact/:id',getContact);                    // get a specific contact
+        this.app.post('/api/contact',createContact);                    // create a contact
+        this.app.put('/api/contact/:id',updateContact);                 // update an existing contact
+
+        this.app.get('/api/unit',getUnit);
+        this.app.get('/api/unit/:id',getUnit);
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);
@@ -267,27 +278,13 @@ export class HttpServer {
         RK.logInfo(RK.LogSection.eHTTP,'request made',undefined,{ idUser: id, ...H.Helpers.cleanExpressRequest(req,false,true) },'HttpServer',true);
         next();
     }
-    // private static logRequestDetailed(req: Request, _res, next): void {
-    //     // move routine higher if debugging potential issues with the JSON body.
-    //     // placed here so GraphQL details are available (from the the body)
-    //     const startBytes = req.socket.bytesRead;
-    //     const reqCache: Request = req;
+    // private static logRequestWithBody(req: Request, _res, next): void {
+    //     // figure out who is calling this
+    //     const { id } = H.Helpers.getUserDetailsFromRequest(req);
 
-    //     LOG.info(`[REQUEST START] ${req.method} ${req.originalUrl} (Content-Length: ${req.headers['content-length'] || 'unknown'})`,LOG.LS.eDEBUG);
-    //     LOG.info(`[REQUEST START] ${H.Helpers.JSONStringify(H.Helpers.cleanExpressRequest(reqCache,true,true))}`,LOG.LS.eDEBUG);
-
-    //     req.on('end', () => {
-    //         const totalBytes = req.socket.bytesRead - startBytes;
-    //         LOG.info(`[REQUEST END] ${req.method} ${req.originalUrl} (body: ${totalBytes} bytes)`,LOG.LS.eDEBUG);
-    //     });
-
-    //     req.on('close', ()=>{
-    //         LOG.info(`[REQUEST CLOSE]  ${req.method} ${req.originalUrl}`,LOG.LS.eDEBUG);
-    //     });
-
+    //     RK.logInfo(RK.LogSection.eHTTP,'request made',undefined,{ idUser: id, ...H.Helpers.cleanExpressRequest(req,true,true) },'HttpServer',true);
     //     next();
-    // };
-
+    // }
     // private static checkLocalStore(label: string) {
     //     return function (_req, _res, next) {
     //         //LOG.info(`HTTP.checkLocalStore [${label}]. (url: ${req.originalUrl} | ${H.Helpers.JSONStringify(ASL.getStore())})`,LOG.LS.eDEBUG);

@@ -10,7 +10,6 @@ import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 //#region Types and Definitions
-
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
 //       so non-standard types (e.g. enums) are converted to strings for clarity/accessibility.
 type ProjectResponse = {
@@ -35,12 +34,15 @@ type AssetList = {
     items: AssetSummary[];
     expected?: number;               // how many items may be expected or found elsewhere
 };
-type SceneSummary = DBAPI.DBReference & {
+type SubjectSummary = DBAPI.DBReference & {
+    arkId: string
+};
+export type SceneSummary = DBAPI.DBReference & {
     publishedState: string,
     datePublished: Date,
     isReviewed: boolean
     project: DBAPI.DBReference,
-    subject: DBAPI.DBReference,
+    subject: SubjectSummary,
     mediaGroup: DBAPI.DBReference,
     dateCreated: Date,
     dateModified: Date,
@@ -54,7 +56,6 @@ type SceneSummary = DBAPI.DBReference & {
         captureData: AssetList,
     }
 };
-
 //#endregion
 
 //#region Get Projects & Scenes
@@ -150,7 +151,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
 //#endregion
 
 //#region Build Summary and Defs
-const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
+export const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project | null): Promise<SceneSummary | null> => {
 
     // debug for timing routine
     const startTime: number = Date.now();
@@ -219,6 +220,28 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
     }
     const projectSO: DBAPI.SystemObject | null = await project?.fetchSystemObject() ?? null;
 
+    // get identifiers for the Subject (get ARK)
+    let subjectArk: string = '';
+    const subjectIdentifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO?.idSystemObject ?? -1);
+    if(!subjectIdentifiers || subjectIdentifiers.length<=0) {
+        RK.logError(RK.LogSection.eHTTP,'build scene def','no identifiers found on Subject',{ ...scene },'HTTP.Route.Project');
+        subjectArk = 'Not Found';
+    } else {
+        // cycle through identifiers looking for ARK ID
+        const arkIDs: DBAPI.Identifier[] | null = subjectIdentifiers.filter( i => {
+            return i.idVIdentifierType===79; // HACK: should be COMMON.eVocabularyID.eIdentifierIdentifierTypeARK but that returns zero
+        });
+        if(!arkIDs || arkIDs.length<=0) {
+            RK.logError(RK.LogSection.eHTTP,'build scene def','no ARK identifiers found on Subject',{ idScene: scene.idScene, subjectIdentifiers: H.Helpers.JSONStringify(subjectIdentifiers) },'HTTP.Route.Project');
+            subjectArk = 'Not Found';
+        } else {
+            if(arkIDs.length>1)
+                RK.logWarning(RK.LogSection.eHTTP,'build scene def','more than one ARK ID found on subject. using first',{ idScene: scene.idScene, subjectIdentifiers: H.Helpers.JSONStringify(subjectIdentifiers) },'HTTP.Route.Project');
+            const arkID: DBAPI.Identifier = arkIDs[0];
+            subjectArk = arkID.IdentifierValue;
+        }
+    }
+
     // get all models associated with the Scene
     const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
     if (!MSXs) {
@@ -276,7 +299,7 @@ const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Project |
             ? { id: projectSO?.idSystemObject ?? -1, name: project.Name }
             : { id: -1, name: 'NA' },
         subject:
-            { id: subjectSO?.idSystemObject ?? -1, name: subject.Name },
+            { id: subjectSO?.idSystemObject ?? -1, name: subject.Name, arkId: subjectArk },
         mediaGroup:
             { id: itemSO?.idSystemObject ?? -1, name: getItemName(item) },
         derivatives:

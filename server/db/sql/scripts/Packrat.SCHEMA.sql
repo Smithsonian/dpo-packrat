@@ -168,6 +168,18 @@ CREATE TABLE IF NOT EXISTS `CaptureDataPhoto` (
   PRIMARY KEY (`idCaptureDataPhoto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `Contact` (
+  `idContact` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `EmailAddress` varchar(255) NOT NULL,
+  `Title` varchar(255) DEFAULT NULL,
+  `idUnit` int(11) DEFAULT NULL,
+  `Department` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`idContact`),
+  UNIQUE KEY `Contact_EmailAddress` (`EmailAddress`),
+  KEY `Contact_idUnit` (`idUnit`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 CREATE TABLE IF NOT EXISTS `CookResource` (
     `idCookResource` int(11) NOT NULL AUTO_INCREMENT,
 	  `Name` varchar(256) NOT NULL,
@@ -433,6 +445,19 @@ CREATE TABLE IF NOT EXISTS `ModelSceneXref` (
   PRIMARY KEY (`idModelSceneXref`),
   KEY `ModelSceneXref_idModel` (`idModel`),
   KEY `ModelSceneXref_idScene` (`idScene`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `ObjectProperty` (
+  `idObjectProperty` int(11) NOT NULL AUTO_INCREMENT,
+  `idSystemObject` int(11) NOT NULL,
+  `PropertyType` enum('sensitivity') NOT NULL,
+  `Level` int(11) NOT NULL DEFAULT 0,
+  `Rationale` text DEFAULT NULL,
+  `idContact` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idObjectProperty`),
+  UNIQUE KEY `ObjectProperty_idSystemObject_PropertyType` (`idSystemObject`,`PropertyType`),
+  KEY `ObjectProperty_idSystemObject` (`idSystemObject`),
+  KEY `ObjectProperty_idContact` (`idContact`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `Project` (
@@ -852,6 +877,13 @@ ADD CONSTRAINT `fk_capturedataphoto_vocabulary6`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+ALTER TABLE `Contact`
+ADD CONSTRAINT `fk_contact_unit1`
+  FOREIGN KEY (`idUnit`)
+  REFERENCES `Unit` (`idUnit`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ALTER TABLE `Identifier` 
 ADD CONSTRAINT `fk_identifier_systemobject1`
   FOREIGN KEY (`idSystemObject`)
@@ -1054,6 +1086,18 @@ ADD CONSTRAINT `fk_modelscenexref_model1`
 ADD CONSTRAINT `fk_modelscenexref_scene1`
   FOREIGN KEY (`idScene`)
   REFERENCES `Scene` (`idScene`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `ObjectProperty`
+ADD CONSTRAINT `fk_objectproperty_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_objectproperty_contact1`
+  FOREIGN KEY (`idContact`)
+  REFERENCES `Contact` (`idContact`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

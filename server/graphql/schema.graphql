@@ -818,6 +818,7 @@ type GetSystemObjectDetailsResult {
   metadata: [Metadata!]!
   name: String!
   objectAncestors: [[RepositoryPath!]!]!
+  objectProperties: [ObjectPropertyResult!]!
   objectType: Int!
   objectVersions: [SystemObjectVersion!]!
   project: [RepositoryPath!]
@@ -1176,31 +1177,11 @@ type Item {
 }
 
 type ItemDetailFields {
-  Altitude: Float
   EntireSubject: Boolean
-  Latitude: Float
-  Longitude: Float
-  R0: Float
-  R1: Float
-  R2: Float
-  R3: Float
-  TS0: Float
-  TS1: Float
-  TS2: Float
 }
 
 input ItemDetailFieldsInput {
-  Altitude: Float
   EntireSubject: Boolean
-  Latitude: Float
-  Longitude: Float
-  R0: Float
-  R1: Float
-  R2: Float
-  R3: Float
-  TS0: Float
-  TS1: Float
-  TS2: Float
 }
 
 scalar JSON
@@ -1493,6 +1474,13 @@ type NavigationResultEntry {
   metadata: [String!]!
   name: String!
   objectType: Int!
+}
+
+type ObjectPropertyResult {
+  idContact: Int
+  level: Int!
+  propertyType: String!
+  rationale: String!
 }
 
 input PaginationInput {
@@ -1960,6 +1948,7 @@ input UpdateObjectDetailsDataInput {
   Metadata: [MetadataInput!]
   Model: ModelDetailFieldsInput
   Name: String
+  ObjectProperties: [UpdateObjectPropertyInput!]
   Project: ProjectDetailFieldsInput
   ProjectDocumentation: ProjectDocumentationDetailFieldsInput
   Retired: Boolean
@@ -1980,6 +1969,13 @@ input UpdateObjectDetailsInput {
 type UpdateObjectDetailsResult {
   message: String
   success: Boolean!
+}
+
+input UpdateObjectPropertyInput {
+  idContact: Int
+  level: Int
+  propertyType: String!
+  rationale: String
 }
 
 type UpdatePhotogrammetryMetadata {

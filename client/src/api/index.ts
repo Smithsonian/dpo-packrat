@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * API (REST)
@@ -59,13 +60,14 @@ export default class API {
 
         return this.request(uri, options);
     }
-    static async generateScene(idSystemObject: number[], statusOnly: boolean = false, includeExisting: boolean = false): Promise<RequestResponse> {
+    static async generateScene(idSystemObject: number[], parameters?: any, statusOnly: boolean = false, includeExisting: boolean = false): Promise<RequestResponse> {
         // initiates the generate scene routine and either runs the recipe with the given id or returns its status.
         // idSystemObject = the SystemObject id for the Packrat Model/Scene making this request
-        const body = JSON.stringify({ statusOnly, includeExisting, idSystemObject });
+        const params = { includeExisting, ...parameters };
+        const body = JSON.stringify({ statusOnly, parameters: params, includeExisting, idSystemObject });
         let uri: string = API_ROUTES.GEN_SCENE;
-        console.log('[PACKRAT:DEBUG] body: ',body);
-        console.trace('API.generateScene');
+        // console.log('[PACKRAT:DEBUG] API body: ',body);
+        // console.log('[PACKRAT:DEBUG] API params: ',params);
 
         let options;
         if(statusOnly) {
@@ -84,6 +86,14 @@ export default class API {
     }
     static async getProjectScenes(idProject: number): Promise<RequestResponse> {
         return this.request(`${API_ROUTES.PROJECTS}/${idProject}/scenes`, { method: 'GET' });
+    }
+
+    // object details
+    static async getObjectDetailsStatus(idSystemObject: number): Promise<RequestResponse> {
+        let uri: string = 'api/object';
+        if(idSystemObject && idSystemObject>0 && !isNaN(idSystemObject))
+            uri += `/${idSystemObject}/status`;
+        return this.request(uri, { method: 'GET' });
     }
 
     // validation reports
@@ -111,6 +121,22 @@ export default class API {
         return this.request(uri, { method: 'POST' });
     }
 
+    // contacts
+    static async getContacts(id?: number): Promise<RequestResponse> {
+        let uri: string = 'api/contact';
+        if(id && id>0 && !isNaN(id))
+            uri += `/${id}`;
+        return this.request(uri, { method: 'GET' });
+    }
+
+    // units
+    static async getUnits(id?: number): Promise<RequestResponse> {
+        let uri: string = 'api/unit';
+        if(id && id>0 && !isNaN(id))
+            uri += `/${id}`;
+        return this.request(uri, { method: 'GET' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
@@ -127,7 +153,7 @@ export default class API {
             .then(response => {
                 // Check if the response returned a successful status code
                 if (!response.ok) {
-                    console.log('response: ',response);
+                    console.log('[Packrat: Error] response: ',response);
                     return { success: false, message: response.statusText };
                 }
                 return response.json(); // Assuming the server responds with JSON
