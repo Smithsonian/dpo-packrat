@@ -47,7 +47,7 @@ import {
     UpdateIdentifier,
     UpdateObjectDetailsDataInput
 } from '../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID, ePublishedState, PublishedStateEnumToString } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { withDefaultValueBoolean, withDefaultValueNumber } from '../../../../utils/shared';
 import ObjectSelectModal from '../../../Ingestion/components/Metadata/Model/ObjectSelectModal';
 import { updateDetailsTabData, useObjectDetails, deleteIdentifier, getDetailsTabDataForObject } from '../../hooks/useDetailsView';
@@ -440,9 +440,11 @@ function DetailsView(): React.ReactElement {
         setUpdatedData(updatedDataFields);
     };
 
-    const onPublishUpdate = ({ target }): void => {
+    const onPublishUpdate = (): void => {
         // console.log(`[PACKRAT] ${JSON.stringify(target)}`);
-        console.log(`[PACKRAT:DEBUG] Repository.DetailsView.onPublishUpdate (value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState})`);
+        // if(target)
+        //     console.log(`[PACKRAT:DEBUG] Repository.DetailsView.onPublishUpdate (value: ${target.value} | enum: ${PublishedStateEnumToString(target.value)} | name: ${target.name} | ${ePublishedState[parseInt(target.value)]}:${typeof(ePublishedState[parseInt(target.value)])} | data: ${publishedState})`);
+        console.log('[PACKRAT:DEBUG] Repository.DetailsView.onPublishUpdate');
 
         // update our tick so child components update themself
         setRefreshTick(t => t + 1);
@@ -777,7 +779,7 @@ function DetailsView(): React.ReactElement {
     };
     const generateSceneAdvanced = async(parameters?: any | null): Promise<boolean> => {
 
-        console.log('[PACKRAT] Generating Scene...', data.getSystemObjectDetails);
+        console.log('[PACKRAT] Generating Scene...', data.getSystemObjectDetails, parameters, sceneGenParameters);
 
         // make a call to our generate scene endpoint with the current scene id
         // return sucess when the job is started or if one is already running
@@ -795,6 +797,8 @@ function DetailsView(): React.ReactElement {
                 console.log(`[Packrat - ERROR] cannot generate scene. (${responseMessage})`);
                 toast.error('Cannot generate scene. Check the report.');
             }
+
+            console.log(idSystemObject,parameters,sceneGenParameters);
             return false;
         }
 

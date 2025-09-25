@@ -63,10 +63,11 @@ export default class API {
     static async generateScene(idSystemObject: number[], parameters?: any, statusOnly: boolean = false, includeExisting: boolean = false): Promise<RequestResponse> {
         // initiates the generate scene routine and either runs the recipe with the given id or returns its status.
         // idSystemObject = the SystemObject id for the Packrat Model/Scene making this request
-        const body = JSON.stringify({ statusOnly, parameters, includeExisting, idSystemObject });
+        const params = { includeExisting, ...parameters };
+        const body = JSON.stringify({ statusOnly, parameters: params, includeExisting, idSystemObject });
         let uri: string = API_ROUTES.GEN_SCENE;
-        // console.log('[PACKRAT:DEBUG] body: ',body);
-        // console.trace('API.generateScene');
+        // console.log('[PACKRAT:DEBUG] API body: ',body);
+        // console.log('[PACKRAT:DEBUG] API params: ',params);
 
         let options;
         if(statusOnly) {
