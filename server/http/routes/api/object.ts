@@ -29,7 +29,7 @@ type FieldStatus = {
 export async function getObjectStatus(req: Request, res: Response): Promise<void> {
 
     // make sure we're authorized to run this routine
-    const authResult = await isAuthorized(req);
+    const authResult = await isAuthorized(req,false);
     if(authResult.success===false) {
         res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus: ${authResult.error}`)));
         return;
@@ -511,7 +511,7 @@ const generateResponse = (success: boolean, message?: string | undefined, data?)
         data
     };
 };
-const isAuthorized = async (req: Request): Promise<H.IOResults> => {
+const isAuthorized = async (req: Request, adminOnly: boolean = true): Promise<H.IOResults> => {
 
     // make sure we're authenticated (i.e. see if request has a 'user' object)
     if (!isAuthenticated(req)) {
@@ -527,10 +527,12 @@ const isAuthorized = async (req: Request): Promise<H.IOResults> => {
     }
 
     // make sure we're of specific class of user (e.g. tools)
-    const authorizedUsers: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
-    if(!authorizedUsers.includes(LS.idUser)) {
-        RK.logError(RK.LogSection.eHTTP,'is authorized failed','user is not authorized for this request',{},'HTTP.Route.Project');
-        return { success: false, error: `user (${LS.idUser}) does not have permission.` };
+    if(adminOnly) {
+        const authorizedUsers: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
+        if(!authorizedUsers.includes(LS.idUser)) {
+            RK.logError(RK.LogSection.eHTTP,'is authorized failed','user is not authorized for this request',{},'HTTP.Route.Project');
+            return { success: false, error: `user (${LS.idUser}) does not have permission.` };
+        }
     }
 
     return { success: true };
