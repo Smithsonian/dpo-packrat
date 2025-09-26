@@ -465,7 +465,7 @@ export async function updateContact(req: Request, res: Response): Promise<void> 
 //#region UNIT
 export async function getUnit(req: Request, res: Response): Promise<void> {
     // make sure we're authorized to run this routine
-    const authResult = await isAuthorized(req);
+    const authResult = await isAuthorized(req,false);
     if(authResult.success===false) {
         res.status(200).send(JSON.stringify(generateResponse(false,`getUnit failed: ${authResult.error}`)));
         return;
