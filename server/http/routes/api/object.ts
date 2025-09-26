@@ -341,7 +341,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
 //#region CONTACT
 export async function createContact(req: Request, res: Response): Promise<void> {
     // make sure we're authorized to run this routine
-    const authResult = await isAuthorized(req);
+    const authResult = await isAuthorized(req, false);
     if(authResult.success===false) {
         res.status(200).send(JSON.stringify(generateResponse(false,`createContact failed: ${authResult.error}`)));
         return;
@@ -377,7 +377,7 @@ export async function createContact(req: Request, res: Response): Promise<void> 
 }
 export async function getContact(req: Request, res: Response): Promise<void> {
     // make sure we're authorized to run this routine
-    const authResult = await isAuthorized(req);
+    const authResult = await isAuthorized(req, false);
     if(authResult.success===false) {
         res.status(200).send(JSON.stringify(generateResponse(false,`getContact failed: ${authResult.error}`)));
         return;
@@ -414,7 +414,7 @@ export async function getContact(req: Request, res: Response): Promise<void> {
 export async function updateContact(req: Request, res: Response): Promise<void> {
 
     // make sure we're authorized to run this routine
-    const authResult = await isAuthorized(req);
+    const authResult = await isAuthorized(req, false);
     if(authResult.success===false) {
         res.status(200).send(JSON.stringify(generateResponse(false,`updateContact failed: ${authResult.error}`)));
         return;
