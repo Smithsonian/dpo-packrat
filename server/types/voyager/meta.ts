@@ -1,7 +1,7 @@
 /* eslint-disable quotes, @typescript-eslint/brace-style, @typescript-eslint/no-explicit-any */
 /**
  * NOTE: this file is part of the definition of a Voyager scene, found in a .svx.json file.
- * This was imported from Voyager's source/client/schema on 4/2/2025. It was then modified,
+ * This was imported from Voyager's source/client/schema on 9/27/2025. It was then modified,
  * minimally, to allow for use by Packrat. Ideally, in the future, we will extract out the
  * definition of this shared file format for use by both projects.
  */
@@ -54,7 +54,7 @@ export interface IImage
 }
 
 export type TImageQuality = "Thumb" | "Low" | "Medium" | "High";
-export type TImageUsage = "Render" | "ARCode";
+export type TImageUsage = "Render" | "Environment" | "ARCode";
 
 /**
  * Refers to an external document or a media file (audio, video, image).
