@@ -215,7 +215,8 @@
                         "point",
                         "spot",
                         "hemisphere",
-                        "rect"
+                        "rect",
+                        "environment"
                     ]
                 },
                 "color": {
@@ -365,7 +366,7 @@
             "type": "array",
             "items": {
                 "$ref": "#/definitions/camera"
-            },
+        },
             "minItems": 1
         },
         "lights": {
