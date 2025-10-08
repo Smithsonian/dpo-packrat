@@ -4,6 +4,7 @@ LOG_BASE_PROD="/3ddigip01/Packrat/Logs"
 LOG_BASE_DEV="/3ddigip01/Packrat/Logs-Dev"
 TAIL_SCRIPT="/data/Packrat/Scripts/ops_logTail.sh"
 LESS_SCRIPT="/data/Packrat/Scripts/ops_logLess.sh"
+COPY_SCRIPT="/data/Packrat/Scripts/ops_logCopy.sh"
 
 disk_cleanup_menu() {
     echo ""
@@ -70,6 +71,7 @@ main_menu() {
     echo "[2] View Log (less)"
     echo "[3] System Monitor"
     echo "[4] Disk Cleanup"
+    echo "[5] Log Copy"
     echo "[Q] Quit"
     echo ""
 
@@ -80,6 +82,7 @@ main_menu() {
         2) log_menu "less" ;;
         3) /data/Packrat/Scripts/ops_monitor.sh ;;
         4) disk_cleanup_menu ;;
+        5) "$COPY_SCRIPT" ;;
         [Qq]) echo "Goodbye!"; exit 0 ;;
         *) echo "Invalid option."; pause_and_return ;;
     esac
