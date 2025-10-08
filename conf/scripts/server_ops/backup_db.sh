@@ -8,13 +8,12 @@ main() {
 	DATA_PATH="/3ddigip01/Packrat/Backups/Database"
 	TIMESTAMP=$(date +"%F_%H-%M-%S")
 	STAGING_FILENAME="$DATA_PATH/PackratStaging.$TIMESTAMP".sql
-	PRODUCTION_FILENAME="$DATA_PATH/PackratProduction.$TIMESTAMP".sql
-	PASSWORD="REPLACE WITH DB PASSWORD"
+	PRODUCTION_FILENAME="$DATA_PATH/PackratProduction.$TIMESTAMP".sql 
 
 	echo "backing up database...Staging"
-	mysqldump --routines --skip-lock-tables --user=packrat --password=$PASSWORD --result-file=$STAGING_FILENAME PackratStaging
+	mysqldump --routines --skip-lock-tables --user=packrat --password=vY66ttjD5bMESG66Yay2qV511QQIFguvSzDqMG7 --result-file=$STAGING_FILENAME PackratStaging
 	echo "backing up database...Production"
-	mysqldump --routines --skip-lock-tables --user=packrat --password=$PASSWORD --result-file=$PRODUCTION_FILENAME PackratProduction
+	mysqldump --routines --skip-lock-tables --user=packrat --password=vY66ttjD5bMESG66Yay2qV511QQIFguvSzDqMG7 --result-file=$PRODUCTION_FILENAME PackratProduction
 
 	DATE=$(date -u +"%Y-%m-%d")
 	YEAR=$(date -u +"%Y")
