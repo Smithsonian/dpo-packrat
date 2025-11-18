@@ -53,7 +53,7 @@ export interface IImage
     usage?: TImageUsage;
 }
 
-export type TImageQuality = "Thumb" | "Low" | "Medium" | "High";
+export type TImageQuality = "Thumb" | "Low" | "Medium" | "High" | "HDR";
 export type TImageUsage = "Render" | "Environment" | "ARCode";
 
 /**
