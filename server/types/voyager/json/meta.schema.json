@@ -1,50 +1,13 @@
 {
-    "$id": "https://schemas.3d.si.edu/voyager/meta.schema.json",
+    "$id": "https://schemas.3d.si.edu/voyager/model.schema.json",
     "$schema": "http://json-schema.org/draft-07/schema#",
 
-    "title": "Meta",
-    "description": "Meta data for a scene or model item.",
+    "title": "Model",
+    "description": "Describes the visual representations (models, derivatives) of a 3D item.",
 
     "definitions": {
-        "image": {
-            "$id": "image",
-            "description": "Reference to a scene supplementing image",
-            "type": "object",
-            "properties": {
-                "uri": {
-                    "description": "Location of the image resource, absolute URL or path relative to this document",
-                    "type": "string",
-                    "minLength": 1
-                },
-                "quality": {
-                    "type": "string",
-                    "enum": [ "Thumb", "Low", "Medium", "High" ]
-                },
-                "byteSize": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "width": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "height": {
-                    "type": "integer",
-                    "minimum": 1
-                },
-                "usage": {
-                    "type": "string",
-                    "enum": [ "Render", "Environment", "ARCode" ]
-                }
-            },
-            "required": [
-                "uri",
-                "quality"
-            ]
-        },
-        "article": {
-            "$id": "#article",
-            "description": "Reference to an external document (HTML)",
+        "annotation": {
+            "description": "Spatial annotation (hot spot, hot zone) on a model. Annotations can reference articles.",
             "type": "object",
             "properties": {
                 "id": {
@@ -52,7 +15,6 @@
                     "minLength": 1
                 },
                 "title": {
-                    "description": "Short title.",
                     "type": "string"
                 },
                 "titles": {
@@ -60,15 +22,17 @@
                     "type": "object"
                 },
                 "lead": {
-                    "description": "Short lead text.",
                     "type": "string"
                 },
                 "leads": {
                     "description": "Short lead text with language key.",
                     "type": "object"
                 },
+                "marker": {
+                    "type": "string"
+                },
                 "tags": {
-                    "description": "Array of tags, categorizing the article.",
+                    "description": "Array of tags, categorizing the annotation.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -78,26 +42,88 @@
                     "description": "Array of tags, categorizing the annotation with language key.",
                     "type": "object"
                 },
-                "intros": {
-                    "description": "Introductory splash screen text with language key.",
-                    "type": "object"
-                },
-                "uri": {
-                    "description": "Location of the article resource, absolute URL or path relative to this document",
+                "articleId": {
+                    "description": "Id of an article related to this annotation.",
                     "type": "string",
                     "minLength": 1
                 },
-                "uris": {
-                    "description": "Location of the article resource, absolute URL or path relative to this document with language key",
+                "imageUri": {
+                    "description": "URI of an image resource for this annotation.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "imageCredit": {
+                    "description": "Credit line image in this annotation with language key.",
                     "type": "object"
                 },
-                "mimeType": {
-                    "description": "MIME type of the resource.",
+                "imageAltText": {
+                    "description": "Alt text for image in this annotation with language key",
+                    "type": "object"
+                },
+                "audioId": {
+                    "description": "Id of an audio resource for this annotation.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "viewId": {
+                    "description": "Id of a snapshot resource with camera view information for this annotation.",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "style": {
                     "type": "string"
                 },
-                "thumbnailUri": {
-                    "description": "Location of a thumbnail/preview image of the resource.",
-                    "type": "string"
+                "visible": {
+                    "description": "Flag indicating whether the annotation is visible.",
+                    "type": "boolean",
+                    "default": true
+                },
+                "expanded": {
+                    "description": "Flag indicating whether the annotation is displayed in expanded state.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "scale": {
+                    "description": "Scales the annotation relative to its default size.",
+                    "type": "number",
+                    "default": 1
+                },
+                "offset": {
+                    "description": "Offsets the annotation along its direction.",
+                    "type": "number",
+                    "default": 0
+                },
+                "tilt": {
+                    "description": "Tilt angle of the annotation relative to the direction vector in degrees.",
+                    "type": "number",
+                    "default": 0
+                },
+                "azimuth": {
+                    "description": "Azimuth angle of a tilted annotation.",
+                    "type": "number",
+                    "default": 0
+                },
+                "color": {
+                    "description": "Color of the annotation",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "position": {
+                    "description": "Position where the annotation is anchored, in local item coordinates.",
+                    "$ref": "./common.schema.json#/definitions/vector3"
+                },
+                "direction": {
+                    "description": "Direction of the stem of this annotation, usually corresponds to the surface normal.",
+                    "$ref": "./common.schema.json#/definitions/vector3"
+                },
+                "zoneIndex": {
+                    "description": "Index of the zone on the zone texture.",
+                    "type": "integer",
+                    "minimum": 0
                 }
             },
             "required": [
@@ -105,122 +131,163 @@
             ],
             "additionalProperties": false
         },
-        "audioclip": {
-            "$id": "audioclip",
-            "description": "Reference to an audio file",
+        "derivative": {
+            "description": "Visual representation derived from the master model.",
             "type": "object",
             "properties": {
-                "id": {
+                "usage": {
+                    "description": "usage categories for a derivative.",
                     "type": "string",
-                    "minLength": 1
+                    "enum": [
+                        "Image2D",
+                        "Web3D",
+                        "App3D",
+                        "iOSApp3D",
+                        "Print3D",
+                        "Editorial3D"
+                    ]
                 },
-                "name": {
-                    "description": "Short name.",
-                    "type": "string"
+                "quality": {
+                    "type": "string",
+                    "enum": [
+                        "Thumb",
+                        "Low",
+                        "Medium",
+                        "High",
+                        "Highest",
+                        "AR"
+                    ]
                 },
-                "uris": {
-                    "description": "Location of the audio resource, absolute URL or path relative to this document with language key",
-                    "type": "object"
-                },
-                "captionUris": {
-                    "description": "Location of the caption resource, absolute URL or path relative to this document with language key",
-                    "type": "object"
-                },
-                "durations": {
-                    "description": "Length of the audio resource with language key",
-                    "type": "object"
+                "assets": {
+                    "description": "List of individual resources this derivative is composed of.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset"
+                    }
                 }
-            },
-            "required": [
-                "id",
-                "uris"
-            ]
+            }
         },
-        "action": {
-            "$id": "action",
-            "description": "Reference to a Voyager action element",
+        "asset": {
+            "description": "an individual resource for a 3D model.",
             "type": "object",
             "properties": {
-                "id": {
+                "uri": {
                     "type": "string",
                     "minLength": 1
                 },
                 "type": {
                     "type": "string",
-                    "enum": [ "PlayAnimation", "PlayAudio" ]
+                    "enum": [
+                        "Model",
+                        "Geometry",
+                        "Image",
+                        "Texture",
+                        "Points",
+                        "Volume"
+                    ]
                 },
-                "trigger": {
-                    "type": "string",
-                    "enum": [ "OnClick", "OnLoad", "OnAnnotation" ]
-                },
-                "audioId": {
-                    "type": "string",
-                    "minLength": 1
-                },
-                "annotationId": {
-                    "type": "string",
-                    "minLength": 1
-                },
-                "animation": {
+                "part": {
                     "type": "string",
                     "minLength": 1
                 },
-                "style": {
+                "mimeType": {
                     "type": "string",
-                    "enum": [ "Single", "PingPong", "Loop" ]
+                    "minLength": 1
+                },
+                "byteSize": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "numFaces": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "imageSize": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "mapType": {
+                    "type": "string",
+                    "enum": [
+                        "Color",
+                        "Normal",
+                        "Occlusion",
+                        "Emissive",
+                        "MetallicRoughness",
+                        "Zone"
+                    ]
                 }
             },
             "required": [
-                "id",
-                "type",
-                "trigger"
+                "uri",
+                "type"
             ]
+        },
+        "material": {
+            "description": "Surface properties for this model, shared by all derivatives.",
+            "type": "object",
+            "properties": {
+            }
         }
     },
 
     "type": "object",
     "properties": {
-        "collection": {
-            "description": "Information retrieved from the collection record for the item.",
-            "type": "object"
+        "units": {
+            "$ref": "./common.schema.json#/definitions/units"
         },
-        "process": {
-            "description": "Information about how the item was processed.",
-            "type": "object"
+        "tags": {
+            "type": "string"
         },
-        "images": {
+        "visible": {
+            "type": "boolean"
+        },
+        "renderOrder": {
+            "type": "number"
+        },
+        "overlayMap": {
+            "type": "number"
+        },
+        "shadowSide": {
+            "type": "string",
+            "enum": [
+                "Front",
+                "Back",
+                "Double"
+            ]
+        },
+        "derivatives": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/image"
-            },
-            "minItems": 1
+                "$ref": "#/definitions/derivative"
+            }
         },
-        "articles": {
+        "translation": {
+            "description": "Translation vector. Must be applied to bring model into its 'neutral' pose.",
+            "$ref": "./common.schema.json#/definitions/vector3"
+        },
+        "rotation": {
+            "description": "Rotation quaternion. Must be applied to bring model into its 'neutral' pose.",
+            "$ref": "./common.schema.json#/definitions/vector4"
+        },
+        "boundingBox": {
+            "description": "Bounding box for this model, shared by all derivatives.",
+            "$ref": "./common.schema.json#/definitions/boundingBox"
+        },
+        "material": {
+            "$ref": "#/definitions/material"
+        },
+        "annotations": {
+            "description": "List of annotations to be displayed with the model",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/article"
-            },
-            "minItems": 1
-        },
-        "leadArticle": {
-            "description": "Index of the main article. This is the default article displayed with the item.",
-            "type": "integer",
-            "minimum": 0
-        },
-        "audio": {
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/audioclip"
-            },
-            "minItems": 0
-        },
-        "actions": {
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/action"
-            },
-            "minItems": 0
+                "$ref": "#/definitions/annotation"
+            }
         }
     },
+    "required": [
+        "units",
+        "derivatives"
+    ],
     "additionalProperties": false
 }
