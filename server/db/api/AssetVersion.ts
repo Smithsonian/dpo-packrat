@@ -130,11 +130,13 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idAssetVersion, DateCreated, idAsset, FileName, idUserCreator, StorageHash, StorageSize, StorageKeyStaging,
-                Ingested, BulkIngest, idSOAttachment, FilePath, Comment, IngestedOrig } = this;
+                Ingested, BulkIngest, idSOAttachment, FilePath, Comment } = this;
             let { Version } = this; // may be updated!
 
-            // if we're updating from not ingested to ingested, and if we don't have a version number, compute and use the next version number:
-            if (!IngestedOrig && Ingested && !Version) {
+            // If the asset is now Ingested, and it effectively has no version (0 or null),
+            // we MUST compute the next version number.
+            // Removed '!IngestedOrig' check to prevent state desync issues.
+            if (Ingested && !Version) {
                 const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset); /* istanbul ignore next*/
                 if (!nextVersion) {
                     RK.logError(RK.LogSection.eDB,'update failed','failed to compute nextVersion',{ ...this },'DB.Asset.Version');
