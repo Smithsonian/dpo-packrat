@@ -42,9 +42,9 @@ main() {
 			mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.DROP.sql"
 		;;
 		2) echo "Building database..."
-		    mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.SCHEMA.sql"
-	       	mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.PROC.sql"
-	      	mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.DATA.sql"
+		       	mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.SCHEMA.sql"
+	       		mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.PROC.sql"
+	      		mysql --database=$DATABASE --default-character-set=utf8mb4 < "$SQL_PATH/Packrat.DATA.sql"
 		;;
  		*) echo "Invalid option. exiting..."
 			exit 1
