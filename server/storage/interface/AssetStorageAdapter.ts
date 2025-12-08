@@ -805,14 +805,27 @@ export class AssetStorageAdapter {
                     }
                     break; /* istanbul ignore next */
 
-                case COMMON.eVocabularyID.eAssetAssetTypeScene:
-                    if (unzippedFileName.toLowerCase().endsWith('.svx.json'))
+                // case COMMON.eVocabularyID.eAssetAssetTypeScene:
+                //     if (unzippedFileName.toLowerCase().endsWith('.svx.json'))
+                //         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeScene;
+                //     else if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
+                //         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                //     else
+                //         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
+                //     break; /* istanbul ignore next */
+                case COMMON.eVocabularyID.eAssetAssetTypeScene: {
+                    const lowerName: string = unzippedFileName.toLowerCase();
+
+                    if (lowerName.endsWith('.svx.json'))
                         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeScene;
                     else if (await CACHE.VocabularyCache.mapModelFileByExtensionID(unzippedFileName) !== undefined)
                         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
+                    else if (AssetStorageAdapter.isSceneDownloadZipFile(unzippedFileName))
+                        eAssetType = COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile;
                     else
                         eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
-                    break; /* istanbul ignore next */
+                    break;
+                } /* istanbul ignore next */
 
                 default:
                     RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker','unsupported asset type',{ asset },'AssetStorageAdapter');
@@ -1569,5 +1582,25 @@ export class AssetStorageAdapter {
         } else
             storageKey = assetVersion.StorageKeyStaging;
         return { storageKey, ingested, error };
+    }
+
+    /**
+     * Detect zip files inside a Scene package that correspond to
+     * Voyager-generated download bundles (e.g. full-res OBJ, GLTF, etc).
+     *
+     * NOTE: This list is intentionally kept in sync with the suffixes
+     * validated in JobCookSIGenerateDownloads.verifyIncomingCookData.
+     */
+    private static isSceneDownloadZipFile(unzippedFileName: string): boolean {
+        const lower: string = unzippedFileName.toLowerCase();
+
+        // Keep these in sync with JobCookSIGenerateDownloads.verifyIncomingCookData
+        const downloadZipSuffixes: string[] = [
+            '-full_resolution-obj_std.zip',
+            '-150k-4096-gltf_std.zip',
+            '-150k-4096-obj_std.zip',
+        ];
+
+        return downloadZipSuffixes.some(suffix => lower.endsWith(suffix));
     }
 }
