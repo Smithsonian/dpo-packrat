@@ -19,6 +19,21 @@ type AssetPair = {
 export class SceneHelpers {
     private static vocabularyPurposeVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
 
+    // Suffixes for Voyager-generated download zip bundles inside Scene packages
+    // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData and AssetStorageAdapter classification.
+    // private static readonly sceneDownloadZipSuffixes: string[] = [
+    //     '-full_resolution-obj_std.zip',
+    //     '-150k-4096-gltf_std.zip',
+    //     '-150k-4096-obj_std.zip',
+    // ];
+
+    // Suffixes for canonical model geometry files referenced by SVX modelDetails
+    // private static readonly sceneModelBaseSuffixes: string[] = [
+    //     '-150k-4096_std.glb',
+    //     '-100k-2048_std_draco.glb',
+    //     '-100k-2048_std.usdz',
+    // ];
+
     /** Returns true if the scene exists, has a scene asset, that scene asset has one or more thumbnails in metas -> images,
      * and each thumbnail exists for the current version of the scene; returns false otherwise,
      * and returns false if there's an error (in which case the error text is set also) */
@@ -156,6 +171,13 @@ export class SceneHelpers {
         if (!IAR.assets || !IAR.assetVersions)
             return SceneHelpers.returnError('handleComplexIngestionScene called without assets or asset versions');
 
+        // get our scene system object so we can find what is attached
+        const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(scene.idScene);
+        if (!sceneSO)
+            return SceneHelpers.returnError(
+                `handleComplexIngestionScene unable to load Scene SystemObject for scene ${H.Helpers.JSONStringify(scene)}`
+            );
+
         // first, identify assets and asset versions for the scene and models
         let sceneAsset: DBAPI.Asset | null = null;
         let sceneAssetVersion: DBAPI.AssetVersion | undefined = undefined;
@@ -208,11 +230,18 @@ export class SceneHelpers {
             success = false;
         }
 
+        // Track which assets are processed via SVX manifest
+        const processedAssets = new Set<string>();
+
         // finally, create/update Model and ModelSceneXref for each model reference:
         if (svx.SvxExtraction.modelDetails) {
             for (const MSX of svx.SvxExtraction.modelDetails) {
                 if (!MSX.Name)
                     continue;
+
+                // Mark this asset as processed so we don't double-handle it
+                processedAssets.add(MSX.Name.toLowerCase());
+
                 let model: DBAPI.Model | null = null;
 
                 // look for matching ModelSceneXref
@@ -343,6 +372,126 @@ export class SceneHelpers {
                 }
             }
         }
+
+        //#region: Orphaned Assets (Downloads/Zips not in SVX)
+        // --------------------------------------------------------------
+        const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+
+        for (const [name, assetPair] of modelAssetMap) {
+            // Skip if already processed via SVX
+            if (processedAssets.has(name)) continue;
+
+            // Only process if it is a ModelGeometryFile (this includes zips identified in AssetStorageAdapter)
+            const assetType = await assetPair.asset.assetType();
+            if (assetType !== COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile) continue;
+
+            const { asset, assetVersion } = assetPair;
+            if (!asset || !assetVersion) continue;
+
+            const Name = asset.FileName;
+            RK.logInfo(RK.LogSection.eSYS,'handle complex scene ingestion',`processing orphan model asset: ${Name}`,{ asset },'Utils.Scene');
+
+            // Create Model
+            const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
+            const model = new DBAPI.Model({
+                idModel: 0,
+                Name,
+                Title: Name,
+                DateCreated: new Date(),
+                idVCreationMethod: modelSource?.idVCreationMethod ?? null,
+                idVModality: modelSource?.idVModality ?? null,
+                idVPurpose: vPurposeDownload ? vPurposeDownload.idVocabulary : null,
+                idVUnits: modelSource?.idVUnits ?? null,
+                idVFileType: vFileType ? vFileType.idVocabulary : null,
+                idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
+                CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
+                AutomationTag: `download-${Name}`,
+                CountTriangles: null,
+                Variant: modelSource?.Variant ?? '[]',
+            });
+
+            if (!await model.create()) {
+                error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create orphan model ${Name}`, error);
+                success = false;
+                continue;
+            }
+
+            // Create ModelSceneXref
+            // CRITICAL: Usage must start with 'Download:' for PublishScene to pick it up
+            const msx = new DBAPI.ModelSceneXref({
+                idModelSceneXref: 0,
+                idModel: model.idModel,
+                idScene: scene.idScene,
+                Name,
+                Usage: 'Download:Generic',
+                Quality: null,
+                FileSize: assetVersion.StorageSize,
+                UVResolution: null,
+                BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null,
+                BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
+                TS0: null, TS1: null, TS2: null,
+                R0: null, R1: null, R2: null, R3: null,
+                S0: null, S1: null, S2: null,
+            });
+
+            if (!await msx.create()) {
+                error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create ModelSceneXref for orphan ${Name}`, error);
+                success = false;
+            }
+
+            // Wire Objects
+            const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(scene, model);
+            if (!SOX1) {
+                error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to wire scene and orphan model ${Name}`, error);
+                success = false;
+            }
+
+            if (modelSource) {
+                const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
+                if (!SOX2) {
+                    error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to wire master model and orphan model ${Name}`, error);
+                    success = false;
+                }
+            } else {
+                RK.logWarning(RK.LogSection.eSYS, 'handle complex scene ingestion', `unable to wire orphan model ${Name} to master model: master model not found`, {}, 'Utils.Scene');
+            }
+
+            // Re-parent Asset to Model
+            const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
+            if (SO) {
+                asset.idSystemObject = SO.idSystemObject;
+                if (!await asset.update()) {
+                    error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to reassign orphan asset ${Name} to model`, error);
+                    success = false;
+                    continue;
+                }
+
+                // Create SystemObjectVersion machinery for the new Model
+                const SOV: DBAPI.SystemObjectVersion = new DBAPI.SystemObjectVersion({
+                    idSystemObject: SO.idSystemObject,
+                    PublishedState: COMMON.ePublishedState.eNotPublished,
+                    DateCreated: new Date(),
+                    Comment: 'Created during Scene Ingestion (Orphan)',
+                    idSystemObjectVersion: 0
+                });
+                if (!await SOV.create()) {
+                    error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create SOV for orphan ${Name}`, error);
+                    success = false;
+                    continue;
+                }
+
+                const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
+                    idSystemObjectVersion: SOV.idSystemObjectVersion,
+                    idAssetVersion: assetVersion.idAssetVersion,
+                    idSystemObjectVersionAssetVersionXref: 0,
+                });
+                if (!await SOVAVX.create()) {
+                    error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create SOVAVX for orphan ${Name}`, error);
+                    success = false;
+                }
+            }
+        }
+        //#endregion
 
         return { success, error, transformUpdated };
     }
