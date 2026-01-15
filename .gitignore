@@ -128,3 +128,7 @@ JTConfig
 
 ### GitHub Secrets File ###
 .github/workflows/.secrets
+
+docs/content/*/*.md
+/*.md
+*-cwd
