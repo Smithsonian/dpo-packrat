@@ -128,3 +128,7 @@ JTConfig
 
 ### GitHub Secrets File ###
 .github/workflows/.secrets
+
+### LLM Processing ###
+*.md
+tmp*-cwd
