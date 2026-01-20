@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // import API, { RequestResponse } from '../../../api';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Box,Collapse, IconButton } from '@material-ui/core';
 import { useLocation } from 'react-router';
 import { useUserStore } from '../../../store';
@@ -74,7 +74,7 @@ function AdminToolsView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
     const { user } = useUserStore();
-    const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
+    const isAuthorized = user?.canAccessTools ?? false;
     const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
         batchOps: false,
         assetValidation: false,
@@ -83,28 +83,6 @@ function AdminToolsView(): React.ReactElement {
     const toggleSection = (section: string) => {
         setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
     };
-
-    useEffect(() => {
-        async function isUserAuthorized() {
-            const authorizedUsers: number[] = [
-                2,  // Jon Blundell
-                3,  // Vincent Rossi
-                4,  // Jamie Cope
-                5,  // Eric Maslowski
-                6,  // Megan Dattoria
-                11, // Katie Wolfe
-            ];
-
-            // if our current user ID is not in the list then return false
-            if(!user) {
-                console.log('[Packrat:ERROR] Admin tools cannot get authenticated user');
-                setIsAuthorized(false);
-            }
-            setIsAuthorized(authorizedUsers.includes(user?.idUser ?? -1));
-        }
-
-        isUserAuthorized();
-    }, [user]);
 
     return (
         <React.Fragment>
