@@ -107,20 +107,27 @@ export class PublishScene {
         }
         RK.logInfo(RK.LogSection.eCOLL,'publish sucess','3D package published to EDAN',{ status: edanRecord.status, publicSearch: edanRecord.publicSearch, resources: this.edan3DResourceList?.length ?? 0, path: this.sharedName },'Publish.Scene');
 
-        // stage downloads
-        if (!await this.stageDownloads() || !this.edan3DResourceList) {
-            RK.logError(RK.LogSection.eCOLL,'publish failed','failed to stage downloads',{ count: this.edan3DResourceList?.length ?? -1 },'Publish.Scene');
-            return false;
-        }
-
-        // figure out our license information
+        // figure out our license information BEFORE staging downloads
+        // this determines whether we should stage downloads to the hot folder
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (!await this.updatePublishedState(LR, ePublishedStateIntended))
             return false;
         const media_usage: COL.EdanLicenseInfo = EdanCollection.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
 
         // figure out our flags for the package so we have the correct visibility within EDAN
-        const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended);
+        const { status, publicSearch, downloads } = this.computeEdanSearchFlags(edanRecord, ePublishedStateIntended, LR);
+
+        // stage downloads only if the license allows it
+        // files staged to the hot folder are automatically picked up by EDAN, so we must not stage them if downloads are disallowed
+        if (downloads) {
+            if (!await this.stageDownloads() || !this.edan3DResourceList) {
+                RK.logError(RK.LogSection.eCOLL,'publish failed','failed to stage downloads',{ count: this.edan3DResourceList?.length ?? -1 },'Publish.Scene');
+                return false;
+            }
+        } else {
+            this.edan3DResourceList = [];
+            RK.logInfo(RK.LogSection.eCOLL,'publish','skipping download staging - license does not allow downloads',{ license: LR?.License?.Name },'Publish.Scene');
+        }
         const haveDownloads: boolean = (this.edan3DResourceList.length > 0);
         const updatePackage: boolean = haveDownloads                                // we have downloads, or
             || (status !== edanRecord.status)                                       // publication status changed
@@ -136,6 +143,11 @@ export class PublishScene {
             E3DPackage.document = this.svxDocument;
             E3DPackage.resources = (downloads && haveDownloads) ? this.edan3DResourceList : [];
             E3DPackage.media_usage = media_usage; // eslint-disable-line camelcase
+
+            // DEBUG: Log full package contents before sending to EDAN
+            RK.logDebug(RK.LogSection.eCOLL,'publish','package contents',{
+                edanRecord, status, publicSearch, downloads, haveDownloads, resources: JSON.stringify(E3DPackage.resources, null, 2), mediaUsage: JSON.stringify(E3DPackage.media_usage, null, 2)
+            },'Publish.Scene');
 
             RK.logDebug(RK.LogSection.eCOLL,'publish','updating package',{ edanRecord },'Publish.Scene');
             edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, edanRecord.title, E3DPackage, status, publicSearch);
@@ -470,6 +482,7 @@ export class PublishScene {
 
         // second pass: zip up appropriate assets; prepare to copy downloads
         const zip: ZIP.ZipStream = new ZIP.ZipStream();
+        const zippedFiles: string[] = []; // DEBUG: track files added to zip
         for (const SAC of this.SacList.values()) {
             if (SAC.model || SAC.metadataSet) // skip downloads
                 continue;
@@ -487,6 +500,7 @@ export class PublishScene {
 
             const fileNameAndPath: string = path.posix.join(rebasedPath, SAC.assetVersion.FileName);
             RK.logDebug(RK.LogSection.eCOLL,'stage scene files','adding to zip',{ fileNameAndPath },'Publish.Scene');
+            zippedFiles.push(fileNameAndPath); // DEBUG: track file
 
             const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
             if (!res.success) {
@@ -494,6 +508,13 @@ export class PublishScene {
                 return false;
             }
         }
+
+        // DEBUG: Log files in staged zip
+        RK.logDebug(RK.LogSection.eCOLL,'staging','zip contents',{
+            sceneFile: this.sceneFile,
+            fileCount: zippedFiles.length,
+            fileNames: zippedFiles
+        },'Publish.Scene');
 
         // stream entire zip
         const zipStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
@@ -804,7 +825,7 @@ export class PublishScene {
         return true;
     }
 
-    private computeEdanSearchFlags(edanRecord: COL.EdanRecord, eState: COMMON.ePublishedState): { status: number, publicSearch: boolean, downloads: boolean } {
+    private computeEdanSearchFlags(edanRecord: COL.EdanRecord, eState: COMMON.ePublishedState, LR?: DBAPI.LicenseResolver): { status: number, publicSearch: boolean, downloads: boolean } {
         // Published (site)
         //      puts it on the 3d site
         //      params = { status: 0, publicSearch: true }
@@ -827,7 +848,12 @@ export class PublishScene {
             case COMMON.ePublishedState.eInternal:           status = 1; publicSearch = false; downloads = true;  break; // same as 'NotPublished' but needed since default is 'NotPublished' and never triggers update.
             // case COMMON.ePublishedState.eViewOnly:           status = 0; publicSearch = true;  downloads = false; break;
         }
-        RK.logInfo(RK.LogSection.eCOLL,'compute EDAN search flags',undefined,{ state: COMMON.ePublishedState[eState], status, publicSearch, downloads },'Publish.Scene');
+
+        // Apply license restriction: only allow downloads if the license permits it
+        const licenseAllowsDownloads: boolean = DBAPI.LicenseAllowsDownloadGeneration(LR?.License?.RestrictLevel);
+        downloads = downloads && licenseAllowsDownloads;
+
+        RK.logInfo(RK.LogSection.eCOLL,'compute EDAN search flags',undefined,{ state: COMMON.ePublishedState[eState], status, publicSearch, downloads, licenseAllowsDownloads },'Publish.Scene');
         return { status, publicSearch, downloads };
     }
 }
