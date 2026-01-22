@@ -16,6 +16,7 @@ export class WorkflowListResult {
     DateStart: Date = new Date();
     DateLast: Date = new Date();
     Error: string = '';
+    ProjectName: string | null = null;
 
     static async search(idVWorkflowType: number[] | undefined | null, idVJobType: number[] | undefined | null, State: number[] | undefined | null,
         DateFrom: Date | undefined | null, DateTo: Date | undefined | null, idUserInitiator: number[] | undefined | null, idUserOwner: number[] | undefined | null,
@@ -98,6 +99,10 @@ export class WorkflowListResult {
                 case COMMON.eWorkflowListSortColumns.eError:
                     orderBy = 'ORDER BY JOB.JobError' + ((sortOrder === false) ? ' DESC' : '');
                     break;
+
+                case COMMON.eWorkflowListSortColumns.eProject:
+                    orderBy = 'ORDER BY P.Name' + ((sortOrder === false) ? ' DESC' : '');
+                    break;
             }
 
             if ((rowCount ?? 0) <= 0)
@@ -136,13 +141,15 @@ export class WorkflowListResult {
                 IFNULL(JOB.JobType, IFNULL(VWF.Term, 'Unknown')) AS 'Type',
                 CASE IFNULL(JOB.JobStatus, WFL.WFState) WHEN 0 THEN 'Uninitialized' WHEN 1 THEN 'Created' WHEN 2 THEN 'Running' WHEN 3 THEN 'Waiting' WHEN 4 THEN 'Done' WHEN 5 THEN 'Error' WHEN 6 THEN 'Canceled' ELSE 'Uninitialized' END AS 'State',
                 WF.idUserInitiator AS 'idUserInitiator', WFL.idWFSOwner AS 'idOwner', WF.DateInitiated AS 'DateStart', WF.DateUpdated AS 'DateLast',
-                JOB.JobError AS 'Error'
+                JOB.JobError AS 'Error',
+                P.Name AS 'ProjectName'
             FROM Workflow AS WF
             LEFT JOIN Vocabulary AS VWF ON (WF.idVWorkflowType = VWF.idVocabulary)
             LEFT JOIN WFLast AS WFL ON (WF.idWorkflow = WFL.idWorkflow)
             LEFT JOIN JobLast AS JOB ON (WF.idWorkflow = JOB.idWorkflow)
             LEFT JOIN WorkflowReport AS WR ON (WF.idWorkflow = WR.idWorkflow)
-            LEFT JOIN User AS U ON (WFL.idWFSOwner = U.idUser)${where}
+            LEFT JOIN User AS U ON (WFL.idWFSOwner = U.idUser)
+            LEFT JOIN Project AS P ON (WF.idProject = P.idProject)${where}
             ${orderBy}
             LIMIT ?, ?`;
             // LOG.info(`DBAPI.WorkflowListResult.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);

@@ -2666,6 +2666,7 @@ export type WorkflowListResult = {
   HyperlinkSet?: Maybe<Scalars['String']>;
   JobRun?: Maybe<JobRun>;
   Owner?: Maybe<User>;
+  ProjectName?: Maybe<Scalars['String']>;
   State?: Maybe<Scalars['String']>;
   Type?: Maybe<Scalars['String']>;
   UserInitiator?: Maybe<User>;
@@ -3232,7 +3233,7 @@ export type GetWorkflowListQueryVariables = Exact<{
 }>;
 
 
-export type GetWorkflowListQuery = { __typename?: 'Query', getWorkflowList: { __typename?: 'GetWorkflowListResult', WorkflowList?: Array<{ __typename?: 'WorkflowListResult', idWorkflow: number, idWorkflowSet?: number | null, idWorkflowReport?: number | null, idJobRun?: number | null, Type?: string | null, State?: string | null, DateStart?: any | null, DateLast?: any | null, Error?: string | null, Owner?: { __typename?: 'User', Name: string } | null } | null> | null } };
+export type GetWorkflowListQuery = { __typename?: 'Query', getWorkflowList: { __typename?: 'GetWorkflowListResult', WorkflowList?: Array<{ __typename?: 'WorkflowListResult', idWorkflow: number, idWorkflowSet?: number | null, idWorkflowReport?: number | null, idJobRun?: number | null, Type?: string | null, State?: string | null, DateStart?: any | null, DateLast?: any | null, Error?: string | null, ProjectName?: string | null, Owner?: { __typename?: 'User', Name: string } | null } | null> | null } };
 
 
 export const DiscardUploadedAssetVersionsDocument = gql`
@@ -6682,6 +6683,7 @@ export const GetWorkflowListDocument = gql`
       DateStart
       DateLast
       Error
+      ProjectName
     }
   }
 }

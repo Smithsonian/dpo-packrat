@@ -802,6 +802,7 @@ function DetailsView(): React.ReactElement {
             return false;
         }
 
+        toast.success('Generating scene started. This may take awhile...');
         return true;
     };
     const generateScene = async (): Promise<boolean> => {
