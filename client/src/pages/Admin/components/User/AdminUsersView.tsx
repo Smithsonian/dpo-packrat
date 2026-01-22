@@ -11,6 +11,7 @@ import { GetAllUsersResult } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
+import { useUserStore } from '../../../../store';
 
 const useStyles = makeStyles({
     AdminUsersViewContainer: {
@@ -39,6 +40,8 @@ function AdminUsersView(): React.ReactElement {
     const classes = useStyles();
     const [usersList, setUsersList] = useState<GetAllUsersResult['User']>([]);
     const location = useLocation();
+    const { user } = useUserStore();
+    const isAuthorized = user?.isAdmin ?? false;
 
     useEffect(() => {
         async function fetchInitialUsersList() {
@@ -91,8 +94,14 @@ function AdminUsersView(): React.ReactElement {
                 <Box className={classes.breadcrumbContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
-                <AdminUsersFilter queryUsersByFilter={queryUsersByFilter} />
-                <AdminUsersList users={usersList} />
+                {isAuthorized ? (
+                    <>
+                        <AdminUsersFilter queryUsersByFilter={queryUsersByFilter} />
+                        <AdminUsersList users={usersList} />
+                    </>
+                ) : (
+                    <p>You are <b>Not Authorized</b> to view this page. Admin access required.</p>
+                )}
             </Box>
         </React.Fragment>
     );
