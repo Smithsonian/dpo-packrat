@@ -178,6 +178,12 @@ export class SceneHelpers {
                 `handleComplexIngestionScene unable to load Scene SystemObject for scene ${H.Helpers.JSONStringify(scene)}`
             );
 
+        // fetch project from scene for workflow tracking
+        let idProject: number | undefined = undefined;
+        const sceneProjects: DBAPI.Project[] | null = await DBAPI.Project.fetchFromScene(scene.idScene);
+        if (sceneProjects && sceneProjects.length > 0)
+            idProject = sceneProjects[0].idProject;
+
         // first, identify assets and asset versions for the scene and models
         let sceneAsset: DBAPI.Asset | null = null;
         let sceneAssetVersion: DBAPI.AssetVersion | undefined = undefined;
@@ -330,7 +336,7 @@ export class SceneHelpers {
                 }
 
                 // If we don't have si-packrat-inspect output available, explicitly run that workflow ... but do not await results
-                SceneHelpers.populateModelMetrics(model.idModel, assetPair, MSX, idUser);
+                SceneHelpers.populateModelMetrics(model.idModel, assetPair, MSX, idUser, idProject);
 
                 // reassign asset to model; create SystemObjectVersion and SystemObjectVersionAssetVersionXref
                 const SO: DBAPI.SystemObject | null = await model.fetchSystemObject();
@@ -511,7 +517,7 @@ export class SceneHelpers {
         return { success: false, error, transformUpdated: false };
     }
 
-    private static async populateModelMetrics(idModel: number, assetPair: AssetPair, MSX: DBAPI.ModelSceneXref, idUser: number | undefined): Promise<boolean> {
+    private static async populateModelMetrics(idModel: number, assetPair: AssetPair, MSX: DBAPI.ModelSceneXref, idUser: number | undefined, idProject: number | undefined): Promise<boolean> {
         if (!assetPair.assetVersion) {
             RK.logError(RK.LogSection.eSYS,'populate model metrics failed','called without assetVersion',{ idModel, assetPair, MSX },'Utils.Scene');
             return false;
@@ -527,7 +533,7 @@ export class SceneHelpers {
             return false;
         }
 
-        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, idModel, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined, undefined /* idProject */, idUser);
+        const results: H.IOResults = await WorkflowUtil.computeModelMetrics(MSX.Name, idModel, undefined, SOModelAssetVersion.idSystemObject, undefined, undefined, idProject, idUser);
         if (!results.success)
             RK.logError(RK.LogSection.eSYS,'populate model metrics failed',`cannot compute JobCookSIPackratInspectOutput from idAssetVersion: ${results.error}`,{ idModel, assetPair, MSX },'Utils.Scene');
 

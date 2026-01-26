@@ -2141,6 +2141,7 @@ type WorkflowListResult {
   HyperlinkSet: String
   JobRun: JobRun
   Owner: User
+  ProjectName: String
   State: String
   Type: String
   UserInitiator: User
