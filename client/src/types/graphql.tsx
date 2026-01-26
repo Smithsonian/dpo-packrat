@@ -2595,7 +2595,9 @@ export type User = {
   Workflow?: Maybe<Array<Maybe<Workflow>>>;
   WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
+  canAccessTools?: Maybe<Scalars['Boolean']>;
   idUser: Scalars['Int'];
+  isAdmin?: Maybe<Scalars['Boolean']>;
 };
 
 export type UserPersonalizationSystemObject = {
@@ -3197,7 +3199,7 @@ export type GetAllUsersQuery = { __typename?: 'Query', getAllUsers: { __typename
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser: { __typename?: 'GetCurrentUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailAddress: string, EmailSettings?: number | null, SecurityID: string, WorkflowNotificationTime?: any | null, SlackID: string } | null } };
+export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser: { __typename?: 'GetCurrentUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailAddress: string, EmailSettings?: number | null, SecurityID: string, WorkflowNotificationTime?: any | null, SlackID: string, isAdmin?: boolean | null, canAccessTools?: boolean | null } | null } };
 
 export type GetUserQueryVariables = Exact<{
   input: GetUserInput;
@@ -6474,6 +6476,8 @@ export const GetCurrentUserDocument = gql`
       SecurityID
       WorkflowNotificationTime
       SlackID
+      isAdmin
+      canAccessTools
     }
   }
 }

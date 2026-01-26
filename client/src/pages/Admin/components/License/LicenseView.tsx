@@ -13,7 +13,7 @@ import { useLocation } from 'react-router';
 import { GetLicenseListDocument, License } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
-import { useLicenseStore } from '../../../../store';
+import { useLicenseStore, useUserStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
 import Clear from '@material-ui/icons/Clear';
@@ -212,6 +212,8 @@ function LicenseView(): React.ReactElement {
     const location = useLocation();
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const getEntries = useLicenseStore(state => state.getEntries);
+    const { user } = useUserStore();
+    const isAuthorized = user?.isAdmin ?? false;
 
     useEffect(() => {
         const licenses = getEntries();
@@ -240,8 +242,14 @@ function LicenseView(): React.ReactElement {
                 <Box className={classes.breadcrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
-                <SearchFilter queryByFilter={queryByFilter} />
-                <LicenseList licenses={licenseList} />
+                {isAuthorized ? (
+                    <>
+                        <SearchFilter queryByFilter={queryByFilter} />
+                        <LicenseList licenses={licenseList} />
+                    </>
+                ) : (
+                    <p>You are <b>Not Authorized</b> to view this page. Admin access required.</p>
+                )}
             </Box>
         </React.Fragment>
     );
