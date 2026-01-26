@@ -3,6 +3,7 @@
  */
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+import { Config } from '../../../../../config';
 
 const User = {
     AccessPolicy: async (parent: Parent): Promise<DBAPI.AccessPolicy[] | null> => {
@@ -28,6 +29,13 @@ const User = {
     },
     WorkflowStep: async (parent: Parent): Promise<DBAPI.WorkflowStep[] | null> => {
         return await DBAPI.WorkflowStep.fetchFromUser(parent.idUser);
+    },
+    isAdmin: (parent: Parent): boolean => {
+        return Config.auth.users.admin.includes(parent.idUser);
+    },
+    canAccessTools: (parent: Parent): boolean => {
+        return Config.auth.users.admin.includes(parent.idUser) ||
+               Config.auth.users.tools.includes(parent.idUser);
     }
 };
 

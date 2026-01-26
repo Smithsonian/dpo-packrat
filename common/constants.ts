@@ -432,6 +432,7 @@ export enum eWorkflowListSortColumns {
     eReport = 7,
     eJobRun = 8,
     eError = 9,
+    eProject = 10,
     eDefault = 0
 }
 

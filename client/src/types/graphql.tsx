@@ -2595,7 +2595,9 @@ export type User = {
   Workflow?: Maybe<Array<Maybe<Workflow>>>;
   WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
+  canAccessTools?: Maybe<Scalars['Boolean']>;
   idUser: Scalars['Int'];
+  isAdmin?: Maybe<Scalars['Boolean']>;
 };
 
 export type UserPersonalizationSystemObject = {
@@ -2666,6 +2668,7 @@ export type WorkflowListResult = {
   HyperlinkSet?: Maybe<Scalars['String']>;
   JobRun?: Maybe<JobRun>;
   Owner?: Maybe<User>;
+  ProjectName?: Maybe<Scalars['String']>;
   State?: Maybe<Scalars['String']>;
   Type?: Maybe<Scalars['String']>;
   UserInitiator?: Maybe<User>;
@@ -3197,7 +3200,7 @@ export type GetAllUsersQuery = { __typename?: 'Query', getAllUsers: { __typename
 export type GetCurrentUserQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser: { __typename?: 'GetCurrentUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailAddress: string, EmailSettings?: number | null, SecurityID: string, WorkflowNotificationTime?: any | null, SlackID: string } | null } };
+export type GetCurrentUserQuery = { __typename?: 'Query', getCurrentUser: { __typename?: 'GetCurrentUserResult', User?: { __typename?: 'User', idUser: number, Name: string, Active: boolean, DateActivated: any, DateDisabled?: any | null, EmailAddress: string, EmailSettings?: number | null, SecurityID: string, WorkflowNotificationTime?: any | null, SlackID: string, isAdmin?: boolean | null, canAccessTools?: boolean | null } | null } };
 
 export type GetUserQueryVariables = Exact<{
   input: GetUserInput;
@@ -3232,7 +3235,7 @@ export type GetWorkflowListQueryVariables = Exact<{
 }>;
 
 
-export type GetWorkflowListQuery = { __typename?: 'Query', getWorkflowList: { __typename?: 'GetWorkflowListResult', WorkflowList?: Array<{ __typename?: 'WorkflowListResult', idWorkflow: number, idWorkflowSet?: number | null, idWorkflowReport?: number | null, idJobRun?: number | null, Type?: string | null, State?: string | null, DateStart?: any | null, DateLast?: any | null, Error?: string | null, Owner?: { __typename?: 'User', Name: string } | null } | null> | null } };
+export type GetWorkflowListQuery = { __typename?: 'Query', getWorkflowList: { __typename?: 'GetWorkflowListResult', WorkflowList?: Array<{ __typename?: 'WorkflowListResult', idWorkflow: number, idWorkflowSet?: number | null, idWorkflowReport?: number | null, idJobRun?: number | null, Type?: string | null, State?: string | null, DateStart?: any | null, DateLast?: any | null, Error?: string | null, ProjectName?: string | null, Owner?: { __typename?: 'User', Name: string } | null } | null> | null } };
 
 
 export const DiscardUploadedAssetVersionsDocument = gql`
@@ -6474,6 +6477,8 @@ export const GetCurrentUserDocument = gql`
       SecurityID
       WorkflowNotificationTime
       SlackID
+      isAdmin
+      canAccessTools
     }
   }
 }
@@ -6682,6 +6687,7 @@ export const GetWorkflowListDocument = gql`
       DateStart
       DateLast
       Error
+      ProjectName
     }
   }
 }

@@ -14,6 +14,7 @@ import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
+import { useUserStore } from '../../../store';
 import Clear from '@material-ui/icons/Clear';
 import DataTable from './shared/DataTable';
 import { DataTableOptions } from '../../../types/component';
@@ -214,6 +215,8 @@ function AdminProjectsView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
     const [projectList, setProjectList] = useState<GetProjectListResult['projects']>([]);
+    const { user } = useUserStore();
+    const isAuthorized = user?.canAccessTools ?? false;
 
     useEffect(() => {
         async function fetchInitialProjectList() {
@@ -260,8 +263,14 @@ function AdminProjectsView(): React.ReactElement {
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
-                <AdminProjectsFilter queryProjectsByFilter={queryProjectsByFilter} />
-                <AdminProjectsList projects={projectList} />
+                {isAuthorized ? (
+                    <>
+                        <AdminProjectsFilter queryProjectsByFilter={queryProjectsByFilter} />
+                        <AdminProjectsList projects={projectList} />
+                    </>
+                ) : (
+                    <p>You are <b>Not Authorized</b> to view this page. Contact support.</p>
+                )}
             </Box>
         </React.Fragment>
     );

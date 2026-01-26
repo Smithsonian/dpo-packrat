@@ -16,6 +16,7 @@ const getWorkflowList = gql`
                 DateStart
                 DateLast
                 Error
+                ProjectName
             }
         }
     }

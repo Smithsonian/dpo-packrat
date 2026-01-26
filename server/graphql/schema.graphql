@@ -2075,7 +2075,9 @@ type User {
   Workflow: [Workflow]
   WorkflowNotificationTime: DateTime
   WorkflowStep: [WorkflowStep]
+  canAccessTools: Boolean
   idUser: Int!
+  isAdmin: Boolean
 }
 
 type UserPersonalizationSystemObject {
@@ -2139,6 +2141,7 @@ type WorkflowListResult {
   HyperlinkSet: String
   JobRun: JobRun
   Owner: User
+  ProjectName: String
   State: String
   Type: String
   UserInitiator: User

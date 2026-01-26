@@ -720,8 +720,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const profileKey: string = `${model.Name} inspection: ${H.Helpers.randomSlug()}`;
         RK.profile(profileKey,RK.LogSection.eJOB,`${model.Name} inspection`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
         if (idSystemObjectModel) {
+            const idProject: number | undefined = this.sceneParameterHelper?.OG?.project?.[0]?.idProject;
             const results: H.IOResults = await WorkflowUtil.computeModelMetrics(model.Name, model.idModel, idSystemObjectModel, undefined, undefined,
-                undefined, undefined /* FIXME */, idUserCreator);
+                undefined, idProject, idUserCreator);
             if (results.success) {
                 RK.logInfo(RK.LogSection.eJOB,'process model','extracted model metrics',{ model },'Job.GenerateDownloads');
                 await this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${model.Name}`);
