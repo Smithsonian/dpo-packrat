@@ -37,7 +37,8 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
         borderTopLeftRadius: '5px',
-        width: 'max-content'
+        width: '100%',
+        overflowX: 'auto'
     },
     centeredTableHead: {
         '& > span': {
@@ -80,12 +81,25 @@ const getMuiTheme = () =>
         overrides: {
             MuiTableCell: {
                 root: {
-                    backgroundColor: '#FFFCD1',
+                    backgroundColor: 'inherit',
                     height: 'fit-content',
-                    padding: '1px',
+                    padding: '8px',
                     fontSize: '0.8em'
                 },
-                body: { color: '#2C405A', borderBottomColor: '#FFFCD1', align: 'center' }
+                head: {
+                    backgroundColor: 'transparent'
+                },
+                body: { color: '#2C405A', align: 'center' }
+            },
+            MuiTableBody: {
+                root: {
+                    '& tr:nth-of-type(odd)': {
+                        backgroundColor: '#FFFCD1'
+                    },
+                    '& tr:nth-of-type(even)': {
+                        backgroundColor: '#FFF9BE'
+                    }
+                }
             },
             MuiToolbar: {
                 regular: {
@@ -108,6 +122,7 @@ const getMuiTheme = () =>
             },
             MuiTableHead: {
                 root: {
+                    backgroundColor: '#f7f29c',
                     borderBottom: '1.2px solid rgb(128,128,128)'
                 }
             },
@@ -123,7 +138,7 @@ const getMuiTheme = () =>
             },
             MuiButtonBase: {
                 root: {
-                    outline: '0.5px solid rgb(255, 252, 209)'
+                    outline: 'none'
                 }
             }
         }
@@ -250,6 +265,24 @@ function WorkflowList(): React.ReactElement {
             }
         },
         {
+            name: 'ProjectName',
+            label: 'Project',
+            options: {
+                customBodyRender(value) {
+                    if (!value) return '';
+                    return (
+                        <Tooltip placement='top' title={value} arrow>
+                            <div style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {value}
+                            </div>
+                        </Tooltip>
+                    );
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
             name: 'DateStart',
             label: 'Start',
             options: {
@@ -367,6 +400,7 @@ const workflowListSortEnumToString = (col: eWorkflowListSortColumns): string => 
         case eWorkflowListSortColumns.eType: return 'Type';
         case eWorkflowListSortColumns.eState: return 'State';
         case eWorkflowListSortColumns.eOwner: return 'Owner';
+        case eWorkflowListSortColumns.eProject: return 'ProjectName';
         case eWorkflowListSortColumns.eStart: return 'DateStart';
         case eWorkflowListSortColumns.eLast: return 'DateLast';
         case eWorkflowListSortColumns.eReport: return 'idWorkflowReport';

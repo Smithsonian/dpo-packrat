@@ -2592,7 +2592,9 @@ export type User = {
   Workflow?: Maybe<Array<Maybe<Workflow>>>;
   WorkflowNotificationTime?: Maybe<Scalars['DateTime']>;
   WorkflowStep?: Maybe<Array<Maybe<WorkflowStep>>>;
+  canAccessTools?: Maybe<Scalars['Boolean']>;
   idUser: Scalars['Int'];
+  isAdmin?: Maybe<Scalars['Boolean']>;
 };
 
 export type UserPersonalizationSystemObject = {
@@ -2663,6 +2665,7 @@ export type WorkflowListResult = {
   HyperlinkSet?: Maybe<Scalars['String']>;
   JobRun?: Maybe<JobRun>;
   Owner?: Maybe<User>;
+  ProjectName?: Maybe<Scalars['String']>;
   State?: Maybe<Scalars['String']>;
   Type?: Maybe<Scalars['String']>;
   UserInitiator?: Maybe<User>;

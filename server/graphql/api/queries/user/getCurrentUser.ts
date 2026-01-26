@@ -14,6 +14,8 @@ const getCurrentUser = gql`
                 SecurityID
                 WorkflowNotificationTime
                 SlackID
+                isAdmin
+                canAccessTools
             }
         }
     }

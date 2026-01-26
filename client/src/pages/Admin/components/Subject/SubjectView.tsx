@@ -7,6 +7,7 @@ import { useLocation } from 'react-router';
 import { Link, useNavigate } from 'react-router-dom';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { getUnitsList } from '../../hooks/useAdminView';
+import { useUserStore } from '../../../../store';
 import { SubjectUnitIdentifier } from '../../../../types/graphql';
 import { Helmet } from 'react-helmet';
 import { eSubjectUnitIdentifierSortColumns } from '@dpo-packrat/common';
@@ -364,6 +365,9 @@ function SubjectView(): React.ReactElement {
     const location = useLocation();
     const [updateFilterValue, fetchSubjectList, paginationUpdateAndRefetchList, keyword, selectedUnit, pageNumber, rowCount, sortOrder, sortBy, loading, subjects] = useAdminSubjectStore(state => [state.updateFilterValue, state.fetchSubjectList, state.paginationUpdateAndRefetchList, state.keyword, state.selectedUnit, state.pageNumber, state.rowCount, state.sortOrder, state.sortBy, state.loading, state.subjects]);
     const [units, setUnits] = useState<selectOption[]>([{ value: 0, label: 'All' }]);
+    const { user } = useUserStore();
+    const isAuthorized = user?.canAccessTools ?? false;
+
     useEffect(() => {
         const fetchUnitList = async () => {
             const { data } = await getUnitsList();
@@ -404,23 +408,29 @@ function SubjectView(): React.ReactElement {
             <Box className={classes.AdminBreadCrumbsContainer}>
                 <GenericBreadcrumbsView items={location.pathname.slice(1)} />
             </Box>
-            <SearchFilter
-                queryByFilter={onSearch}
-                units={units}
-                onSelect={handleDropDownChange}
-                onKeywordChange={handleSearchKeywordChange}
-                keyword={keyword}
-                selectedUnit={selectedUnit}
-            />
-            <SubjectList
-                subjects={subjects}
-                onPaginationChange={paginationUpdateAndRefetchList}
-                pageNumber={pageNumber}
-                rowsPerPage={rowCount}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                loading={loading}
-            />
+            {isAuthorized ? (
+                <>
+                    <SearchFilter
+                        queryByFilter={onSearch}
+                        units={units}
+                        onSelect={handleDropDownChange}
+                        onKeywordChange={handleSearchKeywordChange}
+                        keyword={keyword}
+                        selectedUnit={selectedUnit}
+                    />
+                    <SubjectList
+                        subjects={subjects}
+                        onPaginationChange={paginationUpdateAndRefetchList}
+                        pageNumber={pageNumber}
+                        rowsPerPage={rowCount}
+                        sortBy={sortBy}
+                        sortOrder={sortOrder}
+                        loading={loading}
+                    />
+                </>
+            ) : (
+                <p>You are <b>Not Authorized</b> to view this page. Contact support.</p>
+            )}
         </Box>
     );
 }

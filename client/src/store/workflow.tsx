@@ -114,6 +114,7 @@ const workflowListSortStringToEnum = (col: string): eWorkflowListSortColumns => 
         case 'Type': return eWorkflowListSortColumns.eType;
         case 'State': return eWorkflowListSortColumns.eState;
         case 'Owner': return eWorkflowListSortColumns.eOwner;
+        case 'ProjectName': return eWorkflowListSortColumns.eProject;
         case 'DateStart': return eWorkflowListSortColumns.eStart;
         case 'DateLast': return eWorkflowListSortColumns.eLast;
         case 'idWorkflowReport': return eWorkflowListSortColumns.eReport;

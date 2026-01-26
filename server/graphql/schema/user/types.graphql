@@ -19,6 +19,8 @@ type User {
     Workflow: [Workflow]
     WorkflowStep: [WorkflowStep]
     SlackID: String!
+    isAdmin: Boolean
+    canAccessTools: Boolean
 }
 
 type UserPersonalizationSystemObject {

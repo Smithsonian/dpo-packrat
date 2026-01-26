@@ -1,11 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
+import { useLocation } from 'react-router';
 import API from '../../../../api';
 import { AdminContactForm } from './AdminContactForm';
 import { DataTableSelect, DataTableSelectHandle } from '../shared/DataTableSelect';
 import { ColumnHeader, DBReference } from '../shared/DataTypesStyles';
 import { useContactStore } from '../../../../store/contact';
+import { useUserStore } from '../../../../store';
+import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
+import { Helmet } from 'react-helmet';
+
+const useStyles = makeStyles({
+    AdminPageViewContainer: {
+        display: 'flex',
+        flex: 1,
+        flexDirection: 'column',
+        overflow: 'auto',
+        paddingBottom: '15px',
+        paddingLeft: '15px',
+        margin: '0 auto'
+    },
+    AdminBreadCrumbsContainer: {
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: '46px',
+        paddingLeft: '20px',
+        paddingRight: '20px',
+        background: '#ECF5FD',
+        color: '#3F536E',
+        marginBottom: '15px',
+        width: 'fit-content'
+    }
+});
 
 type Contact = DBReference & {
     email: string;
@@ -15,11 +43,15 @@ type Contact = DBReference & {
 };
 
 const AdminContactView: React.FC = () => {
+    const classes = useStyles();
+    const location = useLocation();
     const tableRef = useRef<DataTableSelectHandle<Contact>>(null);
 
     // ⬇️ store hooks
     const storeContacts = useContactStore((s) => s.all);
     const loadAll = useContactStore((s) => s.loadAll);
+    const { user } = useUserStore();
+    const isAuthorized = user?.canAccessTools ?? false;
 
     // local UI state
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -121,66 +153,80 @@ const AdminContactView: React.FC = () => {
     };
 
     return (
-        <Box display='flex' flexDirection='column' style={{ gap: '1rem', width: '95%' }}>
-            <Box display='flex' alignItems='center' flexDirection='column'>
-                <Typography variant='h6'>Contacts</Typography>
-                <Typography align='center' style={{ padding: '1rem' }}>
-                    This page lets administrators view, edit, and add contacts in a single interface. It provides a table of
-                    existing contacts with inline editing and a modal form for creating new ones.
-                </Typography>
+        <React.Fragment>
+            <Helmet>
+                <title>Contacts Admin</title>
+            </Helmet>
+            <Box className={classes.AdminPageViewContainer}>
+                <Box className={classes.AdminBreadCrumbsContainer}>
+                    <GenericBreadcrumbsView items={location.pathname.slice(1)} />
+                </Box>
+                {isAuthorized ? (
+                    <Box display='flex' flexDirection='column' style={{ gap: '1rem', width: '95%' }}>
+                        <Box display='flex' alignItems='center' flexDirection='column'>
+                            <Typography variant='h6'>Contacts</Typography>
+                            <Typography align='center' style={{ padding: '1rem' }}>
+                                This page lets administrators view, edit, and add contacts in a single interface. It provides a table of
+                                existing contacts with inline editing and a modal form for creating new ones.
+                            </Typography>
+                        </Box>
+
+                        <DataTableSelect
+                            ref={tableRef}
+                            onUpdateSelection={() => {}}
+                            data={rows}
+                            columns={getColumnHeader()}
+                            resetSelection={resetSelection}
+                            isLoading={isLoading}
+                            selectable={false}
+                            expandable
+                            renderExpanded={expandedRowRenderer}
+                        />
+
+                        <Box display='flex' alignItems='center' justifyContent='center' style={{ marginTop: '-5rem' }}>
+                            <Button
+                                variant='contained'
+                                color='primary'
+                                disableElevation
+                                onClick={onRefreshClick}
+                                style={{ margin: '1rem', color: 'white' }}
+                            >
+                                Refresh
+                            </Button>
+                            <Button
+                                variant='contained'
+                                color='primary'
+                                disableElevation
+                                onClick={onOpenCreate}
+                                style={{ margin: '1rem', color: 'white' }}
+                            >
+                                Create
+                            </Button>
+                        </Box>
+
+                        <Dialog
+                            open={createOpen}
+                            onClose={onCloseCreate}
+                            aria-labelledby='create-contact-title'
+                            fullWidth
+                            maxWidth='md'
+                            keepMounted
+                            onExited={() => setResetKey((k) => k + 1)}
+                        >
+                            <DialogTitle id='create-contact-title'>Create Contact</DialogTitle>
+                            <DialogContent dividers>
+                                <AdminContactForm key={resetKey} mode='create' onUpdate={onCreateFinished} />
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={onCloseCreate}>Close</Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
+                ) : (
+                    <p>You are <b>Not Authorized</b> to view this page. Contact support.</p>
+                )}
             </Box>
-
-            <DataTableSelect
-                ref={tableRef}
-                onUpdateSelection={() => {}}
-                data={rows}
-                columns={getColumnHeader()}
-                resetSelection={resetSelection}
-                isLoading={isLoading}
-                selectable={false}
-                expandable
-                renderExpanded={expandedRowRenderer}
-            />
-
-            <Box display='flex' alignItems='center' justifyContent='center' style={{ marginTop: '-5rem' }}>
-                <Button
-                    variant='contained'
-                    color='primary'
-                    disableElevation
-                    onClick={onRefreshClick}
-                    style={{ margin: '1rem', color: 'white' }}
-                >
-                    Refresh
-                </Button>
-                <Button
-                    variant='contained'
-                    color='primary'
-                    disableElevation
-                    onClick={onOpenCreate}
-                    style={{ margin: '1rem', color: 'white' }}
-                >
-                    Create
-                </Button>
-            </Box>
-
-            <Dialog
-                open={createOpen}
-                onClose={onCloseCreate}
-                aria-labelledby='create-contact-title'
-                fullWidth
-                maxWidth='md'
-                keepMounted
-                onExited={() => setResetKey((k) => k + 1)}
-            >
-                <DialogTitle id='create-contact-title'>Create Contact</DialogTitle>
-                <DialogContent dividers>
-                    <AdminContactForm key={resetKey} mode='create' onUpdate={onCreateFinished} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={onCloseCreate}>Close</Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+        </React.Fragment>
     );
 };
 

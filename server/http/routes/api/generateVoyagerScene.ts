@@ -114,6 +114,14 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
         return generateResponse(false,'missing prerequisites',idSystemObject);
     }
 
+    // get project for the workflow (if scene exists)
+    let idProject: number | undefined = undefined;
+    if (scene) {
+        const sceneProjects: DBAPI.Project[] | null = await DBAPI.Project.fetchFromScene(scene.idScene);
+        if (sceneProjects && sceneProjects.length > 0)
+            idProject = sceneProjects[0].idProject;
+    }
+
     // if we're here then we want to try and initiate the workflow
     const wfEngine: IWorkflowEngine | null = await WorkflowFactory.getInstance();
     if(!wfEngine) {
@@ -124,6 +132,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
     // build our parameters for the workflow
     const workflowParams: WorkflowParameters = {
         idUserInitiator: idUser,
+        idProject,
         parameters  // our additional config options
     };
 

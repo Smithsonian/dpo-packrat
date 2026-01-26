@@ -14,6 +14,7 @@ import { apolloClient } from '../../../graphql/index';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import { useNavigate } from 'react-router-dom';
+import { useUserStore } from '../../../store';
 import Clear from '@material-ui/icons/Clear';
 import DataTable from './shared/DataTable';
 import { DataTableOptions } from '../../../types/component';
@@ -220,6 +221,8 @@ function AdminUnitsView(): React.ReactElement {
     const classes = useStyles();
     const location = useLocation();
     const [unitList, setUnitList] = useState<GetUnitsFromNameSearchResult['Units']>([]);
+    const { user } = useUserStore();
+    const isAuthorized = user?.isAdmin ?? false;
 
     useEffect(() => {
         async function fetchInitialUnitList() {
@@ -266,8 +269,14 @@ function AdminUnitsView(): React.ReactElement {
                 <Box className={classes.AdminBreadCrumbsContainer}>
                     <GenericBreadcrumbsView items={location.pathname.slice(1)} />
                 </Box>
-                <AdminUnitsFilter queryUnitsByFilter={queryUnitsByFilter} />
-                <AdminUnitsList units={unitList} />
+                {isAuthorized ? (
+                    <>
+                        <AdminUnitsFilter queryUnitsByFilter={queryUnitsByFilter} />
+                        <AdminUnitsList units={unitList} />
+                    </>
+                ) : (
+                    <p>You are <b>Not Authorized</b> to view this page. Admin access required.</p>
+                )}
             </Box>
         </React.Fragment>
     );

@@ -157,9 +157,7 @@ export const Config: ConfigType = {
                 5,  // Eric Maslowski
             ],
             tools: [
-                2,  // Jon Blundell
-                4,  // Jamie Cope
-                5,  // Eric Maslowski
+                // includes all Admins by default
                 6,  // Megan Dattoria
                 11, // Katie Wolfe
                 17, // Lindsey Dougan

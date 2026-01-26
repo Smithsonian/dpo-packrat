@@ -348,10 +348,25 @@ class UploadAssetWorker extends ResolverBase {
             }
         }
 
+        // Determine idProject for workflow by traversing object hierarchy
+        // NOTE: If multiple projects are related, idProject remains undefined because we cannot
+        // determine which project is the "correct" one. The FK constraint prevents using
+        // a sentinel value like -1.
+        let idProject: number | undefined = undefined;
+        if (idSystemObject.length > 0) {
+            const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject[0], DBAPI.eObjectGraphMode.eAncestors);
+            if (await OG.fetch()) {
+                if (OG.project && OG.project.length === 1) {
+                    idProject = OG.project[0].idProject;
+                }
+                // If OG.project.length > 1, leave idProject undefined (ambiguous)
+            }
+        }
+
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeUpload,
             idSystemObject,
-            // idProject: TODO: populate with idProject
+            idProject,
             idUserInitiator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
         };
 

@@ -1542,9 +1542,14 @@ class IngestDataWorker extends ResolverBase {
                 skipSceneGenerate: IAR.skipSceneGenerate
             };
 
+            // Determine idProject for workflow event
+            // NOTE: If this.input.project.id is 0 or falsy, idProject will be undefined.
+            // The FK constraint prevents using a sentinel value like -1.
+            const idProject: number | undefined = this.input.project.id || undefined;
+
             const workflowParams: WF.WorkflowParameters = {
                 idSystemObject,
-                // idProject: TODO: update with project ID
+                idProject,
                 idUserInitiator: user.idUser,
                 parameters
             };
@@ -1768,10 +1773,16 @@ class IngestDataWorker extends ResolverBase {
                 RK.logError(RK.LogSection.eGQL,'create workflow failed','unable to locate system object',{ oID },'GraphQL.Ingestion.Data');
         }
 
+        // Determine idProject for workflow
+        // NOTE: If this.input.project.id is 0 or falsy, idProject will be undefined.
+        // In the future, if multiple projects could be related, we would need additional
+        // logic here. The FK constraint prevents using a sentinel value like -1.
+        const idProject: number | undefined = this.input.project.id || undefined;
+
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeIngestion,
             idSystemObject,
-            // idProject: TODO: populate with idProject
+            idProject,
             idUserInitiator: this.user?.idUser,
         };
 
