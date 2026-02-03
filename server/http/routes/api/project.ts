@@ -171,16 +171,16 @@ export const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Pr
         return null;
     }
 
-    // get earliest and latest
+    // get the latest version by ID (not by date) - this matches how the scene detail view determines published state
+    // Using fetchLatestFromSystemObject ensures consistency with the rest of the application
+    const sceneVersionLast: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(sceneSO.idSystemObject);
+
+    // get earliest version by date for dateCreated field
     let sceneVersionFirst: DBAPI.SystemObjectVersion | null = null;
-    let sceneVersionLast: DBAPI.SystemObjectVersion | null = null;
     for(const version of sceneSOVs) {
         const date = new Date(version.DateCreated);
         if (!sceneVersionFirst?.DateCreated || date < sceneVersionFirst.DateCreated) {
             sceneVersionFirst = version;
-        }
-        if (!sceneVersionLast?.DateCreated || date > sceneVersionLast.DateCreated) {
-            sceneVersionLast = version;
         }
     }
 
