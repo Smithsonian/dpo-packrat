@@ -90,13 +90,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             return formatResultField('Published','Error','critical',`cannot get version for scene: ${idSystemObject}`);
         }
 
-        // Normalize + sort newest first
-        const normalizeDate = (d: string | Date) => (d instanceof Date ? d : new Date(d));
+        // Sort by idSystemObjectVersion descending (newest/highest ID first)
+        // This matches how fetchLatestFromSystemObject determines the "latest" version
         const sorted = [...sceneSOVs].sort((a, b) =>
-            normalizeDate(b.DateCreated).getTime() - normalizeDate(a.DateCreated).getTime()
+            b.idSystemObjectVersion - a.idSystemObjectVersion
         );
 
-        // get our latest and if any are published
+        // get our latest (highest ID) and find if any version is published
         const latest = sorted[0];
         const isPublished = (s: COMMON.ePublishedState) =>
             s === COMMON.ePublishedState.ePublished ||
@@ -108,9 +108,9 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         if (!lastPublished)
             return formatResultField('Published','Unpublished','pass','Scene is not currently published');
 
-        // figure out our latest time and when the last published one was
-        const latestTime = normalizeDate(latest.DateCreated).getTime();
-        const lastPubTime = normalizeDate(lastPublished.DateCreated).getTime();
+        // Compare version IDs to determine if we have unpublished changes (draft)
+        const latestId = latest.idSystemObjectVersion;
+        const lastPubId = lastPublished.idSystemObjectVersion;
 
         const mapStateToStatus = (s: COMMON.ePublishedState): { status: string, notes: string } => {
             switch (s) {
@@ -126,19 +126,19 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                     return { status: 'Unknown', notes: `Unknown published state: ${s}` };
             }
         };
-        // If the latest is the last published (same object or same timestamp with published state)
-        if (latestTime === lastPubTime && isPublished(latest.PublishedState)) {
+        // If the latest version is the last published one (same ID means current version is published)
+        if (latestId === lastPubId && isPublished(latest.PublishedState)) {
             const { status, notes } = mapStateToStatus(latest.PublishedState);
             return formatResultField('Published',status,'pass',notes);
         }
 
-        // if the latest version is after the last published and the latest is not
-        // published then we have a draft.
-        if (latestTime > lastPubTime && !isPublished(latest.PublishedState)) {
+        // If the latest version ID is greater than the last published version ID and the latest
+        // is not published, then we have unpublished changes (a draft)
+        if (latestId > lastPubId && !isPublished(latest.PublishedState)) {
             return formatResultField('Published','Draft','warn','Latest scene changes have not been published');
         }
 
-        // Otherwise, the latest is not newer than the last published (or ties but latest isn’t published),
+        // Otherwise, the latest is not newer than the last published (or ties but latest isn't published),
         // so the last published remains the effective status (not a draft).
         const { status, notes } = mapStateToStatus(lastPublished.PublishedState);
         return formatResultField('Published',status,'pass',notes);
