@@ -288,16 +288,31 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     };
     const getModelDownloadsStatus = ( status: string, count: number, expected: number, licenseAllows: boolean): FieldStatus => {
         const name = 'Download Models';
+        const expectedCount = expected > 0 ? expected : 6;
+
         if(status === 'Good') {
             if(licenseAllows===true)
                 return formatResultField(name,'Found','pass','all generated downloads found for scene and will be published');
             else
                 return formatResultField(name,'Found','warn','license does not allow for downloads. they <b><u>WILL NOT</u></b> be published.');
-        } else {
+        } else if(status === 'Missing') {
+            // downloads are actually missing (count < 6)
             if(licenseAllows===true)
-                return formatResultField(name,status,'fail',`downloads not found (${count}/${expected>0?expected:6})`);
+                return formatResultField(name,'Missing','fail',`downloads not found (${count}/${expectedCount})`);
             else
-                return formatResultField(name,status,'warn','downloads not found. consider generating them.');
+                return formatResultField(name,'Missing','warn',`downloads not found (${count}/${expectedCount}). consider generating them.`);
+        } else if(status === 'Error') {
+            // downloads exist but may have material issues (created before June 14, 2024 Cook fix)
+            if(licenseAllows===true)
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`);
+            else
+                return formatResultField(name,'Outdated','info',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`);
+        } else {
+            // fallback for unexpected status values
+            if(licenseAllows===true)
+                return formatResultField(name,status,'fail',`unexpected download status (${count}/${expectedCount})`);
+            else
+                return formatResultField(name,status,'warn',`unexpected download status (${count}/${expectedCount})`);
         }
     };
     const getThumbnailsStatus = async (): Promise<FieldStatus> => {
