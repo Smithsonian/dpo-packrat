@@ -635,16 +635,22 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
 };
 const getStatusARModels = (models: AssetSummary[]): string => {
 
+    // if no AR models found, return explicit status
+    if (!models || models.length === 0) {
+        return 'Missing: All';
+    }
+
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     let nonDownloadableCount: number = 0;
     let downloadableCount: number = 0;
 
     for(const model of models) {
 
-        // if any model is too old or prior to known error return error
-        if(model.dateCreated < targetDate) {
-            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateCreated} - ${targetDate})`,{},'HTTP.Route.Project');
-            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateCreated} - ${targetDate}) WebAR`;
+        // if any model's asset version is too old or prior to known error return error
+        // use dateModified (asset version date) not dateCreated (model record date)
+        if(model.dateModified < targetDate) {
+            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateModified} - ${targetDate})`,{},'HTTP.Route.Project');
+            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateModified} - ${targetDate}) WebAR`;
         }
 
         // build our counts for comparison
@@ -667,9 +673,9 @@ const getStatusARModels = (models: AssetSummary[]): string => {
         return 'Good';
     }
 
-    // If none of the conditions are met, log the error and return 'Unexpected'
+    // If none of the conditions are met, log and return descriptive error
     RK.logError(RK.LogSection.eHTTP,'get AR model status failed','unexpected counts',{ native: downloadableCount, web: nonDownloadableCount },'HTTP.Route.Project');
-    return 'Unexpected';
+    return `Error: Unexpected (WebAR:${nonDownloadableCount}, NativeAR:${downloadableCount})`;
 };
 const getStatusCaptureData = (cd: AssetList): string => {
 
