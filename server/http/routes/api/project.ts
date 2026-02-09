@@ -423,6 +423,9 @@ const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | 
             const cdSO = await captureData[i].fetchSystemObject();
             if(!cdSO) { continue; }
 
+            // skip retired objects
+            if(cdSO.Retired) { continue; }
+
             // get the asset and asset version for access to creator and date info
             // only using first asset since there is no explicit access to the original 'zip'
             // asset so we must pull one of the images and use its information.
@@ -479,6 +482,11 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
     const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
     if(!modelSO) {
         RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch SystemObject model',{ ...model },'HTTP.Route.Project');
+        return null;
+    }
+
+    // skip retired objects
+    if(modelSO.Retired) {
         return null;
     }
 
@@ -546,18 +554,34 @@ const getMasterModelsFromItems = async (idItems: number[]): Promise<number | nul
     const masterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchDerivedFromItems(idItems);
     if(!masterModels) return null;
 
-    // confirm they are all master models (purpose = 45)
-    const count: number = masterModels.filter(model => model.idVPurpose === 45).length;
+    // filter to master models (purpose = 45) and exclude retired objects
+    let count: number = 0;
+    for(const model of masterModels) {
+        if(model.idVPurpose !== 45) continue;
 
-    // return our count
-    return count ?? null;
+        const modelSO = await model.fetchSystemObject();
+        if(modelSO && !modelSO.Retired) {
+            count++;
+        }
+    }
+
+    return count;
 };
 const getCaptureDataFromItems = async (idItems: number[]): Promise<number | null> => {
     // get all capture data from the items
     const captureData: DBAPI.CaptureData[] | null = await DBAPI.CaptureData.fetchDerivedFromItems(idItems);
+    if(!captureData) return null;
 
-    // return our count
-    return captureData?.length ?? null;
+    // filter out retired objects
+    let count: number = 0;
+    for(const cd of captureData) {
+        const cdSO = await cd.fetchSystemObject();
+        if(cdSO && !cdSO.Retired) {
+            count++;
+        }
+    }
+
+    return count;
 };
 //#endregion
 
