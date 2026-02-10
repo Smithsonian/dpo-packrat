@@ -322,14 +322,14 @@ function DetailsView(): React.ReactElement {
     }, [sceneGenParameters?.decimationPasses, sceneGenDialogOpen]);
     useEffect(() => {
         // Refresh data when window regains focus (e.g., returning from Voyager story mode)
-        const handleFocus = () => {
-            refetch();
-            fetchDetailTabDataAndSetState();
+        const handleFocus = async () => {
+            if (!data) return; // Don't refresh if data hasn't loaded yet
+            await refetch();
             setRefreshTick(t => t + 1);
         };
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
-    }, [refetch]);
+    }, [refetch, data]);
 
     // contacts and notice
     const ops = useDetailTabStore(s => s.getObjectProperties(idSystemObject));
@@ -1030,7 +1030,7 @@ function DetailsView(): React.ReactElement {
                         onUploaderOpen={onUploaderOpen}
                         publishedState={publishedState}
                         refreshTick={refreshTick}
-                        parentRetired={details?.retired ?? false}
+                        parentRetired={data?.getSystemObjectDetails?.retired ?? false}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (
