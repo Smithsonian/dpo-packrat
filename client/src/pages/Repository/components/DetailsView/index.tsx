@@ -27,7 +27,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -162,6 +162,7 @@ function DetailsView(): React.ReactElement {
     );
 
     const getEntries = useVocabularyStore(state => state.getEntries);
+    const user = useUserStore(state => state.user);
     const [
         stateIdentifiers,
         areIdentifiersUpdated,
@@ -373,6 +374,11 @@ function DetailsView(): React.ReactElement {
         licenseInheritance = null,
     } = data.getSystemObjectDetails;
     const disabled: boolean = !allowed;
+
+    // Hide retire checkbox for Subject, Unit, Project if user is not admin
+    const isAdmin = user?.isAdmin ?? false;
+    const adminOnlyRetireTypes = [eSystemObjectType.eSubject, eSystemObjectType.eUnit, eSystemObjectType.eProject];
+    const hideRetired = !isAdmin && adminOnlyRetireTypes.includes(objectType);
 
     const addIdentifer = () => {
         addNewIdentifier();
@@ -875,6 +881,7 @@ function DetailsView(): React.ReactElement {
                         publishedEnum={publishedEnum}
                         publishable={publishable}
                         retired={withDefaultValueBoolean(details.retired, false)}
+                        hideRetired={hideRetired}
                         objectType={objectType}
                         onRetiredUpdate={onRetiredUpdate}
                         onLicenseUpdate={onLicenseUpdate}
