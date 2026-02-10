@@ -208,7 +208,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index} id={`tab-${index}`}>
-            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} onUploaderOpen={onUploaderOpen} parentRetired={parentRetired} />
+            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} onUploaderOpen={onUploaderOpen} parentRetired={parentRetired} refreshTick={refreshTick} />
         </TabPanel>
     );
 

@@ -144,7 +144,7 @@ function DetailsView(): React.ReactElement {
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
     const idSystemObject: number = Number.parseInt(params.idSystemObject as string, 10);
-    const { data, loading } = useObjectDetails(idSystemObject);
+    const { data, loading, refetch } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
@@ -320,6 +320,16 @@ function DetailsView(): React.ReactElement {
         // keep in sync if dialog parameters change
         setDecimationPassesInput(String(sceneGenParameters?.decimationPasses ?? 1));
     }, [sceneGenParameters?.decimationPasses, sceneGenDialogOpen]);
+    useEffect(() => {
+        // Refresh data when window regains focus (e.g., returning from Voyager story mode)
+        const handleFocus = () => {
+            refetch();
+            fetchDetailTabDataAndSetState();
+            setRefreshTick(t => t + 1);
+        };
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [refetch]);
 
     // contacts and notice
     const ops = useDetailTabStore(s => s.getObjectProperties(idSystemObject));
@@ -696,6 +706,9 @@ function DetailsView(): React.ReactElement {
                 const message: string | null | undefined = data?.updateObjectDetails?.message;
                 toast.success(`Data saved successfully${message? ': ' + message : ''}`);
                 fetchDetailTabDataAndSetState();
+
+                // Refetch system object details to update related objects list
+                await refetch();
 
                 // tell children to refresh their own data
                 setRefreshTick(t => t + 1);

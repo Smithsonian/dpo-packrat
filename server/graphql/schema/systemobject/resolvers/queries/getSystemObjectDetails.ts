@@ -240,7 +240,6 @@ async function getObjectAncestors(idSystemObject: number): Promise<GetObjectAnce
 
 async function resolveNameForObject(idSystemObject: number): Promise<string> {
     const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(idSystemObject);
-    console.log('[Server.resolveNameForObject] idSystemObject:', idSystemObject, 'name:', name);
     return name ?? UNKNOWN_NAME;
 }
 
