@@ -1611,6 +1611,7 @@ type RelatedObject {
   identifier: String
   name: String!
   objectType: Int!
+  retired: Boolean!
 }
 
 input RelatedObjectInput {

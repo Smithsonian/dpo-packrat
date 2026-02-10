@@ -1017,6 +1017,7 @@ function DetailsView(): React.ReactElement {
                         onUploaderOpen={onUploaderOpen}
                         publishedState={publishedState}
                         refreshTick={refreshTick}
+                        parentRetired={details?.retired ?? false}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (

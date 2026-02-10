@@ -11,7 +11,7 @@
 
 import { Box, Button, Typography, Tooltip } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
-import { NewTabLink, ToolTip } from '../../../../../components';
+import { NewTabLink, ToolTip, RetiredFilterToggle, useRetiredFilter } from '../../../../../components';
 import { eSystemObjectType, eIcon, eAssetGridColumnType, eLinkOrigin } from '@dpo-packrat/common';
 import { getObjectAssets } from '../../../hooks/useDetailsView';
 import { getDownloadAllAssetsUrlForObject } from '../../../../../utils/repository';
@@ -126,6 +126,12 @@ export const useStyles = makeStyles(({ palette }) => ({
     },
     oddTableRow: {
         backgroundColor: 'white'
+    },
+    retiredRow: {
+        '& td': {
+            fontStyle: 'italic',
+            color: '#888888'
+        }
     }
 }));
 
@@ -133,6 +139,7 @@ interface AssetGridProps {
     idSystemObject: number;
     systemObjectType?: eSystemObjectType;
     onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
+    parentRetired?: boolean;
 }
 
 const getMuiTheme = () =>
@@ -197,10 +204,19 @@ const getMuiTheme = () =>
 
 function AssetGrid(props: AssetGridProps): React.ReactElement {
     const classes = useStyles();
-    const { idSystemObject, systemObjectType, onUploaderOpen } = props;
+    const { idSystemObject, systemObjectType, onUploaderOpen, parentRetired = false } = props;
     const serverEndpoint = API.serverEndpoint();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
+    const [showRetired, toggleShowRetired] = useRetiredFilter(parentRetired);
+
+    // Filter rows based on retired status
+    const filteredAssetRows = React.useMemo(() => {
+        if (showRetired) {
+            return assetRows;
+        }
+        return assetRows.filter(row => !row.retired);
+    }, [assetRows, showRetired]);
 
     const cookieName = `${systemObjectType}AssetColumns`;
 
@@ -428,8 +444,11 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         pagination: false,
         elevation: 0,
         onViewColumnsChange: toggleColumn,
-        setRowProps: (_row, _dataIndex, _rowIndex) => {
-            return { className: _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow };
+        setRowProps: (_row, dataIndex, _rowIndex) => {
+            const rowData = filteredAssetRows[dataIndex];
+            const isRetired = rowData?.retired === true;
+            const baseClass = _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow;
+            return { className: isRetired ? clsx(baseClass, classes.retiredRow) : baseClass };
         }
     };
 
@@ -437,12 +456,12 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         <React.Fragment>
             <MuiThemeProvider theme={getMuiTheme()}>
                 <Box className={classes.tableContainer}>
-                    {assetRows.length > 0 && (
-                        <MUIDataTable title='Assets' data={assetRows} columns={assetColumns} options={options} className={classes.muiTable} />
+                    {filteredAssetRows.length > 0 && (
+                        <MUIDataTable title='Assets' data={filteredAssetRows} columns={assetColumns} options={options} className={classes.muiTable} />
                     )}
-                    {assetRows.length === 0 && (
+                    {filteredAssetRows.length === 0 && (
                         <Typography align='center' className={classes.emptyValue}>
-                            No assets found
+                            {assetRows.length > 0 ? 'No non-retired assets found' : 'No assets found'}
                         </Typography>
                     )}
                 </Box>
@@ -458,6 +477,9 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                     <Button className={classes.btn} disableElevation variant='contained' color='primary' style={{ marginLeft: '2px' }} onClick={onAddVersion}>
                         Add Version
                     </Button>
+                    <Box style={{ marginLeft: '2px' }}>
+                        <RetiredFilterToggle showRetired={showRetired} onToggle={toggleShowRetired} />
+                    </Box>
                 </Box>
                 <Box display='flex' flexDirection='row' alignItems='center' style={{ alignSelf: 'flex-end' }}>
                     { systemObjectType === eSystemObjectType.eScene && (<Button className={classes.btn} disableElevation variant='contained' color='primary' onClick={onAddAttachment}>Add Attachment</Button>) }
