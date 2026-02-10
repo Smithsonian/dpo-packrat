@@ -306,7 +306,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             if(licenseAllows===true)
                 return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`);
             else
-                return formatResultField(name,'Outdated','info',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`);
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`);
         } else {
             // fallback for unexpected status values
             if(licenseAllows===true)

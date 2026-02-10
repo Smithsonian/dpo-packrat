@@ -2101,6 +2101,7 @@ export type RelatedObject = {
   identifier?: Maybe<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired: Scalars['Boolean'];
 };
 
 export type RelatedObjectInput = {

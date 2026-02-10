@@ -18,7 +18,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    // console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
+    console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
@@ -183,8 +183,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (!Item)
                     return sendResult(false,'update object details failed',`Unable to fetch Media Group with id ${idObject}; update failed`);
 
-                const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
-                Item.Name = namedWithoutSubtitle ? data.Name : computeNewName(Item.Name, Item.Title, data.Subtitle); // do this before updating .Title
+                // Only recompute name if subtitle actually changed; otherwise use data.Name as-is
+                const subtitleChanged: boolean = data.Subtitle !== Item.Title;
+                if (subtitleChanged) {
+                    Item.Name = computeNewName(Item.Name, Item.Title, data.Subtitle);
+                } else if (data.Name != null) {
+                    Item.Name = data.Name;
+                }
                 Item.Title = data.Subtitle ?? null;
 
                 if (!isNull(EntireSubject) && !isUndefined(EntireSubject))
@@ -290,8 +295,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     Variant
                 } = data.Model;
 
-                const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
-                Model.Name = namedWithoutSubtitle ? data.Name : computeNewName(Model.Name, Model.Title, data.Subtitle); // do this before updating .Title
+                // Only recompute name if subtitle actually changed; otherwise use data.Name as-is
+                const subtitleChanged: boolean = data.Subtitle !== Model.Title;
+                if (subtitleChanged) {
+                    Model.Name = computeNewName(Model.Name, Model.Title, data.Subtitle);
+                } else if (data.Name != null) {
+                    Model.Name = data.Name;
+                }
                 Model.Title = data.Subtitle ?? null;
 
                 if (CreationMethod) Model.idVCreationMethod = CreationMethod;
@@ -314,8 +324,13 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
 
             const oldPosedAndQCd: boolean = Scene.PosedAndQCd;
 
-            const namedWithoutSubtitle: boolean = (data.Name != null && data.Subtitle == null);
-            Scene.Name = namedWithoutSubtitle ? data.Name : computeNewName(Scene.Name, Scene.Title, data.Subtitle); // do this before updated .Title
+            // Only recompute name if subtitle actually changed; otherwise use data.Name as-is
+            const subtitleChanged: boolean = data.Subtitle !== Scene.Title;
+            if (subtitleChanged) {
+                Scene.Name = computeNewName(Scene.Name, Scene.Title, data.Subtitle);
+            } else if (data.Name != null) {
+                Scene.Name = data.Name;
+            }
             Scene.Title = data.Subtitle ?? null;
 
             if (data.Scene) {

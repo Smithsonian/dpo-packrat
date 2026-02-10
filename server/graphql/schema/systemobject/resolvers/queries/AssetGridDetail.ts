@@ -15,8 +15,8 @@ export class AssetGridDetail extends AssetGridDetailBase {
     hash: string;
     size: string;
 
-    constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary) {
-        super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion);
+    constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, vocabulary: DBAPI.Vocabulary, retired: boolean = false) {
+        super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion, retired);
         this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: COMMON.eIcon.eIconDownload, origin: COMMON.eLinkOrigin.eServer };
         this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: COMMON.eLinkOrigin.eClient };
         this.filePath = assetVersion.FilePath;

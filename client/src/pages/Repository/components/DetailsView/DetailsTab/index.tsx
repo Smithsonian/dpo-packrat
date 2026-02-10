@@ -123,6 +123,7 @@ type DetailsTabParams = {
     onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
     publishedState: string;
     refreshTick?: number;
+    parentRetired?: boolean;
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -144,7 +145,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         metadata,
         onUploaderOpen,
         publishedState,
-        refreshTick
+        refreshTick,
+        parentRetired = false
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
@@ -181,6 +183,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     onRemoveConnection={deleteObjectConnection}
                     objectType={objectType}
                     relationshipLanguage='Parents'
+                    parentRetired={parentRetired}
                 />
                 <RelatedObjectsList
                     disabled={disabled}
@@ -191,6 +194,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
                     onRemoveConnection={deleteObjectConnection}
                     objectType={objectType}
                     relationshipLanguage='Children'
+                    parentRetired={parentRetired}
                 />
             </Box>
         </TabPanel>
@@ -204,7 +208,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     const AssetDetailsTableTab = (index: number, idSystemObject: number, systemObjectType?: eSystemObjectType) => (
         <TabPanel value={tab} index={index} id={`tab-${index}`}>
-            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} onUploaderOpen={onUploaderOpen} />
+            <AssetGrid idSystemObject={idSystemObject} systemObjectType={systemObjectType} onUploaderOpen={onUploaderOpen} parentRetired={parentRetired} />
         </TabPanel>
     );
 

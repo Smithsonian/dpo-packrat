@@ -8,7 +8,6 @@ import {
     RelatedObject,
     RelatedObjectType,
     RepositoryPath,
-    SystemObject,
     ObjectPropertyResult
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
@@ -35,7 +34,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         throw new Error(message);
     }
 
-    const systemObject: SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+    const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     const sourceObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Source);
     const derivedObjects: RelatedObject[] = await getRelatedObjects(idSystemObject, RelatedObjectType.Derived);
     const objectVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
@@ -164,7 +163,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
 }
 
 export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
-    let relatedSystemObjects: SystemObject[] | null = [];
+    let relatedSystemObjects: DBAPI.SystemObject[] | null = [];
 
     if (type === RelatedObjectType.Source) {
         relatedSystemObjects = await DBAPI.SystemObject.fetchMasterFromXref(idSystemObject);
@@ -190,7 +189,8 @@ export async function getRelatedObjects(idSystemObject: number, type: RelatedObj
             idSystemObject: relatedSystemObject.idSystemObject,
             name: await resolveNameForObject(relatedSystemObject.idSystemObject),
             identifier: identifier?.[0]?.IdentifierValue ?? null,
-            objectType: oID.eObjectType
+            objectType: oID.eObjectType,
+            retired: relatedSystemObject.Retired
         };
 
         relatedObjects.push(sourceObject);
@@ -240,6 +240,7 @@ async function getObjectAncestors(idSystemObject: number): Promise<GetObjectAnce
 
 async function resolveNameForObject(idSystemObject: number): Promise<string> {
     const name: string | undefined = await CACHE.SystemObjectCache.getObjectNameByID(idSystemObject);
+    console.log('[Server.resolveNameForObject] idSystemObject:', idSystemObject, 'name:', name);
     return name ?? UNKNOWN_NAME;
 }
 

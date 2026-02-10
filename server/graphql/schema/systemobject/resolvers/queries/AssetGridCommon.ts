@@ -19,10 +19,12 @@ export class AssetGridDetailBase {
     idSystemObject: number;
     idAsset: number;
     idAssetVersion: number;
+    retired: boolean;
 
-    constructor(idSystemObject: number, idAsset: number, idAssetVersion: number) {
+    constructor(idSystemObject: number, idAsset: number, idAssetVersion: number, retired: boolean = false) {
         this.idSystemObject = idSystemObject;
         this.idAsset = idAsset;
         this.idAssetVersion = idAssetVersion;
+        this.retired = retired;
     }
 }
