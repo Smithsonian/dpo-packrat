@@ -208,7 +208,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
     const serverEndpoint = API.serverEndpoint();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
-    const [showRetired, toggleShowRetired] = useRetiredFilter(parentRetired);
+    const { showRetired, toggleShowRetired } = useRetiredFilter(parentRetired);
 
     // Filter rows based on retired status
     const filteredAssetRows = React.useMemo(() => {

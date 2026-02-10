@@ -100,7 +100,7 @@ interface RelatedObjectsListProps extends ViewableProps {
 function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement {
     const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType, relationshipLanguage, parentRetired = false } = props;
     const classes = useStyles(viewMode);
-    const [showRetired, toggleShowRetired] = useRetiredFilter(parentRetired);
+    const { showRetired, toggleShowRetired } = useRetiredFilter(parentRetired);
 
     // Filter related objects based on retired status
     const filteredRelatedObjects = React.useMemo(() => {

@@ -18,8 +18,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
-
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
 
@@ -30,9 +28,17 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     if (!SO.Retired && data.Retired) {
         if (!await SO.retireObject())
             return sendResult(false,'update object details failed','Error retiring object; update failed');
+        // Cascade retirement to child Assets
+        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, true);
+        if (!cascadeResult.success)
+            return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error retiring child assets');
     } else if (SO.Retired && !data.Retired) {
         if (!await SO.reinstateObject())
             return sendResult(false,'update object details failed','Error reinstating object; update failed');
+        // Cascade reinstatement to child Assets
+        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, false);
+        if (!cascadeResult.success)
+            return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error reinstating child assets');
     }
 
     let identifierPreferred: null | number = null;
@@ -543,4 +549,42 @@ function computeNewName(oldName: string, oldTitle: string | null, newTitle: stri
     // LOG.info(`updateObjectDetails computeNewName(${oldName}, ${oldTitle}, ${newTitle}) = ${newName} (oldBaseName = ${oldBaseName})`, LOG.LS.eGQL);
 
     return newName;
+}
+
+/**
+ * Cascades retirement/reinstatement to all Assets belonging to a SystemObject.
+ * When a parent object (Model, Scene, etc.) is retired, its child Assets should also be retired.
+ * When reinstated, child Assets should also be reinstated.
+ */
+async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean): Promise<H.IOResults> {
+    const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
+    if (!assets || assets.length === 0) {
+        return { success: true }; // No assets to cascade to
+    }
+
+    for (const asset of assets) {
+        const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(asset.idAsset);
+        if (!assetSO) {
+            RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${asset.idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
+            continue; // Log but continue with other assets
+        }
+
+        if (retire) {
+            if (!assetSO.Retired) {
+                if (!await assetSO.retireObject()) {
+                    return { success: false, error: `Failed to retire Asset ${asset.idAsset}` };
+                }
+                RK.logInfo(RK.LogSection.eGQL, 'cascade retirement', `Retired Asset ${asset.idAsset} (SO ${assetSO.idSystemObject})`, { idSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
+            }
+        } else {
+            if (assetSO.Retired) {
+                if (!await assetSO.reinstateObject()) {
+                    return { success: false, error: `Failed to reinstate Asset ${asset.idAsset}` };
+                }
+                RK.logInfo(RK.LogSection.eGQL, 'cascade reinstatement', `Reinstated Asset ${asset.idAsset} (SO ${assetSO.idSystemObject})`, { idSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
+            }
+        }
+    }
+
+    return { success: true };
 }
