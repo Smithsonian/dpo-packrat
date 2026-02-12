@@ -34,6 +34,7 @@ interface SceneQCData {
     downloads: QCStatus;
     captureData: QCStatus;
     arModels: QCStatus;
+    edanRecordId: QCStatus;
     // network: QCStatus;
 }
 interface QCRow {
@@ -123,6 +124,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     downloads: response.data.downloads,
                     arModels: response.data.arModels,
                     captureData: response.data.captureData,
+                    edanRecordId: response.data.edanRecordId,
                     // network: response.data.network
                 };
                 setData(objectData);
@@ -132,6 +134,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     'published',
                     'license',
                     'reviewed',
+                    'edanRecordId',
                     // 'thumbnails',
                     'baseModels',
                     'downloads',

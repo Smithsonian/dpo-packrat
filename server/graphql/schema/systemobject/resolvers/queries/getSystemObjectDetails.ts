@@ -12,11 +12,13 @@ import {
 } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { SceneHelpers } from '../../../../../utils/sceneHelpers';
 
 type PublishedStateInfo = {
     publishedState: string;
     publishedEnum: COMMON.ePublishedState;
     publishable: boolean;
+    publishBlocker: string | null;
 };
 
 const UNKNOWN_NAME: string = '<UNKNOWN>';
@@ -113,6 +115,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         publishedState: publishedStateInfo.publishedState,
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,
+        publishBlocker: publishedStateInfo.publishBlocker,
         thumbnail: null,
         unit,
         project,
@@ -139,17 +142,31 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
 
     let publishable: boolean = false;
+    let publishBlocker: string | null = null;
     if (oID) {
         switch (oID.eObjectType) {
             case COMMON.eSystemObjectType.eScene: {
                 const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(oID.idObject);
                 if (scene) {
+                    const blockers: string[] = [];
+
+                    if (!scene.ApprovedForPublication)
+                        blockers.push('Not approved for publication');
+                    if (!scene.PosedAndQCd)
+                        blockers.push('Not posed and QCd');
+
                     const mayBePublished: boolean = (LR != null) &&
                                                     (LR.License != null) &&
                                                     (DBAPI.LicenseRestrictLevelToPublishedStateEnum(LR.License.RestrictLevel) !== COMMON.ePublishedState.eNotPublished);
-                    publishable = scene.ApprovedForPublication && // Approved for Publication
-                                  scene.PosedAndQCd &&            // Posed and QCd
-                                  mayBePublished;                 // License defined and allows publishing
+                    if (!mayBePublished)
+                        blockers.push('License not defined or does not allow publishing');
+
+                    const edanResult = await SceneHelpers.validateEdanRecordId(idSystemObject, oID.idObject);
+                    if (!edanResult.valid)
+                        blockers.push(`EDAN Record ID: ${edanResult.message}`);
+
+                    publishable = blockers.length === 0;
+                    publishBlocker = blockers.length > 0 ? blockers.join(' | ') : null;
                 } else
                     RK.logError(RK.LogSection.eGQL,'get published state failed','unable to compute scene',{ idSystemObject, ...oID },'GraphQL.SystemObject.Details');
             } break;
@@ -159,7 +176,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                 break;
         }
     }
-    return { publishedState, publishedEnum, publishable };
+    return { publishedState, publishedEnum, publishable, publishBlocker };
 }
 
 export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {

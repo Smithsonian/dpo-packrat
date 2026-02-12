@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { buildProjectSceneDef, SceneSummary } from './project';
+import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
 
 //#region Types and Definitions
 
@@ -321,6 +322,38 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     };
     //#endregion
 
+    //#region edanRecordId
+    const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
+        const name = 'EDAN Record ID';
+        switch (r.status) {
+            case 'error':
+                return formatResultField(name, 'Error', 'fail', r.message);
+            case 'no_subject':
+                return formatResultField(name, 'No Subject', 'fail', r.message);
+            case 'assigned_multisubject':
+                return formatResultField(name, 'Assigned (Multi-Subject)', 'pass', r.message);
+            case 'invalid_multisubject':
+                return formatResultField(name, 'Invalid for Multi-Subject', 'fail', r.message);
+            case 'missing_multisubject':
+                return formatResultField(name, 'Missing for Multi-Subject', 'fail', r.message);
+            case 'assigned':
+                return formatResultField(name, 'Assigned', 'pass', r.message);
+            case 'mismatch':
+                return formatResultField(name, 'Mismatch', 'fail', r.message);
+            case 'missing_svx':
+                return formatResultField(name, 'Missing in SVX', 'fail', r.message);
+            case 'missing_db':
+                return formatResultField(name, 'Missing in DB', 'fail', r.message);
+            case 'not_found':
+                return formatResultField(name, 'Not Found', 'fail', r.message);
+            default:
+                return formatResultField(name, 'Unknown', 'fail', r.message);
+        }
+    };
+    const edanResult: EdanRecordIdResult = await SceneHelpers.validateEdanRecordId(idSystemObject, scene.idScene);
+    const edanRecordIdStatus: FieldStatus = getEdanRecordIdStatus(edanResult);
+    //#endregion
+
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
@@ -334,6 +367,8 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             licenseStatus,
         reviewed:
             getReviewedStatus(sceneSummary.isReviewed),
+        edanRecordId:
+            edanRecordIdStatus,
         scale:
             formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
         thumbnails:
