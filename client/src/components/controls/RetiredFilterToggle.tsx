@@ -38,7 +38,12 @@ function RetiredFilterToggle(props: RetiredFilterToggleProps): React.ReactElemen
 
 export default RetiredFilterToggle;
 
-export function useRetiredFilter(parentRetired: boolean = false) {
+interface UseRetiredFilterResult {
+    showRetired: boolean;
+    toggleShowRetired: () => void;
+}
+
+export function useRetiredFilter(parentRetired: boolean = false): UseRetiredFilterResult {
     const [showRetired, setShowRetired] = React.useState<boolean>(parentRetired);
 
     const toggleShowRetired = React.useCallback(() => {
@@ -49,7 +54,7 @@ export function useRetiredFilter(parentRetired: boolean = false) {
         setShowRetired(parentRetired);
     }, [parentRetired]);
 
-    return [showRetired, toggleShowRetired] as const;
+    return { showRetired, toggleShowRetired };
 }
 
 export const retiredItemStyles = {

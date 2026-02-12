@@ -140,6 +140,7 @@ interface AssetGridProps {
     systemObjectType?: eSystemObjectType;
     onUploaderOpen: (objectType: eIngestionMode, references: UploadReferences) => void;
     parentRetired?: boolean;
+    refreshTick?: number;
 }
 
 const getMuiTheme = () =>
@@ -204,11 +205,11 @@ const getMuiTheme = () =>
 
 function AssetGrid(props: AssetGridProps): React.ReactElement {
     const classes = useStyles();
-    const { idSystemObject, systemObjectType, onUploaderOpen, parentRetired = false } = props;
+    const { idSystemObject, systemObjectType, onUploaderOpen, parentRetired = false, refreshTick } = props;
     const serverEndpoint = API.serverEndpoint();
     const [assetColumns, setAssetColumns] = useState<any>([]);
     const [assetRows, setAssetRows] = useState<any[]>([]);
-    const [showRetired, toggleShowRetired] = useRetiredFilter(parentRetired);
+    const { showRetired, toggleShowRetired } = useRetiredFilter(parentRetired);
 
     // Filter rows based on retired status
     const filteredAssetRows = React.useMemo(() => {
@@ -233,7 +234,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         };
 
         initializeColumnsAndRows();
-    }, []);
+    }, [refreshTick]);
 
     const initializeAssetGridColumnCookie = (cookieName, columns) => {
         const columnsToDisplay = {};

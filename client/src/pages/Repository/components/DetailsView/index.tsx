@@ -27,7 +27,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -144,7 +144,7 @@ function DetailsView(): React.ReactElement {
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
     const idSystemObject: number = Number.parseInt(params.idSystemObject as string, 10);
-    const { data, loading } = useObjectDetails(idSystemObject);
+    const { data, loading, refetch } = useObjectDetails(idSystemObject);
     let [updatedData, setUpdatedData] = useState<UpdateObjectDetailsDataInput>({});
     const [updatedIdentifiers, setUpdatedIdentifiers] = useState(false);
     const [updatedMetadata, setUpdatedMetadata] = useState(false);
@@ -162,6 +162,7 @@ function DetailsView(): React.ReactElement {
     );
 
     const getEntries = useVocabularyStore(state => state.getEntries);
+    const user = useUserStore(state => state.user);
     const [
         stateIdentifiers,
         areIdentifiersUpdated,
@@ -320,6 +321,16 @@ function DetailsView(): React.ReactElement {
         // keep in sync if dialog parameters change
         setDecimationPassesInput(String(sceneGenParameters?.decimationPasses ?? 1));
     }, [sceneGenParameters?.decimationPasses, sceneGenDialogOpen]);
+    useEffect(() => {
+        // Refresh data when window regains focus (e.g., returning from Voyager story mode)
+        const handleFocus = async () => {
+            if (!data) return; // Don't refresh if data hasn't loaded yet
+            await refetch();
+            setRefreshTick(t => t + 1);
+        };
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [refetch, data]);
 
     // contacts and notice
     const ops = useDetailTabStore(s => s.getObjectProperties(idSystemObject));
@@ -363,6 +374,11 @@ function DetailsView(): React.ReactElement {
         licenseInheritance = null,
     } = data.getSystemObjectDetails;
     const disabled: boolean = !allowed;
+
+    // Hide retire checkbox for Subject, Unit, Project if user is not admin
+    const isAdmin = user?.isAdmin ?? false;
+    const adminOnlyRetireTypes = [eSystemObjectType.eSubject, eSystemObjectType.eUnit, eSystemObjectType.eProject];
+    const hideRetired = !isAdmin && adminOnlyRetireTypes.includes(objectType);
 
     const addIdentifer = () => {
         addNewIdentifier();
@@ -697,6 +713,9 @@ function DetailsView(): React.ReactElement {
                 toast.success(`Data saved successfully${message? ': ' + message : ''}`);
                 fetchDetailTabDataAndSetState();
 
+                // Refetch system object details to update related objects list
+                await refetch();
+
                 // tell children to refresh their own data
                 setRefreshTick(t => t + 1);
 
@@ -862,6 +881,7 @@ function DetailsView(): React.ReactElement {
                         publishedEnum={publishedEnum}
                         publishable={publishable}
                         retired={withDefaultValueBoolean(details.retired, false)}
+                        hideRetired={hideRetired}
                         objectType={objectType}
                         onRetiredUpdate={onRetiredUpdate}
                         onLicenseUpdate={onLicenseUpdate}
@@ -1017,7 +1037,7 @@ function DetailsView(): React.ReactElement {
                         onUploaderOpen={onUploaderOpen}
                         publishedState={publishedState}
                         refreshTick={refreshTick}
-                        parentRetired={details?.retired ?? false}
+                        parentRetired={data?.getSystemObjectDetails?.retired ?? false}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (

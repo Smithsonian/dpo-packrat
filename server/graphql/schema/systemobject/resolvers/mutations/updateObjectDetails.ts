@@ -18,8 +18,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    console.log('[Server.updateObjectDetails] input received:', JSON.stringify(args.input, null, 2));
-
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
 
@@ -30,9 +28,17 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     if (!SO.Retired && data.Retired) {
         if (!await SO.retireObject())
             return sendResult(false,'update object details failed','Error retiring object; update failed');
+        // Cascade retirement to child Assets
+        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, true);
+        if (!cascadeResult.success)
+            return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error retiring child assets');
     } else if (SO.Retired && !data.Retired) {
         if (!await SO.reinstateObject())
             return sendResult(false,'update object details failed','Error reinstating object; update failed');
+        // Cascade reinstatement to child Assets
+        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, false);
+        if (!cascadeResult.success)
+            return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error reinstating child assets');
     }
 
     let identifierPreferred: null | number = null;
@@ -543,4 +549,134 @@ function computeNewName(oldName: string, oldTitle: string | null, newTitle: stri
     // LOG.info(`updateObjectDetails computeNewName(${oldName}, ${oldTitle}, ${newTitle}) = ${newName} (oldBaseName = ${oldBaseName})`, LOG.LS.eGQL);
 
     return newName;
+}
+
+/**
+ * Cascades retirement/reinstatement to related objects and assets.
+ * Order of operations for retirement:
+ * 1. Retire derived/child objects (Scenes first, then Models)
+ * 2. Retire direct Assets
+ * For Scenes, uses fetchFromSceneByVersion to get all assets including model assets.
+ */
+async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean): Promise<H.IOResults> {
+    const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+    if (!SO) {
+        return { success: false, error: `Unable to fetch SystemObject ${idSystemObject}` };
+    }
+
+    // Step 1: Cascade to derived/child objects (Scenes first, then Models)
+    const derivedObjects: DBAPI.SystemObject[] | null = await DBAPI.SystemObject.fetchDerivedFromXref(idSystemObject);
+    if (derivedObjects && derivedObjects.length > 0) {
+        // Sort: Scenes first, then Models, then others
+        const scenes: DBAPI.SystemObject[] = [];
+        const models: DBAPI.SystemObject[] = [];
+        const others: DBAPI.SystemObject[] = [];
+
+        for (const derived of derivedObjects) {
+            if (derived.idScene) {
+                scenes.push(derived);
+            } else if (derived.idModel) {
+                models.push(derived);
+            } else {
+                others.push(derived);
+            }
+        }
+
+        // Process in order: Scenes, then Models, then others
+        const orderedDerived = [...scenes, ...models, ...others];
+        for (const derivedSO of orderedDerived) {
+            if (retire) {
+                if (!derivedSO.Retired) {
+                    if (!await derivedSO.retireObject()) {
+                        return { success: false, error: `Failed to retire derived object SO ${derivedSO.idSystemObject}` };
+                    }
+                    // Recursively cascade to the derived object's assets and children
+                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire);
+                    if (!cascadeResult.success) {
+                        return cascadeResult;
+                    }
+                    RK.logInfo(RK.LogSection.eGQL, 'cascade retirement', `Retired derived object (SO ${derivedSO.idSystemObject})`, { idSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
+                }
+            } else {
+                if (derivedSO.Retired) {
+                    if (!await derivedSO.reinstateObject()) {
+                        return { success: false, error: `Failed to reinstate derived object SO ${derivedSO.idSystemObject}` };
+                    }
+                    // Recursively cascade to the derived object's assets and children
+                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire);
+                    if (!cascadeResult.success) {
+                        return cascadeResult;
+                    }
+                    RK.logInfo(RK.LogSection.eGQL, 'cascade reinstatement', `Reinstated derived object (SO ${derivedSO.idSystemObject})`, { idSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
+                }
+            }
+        }
+    }
+
+    // Step 2: Retire assets - use fetchFromSceneByVersion for Scenes to get all assets including model assets
+    if (SO.idScene) {
+        // For Scenes, use the comprehensive fetch that includes model assets
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSceneByVersion(SO.idScene);
+        if (assetVersions && assetVersions.length > 0) {
+            // Get unique Assets from the AssetVersions
+            const assetIdSet = new Set<number>();
+            for (const av of assetVersions) {
+                assetIdSet.add(av.idAsset);
+            }
+
+            for (const idAsset of assetIdSet) {
+                const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(idAsset);
+                if (!assetSO) {
+                    RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
+                    continue;
+                }
+
+                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${idAsset}`, idSystemObject);
+                if (!result.success) {
+                    return result;
+                }
+            }
+        }
+    } else {
+        // For non-Scene objects, use fetchFromSystemObject
+        const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
+        if (assets && assets.length > 0) {
+            for (const asset of assets) {
+                const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(asset.idAsset);
+                if (!assetSO) {
+                    RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${asset.idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
+                    continue;
+                }
+
+                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${asset.idAsset}`, idSystemObject);
+                if (!result.success) {
+                    return result;
+                }
+            }
+        }
+    }
+
+    return { success: true };
+}
+
+/**
+ * Helper to retire or reinstate a single SystemObject with logging.
+ */
+async function retireOrReinstateObject(so: DBAPI.SystemObject, retire: boolean, objectDesc: string, parentIdSystemObject: number): Promise<H.IOResults> {
+    if (retire) {
+        if (!so.Retired) {
+            if (!await so.retireObject()) {
+                return { success: false, error: `Failed to retire ${objectDesc}` };
+            }
+            RK.logInfo(RK.LogSection.eGQL, 'cascade retirement', `Retired ${objectDesc} (SO ${so.idSystemObject})`, { parentIdSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
+        }
+    } else {
+        if (so.Retired) {
+            if (!await so.reinstateObject()) {
+                return { success: false, error: `Failed to reinstate ${objectDesc}` };
+            }
+            RK.logInfo(RK.LogSection.eGQL, 'cascade reinstatement', `Reinstated ${objectDesc} (SO ${so.idSystemObject})`, { parentIdSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
+        }
+    }
+    return { success: true };
 }

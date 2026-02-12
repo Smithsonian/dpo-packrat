@@ -361,6 +361,106 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         }
     }
 
+    /**
+     * Fetches all asset versions associated with a Scene, respecting the versioning system.
+     * This includes:
+     * - Direct scene assets (SVX files, attachments) via SystemObjectVersionAssetVersionXref
+     * - Model assets (geometry, textures) from Models linked via SystemObjectXref
+     *
+     * @param idScene - The Scene ID to fetch assets for
+     * @param idSystemObjectVersion - Optional specific version to fetch. If null/undefined, fetches latest version.
+     * @returns Array of AssetVersion objects or null if none found/error
+     */
+    static async fetchFromSceneByVersion(idScene: number, idSystemObjectVersion?: number | null): Promise<AssetVersion[] | null> {
+        if (!idScene)
+            return null;
+        try {
+            let assetVersions: AssetVersionBase[] | null;
+
+            if (idSystemObjectVersion) {
+                // Fetch assets for a specific SystemObjectVersion
+                assetVersions = await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                    SELECT DISTINCT av.*
+                    FROM Scene AS scn
+                    JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene
+                    JOIN SystemObjectVersion AS scnSOV ON (
+                        scnSO.idSystemObject = scnSOV.idSystemObject
+                        AND scnSOV.idSystemObjectVersion = ${idSystemObjectVersion}
+                    )
+
+                    -- Direct scene assets via SystemObjectVersionAssetVersionXref
+                    LEFT JOIN SystemObjectVersionAssetVersionXref AS scnXref ON scnSOV.idSystemObjectVersion = scnXref.idSystemObjectVersion
+                    LEFT JOIN AssetVersion AS scnAV ON scnXref.idAssetVersion = scnAV.idAssetVersion
+
+                    -- Model assets via SystemObjectXref -> Model -> their latest assets
+                    LEFT JOIN SystemObjectXref AS sox ON scnSO.idSystemObject = sox.idSystemObjectMaster
+                    LEFT JOIN SystemObject AS mdlSO ON sox.idSystemObjectDerived = mdlSO.idSystemObject AND mdlSO.idModel IS NOT NULL
+                    LEFT JOIN SystemObjectVersion AS mdlSOV ON (
+                        mdlSO.idSystemObject = mdlSOV.idSystemObject
+                        AND mdlSOV.idSystemObjectVersion = (
+                            SELECT MAX(idSystemObjectVersion) FROM SystemObjectVersion WHERE idSystemObject = mdlSO.idSystemObject
+                        )
+                    )
+                    LEFT JOIN SystemObjectVersionAssetVersionXref AS mdlXref ON mdlSOV.idSystemObjectVersion = mdlXref.idSystemObjectVersion
+                    LEFT JOIN AssetVersion AS mdlAV ON mdlXref.idAssetVersion = mdlAV.idAssetVersion
+
+                    -- Combine both paths
+                    JOIN AssetVersion AS av ON av.idAssetVersion IN (scnAV.idAssetVersion, mdlAV.idAssetVersion)
+
+                    WHERE scn.idScene = ${idScene}
+                      AND av.idAssetVersion IS NOT NULL
+                    ORDER BY av.FileName`;
+            } else {
+                // Fetch assets for the latest SystemObjectVersion
+                assetVersions = await DBC.DBConnection.prisma.$queryRaw<AssetVersion[]>`
+                    SELECT DISTINCT av.*
+                    FROM Scene AS scn
+                    JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene
+                    JOIN SystemObjectVersion AS scnSOV ON (
+                        scnSO.idSystemObject = scnSOV.idSystemObject
+                        AND scnSOV.idSystemObjectVersion = (
+                            SELECT MAX(idSystemObjectVersion) FROM SystemObjectVersion WHERE idSystemObject = scnSO.idSystemObject
+                        )
+                    )
+
+                    -- Direct scene assets via SystemObjectVersionAssetVersionXref
+                    LEFT JOIN SystemObjectVersionAssetVersionXref AS scnXref ON scnSOV.idSystemObjectVersion = scnXref.idSystemObjectVersion
+                    LEFT JOIN AssetVersion AS scnAV ON scnXref.idAssetVersion = scnAV.idAssetVersion
+
+                    -- Model assets via SystemObjectXref -> Model -> their latest assets
+                    LEFT JOIN SystemObjectXref AS sox ON scnSO.idSystemObject = sox.idSystemObjectMaster
+                    LEFT JOIN SystemObject AS mdlSO ON sox.idSystemObjectDerived = mdlSO.idSystemObject AND mdlSO.idModel IS NOT NULL
+                    LEFT JOIN SystemObjectVersion AS mdlSOV ON (
+                        mdlSO.idSystemObject = mdlSOV.idSystemObject
+                        AND mdlSOV.idSystemObjectVersion = (
+                            SELECT MAX(idSystemObjectVersion) FROM SystemObjectVersion WHERE idSystemObject = mdlSO.idSystemObject
+                        )
+                    )
+                    LEFT JOIN SystemObjectVersionAssetVersionXref AS mdlXref ON mdlSOV.idSystemObjectVersion = mdlXref.idSystemObjectVersion
+                    LEFT JOIN AssetVersion AS mdlAV ON mdlXref.idAssetVersion = mdlAV.idAssetVersion
+
+                    -- Combine both paths
+                    JOIN AssetVersion AS av ON av.idAssetVersion IN (scnAV.idAssetVersion, mdlAV.idAssetVersion)
+
+                    WHERE scn.idScene = ${idScene}
+                      AND av.idAssetVersion IS NOT NULL
+                    ORDER BY av.FileName`;
+            }
+
+            /* istanbul ignore if */
+            if (!assetVersions || assetVersions.length === 0)
+                return null;
+
+            const res: AssetVersion[] = [];
+            for (const assetVersion of assetVersions)
+                res.push(AssetVersion.constructFromPrisma(assetVersion));
+            return res;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch from Scene by version failed',H.Helpers.getErrorString(error),{ idScene, idSystemObjectVersion, ...this },'DB.Asset.Version');
+            return null;
+        }
+    }
+
     /** Fetches the the active asset version that is being used by the given scene for Voyager SVX scene */
     static async fetchActiveVoyagerSceneFromScene(idScene: number): Promise<AssetVersion | null> {
         try {
