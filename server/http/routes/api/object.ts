@@ -27,6 +27,38 @@ type FieldStatus = {
     level: 'pass' | 'fail' | 'warn' | 'critical',
     notes: string
 };
+
+const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
+    return { name, status, level, notes };
+};
+const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
+    const name = 'EDAN Record ID';
+    switch (r.status) {
+        case 'error':
+            return formatEdanResultField(name, 'Error', 'fail', r.message);
+        case 'no_subject':
+            return formatEdanResultField(name, 'No Subject', 'fail', r.message);
+        case 'assigned_multisubject':
+            return formatEdanResultField(name, 'Assigned (Multi-Subject)', 'pass', r.message);
+        case 'invalid_multisubject':
+            return formatEdanResultField(name, 'Invalid for Multi-Subject', 'fail', r.message);
+        case 'missing_multisubject':
+            return formatEdanResultField(name, 'Missing for Multi-Subject', 'fail', r.message);
+        case 'assigned':
+            return formatEdanResultField(name, 'Assigned', 'pass', r.message);
+        case 'mismatch':
+            return formatEdanResultField(name, 'Mismatch', 'fail', r.message);
+        case 'missing_svx':
+            return formatEdanResultField(name, 'Missing in SVX', 'fail', r.message);
+        case 'missing_db':
+            return formatEdanResultField(name, 'Missing in DB', 'fail', r.message);
+        case 'not_found':
+            return formatEdanResultField(name, 'Not Found', 'fail', r.message);
+        default:
+            return formatEdanResultField(name, 'Unknown', 'fail', r.message);
+    }
+};
+
 export async function getObjectStatus(req: Request, res: Response): Promise<void> {
 
     // make sure we're authorized to run this routine
@@ -323,33 +355,6 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     //#endregion
 
     //#region edanRecordId
-    const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
-        const name = 'EDAN Record ID';
-        switch (r.status) {
-            case 'error':
-                return formatResultField(name, 'Error', 'fail', r.message);
-            case 'no_subject':
-                return formatResultField(name, 'No Subject', 'fail', r.message);
-            case 'assigned_multisubject':
-                return formatResultField(name, 'Assigned (Multi-Subject)', 'pass', r.message);
-            case 'invalid_multisubject':
-                return formatResultField(name, 'Invalid for Multi-Subject', 'fail', r.message);
-            case 'missing_multisubject':
-                return formatResultField(name, 'Missing for Multi-Subject', 'fail', r.message);
-            case 'assigned':
-                return formatResultField(name, 'Assigned', 'pass', r.message);
-            case 'mismatch':
-                return formatResultField(name, 'Mismatch', 'fail', r.message);
-            case 'missing_svx':
-                return formatResultField(name, 'Missing in SVX', 'fail', r.message);
-            case 'missing_db':
-                return formatResultField(name, 'Missing in DB', 'fail', r.message);
-            case 'not_found':
-                return formatResultField(name, 'Not Found', 'fail', r.message);
-            default:
-                return formatResultField(name, 'Unknown', 'fail', r.message);
-        }
-    };
     const edanResult: EdanRecordIdResult = await SceneHelpers.validateEdanRecordId(idSystemObject, scene.idScene);
     const edanRecordIdStatus: FieldStatus = getEdanRecordIdStatus(edanResult);
     //#endregion
@@ -369,6 +374,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             getReviewedStatus(sceneSummary.isReviewed),
         edanRecordId:
             edanRecordIdStatus,
+        edanRecordIdRaw: {
+            svx: edanResult.svxEdanRecordId,
+            db: edanResult.dbEdanRecordId,
+            subjectCount: edanResult.subjectCount,
+        },
         scale:
             formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
         thumbnails:
@@ -385,6 +395,96 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
 
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,'Returned scene summary',result)));
+}
+//#endregion
+
+//#region PATCH OBJECT
+export async function patchObject(req: Request, res: Response): Promise<void> {
+
+    // make sure we're authorized to run this routine
+    const authResult = await isAuthorized(req, false);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${authResult.error}`)));
+        return;
+    }
+
+    try {
+        const { id } = req.params;
+        const idSystemObject: number = parseInt(id);
+        if(isNaN(idSystemObject) || idSystemObject <= 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: invalid idSystemObject')));
+            return;
+        }
+
+        const { fields } = req.body ?? {};
+        if(!fields || typeof fields !== 'object' || Object.keys(fields).length === 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: fields object required with at least one key')));
+            return;
+        }
+
+        // verify it's a scene
+        const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if(!systemObject || !systemObject.idScene) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: only Scene objects are supported')));
+            return;
+        }
+
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
+        if(!scene) {
+            res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: cannot fetch scene ${systemObject.idScene}`)));
+            return;
+        }
+
+        // get user id
+        const LS = ASL.getStore();
+        const idUser: number = LS?.idUser ?? 0;
+        if(!idUser) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: cannot determine user')));
+            return;
+        }
+
+        // dispatch by field key
+        const fieldKeys = Object.keys(fields);
+        for (const key of fieldKeys) {
+            switch(key) {
+                case 'edanRecordId': {
+                    const newValue = fields[key];
+                    if(typeof newValue !== 'string' || newValue.trim().length === 0) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: edanRecordId must be a non-empty string')));
+                        return;
+                    }
+
+                    // patch the SVX file
+                    const patchResult = await SceneHelpers.patchSvxEdanRecordId(idSystemObject, scene, newValue.trim(), idUser);
+                    if(!patchResult.success) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${patchResult.error}`)));
+                        return;
+                    }
+
+                    // re-validate to get updated status
+                    const edanResult: EdanRecordIdResult = await SceneHelpers.validateEdanRecordId(idSystemObject, systemObject.idScene);
+                    const updatedStatus: FieldStatus = getEdanRecordIdStatus(edanResult);
+
+                    res.status(200).send(JSON.stringify(generateResponse(true, 'Updated', {
+                        edanRecordId: updatedStatus,
+                        edanRecordIdRaw: {
+                            svx: edanResult.svxEdanRecordId,
+                            db: edanResult.dbEdanRecordId,
+                            subjectCount: edanResult.subjectCount,
+                        }
+                    })));
+                    return;
+                }
+                default:
+                    res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: unsupported field '${key}'`)));
+                    return;
+            }
+        }
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'patch object',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject failed: ${error}`)));
+    }
 }
 //#endregion
 
