@@ -481,6 +481,11 @@ function DetailsView(): React.ReactElement {
         // }
     };
 
+    const onDetailUpdate = async (): Promise<void> => {
+        await refetch();
+        setRefreshTick(t => t + 1);
+    };
+
     const onUpdateDetail = (objectType: number, data: UpdateDataFields): void => {
 
         const updatedDataFields: UpdateObjectDetailsDataInput = {
@@ -1038,6 +1043,7 @@ function DetailsView(): React.ReactElement {
                         publishedState={publishedState}
                         refreshTick={refreshTick}
                         parentRetired={data?.getSystemObjectDetails?.retired ?? false}
+                        onDetailUpdate={onDetailUpdate}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (
