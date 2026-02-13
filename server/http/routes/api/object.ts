@@ -104,11 +104,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
         return { name, status, level, notes };
     };
-    const getReviewedStatus = (isReviewed: boolean): FieldStatus => {
+    const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
         const name = 'Is Reviewed';
-        if(isReviewed)
-            return formatResultField(name,'Reviewed','pass','Marked as reviewed');
-        else
+        if(isReviewed) {
+            const reviewer: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(idSystemObject, DBAPI.eAuditType.eSceneQCd);
+            const notes = reviewer ? `Marked as reviewed by ${reviewer.Name}` : 'Marked as reviewed';
+            return formatResultField(name,'Reviewed','pass',notes);
+        } else
             return formatResultField(name,'Not Reviewed','fail','Scene has not been reviewed');
     };
 
@@ -371,7 +373,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         license:
             licenseStatus,
         reviewed:
-            getReviewedStatus(sceneSummary.isReviewed),
+            await getReviewedStatus(sceneSummary.isReviewed),
         edanRecordId:
             edanRecordIdStatus,
         edanRecordIdRaw: {
