@@ -63,6 +63,7 @@ interface QCRow {
 interface SceneDetailsStatusProps {
     idSceneSO: number;
     refreshTick?: number;
+    onUpdate?: () => void;
 }
 
 // row keys in display order
@@ -266,6 +267,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             setRows(buildRows(updatedData));
             setDialogOpen(false);
             setEdanRecordIdValue('');
+            props.onUpdate?.();
         } catch (err) {
             setSaveError('An unexpected error occurred');
             console.error(err);
@@ -316,7 +318,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                                     dangerouslySetInnerHTML={{ __html: row.notes }}
                                 />
                                 <TableCell className={classes.actionsCell}>
-                                    {row.key === 'edanRecordId' && row.level === 'fail' && (
+                                    {row.key === 'edanRecordId' && (
                                         <Tooltip title='Edit EDAN Record ID'>
                                             <IconButton size='small' onClick={handleOpenDialog}>
                                                 <Edit fontSize='small' />
@@ -376,6 +378,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                         color='primary'
                         variant='contained'
                         disabled={saving || !edanRecordIdValue.trim()}
+                        style={{ color: 'white' }}
                     >
                         {saving ? <CircularProgress size={20} /> : 'Apply'}
                     </Button>
