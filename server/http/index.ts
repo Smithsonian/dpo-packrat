@@ -189,6 +189,7 @@ export class HttpServer {
         // utility endpoints
         this.app.get('/heartbeat', heartbeat);
         this.app.get('/solrindex', solrindex);
+        this.app.post('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
         // this.app.get('/migrate', migrate);
         // this.app.get('/migrate/*', migrate);

@@ -144,6 +144,11 @@ export default class API {
         return this.request(uri, { method: 'GET' });
     }
 
+    // system operations
+    static async solrReindex(): Promise<RequestResponse> {
+        return this.request('solrindex', { method: 'POST' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
