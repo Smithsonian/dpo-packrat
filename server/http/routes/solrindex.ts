@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import * as NAV from '../../navigation/interface';
+import { IndexSolr, eSolrIndexPhase } from '../../navigation/impl/NavigationSolr';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { isAuthenticated } from '../auth';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
@@ -17,6 +18,28 @@ export async function solrindex(request: Request, response: Response): Promise<v
     const indexer: NAV.IIndexer | null = await fetchIndexer(response);
     if (!indexer)
         return;
+
+    // POST: non-blocking fire-and-forget
+    if (request.method === 'POST') {
+        const { phase } = IndexSolr.progress;
+        if (phase === eSolrIndexPhase.eObjects || phase === eSolrIndexPhase.eMetadata) {
+            response.json({ success: false, message: 'Solr indexing already underway' });
+            return;
+        }
+        // fire-and-forget: do not await
+        indexer.fullIndex().then((success) => {
+            if (success)
+                RK.logInfo(RK.LogSection.eHTTP,'index success',undefined,H.Helpers.cleanExpressRequest(request),'HTTP.Solr.Index');
+            else
+                RK.logError(RK.LogSection.eHTTP,'index failed','cannot execute fullIndex',H.Helpers.cleanExpressRequest(request),'HTTP.Solr.Index');
+        }).catch((error) => {
+            RK.logError(RK.LogSection.eHTTP,'index failed',H.Helpers.getErrorString(error),H.Helpers.cleanExpressRequest(request),'HTTP.Solr.Index');
+        });
+        response.json({ success: true, message: 'Solr indexing started' });
+        return;
+    }
+
+    // GET: blocking (backward compat / direct browser use)
     try {
         const success: boolean = await indexer.fullIndex();
         if(success===true)
@@ -30,6 +53,16 @@ export async function solrindex(request: Request, response: Response): Promise<v
         RK.logError(RK.LogSection.eHTTP,'index failed',H.Helpers.getErrorString(error),H.Helpers.cleanExpressRequest(request),'HTTP.Solr.Index');
         response.status(500).json({ success: false, message: 'Solr Indexing failed due to an internal error' });
     }
+}
+
+export async function solrindexstatus(request: Request, response: Response): Promise<void> {
+    if (!isAuthenticated(request)) {
+        AuditFactory.audit({ url: request.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
+        RK.logError(RK.LogSection.eHTTP,'index status failed','not authenticated',{ url: request.path },'HTTP.Solr.Index');
+        response.status(403).json({ success: false, message: 'not authenticated' });
+        return;
+    }
+    response.json({ success: true, progress: IndexSolr.progress });
 }
 
 export async function solrindexprofiled(request: Request, response: Response): Promise<void> {

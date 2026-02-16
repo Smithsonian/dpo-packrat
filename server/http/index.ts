@@ -9,7 +9,7 @@ import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
 import { heartbeat } from './routes/heartbeat';
-import { solrindex, solrindexprofiled } from './routes/solrindex';
+import { solrindex, solrindexprofiled, solrindexstatus } from './routes/solrindex';
 // import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
@@ -188,6 +188,7 @@ export class HttpServer {
 
         // utility endpoints
         this.app.get('/heartbeat', heartbeat);
+        this.app.get('/solrindex/status', solrindexstatus);
         this.app.get('/solrindex', solrindex);
         this.app.post('/solrindex', solrindex);
         this.app.get('/solrindexprofiled', solrindexprofiled);
