@@ -120,6 +120,7 @@ export class JobCookSIVoyagerSceneParameters {
     sourceMeshFile: string;
     units: string;
     sourceDiffuseMapFile?: string | undefined;
+    sourceRoughMetalMapFile?: string | undefined;
     svxFile?: string | undefined;
     metaDataFile?: string | undefined;
     outputFileBaseName?: string | undefined;
@@ -135,6 +136,7 @@ export class JobCookSIVoyagerSceneParameters {
         sourceMeshFile: string,
         units: string,
         sourceDiffuseMapFile: string | undefined = undefined,
+        sourceRoughMetalMapFile: string | undefined = undefined,
         svxFile: string | undefined = undefined,
         metaDataFile: string | undefined = undefined,
         outputFileBaseName: string | undefined = undefined,
@@ -146,6 +148,7 @@ export class JobCookSIVoyagerSceneParameters {
         this.sourceMeshFile = path.basename(sourceMeshFile);
         this.units = units;
         this.sourceDiffuseMapFile = sourceDiffuseMapFile ? path.basename(sourceDiffuseMapFile) : undefined;
+        this.sourceRoughMetalMapFile = sourceRoughMetalMapFile ? path.basename(sourceRoughMetalMapFile) : undefined;
         this.svxFile = svxFile ? path.basename(svxFile) : undefined;
         this.metaDataFile = metaDataFile ? path.basename(metaDataFile) : undefined;
         this.outputFileBaseName = outputFileBaseName ? path.basename(outputFileBaseName) : undefined;
