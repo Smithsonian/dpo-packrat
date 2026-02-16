@@ -1543,9 +1543,9 @@ class IngestDataWorker extends ResolverBase {
             };
 
             // Determine idProject for workflow event
-            // NOTE: If this.input.project.id is 0 or falsy, idProject will be undefined.
+            // NOTE: If this.input.project.id is 0, negative, or falsy, idProject will be undefined.
             // The FK constraint prevents using a sentinel value like -1.
-            const idProject: number | undefined = this.input.project.id || undefined;
+            const idProject: number | undefined = (this.input.project.id && this.input.project.id > 0) ? this.input.project.id : undefined;
 
             const workflowParams: WF.WorkflowParameters = {
                 idSystemObject,
@@ -1774,10 +1774,10 @@ class IngestDataWorker extends ResolverBase {
         }
 
         // Determine idProject for workflow
-        // NOTE: If this.input.project.id is 0 or falsy, idProject will be undefined.
+        // NOTE: If this.input.project.id is 0, negative, or falsy, idProject will be undefined.
         // In the future, if multiple projects could be related, we would need additional
         // logic here. The FK constraint prevents using a sentinel value like -1.
-        const idProject: number | undefined = this.input.project.id || undefined;
+        const idProject: number | undefined = (this.input.project.id && this.input.project.id > 0) ? this.input.project.id : undefined;
 
         const wfParams: WF.WorkflowParameters = {
             eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeIngestion,

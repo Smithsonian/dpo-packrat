@@ -20,8 +20,8 @@ export class AssetGridDetailCaptureData extends AssetGridDetailBase {
     imageHeight: number | null;
     imageWidth: number | null;
 
-    constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, metadataMap: Map<string, string>) {
-        super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion);
+    constructor(_asset: DBAPI.Asset, assetVersion: DBAPI.AssetVersion, idSystemObject: number, metadataMap: Map<string, string>, retired: boolean = false) {
+        super(idSystemObject, assetVersion.idAsset, assetVersion.idAssetVersion, retired);
         this.link = { label: null, path: `${RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion)}`, icon: COMMON.eIcon.eIconDownload, origin: COMMON.eLinkOrigin.eServer };
         this.name = { label: assetVersion.FileName, path: `${RouteBuilder.RepositoryDetails(idSystemObject)}`, icon: null, origin: COMMON.eLinkOrigin.eClient };
         this.variant = H.Helpers.safeString(metadataMap.get('variant'));

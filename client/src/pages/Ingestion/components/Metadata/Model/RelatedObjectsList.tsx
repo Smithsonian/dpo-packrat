@@ -11,7 +11,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { MdRemoveCircleOutline } from 'react-icons/md';
-import { NewTabLink } from '../../../../../components';
+import { NewTabLink, ToolTip, RetiredFilterToggle, useRetiredFilter } from '../../../../../components';
 import { StateRelatedObject } from '../../../../../store';
 import { RelatedObjectType } from '../../../../../types/graphql';
 import { ViewableProps } from '../../../../../types/repository';
@@ -20,7 +20,6 @@ import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared
 import { toast } from 'react-toastify';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { HelpOutline } from '@material-ui/icons';
-import { ToolTip } from '../../../../../components';
 
 const sourceTooltip = `Examples Include:
 -A list of the capture dataset(s) that were used to produce a master model that is being ingested
@@ -74,6 +73,15 @@ const useStyles = makeStyles(({ palette }) => ({
     removeBtnCell: {
         padding: '0px 8px 0px 0px',
         lineHeight: 0
+    },
+    retiredRow: {
+        '& td': {
+            fontStyle: 'italic',
+            color: '#888888'
+        },
+        '& a': {
+            color: '#888888 !important'
+        }
     }
 }));
 
@@ -86,13 +94,24 @@ interface RelatedObjectsListProps extends ViewableProps {
     onRemoveConnection?: (idSystemObjectMaster: number, objectTypeMaster: eSystemObjectType, idSystemObjectDerived: number, objectTypeDerived: eSystemObjectType) => any;
     objectType?: number;
     relationshipLanguage?: string;
+    parentRetired?: boolean;
 }
 
 function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement {
-    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType, relationshipLanguage } = props;
+    const { relatedObjects, type, onAdd, onRemove, viewMode = false, disabled = false, currentObject, onRemoveConnection, objectType, relationshipLanguage, parentRetired = false } = props;
     const classes = useStyles(viewMode);
+    const { showRetired, toggleShowRetired } = useRetiredFilter(parentRetired);
 
-    const hasRelatedObjects = !!relatedObjects.length;
+    // Filter related objects based on retired status
+    const filteredRelatedObjects = React.useMemo(() => {
+        if (showRetired) {
+            return relatedObjects;
+        }
+        return relatedObjects.filter(obj => !obj.retired);
+    }, [relatedObjects, showRetired]);
+
+    const hasRelatedObjects = !!filteredRelatedObjects.length;
+    const hasAnyRelatedObjects = !!relatedObjects.length;
 
     const buttonLabel: string = viewMode ? 'Connect' : 'Add';
 
@@ -117,7 +136,7 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
                     </TableHead>
                     {hasRelatedObjects && (
                         <TableBody>
-                            {relatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
+                            {filteredRelatedObjects.map((sourceObject: StateRelatedObject, index: number) => (
                                 <Item
                                     type={type}
                                     key={index}
@@ -128,9 +147,19 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
                                     onRemoveConnection={onRemoveConnection}
                                     systemObjectType={objectType}
                                     index={index}
-                                    finalIndex={relatedObjects.length - 1}
+                                    finalIndex={filteredRelatedObjects.length - 1}
+                                    retired={sourceObject.retired === true}
                                 />
                             ))}
+                        </TableBody>
+                    )}
+                    {!hasRelatedObjects && hasAnyRelatedObjects && (
+                        <TableBody>
+                            <TableRow>
+                                <TableCell colSpan={4} style={{ textAlign: 'center', fontStyle: 'italic', color: '#888888' }}>
+                                    No non-retired objects
+                                </TableCell>
+                            </TableRow>
                         </TableBody>
                     )}
                 </Table>
@@ -139,6 +168,7 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
                 <Button className={classes.addButton} disableElevation color='primary' variant='contained' onClick={() => onAdd()} disabled={disabled}>
                     {buttonLabel}
                 </Button>
+                <RetiredFilterToggle showRetired={showRetired} onToggle={toggleShowRetired} />
                 <Tooltip arrow title={ <ToolTip text={type === RelatedObjectType.Source ? sourceTooltip : derivedTooltip} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
             </div>
         </Box>
@@ -156,10 +186,11 @@ interface ItemProps {
     systemObjectType?: number;
     index: number;
     finalIndex: number;
+    retired?: boolean;
 }
 
 function Item(props: ItemProps): React.ReactElement {
-    const { sourceObject, onRemove, viewMode = false, currentObject, onRemoveConnection, type, systemObjectType, index, finalIndex } = props;
+    const { sourceObject, onRemove, viewMode = false, currentObject, onRemoveConnection, type, systemObjectType, index, finalIndex, retired = false } = props;
     const { idSystemObject, name, identifier, objectType } = sourceObject;
     const classes = useStyles(viewMode);
     let remove;
@@ -185,11 +216,13 @@ function Item(props: ItemProps): React.ReactElement {
         remove = () => onRemove?.(idSystemObject);
     }
 
+    const rowClassName = retired ? classes.retiredRow : undefined;
+
     return (
-        <TableRow style={{ backgroundColor: index % 2 !== 0 ? 'white' : '#ffffe0' }}>
+        <TableRow style={{ backgroundColor: index % 2 !== 0 ? 'white' : '#ffffe0' }} className={rowClassName}>
             <TableCell className={classes.nameCell} style={{ borderTopLeftRadius: index === 0 ? '5px' : undefined, borderBottomLeftRadius: finalIndex === index ? '5px' : undefined }}>
                 <NewTabLink to={getDetailsUrlForObject(idSystemObject)} className={clsx(classes.label, classes.labelUnderline)} style={{ fontSize: '0.8rem', verticalAlign: 'middle', wordBreak: 'break-word' }}>
-                    {name}
+                    {name}{retired ? ' (retired)' : ''}
                 </NewTabLink>
             </TableCell>
             <TableCell className={classes.objectTypeCell}>

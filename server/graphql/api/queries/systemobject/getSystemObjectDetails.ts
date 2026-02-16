@@ -59,12 +59,14 @@ const getSystemObjectDetails = gql`
                 name
                 identifier
                 objectType
+                retired
             }
             derivedObjects {
                 idSystemObject
                 name
                 identifier
                 objectType
+                retired
             }
             objectVersions {
                 idSystemObjectVersion

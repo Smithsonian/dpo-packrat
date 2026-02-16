@@ -171,16 +171,16 @@ export const buildProjectSceneDef = async (scene: DBAPI.Scene, project: DBAPI.Pr
         return null;
     }
 
-    // get earliest and latest
+    // get the latest version by ID (not by date) - this matches how the scene detail view determines published state
+    // Using fetchLatestFromSystemObject ensures consistency with the rest of the application
+    const sceneVersionLast: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(sceneSO.idSystemObject);
+
+    // get earliest version by date for dateCreated field
     let sceneVersionFirst: DBAPI.SystemObjectVersion | null = null;
-    let sceneVersionLast: DBAPI.SystemObjectVersion | null = null;
     for(const version of sceneSOVs) {
         const date = new Date(version.DateCreated);
         if (!sceneVersionFirst?.DateCreated || date < sceneVersionFirst.DateCreated) {
             sceneVersionFirst = version;
-        }
-        if (!sceneVersionLast?.DateCreated || date > sceneVersionLast.DateCreated) {
-            sceneVersionLast = version;
         }
     }
 
@@ -423,6 +423,9 @@ const buildSummaryCaptureData = async (idModels: number[]): Promise<AssetList | 
             const cdSO = await captureData[i].fetchSystemObject();
             if(!cdSO) { continue; }
 
+            // skip retired objects
+            if(cdSO.Retired) { continue; }
+
             // get the asset and asset version for access to creator and date info
             // only using first asset since there is no explicit access to the original 'zip'
             // asset so we must pull one of the images and use its information.
@@ -479,6 +482,11 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
     const modelSO: DBAPI.SystemObject | null = await model.fetchSystemObject();
     if(!modelSO) {
         RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch SystemObject model',{ ...model },'HTTP.Route.Project');
+        return null;
+    }
+
+    // skip retired objects
+    if(modelSO.Retired) {
         return null;
     }
 
@@ -546,18 +554,34 @@ const getMasterModelsFromItems = async (idItems: number[]): Promise<number | nul
     const masterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchDerivedFromItems(idItems);
     if(!masterModels) return null;
 
-    // confirm they are all master models (purpose = 45)
-    const count: number = masterModels.filter(model => model.idVPurpose === 45).length;
+    // filter to master models (purpose = 45) and exclude retired objects
+    let count: number = 0;
+    for(const model of masterModels) {
+        if(model.idVPurpose !== 45) continue;
 
-    // return our count
-    return count ?? null;
+        const modelSO = await model.fetchSystemObject();
+        if(modelSO && !modelSO.Retired) {
+            count++;
+        }
+    }
+
+    return count;
 };
 const getCaptureDataFromItems = async (idItems: number[]): Promise<number | null> => {
     // get all capture data from the items
     const captureData: DBAPI.CaptureData[] | null = await DBAPI.CaptureData.fetchDerivedFromItems(idItems);
+    if(!captureData) return null;
 
-    // return our count
-    return captureData?.length ?? null;
+    // filter out retired objects
+    let count: number = 0;
+    for(const cd of captureData) {
+        const cdSO = await cd.fetchSystemObject();
+        if(cdSO && !cdSO.Retired) {
+            count++;
+        }
+    }
+
+    return count;
 };
 //#endregion
 
@@ -635,16 +659,22 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
 };
 const getStatusARModels = (models: AssetSummary[]): string => {
 
+    // if no AR models found, return explicit status
+    if (!models || models.length === 0) {
+        return 'Missing: All';
+    }
+
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     let nonDownloadableCount: number = 0;
     let downloadableCount: number = 0;
 
     for(const model of models) {
 
-        // if any model is too old or prior to known error return error
-        if(model.dateCreated < targetDate) {
-            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateCreated} - ${targetDate})`,{},'HTTP.Route.Project');
-            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateCreated} - ${targetDate}) WebAR`;
+        // if any model's asset version is too old or prior to known error return error
+        // use dateModified (asset version date) not dateCreated (model record date)
+        if(model.dateModified < targetDate) {
+            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateModified} - ${targetDate})`,{},'HTTP.Route.Project');
+            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateModified} - ${targetDate}) WebAR`;
         }
 
         // build our counts for comparison
@@ -667,9 +697,9 @@ const getStatusARModels = (models: AssetSummary[]): string => {
         return 'Good';
     }
 
-    // If none of the conditions are met, log the error and return 'Unexpected'
+    // If none of the conditions are met, log and return descriptive error
     RK.logError(RK.LogSection.eHTTP,'get AR model status failed','unexpected counts',{ native: downloadableCount, web: nonDownloadableCount },'HTTP.Route.Project');
-    return 'Unexpected';
+    return `Error: Unexpected (WebAR:${nonDownloadableCount}, NativeAR:${downloadableCount})`;
 };
 const getStatusCaptureData = (cd: AssetList): string => {
 

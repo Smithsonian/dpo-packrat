@@ -670,15 +670,22 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // if we didn't get one then we create one. otherwise we use the first one
         let MSX: DBAPI.ModelSceneXref | null = (MSXs && MSXs.length > 0) ? MSXs[0] : null;
         let MSXResult: boolean = false;
+
+        // compute model properties from download type - needed for both create and update
+        const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(fileItem.downloadType);
+
         if (MSX) {
-            // if we have a record already just update the filesize
+            // if we have a record already, update filesize AND usage/quality/uvResolution
+            // to ensure labels are correct after regeneration
             MSX.FileSize = FileSize;
+            MSX.Usage = usage ?? MSX.Usage;
+            MSX.Quality = quality ?? MSX.Quality;
+            MSX.UVResolution = uvResolution ?? MSX.UVResolution;
 
             // update our DB record
             MSXResult = await MSX.update();
         } else {
             // if we don't have a record, create it
-            const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(fileItem.downloadType);
             MSX = new DBAPI.ModelSceneXref({
                 idModelSceneXref: 0,
                 idModel: model.idModel,

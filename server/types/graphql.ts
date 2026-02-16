@@ -910,6 +910,7 @@ export type GetSystemObjectDetailsResult = {
   objectType: Scalars['Int'];
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
+  publishBlocker?: Maybe<Scalars['String']>;
   publishable: Scalars['Boolean'];
   publishedEnum: Scalars['Int'];
   publishedState: Scalars['String'];
@@ -2101,6 +2102,7 @@ export type RelatedObject = {
   identifier?: Maybe<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired: Scalars['Boolean'];
 };
 
 export type RelatedObjectInput = {

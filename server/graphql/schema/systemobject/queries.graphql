@@ -161,6 +161,7 @@ type GetSystemObjectDetailsResult {
     publishedState: String!
     publishedEnum: Int!
     publishable: Boolean!
+    publishBlocker: String
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!

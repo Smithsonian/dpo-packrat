@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     Table,
     TableBody,
@@ -8,9 +8,19 @@ import {
     TableRow,
     Paper,
     CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    IconButton,
+    TextField,
+    Button,
+    Tooltip,
+    Typography,
     // Theme,
     createStyles
 } from '@material-ui/core';
+import { Edit, Sync } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import API, { RequestResponse } from '../../../../../api';
@@ -20,6 +30,11 @@ interface QCStatus {
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
+}
+interface EdanRecordIdRaw {
+    svx: string | null;
+    db: string | null;
+    subjectCount: number;
 }
 interface SceneQCData {
     idSystemObject: number,
@@ -34,9 +49,12 @@ interface SceneQCData {
     downloads: QCStatus;
     captureData: QCStatus;
     arModels: QCStatus;
+    edanRecordId: QCStatus;
+    edanRecordIdRaw?: EdanRecordIdRaw;
     // network: QCStatus;
 }
 interface QCRow {
+    key: string;
     property: string;
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
@@ -45,7 +63,21 @@ interface QCRow {
 interface SceneDetailsStatusProps {
     idSceneSO: number;
     refreshTick?: number;
+    onUpdate?: () => void;
 }
+
+// row keys in display order
+const qcRowKeys: (keyof SceneQCData)[] = [
+    'published',
+    'license',
+    'reviewed',
+    'edanRecordId',
+    // 'thumbnails',
+    'baseModels',
+    'downloads',
+    'arModels',
+    'captureData'
+];
 
 // Define styles
 const useStyles = makeStyles(() =>
@@ -83,6 +115,11 @@ const useStyles = makeStyles(() =>
                 },
             },
         },
+        actionsCell: {
+            width: 80,
+            textAlign: 'center',
+            padding: '4px 8px',
+        },
         title: {
             marginBottom: 16,
             fontWeight: 600,
@@ -94,6 +131,11 @@ const useStyles = makeStyles(() =>
             alignItems: 'center',
             height: 200,
         },
+        dialogFieldRow: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+        },
     })
 );
 
@@ -104,11 +146,38 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
+    // dialog state
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    const [edanRecordIdValue, setEdanRecordIdValue] = useState<string>('');
+    const [saving, setSaving] = useState<boolean>(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+
+    const buildRows = useCallback((objectData: SceneQCData): QCRow[] => {
+        return qcRowKeys.map((key) => {
+            const row = objectData[key] as QCStatus;
+
+            // adjust the publish one with a link, if available
+            let publishedNotes: string | null = null;
+            if(key==='published') {
+                publishedNotes = row.notes;
+                if(objectData.publishedUrl && objectData.publishedUrl.length>0)
+                    publishedNotes += ` (<a href='${objectData.publishedUrl}'><b>Link</b></a>)`;
+            }
+
+            return {
+                key: key as string,
+                property: row.name,
+                status: row.status,
+                level: row.level,
+                notes: (publishedNotes) ?? row.notes,
+            };
+        });
+    }, []);
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
-                // console.log('response: ',response.data);
 
                 const objectData: SceneQCData = {
                     idSystemObject: response.data.idSystemObject,
@@ -123,42 +192,11 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     downloads: response.data.downloads,
                     arModels: response.data.arModels,
                     captureData: response.data.captureData,
-                    // network: response.data.network
+                    edanRecordId: response.data.edanRecordId,
+                    edanRecordIdRaw: response.data.edanRecordIdRaw,
                 };
                 setData(objectData);
-
-                // define rows to be included in the table
-                const qcRowKeys: (keyof SceneQCData)[] = [
-                    'published',
-                    'license',
-                    'reviewed',
-                    // 'thumbnails',
-                    'baseModels',
-                    'downloads',
-                    'arModels',
-                    'captureData'
-                ];
-
-                // map to rows
-                const qcRows: QCRow[] = qcRowKeys.map((key) => {
-                    const row = objectData[key] as QCStatus;
-
-                    // adjust the publish one with a link, if available
-                    let publishedNotes: string | null = null;
-                    if(key==='published') {
-                        publishedNotes = row.notes;
-                        if(objectData.publishedUrl && objectData.publishedUrl.length>0)
-                            publishedNotes += ` (<a href='${objectData.publishedUrl}'><b>Link</b></a>)`;
-                    }
-
-                    return {
-                        property: row.name,
-                        status: row.status,
-                        level: row.level,
-                        notes: (publishedNotes) ?? row.notes,
-                    };
-                });
-                setRows(qcRows);
+                setRows(buildRows(objectData));
             } catch (err) {
                 setError('Failed to load QC data');
                 console.error(err);
@@ -168,7 +206,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
         };
 
         fetchData();
-    }, [props.idSceneSO, props.refreshTick]);
+    }, [props.idSceneSO, props.refreshTick, buildRows]);
 
     const getStatusClass = (level: 'pass' | 'warn' | 'fail' | 'critical' | 'info') => {
         switch (level) {
@@ -177,6 +215,64 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             case 'pass': return 'pass';
             case 'critical': return 'critical';
             default: return 'info';
+        }
+    };
+
+    const handleOpenDialog = () => {
+        setEdanRecordIdValue(data?.edanRecordIdRaw?.svx ?? '');
+        setSaveError(null);
+        setDialogOpen(true);
+    };
+
+    const handleCancel = () => {
+        setDialogOpen(false);
+        setSaveError(null);
+        setEdanRecordIdValue('');
+    };
+
+    const handleSyncFromDb = () => {
+        setEdanRecordIdValue(data?.edanRecordIdRaw?.db ?? '');
+    };
+
+    const handleApply = async () => {
+        if (!data || !edanRecordIdValue.trim()) return;
+        setSaving(true);
+        setSaveError(null);
+        try {
+            const patchResponse: RequestResponse = await API.patchObject(data.idSystemObject, { edanRecordId: edanRecordIdValue.trim() });
+            if (!patchResponse.success) {
+                setSaveError(patchResponse.message ?? 'Failed to update EDAN Record ID');
+                return;
+            }
+
+            // re-fetch full status to rebuild all rows
+            const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+            const updatedData: SceneQCData = {
+                idSystemObject: statusResponse.data.idSystemObject,
+                idScene: statusResponse.data.idScene,
+                publishedUrl: statusResponse.data.publishedUrl,
+                published: statusResponse.data.published,
+                license: statusResponse.data.license,
+                reviewed: statusResponse.data.reviewed,
+                scale: statusResponse.data.scale,
+                thumbnails: statusResponse.data.thumbnails,
+                baseModels: statusResponse.data.baseModels,
+                downloads: statusResponse.data.downloads,
+                arModels: statusResponse.data.arModels,
+                captureData: statusResponse.data.captureData,
+                edanRecordId: statusResponse.data.edanRecordId,
+                edanRecordIdRaw: statusResponse.data.edanRecordIdRaw,
+            };
+            setData(updatedData);
+            setRows(buildRows(updatedData));
+            setDialogOpen(false);
+            setEdanRecordIdValue('');
+            props.onUpdate?.();
+        } catch (err) {
+            setSaveError('An unexpected error occurred');
+            console.error(err);
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -205,6 +301,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                             <TableCell>Property/Test</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Notes</TableCell>
+                            <TableCell className={classes.actionsCell}>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -220,11 +317,73 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                                     className={classes.notesCell}
                                     dangerouslySetInnerHTML={{ __html: row.notes }}
                                 />
+                                <TableCell className={classes.actionsCell}>
+                                    {row.key === 'edanRecordId' && (
+                                        <Tooltip title='Edit EDAN Record ID'>
+                                            <IconButton size='small' onClick={handleOpenDialog}>
+                                                <Edit fontSize='small' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <Dialog open={dialogOpen} onClose={handleCancel} maxWidth='sm' fullWidth>
+                <DialogTitle>Edit EDAN Record ID</DialogTitle>
+                <DialogContent>
+                    {data?.edanRecordIdRaw?.db && (
+                        <Typography variant='body2' style={{ marginBottom: 8 }}>
+                            <strong>DB Subject identifier:</strong> {data.edanRecordIdRaw.db}
+                        </Typography>
+                    )}
+                    <div className={classes.dialogFieldRow}>
+                        <TextField
+                            variant='outlined'
+                            size='small'
+                            fullWidth
+                            placeholder='e.g. edanmdm:nmnhanthro_123456'
+                            value={edanRecordIdValue}
+                            onChange={(e) => setEdanRecordIdValue(e.target.value)}
+                            disabled={saving}
+                        />
+                        <Tooltip title='Pull from DB Subject identifier'>
+                            <span>
+                                <IconButton
+                                    size='small'
+                                    onClick={handleSyncFromDb}
+                                    disabled={saving || !data?.edanRecordIdRaw?.db}
+                                >
+                                    <Sync fontSize='small' />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                    </div>
+                    <Typography variant='caption' color='textSecondary' style={{ marginTop: 4, display: 'block' }}>
+                        Multi-subject scenes require &apos;edanlists:&apos; prefix
+                    </Typography>
+                    {saveError && (
+                        <Alert severity='error' style={{ marginTop: 8 }}>{saveError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancel} disabled={saving}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleApply}
+                        color='primary'
+                        variant='contained'
+                        disabled={saving || !edanRecordIdValue.trim()}
+                        style={{ color: 'white' }}
+                    >
+                        {saving ? <CircularProgress size={20} /> : 'Apply'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </div>
     );
 };

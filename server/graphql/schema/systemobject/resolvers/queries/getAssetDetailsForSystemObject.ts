@@ -68,6 +68,10 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
             continue;
         }
 
+        // Fetch the retired status from the asset's system object
+        const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(sID.idSystemObject);
+        const retired: boolean = assetSO?.Retired ?? false;
+
         let assetDetail: AssetGridDetailBase | null = null;
         switch (eGridType) {
             default:
@@ -78,14 +82,14 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
                     continue;
                 }
 
-                assetDetail = new AssetGridDetail(asset, assetVersion, sID.idSystemObject, vocabulary);
+                assetDetail = new AssetGridDetail(asset, assetVersion, sID.idSystemObject, vocabulary, retired);
             }   break;
 
             case eAssetGridType.eCaptureData: {
                 // Fetch metadata for the system object of the asset version
                 const oIDAV: DBAPI.ObjectIDAndType = { idObject: assetVersion.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion };
                 const metadataMap: Map<string, string> = await computeMetadataSet(oIDAV, metadataMetaMap);
-                assetDetail = new AssetGridDetailCaptureData(asset, assetVersion, sID.idSystemObject, metadataMap);
+                assetDetail = new AssetGridDetailCaptureData(asset, assetVersion, sID.idSystemObject, metadataMap, retired);
             }   break;
 
             case eAssetGridType.eScene: {
@@ -97,7 +101,7 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
                     RK.logError(RK.LogSection.eGQL,'get asset details for SystemObject failed','vocabularyCache could not retrieve vocabulary for asset',{ asset },'GraphQL.Schema.SystemObject');
                     continue;
                 }
-                assetDetail = new AssetGridDetailScene(asset, assetVersion, sID.idSystemObject, vocabulary, metadataMap);
+                assetDetail = new AssetGridDetailScene(asset, assetVersion, sID.idSystemObject, vocabulary, metadataMap, retired);
             }   break;
         }
 

@@ -10,12 +10,35 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import * as NS from 'node-schedule';
 
+export enum eSolrIndexPhase { eIdle, eObjects, eMetadata, eCompleted, eError }
+
+export interface SolrIndexProgress {
+    phase: eSolrIndexPhase;
+    processed: number;
+    total: number;
+    startTime: string | null;
+    endTime: string | null;
+    error: string | null;
+}
+
 export class IndexSolr implements NAV.IIndexer {
     private objectGraphDatabase: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
     private hierarchyNameMap: Map<number, string> = new Map<number, string>(); // map of idSystemObject -> object name
     private static fullIndexUnderway: boolean = false;
+    private static _progress: SolrIndexProgress = {
+        phase: eSolrIndexPhase.eIdle,
+        processed: 0,
+        total: 0,
+        startTime: null,
+        endTime: null,
+        error: null,
+    };
     private static reindexJob: NS.Job | null = null;
     private static regexARK: RegExp = new RegExp('ark:/(.*)/(.*)');
+
+    static get progress(): SolrIndexProgress {
+        return { ...IndexSolr._progress };
+    }
 
     private countUnit:                  number = 0;
     private countProject:               number = 0;
@@ -52,11 +75,24 @@ export class IndexSolr implements NAV.IIndexer {
         let retValue: boolean = false;
         try {
             IndexSolr.fullIndexUnderway = true;
+            IndexSolr._progress = {
+                phase: eSolrIndexPhase.eObjects,
+                processed: 0,
+                total: 0,
+                startTime: new Date().toISOString(),
+                endTime: null,
+                error: null,
+            };
             retValue = await this.fullIndexWorker();
         } catch (error) {
+            IndexSolr._progress.phase = eSolrIndexPhase.eError;
+            IndexSolr._progress.error = H.Helpers.getErrorString(error);
             RK.logError(RK.LogSection.eNAV,'full index failed',H.Helpers.getErrorString(error),{},'Navigation.Solr.Index');
         } finally {
             IndexSolr.fullIndexUnderway = false;
+            IndexSolr._progress.endTime = new Date().toISOString();
+            if (IndexSolr._progress.phase !== eSolrIndexPhase.eError)
+                IndexSolr._progress.phase = eSolrIndexPhase.eCompleted;
         }
         return retValue;
     }
@@ -214,6 +250,9 @@ export class IndexSolr implements NAV.IIndexer {
             return false;
         }
 
+        IndexSolr._progress.total = this.objectGraphDatabase.objectMap.size;
+        IndexSolr._progress.processed = 0;
+
         let documentCount: number = 0;
         let docs: any[] = [];
         for (const objectGraphDataEntry of this.objectGraphDatabase.objectMap.values()) {
@@ -225,6 +264,7 @@ export class IndexSolr implements NAV.IIndexer {
                     documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerOG');
                     if (documentCount === -1)
                         return false;
+                    IndexSolr._progress.processed = documentCount;
                     docs = [];
                 }
             } else
@@ -235,6 +275,7 @@ export class IndexSolr implements NAV.IIndexer {
             documentCount = await this.addDocumentsToSolr(solrClient, docs, documentCount, 'fullIndexWorkerOG');
             if (documentCount === -1)
                 return false;
+            IndexSolr._progress.processed = documentCount;
         }
 
         RK.logInfo(RK.LogSection.eNAV,'index success',undefined,
@@ -262,6 +303,10 @@ export class IndexSolr implements NAV.IIndexer {
     private async fullIndexWorkerMeta(): Promise<boolean> {
         const solrClient: SolrClient = new SolrClient(null, null, eSolrCore.ePackratMeta);
 
+        IndexSolr._progress.phase = eSolrIndexPhase.eMetadata;
+        IndexSolr._progress.processed = 0;
+        IndexSolr._progress.total = -1;
+
         let result: boolean = true;
         let documentCount: number = 0;
         let idMetadataLast: number = 0;
@@ -282,6 +327,7 @@ export class IndexSolr implements NAV.IIndexer {
                 result = false;
             }
             idMetadataLast = metadataList[metadataList.length - 1].idMetadata;
+            IndexSolr._progress.processed = this.countMetadata;
         }
 
         RK.logInfo(RK.LogSection.eNAV,'metadata worker',`indexed metadata: ${this.countMetadata}`,{},'Navigation.Solr.Index');

@@ -57,6 +57,7 @@ type RelatedObject {
     name: String!
     identifier: String
     objectType: Int!
+    retired: Boolean!
 }
 
 type IngestModel {

@@ -16,6 +16,7 @@ import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumb
 import { Helmet } from 'react-helmet';
 import ToolsBatchGeneration from './Tools/ToolsBatchGeneration';
 import ToolsAssetValidation from './Tools/ToolsAssetValidation';
+import ToolsSystemOps from './Tools/ToolsSystemOps';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -78,6 +79,7 @@ function AdminToolsView(): React.ReactElement {
     const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
         batchOps: false,
         assetValidation: false,
+        systemOps: false,
     });
 
     const toggleSection = (section: string) => {
@@ -115,6 +117,17 @@ function AdminToolsView(): React.ReactElement {
                                 </IconButton>
                                 <Collapse in={openSections.assetValidation} className={classes.collapseContainer}>
                                     <ToolsAssetValidation />
+                                </Collapse>
+                            </Box>
+
+                            {/* System Ops Section */}
+                            <Box>
+                                <IconButton className={classes.collapseHeader} onClick={() => toggleSection('systemOps')}>
+                                    System Ops
+                                    {openSections.systemOps ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                </IconButton>
+                                <Collapse in={openSections.systemOps} className={classes.collapseContainer}>
+                                    <ToolsSystemOps />
                                 </Collapse>
                             </Box>
                         </>

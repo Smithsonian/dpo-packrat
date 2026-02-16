@@ -96,6 +96,13 @@ export default class API {
         return this.request(uri, { method: 'GET' });
     }
 
+    // object patch
+    static async patchObject(idSystemObject: number, fields: Record<string, unknown>): Promise<RequestResponse> {
+        const uri = `api/object/${idSystemObject}`;
+        const body = JSON.stringify({ fields });
+        return this.request(uri, { method: 'PATCH', body });
+    }
+
     // validation reports
     static async getReport(type: 'asset-files', date: Date, format: 'csv' | 'json', inline: boolean = false): Promise<RequestResponse> {
 
@@ -135,6 +142,15 @@ export default class API {
         if(id && id>0 && !isNaN(id))
             uri += `/${id}`;
         return this.request(uri, { method: 'GET' });
+    }
+
+    // system operations
+    static async solrReindex(): Promise<RequestResponse> {
+        return this.request('solrindex', { method: 'POST' });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async solrReindexStatus(): Promise<any> {
+        return this.request('solrindex/status', { method: 'GET' });
     }
 
     // general routines

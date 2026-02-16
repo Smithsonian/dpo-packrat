@@ -24,6 +24,7 @@ import ReadOnlyRow from './controls/ReadOnlyRow';
 import TextArea from './controls/TextArea';
 import { ToolTip } from './controls/ToolTip';
 import IndentedReadOnlyRow from './controls/IndentedReadOnlyRow';
+import RetiredFilterToggle, { useRetiredFilter, retiredItemStyles } from './controls/RetiredFilterToggle';
 
 export {
     Header,
@@ -47,7 +48,10 @@ export {
     ReadOnlyRow,
     TextArea,
     ToolTip,
-    IndentedReadOnlyRow
+    IndentedReadOnlyRow,
+    RetiredFilterToggle,
+    useRetiredFilter,
+    retiredItemStyles
 };
 
 export type { RepositoryIconProps };
