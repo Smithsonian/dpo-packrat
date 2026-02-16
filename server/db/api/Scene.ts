@@ -24,6 +24,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     Title!: string | null;
 
     ApprovedForPublicationOrig!: boolean;
+    PosedAndQCdOrig!: boolean;
 
     constructor(input: SceneBase) {
         super(input);
@@ -31,6 +32,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
     protected updateCachedValues(): void {
         this.ApprovedForPublicationOrig = this.ApprovedForPublication;
+        this.PosedAndQCdOrig = this.PosedAndQCd;
     }
 
     public fetchTableName(): string { return 'Scene'; }
@@ -62,6 +64,8 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             // Audit if someone marks this scene as QC'd
             if (ApprovedForPublication)
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
+            if (PosedAndQCd)
+                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
@@ -73,7 +77,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         try {
             const { idScene, Name, idAssetThumbnail, PosedAndQCd, ApprovedForPublication,
                 CountScene, CountNode, CountCamera, CountLight, CountModel, CountMeta, CountSetup, CountTour, EdanUUID,
-                Title, ApprovedForPublicationOrig } = this;
+                Title, ApprovedForPublicationOrig, PosedAndQCdOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.scene.update({
                 where: { idScene, },
                 data: {
@@ -87,6 +91,8 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
             // Audit if someone marks this scene as QC'd
             if (ApprovedForPublication && !ApprovedForPublicationOrig)
+                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
+            if (PosedAndQCd && !PosedAndQCdOrig)
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {

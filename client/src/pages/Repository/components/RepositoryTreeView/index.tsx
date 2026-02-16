@@ -225,7 +225,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                         idSystemObject,
                         name,
                         objectType,
-                        identifier: ''
+                        identifier: '',
+                        retired: false
                     };
                     onSelect(repositoryItem);
                 }

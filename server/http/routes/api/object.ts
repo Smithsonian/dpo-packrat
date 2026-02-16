@@ -8,6 +8,7 @@ import { Request, Response } from 'express';
 import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { buildProjectSceneDef, SceneSummary } from './project';
+import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
 
 //#region Types and Definitions
 
@@ -26,6 +27,38 @@ type FieldStatus = {
     level: 'pass' | 'fail' | 'warn' | 'critical',
     notes: string
 };
+
+const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
+    return { name, status, level, notes };
+};
+const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
+    const name = 'EDAN Record ID';
+    switch (r.status) {
+        case 'error':
+            return formatEdanResultField(name, 'Error', 'fail', r.message);
+        case 'no_subject':
+            return formatEdanResultField(name, 'No Subject', 'fail', r.message);
+        case 'assigned_multisubject':
+            return formatEdanResultField(name, 'Assigned (Multi-Subject)', 'pass', r.message);
+        case 'invalid_multisubject':
+            return formatEdanResultField(name, 'Invalid for Multi-Subject', 'fail', r.message);
+        case 'missing_multisubject':
+            return formatEdanResultField(name, 'Missing for Multi-Subject', 'fail', r.message);
+        case 'assigned':
+            return formatEdanResultField(name, 'Assigned', 'pass', r.message);
+        case 'mismatch':
+            return formatEdanResultField(name, 'Mismatch', 'fail', r.message);
+        case 'missing_svx':
+            return formatEdanResultField(name, 'Missing in SVX', 'fail', r.message);
+        case 'missing_db':
+            return formatEdanResultField(name, 'Missing in DB', 'fail', r.message);
+        case 'not_found':
+            return formatEdanResultField(name, 'Not Found', 'fail', r.message);
+        default:
+            return formatEdanResultField(name, 'Unknown', 'fail', r.message);
+    }
+};
+
 export async function getObjectStatus(req: Request, res: Response): Promise<void> {
 
     // make sure we're authorized to run this routine
@@ -71,11 +104,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
         return { name, status, level, notes };
     };
-    const getReviewedStatus = (isReviewed: boolean): FieldStatus => {
+    const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
         const name = 'Is Reviewed';
-        if(isReviewed)
-            return formatResultField(name,'Reviewed','pass','Marked as reviewed');
-        else
+        if(isReviewed) {
+            const reviewer: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(idSystemObject, DBAPI.eAuditType.eSceneQCd);
+            const notes = reviewer ? `Marked as reviewed by ${reviewer.Name}` : 'Marked as reviewed';
+            return formatResultField(name,'Reviewed','pass',notes);
+        } else
             return formatResultField(name,'Not Reviewed','fail','Scene has not been reviewed');
     };
 
@@ -90,13 +125,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             return formatResultField('Published','Error','critical',`cannot get version for scene: ${idSystemObject}`);
         }
 
-        // Normalize + sort newest first
-        const normalizeDate = (d: string | Date) => (d instanceof Date ? d : new Date(d));
+        // Sort by idSystemObjectVersion descending (newest/highest ID first)
+        // This matches how fetchLatestFromSystemObject determines the "latest" version
         const sorted = [...sceneSOVs].sort((a, b) =>
-            normalizeDate(b.DateCreated).getTime() - normalizeDate(a.DateCreated).getTime()
+            b.idSystemObjectVersion - a.idSystemObjectVersion
         );
 
-        // get our latest and if any are published
+        // get our latest (highest ID) and find if any version is published
         const latest = sorted[0];
         const isPublished = (s: COMMON.ePublishedState) =>
             s === COMMON.ePublishedState.ePublished ||
@@ -108,9 +143,9 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         if (!lastPublished)
             return formatResultField('Published','Unpublished','pass','Scene is not currently published');
 
-        // figure out our latest time and when the last published one was
-        const latestTime = normalizeDate(latest.DateCreated).getTime();
-        const lastPubTime = normalizeDate(lastPublished.DateCreated).getTime();
+        // Compare version IDs to determine if we have unpublished changes (draft)
+        const latestId = latest.idSystemObjectVersion;
+        const lastPubId = lastPublished.idSystemObjectVersion;
 
         const mapStateToStatus = (s: COMMON.ePublishedState): { status: string, notes: string } => {
             switch (s) {
@@ -126,19 +161,19 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                     return { status: 'Unknown', notes: `Unknown published state: ${s}` };
             }
         };
-        // If the latest is the last published (same object or same timestamp with published state)
-        if (latestTime === lastPubTime && isPublished(latest.PublishedState)) {
+        // If the latest version is the last published one (same ID means current version is published)
+        if (latestId === lastPubId && isPublished(latest.PublishedState)) {
             const { status, notes } = mapStateToStatus(latest.PublishedState);
             return formatResultField('Published',status,'pass',notes);
         }
 
-        // if the latest version is after the last published and the latest is not
-        // published then we have a draft.
-        if (latestTime > lastPubTime && !isPublished(latest.PublishedState)) {
+        // If the latest version ID is greater than the last published version ID and the latest
+        // is not published, then we have unpublished changes (a draft)
+        if (latestId > lastPubId && !isPublished(latest.PublishedState)) {
             return formatResultField('Published','Draft','warn','Latest scene changes have not been published');
         }
 
-        // Otherwise, the latest is not newer than the last published (or ties but latest isn’t published),
+        // Otherwise, the latest is not newer than the last published (or ties but latest isn't published),
         // so the last published remains the effective status (not a draft).
         const { status, notes } = mapStateToStatus(lastPublished.PublishedState);
         return formatResultField('Published',status,'pass',notes);
@@ -288,22 +323,42 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     };
     const getModelDownloadsStatus = ( status: string, count: number, expected: number, licenseAllows: boolean): FieldStatus => {
         const name = 'Download Models';
+        const expectedCount = expected > 0 ? expected : 6;
+
         if(status === 'Good') {
             if(licenseAllows===true)
                 return formatResultField(name,'Found','pass','all generated downloads found for scene and will be published');
             else
                 return formatResultField(name,'Found','warn','license does not allow for downloads. they <b><u>WILL NOT</u></b> be published.');
-        } else {
+        } else if(status === 'Missing') {
+            // downloads are actually missing (count < 6)
             if(licenseAllows===true)
-                return formatResultField(name,status,'fail',`downloads not found (${count}/${expected>0?expected:6})`);
+                return formatResultField(name,'Missing','fail',`downloads not found (${count}/${expectedCount})`);
             else
-                return formatResultField(name,status,'warn','downloads not found. consider generating them.');
+                return formatResultField(name,'Missing','warn',`downloads not found (${count}/${expectedCount}). consider generating them.`);
+        } else if(status === 'Error') {
+            // downloads exist but may have material issues (created before June 14, 2024 Cook fix)
+            if(licenseAllows===true)
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`);
+            else
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`);
+        } else {
+            // fallback for unexpected status values
+            if(licenseAllows===true)
+                return formatResultField(name,status,'fail',`unexpected download status (${count}/${expectedCount})`);
+            else
+                return formatResultField(name,status,'warn',`unexpected download status (${count}/${expectedCount})`);
         }
     };
     const getThumbnailsStatus = async (): Promise<FieldStatus> => {
         const name = 'Thumbnails';
         return formatResultField(name,'Found','pass','not supported');
     };
+    //#endregion
+
+    //#region edanRecordId
+    const edanResult: EdanRecordIdResult = await SceneHelpers.validateEdanRecordId(idSystemObject, scene.idScene);
+    const edanRecordIdStatus: FieldStatus = getEdanRecordIdStatus(edanResult);
     //#endregion
 
     // return object structure
@@ -318,7 +373,14 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         license:
             licenseStatus,
         reviewed:
-            getReviewedStatus(sceneSummary.isReviewed),
+            await getReviewedStatus(sceneSummary.isReviewed),
+        edanRecordId:
+            edanRecordIdStatus,
+        edanRecordIdRaw: {
+            svx: edanResult.svxEdanRecordId,
+            db: edanResult.dbEdanRecordId,
+            subjectCount: edanResult.subjectCount,
+        },
         scale:
             formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
         thumbnails:
@@ -335,6 +397,96 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
 
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,'Returned scene summary',result)));
+}
+//#endregion
+
+//#region PATCH OBJECT
+export async function patchObject(req: Request, res: Response): Promise<void> {
+
+    // make sure we're authorized to run this routine
+    const authResult = await isAuthorized(req, false);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${authResult.error}`)));
+        return;
+    }
+
+    try {
+        const { id } = req.params;
+        const idSystemObject: number = parseInt(id);
+        if(isNaN(idSystemObject) || idSystemObject <= 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: invalid idSystemObject')));
+            return;
+        }
+
+        const { fields } = req.body ?? {};
+        if(!fields || typeof fields !== 'object' || Object.keys(fields).length === 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: fields object required with at least one key')));
+            return;
+        }
+
+        // verify it's a scene
+        const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if(!systemObject || !systemObject.idScene) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: only Scene objects are supported')));
+            return;
+        }
+
+        const scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
+        if(!scene) {
+            res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: cannot fetch scene ${systemObject.idScene}`)));
+            return;
+        }
+
+        // get user id
+        const LS = ASL.getStore();
+        const idUser: number = LS?.idUser ?? 0;
+        if(!idUser) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: cannot determine user')));
+            return;
+        }
+
+        // dispatch by field key
+        const fieldKeys = Object.keys(fields);
+        for (const key of fieldKeys) {
+            switch(key) {
+                case 'edanRecordId': {
+                    const newValue = fields[key];
+                    if(typeof newValue !== 'string' || newValue.trim().length === 0) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: edanRecordId must be a non-empty string')));
+                        return;
+                    }
+
+                    // patch the SVX file
+                    const patchResult = await SceneHelpers.patchSvxEdanRecordId(idSystemObject, scene, newValue.trim(), idUser);
+                    if(!patchResult.success) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${patchResult.error}`)));
+                        return;
+                    }
+
+                    // re-validate to get updated status
+                    const edanResult: EdanRecordIdResult = await SceneHelpers.validateEdanRecordId(idSystemObject, systemObject.idScene);
+                    const updatedStatus: FieldStatus = getEdanRecordIdStatus(edanResult);
+
+                    res.status(200).send(JSON.stringify(generateResponse(true, 'Updated', {
+                        edanRecordId: updatedStatus,
+                        edanRecordIdRaw: {
+                            svx: edanResult.svxEdanRecordId,
+                            db: edanResult.dbEdanRecordId,
+                            subjectCount: edanResult.subjectCount,
+                        }
+                    })));
+                    return;
+                }
+                default:
+                    res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: unsupported field '${key}'`)));
+                    return;
+            }
+        }
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'patch object',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject failed: ${error}`)));
+    }
 }
 //#endregion
 

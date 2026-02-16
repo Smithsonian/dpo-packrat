@@ -32,6 +32,7 @@ export class SvxExtraction {
     metaArticles: SVX.IArticle[] | null = null;
     modelAssets: SVX.IAsset[] | null = null;
     nonModelAssets: SvxNonModelAsset[] | null = null;
+    edanRecordId: string | null = null;
 
     extractScene(): DBAPI.Scene {
         // first, attempt to extract Name and Title from metas -> collection -> title(s), metas -> collection -> titlesceneTitle
@@ -266,6 +267,19 @@ export class SvxExtraction {
         return true;
     }
 
+    private extractEdanRecordId(): string | null {
+        if (!this.document.metas)
+            return null;
+        for (const meta of this.document.metas) {
+            if (meta.collection && meta.collection['edanRecordId']) {
+                const value = meta.collection['edanRecordId'];
+                if (typeof value === 'string' && value.length > 0)
+                    return value;
+            }
+        }
+        return null;
+    }
+
     static extract(document: any): { svx: SvxExtraction | null, results: H.IOResults } {
         if (!document) {
             RK.logError(RK.LogSection.eSYS,'extract failed','Missing document',{},'Utils.SVX.Extraction');
@@ -316,6 +330,7 @@ export class SvxExtraction {
         svx.tourCount = tourCount;
         svx.extractModelDetails();
         svx.extractNonModelDetails();
+        svx.edanRecordId = svx.extractEdanRecordId();
         return { svx, results: { success: true } };
     }
 }

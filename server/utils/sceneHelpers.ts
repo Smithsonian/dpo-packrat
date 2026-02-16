@@ -10,6 +10,16 @@ import { IngestSceneAttachmentInput } from '../types/graphql';
 import { SvxReader, SvxExtraction } from './parser';
 import { JobCookSIPackratInspectOutput } from '../job/impl/Cook';
 import { WorkflowUtil } from '../workflow/impl/Packrat/WorkflowUtil';
+import { Readable } from 'stream';
+
+export type EdanRecordIdResult = {
+    status: 'assigned' | 'assigned_multisubject' | 'mismatch' | 'missing_svx' | 'missing_db' | 'not_found' | 'no_subject' | 'invalid_multisubject' | 'missing_multisubject' | 'error';
+    valid: boolean;
+    svxEdanRecordId: string | null;
+    dbEdanRecordId: string | null;
+    subjectCount: number;
+    message: string;
+};
 
 type AssetPair = {
     asset: DBAPI.Asset;
@@ -18,6 +28,7 @@ type AssetPair = {
 
 export class SceneHelpers {
     private static vocabularyPurposeVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
+    private static idVocabEdanRecordID: number | null = null;
 
     // Suffixes for Voyager-generated download zip bundles inside Scene packages
     // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData and AssetStorageAdapter classification.
@@ -33,6 +44,203 @@ export class SceneHelpers {
     //     '-100k-2048_std_draco.glb',
     //     '-100k-2048_std.usdz',
     // ];
+
+    /** Validates the EDAN Record ID for a scene by comparing the SVX file value against the DB Identifier.
+     *  Multi-subject scenes require an `edanlists:` prefix; single-subject scenes require SVX-to-DB match. */
+    static async validateEdanRecordId(idSystemObject: number, idScene: number): Promise<EdanRecordIdResult> {
+        const fail = (status: EdanRecordIdResult['status'], message: string,
+            svx: string | null = null, db: string | null = null, subjectCount: number = 0): EdanRecordIdResult =>
+            ({ status, valid: false, svxEdanRecordId: svx, dbEdanRecordId: db, subjectCount, message });
+
+        // 1. Resolve vocabulary ID for EDAN Record ID (cache on success)
+        if (SceneHelpers.idVocabEdanRecordID === null) {
+            const vocab: DBAPI.Vocabulary | undefined =
+                await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+            if (!vocab)
+                return fail('error', 'EDAN Record ID vocabulary not found in cache');
+            SceneHelpers.idVocabEdanRecordID = vocab.idVocabulary;
+        }
+        const idVocab: number = SceneHelpers.idVocabEdanRecordID;
+
+        // 2. Scene -> Items -> Subjects
+        const items: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([idScene]);
+        const allItemIds: number[] = items ? items.map(i => i.idItem) : [];
+        const subjects: DBAPI.Subject[] | null = allItemIds.length > 0
+            ? await DBAPI.Subject.fetchMasterFromItems(allItemIds)
+            : null;
+        const subjectCount: number = subjects ? subjects.length : 0;
+
+        if (subjectCount === 0)
+            return fail('no_subject', 'No Subject linked to scene; cannot validate EDAN Record ID');
+
+        // 3. Read the SVX edanRecordId from the latest scene asset
+        let svxEdanRecordId: string | null = null;
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (assetVersions) {
+            for (const av of assetVersions) {
+                const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(av.idAsset);
+                if (!asset) continue;
+                const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+                if (!sceneSO) continue;
+                if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, sceneSO)) {
+                    const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(av.idAssetVersion);
+                    if (RSR.success && RSR.readStream) {
+                        const svxReader: SvxReader = new SvxReader();
+                        const svxRes: H.IOResults = await svxReader.loadFromStream(RSR.readStream);
+                        if (svxRes.success && svxReader.SvxExtraction)
+                            svxEdanRecordId = svxReader.SvxExtraction.edanRecordId;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // 4. Read the DB edanRecordId from the first subject's identifiers
+        let dbEdanRecordId: string | null = null;
+        if (subjects) {
+            for (const subject of subjects) {
+                const subjectSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
+                if (!subjectSO) continue;
+                const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO.idSystemObject);
+                if (!identifiers) continue;
+                for (const ident of identifiers) {
+                    if (ident.idVIdentifierType === idVocab) {
+                        dbEdanRecordId = ident.IdentifierValue;
+                        break;
+                    }
+                }
+                if (dbEdanRecordId) break;
+            }
+        }
+
+        // 5. Multi-subject branch
+        if (subjectCount > 1) {
+            if (!svxEdanRecordId)
+                return fail('missing_multisubject', 'Multi-subject scene requires edanlists: ID in SVX, none found',
+                    null, dbEdanRecordId, subjectCount);
+            if (!svxEdanRecordId.startsWith('edanlists:'))
+                return fail('invalid_multisubject',
+                    `Multi-subject scene requires edanlists: ID, found (${svxEdanRecordId})`,
+                    svxEdanRecordId, dbEdanRecordId, subjectCount);
+            return {
+                status: 'assigned_multisubject', valid: true,
+                svxEdanRecordId, dbEdanRecordId, subjectCount,
+                message: `EDAN Record ID assigned for multi-subject scene (${svxEdanRecordId})`
+            };
+        }
+
+        // 6. Single-subject branch
+        if (svxEdanRecordId && dbEdanRecordId) {
+            if (svxEdanRecordId === dbEdanRecordId)
+                return {
+                    status: 'assigned', valid: true,
+                    svxEdanRecordId, dbEdanRecordId, subjectCount,
+                    message: `EDAN Record ID assigned (${svxEdanRecordId})`
+                };
+            return fail('mismatch',
+                `SVX (${svxEdanRecordId}) does not match DB (${dbEdanRecordId})`,
+                svxEdanRecordId, dbEdanRecordId, subjectCount);
+        }
+        if (!svxEdanRecordId && dbEdanRecordId)
+            return fail('missing_svx',
+                `EDAN Record ID missing in SVX; DB has (${dbEdanRecordId})`,
+                null, dbEdanRecordId, subjectCount);
+        if (svxEdanRecordId && !dbEdanRecordId)
+            return fail('missing_db',
+                `SVX has (${svxEdanRecordId}) but not found in DB Subject identifier`,
+                svxEdanRecordId, null, subjectCount);
+        return fail('not_found', 'No EDAN Record ID found in SVX or DB',
+            null, null, subjectCount);
+    }
+
+    /** Patches the edanRecordId in the SVX JSON's metas[].collection and ingests the updated file as a new asset version. */
+    static async patchSvxEdanRecordId(idSystemObject: number, scene: DBAPI.Scene, newEdanRecordId: string, idUser: number): Promise<H.IOResults> {
+        // 1. Find the preferred SVX asset and its latest version
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (!assetVersions)
+            return { success: false, error: 'Cannot fetch asset versions for scene' };
+
+        let svxAsset: DBAPI.Asset | null = null;
+        let svxAssetVersion: DBAPI.AssetVersion | null = null;
+        const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if (!sceneSO)
+            return { success: false, error: `Cannot fetch SystemObject ${idSystemObject}` };
+
+        for (const av of assetVersions) {
+            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(av.idAsset);
+            if (!asset) continue;
+            if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, sceneSO)) {
+                svxAsset = asset;
+                svxAssetVersion = av;
+                break;
+            }
+        }
+        if (!svxAsset || !svxAssetVersion)
+            return { success: false, error: 'Cannot find preferred SVX asset for scene' };
+
+        // 2. Read raw SVX JSON
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(svxAssetVersion.idAssetVersion);
+        if (!RSR.success || !RSR.readStream)
+            return { success: false, error: `Cannot read SVX asset version: ${RSR.error}` };
+
+        const buffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+        if (!buffer)
+            return { success: false, error: 'Cannot read SVX stream into buffer' };
+
+        // 3. Parse as plain JSON (avoids lossy SvxReader round-trip)
+        let svxDoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            svxDoc = JSON.parse(buffer.toString());
+        } catch (err) {
+            return { success: false, error: `Cannot parse SVX JSON: ${H.Helpers.getErrorString(err)}` };
+        }
+
+        // 4. Patch metas[].collection.edanRecordId
+        if (!svxDoc.metas)
+            svxDoc.metas = [];
+        let patched = false;
+        let oldEdanRecordId: string | null = null;
+        for (const meta of svxDoc.metas) {
+            if (meta.collection) {
+                oldEdanRecordId = meta.collection.edanRecordId ?? null;
+                meta.collection.edanRecordId = newEdanRecordId;
+                patched = true;
+                break;
+            }
+        }
+        if (!patched)
+            svxDoc.metas.push({ collection: { edanRecordId: newEdanRecordId } });
+
+        // 5. Serialize back with 4-space indent (matches Cook output)
+        const updatedJson: string = JSON.stringify(svxDoc, null, 4);
+
+        // 6. Ingest as new asset version
+        const comment = oldEdanRecordId
+            ? `Updated EDAN Record ID from: ${oldEdanRecordId} to: ${newEdanRecordId}`
+            : `Set EDAN Record ID to: ${newEdanRecordId}`;
+        const readStream = Readable.from(updatedJson);
+        const ISI: STORE.IngestStreamOrFileInput = {
+            readStream,
+            localFilePath: null,
+            asset: svxAsset,
+            FileName: svxAssetVersion.FileName,
+            FilePath: '',
+            idAssetGroup: 0,
+            idVAssetType: svxAsset.idVAssetType,
+            allowZipCracking: false,
+            idUserCreator: idUser,
+            SOBased: scene,
+            Comment: comment,
+        };
+
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!IAR.success)
+            return { success: false, error: `Failed to ingest updated SVX: ${IAR.error}` };
+
+        RK.logInfo(RK.LogSection.eHTTP, 'patch SVX EDAN Record ID', `success: ${newEdanRecordId}`,
+            { idSystemObject, idScene: scene.idScene }, 'Utils.Scene');
+        return { success: true };
+    }
 
     /** Returns true if the scene exists, has a scene asset, that scene asset has one or more thumbnails in metas -> images,
      * and each thumbnail exists for the current version of the scene; returns false otherwise,
