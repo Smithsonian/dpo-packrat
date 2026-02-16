@@ -144,6 +144,15 @@ export default class API {
         return this.request(uri, { method: 'GET' });
     }
 
+    // system operations
+    static async solrReindex(): Promise<RequestResponse> {
+        return this.request('solrindex', { method: 'POST' });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async solrReindexStatus(): Promise<any> {
+        return this.request('solrindex/status', { method: 'GET' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
