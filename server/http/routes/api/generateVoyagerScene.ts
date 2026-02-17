@@ -32,7 +32,8 @@ type WorkflowResponse = {       // general response for each
 type SceneGenParameters = {
     optimalPlacement: boolean,
     decimationTool: 'Meshlab' | 'RapidCompact',
-    decimationPasses: number
+    decimationPasses: number,
+    skipJobCleanup?: boolean
 };
 //#endregion
 

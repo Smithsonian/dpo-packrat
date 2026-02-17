@@ -690,8 +690,16 @@ const schemaCD = yup.object().shape({
 });
 
 const schemaModel = yup.object().shape({
-    // ignore time from date comparison to avoid timezone issues
-    dateCreated: yup.date().max(new Date(new Date().setHours(0, 0, 0, 0)), 'Date Created cannot be set in the future')
+    dateCreated: yup.date().test(
+        'not-future',
+        'Date Created cannot be set in the future',
+        value => {
+            if (!value) return true;
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            return value.getTime() <= today.getTime();
+        }
+    )
 });
 
 const schemaSubject = yup.object().shape({
