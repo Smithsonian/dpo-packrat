@@ -86,6 +86,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     private _configuration: JobCookConfiguration;
     protected _idAssetVersions: number[] | null;
+    protected _skipCleanup: boolean = false;
     private _completionMutexes: MutexInterface[] = [];
     private _complete: boolean = false;
     protected _streamOverrideMap: Map<number, STORE.ReadStreamResult[]> = new Map<number, STORE.ReadStreamResult[]>();
@@ -819,8 +820,13 @@ export abstract class JobCook<T> extends JobPackrat {
 
         // if it did update that means we had success and finished job specific cleanup
         // so it should be safe to remove the cook resources used
-        if(updated)
-            await this.removeCookJob();
+        if(updated) {
+            if (this._skipCleanup) {
+                RK.logInfo(RK.LogSection.eJOB, 'Cook cleanup skipped', 'skipJobCleanup flag is set', { ...this._configuration }, 'Job.Cook');
+            } else {
+                await this.removeCookJob();
+            }
+        }
 
         return updated;
     }

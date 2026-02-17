@@ -130,6 +130,7 @@ export class JobCookSIVoyagerSceneParameters {
 
     // extract and remove these from the parameter object before passing to Cook
     parameterHelper?: JobCookSIVoyagerSceneParameterHelper;
+    skipJobCleanup?: boolean;
 
     constructor(
         parameterHelper: JobCookSIVoyagerSceneParameterHelper,
@@ -142,7 +143,8 @@ export class JobCookSIVoyagerSceneParameters {
         outputFileBaseName: string | undefined = undefined,
         optimalPlacement: boolean | undefined = undefined,
         decimationTool: 'Meshlab' | 'RapidCompact' | undefined = undefined,                     // which software to use for decimation
-        decimationPasses: number | undefined = undefined) {
+        decimationPasses: number | undefined = undefined,
+        skipJobCleanup: boolean | undefined = undefined) {
 
         this.parameterHelper = parameterHelper;
         this.sourceMeshFile = path.basename(sourceMeshFile);
@@ -161,6 +163,9 @@ export class JobCookSIVoyagerSceneParameters {
 
         if(decimationPasses!=undefined)
             this.decimationPasses = decimationPasses;
+
+        if(skipJobCleanup!=undefined)
+            this.skipJobCleanup = skipJobCleanup;
     }
 }
 
@@ -178,6 +183,11 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
             CookRecipe.getCookRecipeID('si-vogager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
             null, idAssetVersions, report, dbJobRun);
+
+        if (parameters.skipJobCleanup) {
+            this._skipCleanup = true;
+        }
+        delete (parameters as any).skipJobCleanup;
 
         if (parameters.parameterHelper) {
             this.parameterHelper = parameters.parameterHelper;

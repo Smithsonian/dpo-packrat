@@ -491,6 +491,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const optimalPlacement: boolean = workflowParams.parameters?.optimalPlacement ?? undefined;
         const decimationTool: 'Meshlab' | 'RapidCompact' = workflowParams.parameters?.decimationTool ?? undefined;
         const decimationPasses: number = workflowParams.parameters?.decimationPasses ?? undefined;
+        const skipJobCleanup: boolean = workflowParams.parameters?.skipJobCleanup ?? false;
 
         // create parameters for a voyager scene
         const jobParamSIVoyagerScene: WFP.WorkflowJobParameters =
@@ -507,6 +508,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
                     optimalPlacement,                        // optimalPlacement
                     decimationTool,                          // which software to use for decimation
                     decimationPasses,                        // how many iterative passes to decimate
+                    skipJobCleanup || undefined,             // skip Cook job cleanup (admin debug)
                 )
             );
 
