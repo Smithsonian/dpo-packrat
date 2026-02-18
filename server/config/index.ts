@@ -66,7 +66,8 @@ export type ConfigType = {
         users: {
             admin: number[];    // users that are full admin
             tools: number[];    // users that can access tools like batch processing
-        }
+        };
+        enforceProjectAuth: boolean;    // when true, enforce project-level authorization; false = permissive (current behavior)
     },
     collection: {
         type: COLLECTION_TYPE;
@@ -163,6 +164,7 @@ export const Config: ConfigType = {
                 17, // Lindsey Dougan
             ]
         },
+        enforceProjectAuth: convertStringSettingToBoolean(process.env.PACKRAT_ENFORCE_PROJECT_AUTH ?? 'false'),
     },
     collection: {
         type: COLLECTION_TYPE.EDAN,

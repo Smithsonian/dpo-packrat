@@ -55,6 +55,7 @@ export * from './api/SystemObjectXref';
 export * from './api/Unit';
 export * from './api/UnitEdan';
 export * from './api/User';
+export * from './api/UserAuthorization';
 export * from './api/UserPersonalizationSystemObject';
 export * from './api/UserPersonalizationUrl';
 export * from './api/Vocabulary';

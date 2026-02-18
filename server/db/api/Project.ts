@@ -9,6 +9,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
     idProject!: number;
     Name!: string;
     Description!: string | null;
+    isRestricted!: boolean;
 
     constructor(input: ProjectBase) {
         super(input);
@@ -19,12 +20,14 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { Name, Description } = this;
-            ({ idProject: this.idProject, Name: this.Name, Description: this.Description } =
+            const { Name, Description, isRestricted } = this;
+            ({ idProject: this.idProject, Name: this.Name, Description: this.Description,
+                isRestricted: this.isRestricted } =
                 await DBC.DBConnection.prisma.project.create({
                     data: {
                         Name,
                         Description,
+                        isRestricted,
                         SystemObject: { create: { Retired: false }, },
                     }
                 }));
@@ -37,10 +40,10 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idProject, Name, Description } = this;
+            const { idProject, Name, Description, isRestricted } = this;
             return await DBC.DBConnection.prisma.project.update({
                 where: { idProject, },
-                data: { Name, Description, },
+                data: { Name, Description, isRestricted, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
@@ -202,5 +205,50 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN Project AS proj ON projSO.idProject = proj.idProject
                 WHERE scn.idScene = ${idScene};
             `,Project);
+    }
+
+    /**
+     * Fetches unrestricted Projects whose parent Unit is in the given list.
+     * Traverses Project -> SystemObject -> SystemObjectXref -> SystemObject -> Unit.
+     * @param unitIds Array of Unit.idUnit
+     */
+    static async fetchUnrestrictedByUnits(unitIds: number[]): Promise<Project[]> {
+        if (!unitIds || unitIds.length == 0)
+            return [];
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SOP ON (P.idProject = SOP.idProject)
+                JOIN SystemObjectXref AS SOX ON (SOP.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN SystemObject AS SOU ON (SOX.idSystemObjectMaster = SOU.idSystemObject)
+                WHERE SOU.idUnit IN (${Prisma.join(unitIds)}) AND P.isRestricted = false`, Project) ?? [];
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchUnrestrictedByUnits failed',H.Helpers.getErrorString(error),{ unitIds, ...this },'DB.Project');
+            return [];
+        }
+    }
+
+    /**
+     * Fetches restricted Projects where the given user is explicitly authorized.
+     * Joins through UserAuthorization -> SystemObject -> Project where isRestricted = true.
+     * @param idUser User.idUser
+     */
+    static async fetchRestrictedForUser(idUser: number): Promise<Project[]> {
+        if (!idUser)
+            return [];
+        try {
+            return DBC.CopyArray<ProjectBase, Project>(
+                await DBC.DBConnection.prisma.$queryRaw<Project[]>`
+                SELECT DISTINCT P.*
+                FROM Project AS P
+                JOIN SystemObject AS SO ON (P.idProject = SO.idProject)
+                JOIN UserAuthorization AS UA ON (SO.idSystemObject = UA.idSystemObject)
+                WHERE UA.idUser = ${idUser} AND P.isRestricted = true`, Project) ?? [];
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchRestrictedForUser failed',H.Helpers.getErrorString(error),{ idUser, ...this },'DB.Project');
+            return [];
+        }
     }
 }

@@ -130,6 +130,9 @@ let unitEdan: DBAPI.UnitEdan | null;
 let unitEdan2: DBAPI.UnitEdan | null;
 let userActive: DBAPI.User | null;
 let userInactive: DBAPI.User | null;
+let userAuthorization: DBAPI.UserAuthorization | null;
+let userAuthorizationProject: DBAPI.UserAuthorization | null;
+let projectRestricted: DBAPI.Project | null;
 let userPersonalizationSystemObject: DBAPI.UserPersonalizationSystemObject | null;
 let userPersonalizationUrl: DBAPI.UserPersonalizationUrl | null;
 let vocabulary: DBAPI.Vocabulary | null;
@@ -1386,12 +1389,14 @@ describe('DB Creation Test Suite', () => {
         project = await UTIL.createProjectTest({
             Name: 'Test Project',
             Description: 'Test',
+            isRestricted: false,
             idProject: 0,
         });
 
         project2 = await UTIL.createProjectTest({
             Name: 'Test Project 2',
             Description: 'Test',
+            isRestricted: false,
             idProject: 0,
         });
     });
@@ -1627,6 +1632,57 @@ describe('DB Creation Test Suite', () => {
             MailingAddress: 'Test Mailing Address',
             idStakeholder: 0
         });
+    });
+
+    test('DB Creation: Project (restricted)', async () => {
+        projectRestricted = await UTIL.createProjectTest({
+            Name: 'Test Project Restricted',
+            Description: 'Test Restricted',
+            isRestricted: true,
+            idProject: 0,
+        });
+
+        // Wire restricted project to unit so fetchUnrestrictedByUnits can verify exclusion
+        if (projectRestricted && unit) {
+            const xref = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(unit, projectRestricted);
+            expect(xref).toBeTruthy();
+        }
+    });
+
+    test('DB Creation: UserAuthorization (Unit)', async () => {
+        if (userActive && unit) {
+            const systemObjectUnit: DBAPI.SystemObject | null = await unit.fetchSystemObject();
+            expect(systemObjectUnit).toBeTruthy();
+            if (systemObjectUnit) {
+                userAuthorization = new DBAPI.UserAuthorization({
+                    idUser: userActive.idUser,
+                    idSystemObject: systemObjectUnit.idSystemObject,
+                    idUserAuthorization: 0
+                });
+                expect(await userAuthorization.create()).toBeTruthy();
+            }
+        }
+        expect(userAuthorization).toBeTruthy();
+        if (userAuthorization)
+            expect(userAuthorization.idUserAuthorization).toBeGreaterThan(0);
+    });
+
+    test('DB Creation: UserAuthorization (Project)', async () => {
+        if (userActive && projectRestricted) {
+            const systemObjectProject: DBAPI.SystemObject | null = await projectRestricted.fetchSystemObject();
+            expect(systemObjectProject).toBeTruthy();
+            if (systemObjectProject) {
+                userAuthorizationProject = new DBAPI.UserAuthorization({
+                    idUser: userActive.idUser,
+                    idSystemObject: systemObjectProject.idSystemObject,
+                    idUserAuthorization: 0
+                });
+                expect(await userAuthorizationProject.create()).toBeTruthy();
+            }
+        }
+        expect(userAuthorizationProject).toBeTruthy();
+        if (userAuthorizationProject)
+            expect(userAuthorizationProject.idUserAuthorization).toBeGreaterThan(0);
     });
 
     test('DB Creation: UserPersonalizationSystemObject', async () => {
@@ -5559,6 +5615,82 @@ describe('DB Fetch Special Test Suite', () => {
         expect(projectFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: UserAuthorization.fetchFromUser', async () => {
+        let uaFetch: DBAPI.UserAuthorization[] | null = null;
+        if (userActive) {
+            uaFetch = await DBAPI.UserAuthorization.fetchFromUser(userActive.idUser);
+            if (uaFetch) {
+                expect(uaFetch).toEqual(expect.arrayContaining([userAuthorization, userAuthorizationProject]));
+            }
+        }
+        expect(uaFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: UserAuthorization.fetchFromSystemObject', async () => {
+        let uaFetch: DBAPI.UserAuthorization[] | null = null;
+        if (userAuthorization) {
+            uaFetch = await DBAPI.UserAuthorization.fetchFromSystemObject(userAuthorization.idSystemObject);
+            if (uaFetch) {
+                expect(uaFetch).toEqual(expect.arrayContaining([userAuthorization]));
+            }
+        }
+        expect(uaFetch).toBeTruthy();
+    });
+
+    test('DB Fetch Special: UserAuthorization.fetchUnitsForUser', async () => {
+        if (userActive && unit) {
+            const unitIds: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(userActive.idUser);
+            expect(unitIds).toContain(unit.idUnit);
+        }
+    });
+
+    test('DB Fetch Special: UserAuthorization.fetchProjectsForUser', async () => {
+        if (userActive && projectRestricted) {
+            const projectIds: number[] = await DBAPI.UserAuthorization.fetchProjectsForUser(userActive.idUser);
+            expect(projectIds).toContain(projectRestricted.idProject);
+        }
+    });
+
+    test('DB Fetch Special: UserAuthorization.fetchUnitsForUser empty', async () => {
+        const unitIds: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(0);
+        expect(unitIds).toEqual([]);
+    });
+
+    test('DB Fetch Special: UserAuthorization.fetchProjectsForUser empty', async () => {
+        const projectIds: number[] = await DBAPI.UserAuthorization.fetchProjectsForUser(0);
+        expect(projectIds).toEqual([]);
+    });
+
+    test('DB Fetch Special: Project.fetchUnrestrictedByUnits', async () => {
+        if (unit && project) {
+            const projects: DBAPI.Project[] = await DBAPI.Project.fetchUnrestrictedByUnits([unit.idUnit]);
+            expect(projects).toEqual(expect.arrayContaining([project]));
+            // should NOT contain restricted project
+            if (projectRestricted)
+                expect(projects.map(p => p.idProject)).not.toContain(projectRestricted.idProject);
+        }
+    });
+
+    test('DB Fetch Special: Project.fetchUnrestrictedByUnits empty', async () => {
+        const projects: DBAPI.Project[] = await DBAPI.Project.fetchUnrestrictedByUnits([]);
+        expect(projects).toEqual([]);
+    });
+
+    test('DB Fetch Special: Project.fetchRestrictedForUser', async () => {
+        if (userActive && projectRestricted) {
+            const projects: DBAPI.Project[] = await DBAPI.Project.fetchRestrictedForUser(userActive.idUser);
+            expect(projects.map(p => p.idProject)).toContain(projectRestricted.idProject);
+            // should NOT contain unrestricted projects
+            if (project)
+                expect(projects.map(p => p.idProject)).not.toContain(project.idProject);
+        }
+    });
+
+    test('DB Fetch Special: Project.fetchRestrictedForUser empty', async () => {
+        const projects: DBAPI.Project[] = await DBAPI.Project.fetchRestrictedForUser(0);
+        expect(projects).toEqual([]);
+    });
+
     test('DB Fetch Special: ProjectDocumentation.fetchAll', async () => {
         let pdFetch: DBAPI.ProjectDocumentation[] | null = null;
         if (projectDocumentation) {
@@ -8040,6 +8172,9 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.UnitEdan.fetchFromAbbreviation('')).toBeNull();
         expect(await DBAPI.UnitEdan.fetchFromName('')).toBeNull();
         expect(await DBAPI.User.fetch(0)).toBeNull();
+        expect(await DBAPI.UserAuthorization.fetch(0)).toBeNull();
+        expect(await DBAPI.UserAuthorization.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.UserAuthorization.fetchFromSystemObject(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetch(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetchFromUser(0)).toBeNull();
         expect(await DBAPI.UserPersonalizationSystemObject.fetchFromSystemObject(0)).toBeNull();

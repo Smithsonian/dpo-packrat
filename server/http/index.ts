@@ -265,6 +265,9 @@ export class HttpServer {
             }
         }
 
+        // Populate authorization context from session cache
+        if (req.session?.authContext)
+            LS.authContext = req.session.authContext;
 
         // run the store for this user
         ASL.run(LS, () => {
