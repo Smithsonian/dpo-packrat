@@ -13,6 +13,7 @@ import {
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { SceneHelpers } from '../../../../../utils/sceneHelpers';
+import { Authorization } from '../../../../../auth/Authorization';
 
 type PublishedStateInfo = {
     publishedState: string;
@@ -104,6 +105,9 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         }
     }
 
+    const ctx = Authorization.getContext();
+    const allowed = ctx ? await Authorization.canAccessSystemObject(ctx, idSystemObject) : true;
+
     return {
         idSystemObject,
         idObject: oID.idObject,
@@ -111,7 +115,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         subTitle,
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
-        allowed: true, // TODO: True until Access control is implemented (Post MVP)
+        allowed,
         publishedState: publishedStateInfo.publishedState,
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,

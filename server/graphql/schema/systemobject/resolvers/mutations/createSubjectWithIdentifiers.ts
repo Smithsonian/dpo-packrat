@@ -8,6 +8,7 @@ import * as H from '../../../../../utils/helpers';
 import { VocabularyCache } from '../../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function createSubjectWithIdentifiers(_: Parent, args: MutationCreateSubjectWithIdentifiersArgs, context: Context): Promise<CreateSubjectWithIdentifiersResult> {
     const {
@@ -15,6 +16,11 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
     } = args;
     const { user } = context;
     const { idUnit, Name, idGeoLocation } = subject;
+
+    // Authorization: check access to the target Unit
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit))
+        return { success: false, message: AUTH_ERROR.UNIT_DENIED };
 
     const identifierTypeARK: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
     if (!identifierTypeARK)

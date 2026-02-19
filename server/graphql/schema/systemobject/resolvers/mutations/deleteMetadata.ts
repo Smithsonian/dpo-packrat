@@ -2,6 +2,7 @@ import { DeleteMetadataResult, MutationDeleteMetadataArgs } from '../../../../..
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization } from '../../../../../auth/Authorization';
 
 export default async function deleteMetadata(_: Parent, args: MutationDeleteMetadataArgs): Promise<DeleteMetadataResult> {
     const { input: { idMetadata } } = args;
@@ -9,6 +10,13 @@ export default async function deleteMetadata(_: Parent, args: MutationDeleteMeta
     if (!metadata) {
         RK.logError(RK.LogSection.eGQL,'delete identifier failed',`Unable to retrieve Metadata with idMetadata ${idMetadata}`,{},'GraphQL.SystemObject.Metadata');
         return { success: false };
+    }
+
+    // Authorization: check access to the metadata's parent SystemObject
+    const ctx = Authorization.getContext();
+    if (ctx && metadata.idSystemObject) {
+        if (!await Authorization.canAccessSystemObject(ctx, metadata.idSystemObject))
+            return { success: false };
     }
 
     if (await metadata.delete()) {

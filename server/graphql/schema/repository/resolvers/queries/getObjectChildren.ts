@@ -1,6 +1,7 @@
 import { GetObjectChildrenResult, QueryGetObjectChildrenArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } from '../../../../../navigation/interface';
+import { Authorization } from '../../../../../auth/Authorization';
 import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
@@ -57,6 +58,30 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         rows,
         cursorMark
     };
+
+    // Enforce authorization on the filter
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin) {
+        // Restrict projects to authorized set
+        if (ctx.effectiveProjectSOIds !== null) {
+            if (filter.projects?.length) {
+                const authorized = new Set(ctx.effectiveProjectSOIds);
+                filter.projects = filter.projects.filter(p => authorized.has(p));
+            } else {
+                filter.projects = ctx.effectiveProjectSOIds;
+            }
+        }
+
+        // Restrict units to authorized set
+        if (ctx.authorizedUnitSOIds !== null) {
+            if (filter.units?.length) {
+                const authorized = new Set(ctx.authorizedUnitSOIds);
+                filter.units = filter.units.filter(u => authorized.has(u));
+            } else {
+                filter.units = ctx.authorizedUnitSOIds;
+            }
+        }
+    }
 
     const result: NavigationResult = await navigation.getObjectChildren(filter);
     return result;

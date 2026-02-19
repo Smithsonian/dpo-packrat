@@ -5,10 +5,16 @@ import * as CACHE from '../../../../../cache';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function assignLicense(_: Parent, args: MutationAssignLicenseArgs, context: Context): Promise<AssignLicenseResult> {
     const { input: { idSystemObject, idLicense } } = args;
     const { user } = context;
+
+    // Authorization: check access to the target SystemObject
+    const ctx = Authorization.getContext();
+    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+        return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
     const LROld: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
     const LicenseOld: DBAPI.License | undefined = LROld?.License ?? undefined;

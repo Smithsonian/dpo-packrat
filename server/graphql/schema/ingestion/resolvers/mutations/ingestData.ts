@@ -25,6 +25,7 @@ import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 type ModelInfo = {
     model: IngestModelInput;
@@ -58,6 +59,14 @@ type IdentifierResults = {
 export default async function ingestData(_: Parent, args: MutationIngestDataArgs, context: Context): Promise<IngestDataResult> {
     const { input } = args;
     const { user } = context;
+
+    // Authorization: check project access if a project is specified
+    const ctx = Authorization.getContext();
+    if (ctx && input.project.id && input.project.id > 0) {
+        if (!Authorization.canAccessProject(ctx, input.project.id))
+            return { success: false, message: AUTH_ERROR.PROJECT_DENIED };
+    }
+
     const ingestDataWorker: IngestDataWorker = new IngestDataWorker(input, user);
     return await ingestDataWorker.ingest();
 }

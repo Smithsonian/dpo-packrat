@@ -14,6 +14,7 @@ import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 interface StreamOptions {
     highWaterMark?: number;  // the buffer size and should range between 64kb and 1024kb depending on disk & network I/O.
@@ -26,6 +27,13 @@ interface ApolloFile {
 }
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
+    // Authorization: check access to the attachment target SystemObject
+    const ctx = Authorization.getContext();
+    if (ctx && args.idSOAttachment) {
+        if (!await Authorization.canAccessSystemObject(ctx, args.idSOAttachment))
+            return { status: UploadStatus.Failed, error: AUTH_ERROR.ACCESS_DENIED };
+    }
+
     const profileKey: string = 'upload: '+H.Helpers.randomSlug();
     RK.logInfo(RK.LogSection.eGQL,'upload asset request',undefined,args,'GraphQL.Upload.Asset',true);
     RK.profile(profileKey,RK.LogSection.eGQL,'upload asset',{},'GraphQL.Upload.Asset');

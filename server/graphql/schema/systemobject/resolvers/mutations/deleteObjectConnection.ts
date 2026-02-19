@@ -5,9 +5,20 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { getRelatedObjects } from '../queries/getSystemObjectDetails';
 import { RelatedObjectType } from '../../../../../types/graphql';
 import * as COMMON from '@dpo-packrat/common';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;
+
+    // Authorization: check access to either end of the connection
+    const ctx = Authorization.getContext();
+    if (ctx) {
+        if (!await Authorization.canAccessSystemObject(ctx, idSystemObjectMaster))
+            return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
+        if (!await Authorization.canAccessSystemObject(ctx, idSystemObjectDerived))
+            return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
+    }
+
     let result: DeleteObjectConnectionResult = { success: true, details: 'Relationship Removed!' };
 
     const idSystemObjectXrefs = await DBAPI.SystemObjectXref.fetchXref(idSystemObjectMaster, idSystemObjectDerived);

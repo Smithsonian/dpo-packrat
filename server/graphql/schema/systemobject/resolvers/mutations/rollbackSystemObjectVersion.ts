@@ -2,6 +2,7 @@ import { RollbackSystemObjectVersionResult, MutationRollbackSystemObjectVersionA
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function rollbackSystemObjectVersion(_: Parent, args: MutationRollbackSystemObjectVersionArgs): Promise<RollbackSystemObjectVersionResult> {
     const { input } = args;
@@ -13,6 +14,11 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
         RK.logError(RK.LogSection.eGQL,'rollback system object version failed',`Unable to load SystemObjectVersion for ${idSystemObjectVersion}`,{},'GraphQL.SystemObject.ObjectVersion');
         return { success: false, message };
     }
+
+    // Authorization: check access to the version's parent SystemObject
+    const ctx = Authorization.getContext();
+    if (ctx && !await Authorization.canAccessSystemObject(ctx, SOV.idSystemObject))
+        return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
     const timestampedRollbackNotes = `Rollback from version created at ${time}. \n ${rollbackNotes}`;
     const SOVRollback: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(SOV.idSystemObject, SOV.idSystemObjectVersion, timestampedRollbackNotes);
