@@ -9,6 +9,7 @@ import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './Down
 import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { Authorization } from '../../auth/Authorization';
 
 import { Request, Response } from 'express';
 import * as mime from 'mime-types';
@@ -68,6 +69,14 @@ export class Downloader {
         if (!DPResults.success) {
             RK.logError(RK.LogSection.eHTTP,'execute failed',DPResults.message,{},'HTTP.Route.Download');
             return this.sendError(DPResults.statusCode ?? 200, DPResults.message);
+        }
+
+        // Authorization: check access to the target SystemObject
+        const ctx = Authorization.getContext();
+        if (ctx) {
+            const idSO: number | null = await this.resolveSystemObjectForAuth(DPResults);
+            if (idSO && !await Authorization.canAccessSystemObject(ctx, idSO))
+                return this.sendError(403, 'Access denied');
         }
 
         // Audit download
@@ -252,6 +261,27 @@ export class Downloader {
         const ret: boolean = await SitemapGenerator.generate(this.response);
         this.response.end();
         return ret;
+    }
+
+    /** Resolve the idSystemObject for the current download target, for authorization checks. */
+    private async resolveSystemObjectForAuth(DPResults: DownloaderParserResults): Promise<number | null> {
+        // Direct SystemObject reference
+        if (this.downloaderParser.idSystemObjectV)
+            return this.downloaderParser.idSystemObjectV;
+
+        // SystemObjectVersion → idSystemObject
+        if (this.downloaderParser.idSystemObjectVersionV) {
+            const SOV = await DBAPI.SystemObjectVersion.fetch(this.downloaderParser.idSystemObjectVersionV);
+            return SOV?.idSystemObject ?? null;
+        }
+
+        // AssetVersion → Asset → owning SystemObject
+        if (DPResults.assetVersion?.idAsset) {
+            const asset = await DBAPI.Asset.fetch(DPResults.assetVersion.idAsset);
+            return asset?.idSystemObject ?? null;
+        }
+
+        return null;
     }
 
     private sendError(statusCode: number, message?: string | undefined): boolean {

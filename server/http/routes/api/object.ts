@@ -9,6 +9,7 @@ import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { buildProjectSceneDef, SceneSummary } from './project';
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
+import { Authorization } from '../../../auth/Authorization';
 
 //#region Types and Definitions
 
@@ -74,6 +75,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if(!systemObject) {
         res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. no system object for: ${idSystemObject}`)));
+        return;
+    }
+
+    // Authorization: check access to the target SystemObject
+    const ctx = Authorization.getContext();
+    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
+        res.status(200).send(JSON.stringify(generateResponse(false,'getObjectStatus: access denied')));
         return;
     }
 
@@ -415,6 +423,13 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
         const idSystemObject: number = parseInt(id);
         if(isNaN(idSystemObject) || idSystemObject <= 0) {
             res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: invalid idSystemObject')));
+            return;
+        }
+
+        // Authorization: check access to the target SystemObject
+        const ctx = Authorization.getContext();
+        if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: access denied')));
             return;
         }
 

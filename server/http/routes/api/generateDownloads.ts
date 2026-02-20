@@ -9,6 +9,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
+import { Authorization } from '../../../auth/Authorization';
 
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
@@ -313,6 +314,21 @@ export async function generateDownloads(req: Request, res: Response): Promise<vo
         RK.logError(RK.LogSection.eHTTP,'generate downloads failed','no IDs found in request',{ ...H.Helpers.cleanExpressRequest(req) },'HTTP.Route.GenDownloads');
         res.status(200).send(JSON.stringify(generateResponse(false,'invalid id parameters/body. none found.')));
         return;
+    }
+
+    // Authorization: filter out SystemObjects the user cannot access
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin) {
+        const authorized: number[] = [];
+        for (const idSO of idSystemObjects) {
+            if (await Authorization.canAccessSystemObject(ctx, idSO))
+                authorized.push(idSO);
+        }
+        idSystemObjects = authorized;
+        if (idSystemObjects.length === 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false,'access denied for all requested objects')));
+            return;
+        }
     }
 
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat

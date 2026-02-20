@@ -11,6 +11,7 @@ import { ASL, ASR, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { Authorization } from '../../auth/Authorization';
 import { Readable, Writable } from 'stream';
 
 import { v2 as webdav } from 'webdav-server';
@@ -356,6 +357,16 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
+            // Authorization: check access to the target SystemObject
+            const ctx = Authorization.getContext();
+            if (ctx) {
+                const idSO: number | null = DP.idSystemObjectV ?? (DPResults.assetVersion ? (await DBAPI.Asset.fetch(DPResults.assetVersion.idAsset))?.idSystemObject ?? null : null);
+                if (idSO && !await Authorization.canAccessSystemObject(ctx, idSO)) {
+                    callback(new Error(`WebDAVFileSystem._openReadStream(${pathS}) access denied`));
+                    return;
+                }
+            }
+
             // Audit download
             const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
             const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
@@ -439,6 +450,15 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 callback(new Error(error));
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
+            }
+
+            // Authorization: check access to the target SystemObject
+            const ctx = Authorization.getContext();
+            if (ctx && DP.idSystemObjectV) {
+                if (!await Authorization.canAccessSystemObject(ctx, DP.idSystemObjectV)) {
+                    callback(new Error(`WebDAVFileSystem._openWriteStream(${pathS}) access denied`));
+                    return;
+                }
             }
 
             // Audit upload
