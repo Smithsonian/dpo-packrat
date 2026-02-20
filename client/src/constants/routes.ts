@@ -64,6 +64,7 @@ export const ADMIN_ROUTES_TYPE = {
     USERS: 'users',
     EDIT: ADMIN_EDIT,
     PROJECTS: 'projects',
+    PROJECTAUTH: 'projects/:idProject/auth',
     UNITS: 'units',
     CREATEPROJECT: 'projects/create',
     CREATEUNIT: 'units/create',

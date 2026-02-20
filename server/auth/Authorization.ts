@@ -199,13 +199,6 @@ export class Authorization {
             }
 
             const masters = await DBAPI.SystemObjectXref.fetchMasters(SO.idSystemObject);
-            const hasUnitParent = masters?.some(xref => {
-                // We need to check if the master SystemObject points to a Unit.
-                // The master idSystemObject is xref.idSystemObjectMaster;
-                // we check this asynchronously below.
-                return false; // placeholder — synchronous check not possible here
-            });
-
             // Do the async check: find if any master is a Unit
             let foundUnit = false;
             if (masters) {
@@ -218,7 +211,7 @@ export class Authorization {
                 }
             }
 
-            if (!foundUnit && !hasUnitParent) {
+            if (!foundUnit) {
                 RK.logWarning(RK.LogSection.eAUTH, 'orphan project: no Unit ancestor',
                     undefined, { idProject: project.idProject, name: project.Name }, 'Authorization');
                 orphanIds.push(project.idProject);

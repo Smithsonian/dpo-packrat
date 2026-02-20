@@ -13,7 +13,8 @@ export default async function CreateProject(_: Parent, args: MutationCreateProje
     const projectArgs = {
         idProject: 0,
         Name,
-        Description
+        Description,
+        isRestricted: false
     };
 
     const Project: DBAPI.Project = new DBAPI.Project(projectArgs);

@@ -12,7 +12,12 @@ enum API_ROUTES {
     GEN_DOWNLOADS = 'api/scene/gen-downloads',
     GEN_SCENE = 'api/workflow/gen-scene',
     PROJECTS = 'api/project',
-    REPORT = 'api/report'
+    REPORT = 'api/report',
+    AUTH_USER_UNITS = 'api/auth/user',
+    AUTH_PROJECT = 'api/auth/project',
+    AUTH_USERS = 'api/auth/users',
+    AUTH_UNITS = 'api/auth/units',
+    AUTH_PROJECTS = 'api/auth/projects',
 }
 
 export type AuthResponseType = {
@@ -142,6 +147,31 @@ export default class API {
         if(id && id>0 && !isNaN(id))
             uri += `/${id}`;
         return this.request(uri, { method: 'GET' });
+    }
+
+    // authorization management
+    static async getUserUnits(idUser: number): Promise<RequestResponse> {
+        return this.request(`${API_ROUTES.AUTH_USER_UNITS}/${idUser}/units`, { method: 'GET' });
+    }
+    static async setUserUnits(idUser: number, unitIds: number[]): Promise<RequestResponse> {
+        const body = JSON.stringify({ unitIds });
+        return this.request(`${API_ROUTES.AUTH_USER_UNITS}/${idUser}/units`, { method: 'PUT', body });
+    }
+    static async getProjectAuth(idProject: number): Promise<RequestResponse> {
+        return this.request(`${API_ROUTES.AUTH_PROJECT}/${idProject}`, { method: 'GET' });
+    }
+    static async setProjectAuth(idProject: number, isRestricted: boolean, authorizedUserIds: number[]): Promise<RequestResponse> {
+        const body = JSON.stringify({ isRestricted, authorizedUserIds });
+        return this.request(`${API_ROUTES.AUTH_PROJECT}/${idProject}`, { method: 'PUT', body });
+    }
+    static async getAuthUsers(): Promise<RequestResponse> {
+        return this.request(API_ROUTES.AUTH_USERS, { method: 'GET' });
+    }
+    static async getAuthUnits(): Promise<RequestResponse> {
+        return this.request(API_ROUTES.AUTH_UNITS, { method: 'GET' });
+    }
+    static async getAuthProjects(): Promise<RequestResponse> {
+        return this.request(API_ROUTES.AUTH_PROJECTS, { method: 'GET' });
     }
 
     // system operations

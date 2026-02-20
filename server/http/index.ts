@@ -25,6 +25,7 @@ import { createReport, getReportList, getReportFile } from './routes/api/report'
 import { getObjectStatus, patchObject } from './routes/api/object';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
+import { getUserUnits, setUserUnits, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects } from './routes/api/authorization';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -223,6 +224,14 @@ export class HttpServer {
         this.app.get('/api/report/:type',getReportList);                // get a list of reports for the given type
         this.app.post('/api/report/:type', createReport);               // run report creation for asset-files
 
+        this.app.get('/api/auth/user/:idUser/units', getUserUnits);
+        this.app.put('/api/auth/user/:idUser/units', setUserUnits);
+        this.app.get('/api/auth/project/:idProject', getProjectAuth);
+        this.app.put('/api/auth/project/:idProject', setProjectAuth);
+        this.app.get('/api/auth/users', getAuthUsers);
+        this.app.get('/api/auth/units', getAuthUnits);
+        this.app.get('/api/auth/projects', getAuthProjects);
+
         this.app.get('/api/sandbox/play',play);
 
         // if we're here then we handle any errors that may have surfaced
@@ -266,8 +275,9 @@ export class HttpServer {
         }
 
         // Populate authorization context from session cache
-        if (req.session?.authContext)
-            LS.authContext = req.session.authContext;
+        const reqSession = (req as any).session;
+        if (reqSession?.authContext)
+            LS.authContext = reqSession.authContext;
 
         // run the store for this user
         ASL.run(LS, () => {

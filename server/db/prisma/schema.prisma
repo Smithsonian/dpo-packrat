@@ -794,18 +794,6 @@ model User {
   @@index([EmailAddress], map: "user_EmailAddress")
 }
 
-model UserAuthorization {
-  idUserAuthorization Int          @id @default(autoincrement())
-  idUser              Int
-  idSystemObject      Int
-  User                User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_user1")
-  SystemObject        SystemObject @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_systemobject1")
-
-  @@unique([idUser, idSystemObject], map: "UserAuthorization_idUser_idSystemObject")
-  @@index([idUser], map: "UserAuthorization_idUser")
-  @@index([idSystemObject], map: "UserAuthorization_idSystemObject")
-}
-
 model UserPersonalizationSystemObject {
   idUserPersonalizationSystemObject Int          @id @default(autoincrement())
   idUser                            Int
@@ -976,6 +964,18 @@ model ObjectProperty {
   @@unique([idSystemObject, PropertyType], map: "ObjectProperty_idSystemObject_Type")
   @@index([idContact], map: "ObjectProperty_idContact")
   @@index([idSystemObject], map: "ObjectProperty_idSystemObject")
+}
+
+model UserAuthorization {
+  idUserAuthorization Int          @id @default(autoincrement())
+  idUser              Int
+  idSystemObject      Int
+  SystemObject        SystemObject @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_systemobject1")
+  User                User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_user1")
+
+  @@unique([idUser, idSystemObject], map: "UserAuthorization_idUser_idSystemObject")
+  @@index([idUser], map: "UserAuthorization_idUser")
+  @@index([idSystemObject], map: "UserAuthorization_idSystemObject")
 }
 
 enum ObjectProperty_PropertyType {

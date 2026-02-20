@@ -89,7 +89,8 @@ function executeQueryCollection(ICollection: COL.ICollection, query: string, exp
                     SubjectName: record.name,
                     UnitAbbreviation: record.unit,
                     IdentifierPublic: record.identifierPublic,
-                    IdentifierCollection: record.identifierCollection
+                    IdentifierCollection: record.identifierCollection,
+                    idUnit: 0
                 });
 
         if (!expectNull)

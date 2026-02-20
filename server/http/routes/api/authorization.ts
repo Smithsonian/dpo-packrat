@@ -1,0 +1,296 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as DBAPI from '../../../db';
+import * as H from '../../../utils/helpers';
+import { ASL, LocalStore } from '../../../utils/localStore';
+import { isAuthenticated } from '../../auth';
+import { Request, Response } from 'express';
+import { Config } from '../../../config';
+import { RecordKeeper as RK } from '../../../records/recordKeeper';
+
+const SRC = 'HTTP.Route.Authorization';
+
+type AuthResponse = {
+    success: boolean;
+    message?: string;
+    data?: any;
+};
+
+const generateResponse = (success: boolean, message?: string, data?: any): AuthResponse => {
+    return { success, message, data };
+};
+
+const isAdminAuthorized = async (req: Request): Promise<H.IOResults> => {
+    if (!isAuthenticated(req)) {
+        RK.logError(RK.LogSection.eHTTP, 'auth check failed', 'not authenticated', {}, SRC);
+        return { success: false, error: 'not authenticated' };
+    }
+
+    const LS: LocalStore | undefined = ASL.getStore();
+    if (!LS || !LS.idUser) {
+        RK.logError(RK.LogSection.eHTTP, 'auth check failed', 'cannot get LocalStore or idUser', {}, SRC);
+        return { success: false, error: `missing local store/user (${LS?.idUser})` };
+    }
+
+    if (!Config.auth.users.admin.includes(LS.idUser)) {
+        RK.logError(RK.LogSection.eHTTP, 'auth check failed', 'user is not an admin', {}, SRC);
+        return { success: false, error: `user (${LS.idUser}) does not have admin permission` };
+    }
+
+    return { success: true };
+};
+
+//#region GET /api/auth/user/:idUser/units
+export async function getUserUnits(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getUserUnits: ${authResult.error}`)));
+        return;
+    }
+
+    const idUser: number = parseInt(req.params.idUser);
+    if (!idUser || isNaN(idUser)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getUserUnits: invalid idUser')));
+        return;
+    }
+
+    const unitIds: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(idUser);
+
+    // Fetch unit details for the returned IDs
+    const units: { idUnit: number; Name: string; Abbreviation: string | null }[] = [];
+    for (const idUnit of unitIds) {
+        const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(idUnit);
+        if (unit)
+            units.push({ idUnit: unit.idUnit, Name: unit.Name, Abbreviation: unit.Abbreviation });
+    }
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, { idUser, units })));
+}
+//#endregion
+
+//#region PUT /api/auth/user/:idUser/units
+export async function setUserUnits(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setUserUnits: ${authResult.error}`)));
+        return;
+    }
+
+    const idUser: number = parseInt(req.params.idUser);
+    if (!idUser || isNaN(idUser)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'setUserUnits: invalid idUser')));
+        return;
+    }
+
+    const { unitIds } = req.body;
+    if (!Array.isArray(unitIds) || unitIds.length === 0) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'setUserUnits: unitIds must be a non-empty array')));
+        return;
+    }
+
+    // Fetch current unit assignments for this user
+    const currentUnitIds: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(idUser);
+
+    const toAdd: number[] = unitIds.filter((id: number) => !currentUnitIds.includes(id));
+    const toRemove: number[] = currentUnitIds.filter(id => !unitIds.includes(id));
+
+    // Remove assignments no longer desired
+    for (const idUnit of toRemove) {
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
+        if (!SO) continue;
+        const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
+        if (ua)
+            await ua.delete();
+    }
+
+    // Add new assignments
+    for (const idUnit of toAdd) {
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
+        if (!SO) {
+            RK.logError(RK.LogSection.eHTTP, 'setUserUnits', `no SystemObject for unit ${idUnit}`, {}, SRC);
+            continue;
+        }
+        const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
+            idUserAuthorization: 0,
+            idUser,
+            idSystemObject: SO.idSystemObject,
+        });
+        await ua.create();
+    }
+
+    RK.logInfo(RK.LogSection.eHTTP, 'setUserUnits', `updated units for user ${idUser}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+    res.status(200).send(JSON.stringify(generateResponse(true, 'Updated unit assignments', { unitIds })));
+}
+//#endregion
+
+//#region GET /api/auth/project/:idProject
+export async function getProjectAuth(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getProjectAuth: ${authResult.error}`)));
+        return;
+    }
+
+    const idProject: number = parseInt(req.params.idProject);
+    if (!idProject || isNaN(idProject)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getProjectAuth: invalid idProject')));
+        return;
+    }
+
+    const project: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
+    if (!project) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getProjectAuth: project ${idProject} not found`)));
+        return;
+    }
+
+    const authorizedUsers = await DBAPI.UserAuthorization.fetchUsersForProject(idProject);
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, {
+        idProject: project.idProject,
+        Name: project.Name,
+        isRestricted: project.isRestricted,
+        authorizedUsers,
+    })));
+}
+//#endregion
+
+//#region PUT /api/auth/project/:idProject
+export async function setProjectAuth(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setProjectAuth: ${authResult.error}`)));
+        return;
+    }
+
+    const idProject: number = parseInt(req.params.idProject);
+    if (!idProject || isNaN(idProject)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'setProjectAuth: invalid idProject')));
+        return;
+    }
+
+    const project: DBAPI.Project | null = await DBAPI.Project.fetch(idProject);
+    if (!project) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setProjectAuth: project ${idProject} not found`)));
+        return;
+    }
+
+    const { isRestricted, authorizedUserIds } = req.body;
+
+    // Update isRestricted if provided
+    if (typeof isRestricted === 'boolean') {
+        project.isRestricted = isRestricted;
+        await project.update();
+    }
+
+    // Warn if restricted with no authorized users
+    if (project.isRestricted && (!Array.isArray(authorizedUserIds) || authorizedUserIds.length === 0)) {
+        RK.logWarning(RK.LogSection.eHTTP, 'setProjectAuth', `project ${idProject} set to restricted with no authorized users`, {}, SRC);
+    }
+
+    // Diff user authorizations if provided
+    if (Array.isArray(authorizedUserIds)) {
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(idProject);
+        if (!SO) {
+            res.status(200).send(JSON.stringify(generateResponse(false, `setProjectAuth: no SystemObject for project ${idProject}`)));
+            return;
+        }
+
+        const currentRows: DBAPI.UserAuthorization[] | null = await DBAPI.UserAuthorization.fetchFromSystemObject(SO.idSystemObject);
+        const currentUserIds: number[] = currentRows ? currentRows.map(r => r.idUser) : [];
+
+        const toAdd: number[] = authorizedUserIds.filter((id: number) => !currentUserIds.includes(id));
+        const toRemove: number[] = currentUserIds.filter(id => !authorizedUserIds.includes(id));
+
+        for (const idUser of toRemove) {
+            const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
+            if (ua)
+                await ua.delete();
+        }
+
+        for (const idUser of toAdd) {
+            const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
+                idUserAuthorization: 0,
+                idUser,
+                idSystemObject: SO.idSystemObject,
+            });
+            await ua.create();
+        }
+
+        RK.logInfo(RK.LogSection.eHTTP, 'setProjectAuth', `updated auth for project ${idProject}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+    }
+
+    res.status(200).send(JSON.stringify(generateResponse(true, 'Updated project authorization')));
+}
+//#endregion
+
+//#region GET /api/auth/users
+export async function getAuthUsers(_req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(_req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getAuthUsers: ${authResult.error}`)));
+        return;
+    }
+
+    const users: DBAPI.User[] | null = await DBAPI.User.fetchUserList('', DBAPI.eUserStatus.eAll);
+    if (!users) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getAuthUsers: failed to fetch users')));
+        return;
+    }
+
+    const data = users.map(u => ({
+        idUser: u.idUser,
+        Name: u.Name,
+        EmailAddress: u.EmailAddress,
+        Active: u.Active,
+    }));
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, data)));
+}
+//#endregion
+
+//#region GET /api/auth/units
+export async function getAuthUnits(_req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(_req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getAuthUnits: ${authResult.error}`)));
+        return;
+    }
+
+    const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll();
+    if (!units) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getAuthUnits: failed to fetch units')));
+        return;
+    }
+
+    const data = units.map(u => ({
+        idUnit: u.idUnit,
+        Name: u.Name,
+        Abbreviation: u.Abbreviation,
+    }));
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, data)));
+}
+//#endregion
+
+//#region GET /api/auth/projects
+export async function getAuthProjects(_req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(_req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getAuthProjects: ${authResult.error}`)));
+        return;
+    }
+
+    const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll();
+    if (!projects) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getAuthProjects: failed to fetch projects')));
+        return;
+    }
+
+    const data = projects.map(p => ({
+        idProject: p.idProject,
+        Name: p.Name,
+        isRestricted: p.isRestricted,
+    }));
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, data)));
+}
+//#endregion

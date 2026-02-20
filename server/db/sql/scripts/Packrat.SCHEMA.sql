@@ -464,6 +464,7 @@ CREATE TABLE IF NOT EXISTS `Project` (
   `idProject` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(128) NOT NULL,
   `Description` varchar(8000) DEFAULT NULL,
+  `isRestricted` boolean NOT NULL DEFAULT false,
   PRIMARY KEY (`idProject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
@@ -612,6 +613,16 @@ CREATE TABLE IF NOT EXISTS `User` (
   `SlackID` varchar(255) NOT NULL,
   PRIMARY KEY (`idUser`),
   KEY `user_EmailAddress` (`EmailAddress`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+CREATE TABLE IF NOT EXISTS `UserAuthorization` (
+  `idUserAuthorization` int(11) NOT NULL AUTO_INCREMENT,
+  `idUser` int(11) NOT NULL,
+  `idSystemObject` int(11) NOT NULL,
+  PRIMARY KEY (`idUserAuthorization`),
+  UNIQUE KEY `UserAuthorization_idUser_idSystemObject` (`idUser`,`idSystemObject`),
+  KEY `UserAuthorization_idUser` (`idUser`),
+  KEY `UserAuthorization_idSystemObject` (`idSystemObject`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
@@ -1249,7 +1260,19 @@ ADD CONSTRAINT `fk_unitedan_idunit`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
-ALTER TABLE `UserPersonalizationSystemObject` 
+ALTER TABLE `UserAuthorization`
+ADD CONSTRAINT `fk_userauthorization_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_userauthorization_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `UserPersonalizationSystemObject`
 ADD CONSTRAINT `fk_userpersonalizationsystemobject_user1`
   FOREIGN KEY (`idUser`)
   REFERENCES `User` (`idUser`)

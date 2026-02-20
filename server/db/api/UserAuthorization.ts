@@ -126,4 +126,55 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
             return [];
         }
     }
+
+    protected async deleteWorker(): Promise<boolean> {
+        try {
+            const { idUserAuthorization } = this;
+            await DBC.DBConnection.prisma.userAuthorization.delete({
+                where: { idUserAuthorization },
+            });
+            return true;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
+            return false;
+        }
+    }
+
+    /**
+     * Returns users authorized for a specific project.
+     * Joins UserAuthorization -> SystemObject (where SO.idProject = idProject) -> User.
+     */
+    static async fetchUsersForProject(idProject: number): Promise<{ idUser: number; Name: string; EmailAddress: string }[]> {
+        if (!idProject)
+            return [];
+        try {
+            return await DBC.DBConnection.prisma.$queryRaw<{ idUser: number; Name: string; EmailAddress: string }[]>`
+                SELECT U.idUser, U.Name, U.EmailAddress
+                FROM UserAuthorization AS UA
+                JOIN SystemObject AS SO ON (UA.idSystemObject = SO.idSystemObject)
+                JOIN User AS U ON (UA.idUser = U.idUser)
+                WHERE SO.idProject = ${idProject}
+                ORDER BY U.Name ASC`;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchUsersForProject failed',H.Helpers.getErrorString(error),{ idProject, ...this },'DB.UserAuthorization');
+            return [];
+        }
+    }
+
+    /**
+     * Fetches a specific UserAuthorization row by (idUser, idSystemObject).
+     */
+    static async fetchByUserAndSystemObject(idUser: number, idSystemObject: number): Promise<UserAuthorization | null> {
+        if (!idUser || !idSystemObject)
+            return null;
+        try {
+            return DBC.CopyObject<UserAuthorizationBase, UserAuthorization>(
+                await DBC.DBConnection.prisma.userAuthorization.findFirst({
+                    where: { idUser, idSystemObject }
+                }), UserAuthorization);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchByUserAndSystemObject failed',H.Helpers.getErrorString(error),{ idUser, idSystemObject, ...this },'DB.UserAuthorization');
+            return null;
+        }
+    }
 }

@@ -24,6 +24,7 @@ import React from 'react';
 import AdminUsersView from './components/User/AdminUsersView';
 import AdminUserForm from './components/User/AdminUserForm';
 import AdminProjectsView from './components/AdminProjectsView';
+import AdminProjectAuthView from './components/AdminProjectAuthView';
 import AdminUnitsView from './components/AdminUnitsView';
 import AdminToolsView from './components/AdminToolsView';
 import AdminContactView from './components/Contact/AdminContactView';
@@ -46,6 +47,7 @@ function Admin(): React.ReactElement {
             <Route path={resolveRoute(ADMIN_EDIT.LICENSE)} element={<LicenseForm />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.LICENSES)} element={<LicenseView />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.CREATEPROJECT)} element={<AddProjectForm />} />
+            <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.PROJECTAUTH)} element={<AdminProjectAuthView />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.PROJECTS)} element={<AdminProjectsView />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.CREATEUNIT)} element={<AddUnitForm />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.UNITS)} element={<AdminUnitsView />} />

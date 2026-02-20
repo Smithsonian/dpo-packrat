@@ -33,7 +33,7 @@ AuthRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
             // Build and cache authorization context in session
             try {
                 const authContext = await Authorization.buildContext(user.idUser);
-                req.session.authContext = authContext;
+                (req as any).session.authContext = authContext;
             } catch (err) {
                 RK.logError(RK.LogSection.eAUTH,'buildContext failed during login',
                     err instanceof Error ? err.message : String(err), { idUser: user.idUser, ip },'Auth.Router');

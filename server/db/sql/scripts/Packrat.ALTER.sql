@@ -585,4 +585,29 @@ ADD CONSTRAINT `fk_objectproperty_contact1`
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 
+-- 2026-02-18 Project-based authorization (Eric)
+ALTER TABLE Project ADD COLUMN `isRestricted` boolean NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS `UserAuthorization` (
+  `idUserAuthorization` int(11) NOT NULL AUTO_INCREMENT,
+  `idUser` int(11) NOT NULL,
+  `idSystemObject` int(11) NOT NULL,
+  PRIMARY KEY (`idUserAuthorization`),
+  UNIQUE KEY `UserAuthorization_idUser_idSystemObject` (`idUser`,`idSystemObject`),
+  KEY `UserAuthorization_idUser` (`idUser`),
+  KEY `UserAuthorization_idSystemObject` (`idSystemObject`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+ALTER TABLE `UserAuthorization`
+ADD CONSTRAINT `fk_userauthorization_user1`
+  FOREIGN KEY (`idUser`)
+  REFERENCES `User` (`idUser`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_userauthorization_systemobject1`
+  FOREIGN KEY (`idSystemObject`)
+  REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
 ------

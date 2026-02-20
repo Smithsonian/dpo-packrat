@@ -263,7 +263,7 @@ export class BulkIngestReader {
         }
 
         return { idSubject: 0, idSystemObject: 0, SubjectName: bagitSubject.subject_name, UnitAbbreviation: units[0].Abbreviation || /* istanbul ignore next */ '',
-            IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '' };
+            IdentifierCollection: bagitSubject.subject_guid, IdentifierPublic: '', idUnit: units[0].idUnit };
     }
 
     private async extractSubjectUnitIDFromSubject(subject: DBAPI.Subject | null,
@@ -289,7 +289,7 @@ export class BulkIngestReader {
             ? await DBAPI.Identifier.fetch(subject.idIdentifierPreferred)
             : /* istanbul ignore next */ null;
         return { idSubject: subject.idSubject, idSystemObject: SO.idSystemObject, SubjectName: subject.Name, UnitAbbreviation: unit.Abbreviation  || /* istanbul ignore next */ '',
-            IdentifierCollection: identifier ? identifier.IdentifierValue : /* istanbul ignore next */ bagitSubject.subject_guid, IdentifierPublic: '' };
+            IdentifierCollection: identifier ? identifier.IdentifierValue : /* istanbul ignore next */ bagitSubject.subject_guid, IdentifierPublic: '', idUnit: subject.idUnit };
     }
 
     private async extractItemFromCSV(bagitItem: ItemsCSVFields): Promise<DBAPI.Item | null> {

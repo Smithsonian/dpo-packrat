@@ -1157,19 +1157,19 @@ export function getNoticeConfig(properties: ObjectPropertyResult[] | null, conta
     // build our notice for return
     let messageHTML = '';
     switch(sensitiveProps.level) {
-        case 0: {
+        case 0:
             messageHTML += 'This object is deemed NOT sensitive, but still follows Smithsonian policy for digital assets.';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
-        } break;
-        case 1: {
+            break;
+        case 1:
             messageHTML += 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
-        } break;
-        case 2: {
+            break;
+        case 2:
             messageHTML += 'This object is confidential and visible only to selecet members.';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
             messageHTML += '</br></br>If you think you should be able to see this object please contact the individual below and Packrat support (<b>packrat@si.edu</b>)';
-        }
+            break;
     }
 
     // shared lines (contact/reason)
