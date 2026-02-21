@@ -619,10 +619,13 @@ CREATE TABLE IF NOT EXISTS `UserAuthorization` (
   `idUserAuthorization` int(11) NOT NULL AUTO_INCREMENT,
   `idUser` int(11) NOT NULL,
   `idSystemObject` int(11) NOT NULL,
+  `DateCreated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `idUserCreator` int(11) DEFAULT NULL,
   PRIMARY KEY (`idUserAuthorization`),
   UNIQUE KEY `UserAuthorization_idUser_idSystemObject` (`idUser`,`idSystemObject`),
   KEY `UserAuthorization_idUser` (`idUser`),
-  KEY `UserAuthorization_idSystemObject` (`idSystemObject`)
+  KEY `UserAuthorization_idSystemObject` (`idSystemObject`),
+  KEY `UserAuthorization_idUserCreator` (`idUserCreator`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `UserPersonalizationSystemObject` (
@@ -1269,6 +1272,11 @@ ADD CONSTRAINT `fk_userauthorization_user1`
 ADD CONSTRAINT `fk_userauthorization_systemobject1`
   FOREIGN KEY (`idSystemObject`)
   REFERENCES `SystemObject` (`idSystemObject`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_userauthorization_usercreator1`
+  FOREIGN KEY (`idUserCreator`)
+  REFERENCES `User` (`idUser`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;
 

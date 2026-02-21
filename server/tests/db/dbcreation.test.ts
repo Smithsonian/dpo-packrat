@@ -1657,7 +1657,9 @@ describe('DB Creation Test Suite', () => {
                 userAuthorization = new DBAPI.UserAuthorization({
                     idUser: userActive.idUser,
                     idSystemObject: systemObjectUnit.idSystemObject,
-                    idUserAuthorization: 0
+                    idUserAuthorization: 0,
+                    DateCreated: new Date(),
+                    idUserCreator: null,
                 });
                 expect(await userAuthorization.create()).toBeTruthy();
             }
@@ -1675,7 +1677,9 @@ describe('DB Creation Test Suite', () => {
                 userAuthorizationProject = new DBAPI.UserAuthorization({
                     idUser: userActive.idUser,
                     idSystemObject: systemObjectProject.idSystemObject,
-                    idUserAuthorization: 0
+                    idUserAuthorization: 0,
+                    DateCreated: new Date(),
+                    idUserCreator: null,
                 });
                 expect(await userAuthorizationProject.create()).toBeTruthy();
             }

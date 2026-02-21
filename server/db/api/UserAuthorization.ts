@@ -8,6 +8,8 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
     idUserAuthorization!: number;
     idUser!: number;
     idSystemObject!: number;
+    DateCreated!: Date;
+    idUserCreator!: number | null;
 
     constructor(input: UserAuthorizationBase) {
         super(input);
@@ -18,13 +20,16 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
 
     protected async createWorker(): Promise<boolean> {
         try {
-            const { idUser, idSystemObject } = this;
+            const { idUser, idSystemObject, DateCreated, idUserCreator } = this;
             ({ idUserAuthorization: this.idUserAuthorization, idUser: this.idUser,
-                idSystemObject: this.idSystemObject } =
+                idSystemObject: this.idSystemObject, DateCreated: this.DateCreated,
+                idUserCreator: this.idUserCreator } =
                 await DBC.DBConnection.prisma.userAuthorization.create({
                     data: {
-                        User:         { connect: { idUser }, },
-                        SystemObject: { connect: { idSystemObject }, },
+                        idUser,
+                        idSystemObject,
+                        DateCreated:   DateCreated ?? new Date(),
+                        idUserCreator: idUserCreator ?? null,
                     }
                 }));
             return true;

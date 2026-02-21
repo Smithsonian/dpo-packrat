@@ -103,6 +103,9 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
     }
 
     // Add new assignments
+    const LS: LocalStore | undefined = ASL.getStore();
+    const idUserCreator: number | null = LS?.idUser ?? null;
+
     for (const idUnit of toAdd) {
         const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
         if (!SO) {
@@ -113,6 +116,8 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
             idUserAuthorization: 0,
             idUser,
             idSystemObject: SO.idSystemObject,
+            DateCreated: new Date(),
+            idUserCreator,
         });
         await ua.create();
     }
@@ -206,11 +211,16 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
                 await ua.delete();
         }
 
+        const LSProj: LocalStore | undefined = ASL.getStore();
+        const idUserCreatorProj: number | null = LSProj?.idUser ?? null;
+
         for (const idUser of toAdd) {
             const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
                 idUserAuthorization: 0,
                 idUser,
                 idSystemObject: SO.idSystemObject,
+                DateCreated: new Date(),
+                idUserCreator: idUserCreatorProj,
             });
             await ua.create();
         }

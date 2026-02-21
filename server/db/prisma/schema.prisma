@@ -769,27 +769,28 @@ model UnitEdan {
 }
 
 model User {
-  idUser                          Int                               @id @default(autoincrement())
-  Name                            String                            @mariasql.VarChar(255)
-  EmailAddress                    String                            @mariasql.VarChar(255)
-  SecurityID                      String                            @mariasql.VarChar(255)
-  Active                          Boolean
-  DateActivated                   DateTime                          @mariasql.DateTime(0)
-  DateDisabled                    DateTime?                         @mariasql.DateTime(0)
-  WorkflowNotificationTime        DateTime?                         @mariasql.Time(0)
-  EmailSettings                   Int?
-  SlackID                         String                            @default("") @mariasql.LongText
-  AccessPolicy                    AccessPolicy[]
-  AssetVersion                    AssetVersion[]
-  Audit                           Audit[]
-  LicenseAssignment               LicenseAssignment[]
-  Metadata                        Metadata[]
-  Sentinel                        Sentinel[]
-  UserAuthorization               UserAuthorization[]
-  UserPersonalizationSystemObject UserPersonalizationSystemObject[]
-  UserPersonalizationUrl          UserPersonalizationUrl[]
-  Workflow                        Workflow[]
-  WorkflowStep                    WorkflowStep[]
+  idUser                                                  Int                               @id @default(autoincrement())
+  Name                                                    String                            @mariasql.VarChar(255)
+  EmailAddress                                            String                            @mariasql.VarChar(255)
+  SecurityID                                              String                            @mariasql.VarChar(255)
+  Active                                                  Boolean
+  DateActivated                                           DateTime                          @mariasql.DateTime(0)
+  DateDisabled                                            DateTime?                         @mariasql.DateTime(0)
+  WorkflowNotificationTime                                DateTime?                         @mariasql.Time(0)
+  EmailSettings                                           Int?
+  SlackID                                                 String                            @default("") @mariasql.LongText
+  AccessPolicy                                            AccessPolicy[]
+  AssetVersion                                            AssetVersion[]
+  Audit                                                   Audit[]
+  LicenseAssignment                                       LicenseAssignment[]
+  Metadata                                                Metadata[]
+  Sentinel                                                Sentinel[]
+  UserAuthorization                                       UserAuthorization[]
+  UserAuthorization_UserAuthorization_idUserCreatorToUser UserAuthorization[]               @relation("UserAuthorization_idUserCreatorToUser")
+  UserPersonalizationSystemObject                         UserPersonalizationSystemObject[]
+  UserPersonalizationUrl                                  UserPersonalizationUrl[]
+  Workflow                                                Workflow[]
+  WorkflowStep                                            WorkflowStep[]
 
   @@index([EmailAddress], map: "user_EmailAddress")
 }
@@ -967,15 +968,19 @@ model ObjectProperty {
 }
 
 model UserAuthorization {
-  idUserAuthorization Int          @id @default(autoincrement())
-  idUser              Int
-  idSystemObject      Int
-  SystemObject        SystemObject @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_systemobject1")
-  User                User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_user1")
+  idUserAuthorization                        Int          @id @default(autoincrement())
+  idUser                                     Int
+  idSystemObject                             Int
+  DateCreated                                DateTime     @default(now()) @mariasql.DateTime(0)
+  idUserCreator                              Int?
+  SystemObject                               SystemObject @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_systemobject1")
+  User                                       User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_user1")
+  User_UserAuthorization_idUserCreatorToUser User?        @relation("UserAuthorization_idUserCreatorToUser", fields: [idUserCreator], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_usercreator1")
 
   @@unique([idUser, idSystemObject], map: "UserAuthorization_idUser_idSystemObject")
   @@index([idUser], map: "UserAuthorization_idUser")
   @@index([idSystemObject], map: "UserAuthorization_idSystemObject")
+  @@index([idUserCreator], map: "UserAuthorization_idUserCreator")
 }
 
 enum ObjectProperty_PropertyType {
