@@ -11,15 +11,21 @@ import API, { RequestResponse } from '../../../../api';
 import {
     Box,
     Button,
+    Checkbox,
+    Collapse,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
+    FormControlLabel,
+    IconButton,
     TextField,
     MenuItem,
     Typography,
     Tooltip
 } from '@material-ui/core';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import { ToggleButton, ToggleButtonGroup } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
@@ -113,6 +119,27 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             borderColor: palette.primary.main,
         },
     },
+    collapseHeader: {
+        display: 'flex',
+        alignItems: 'center',
+        cursor: 'pointer',
+        fontSize: '0.875rem',
+        padding: '8px 10px',
+        backgroundColor: palette.primary.light,
+        color: palette.primary.main,
+        borderRadius: 5,
+        border: `1px solid ${palette.primary.main}`,
+        justifyContent: 'space-between',
+        width: '100%',
+    },
+    collapseContainer: {
+        border: `1px dotted ${palette.primary.main}`,
+        borderTop: 0,
+        boxSizing: 'border-box',
+        borderRadius: 5,
+        padding: '10px',
+        overflow: 'hidden',
+    },
 }));
 
 type DetailsParams = {
@@ -157,6 +184,8 @@ function DetailsView(): React.ReactElement {
     const [refreshTick, setRefreshTick] = useState(0);
     const [sceneGenParameters, setSceneGenParameters] = useState<SceneGeneParameters | null>(null);
     const [sceneGenDialogOpen, setSceneGenDialogOpen] = React.useState(false);
+    const [skipJobCleanup, setSkipJobCleanup] = useState(false);
+    const [adminOptionsOpen, setAdminOptionsOpen] = useState(false);
     const [decimationPassesInput, setDecimationPassesInput] = React.useState(
         String(sceneGenParameters?.decimationPasses ?? 1)
     );
@@ -807,7 +836,7 @@ function DetailsView(): React.ReactElement {
 
         // make a call to our generate scene endpoint with the current scene id
         // return sucess when the job is started or if one is already running
-        const response: RequestResponse = await API.generateScene([idSystemObject], parameters ? sceneGenParameters : undefined);
+        const response: RequestResponse = await API.generateScene([idSystemObject], parameters ? { ...sceneGenParameters, skipJobCleanup } : { skipJobCleanup });
         if(response.success === false) {
 
             // get our message from our first response
@@ -1009,6 +1038,28 @@ function DetailsView(): React.ReactElement {
                                         onKeyDown={(e) => { if (e.key === 'Enter') commitSceneGenDecimationPasses(); }}
                                     />
                                 </Tooltip>
+
+                                {isAdmin && (
+                                    <Box mt={2}>
+                                        <IconButton className={classes.collapseHeader} onClick={() => setAdminOptionsOpen(prev => !prev)}>
+                                            Admin Options
+                                            {adminOptionsOpen ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                        </IconButton>
+                                        <Collapse in={adminOptionsOpen} className={classes.collapseContainer}>
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        size='small'
+                                                        checked={skipJobCleanup}
+                                                        onChange={(e) => setSkipJobCleanup(e.target.checked)}
+                                                        color='primary'
+                                                    />
+                                                }
+                                                label='Skip Job Cleanup'
+                                            />
+                                        </Collapse>
+                                    </Box>
+                                )}
                             </DialogContent>
 
                             <DialogActions>
