@@ -40,6 +40,7 @@ export class JobCookSIGenerateDownloadsParameters {
         sourceMeshFile: string,
         svxFile: string,
         sourceDiffuseMapFile: string | undefined = undefined,
+        sourceRoughMetalMapFile: string | undefined = undefined,
         sourceMTLFile: string | undefined = undefined,
         outputFileBaseName: string | undefined = undefined,
         units: string | undefined = undefined,
@@ -51,11 +52,9 @@ export class JobCookSIGenerateDownloadsParameters {
         this.sourceMeshFile = path.basename(sourceMeshFile);
         this.svxFile = path.basename(svxFile);
         this.sourceDiffuseMapFile = sourceDiffuseMapFile ? path.basename(sourceDiffuseMapFile) : undefined;
+        this.sourceRoughMetalMapFile = sourceRoughMetalMapFile ? path.basename(sourceRoughMetalMapFile) : undefined;
         this.sourceMTLFile = sourceMTLFile ? path.basename(sourceMTLFile) : undefined;
         this.outputFileBaseName = outputFileBaseName ? path.basename(outputFileBaseName) : undefined;
-        this.units = units ? units : undefined;
-        this.metaDataFile = metaDataFile ? metaDataFile : undefined;
-        this.parameterHelper = parameterHelper ? parameterHelper : undefined;
         this.units = units ? units : undefined;
         this.metaDataFile = metaDataFile ? metaDataFile : undefined;
         this.parameterHelper = parameterHelper ? parameterHelper : undefined;
@@ -67,6 +66,7 @@ export class JobCookSIGenerateDownloadsParameters {
     svxFile: string;                    // required
     sourceMTLFile?: string | undefined;
     sourceDiffuseMapFile?: string | undefined;
+    sourceRoughMetalMapFile?: string | undefined;
     outputFileBaseName?: string | undefined;
     units: string | undefined;
     metaDataFile?: string | undefined;
