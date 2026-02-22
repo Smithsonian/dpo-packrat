@@ -1620,6 +1620,7 @@ input RelatedObjectInput {
   identifier: String
   name: String!
   objectType: Int!
+  retired: Boolean
 }
 
 enum RelatedObjectType {
