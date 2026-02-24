@@ -63,7 +63,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     // Authorization: check project access if a project is specified
     const ctx = Authorization.getContext();
     if (ctx && input.project.id && input.project.id > 0) {
-        if (!Authorization.canAccessProject(ctx, input.project.id))
+        if (!Authorization.canAccessProject(ctx, input.project.id, 'ingestData'))
             return { success: false, message: AUTH_ERROR.PROJECT_DENIED };
     }
 

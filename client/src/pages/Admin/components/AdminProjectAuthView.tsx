@@ -244,7 +244,7 @@ function AdminProjectAuthView(): React.ReactElement {
                 )}
 
                 <Typography className={classes.note}>
-                    Note: Changes to user authorization take effect on the user's next login.
+                    Note: Changes to user authorization take effect on the user&apos;s next login.
                 </Typography>
             </Box>
 

@@ -471,6 +471,7 @@ export type DeleteIdentifierInput = {
 
 export type DeleteIdentifierResult = {
   __typename?: 'DeleteIdentifierResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -480,6 +481,7 @@ export type DeleteMetadataInput = {
 
 export type DeleteMetadataResult = {
   __typename?: 'DeleteMetadataResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -897,6 +899,7 @@ export type GetSystemObjectDetailsInput = {
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
   allowed: Scalars['Boolean'];
+  allowedReason?: Maybe<Scalars['String']>;
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;
@@ -2811,14 +2814,14 @@ export type DeleteIdentifierMutationVariables = Exact<{
 }>;
 
 
-export type DeleteIdentifierMutation = { __typename?: 'Mutation', deleteIdentifier: { __typename?: 'DeleteIdentifierResult', success: boolean } };
+export type DeleteIdentifierMutation = { __typename?: 'Mutation', deleteIdentifier: { __typename?: 'DeleteIdentifierResult', success: boolean, message?: string | null } };
 
 export type DeleteMetadataMutationVariables = Exact<{
   input: DeleteMetadataInput;
 }>;
 
 
-export type DeleteMetadataMutation = { __typename?: 'Mutation', deleteMetadata: { __typename?: 'DeleteMetadataResult', success: boolean } };
+export type DeleteMetadataMutation = { __typename?: 'Mutation', deleteMetadata: { __typename?: 'DeleteMetadataResult', success: boolean, message?: string | null } };
 
 export type DeleteObjectConnectionMutationVariables = Exact<{
   input: DeleteObjectConnectionInput;
@@ -3087,7 +3090,7 @@ export type GetSystemObjectDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, publishedState: string, publishedEnum: number, publishable: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
 
 export type GetVersionsForAssetQueryVariables = Exact<{
   input: GetVersionsForAssetInput;
@@ -3636,6 +3639,7 @@ export const DeleteIdentifierDocument = gql`
     mutation deleteIdentifier($input: DeleteIdentifierInput!) {
   deleteIdentifier(input: $input) {
     success
+    message
   }
 }
     `;
@@ -3669,6 +3673,7 @@ export const DeleteMetadataDocument = gql`
     mutation deleteMetadata($input: DeleteMetadataInput!) {
   deleteMetadata(input: $input) {
     success
+    message
   }
 }
     `;
@@ -5690,6 +5695,7 @@ export const GetSystemObjectDetailsDocument = gql`
     retired
     objectType
     allowed
+    allowedReason
     publishedState
     publishedEnum
     publishable

@@ -22,9 +22,13 @@ export default async function getFilterViewData(): Promise<GetFilterViewDataResu
     // Filter by authorization context
     const ctx = Authorization.getContext();
     if (ctx && !ctx.isAdmin) {
+        const totalUnits = units.length;
+        const totalProjects = projects.length;
         const unitSet = new Set(ctx.authorizedUnitIds);
         units = units.filter(u => unitSet.has(u.idUnit));
         projects = Authorization.filterProjects(projects, ctx);
+        Authorization.logFilteredResults('getFilterViewData.units', totalUnits, units.length);
+        Authorization.logFilteredResults('getFilterViewData.projects', totalProjects, projects.length);
     }
 
     return { units, projects };

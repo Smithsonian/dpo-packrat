@@ -19,8 +19,10 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
 
     // Authorization: check access to the target Unit
     const ctx = Authorization.getContext();
-    if (ctx && !ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit))
+    if (ctx && !ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit)) {
+        Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubjectWithIdentifiers');
         return { success: false, message: AUTH_ERROR.UNIT_DENIED };
+    }
 
     const identifierTypeARK: DBAPI.Vocabulary | undefined = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
     if (!identifierTypeARK)

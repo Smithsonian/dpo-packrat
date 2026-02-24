@@ -13,7 +13,7 @@ import {
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { SceneHelpers } from '../../../../../utils/sceneHelpers';
-import { Authorization } from '../../../../../auth/Authorization';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 type PublishedStateInfo = {
     publishedState: string;
@@ -107,6 +107,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     const ctx = Authorization.getContext();
     const allowed = ctx ? await Authorization.canAccessSystemObject(ctx, idSystemObject) : true;
+    const allowedReason = allowed ? null : AUTH_ERROR.ACCESS_DENIED;
 
     return {
         idSystemObject,
@@ -116,6 +117,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
         allowed,
+        allowedReason,
         publishedState: publishedStateInfo.publishedState,
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,

@@ -2,7 +2,7 @@ import { DeleteMetadataResult, MutationDeleteMetadataArgs } from '../../../../..
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
-import { Authorization } from '../../../../../auth/Authorization';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function deleteMetadata(_: Parent, args: MutationDeleteMetadataArgs): Promise<DeleteMetadataResult> {
     const { input: { idMetadata } } = args;
@@ -16,7 +16,7 @@ export default async function deleteMetadata(_: Parent, args: MutationDeleteMeta
     const ctx = Authorization.getContext();
     if (ctx && metadata.idSystemObject) {
         if (!await Authorization.canAccessSystemObject(ctx, metadata.idSystemObject))
-            return { success: false };
+            return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
     }
 
     if (await metadata.delete()) {

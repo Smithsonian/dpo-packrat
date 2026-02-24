@@ -210,6 +210,7 @@ input DeleteObjectConnectionInput {
 
 type DeleteIdentifierResult {
     success: Boolean!
+    message: String
 }
 
 input DeleteIdentifierInput {
@@ -218,6 +219,7 @@ input DeleteIdentifierInput {
 
 type DeleteMetadataResult {
     success: Boolean!
+    message: String
 }
 
 input DeleteMetadataInput {

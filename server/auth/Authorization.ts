@@ -102,11 +102,15 @@ export class Authorization {
 
     /**
      * Check if user can access a specific Project by idProject.
+     * When `surface` is provided, a denial is logged with that label.
      */
-    static canAccessProject(ctx: AuthorizationContext, idProject: number): boolean {
+    static canAccessProject(ctx: AuthorizationContext, idProject: number, surface?: string): boolean {
         if (ctx.isAdmin) return true;
         if (ctx.effectiveProjectIds === null) return true;
-        return ctx.effectiveProjectIds.includes(idProject);
+        const allowed = ctx.effectiveProjectIds.includes(idProject);
+        if (!allowed && surface)
+            Authorization.logProjectDenial(ctx.idUser, idProject, surface);
+        return allowed;
     }
 
     /**
@@ -123,7 +127,7 @@ export class Authorization {
         // Check project ancestry
         const projectIds = OG.project?.map(p => p.idProject) ?? [];
         if (projectIds.length > 0) {
-            const allowed = projectIds.some(pid => ctx.effectiveProjectIds!.includes(pid));
+            const allowed = projectIds.some(pid => (ctx.effectiveProjectIds as number[]).includes(pid));
             if (!allowed)
                 Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject');
             return allowed;
@@ -229,9 +233,44 @@ export class Authorization {
 
     // #region Logging
 
-    private static logDenial(idUser: number, idSystemObject: number, surface: string): void {
+    static logDenial(idUser: number, idSystemObject: number, surface: string): void {
         RK.logInfo(RK.LogSection.eSEC, 'access denied',
             undefined, { idUser, idSystemObject, surface }, 'Authorization');
+        Authorization.auditDenial(idUser, idSystemObject, { surface, idSystemObject });
+    }
+
+    static logProjectDenial(idUser: number, idProject: number, surface: string): void {
+        RK.logInfo(RK.LogSection.eSEC, 'project access denied',
+            undefined, { idUser, idProject, surface }, 'Authorization');
+        Authorization.auditDenial(idUser, null, { surface, idProject });
+    }
+
+    static logUnitDenial(idUser: number, idUnit: number, surface: string): void {
+        RK.logInfo(RK.LogSection.eSEC, 'unit access denied',
+            undefined, { idUser, idUnit, surface }, 'Authorization');
+        Authorization.auditDenial(idUser, null, { surface, idUnit });
+    }
+
+    static logFilteredResults(surface: string, totalCount: number, filteredCount: number): void {
+        if (totalCount !== filteredCount)
+            RK.logDebug(RK.LogSection.eSEC, `${surface}: filtered ${totalCount} → ${filteredCount}`,
+                undefined, { surface, totalCount, filteredCount }, 'Authorization');
+    }
+
+    private static async auditDenial(idUser: number, idSystemObject: number | null, data: Record<string, unknown>): Promise<void> {
+        try {
+            const audit = new DBAPI.Audit({
+                idAudit: 0,
+                idUser,
+                AuditDate: new Date(),
+                AuditType: DBAPI.eAuditType.eAuthDenied,
+                DBObjectType: null,
+                idDBObject: null,
+                idSystemObject,
+                Data: JSON.stringify(data),
+            });
+            await audit.create();
+        } catch (error) { /* best-effort; log failure already handled by Audit.createWorker */ }
     }
 
     // #endregion

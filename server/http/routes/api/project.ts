@@ -8,7 +8,7 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
-import { Authorization } from '../../../auth/Authorization';
+import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 
 //#region Types and Definitions
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
@@ -105,8 +105,8 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
 
     // Authorization: check project access for specific project requests
     const ctx = Authorization.getContext();
-    if (ctx && !ctx.isAdmin && idProject > 0 && !Authorization.canAccessProject(ctx, idProject)) {
-        res.status(200).send(JSON.stringify(generateResponse(false,'getProjectScenes: access denied')));
+    if (ctx && !ctx.isAdmin && idProject > 0 && !Authorization.canAccessProject(ctx, idProject, 'getProjectScenes')) {
+        res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.PROJECT_DENIED)));
         return;
     }
 

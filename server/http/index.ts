@@ -275,6 +275,7 @@ export class HttpServer {
         }
 
         // Populate authorization context from session cache
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const reqSession = (req as any).session;
         if (reqSession?.authContext)
             LS.authContext = reqSession.authContext;

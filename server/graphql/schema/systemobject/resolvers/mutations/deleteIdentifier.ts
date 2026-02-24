@@ -2,7 +2,7 @@ import { DeleteIdentifierResult, MutationDeleteIdentifierArgs } from '../../../.
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
-import { Authorization } from '../../../../../auth/Authorization';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function deleteIdentifier(_: Parent, args: MutationDeleteIdentifierArgs): Promise<DeleteIdentifierResult> {
     const { input: { idIdentifier } } = args;
@@ -16,7 +16,7 @@ export default async function deleteIdentifier(_: Parent, args: MutationDeleteId
     const ctx = Authorization.getContext();
     if (ctx && identifier.idSystemObject) {
         if (!await Authorization.canAccessSystemObject(ctx, identifier.idSystemObject))
-            return { success: false };
+            return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
     }
 
     if (await identifier?.delete()) {

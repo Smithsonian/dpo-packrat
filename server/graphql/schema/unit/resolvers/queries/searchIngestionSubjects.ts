@@ -22,6 +22,7 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
     const authorizedUnitSet = (ctx && !ctx.isAdmin) ? new Set(ctx.authorizedUnitIds) : null;
 
     if (resultsDB) {
+        const totalDB = resultsDB.length;
         for (const resultDB of resultsDB) {
             if (resultSet.has(resultDB.IdentifierPublic))
                 continue;
@@ -32,6 +33,8 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
             resultSet.add(resultDB.IdentifierPublic);
             results.push(resultDB);
         }
+        if (authorizedUnitSet)
+            Authorization.logFilteredResults('searchIngestionSubjects', totalDB, results.length);
     }
 
     if (resultsCOL && resultsCOL.records) {

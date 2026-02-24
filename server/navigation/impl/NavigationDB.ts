@@ -97,8 +97,10 @@ export class NavigationDB implements NAV.INavigation {
         // Filter by authorization context
         const ctx = Authorization.getContext();
         if (ctx && !ctx.isAdmin) {
+            const totalUnits = units.length;
             const unitSet = new Set(ctx.authorizedUnitIds);
             units = units.filter(u => unitSet.has(u.idUnit));
+            Authorization.logFilteredResults('computeRootUnits', totalUnits, units.length);
         }
 
         for (const unit of units) {
@@ -170,8 +172,11 @@ export class NavigationDB implements NAV.INavigation {
 
         // Filter by authorization context
         const ctx = Authorization.getContext();
-        if (ctx && !ctx.isAdmin)
+        if (ctx && !ctx.isAdmin) {
+            const totalProjects = projects.length;
             projects = Authorization.filterProjects(projects, ctx);
+            Authorization.logFilteredResults('computeRootProjects', totalProjects, projects.length);
+        }
 
         for (const project of projects) {
             const oID: DBAPI.ObjectIDAndType = { idObject: project.idProject, eObjectType: COMMON.eSystemObjectType.eProject };

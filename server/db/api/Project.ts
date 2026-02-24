@@ -13,6 +13,8 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
 
     constructor(input: ProjectBase) {
         super(input);
+        // $queryRaw returns MySQL booleans as 0/1; coerce to true/false
+        this.isRestricted = Boolean(this.isRestricted);
     }
 
     public fetchTableName(): string { return 'Project'; }

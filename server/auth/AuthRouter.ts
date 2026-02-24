@@ -33,6 +33,7 @@ AuthRouter.post('/login', (req: Request, res: Response, next: NextFunction) => {
             // Build and cache authorization context in session
             try {
                 const authContext = await Authorization.buildContext(user.idUser);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 (req as any).session.authContext = authContext;
             } catch (err) {
                 RK.logError(RK.LogSection.eAUTH,'buildContext failed during login',

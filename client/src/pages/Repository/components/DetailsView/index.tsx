@@ -385,6 +385,7 @@ function DetailsView(): React.ReactElement {
         idObject,
         objectType,
         allowed,
+        allowedReason,
         publishedState,
         publishedEnum,
         publishable,
@@ -418,13 +419,14 @@ function DetailsView(): React.ReactElement {
         if (idIdentifier) {
             const confirm = window.confirm('Are you sure you wish to remove this?');
             if (!confirm) return;
-            const deleteIdentifierSuccess = await deleteIdentifier(idIdentifier);
-            if (deleteIdentifierSuccess) {
+            const result = await deleteIdentifier(idIdentifier);
+            if (result?.data?.deleteIdentifier?.success) {
                 removeTargetIdentifier(idIdentifier);
                 setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
-                toast.error('Error when removing identifier');
+                const message = result?.data?.deleteIdentifier?.message || 'Error when removing identifier';
+                toast.error(message);
             }
         } else {
             removeTargetIdentifier(0, id);
@@ -885,6 +887,13 @@ function DetailsView(): React.ReactElement {
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
+                {!allowed && (
+                    <NoticeBanner
+                        state='warning'
+                        title='Access Restricted'
+                        messageText={allowedReason || 'You do not have permission to access this resource.'}
+                    />
+                )}
                 {notice?.show && (
                     <NoticeBanner
                         state={notice.state}

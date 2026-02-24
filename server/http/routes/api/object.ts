@@ -9,7 +9,7 @@ import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { buildProjectSceneDef, SceneSummary } from './project';
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
-import { Authorization } from '../../../auth/Authorization';
+import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 
 //#region Types and Definitions
 
@@ -81,7 +81,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     // Authorization: check access to the target SystemObject
     const ctx = Authorization.getContext();
     if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
-        res.status(200).send(JSON.stringify(generateResponse(false,'getObjectStatus: access denied')));
+        res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
         return;
     }
 
@@ -429,7 +429,7 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
         // Authorization: check access to the target SystemObject
         const ctx = Authorization.getContext();
         if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
-            res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: access denied')));
+            res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
             return;
         }
 

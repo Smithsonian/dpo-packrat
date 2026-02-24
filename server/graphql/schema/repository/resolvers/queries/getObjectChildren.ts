@@ -65,8 +65,10 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         // Restrict projects to authorized set
         if (ctx.effectiveProjectSOIds !== null) {
             if (filter.projects?.length) {
+                const totalProjects = filter.projects.length;
                 const authorized = new Set(ctx.effectiveProjectSOIds);
                 filter.projects = filter.projects.filter(p => authorized.has(p));
+                Authorization.logFilteredResults('getObjectChildren.projects', totalProjects, filter.projects.length);
             } else {
                 filter.projects = ctx.effectiveProjectSOIds;
             }
@@ -75,8 +77,10 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         // Restrict units to authorized set
         if (ctx.authorizedUnitSOIds !== null) {
             if (filter.units?.length) {
+                const totalUnits = filter.units.length;
                 const authorized = new Set(ctx.authorizedUnitSOIds);
                 filter.units = filter.units.filter(u => authorized.has(u));
+                Authorization.logFilteredResults('getObjectChildren.units', totalUnits, filter.units.length);
             } else {
                 filter.units = ctx.authorizedUnitSOIds;
             }
