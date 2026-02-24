@@ -242,6 +242,111 @@ export class SceneHelpers {
         return { success: true };
     }
 
+    /** Inspects an SVX buffer and injects the EDAN Record ID from the DB if it is missing in the SVX JSON.
+     *  Only injects for single-subject scenes. Multi-subject scenes are skipped (require manual edanlists: prefix).
+     *  Injection failure never blocks ingestion — the original buffer is returned with a warning. */
+    static async ensureEdanRecordId(
+        svxBuffer: Buffer,
+        subjectResolver: { idScene?: number; OG?: DBAPI.ObjectGraph }
+    ): Promise<{ buffer: Buffer; modified: boolean; edanRecordId: string | null; error?: string }> {
+        const unchanged = (error?: string): { buffer: Buffer; modified: boolean; edanRecordId: string | null; error?: string } =>
+            ({ buffer: svxBuffer, modified: false, edanRecordId: null, error });
+
+        // 1. Parse SVX JSON
+        let document: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            document = JSON.parse(svxBuffer.toString());
+        } catch (err) {
+            const error = `ensured EDAN Record ID failed to parse SVX JSON: ${H.Helpers.getErrorString(err)}`;
+            RK.logError(RK.LogSection.eSYS, 'ensure EDAN Record ID', error, {}, 'Utils.Scene');
+            return unchanged(error);
+        }
+
+        // 2. Check if edanRecordId already exists (reimplement extraction inline — svxReader.ts:270-281 is private)
+        if (document.metas) {
+            for (const meta of document.metas) {
+                if (meta.collection && meta.collection['edanRecordId']) {
+                    const value = meta.collection['edanRecordId'];
+                    if (typeof value === 'string' && value.length > 0) {
+                        RK.logDebug(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                            `ensured EDAN Record ID skipped, SVX already has (${value})`, {}, 'Utils.Scene');
+                        return { buffer: svxBuffer, modified: false, edanRecordId: value };
+                    }
+                }
+            }
+        }
+
+        // 3. Resolve Subject(s)
+        let subjects: DBAPI.Subject[] | null = null;
+        if (subjectResolver.OG) {
+            subjects = subjectResolver.OG.subject;
+        } else if (subjectResolver.idScene) {
+            const items: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([subjectResolver.idScene]);
+            const allItemIds: number[] = items ? items.map(i => i.idItem) : [];
+            subjects = allItemIds.length > 0
+                ? await DBAPI.Subject.fetchMasterFromItems(allItemIds)
+                : null;
+        }
+
+        const subjectCount: number = subjects ? subjects.length : 0;
+        if (subjectCount === 0) {
+            RK.logWarning(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                'ensured EDAN Record ID skipped, no Subject linked to scene', { subjectResolver }, 'Utils.Scene');
+            return unchanged();
+        }
+        if (subjectCount > 1) {
+            RK.logDebug(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                `ensured EDAN Record ID skipped, multi-subject scene (${subjectCount} subjects)`, {}, 'Utils.Scene');
+            return unchanged();
+        }
+
+        // 4. Look up EDAN Record ID from Identifier table
+        if (SceneHelpers.idVocabEdanRecordID === null) {
+            const vocab: DBAPI.Vocabulary | undefined =
+                await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+            if (!vocab) {
+                const error = 'ensured EDAN Record ID failed, vocabulary not found in cache';
+                RK.logError(RK.LogSection.eSYS, 'ensure EDAN Record ID', error, {}, 'Utils.Scene');
+                return unchanged(error);
+            }
+            SceneHelpers.idVocabEdanRecordID = vocab.idVocabulary;
+        }
+        const idVocab: number = SceneHelpers.idVocabEdanRecordID;
+
+        let dbEdanRecordId: string | null = null;
+        const subject: DBAPI.Subject = subjects![0]; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        const subjectSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
+        if (subjectSO) {
+            const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO.idSystemObject);
+            if (identifiers) {
+                for (const ident of identifiers) {
+                    if (ident.idVIdentifierType === idVocab) {
+                        dbEdanRecordId = ident.IdentifierValue;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!dbEdanRecordId) {
+            RK.logWarning(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                'ensured EDAN Record ID skipped, no EDAN Record ID in DB for Subject', { idSubject: subject.idSubject }, 'Utils.Scene');
+            return unchanged();
+        }
+
+        // 5. Inject into SVX JSON
+        if (!document.metas || document.metas.length === 0)
+            document.metas = [{ collection: {} }];
+        if (!document.metas[0].collection)
+            document.metas[0].collection = {};
+        document.metas[0].collection['edanRecordId'] = dbEdanRecordId;
+
+        const modifiedBuffer: Buffer = Buffer.from(JSON.stringify(document, null, 4));
+        RK.logInfo(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+            `ensured EDAN Record ID (${dbEdanRecordId}) injected into SVX`, {}, 'Utils.Scene');
+        return { buffer: modifiedBuffer, modified: true, edanRecordId: dbEdanRecordId };
+    }
+
     /** Returns true if the scene exists, has a scene asset, that scene asset has one or more thumbnails in metas -> images,
      * and each thumbnail exists for the current version of the scene; returns false otherwise,
      * and returns false if there's an error (in which case the error text is set also) */
