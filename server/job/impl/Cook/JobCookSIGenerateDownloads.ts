@@ -18,6 +18,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // scene speecific
 import { SvxReader } from '../../../utils/parser';
+import { SceneHelpers } from '../../../utils/sceneHelpers';
 import { JobCookSIVoyagerSceneParameterHelper } from './JobCookSIVoyagerScene';
 
 // system specific
@@ -969,9 +970,21 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!RSR.success || !RSR.readStream)
             return await this.logError('process scene failed',`unable to fetch stream for scene file: ${RSR.error}`,{ svxFile });
 
+        // Inject EDAN record ID if missing from SVX
+        let ingestReadStream: NodeJS.ReadableStream = RSR.readStream;
+        if (this.sceneParameterHelper) {
+            const svxBuffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+            if (svxBuffer) {
+                const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { OG: this.sceneParameterHelper.OG });
+                ingestReadStream = Readable.from(inject.buffer);
+                if (inject.modified)
+                    await this.appendToReportAndLog(`${this.name()} injected EDAN Record ID (${inject.edanRecordId}) into scene SVX`);
+            }
+        }
+
         // create our configuration for ingesting this svx scene
         const ISI: STORE.IngestStreamOrFileInput = {
-            readStream: RSR.readStream,
+            readStream: ingestReadStream,
             localFilePath: null,
             asset,
             FileName: svxFile,
