@@ -7,6 +7,7 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import * as CACHE from '../../../cache';
 import { buildProjectSceneDef, SceneSummary } from './project';
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
 
@@ -232,49 +233,43 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const getLicenseStatus = async (sensitivity: string): Promise<FieldStatus> => {
         const name = 'License';
 
-        // grab the license assignment by SystemObject
-        const assignments: DBAPI.LicenseAssignment[] | null = await DBAPI.LicenseAssignment.fetchFromSystemObject(idSystemObject);
-        if(!assignments || assignments.length===0)
+        // resolve license including inherited assignments via LicenseResolver
+        const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+        if(!LR || !LR.License)
             return formatResultField(name,'No License','fail','No license assigned');
 
-        // figure out what our active license is by looking for the one with no end date
-        const assignment: DBAPI.LicenseAssignment | null = assignments.find(a=> {
-            return !a.DateEnd;
-        }) ?? null;
-
-        const license: DBAPI.License | null = await DBAPI.License.fetch(assignment?.idLicense ?? -1);
-        if(!license)
-            return formatResultField(name,'No License','fail','No license assigned');
-
+        const license: DBAPI.License = LR.License;
+        const inherited: boolean = LR.inherited;
         const licenseType: string = license.Name.split(',')[0];
         const allowsDownloads: boolean = doesLicenseAllowDownloads(license.Name);
         const status: string = licenseType + ((allowsDownloads) ? ' (Downloads)' : '');
+        const inheritedNote: string = inherited ? ' (inherited)' : '';
 
         // extract the license type for status
         switch(licenseType) {
             case 'CC0': {
                 if(sensitivity==='Not Sensitive' || sensitivity==='Unassigned')
-                    return formatResultField(name,status,'pass','no issues with license assignment');
+                    return formatResultField(name,status,'pass','no issues with license assignment' + inheritedNote);
                 else if(sensitivity==='Sensitive')
-                    return formatResultField(name,status,'warn','object is sensitive. may require extra permissions to make open access.');
+                    return formatResultField(name,status,'warn','object is sensitive. may require extra permissions to make open access.' + inheritedNote);
                 else
-                    return formatResultField(name,status,'fail','restricted and confidential models often cannot be CC0. double check before publishing.');
+                    return formatResultField(name,status,'fail','restricted and confidential models often cannot be CC0. double check before publishing.' + inheritedNote);
             }
             case 'SI ToU': {
                 if(sensitivity==='Not Sensitive' || sensitivity==='Unassigned')
-                    return formatResultField(name,status,'pass','no issues with license assignment');
+                    return formatResultField(name,status,'pass','no issues with license assignment' + inheritedNote);
                 else if(sensitivity==='Sensitive')
-                    return formatResultField(name,status,'pass','object is sensitive, but follows SD-609 data use policy');
+                    return formatResultField(name,status,'pass','object is sensitive, but follows SD-609 data use policy' + inheritedNote);
                 else
-                    return formatResultField(name,status,'warn','restricted and confidential may require extra permissions before publishing. double check before publishing.');
+                    return formatResultField(name,status,'warn','restricted and confidential may require extra permissions before publishing. double check before publishing.' + inheritedNote);
             }
             case 'Restricted': {
                 if(sensitivity==='Not Sensitive' || sensitivity==='Unassigned')
-                    return formatResultField(name,status,'warn','no issues with license assignment');
+                    return formatResultField(name,status,'warn','no issues with license assignment' + inheritedNote);
                 else if(sensitivity==='Sensitive')
-                    return formatResultField(name,status,'warn','object is sensitive. may require extra permissions to make open access.');
+                    return formatResultField(name,status,'warn','object is sensitive. may require extra permissions to make open access.' + inheritedNote);
                 else
-                    return formatResultField(name,status,'fail','restricted and confidential models often cannot be CC0. double check before publishing.');
+                    return formatResultField(name,status,'fail','restricted and confidential models often cannot be CC0. double check before publishing.' + inheritedNote);
             }
             default:
                 return formatResultField(name,'Not Assigned','fail','No license assigned');
