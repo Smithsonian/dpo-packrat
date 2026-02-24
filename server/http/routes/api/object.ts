@@ -299,7 +299,6 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             return { name, status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. unexpected relationships` };
     };
     const getModelARStatus = (status: string, licenseAllows: boolean): FieldStatus => {
-        // TODO: check if downloads supported by license to determin severity
         const name = 'Models: AR';
 
         switch(status) {
@@ -309,8 +308,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 return { name, status, level: 'fail', notes: 'WebXR models are generated with the scene. Try regenerating it from the source model page' };
             case 'Missing: NativeAR':
                 return { name, status, level: (licenseAllows)?'fail':'warn', notes: 'Native AR models are generated with downloads' };
-            default:
-                return { name, status: 'Error', level: 'critical', notes: 'unexpected AR model status' };
+            case 'Missing: All':
+                return { name, status, level: (licenseAllows)?'fail':'warn', notes: 'no AR models found. Regenerate the scene and generate downloads' };
+            default: {
+                if (status.startsWith('Error:'))
+                    return { name, status: 'Outdated', level: 'warn', notes: `AR model may have material issues. Consider regenerating. (${status})` };
+                return { name, status: 'Error', level: 'critical', notes: `unexpected AR model status: ${status}` };
+            }
         }
     };
     const getModelBaseStatus = (status: string, count: number, expected: number): FieldStatus => {
