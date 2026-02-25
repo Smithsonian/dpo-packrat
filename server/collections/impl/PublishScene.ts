@@ -798,9 +798,11 @@ export class PublishScene {
                         case '.usdz':   category = 'iOS AR model';    MODEL_FILE_TYPE = 'usdz'; break;
                         case '.zip': {
                             const lowerName = SAC.assetVersion.FileName.toLowerCase();
-                            if (lowerName.includes('gltf'))
-                                 { category = 'Low resolution';  MODEL_FILE_TYPE = 'gltf'; }
-                            else { category = 'Full resolution'; MODEL_FILE_TYPE = 'obj'; }
+                            if (lowerName.includes('gltf')) {
+                                category = 'Low resolution';  MODEL_FILE_TYPE = 'gltf';
+                            } else {
+                                category = 'Full resolution'; MODEL_FILE_TYPE = 'obj';
+                            }
                             break;
                         }
                         default: category = 'Low resolution'; break;
