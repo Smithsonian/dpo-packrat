@@ -146,11 +146,14 @@ export default class API {
 
     // system operations
     static async solrReindex(): Promise<RequestResponse> {
-        return this.request('solrindex', { method: 'POST' });
+        return this.request('solr/index', { method: 'POST' });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async solrReindexStatus(): Promise<any> {
-        return this.request('solrindex/status', { method: 'GET' });
+        return this.request('solr/index/status', { method: 'GET' });
+    }
+    static async solrRebuildIndex(): Promise<RequestResponse> {
+        return this.request('solr/rebuild', { method: 'POST' });
     }
 
     // general routines

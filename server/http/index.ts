@@ -9,7 +9,7 @@ import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
 import { heartbeat } from './routes/heartbeat';
-import { solrindex, solrindexprofiled, solrindexstatus } from './routes/solrindex';
+import { solrindex, solrindexprofiled, solrindexstatus, solrrebuild } from './routes/solrindex';
 // import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
@@ -188,10 +188,11 @@ export class HttpServer {
 
         // utility endpoints
         this.app.get('/heartbeat', heartbeat);
-        this.app.get('/solrindex/status', solrindexstatus);
-        this.app.get('/solrindex', solrindex);
-        this.app.post('/solrindex', solrindex);
-        this.app.get('/solrindexprofiled', solrindexprofiled);
+        this.app.get('/solr/index/status', solrindexstatus);
+        this.app.get('/solr/index', solrindex);
+        this.app.post('/solr/index', solrindex);
+        this.app.post('/solr/rebuild', solrrebuild);
+        this.app.get('/solr/index/profiled', solrindexprofiled);
         // this.app.get('/migrate', migrate);
         // this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, download);
