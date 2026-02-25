@@ -789,6 +789,24 @@ export class PublishScene {
                 case 'iosapp3d':                    category = 'iOS AR model';      MODEL_FILE_TYPE = 'usdz'; break;
                 case 'webassetglbarcompressed':
                 case 'app3d':                       category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
+
+                // Safety net for pre-existing Download:Generic records in the database
+                case 'generic': {
+                    const ext = path.extname(SAC.assetVersion.FileName).toLowerCase();
+                    switch (ext) {
+                        case '.glb':    category = 'Low resolution';  MODEL_FILE_TYPE = 'glb'; break;
+                        case '.usdz':   category = 'iOS AR model';    MODEL_FILE_TYPE = 'usdz'; break;
+                        case '.zip': {
+                            const lowerName = SAC.assetVersion.FileName.toLowerCase();
+                            if (lowerName.includes('gltf'))
+                                 { category = 'Low resolution';  MODEL_FILE_TYPE = 'gltf'; }
+                            else { category = 'Full resolution'; MODEL_FILE_TYPE = 'obj'; }
+                            break;
+                        }
+                        default: category = 'Low resolution'; break;
+                    }
+                    break;
+                }
             }
         }
 

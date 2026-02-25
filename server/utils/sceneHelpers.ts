@@ -11,6 +11,7 @@ import { SvxReader, SvxExtraction } from './parser';
 import { JobCookSIPackratInspectOutput } from '../job/impl/Cook';
 import { WorkflowUtil } from '../workflow/impl/Packrat/WorkflowUtil';
 import { Readable } from 'stream';
+import * as path from 'path';
 
 export type EdanRecordIdResult = {
     status: 'assigned' | 'assigned_multisubject' | 'mismatch' | 'missing_svx' | 'missing_db' | 'not_found' | 'no_subject' | 'invalid_multisubject' | 'missing_multisubject' | 'error';
@@ -710,6 +711,9 @@ export class SceneHelpers {
             const Name = asset.FileName;
             RK.logInfo(RK.LogSection.eSYS,'handle complex scene ingestion',`processing orphan model asset: ${Name}`,{ asset },'Utils.Scene');
 
+            // Infer download properties from file name patterns
+            const downloadProps = SceneHelpers.inferDownloadProperties(Name);
+
             // Create Model
             const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
             const model = new DBAPI.Model({
@@ -724,7 +728,7 @@ export class SceneHelpers {
                 idVFileType: vFileType ? vFileType.idVocabulary : null,
                 idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
                 CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
-                AutomationTag: `download-${Name}`,
+                AutomationTag: downloadProps.automationTag,
                 CountTriangles: null,
                 Variant: modelSource?.Variant ?? '[]',
             });
@@ -736,16 +740,16 @@ export class SceneHelpers {
             }
 
             // Create ModelSceneXref
-            // CRITICAL: Usage must start with 'Download:' for PublishScene to pick it up
+            // CRITICAL: Usage must start with 'Download:' or be 'App3D'/'iOSApp3D' for PublishScene to pick it up
             const msx = new DBAPI.ModelSceneXref({
                 idModelSceneXref: 0,
                 idModel: model.idModel,
                 idScene: scene.idScene,
                 Name,
-                Usage: 'Download:Generic',
-                Quality: null,
+                Usage: downloadProps.usage,
+                Quality: downloadProps.quality,
                 FileSize: assetVersion.StorageSize,
-                UVResolution: null,
+                UVResolution: downloadProps.uvResolution,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null,
                 BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
                 TS0: null, TS1: null, TS2: null,
@@ -938,5 +942,65 @@ export class SceneHelpers {
     private static recordError(error: string | undefined): H.IOResults {
         RK.logError(RK.LogSection.eSYS,'record error',error,{},'Utils.Scene');
         return { success: false, error };
+    }
+
+    // Mirrors JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType (line 771)
+    // and computeModelAutomationTagFromDownloadType (line 796). Keep in sync with those methods.
+    private static downloadTypeToProperties(downloadType: string): { usage: string, quality: string | null, uvResolution: number | null, automationTag: string } {
+        switch (downloadType) {
+            case 'objZipFull':
+                return { usage: 'Download:objZipFull', quality: 'Highest', uvResolution: 0, automationTag: 'download-objZipFull-Highest-0' };
+            case 'objZipLow':
+                return { usage: 'Download:objZipLow', quality: 'Low', uvResolution: 4096, automationTag: 'download-objZipLow-Low-4096' };
+            case 'gltfZipLow':
+                return { usage: 'Download:gltfZipLow', quality: 'Low', uvResolution: 4096, automationTag: 'download-gltfZipLow-Low-4096' };
+            case 'webAssetGlbLowUncompressed':
+                return { usage: 'Download:webAssetGlbLowUncompressed', quality: 'Low', uvResolution: 4096, automationTag: 'download-webAssetGlbLowUncompressed-Low-4096' };
+            case 'webAssetGlbARCompressed':
+                return { usage: 'App3D', quality: 'AR', uvResolution: 2048, automationTag: 'scene-App3D-AR-2048' };
+            case 'usdz':
+                return { usage: 'iOSApp3D', quality: 'AR', uvResolution: 2048, automationTag: 'scene-iOSApp3D-AR-2048' };
+            default:
+                return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${downloadType}` };
+        }
+    }
+
+    // Infers Usage, Quality, UVResolution, and AutomationTag from a download file name.
+    // Uses Cook's naming conventions to classify orphan assets that are not referenced in SVX.
+    static inferDownloadProperties(fileName: string): { usage: string, quality: string | null, uvResolution: number | null, automationTag: string } {
+        const lowerName = fileName.toLowerCase();
+
+        // Priority 1: Cook-generated suffix patterns (highest confidence).
+        // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData suffixes (line 1124)
+        // and AssetStorageAdapter.isSceneDownloadZipFile (line 1620).
+        const suffixMap: [string, string][] = [
+            ['-full_resolution-obj_std.zip', 'objZipFull'],
+            ['-150k-4096-obj_std.zip', 'objZipLow'],
+            ['-150k-4096-gltf_std.zip', 'gltfZipLow'],
+            ['-150k-4096_std.glb', 'webAssetGlbLowUncompressed'],
+            ['-100k-2048_std_draco.glb', 'webAssetGlbARCompressed'],
+            ['-100k-2048_std.usdz', 'usdz'],
+        ];
+
+        for (const [suffix, downloadType] of suffixMap) {
+            if (lowerName.endsWith(suffix))
+                return SceneHelpers.downloadTypeToProperties(downloadType);
+        }
+
+        // Priority 2: Extension-based inference (reasonable defaults)
+        const ext = path.extname(fileName).toLowerCase();
+        switch (ext) {
+            case '.glb':
+                return SceneHelpers.downloadTypeToProperties('webAssetGlbLowUncompressed');
+            case '.usdz':
+                return SceneHelpers.downloadTypeToProperties('usdz');
+            case '.zip':
+                if (lowerName.includes('gltf'))
+                    return SceneHelpers.downloadTypeToProperties('gltfZipLow');
+                return SceneHelpers.downloadTypeToProperties('objZipFull');
+        }
+
+        // Priority 3: Ultimate fallback — preserves existing behavior for unrecognizable files
+        return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${fileName}` };
     }
 }
