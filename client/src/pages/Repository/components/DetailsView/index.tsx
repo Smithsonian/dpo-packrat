@@ -1109,7 +1109,16 @@ function DetailsView(): React.ReactElement {
                 {(uploadReferences && uploadReferences.idSOAttachment) && <SpecialUploadList uploadType={eIngestionMode.eAttach} onUploaderClose={onUploaderReset} idSOAttachment={uploadReferences?.idSOAttachment} idSO={idSystemObject} />}
 
                 <Box display='flex' flex={1} padding={2}>
-                    <DetailsThumbnail thumbnail={thumbnail} idSystemObject={idSystemObject} objectType={objectType} />
+                    <DetailsThumbnail
+                        thumbnail={thumbnail}
+                        idSystemObject={idSystemObject}
+                        objectType={objectType}
+                        onEditorClose={async () => {
+                            await refetch();
+                            await fetchDetailTabDataAndSetState();
+                            setRefreshTick(t => t + 1);
+                        }}
+                    />
                 </Box>
 
                 <ObjectSelectModal
