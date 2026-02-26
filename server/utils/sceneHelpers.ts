@@ -1054,6 +1054,8 @@ export class SceneHelpers {
         switch (ext) {
             case '.glb':
                 return SceneHelpers.downloadTypeToProperties('webAssetGlbLowUncompressed');
+            case '.gltf':
+                return SceneHelpers.downloadTypeToProperties('gltfZipLow');
             case '.usdz':
                 return SceneHelpers.downloadTypeToProperties('usdz');
             case '.zip':
