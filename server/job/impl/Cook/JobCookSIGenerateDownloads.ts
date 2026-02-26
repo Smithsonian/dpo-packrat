@@ -236,9 +236,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             // fetch the file from WebDav shared space with Cook
             // TODO: just check if file exists vs. actually opening stream
-
-            // fetch the file from WebDav shared space with Cook
-            // TODO: just check if file exists vs. actually opening stream
+            // Future work: fetchFile returns ReadStreamResult with a stream, but errors during
+            // streaming (network drops, partial reads) are not caught after the initial fetch.
+            // Safe pattern: RSR.readStream.on('error', handler); await pipeline(RSR.readStream, dest);
             RK.logDebug(RK.LogSection.eJOB,'create system objects','processing download', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, downloadFile, downloadType },'Job.GenerateDownloads');
 
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
@@ -1141,6 +1141,13 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         });
         if(missingIncomingFiles.length>0)
             return this.logError('verify Cook data','failed to find expected files in Cook response', { missingIncomingFiles });
+
+        // verify no unexpected extra files in Cook response
+        const unexpectedFiles: string[] = incomingFilenames.filter(filename =>
+            !suffixes.some(suffix => filename.endsWith(suffix))
+        );
+        if (unexpectedFiles.length > 0)
+            return this.logError('verify Cook data', 'unexpected extra files in Cook response', { unexpectedFiles, expectedSuffixes: suffixes });
 
         // determine all incoming filenames are consistent
         const incomingBaseName: string | null = this.extractBaseName(incomingFilenames);
