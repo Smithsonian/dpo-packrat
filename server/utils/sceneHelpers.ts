@@ -567,6 +567,9 @@ export class SceneHelpers {
                 // look for matching ModelSceneXref
                 // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
                 // if not found, create model and MSX
+                // Future work: Compare SVX transform values (TS0-2, R0-3, S0-2) against existing MSX
+                // records and log a warning if delta exceeds a threshold. Do not block ingestion.
+
                 // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
                 const JCOutput: JobCookSIPackratInspectOutput | null = idAssetVersion ? await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name) : null;
                 if (JCOutput && !JCOutput.success)
@@ -695,6 +698,11 @@ export class SceneHelpers {
 
         //#region: Orphaned Assets (Downloads/Zips not in SVX)
         // --------------------------------------------------------------
+        // Future work: Wrap each orphan's Model+MSX+SOX+Asset creation in a Prisma
+        // interactive transaction to prevent partial state on failure. Pattern:
+        //   const txnOpts = { maxWait: 10000, timeout: 20000 };
+        //   await prismaClient.$transaction(async (prisma) => { ... }, txnOpts);
+        // See SystemObjectVersion.cloneObjectAndXrefs (server/db/api/SystemObjectVersion.ts:138)
         const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
 
         for (const [name, assetPair] of modelAssetMap) {
@@ -714,6 +722,57 @@ export class SceneHelpers {
             // Infer download properties from file name patterns
             const downloadProps = SceneHelpers.inferDownloadProperties(Name);
 
+            // Dedup: check for existing model with matching AutomationTag under this scene
+            // Pattern: JobCookSIGenerateDownloads.findMatchingModelFromModel (line 835)
+            const existingModels: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, scene.idScene, downloadProps.automationTag);
+            if (existingModels && existingModels.length > 0) {
+                if (existingModels.length > 1)
+                    RK.logWarning(RK.LogSection.eSYS, 'handle complex scene ingestion',
+                        `found ${existingModels.length} models matching tag ${downloadProps.automationTag} for orphan ${Name}; using first match`,
+                        { idModels: existingModels.map(m => m.idModel) }, 'Utils.Scene');
+
+                const existingModel: DBAPI.Model = existingModels[0];
+                RK.logInfo(RK.LogSection.eSYS, 'handle complex scene ingestion',
+                    `dedup: found existing orphan model for ${Name} (idModel: ${existingModel.idModel}, tag: ${downloadProps.automationTag})`, {}, 'Utils.Scene');
+
+                const SO: DBAPI.SystemObject | null = await existingModel.fetchSystemObject();
+                if (SO) {
+                    asset.idSystemObject = SO.idSystemObject;
+                    if (!await asset.update()) {
+                        error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to reassign orphan asset ${Name} to existing model`, error);
+                        success = false;
+                        continue;
+                    }
+
+                    const SOV: DBAPI.SystemObjectVersion = new DBAPI.SystemObjectVersion({
+                        idSystemObject: SO.idSystemObject,
+                        PublishedState: COMMON.ePublishedState.eNotPublished,
+                        DateCreated: new Date(),
+                        Comment: 'Updated during Scene Ingestion (Orphan)',
+                        idSystemObjectVersion: 0
+                    });
+                    if (!await SOV.create()) {
+                        error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create SOV for updated orphan ${Name}`, error);
+                        success = false;
+                        continue;
+                    }
+
+                    const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
+                        idSystemObjectVersion: SOV.idSystemObjectVersion,
+                        idAssetVersion: assetVersion.idAssetVersion,
+                        idSystemObjectVersionAssetVersionXref: 0,
+                    });
+                    if (!await SOVAVX.create()) {
+                        error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create SOVAVX for updated orphan ${Name}`, error);
+                        success = false;
+                    }
+                } else {
+                    error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to fetch system object for existing orphan model ${Name}`, error);
+                    success = false;
+                }
+                continue;
+            }
+
             // Create Model
             const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
             const model = new DBAPI.Model({
@@ -732,6 +791,9 @@ export class SceneHelpers {
                 CountTriangles: null,
                 Variant: modelSource?.Variant ?? '[]',
             });
+            // NOTE: Model metrics (CountFaces, CountVertices, etc.) are intentionally null for
+            // orphan downloads. These are typically zip archives; si-packrat-inspect would need
+            // to extract and parse contents. Future work: evaluate running metrics on extracted files.
 
             if (!await model.create()) {
                 error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create orphan model ${Name}`, error);
@@ -961,7 +1023,7 @@ export class SceneHelpers {
             case 'usdz':
                 return { usage: 'iOSApp3D', quality: 'AR', uvResolution: 2048, automationTag: 'scene-iOSApp3D-AR-2048' };
             default:
-                return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${downloadType}` };
+                return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${downloadType}-null-null` };
         }
     }
 
@@ -992,6 +1054,8 @@ export class SceneHelpers {
         switch (ext) {
             case '.glb':
                 return SceneHelpers.downloadTypeToProperties('webAssetGlbLowUncompressed');
+            case '.gltf':
+                return SceneHelpers.downloadTypeToProperties('gltfZipLow');
             case '.usdz':
                 return SceneHelpers.downloadTypeToProperties('usdz');
             case '.zip':
@@ -1001,6 +1065,6 @@ export class SceneHelpers {
         }
 
         // Priority 3: Ultimate fallback — preserves existing behavior for unrecognizable files
-        return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${fileName}` };
+        return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${fileName}-null-null` };
     }
 }
