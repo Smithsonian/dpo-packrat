@@ -55,17 +55,19 @@ interface DetailsThumbnailProps {
     thumbnail?: string | null;
     objectType?: number;
     idSystemObject?: number;
+    onEditorClose?: () => void;
 }
 
 function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const serverEndpoint = API.serverEndpoint();
-    const { thumbnail, objectType, idSystemObject } = props;
+    const { thumbnail, objectType, idSystemObject, onEditorClose } = props;
     const classes = useStyles();
     const [rootExplorerLink, setRootExplorerLink] = useState('');
     const [rootStoryLink, setRootStoryLink] = useState('');
     const [documentLink, setDocumentLink] = useState('');
     const [openVoyagerStory, setOpenVoyagerStory] = React.useState(false);
     const [showVoyagerExplorer, setShowVoyagerExplorer] = React.useState(true);
+    const [sceneSOId, setSceneSOId] = useState<number>(0);
 
     // helper function to wait X ms
     const delay = (ms) => {
@@ -109,6 +111,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
                 setRootExplorerLink(rootExplorer);
                 setRootStoryLink(rootStory);
                 setDocumentLink(document);
+                setSceneSOId(idSystemObjectScene);
             }
         };
 
@@ -198,14 +201,18 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         if(element)
             element.removeEventListener('click',handleCloseVoyagerStory);
     };
-    const addVoyagerStoryElement = (): boolean => {
+    const addVoyagerStoryElement = (token?: string): boolean => {
         // explicitly create and add voyager story to the DOM. we do this here because React uses
         // createElement + setAttribute for converting JSX to an HTML element. In this case the
         // attributes won't be available when the voyager constructor runs, yielding default values/properties.
         // so we need to inject raw HTML into the DOM to ensure everything loads when expected.
+        let storyRoot: string = rootStoryLink;
+        if (token)
+            storyRoot = rootStoryLink.replace('/webdav/', `/webdav/token-${token}/`);
+
         const voyagerStoryMarkup = `<voyager-story
             id="Voyager-Story"
-            root="${rootStoryLink}"
+            root="${storyRoot}"
             document="${documentLink}"
             mode="${getModeForVoyager(eVoyagerStoryMode.eEdit)}"
             style="width: 100%; height: 100%; display: block; position: relative; color: white"
@@ -237,6 +244,20 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     const handleOpenVoyagerStory = async () => {
         console.log(`[PACKRAT] Opening Voyager Story (${documentLink} | root: ${rootStoryLink})`);
 
+        // fetch a WebDAV token for cross-origin auth (graceful degradation: proceed without if fetch fails)
+        let token: string | undefined;
+        if (sceneSOId > 0) {
+            try {
+                const response = await API.getWebDAVToken(sceneSOId);
+                if (response?.success && response.data?.token)
+                    token = response.data.token;
+                else
+                    console.warn('[PACKRAT] WebDAV token fetch returned unsuccessful response, proceeding without token');
+            } catch (err) {
+                console.warn('[PACKRAT] Failed to fetch WebDAV token, proceeding without token:', err);
+            }
+        }
+
         // set our flag so the dialog opens and is added to the DOM by React
         setOpenVoyagerStory(true);
 
@@ -244,7 +265,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
         await delay(100);
 
         // add/inject Voyager Story into the container
-        if(!addVoyagerStoryElement()) {
+        if(!addVoyagerStoryElement(token)) {
             console.log('[PACKRAT: ERROR] Failed to add Voyager Story. Closing editor...');
             setOpenVoyagerStory(false);
             return;
@@ -269,6 +290,7 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
 
         setShowVoyagerExplorer(true);
         setOpenVoyagerStory(false);
+        onEditorClose?.();
     };
 
     return (

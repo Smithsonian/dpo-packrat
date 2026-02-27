@@ -15,5 +15,6 @@ export enum eEventKey {
     eHTTPDownload = 6,
     eHTTPUpload = 7,
     eAuthFailed = 8,
-    eGenDownloads = 9
+    eGenDownloads = 9,
+    eSolrRebuild = 10
 }

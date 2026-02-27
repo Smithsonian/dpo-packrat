@@ -18,6 +18,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // scene speecific
 import { SvxReader } from '../../../utils/parser';
+import { SceneHelpers } from '../../../utils/sceneHelpers';
 import { JobCookSIVoyagerSceneParameterHelper } from './JobCookSIVoyagerScene';
 
 // system specific
@@ -235,9 +236,9 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
             // fetch the file from WebDav shared space with Cook
             // TODO: just check if file exists vs. actually opening stream
-
-            // fetch the file from WebDav shared space with Cook
-            // TODO: just check if file exists vs. actually opening stream
+            // Future work: fetchFile returns ReadStreamResult with a stream, but errors during
+            // streaming (network drops, partial reads) are not caught after the initial fetch.
+            // Safe pattern: RSR.readStream.on('error', handler); await pipeline(RSR.readStream, dest);
             RK.logDebug(RK.LogSection.eJOB,'create system objects','processing download', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, downloadFile, downloadType },'Job.GenerateDownloads');
 
             const RSR: STORE.ReadStreamResult = await this.fetchFile(downloadFile);
@@ -969,9 +970,21 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!RSR.success || !RSR.readStream)
             return await this.logError('process scene failed',`unable to fetch stream for scene file: ${RSR.error}`,{ svxFile });
 
+        // Inject EDAN record ID if missing from SVX
+        let ingestReadStream: NodeJS.ReadableStream = RSR.readStream;
+        if (this.sceneParameterHelper) {
+            const svxBuffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+            if (svxBuffer) {
+                const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { OG: this.sceneParameterHelper.OG });
+                ingestReadStream = Readable.from(inject.buffer);
+                if (inject.modified)
+                    await this.appendToReportAndLog(`${this.name()} injected EDAN Record ID (${inject.edanRecordId}) into scene SVX`);
+            }
+        }
+
         // create our configuration for ingesting this svx scene
         const ISI: STORE.IngestStreamOrFileInput = {
-            readStream: RSR.readStream,
+            readStream: ingestReadStream,
             localFilePath: null,
             asset,
             FileName: svxFile,
@@ -1128,6 +1141,13 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         });
         if(missingIncomingFiles.length>0)
             return this.logError('verify Cook data','failed to find expected files in Cook response', { missingIncomingFiles });
+
+        // verify no unexpected extra files in Cook response
+        const unexpectedFiles: string[] = incomingFilenames.filter(filename =>
+            !suffixes.some(suffix => filename.endsWith(suffix))
+        );
+        if (unexpectedFiles.length > 0)
+            return this.logError('verify Cook data', 'unexpected extra files in Cook response', { unexpectedFiles, expectedSuffixes: suffixes });
 
         // determine all incoming filenames are consistent
         const incomingBaseName: string | null = this.extractBaseName(incomingFilenames);
