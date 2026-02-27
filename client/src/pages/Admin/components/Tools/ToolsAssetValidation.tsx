@@ -27,7 +27,7 @@ const ReportSelector: React.FC = () => {
         API.getReportList('asset-files')
             .then((response) => {
             // Assume response.data.reports is an array of report objects
-                const reportList: Report[] = response.data.reports;
+                const reportList: Report[] = response.data?.reports ?? [];
                 setReports(reportList);
 
                 // Extract unique dates

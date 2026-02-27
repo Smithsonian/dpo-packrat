@@ -21,7 +21,8 @@ export class EventConsumerHTTP extends EventConsumer {
 
             switch (dataItem.key) {
                 case EVENT.eEventKey.eHTTPDownload:
-                case EVENT.eEventKey.eHTTPUpload: {
+                case EVENT.eEventKey.eHTTPUpload:
+                case EVENT.eEventKey.eSolrRebuild: {
                     const audit: DBAPI.Audit = EventConsumerDB.convertDataToAudit(dataItem.value);
                     const oID: DBAPI.ObjectIDAndType = { idObject: audit.idDBObject ?? 0, eObjectType: audit.DBObjectType ?? 0 };
 

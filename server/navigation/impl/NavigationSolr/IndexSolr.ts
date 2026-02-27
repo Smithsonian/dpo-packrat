@@ -10,7 +10,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import * as NS from 'node-schedule';
 
-export enum eSolrIndexPhase { eIdle, eObjects, eMetadata, eCompleted, eError }
+export enum eSolrIndexPhase { eIdle = 0, eDeleting = 1, eObjects = 2, eMetadata = 3, eCompleted = 4, eError = 5 }
 
 export interface SolrIndexProgress {
     phase: eSolrIndexPhase;
@@ -88,6 +88,58 @@ export class IndexSolr implements NAV.IIndexer {
             IndexSolr._progress.phase = eSolrIndexPhase.eError;
             IndexSolr._progress.error = H.Helpers.getErrorString(error);
             RK.logError(RK.LogSection.eNAV,'full index failed',H.Helpers.getErrorString(error),{},'Navigation.Solr.Index');
+        } finally {
+            IndexSolr.fullIndexUnderway = false;
+            IndexSolr._progress.endTime = new Date().toISOString();
+            if (IndexSolr._progress.phase !== eSolrIndexPhase.eError)
+                IndexSolr._progress.phase = eSolrIndexPhase.eCompleted;
+        }
+        return retValue;
+    }
+
+    async rebuildIndex(): Promise<boolean> {
+        if (IndexSolr.fullIndexUnderway) {
+            RK.logWarning(RK.LogSection.eNAV,'rebuild index failed','already underway; exiting this additional request early',{},'Navigation.Solr.Index');
+            return false;
+        }
+
+        let retValue: boolean = false;
+        try {
+            IndexSolr.fullIndexUnderway = true;
+            IndexSolr._progress = {
+                phase: eSolrIndexPhase.eDeleting,
+                processed: 0,
+                total: 0,
+                startTime: new Date().toISOString(),
+                endTime: null,
+                error: null,
+            };
+
+            // Delete all documents from both Solr cores
+            for (const eCore of [eSolrCore.ePackrat, eSolrCore.ePackratMeta]) {
+                const solrClient: SolrClient = new SolrClient(null, null, eCore);
+                let res: H.IOResults = await solrClient.deleteAll();
+                if (!res.success) {
+                    const error: string = `rebuildIndex deleteAll failed for core ${solrClient.core()}: ${res.error}`;
+                    RK.logError(RK.LogSection.eNAV,'rebuild index failed',error,{},'Navigation.Solr.Index');
+                    throw new Error(error);
+                }
+                res = await solrClient.commit();
+                if (!res.success) {
+                    const error: string = `rebuildIndex commit after deleteAll failed for core ${solrClient.core()}: ${res.error}`;
+                    RK.logError(RK.LogSection.eNAV,'rebuild index failed',error,{},'Navigation.Solr.Index');
+                    throw new Error(error);
+                }
+                RK.logInfo(RK.LogSection.eNAV,'rebuild index','deleted all documents',{ solrCore: solrClient.core() },'Navigation.Solr.Index');
+            }
+
+            // Now reindex from scratch
+            IndexSolr._progress.phase = eSolrIndexPhase.eObjects;
+            retValue = await this.fullIndexWorker();
+        } catch (error) {
+            IndexSolr._progress.phase = eSolrIndexPhase.eError;
+            IndexSolr._progress.error = H.Helpers.getErrorString(error);
+            RK.logError(RK.LogSection.eNAV,'rebuild index failed',H.Helpers.getErrorString(error),{},'Navigation.Solr.Index');
         } finally {
             IndexSolr.fullIndexUnderway = false;
             IndexSolr._progress.endTime = new Date().toISOString();

@@ -331,7 +331,7 @@ export function getVoyagerModeFromParam(sMode: string): eVoyagerStoryMode {
 }
 
 export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undefined, idSystemObject: number,
-    path: string, eMode?: eVoyagerStoryMode | undefined): string {
+    path: string, eMode?: eVoyagerStoryMode | undefined, token?: string): string {
     let dlPath: string = 'download';
     switch (eMode) {
         default:
@@ -341,7 +341,8 @@ export function getRootSceneDownloadUrlForVoyager(serverEndPoint: string | undef
         case eVoyagerStoryMode.eAuthor: dlPath='webdav'; break;
         case eVoyagerStoryMode.eExpert: dlPath='webdav'; break;
     }
-    const uri: string = `${serverEndPoint}/${dlPath}/idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
+    const tokenSegment: string = token && dlPath === 'webdav' ? `token-${token}/` : '';
+    const uri: string = `${serverEndPoint}/${dlPath}/${tokenSegment}idSystemObject-${idSystemObject}/${path ? path + '/' : ''}`;
     // console.log(`>>> getVoyagerStoryURL (document: ${document} | dlPath: ${dlPath} | uri: ${uri} | path: ${path})`);
     return uri;
 }

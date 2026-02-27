@@ -361,8 +361,14 @@ const buildSummaryDerivatives = async (MSXs: DBAPI.ModelSceneXref[]): Promise<{ 
     // get download status
     downloads.status = getStatusDownload(downloads.items);
 
+    // determine mesh count from Thumb-quality Web models (1 Thumb per mesh)
+    const meshCount: number = models.items.filter(
+        m => m.quality === 'Thumb' && m.usage === 'Web'
+    ).length;
+    ar.expected = meshCount > 0 ? meshCount : 1;
+
     // get AR model status
-    ar.status = getStatusARModels(ar.items);
+    ar.status = getStatusARModels(ar.items, ar.expected);
 
     return { models, downloads, ar };
 };
@@ -657,7 +663,7 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
     }
     return 'Good';
 };
-const getStatusARModels = (models: AssetSummary[]): string => {
+const getStatusARModels = (models: AssetSummary[], meshCount: number = 1): string => {
 
     // if no AR models found, return explicit status
     if (!models || models.length === 0) {
@@ -665,8 +671,8 @@ const getStatusARModels = (models: AssetSummary[]): string => {
     }
 
     const targetDate: Date = new Date('2024-06-14T00:00:00Z');
-    let nonDownloadableCount: number = 0;
-    let downloadableCount: number = 0;
+    let nonDownloadableCount: number = 0;   // WebAR: 1 per mesh
+    let downloadableCount: number = 0;      // NativeAR: 2 per scene (usdz + draco)
 
     for(const model of models) {
 
@@ -684,22 +690,17 @@ const getStatusARModels = (models: AssetSummary[]): string => {
             nonDownloadableCount++;
     }
 
-    // Check conditions based on the counts of downloadable and non-downloadable items
-    if (downloadableCount === 2 && nonDownloadableCount < 1) {
-        return 'Missing: WebAR';
-    }
+    const hasAllWebAR: boolean = nonDownloadableCount >= meshCount;
+    const hasAllNativeAR: boolean = downloadableCount >= 2;
 
-    if (nonDownloadableCount === 1 && downloadableCount < 2) {
-        return 'Missing: NativeAR';
-    }
-
-    if (nonDownloadableCount === 1 && downloadableCount === 2) {
+    if (hasAllWebAR && hasAllNativeAR)
         return 'Good';
-    }
+    if (!hasAllWebAR && hasAllNativeAR)
+        return 'Missing: WebAR';
+    if (hasAllWebAR && !hasAllNativeAR)
+        return 'Missing: NativeAR';
 
-    // If none of the conditions are met, log and return descriptive error
-    RK.logError(RK.LogSection.eHTTP,'get AR model status failed','unexpected counts',{ native: downloadableCount, web: nonDownloadableCount },'HTTP.Route.Project');
-    return `Error: Unexpected (WebAR:${nonDownloadableCount}, NativeAR:${downloadableCount})`;
+    return 'Missing: All';
 };
 const getStatusCaptureData = (cd: AssetList): string => {
 

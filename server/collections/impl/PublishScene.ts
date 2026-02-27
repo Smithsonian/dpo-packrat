@@ -269,6 +269,14 @@ export class PublishScene {
             }
         }
 
+        // Safety guard: EdanUUID is required for downstream non-null assertions (lines 560, 588)
+        if (changingPubState && !this.scene.EdanUUID) {
+            RK.logError(RK.LogSection.eCOLL, 'fetch scene failed',
+                'EdanUUID is required for publishing but is missing after generation',
+                { scene: this.scene }, 'Publish.Scene');
+            return false;
+        }
+
         // compute subject(s) owning this scene
         const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(this.idSystemObject, DBAPI.eObjectGraphMode.eAncestors);
         if (!await OG.fetch()) {
@@ -307,9 +315,15 @@ export class PublishScene {
             // assets like draco and USDZ downloads are used by the viewer & as a download. temporarily adding
             // their Usage types until a file's 'downloadable' property is detached from 'Usage'. (#DPO3DPKRT-777)
             if (MSX.Usage && (MSX.Usage.startsWith('Download:') || MSX.Usage.startsWith('App3D') || MSX.Usage.startsWith('iOSApp3D'))) {
-                const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromObjectID({ eObjectType: COMMON.eSystemObjectType.eModel, idObject: MSX.idModel });
-                if (SOI)
-                    DownloadMSXMap.set(SOI.idSystemObject, MSX);
+                const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+                if (SO) {
+                    if (SO.Retired) {
+                        RK.logInfo(RK.LogSection.eCOLL, 'compute download map',
+                            'skipping retired model', { idModel: MSX.idModel, Usage: MSX.Usage }, 'Publish.Scene');
+                        continue;
+                    }
+                    DownloadMSXMap.set(SO.idSystemObject, MSX);
+                }
             }
         }
         return DownloadMSXMap;
@@ -559,6 +573,37 @@ export class PublishScene {
         this.edan3DResourceList = [];
         this.resourcesHotFolder = path.join(Config.collection.edan.resourcesHotFolder, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 
+        // Clear hot folder from any previous staging to prevent stale files
+        const existsRes: H.IOResults = await H.Helpers.fileOrDirExists(this.resourcesHotFolder);
+        if (existsRes.success) {
+            const removeRes: H.IOResults = await H.Helpers.removeDirectory(this.resourcesHotFolder, true);
+            if (!removeRes.success) {
+                RK.logError(RK.LogSection.eCOLL, 'stage downloads failed',
+                    `unable to clear existing hot folder: ${removeRes.error}`,
+                    { hotFolder: this.resourcesHotFolder }, 'Publish.Scene');
+                return false;
+            }
+        }
+
+        // Pre-validation: verify all download assets are readable before staging any
+        const missingAssets: string[] = [];
+        for (const SAC of this.SacList.values()) {
+            if (!SAC.model && !SAC.metadataSet)
+                continue;
+            const checkRSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
+            if (!checkRSR.success || !checkRSR.readStream) {
+                missingAssets.push(`${SAC.assetVersion.FileName} (${checkRSR.error})`);
+            } else if (checkRSR.readStream && 'destroy' in checkRSR.readStream) {
+                (checkRSR.readStream as NodeJS.ReadableStream & { destroy: () => void }).destroy();
+            }
+        }
+        if (missingAssets.length > 0) {
+            RK.logError(RK.LogSection.eCOLL, 'stage downloads failed',
+                'download assets missing or unreadable before staging',
+                { missingAssets }, 'Publish.Scene');
+            return false;
+        }
+
         for (const SAC of this.SacList.values()) {
             // LOG.info(`>>> stageDownloads.SAC: ${H.Helpers.JSONStringify(SAC)}`,LOG.LS.eDEBUG);
             if (!SAC.model && !SAC.metadataSet) // SAC is not a attachment, skip it
@@ -789,7 +834,36 @@ export class PublishScene {
                 case 'iosapp3d':                    category = 'iOS AR model';      MODEL_FILE_TYPE = 'usdz'; break;
                 case 'webassetglbarcompressed':
                 case 'app3d':                       category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
+
+                // Safety net for pre-existing Download:Generic records in the database
+                case 'generic': {
+                    const ext = path.extname(SAC.assetVersion.FileName).toLowerCase();
+                    switch (ext) {
+                        case '.glb':    category = 'Low resolution';  MODEL_FILE_TYPE = 'glb'; break;
+                        case '.usdz':   category = 'iOS AR model';    MODEL_FILE_TYPE = 'usdz'; break;
+                        case '.zip': {
+                            const lowerName = SAC.assetVersion.FileName.toLowerCase();
+                            if (lowerName.includes('gltf')) {
+                                category = 'Low resolution';  MODEL_FILE_TYPE = 'gltf';
+                            } else {
+                                category = 'Full resolution'; MODEL_FILE_TYPE = 'obj';
+                            }
+                            break;
+                        }
+                        default: category = 'Low resolution'; break;
+                    }
+                    break;
+                }
             }
+        }
+
+        // Guard: ensure critical fields are populated before building EDAN resource
+        if (!MODEL_FILE_TYPE || !UNITS || !category || !type) {
+            RK.logError(RK.LogSection.eCOLL, 'extract resource failed',
+                'critical resource fields are undefined or empty',
+                { MODEL_FILE_TYPE, UNITS, category, type, filename: SAC.assetVersion.FileName },
+                'Publish.Scene');
+            return null;
         }
 
         const subjectName: string = this.subject ? this.subject.Name : '';

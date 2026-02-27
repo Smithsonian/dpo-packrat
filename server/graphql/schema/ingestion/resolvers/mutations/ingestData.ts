@@ -15,7 +15,7 @@ import { SceneHelpers } from '../../../../../utils';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import * as NAV from '../../../../../navigation/interface';
-import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo } from '../../../../../storage/interface';
+import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, StorageFactory, IStorage } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
@@ -25,6 +25,7 @@ import { NameHelpers, ModelHierarchy } from '../../../../../utils/nameHelpers';
 import * as COMMON from '@dpo-packrat/common';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import * as fs from 'fs';
 
 type ModelInfo = {
     model: IngestModelInput;
@@ -1421,6 +1422,33 @@ class IngestDataWorker extends ResolverBase {
                 RK.logError(RK.LogSection.eGQL,'promote assets failed','unable to load asset',{ assetVersion: assetVersionDB },'GraphQL.Ingestion.Data');
                 ingestResMap.set(idAssetVersion, null);
                 continue;
+            }
+
+            // Inject EDAN record ID into staged SVX before promotion
+            if (!AVInfo.isAttachment && SOBased instanceof DBAPI.Scene) {
+                const eAssetType: COMMON.eVocabularyID | undefined = await assetDB.assetType();
+                if (eAssetType === COMMON.eVocabularyID.eAssetAssetTypeScene) {
+                    const storage: IStorage | null = await StorageFactory.getInstance();
+                    if (storage && !assetVersionDB.Ingested) {
+                        const stagingPath: string = await storage.stagingFileName(assetVersionDB.StorageKeyStaging);
+                        if (stagingPath) {
+                            try {
+                                const svxBuffer: Buffer = fs.readFileSync(stagingPath);
+                                const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { idScene: SOBased.idScene });
+                                if (inject.modified) {
+                                    fs.writeFileSync(stagingPath, inject.buffer);
+                                    assetVersionDB.StorageSize = BigInt(inject.buffer.length);
+                                    await assetVersionDB.update();
+                                    await this.appendToWFReport(`Injected EDAN Record ID (${inject.edanRecordId}) into SVX`);
+                                }
+                            } catch (err) {
+                                RK.logWarning(RK.LogSection.eGQL, 'promote assets',
+                                    `EDAN Record ID injection failed, proceeding with original SVX: ${H.Helpers.getErrorString(err)}`,
+                                    { idAssetVersion }, 'GraphQL.Ingestion.Data');
+                            }
+                        }
+                    }
+                }
             }
 
             await this.appendToWFReport(`Ingesting ${assetVersionDB.FileName}, size ${assetVersionDB.StorageSize}, hash ${assetVersionDB.StorageHash}`);

@@ -635,7 +635,7 @@ export async function createReport(req: Request, res: Response): Promise<void> {
     const reportPath = path.join(Config.storage.rootStaging,'reports');
     const reportFileName = `report_asset-files_${(new Date).toISOString().split('T')[0]}`;
     const basePath = path.join(reportPath,reportFileName);
-    H.Helpers.createDirectory(basePath);
+    await H.Helpers.createDirectory(reportPath);
 
     // handle the report type
     switch(reportType) {
@@ -656,6 +656,17 @@ export async function getReportList(req: Request, res: Response): Promise<void> 
     try {
         const reportType = req.params.type;
         const reportsDir = path.join(Config.storage.rootStaging, 'reports');
+
+        // ensure reports directory exists before reading
+        const dirExists: H.IOResults = await H.Helpers.fileOrDirExists(reportsDir);
+        if (!dirExists.success) {
+            res.status(200).json({
+                success: true,
+                message: 'no reports available',
+                data: { type: reportType, reports: [] }
+            });
+            return;
+        }
 
         // Use the promise-based version of fs.readdir to await the file list.
         const files = await fs.promises.readdir(reportsDir);
