@@ -385,7 +385,6 @@ function DetailsView(): React.ReactElement {
         idObject,
         objectType,
         allowed,
-        allowedReason,
         publishedState,
         publishedEnum,
         publishable,
@@ -884,16 +883,23 @@ function DetailsView(): React.ReactElement {
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
 
+    if (!allowed) {
+        return (
+            <Box className={classes.container}>
+                <Box className={classes.content}>
+                    <NoticeBanner
+                        state='warning'
+                        title='Access Denied'
+                        messageText='You do not have permission to access this resource. If you think this is in error please contact the Packrat Support Team (packrat@si.edu).'
+                    />
+                </Box>
+            </Box>
+        );
+    }
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
-                {!allowed && (
-                    <NoticeBanner
-                        state='warning'
-                        title='Access Restricted'
-                        messageText={allowedReason || 'You do not have permission to access this resource.'}
-                    />
-                )}
                 {notice?.show && (
                     <NoticeBanner
                         state={notice.state}

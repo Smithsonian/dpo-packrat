@@ -87,11 +87,9 @@ export class Authorization {
 
     /**
      * Get cached authorization context from LocalStore.
-     * Returns null when enforcement is disabled or no context is available.
+     * Returns null when no context is available (e.g. unauthenticated request).
      */
     static getContext(): AuthorizationContext | null {
-        if (!Config.auth.enforceProjectAuth)
-            return null;
         const LS: LocalStore | undefined = ASL.getStore();
         return LS?.authContext ?? null;
     }
@@ -234,19 +232,19 @@ export class Authorization {
     // #region Logging
 
     static logDenial(idUser: number, idSystemObject: number, surface: string): void {
-        RK.logInfo(RK.LogSection.eSEC, 'access denied',
+        RK.logWarning(RK.LogSection.eSEC, 'access denied',
             undefined, { idUser, idSystemObject, surface }, 'Authorization');
         Authorization.auditDenial(idUser, idSystemObject, { surface, idSystemObject });
     }
 
     static logProjectDenial(idUser: number, idProject: number, surface: string): void {
-        RK.logInfo(RK.LogSection.eSEC, 'project access denied',
+        RK.logWarning(RK.LogSection.eSEC, 'project access denied',
             undefined, { idUser, idProject, surface }, 'Authorization');
         Authorization.auditDenial(idUser, null, { surface, idProject });
     }
 
     static logUnitDenial(idUser: number, idUnit: number, surface: string): void {
-        RK.logInfo(RK.LogSection.eSEC, 'unit access denied',
+        RK.logWarning(RK.LogSection.eSEC, 'unit access denied',
             undefined, { idUser, idUnit, surface }, 'Authorization');
         Authorization.auditDenial(idUser, null, { surface, idUnit });
     }
