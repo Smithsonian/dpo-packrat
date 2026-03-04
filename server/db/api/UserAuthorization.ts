@@ -4,6 +4,18 @@ import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
+export type AuthSummaryRow = {
+    idUnit: number;
+    UnitName: string;
+    UnitAbbreviation: string | null;
+    idProject: number;
+    ProjectName: string;
+    isRestricted: number;
+    idUser: number | null;
+    UserName: string | null;
+    EmailAddress: string | null;
+};
+
 export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> implements UserAuthorizationBase {
     idUserAuthorization!: number;
     idUser!: number;
@@ -162,6 +174,52 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 ORDER BY U.Name ASC`;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'fetchUsersForProject failed',H.Helpers.getErrorString(error),{ idProject, ...this },'DB.UserAuthorization');
+            return [];
+        }
+    }
+
+    /**
+     * Returns a flat summary of all Unit→Project→User authorization relationships.
+     * For unrestricted projects: users authorized via unit membership.
+     * For restricted projects: users explicitly authorized on the project.
+     */
+    static async fetchAuthSummary(): Promise<AuthSummaryRow[]> {
+        try {
+            return await DBC.DBConnection.prisma.$queryRaw<AuthSummaryRow[]>`
+                SELECT
+                    U_unit.idUnit,
+                    U_unit.Name        AS UnitName,
+                    U_unit.Abbreviation AS UnitAbbreviation,
+                    P.idProject,
+                    P.Name             AS ProjectName,
+                    P.isRestricted,
+                    AuthUsers.idUser,
+                    AuthUsers.UserName,
+                    AuthUsers.EmailAddress
+                FROM Unit AS U_unit
+                JOIN SystemObject AS SO_unit ON (SO_unit.idUnit = U_unit.idUnit)
+                JOIN SystemObjectXref AS SOX ON (SOX.idSystemObjectMaster = SO_unit.idSystemObject)
+                JOIN SystemObject AS SO_proj ON (SO_proj.idSystemObject = SOX.idSystemObjectDerived)
+                JOIN Project AS P ON (P.idProject = SO_proj.idProject)
+                LEFT JOIN (
+                    SELECT UA.idUser, Usr.Name AS UserName, Usr.EmailAddress, SO_ua.idUnit AS authIdUnit, NULL AS authIdProject
+                    FROM UserAuthorization AS UA
+                    JOIN User AS Usr ON (Usr.idUser = UA.idUser)
+                    JOIN SystemObject AS SO_ua ON (SO_ua.idSystemObject = UA.idSystemObject)
+                    WHERE SO_ua.idUnit IS NOT NULL
+                    UNION
+                    SELECT UA2.idUser, Usr2.Name AS UserName, Usr2.EmailAddress, NULL AS authIdUnit, SO_ua2.idProject AS authIdProject
+                    FROM UserAuthorization AS UA2
+                    JOIN User AS Usr2 ON (Usr2.idUser = UA2.idUser)
+                    JOIN SystemObject AS SO_ua2 ON (SO_ua2.idSystemObject = UA2.idSystemObject)
+                    WHERE SO_ua2.idProject IS NOT NULL
+                ) AS AuthUsers ON (
+                    (P.isRestricted = 0 AND AuthUsers.authIdUnit = U_unit.idUnit)
+                    OR (P.isRestricted = 1 AND AuthUsers.authIdProject = P.idProject)
+                )
+                ORDER BY U_unit.Name, P.Name, AuthUsers.UserName`;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchAuthSummary failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
             return [];
         }
     }

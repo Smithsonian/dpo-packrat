@@ -18,6 +18,8 @@ enum API_ROUTES {
     AUTH_USERS = 'api/auth/users',
     AUTH_UNITS = 'api/auth/units',
     AUTH_PROJECTS = 'api/auth/projects',
+    AUTH_SUMMARY = 'api/auth/summary',
+    AUTH_DENIALS = 'api/auth/denials',
 }
 
 export type AuthResponseType = {
@@ -172,6 +174,12 @@ export default class API {
     }
     static async getAuthProjects(): Promise<RequestResponse> {
         return this.request(API_ROUTES.AUTH_PROJECTS, { method: 'GET' });
+    }
+    static async getAuthSummary(): Promise<RequestResponse> {
+        return this.request(API_ROUTES.AUTH_SUMMARY, { method: 'GET' });
+    }
+    static async getAuthDenials(startDate: string, endDate: string): Promise<RequestResponse> {
+        return this.request(`${API_ROUTES.AUTH_DENIALS}?startDate=${startDate}&endDate=${endDate}`, { method: 'GET' });
     }
 
     // system operations

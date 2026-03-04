@@ -25,7 +25,7 @@ import { createReport, getReportList, getReportFile } from './routes/api/report'
 import { getObjectStatus, patchObject } from './routes/api/object';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
-import { getUserUnits, setUserUnits, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects } from './routes/api/authorization';
+import { getUserUnits, setUserUnits, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -231,6 +231,8 @@ export class HttpServer {
         this.app.get('/api/auth/users', getAuthUsers);
         this.app.get('/api/auth/units', getAuthUnits);
         this.app.get('/api/auth/projects', getAuthProjects);
+        this.app.get('/api/auth/summary', getAuthSummary);
+        this.app.get('/api/auth/denials', getAuthDenials);
 
         this.app.get('/api/sandbox/play',play);
 

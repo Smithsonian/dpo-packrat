@@ -6,6 +6,16 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { eDBObjectType, eAuditType /*, eSystemObjectType */ } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
 import { User } from './User';
 
+export type AuditDenialRow = {
+    idAudit: number;
+    AuditDate: Date;
+    idUser: number | null;
+    UserName: string | null;
+    EmailAddress: string | null;
+    idSystemObject: number | null;
+    Data: string | null;
+};
+
 export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     idAudit!: number;
     idUser!: number | null;
@@ -97,6 +107,21 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAudit, ...this },'DB.Audit');
             return null;
+        }
+    }
+
+    static async fetchAuthDenialsByDateRange(startDate: Date, endDate: Date): Promise<AuditDenialRow[]> {
+        try {
+            return await DBC.DBConnection.prisma.$queryRaw<AuditDenialRow[]>`
+                SELECT AU.idAudit, AU.AuditDate, AU.idUser, U.Name AS UserName, U.EmailAddress, AU.idSystemObject, AU.Data
+                FROM Audit AS AU
+                LEFT JOIN User AS U ON (AU.idUser = U.idUser)
+                WHERE AU.AuditType = 9
+                  AND AU.AuditDate BETWEEN ${startDate} AND ${endDate}
+                ORDER BY AU.AuditDate DESC`;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchAuthDenialsByDateRange failed',H.Helpers.getErrorString(error),{ startDate, endDate, ...this },'DB.Audit');
+            return [];
         }
     }
 

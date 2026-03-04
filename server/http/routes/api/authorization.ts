@@ -304,3 +304,51 @@ export async function getAuthProjects(_req: Request, res: Response): Promise<voi
     res.status(200).send(JSON.stringify(generateResponse(true, undefined, data)));
 }
 //#endregion
+
+//#region GET /api/auth/summary
+export async function getAuthSummary(_req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(_req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getAuthSummary: ${authResult.error}`)));
+        return;
+    }
+
+    const rows: DBAPI.AuthSummaryRow[] = await DBAPI.UserAuthorization.fetchAuthSummary();
+    const data = rows.map(r => ({ ...r, isRestricted: Boolean(r.isRestricted) }));
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, data)));
+}
+//#endregion
+
+//#region GET /api/auth/denials
+export async function getAuthDenials(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getAuthDenials: ${authResult.error}`)));
+        return;
+    }
+
+    const startParam = req.query.startDate as string | undefined;
+    const endParam = req.query.endDate as string | undefined;
+
+    if (!startParam || !endParam) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getAuthDenials: startDate and endDate query params required')));
+        return;
+    }
+
+    const startDate = new Date(startParam);
+    const endDate = new Date(endParam);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getAuthDenials: invalid date format')));
+        return;
+    }
+
+    // Set end date to end of day (23:59:59.999)
+    endDate.setHours(23, 59, 59, 999);
+
+    const rows: DBAPI.AuditDenialRow[] = await DBAPI.Audit.fetchAuthDenialsByDateRange(startDate, endDate);
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, rows)));
+}
+//#endregion
