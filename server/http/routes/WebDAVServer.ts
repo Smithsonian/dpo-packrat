@@ -71,6 +71,17 @@ export class WebDAVServer {
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
+            const token: string | undefined = (ctx.request as any).webdavToken;
+            if (token)
+                ctx.uriPrefix = '/token-' + token;
+
+            // The WebDAV server hardcodes Access-Control-Allow-Origin to '*' before
+            // this hook fires, which conflicts with credentialed requests. Overwrite
+            // it with the actual request origin so browsers accept the response.
+            const origin: string | undefined = ctx.request.headers.origin;
+            if (origin)
+                ctx.response.setHeader('Access-Control-Allow-Origin', origin);
+
             RK.logDebug(RK.LogSection.eHTTP,'before request',`${ctx.request.method} ${ctx.request.url} start`,{},'HTTP.Route.WebDAV');
             next();
         });
