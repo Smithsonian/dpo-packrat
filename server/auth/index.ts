@@ -14,7 +14,8 @@ if (!PACKRAT_CLIENT_ENDPOINT) {
 // for non-production deployments (where httpAuthRequired is false), allow requests from the Apollo GraphQL Studio:
 const authCorsConfig = {
     origin: httpAuthRequired ? PACKRAT_CLIENT_ENDPOINT : [ PACKRAT_CLIENT_ENDPOINT, 'https://studio.apollographql.com' ],
-    credentials: true
+    credentials: true,
+    methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','PROPFIND','PROPPATCH','MKCOL','COPY','MOVE','LOCK','UNLOCK','OPTIONS']
 };
 
 if (!PACKRAT_SESSION_SECRET) {
