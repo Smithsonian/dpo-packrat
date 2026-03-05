@@ -158,6 +158,27 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
     }
 
     /**
+     * Returns users authorized for a specific unit.
+     * Joins UserAuthorization -> SystemObject (where SO.idUnit = idUnit) -> User.
+     */
+    static async fetchUsersForUnit(idUnit: number): Promise<{ idUser: number; Name: string; EmailAddress: string }[]> {
+        if (!idUnit)
+            return [];
+        try {
+            return await DBC.DBConnection.prisma.$queryRaw<{ idUser: number; Name: string; EmailAddress: string }[]>`
+                SELECT U.idUser, U.Name, U.EmailAddress
+                FROM UserAuthorization AS UA
+                JOIN SystemObject AS SO ON (UA.idSystemObject = SO.idSystemObject)
+                JOIN User AS U ON (UA.idUser = U.idUser)
+                WHERE SO.idUnit = ${idUnit}
+                ORDER BY U.Name ASC`;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetchUsersForUnit failed',H.Helpers.getErrorString(error),{ idUnit, ...this },'DB.UserAuthorization');
+            return [];
+        }
+    }
+
+    /**
      * Returns users authorized for a specific project.
      * Joins UserAuthorization -> SystemObject (where SO.idProject = idProject) -> User.
      */

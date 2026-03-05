@@ -156,18 +156,6 @@ function AdminProjectsList({ projects }): React.ReactElement {
                 sort: false
             }
         },
-        {
-            name: 'idProject',
-            label: 'Auth',
-            options: {
-                setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader,
-                customBodyRender(value) {
-                    return <Link to={`/admin/projects/${value}/auth`}>Auth</Link>;
-                },
-                sort: false
-            }
-        }
     ];
 
     return (

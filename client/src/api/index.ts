@@ -14,6 +14,7 @@ enum API_ROUTES {
     PROJECTS = 'api/project',
     REPORT = 'api/report',
     AUTH_USER_UNITS = 'api/auth/user',
+    AUTH_UNIT = 'api/auth/unit',
     AUTH_PROJECT = 'api/auth/project',
     AUTH_USERS = 'api/auth/users',
     AUTH_UNITS = 'api/auth/units',
@@ -158,6 +159,13 @@ export default class API {
     static async setUserUnits(idUser: number, unitIds: number[]): Promise<RequestResponse> {
         const body = JSON.stringify({ unitIds });
         return this.request(`${API_ROUTES.AUTH_USER_UNITS}/${idUser}/units`, { method: 'PUT', body });
+    }
+    static async getUnitAuth(idUnit: number): Promise<RequestResponse> {
+        return this.request(`${API_ROUTES.AUTH_UNIT}/${idUnit}`, { method: 'GET' });
+    }
+    static async setUnitAuth(idUnit: number, authorizedUserIds: number[]): Promise<RequestResponse> {
+        const body = JSON.stringify({ authorizedUserIds });
+        return this.request(`${API_ROUTES.AUTH_UNIT}/${idUnit}`, { method: 'PUT', body });
     }
     static async getProjectAuth(idProject: number): Promise<RequestResponse> {
         return this.request(`${API_ROUTES.AUTH_PROJECT}/${idProject}`, { method: 'GET' });

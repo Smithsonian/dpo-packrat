@@ -87,6 +87,7 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     publishedState: string;
     idSystemObject: number;
+    idObject?: number;
     refreshTick?: number;
     onDetailUpdate?: () => void;
 }
@@ -108,6 +109,7 @@ export type UpdateDataFields =
 type DetailsTabParams = {
     disabled: boolean;
     idSystemObject: number;
+    idObject?: number;
     objectType: eSystemObjectType;
     assetOwner: RepositoryPath | undefined | null;
     sourceObjects: StateRelatedObject[];
@@ -132,6 +134,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const {
         disabled,
         idSystemObject,
+        idObject,
         objectType,
         assetOwner,
         sourceObjects,
@@ -240,6 +243,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         ...sharedProps,
         publishedState,
         idSystemObject,
+        idObject,
         refreshTick,
         onDetailUpdate,
     };

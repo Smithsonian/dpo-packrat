@@ -127,6 +127,100 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
 }
 //#endregion
 
+//#region GET /api/auth/unit/:idUnit
+export async function getUnitAuth(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getUnitAuth: ${authResult.error}`)));
+        return;
+    }
+
+    const idUnit: number = parseInt(req.params.idUnit);
+    if (!idUnit || isNaN(idUnit)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'getUnitAuth: invalid idUnit')));
+        return;
+    }
+
+    const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(idUnit);
+    if (!unit) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `getUnitAuth: unit ${idUnit} not found`)));
+        return;
+    }
+
+    const authorizedUsers = await DBAPI.UserAuthorization.fetchUsersForUnit(idUnit);
+
+    res.status(200).send(JSON.stringify(generateResponse(true, undefined, {
+        idUnit: unit.idUnit,
+        Name: unit.Name,
+        authorizedUsers,
+    })));
+}
+//#endregion
+
+//#region PUT /api/auth/unit/:idUnit
+export async function setUnitAuth(req: Request, res: Response): Promise<void> {
+    const authResult = await isAdminAuthorized(req);
+    if (!authResult.success) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setUnitAuth: ${authResult.error}`)));
+        return;
+    }
+
+    const idUnit: number = parseInt(req.params.idUnit);
+    if (!idUnit || isNaN(idUnit)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'setUnitAuth: invalid idUnit')));
+        return;
+    }
+
+    const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(idUnit);
+    if (!unit) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setUnitAuth: unit ${idUnit} not found`)));
+        return;
+    }
+
+    const { authorizedUserIds } = req.body;
+
+    if (!Array.isArray(authorizedUserIds)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, 'setUnitAuth: authorizedUserIds must be an array')));
+        return;
+    }
+
+    const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
+    if (!SO) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setUnitAuth: no SystemObject for unit ${idUnit}`)));
+        return;
+    }
+
+    const currentRows: DBAPI.UserAuthorization[] | null = await DBAPI.UserAuthorization.fetchFromSystemObject(SO.idSystemObject);
+    const currentUserIds: number[] = currentRows ? currentRows.map(r => r.idUser) : [];
+
+    const toAdd: number[] = authorizedUserIds.filter((id: number) => !currentUserIds.includes(id));
+    const toRemove: number[] = currentUserIds.filter(id => !authorizedUserIds.includes(id));
+
+    for (const idUser of toRemove) {
+        const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
+        if (ua)
+            await ua.delete();
+    }
+
+    const LS: LocalStore | undefined = ASL.getStore();
+    const idUserCreator: number | null = LS?.idUser ?? null;
+
+    for (const idUser of toAdd) {
+        const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
+            idUserAuthorization: 0,
+            idUser,
+            idSystemObject: SO.idSystemObject,
+            DateCreated: new Date(),
+            idUserCreator,
+        });
+        await ua.create();
+    }
+
+    RK.logInfo(RK.LogSection.eHTTP, 'setUnitAuth', `updated auth for unit ${idUnit}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+    res.status(200).send(JSON.stringify(generateResponse(true, 'Updated unit authorization')));
+}
+//#endregion
+
 //#region GET /api/auth/project/:idProject
 export async function getProjectAuth(req: Request, res: Response): Promise<void> {
     const authResult = await isAdminAuthorized(req);

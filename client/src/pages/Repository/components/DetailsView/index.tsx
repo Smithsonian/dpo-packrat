@@ -1092,6 +1092,7 @@ function DetailsView(): React.ReactElement {
                     <DetailsTab
                         disabled={disabled}
                         idSystemObject={idSystemObject}
+                        idObject={idObject}
                         objectType={objectType}
                         assetOwner={assetOwner}
                         sourceObjects={sourceObjects}
