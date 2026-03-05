@@ -222,6 +222,15 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     };
     const removeVoyagerStoryElement = () => {
 
+        // clean up TinyMCE editor instances before removing Voyager Story.
+        // Voyager's ArticleEditor initializes TinyMCE in firstConnected() but does not
+        // call tinymce.remove() in disconnected(), leaving stale editors in TinyMCE's
+        // global registry. This prevents re-initialization when a new <voyager-story>
+        // element is created, causing the article editor to not display on re-entry.
+        if ((window as any).tinymce) {
+            (window as any).tinymce.remove();
+        }
+
         // get our dialog component/container
         const voyagerContainer: HTMLElement | null = document.querySelector('div#Voyager-Story-Container');
         if(!voyagerContainer) {
