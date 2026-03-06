@@ -15,10 +15,9 @@ import { DebounceInput } from 'react-debounce-input';
 import clsx from 'clsx';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 import LabelTooltipText from '../../../../../components/controls/LabelTooltipText';
-import UnitAuthorizedUsers from './UnitAuthorizedUsers';
 
 function UnitDetails(props: DetailComponentProps): React.ReactElement {
-    const { data, loading, disabled, onUpdateDetail, objectType, idObject } = props;
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const classes = useStyles();
     const [UnitDetails, updateDetailField] = useDetailTabStore(state => [state.UnitDetails, state.updateDetailField]);
 
@@ -89,7 +88,6 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <UnitAuthorizedUsers idUnit={idObject} />
         </Box>
     );
 }

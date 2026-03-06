@@ -1,29 +1,30 @@
 /* eslint-disable react/jsx-max-props-per-line */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Button, Select, MenuItem, Typography, IconButton, Collapse, Switch, FormControlLabel } from '@material-ui/core';
+import { Box, Button, Select, MenuItem, Typography, Switch, FormControlLabel } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
-import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
-import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
+import IconButton from '@material-ui/core/IconButton';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
+import { Alert } from '@material-ui/lab';
 import { toast } from 'react-toastify';
 import { useUserStore } from '../../../../../store';
 import API from '../../../../../api';
 
 const useStyles = makeStyles(({ typography }) => createStyles({
     container: {
-        marginTop: '8px',
+        padding: '8px',
+        backgroundColor: 'rgb(236, 245, 253)',
     },
-    headerRow: {
-        display: 'flex',
-        alignItems: 'center',
-        cursor: 'pointer',
-        padding: '4px 0',
-    },
-    headerText: {
+    sectionTitle: {
         fontWeight: 600,
-        fontSize: '0.85rem',
-        color: '#3F536E',
+        fontSize: '0.9rem',
+        color: 'black',
+        marginBottom: '4px',
+    },
+    description: {
+        fontSize: '0.8rem',
+        color: '#555',
+        marginBottom: '12px',
     },
     userRow: {
         display: 'flex',
@@ -54,19 +55,14 @@ const useStyles = makeStyles(({ typography }) => createStyles({
     addBtn: {
         height: '30px',
         color: 'white',
-        outline: '2px hidden #8DABC4',
-        '& :focus': {
-            outline: '2px solid #8DABC4',
-        },
     },
     saveBtn: {
         height: '30px',
         width: '90px',
         color: 'white',
-        outline: '2px hidden #8DABC4',
-        '& :focus': {
-            outline: '2px solid #8DABC4',
-        },
+    },
+    restrictedBanner: {
+        marginBottom: '12px',
     },
 }));
 
@@ -82,7 +78,6 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
     const { user } = useUserStore();
     const isAdmin = user?.isAdmin ?? false;
 
-    const [open, setOpen] = useState<boolean>(false);
     const [loaded, setLoaded] = useState<boolean>(false);
     const [isRestricted, setIsRestricted] = useState<boolean>(false);
     const [savedIsRestricted, setSavedIsRestricted] = useState<boolean>(false);
@@ -101,7 +96,7 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
     }, [authorizedUsers, savedUserIds, isRestricted, savedIsRestricted]);
 
     useEffect(() => {
-        if (!open || loaded || !idProject) return;
+        if (loaded || !idProject || !isAdmin) return;
 
         const fetchData = async () => {
             const [projectResult, usersResult] = await Promise.all([
@@ -126,11 +121,23 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
             setLoaded(true);
         };
         fetchData();
-    }, [open, loaded, idProject]);
+    }, [loaded, idProject, isAdmin]);
 
-    if (!isAdmin) return null;
+    if (!isAdmin) {
+        return (
+            <Box className={classes.container}>
+                <Typography style={{ fontSize: '0.85rem', color: 'black' }}>Admin access required to manage authorization.</Typography>
+            </Box>
+        );
+    }
 
-    const handleToggle = () => setOpen(prev => !prev);
+    if (!loaded) {
+        return (
+            <Box className={classes.container}>
+                <Typography style={{ fontSize: '0.8rem', color: 'black' }}>Loading...</Typography>
+            </Box>
+        );
+    }
 
     const handleAddUser = () => {
         if (!selectedUserId) return;
@@ -178,97 +185,95 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
 
     return (
         <Box className={classes.container}>
-            <Box className={classes.headerRow} onClick={handleToggle}>
-                <IconButton size='small'>
-                    {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                </IconButton>
-                <Typography className={classes.headerText}>Authorization</Typography>
-            </Box>
+            <Typography className={classes.sectionTitle}>Project Authorization</Typography>
+            <Typography className={classes.description}>
+                When restricted access is enabled, only listed users and admins can view this project
+                and its contents. Other users will see an &quot;Access Denied&quot; message. Changes take
+                effect on each user&apos;s next login.
+            </Typography>
 
-            <Collapse in={open}>
-                {!loaded ? (
-                    <Typography style={{ padding: '8px 0', display: 'block', fontSize: '0.8rem', color: 'black' }}>Loading...</Typography>
-                ) : (
-                    <Box style={{ padding: '4px 0 8px 8px' }}>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={isRestricted}
-                                    onChange={e => setIsRestricted(e.target.checked)}
-                                    color='primary'
-                                    size='small'
-                                />
-                            }
-                            label={<Typography style={{ fontSize: '0.85rem', color: 'black' }}>Restricted Access</Typography>}
-                        />
+            {isRestricted && (
+                <Alert severity='info' className={classes.restrictedBanner}>
+                    This project is currently restricted. Only authorized users and admins can access it.
+                </Alert>
+            )}
 
-                        {isRestricted && (
-                            <Box style={{ marginTop: '8px' }}>
-                                <Typography style={{ fontWeight: 600, fontSize: '0.85rem', color: 'black' }}>
-                                    Authorized Users
-                                </Typography>
+            <FormControlLabel
+                control={
+                    <Switch
+                        checked={isRestricted}
+                        onChange={e => setIsRestricted(e.target.checked)}
+                        color='primary'
+                        size='small'
+                    />
+                }
+                label={<Typography style={{ fontSize: '0.85rem', color: 'black' }}>Restricted Access</Typography>}
+            />
 
-                                {authorizedUsers.length > 0 ? (
-                                    <Box style={{ marginTop: '4px', marginBottom: '8px' }}>
-                                        {authorizedUsers.map(u => (
-                                            <Box key={u.idUser} className={classes.userRow}>
-                                                <Typography style={{ fontSize: '0.8rem', color: 'black' }}>
-                                                    {u.Name} ({u.EmailAddress})
-                                                </Typography>
-                                                <IconButton size='small' onClick={() => handleRemoveUser(u.idUser)} aria-label='remove user'>
-                                                    <DeleteIcon fontSize='small' />
-                                                </IconButton>
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                ) : (
-                                    <Typography style={{ display: 'block', color: '#999', fontSize: '0.8rem', margin: '4px 0 8px' }}>
-                                        No users authorized. Only admins can access this project.
+            {isRestricted && (
+                <Box style={{ marginTop: '8px' }}>
+                    <Typography style={{ fontWeight: 600, fontSize: '0.85rem', color: 'black' }}>
+                        Authorized Users
+                    </Typography>
+
+                    {authorizedUsers.length > 0 ? (
+                        <Box style={{ marginTop: '4px', marginBottom: '8px' }}>
+                            {authorizedUsers.map(u => (
+                                <Box key={u.idUser} className={classes.userRow}>
+                                    <Typography style={{ fontSize: '0.8rem', color: 'black' }}>
+                                        {u.Name} ({u.EmailAddress})
                                     </Typography>
-                                )}
-
-                                <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Select
-                                        value={selectedUserId}
-                                        className={classes.select}
-                                        disableUnderline
-                                        onChange={e => setSelectedUserId(Number(e.target.value))}
-                                        displayEmpty
-                                    >
-                                        <MenuItem value={0} disabled>(Select User)</MenuItem>
-                                        {allUsers
-                                            .filter(u => u.Active && !authorizedUsers.some(a => a.idUser === u.idUser))
-                                            .map(u => (
-                                                <MenuItem key={u.idUser} value={u.idUser}>{u.Name} ({u.EmailAddress})</MenuItem>
-                                            ))
-                                        }
-                                    </Select>
-                                    <Button size='small' variant='contained' color='primary' className={classes.addBtn} onClick={handleAddUser} disabled={!selectedUserId} disableElevation>Add</Button>
+                                    <IconButton size='small' onClick={() => handleRemoveUser(u.idUser)} aria-label='remove user'>
+                                        <DeleteIcon fontSize='small' />
+                                    </IconButton>
                                 </Box>
-                            </Box>
-                        )}
-
-                        <Typography className={classes.note}>
-                            Note: Changes to user authorization take effect on the user&apos;s next login.
+                            ))}
+                        </Box>
+                    ) : (
+                        <Typography style={{ display: 'block', color: '#999', fontSize: '0.8rem', margin: '4px 0 8px' }}>
+                            No users authorized. Only admins can access this project.
                         </Typography>
+                    )}
 
-                        {isDirty() && (
-                            <Box style={{ marginTop: '10px' }}>
-                                <Button
-                                    variant='contained'
-                                    color='primary'
-                                    className={classes.saveBtn}
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                    disableElevation
-                                >
-                                    {saving ? 'Saving...' : 'Save'}
-                                </Button>
-                            </Box>
-                        )}
+                    <Box style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Select
+                            value={selectedUserId}
+                            className={classes.select}
+                            disableUnderline
+                            onChange={e => setSelectedUserId(Number(e.target.value))}
+                            displayEmpty
+                        >
+                            <MenuItem value={0} disabled>(Select User)</MenuItem>
+                            {allUsers
+                                .filter(u => u.Active && !authorizedUsers.some(a => a.idUser === u.idUser))
+                                .map(u => (
+                                    <MenuItem key={u.idUser} value={u.idUser}>{u.Name} ({u.EmailAddress})</MenuItem>
+                                ))
+                            }
+                        </Select>
+                        <Button size='small' variant='contained' color='primary' className={classes.addBtn} onClick={handleAddUser} disabled={!selectedUserId} disableElevation>Add</Button>
                     </Box>
-                )}
-            </Collapse>
+                </Box>
+            )}
+
+            <Typography className={classes.note}>
+                Note: Changes to user authorization take effect on the user&apos;s next login.
+            </Typography>
+
+            {isDirty() && (
+                <Box style={{ marginTop: '10px' }}>
+                    <Button
+                        variant='contained'
+                        color='primary'
+                        className={classes.saveBtn}
+                        onClick={handleSave}
+                        disabled={saving}
+                        disableElevation
+                    >
+                        {saving ? 'Saving...' : 'Save'}
+                    </Button>
+                </Box>
+            )}
         </Box>
     );
 }

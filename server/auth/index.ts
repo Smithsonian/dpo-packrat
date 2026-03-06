@@ -30,15 +30,17 @@ const Store = MemoryStore(session);
 
 const { maxAge, checkPeriod } = Config.auth.session;
 
+const sessionStore = new Store({ checkPeriod });
+
 const sessionConfig = {
     cookie: { maxAge },
     secret: PACKRAT_SESSION_SECRET,
     resave: true,
     rolling: true,
     saveUninitialized: true,
-    store: new Store({ checkPeriod })
+    store: sessionStore
 };
 
 const authSession = session(sessionConfig);
 
-export { passport, authCorsConfig, authSession, AuthRouter };
+export { passport, authCorsConfig, authSession, AuthRouter, sessionStore };

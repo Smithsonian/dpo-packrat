@@ -13,10 +13,9 @@ import { useDetailTabStore } from '../../../../../store';
 import { Typography, Table, TableBody, TableCell, TableContainer, TableRow, Box } from '@material-ui/core';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 import { DebounceInput } from 'react-debounce-input';
-import ProjectAuthorizedUsers from './ProjectAuthorizedUsers';
 
 function ProjectDetails(props: DetailComponentProps): React.ReactElement {
-    const { data, loading, disabled, onUpdateDetail, objectType, idObject } = props;
+    const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const classes = useStyles();
     const [ProjectDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDetails, state.updateDetailField]);
 
@@ -71,7 +70,6 @@ function ProjectDetails(props: DetailComponentProps): React.ReactElement {
                     </TableBody>
                 </Table>
             </TableContainer>
-            <ProjectAuthorizedUsers idProject={idObject} />
         </Box>
     );
 }
