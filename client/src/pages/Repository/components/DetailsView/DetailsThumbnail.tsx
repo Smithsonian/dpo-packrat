@@ -229,6 +229,11 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
     };
     const removeVoyagerStoryElement = () => {
 
+        // HACK: Voyager Story doesn't dispose of the TinyMCE editor instance failing to load
+        //       it a second time without a page refresh. This manually removes it.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((window as any).tinymce) (window as any).tinymce.remove();
+
         // get our dialog component/container
         const voyagerContainer: HTMLElement | null = document.querySelector('div#Voyager-Story-Container');
         if(!voyagerContainer) {
