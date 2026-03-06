@@ -74,7 +74,7 @@ function ServiceStatusBanner(): React.ReactElement | null {
     if (banners.length === 0) return null;
 
     return (
-        <Box ref={wrapperRef} className={classes.wrapper}>
+        <div ref={wrapperRef} className={classes.wrapper}>
             {banners.map((banner, index) => (
                 <Box
                     key={index}
@@ -85,7 +85,7 @@ function ServiceStatusBanner(): React.ReactElement | null {
                     </Typography>
                 </Box>
             ))}
-        </Box>
+        </div>
     );
 }
 
