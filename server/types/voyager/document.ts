@@ -31,12 +31,13 @@ import { IMeta } from "./meta";
 import { IModel } from "./model";
 import { ISetup } from "./setup";
 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // export { EUnitType, TUnitType, Vector3, Quaternion, Matrix4, ColorRGB };
 
 export type TCameraType = "perspective" | "orthographic";
-export type TLightType = "ambient" | "directional" | "point" | "spot" | "hemisphere"| "rect";
+export type TLightType = "ambient" | "directional" | "point" | "spot" | "hemisphere" | "rect" | "environment" | "sun";
 
 /**
  * Encapsulates a node tree representing a renderable scene.
@@ -133,6 +134,7 @@ export interface ILight
     enabled?: boolean;
     color?: ColorRGB;
     intensity?: number;
+    tags?: string;
 
     shadowEnabled?: boolean;
     shadowSize?: number;
@@ -143,6 +145,7 @@ export interface ILight
     point?: IPointLightProps;
     spot?: ISpotLightProps;
     hemisphere?: IHemisphereLightProps;
+    sun?: ISunLightProps;
 }
 
 /**
@@ -165,4 +168,11 @@ export interface ISpotLightProps extends IPointLightProps
 
 export interface IHemisphereLightProps {
     ground: ColorRGB;
+}
+
+export interface ISunLightProps {
+    datetime?: Date;
+    latitude?: number;
+    longitude?: number;
+    intensityFactor?: number;
 }

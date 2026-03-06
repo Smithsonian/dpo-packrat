@@ -15,11 +15,13 @@ import { VocabularyCache } from '../../cache';
 import { ASL, LocalStore } from '../../utils/localStore';
 import { SvxReader } from '../../utils/parser';
 import { RouteBuilder, eHrefMode } from '../../http/routes/routeBuilder';
+import { SceneHelpers } from '../../utils/sceneHelpers';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import { Readable } from 'stream';
 import * as mime from 'mime-types';
 
 export type AssetStorageResult = {
@@ -763,7 +765,7 @@ export class AssetStorageAdapter {
                     IAR = { success: false, error, assets, assetVersions, systemObjectVersion: null };
                 continue;
             }
-            const hashResults: H.HashResults = await H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm); /* istanbul ignore next */
+            let hashResults: H.HashResults = await H.Helpers.computeHashFromStream(inputStream, ST.OCFLDigestAlgorithm); /* istanbul ignore next */
             if (!hashResults.success) {
                 RK.logError(RK.LogSection.eSTR,'bulk ingest zip worker',`unable to compute hash: ${hashResults.error}`,{ entry, assetVersion },'AssetStorageAdapter');
                 if (IAR.success)
@@ -832,6 +834,26 @@ export class AssetStorageAdapter {
                     eAssetType = COMMON.eVocabularyID.eAssetAssetTypeOther;
                     break;
             }
+
+            // Inject EDAN record ID into SVX extracted from ZIP package
+            if (eAssetType === COMMON.eVocabularyID.eAssetAssetTypeScene) {
+                const svxBuffer: Buffer | null = await H.Helpers.readFileFromStream(inputStream);
+                if (svxBuffer) {
+                    const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { OG: metadata });
+                    if (inject.modified) {
+                        const newHash: H.HashResults = await H.Helpers.computeHashFromStream(
+                            Readable.from(inject.buffer), ST.OCFLDigestAlgorithm);
+                        if (newHash.success)
+                            hashResults = newHash;
+                        RK.logInfo(RK.LogSection.eSTR, 'bulk ingest zip worker',
+                            `injected EDAN Record ID (${inject.edanRecordId}) into SVX ${unzippedFileName}`,
+                            { entry }, 'AssetStorageAdapter');
+                    }
+                    // Original stream was consumed by readFileFromStream — recreate from buffer
+                    inputStream = Readable.from(inject.buffer);
+                }
+            }
+
             const idVAssetType: number | undefined = await VocabularyCache.vocabularyEnumToId(eAssetType); /* istanbul ignore next */
             if (!idVAssetType) {
                 const error: string = `ingestAssetBulkZipWorker: unable to compute asset type of Asset ${JSON.stringify(asset, H.Helpers.saferStringify)}`;

@@ -152,6 +152,11 @@ export default class API {
         return this.request(uri, { method: 'GET' });
     }
 
+    // webdav token
+    static async getWebDAVToken(idSystemObject: number): Promise<RequestResponse> {
+        return this.request(`api/scene/${idSystemObject}/webdav-token`, { method: 'POST' });
+    }
+
     // authorization management
     static async getUserUnits(idUser: number): Promise<RequestResponse> {
         return this.request(`${API_ROUTES.AUTH_USER_UNITS}/${idUser}/units`, { method: 'GET' });
@@ -198,11 +203,14 @@ export default class API {
 
     // system operations
     static async solrReindex(): Promise<RequestResponse> {
-        return this.request('solrindex', { method: 'POST' });
+        return this.request('solr/index', { method: 'POST' });
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static async solrReindexStatus(): Promise<any> {
-        return this.request('solrindex/status', { method: 'GET' });
+        return this.request('solr/index/status', { method: 'GET' });
+    }
+    static async solrRebuildIndex(): Promise<RequestResponse> {
+        return this.request('solr/rebuild', { method: 'POST' });
     }
 
     // general routines

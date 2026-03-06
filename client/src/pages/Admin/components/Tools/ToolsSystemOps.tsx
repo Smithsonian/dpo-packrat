@@ -1,11 +1,11 @@
 import API, { RequestResponse } from '../../../../api';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Box, Typography, Button, LinearProgress } from '@material-ui/core';
+import { Box, Typography, Button, LinearProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@material-ui/core';
 import { toast } from 'react-toastify';
 import { useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 
-enum eSolrIndexPhase { eIdle, eObjects, eMetadata, eCompleted, eError }
+enum eSolrIndexPhase { eIdle = 0, eDeleting = 1, eObjects = 2, eMetadata = 3, eCompleted = 4, eError = 5 }
 
 interface SolrIndexProgress {
     phase: eSolrIndexPhase;
@@ -20,7 +20,9 @@ const ToolsSystemOps = (): React.ReactElement => {
     const classes = useToolsStyles();
     const [isIndexing, setIsIndexing] = useState<boolean>(false);
     const [progress, setProgress] = useState<SolrIndexProgress | null>(null);
+    const [showRebuildConfirm, setShowRebuildConfirm] = useState<boolean>(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const operationRef = useRef<'reindex' | 'rebuild'>('reindex');
 
     const stopPolling = useCallback(() => {
         if (pollRef.current !== null) {
@@ -38,14 +40,16 @@ const ToolsSystemOps = (): React.ReactElement => {
             const p: SolrIndexProgress = response.progress;
             setProgress(p);
 
+            const label = operationRef.current === 'rebuild' ? 'Solr Rebuild' : 'Solr (Re)Index';
+
             if (p.phase === eSolrIndexPhase.eCompleted) {
                 stopPolling();
                 setIsIndexing(false);
-                toast.success('Solr (Re)Index completed successfully.');
+                toast.success(`${label} completed successfully.`);
             } else if (p.phase === eSolrIndexPhase.eError) {
                 stopPolling();
                 setIsIndexing(false);
-                toast.error(`Solr (Re)Index failed. ${p.error ?? ''}`);
+                toast.error(`${label} failed. ${p.error ?? ''}`);
             } else if (p.phase === eSolrIndexPhase.eIdle) {
                 stopPolling();
                 setIsIndexing(false);
@@ -69,7 +73,7 @@ const ToolsSystemOps = (): React.ReactElement => {
                     return;
 
                 const p: SolrIndexProgress = response.progress;
-                if (p.phase === eSolrIndexPhase.eObjects || p.phase === eSolrIndexPhase.eMetadata) {
+                if (p.phase === eSolrIndexPhase.eDeleting || p.phase === eSolrIndexPhase.eObjects || p.phase === eSolrIndexPhase.eMetadata) {
                     setProgress(p);
                     setIsIndexing(true);
                     startPolling();
@@ -83,6 +87,7 @@ const ToolsSystemOps = (): React.ReactElement => {
     }, [startPolling, stopPolling]);
 
     const onSolrReindex = async () => {
+        operationRef.current = 'reindex';
         setIsIndexing(true);
         setProgress(null);
         try {
@@ -100,9 +105,40 @@ const ToolsSystemOps = (): React.ReactElement => {
         }
     };
 
+    const onSolrRebuild = async () => {
+        setShowRebuildConfirm(false);
+        operationRef.current = 'rebuild';
+        setIsIndexing(true);
+        setProgress(null);
+        try {
+            const response: RequestResponse = await API.solrRebuildIndex();
+            if (response.success) {
+                startPolling();
+            } else {
+                toast.error(`Solr Rebuild failed. ${response.message ?? ''}`);
+                setIsIndexing(false);
+            }
+        } catch (error) {
+            console.error(`[Packrat:ERROR] Unexpected error during Solr rebuild: ${error}`);
+            toast.error('Solr Rebuild failed due to an unexpected error.');
+            setIsIndexing(false);
+        }
+    };
+
     const renderProgress = () => {
         if (!isIndexing || !progress)
             return null;
+
+        if (progress.phase === eSolrIndexPhase.eDeleting) {
+            return (
+                <Box style={{ marginTop: '0.5rem', maxWidth: 400 }}>
+                    <Typography variant='body2'>
+                        Deleting all Solr documents...
+                    </Typography>
+                    <LinearProgress variant='indeterminate' />
+                </Box>
+            );
+        }
 
         if (progress.phase === eSolrIndexPhase.eObjects) {
             const pct = progress.total > 0 ? Math.round((progress.processed / progress.total) * 100) : 0;
@@ -151,8 +187,41 @@ const ToolsSystemOps = (): React.ReactElement => {
                         Triggers a full Solr reindex of all Packrat objects. This process runs in the background and may take several minutes.
                     </Typography>
                 </Box>
+
+                <Box style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
+                    <Button
+                        className={isIndexing ? classes.btnDisabled : classes.btn}
+                        onClick={() => setShowRebuildConfirm(true)}
+                        disableElevation
+                        disabled={isIndexing}
+                        style={{ width: 180, paddingLeft: '15px', paddingRight: '15px', textTransform: 'none', backgroundColor: isIndexing ? undefined : '#d32f2f', color: isIndexing ? undefined : '#fff' }}
+                    >
+                        {isIndexing ? 'Indexing...' : 'Rebuild Index'}
+                    </Button>
+                    <Typography variant='body2'>
+                        Deletes all Solr documents then reindexes from scratch. Use after a database rebuild to remove orphaned documents. Admin only.
+                    </Typography>
+                </Box>
                 {renderProgress()}
             </Box>
+
+            <Dialog open={showRebuildConfirm} onClose={() => setShowRebuildConfirm(false)}>
+                <DialogTitle>Confirm Rebuild Index</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        This will delete ALL documents from both Solr cores and reindex from the database.
+                        Search will be unavailable during this process. Are you sure?
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setShowRebuildConfirm(false)} color='primary'>
+                        Cancel
+                    </Button>
+                    <Button onClick={onSolrRebuild} style={{ color: '#d32f2f' }}>
+                        Rebuild
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 };

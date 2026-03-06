@@ -11,6 +11,7 @@ import { SvxReader, SvxExtraction } from './parser';
 import { JobCookSIPackratInspectOutput } from '../job/impl/Cook';
 import { WorkflowUtil } from '../workflow/impl/Packrat/WorkflowUtil';
 import { Readable } from 'stream';
+import * as path from 'path';
 
 export type EdanRecordIdResult = {
     status: 'assigned' | 'assigned_multisubject' | 'mismatch' | 'missing_svx' | 'missing_db' | 'not_found' | 'no_subject' | 'invalid_multisubject' | 'missing_multisubject' | 'error';
@@ -242,6 +243,111 @@ export class SceneHelpers {
         return { success: true };
     }
 
+    /** Inspects an SVX buffer and injects the EDAN Record ID from the DB if it is missing in the SVX JSON.
+     *  Only injects for single-subject scenes. Multi-subject scenes are skipped (require manual edanlists: prefix).
+     *  Injection failure never blocks ingestion — the original buffer is returned with a warning. */
+    static async ensureEdanRecordId(
+        svxBuffer: Buffer,
+        subjectResolver: { idScene?: number; OG?: DBAPI.ObjectGraph }
+    ): Promise<{ buffer: Buffer; modified: boolean; edanRecordId: string | null; error?: string }> {
+        const unchanged = (error?: string): { buffer: Buffer; modified: boolean; edanRecordId: string | null; error?: string } =>
+            ({ buffer: svxBuffer, modified: false, edanRecordId: null, error });
+
+        // 1. Parse SVX JSON
+        let document: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            document = JSON.parse(svxBuffer.toString());
+        } catch (err) {
+            const error = `ensured EDAN Record ID failed to parse SVX JSON: ${H.Helpers.getErrorString(err)}`;
+            RK.logError(RK.LogSection.eSYS, 'ensure EDAN Record ID', error, {}, 'Utils.Scene');
+            return unchanged(error);
+        }
+
+        // 2. Check if edanRecordId already exists (reimplement extraction inline — svxReader.ts:270-281 is private)
+        if (document.metas) {
+            for (const meta of document.metas) {
+                if (meta.collection && meta.collection['edanRecordId']) {
+                    const value = meta.collection['edanRecordId'];
+                    if (typeof value === 'string' && value.length > 0) {
+                        RK.logDebug(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                            `ensured EDAN Record ID skipped, SVX already has (${value})`, {}, 'Utils.Scene');
+                        return { buffer: svxBuffer, modified: false, edanRecordId: value };
+                    }
+                }
+            }
+        }
+
+        // 3. Resolve Subject(s)
+        let subjects: DBAPI.Subject[] | null = null;
+        if (subjectResolver.OG) {
+            subjects = subjectResolver.OG.subject;
+        } else if (subjectResolver.idScene) {
+            const items: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([subjectResolver.idScene]);
+            const allItemIds: number[] = items ? items.map(i => i.idItem) : [];
+            subjects = allItemIds.length > 0
+                ? await DBAPI.Subject.fetchMasterFromItems(allItemIds)
+                : null;
+        }
+
+        const subjectCount: number = subjects ? subjects.length : 0;
+        if (subjectCount === 0) {
+            RK.logWarning(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                'ensured EDAN Record ID skipped, no Subject linked to scene', { subjectResolver }, 'Utils.Scene');
+            return unchanged();
+        }
+        if (subjectCount > 1) {
+            RK.logDebug(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                `ensured EDAN Record ID skipped, multi-subject scene (${subjectCount} subjects)`, {}, 'Utils.Scene');
+            return unchanged();
+        }
+
+        // 4. Look up EDAN Record ID from Identifier table
+        if (SceneHelpers.idVocabEdanRecordID === null) {
+            const vocab: DBAPI.Vocabulary | undefined =
+                await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+            if (!vocab) {
+                const error = 'ensured EDAN Record ID failed, vocabulary not found in cache';
+                RK.logError(RK.LogSection.eSYS, 'ensure EDAN Record ID', error, {}, 'Utils.Scene');
+                return unchanged(error);
+            }
+            SceneHelpers.idVocabEdanRecordID = vocab.idVocabulary;
+        }
+        const idVocab: number = SceneHelpers.idVocabEdanRecordID;
+
+        let dbEdanRecordId: string | null = null;
+        const subject: DBAPI.Subject = subjects![0]; // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        const subjectSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
+        if (subjectSO) {
+            const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO.idSystemObject);
+            if (identifiers) {
+                for (const ident of identifiers) {
+                    if (ident.idVIdentifierType === idVocab) {
+                        dbEdanRecordId = ident.IdentifierValue;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!dbEdanRecordId) {
+            RK.logWarning(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+                'ensured EDAN Record ID skipped, no EDAN Record ID in DB for Subject', { idSubject: subject.idSubject }, 'Utils.Scene');
+            return unchanged();
+        }
+
+        // 5. Inject into SVX JSON
+        if (!document.metas || document.metas.length === 0)
+            document.metas = [{ collection: {} }];
+        if (!document.metas[0].collection)
+            document.metas[0].collection = {};
+        document.metas[0].collection['edanRecordId'] = dbEdanRecordId;
+
+        const modifiedBuffer: Buffer = Buffer.from(JSON.stringify(document, null, 4));
+        RK.logInfo(RK.LogSection.eSYS, 'ensure EDAN Record ID',
+            `ensured EDAN Record ID (${dbEdanRecordId}) injected into SVX`, {}, 'Utils.Scene');
+        return { buffer: modifiedBuffer, modified: true, edanRecordId: dbEdanRecordId };
+    }
+
     /** Returns true if the scene exists, has a scene asset, that scene asset has one or more thumbnails in metas -> images,
      * and each thumbnail exists for the current version of the scene; returns false otherwise,
      * and returns false if there's an error (in which case the error text is set also) */
@@ -461,6 +567,9 @@ export class SceneHelpers {
                 // look for matching ModelSceneXref
                 // scene.idScene, MSX.Name, .Usage, .Quality, .UVResolution
                 // if not found, create model and MSX
+                // Future work: Compare SVX transform values (TS0-2, R0-3, S0-2) against existing MSX
+                // records and log a warning if delta exceeds a threshold. Do not block ingestion.
+
                 // if found, determine if MSX transform has changed; if so, update MSX, and return a status that can be used to kick off download generation workflow
                 const JCOutput: JobCookSIPackratInspectOutput | null = idAssetVersion ? await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion, MSX.Name) : null;
                 if (JCOutput && !JCOutput.success)
@@ -589,6 +698,11 @@ export class SceneHelpers {
 
         //#region: Orphaned Assets (Downloads/Zips not in SVX)
         // --------------------------------------------------------------
+        // Future work: Wrap each orphan's Model+MSX+SOX+Asset creation in a Prisma
+        // interactive transaction to prevent partial state on failure. Pattern:
+        //   const txnOpts = { maxWait: 10000, timeout: 20000 };
+        //   await prismaClient.$transaction(async (prisma) => { ... }, txnOpts);
+        // See SystemObjectVersion.cloneObjectAndXrefs (server/db/api/SystemObjectVersion.ts:138)
         const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
 
         for (const [name, assetPair] of modelAssetMap) {
@@ -605,6 +719,60 @@ export class SceneHelpers {
             const Name = asset.FileName;
             RK.logInfo(RK.LogSection.eSYS,'handle complex scene ingestion',`processing orphan model asset: ${Name}`,{ asset },'Utils.Scene');
 
+            // Infer download properties from file name patterns
+            const downloadProps = SceneHelpers.inferDownloadProperties(Name);
+
+            // Dedup: check for existing model with matching AutomationTag under this scene
+            // Pattern: JobCookSIGenerateDownloads.findMatchingModelFromModel (line 835)
+            const existingModels: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, scene.idScene, downloadProps.automationTag);
+            if (existingModels && existingModels.length > 0) {
+                if (existingModels.length > 1)
+                    RK.logWarning(RK.LogSection.eSYS, 'handle complex scene ingestion',
+                        `found ${existingModels.length} models matching tag ${downloadProps.automationTag} for orphan ${Name}; using first match`,
+                        { idModels: existingModels.map(m => m.idModel) }, 'Utils.Scene');
+
+                const existingModel: DBAPI.Model = existingModels[0];
+                RK.logInfo(RK.LogSection.eSYS, 'handle complex scene ingestion',
+                    `dedup: found existing orphan model for ${Name} (idModel: ${existingModel.idModel}, tag: ${downloadProps.automationTag})`, {}, 'Utils.Scene');
+
+                const SO: DBAPI.SystemObject | null = await existingModel.fetchSystemObject();
+                if (SO) {
+                    asset.idSystemObject = SO.idSystemObject;
+                    if (!await asset.update()) {
+                        error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to reassign orphan asset ${Name} to existing model`, error);
+                        success = false;
+                        continue;
+                    }
+
+                    const SOV: DBAPI.SystemObjectVersion = new DBAPI.SystemObjectVersion({
+                        idSystemObject: SO.idSystemObject,
+                        PublishedState: COMMON.ePublishedState.eNotPublished,
+                        DateCreated: new Date(),
+                        Comment: 'Updated during Scene Ingestion (Orphan)',
+                        idSystemObjectVersion: 0
+                    });
+                    if (!await SOV.create()) {
+                        error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create SOV for updated orphan ${Name}`, error);
+                        success = false;
+                        continue;
+                    }
+
+                    const SOVAVX: DBAPI.SystemObjectVersionAssetVersionXref = new DBAPI.SystemObjectVersionAssetVersionXref({
+                        idSystemObjectVersion: SOV.idSystemObjectVersion,
+                        idAssetVersion: assetVersion.idAssetVersion,
+                        idSystemObjectVersionAssetVersionXref: 0,
+                    });
+                    if (!await SOVAVX.create()) {
+                        error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create SOVAVX for updated orphan ${Name}`, error);
+                        success = false;
+                    }
+                } else {
+                    error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to fetch system object for existing orphan model ${Name}`, error);
+                    success = false;
+                }
+                continue;
+            }
+
             // Create Model
             const vFileType: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.mapModelFileByExtension(Name);
             const model = new DBAPI.Model({
@@ -619,10 +787,13 @@ export class SceneHelpers {
                 idVFileType: vFileType ? vFileType.idVocabulary : null,
                 idAssetThumbnail: null, CountAnimations: null, CountCameras: null, CountFaces: null, CountLights: null, CountMaterials: null,
                 CountMeshes: null, CountVertices: null, CountEmbeddedTextures: null, CountLinkedTextures: null, FileEncoding: null, IsDracoCompressed: null,
-                AutomationTag: `download-${Name}`,
+                AutomationTag: downloadProps.automationTag,
                 CountTriangles: null,
                 Variant: modelSource?.Variant ?? '[]',
             });
+            // NOTE: Model metrics (CountFaces, CountVertices, etc.) are intentionally null for
+            // orphan downloads. These are typically zip archives; si-packrat-inspect would need
+            // to extract and parse contents. Future work: evaluate running metrics on extracted files.
 
             if (!await model.create()) {
                 error = SceneHelpers.logAndAccumulateError(`sceneHelper handleComplexIngestionScene unable to create orphan model ${Name}`, error);
@@ -631,16 +802,16 @@ export class SceneHelpers {
             }
 
             // Create ModelSceneXref
-            // CRITICAL: Usage must start with 'Download:' for PublishScene to pick it up
+            // CRITICAL: Usage must start with 'Download:' or be 'App3D'/'iOSApp3D' for PublishScene to pick it up
             const msx = new DBAPI.ModelSceneXref({
                 idModelSceneXref: 0,
                 idModel: model.idModel,
                 idScene: scene.idScene,
                 Name,
-                Usage: 'Download:Generic',
-                Quality: null,
+                Usage: downloadProps.usage,
+                Quality: downloadProps.quality,
                 FileSize: assetVersion.StorageSize,
-                UVResolution: null,
+                UVResolution: downloadProps.uvResolution,
                 BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null,
                 BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
                 TS0: null, TS1: null, TS2: null,
@@ -833,5 +1004,67 @@ export class SceneHelpers {
     private static recordError(error: string | undefined): H.IOResults {
         RK.logError(RK.LogSection.eSYS,'record error',error,{},'Utils.Scene');
         return { success: false, error };
+    }
+
+    // Mirrors JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType (line 771)
+    // and computeModelAutomationTagFromDownloadType (line 796). Keep in sync with those methods.
+    private static downloadTypeToProperties(downloadType: string): { usage: string, quality: string | null, uvResolution: number | null, automationTag: string } {
+        switch (downloadType) {
+            case 'objZipFull':
+                return { usage: 'Download:objZipFull', quality: 'Highest', uvResolution: 0, automationTag: 'download-objZipFull-Highest-0' };
+            case 'objZipLow':
+                return { usage: 'Download:objZipLow', quality: 'Low', uvResolution: 4096, automationTag: 'download-objZipLow-Low-4096' };
+            case 'gltfZipLow':
+                return { usage: 'Download:gltfZipLow', quality: 'Low', uvResolution: 4096, automationTag: 'download-gltfZipLow-Low-4096' };
+            case 'webAssetGlbLowUncompressed':
+                return { usage: 'Download:webAssetGlbLowUncompressed', quality: 'Low', uvResolution: 4096, automationTag: 'download-webAssetGlbLowUncompressed-Low-4096' };
+            case 'webAssetGlbARCompressed':
+                return { usage: 'App3D', quality: 'AR', uvResolution: 2048, automationTag: 'scene-App3D-AR-2048' };
+            case 'usdz':
+                return { usage: 'iOSApp3D', quality: 'AR', uvResolution: 2048, automationTag: 'scene-iOSApp3D-AR-2048' };
+            default:
+                return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${downloadType}-null-null` };
+        }
+    }
+
+    // Infers Usage, Quality, UVResolution, and AutomationTag from a download file name.
+    // Uses Cook's naming conventions to classify orphan assets that are not referenced in SVX.
+    static inferDownloadProperties(fileName: string): { usage: string, quality: string | null, uvResolution: number | null, automationTag: string } {
+        const lowerName = fileName.toLowerCase();
+
+        // Priority 1: Cook-generated suffix patterns (highest confidence).
+        // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData suffixes (line 1124)
+        // and AssetStorageAdapter.isSceneDownloadZipFile (line 1620).
+        const suffixMap: [string, string][] = [
+            ['-full_resolution-obj_std.zip', 'objZipFull'],
+            ['-150k-4096-obj_std.zip', 'objZipLow'],
+            ['-150k-4096-gltf_std.zip', 'gltfZipLow'],
+            ['-150k-4096_std.glb', 'webAssetGlbLowUncompressed'],
+            ['-100k-2048_std_draco.glb', 'webAssetGlbARCompressed'],
+            ['-100k-2048_std.usdz', 'usdz'],
+        ];
+
+        for (const [suffix, downloadType] of suffixMap) {
+            if (lowerName.endsWith(suffix))
+                return SceneHelpers.downloadTypeToProperties(downloadType);
+        }
+
+        // Priority 2: Extension-based inference (reasonable defaults)
+        const ext = path.extname(fileName).toLowerCase();
+        switch (ext) {
+            case '.glb':
+                return SceneHelpers.downloadTypeToProperties('webAssetGlbLowUncompressed');
+            case '.gltf':
+                return SceneHelpers.downloadTypeToProperties('gltfZipLow');
+            case '.usdz':
+                return SceneHelpers.downloadTypeToProperties('usdz');
+            case '.zip':
+                if (lowerName.includes('gltf'))
+                    return SceneHelpers.downloadTypeToProperties('gltfZipLow');
+                return SceneHelpers.downloadTypeToProperties('objZipFull');
+        }
+
+        // Priority 3: Ultimate fallback — preserves existing behavior for unrecognizable files
+        return { usage: 'Download:Generic', quality: null, uvResolution: null, automationTag: `download-${fileName}-null-null` };
     }
 }

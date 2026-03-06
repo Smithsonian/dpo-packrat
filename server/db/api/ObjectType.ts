@@ -274,6 +274,7 @@ export enum eAuditType {
     eHTTPUpload = 7,
     eAuthFailed = 8,
     eAuthDenied = 9,
+    eSolrRebuild = 10,
 }
 
 export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): COMMON.ePublishedState {

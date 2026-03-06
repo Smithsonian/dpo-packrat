@@ -73,4 +73,15 @@ export class SolrClient {
             return { success: false, error };
         }
     }
+
+    async deleteAll(): Promise<H.IOResults> {
+        try {
+            await this._client.deleteAll();
+            return { success: true };
+        } catch (err) /* istanbul ignore next */ {
+            const error: string = `SolrClient.deleteAll failed: ${JSON.stringify(err)}`;
+            RK.logError(RK.LogSection.eNAV,'deleteAll failed',H.Helpers.getErrorString(err),{},'Navigation.Solr.Client');
+            return { success: false, error };
+        }
+    }
 }

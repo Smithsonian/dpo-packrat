@@ -65,6 +65,7 @@ input RelatedObjectInput {
     name: String!
     identifier: String
     objectType: Int!
+    retired: Boolean
 }
 
 input IngestModelInput {

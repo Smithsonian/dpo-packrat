@@ -132,3 +132,4 @@ JTConfig
 ### LLM Processing ###
 *.md
 tmp*-cwd
+.claude

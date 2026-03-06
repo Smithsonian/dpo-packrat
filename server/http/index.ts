@@ -9,7 +9,7 @@ import { UsageMonitor } from '../utils/osStats';
 import { RecordKeeper as RK, IOResults } from '../records/recordKeeper';
 
 import { heartbeat } from './routes/heartbeat';
-import { solrindex, solrindexprofiled, solrindexstatus } from './routes/solrindex';
+import { solrindex, solrindexprofiled, solrindexstatus, solrrebuild } from './routes/solrindex';
 // import { migrate } from './routes/migrate';
 import { Downloader, download } from './routes/download';
 import { errorhandler } from './routes/errorhandler';
@@ -27,6 +27,7 @@ import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
 import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
 import { getServiceStatus } from './routes/api/status';
+import { createWebDAVToken } from './routes/api/scene';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -170,6 +171,9 @@ export class HttpServer {
         // create our LocalStore for all future interactions
         this.app.use(HttpServer.assignLocalStore);
 
+        // strip token from WebDAV URLs before the WebDAV server processes them
+        this.app.use(HttpServer.stripWebDAVToken);
+
         // if we have a WebDAV server (always), attach it to express
         if(this.WDSV)
             this.app.use(webdav.extensions.express(WebDAVServer.httpRoute, this.WDSV.webdav()));
@@ -190,10 +194,11 @@ export class HttpServer {
 
         // utility endpoints
         this.app.get('/heartbeat', heartbeat);
-        this.app.get('/solrindex/status', solrindexstatus);
-        this.app.get('/solrindex', solrindex);
-        this.app.post('/solrindex', solrindex);
-        this.app.get('/solrindexprofiled', solrindexprofiled);
+        this.app.get('/solr/index/status', solrindexstatus);
+        this.app.get('/solr/index', solrindex);
+        this.app.post('/solr/index', solrindex);
+        this.app.post('/solr/rebuild', solrrebuild);
+        this.app.get('/solr/index/profiled', solrindexprofiled);
         // this.app.get('/migrate', migrate);
         // this.app.get('/migrate/*', migrate);
         this.app.get(`${Downloader.httpRoute}*`, download);
@@ -206,6 +211,7 @@ export class HttpServer {
 
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
+        this.app.post('/api/scene/:id/webdav-token', createWebDAVToken);
 
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
@@ -292,6 +298,17 @@ export class HttpServer {
             // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id },'HttpServer');
             next();
         });
+    }
+
+    // strips token segment from WebDAV URLs (e.g. /webdav/token-XXXXX/...) and stashes
+    // the token on the request for downstream authentication
+    private static stripWebDAVToken(req: Request, _res, next): void {
+        const match: RegExpMatchArray | null = req.url.match(/^\/webdav\/token-([a-f0-9-]+)(\/.*)?$/i);
+        if (match) {
+            (req as any).webdavToken = match[1];
+            req.url = `/webdav${match[2] || '/'}`;
+        }
+        next();
     }
 
     // utility routines and middleware

@@ -2116,6 +2116,7 @@ export type RelatedObjectInput = {
   identifier?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired?: InputMaybe<Scalars['Boolean']>;
 };
 
 export enum RelatedObjectType {

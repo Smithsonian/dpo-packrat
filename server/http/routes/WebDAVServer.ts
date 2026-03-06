@@ -10,6 +10,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL, ASR, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
+import { WebDAVTokenStore } from './WebDAVToken';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { Authorization } from '../../auth/Authorization';
 import { Readable, Writable } from 'stream';
@@ -71,6 +72,17 @@ export class WebDAVServer {
             // port: webDAVPort
         });
         this.server.beforeRequest((ctx, next) => {
+            const token: string | undefined = (ctx.request as any).webdavToken;
+            if (token)
+                ctx.uriPrefix = '/token-' + token;
+
+            // The WebDAV server hardcodes Access-Control-Allow-Origin to '*' before
+            // this hook fires, which conflicts with credentialed requests. Overwrite
+            // it with the actual request origin so browsers accept the response.
+            const origin: string | undefined = ctx.request.headers.origin;
+            if (origin)
+                ctx.response.setHeader('Access-Control-Allow-Origin', origin);
+
             RK.logDebug(RK.LogSection.eHTTP,'before request',`${ctx.request.method} ${ctx.request.url} start`,{},'HTTP.Route.WebDAV');
             next();
         });
@@ -88,6 +100,7 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
     }
 
     async getUser(ctx: webdav.HTTPRequestContext, callback: (error: Error, user?: webdav.IUser) => void): Promise<void> {
+        // Try session-based auth first (works behind reverse proxy / same-origin)
         if (isAuthenticated(ctx.request)) {
             const LS: LocalStore | undefined = ASL.getStore();
             const idUser: number | undefined | null = LS?.idUser;
@@ -98,6 +111,32 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
                 callback(null, { uid: user.idUser.toString(), username: user.Name });
                 return;
             }
+        }
+
+        // Token-based auth fallback (for cross-origin / Voyager Story requests)
+        const token: string | undefined = (ctx.request as any).webdavToken;
+        if (token) {
+            const idSOMatch: RegExpMatchArray | null = (ctx.request.url || '').match(/idSystemObject-(\d+)/);
+            const idSystemObject: number = idSOMatch ? parseInt(idSOMatch[1], 10) : 0;
+
+            if (idSystemObject > 0) {
+                const idUser: number | null = WebDAVTokenStore.validate(token, idSystemObject);
+                if (idUser) {
+                    const user: DBAPI.User | undefined = await CACHE.UserCache.getUser(idUser);
+                    if (user) {
+                        // Update the existing LocalStore with the authenticated user
+                        const LS: LocalStore | undefined = ASL.getStore();
+                        if (LS && !LS.idUser)
+                            LS.idUser = idUser;
+
+                        RK.logInfo(RK.LogSection.eHTTP,'get user','authenticated via token',{ idUser: user.idUser, name: user.Name },'HTTP.Route.WebDAV');
+                        // @ts-ignore: ts(2345)
+                        callback(null, { uid: user.idUser.toString(), username: user.Name });
+                        return;
+                    }
+                }
+            }
+            RK.logError(RK.LogSection.eHTTP,'token authentication failed',`${ctx.request.url} invalid token`,{},'HTTP.Route.WebDAV');
         }
 
         RK.logError(RK.LogSection.eHTTP,'ask for authentication failed',`${ctx.request.url} not authenticated`,{},'HTTP.Route.WebDAV');

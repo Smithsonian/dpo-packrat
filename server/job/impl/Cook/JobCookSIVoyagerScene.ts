@@ -12,6 +12,7 @@ import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { SvxReader } from '../../../utils/parser';
+import { SceneHelpers } from '../../../utils/sceneHelpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { RouteBuilder, eHrefMode } from '../../../http/routes/routeBuilder';
 
@@ -326,6 +327,15 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         RSR = await this.fetchFile(svxFile);
         if (!RSR.success || !RSR.readStream)
             return this.logError('create system objects failed',`unable to fetch stream for scene file: ${RSR.error}`,{ svxFile });
+
+        // Inject EDAN record ID if missing from SVX
+        const svxBuffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+        if (svxBuffer) {
+            const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { OG: this.parameterHelper.OG });
+            RSR = { readStream: Readable.from(inject.buffer), fileName: svxFile, storageHash: null, success: true };
+            if (inject.modified)
+                await this.appendToReportAndLog(`${this.name()} injected EDAN Record ID (${inject.edanRecordId}) into scene SVX`);
+        }
 
         const LS: LocalStore = await ASL.getOrCreateStore();
         const idUserCreator: number = LS?.idUser ?? 0;
