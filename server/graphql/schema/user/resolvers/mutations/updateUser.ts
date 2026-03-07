@@ -2,7 +2,7 @@ import { CreateUserResult, MutationUpdateUserArgs } from '../../../../../types/g
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
-import { sessionStore } from '../../../../../auth';
+import { destroyUserSessions } from '../../../../../auth';
 
 export default async function updateUser(_: Parent, args: MutationUpdateUserArgs): Promise<CreateUserResult> {
     const { input } = args;
@@ -46,20 +46,7 @@ export default async function updateUser(_: Parent, args: MutationUpdateUserArgs
         }
 
         // Invalidate active sessions for the deactivated user
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const store = sessionStore as any;
-        if (store && typeof store.all === 'function') {
-            store.all((_err: unknown, sessions: Record<string, any> | null) => {
-                if (!sessions) return;
-                for (const [sid, sess] of Object.entries(sessions)) {
-                    if (sess?.passport?.user === idUser || sess?.authContext?.idUser === idUser) {
-                        store.destroy(sid, () => {
-                            RK.logInfo(RK.LogSection.eGQL, 'updateUser', `destroyed session ${sid} for deactivated user ${idUser}`, {}, 'GQL.updateUser');
-                        });
-                    }
-                }
-            });
-        }
+        await destroyUserSessions([idUser]);
     }
 
     return { User };

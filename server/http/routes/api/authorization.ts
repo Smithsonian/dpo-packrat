@@ -3,6 +3,8 @@ import * as DBAPI from '../../../db';
 import * as H from '../../../utils/helpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { isAuthenticated } from '../../auth';
+import { refreshUserSessions } from '../../../auth';
+import { Authorization } from '../../../auth/Authorization';
 import { Request, Response } from 'express';
 import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
@@ -123,6 +125,9 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
     }
 
     RK.logInfo(RK.LogSection.eHTTP, 'setUserUnits', `updated units for user ${idUser}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+
+    await refreshUserSessions([idUser]);
+
     res.status(200).send(JSON.stringify(generateResponse(true, 'Updated unit assignments', { unitIds })));
 }
 //#endregion
@@ -217,6 +222,10 @@ export async function setUnitAuth(req: Request, res: Response): Promise<void> {
     }
 
     RK.logInfo(RK.LogSection.eHTTP, 'setUnitAuth', `updated auth for unit ${idUnit}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+
+    const affectedUserIds = [...new Set([...toAdd, ...toRemove])];
+    await refreshUserSessions(affectedUserIds);
+
     res.status(200).send(JSON.stringify(generateResponse(true, 'Updated unit authorization')));
 }
 //#endregion
@@ -274,6 +283,8 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
 
     const { isRestricted, authorizedUserIds } = req.body;
 
+    const isRestrictedBefore: boolean = project.isRestricted;
+
     // Update isRestricted if provided
     if (typeof isRestricted === 'boolean') {
         project.isRestricted = isRestricted;
@@ -284,6 +295,9 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
     if (project.isRestricted && (!Array.isArray(authorizedUserIds) || authorizedUserIds.length === 0)) {
         RK.logWarning(RK.LogSection.eHTTP, 'setProjectAuth', `project ${idProject} set to restricted with no authorized users`, {}, SRC);
     }
+
+    // Track affected users for session refresh
+    const affectedUserIds = new Set<number>();
 
     // Diff user authorizations if provided
     if (Array.isArray(authorizedUserIds)) {
@@ -319,8 +333,22 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
             await ua.create();
         }
 
+        toAdd.forEach(id => affectedUserIds.add(id));
+        toRemove.forEach(id => affectedUserIds.add(id));
+
         RK.logInfo(RK.LogSection.eHTTP, 'setProjectAuth', `updated auth for project ${idProject}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
     }
+
+    // If isRestricted changed, all users assigned to the parent unit are affected
+    if (typeof isRestricted === 'boolean' && project.isRestricted !== isRestrictedBefore) {
+        const parentUnitId = await Authorization.getProjectParentUnitId(idProject);
+        if (parentUnitId !== null) {
+            const unitUsers = await DBAPI.UserAuthorization.fetchUsersForUnit(parentUnitId);
+            unitUsers.forEach(u => affectedUserIds.add(u.idUser));
+        }
+    }
+
+    await refreshUserSessions([...affectedUserIds]);
 
     res.status(200).send(JSON.stringify(generateResponse(true, 'Updated project authorization')));
 }

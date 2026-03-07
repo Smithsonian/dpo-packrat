@@ -14,7 +14,8 @@ export const AUTH_ERROR = {
 // #endregion
 
 // #region AuthorizationContext
-/** Precomputed authorization context, cached in session at login. */
+/** Precomputed authorization context, cached in session at login and
+ *  refreshed in-place when an admin modifies auth assignments. */
 export interface AuthorizationContext {
     idUser: number;
     isAdmin: boolean;
@@ -34,7 +35,8 @@ export class Authorization {
 
     /**
      * Build authorization context at login time.
-     * Called once per login, result is cached in session.
+     * Result is cached in session and rebuilt in-place by refreshUserSessions()
+     * whenever an admin changes unit/project authorization assignments.
      */
     static async buildContext(idUser: number): Promise<AuthorizationContext> {
         const isAdmin = Config.auth.users.admin.includes(idUser);
