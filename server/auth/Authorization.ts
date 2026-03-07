@@ -22,7 +22,9 @@ export interface AuthorizationContext {
     authorizedProjectIds: number[];           // Projects the user is explicitly listed on (restricted projects)
     effectiveProjectIds: number[] | null;     // All accessible project IDs; null = all (admin)
     effectiveProjectSOIds: number[] | null;   // Same as above but as SystemObject IDs (for Solr)
-    authorizedUnitSOIds: number[] | null;     // Unit SystemObject IDs (for Solr root filtering); null = all (admin)
+    effectiveUnitIds: number[];               // Authorized units + parent units of accessible restricted projects
+    effectiveUnitSOIds: number[] | null;      // Effective unit SystemObject IDs (for Solr root filtering); null = all (admin)
+    authorizedUnitSOIds: number[] | null;     // Unit SystemObject IDs (for Solr root filtering); null = all (admin) [deprecated: use effectiveUnitSOIds]
 }
 // #endregion
 
@@ -41,7 +43,8 @@ export class Authorization {
             return {
                 idUser, isAdmin,
                 authorizedUnitIds: [], authorizedProjectIds: [],
-                effectiveProjectIds: null, effectiveProjectSOIds: null, authorizedUnitSOIds: null
+                effectiveProjectIds: null, effectiveProjectSOIds: null,
+                effectiveUnitIds: [], effectiveUnitSOIds: null, authorizedUnitSOIds: null
             };
         }
 
@@ -52,7 +55,8 @@ export class Authorization {
             return {
                 idUser, isAdmin: false,
                 authorizedUnitIds: [], authorizedProjectIds: [],
-                effectiveProjectIds: [], effectiveProjectSOIds: [], authorizedUnitSOIds: []
+                effectiveProjectIds: [], effectiveProjectSOIds: [],
+                effectiveUnitIds: [], effectiveUnitSOIds: [], authorizedUnitSOIds: []
             };
         }
 
@@ -70,18 +74,30 @@ export class Authorization {
             ...restrictedProjects.map(p => p.idProject)
         ];
 
+        // Compute effective unit set:
+        //   directly-assigned units + parent units of accessible restricted projects
+        const effectiveUnitIdSet = new Set(authorizedUnitIds);
+        for (const project of restrictedProjects) {
+            const parentUnitId = await Authorization.getProjectParentUnitId(project.idProject);
+            if (parentUnitId !== null)
+                effectiveUnitIdSet.add(parentUnitId);
+        }
+        const effectiveUnitIds = [...effectiveUnitIdSet];
+
         // Convert to SystemObject IDs for Solr filtering
         const effectiveProjectSOIds = await Authorization.projectIdsToSOIds(effectiveProjectIds);
+        const effectiveUnitSOIds = await Authorization.unitIdsToSOIds(effectiveUnitIds);
         const authorizedUnitSOIds = await Authorization.unitIdsToSOIds(authorizedUnitIds);
 
         RK.logInfo(RK.LogSection.eAUTH, 'buildContext success', undefined, {
-            idUser, units: authorizedUnitIds.length, projects: effectiveProjectIds.length
+            idUser, units: effectiveUnitIds.length, projects: effectiveProjectIds.length
         }, 'Authorization');
 
         return {
             idUser, isAdmin,
             authorizedUnitIds, authorizedProjectIds,
-            effectiveProjectIds, effectiveProjectSOIds, authorizedUnitSOIds
+            effectiveProjectIds, effectiveProjectSOIds,
+            effectiveUnitIds, effectiveUnitSOIds, authorizedUnitSOIds
         };
     }
 
@@ -155,6 +171,20 @@ export class Authorization {
     // #endregion
 
     // #region ID Conversion Utilities
+
+    /** Get the parent Unit ID for a Project via SystemObjectXref hierarchy. */
+    static async getProjectParentUnitId(idProject: number): Promise<number | null> {
+        const SO = await DBAPI.SystemObject.fetchFromProjectID(idProject);
+        if (!SO) return null;
+        const masters = await DBAPI.SystemObjectXref.fetchMasters(SO.idSystemObject);
+        if (!masters) return null;
+        for (const xref of masters) {
+            const masterSO = await DBAPI.SystemObject.fetch(xref.idSystemObjectMaster);
+            if (masterSO && masterSO.idUnit !== null)
+                return masterSO.idUnit;
+        }
+        return null;
+    }
 
     /** Convert project IDs to their SystemObject IDs. */
     static async projectIdsToSOIds(projectIds: number[]): Promise<number[]> {

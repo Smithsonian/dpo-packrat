@@ -74,15 +74,15 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
             }
         }
 
-        // Restrict units to authorized set
-        if (ctx.authorizedUnitSOIds !== null) {
+        // Restrict units to effective set (assigned units + parent units of restricted projects)
+        if (ctx.effectiveUnitSOIds !== null) {
             if (filter.units?.length) {
                 const totalUnits = filter.units.length;
-                const authorized = new Set(ctx.authorizedUnitSOIds);
+                const authorized = new Set(ctx.effectiveUnitSOIds);
                 filter.units = filter.units.filter(u => authorized.has(u));
                 Authorization.logFilteredResults('getObjectChildren.units', totalUnits, filter.units.length);
             } else {
-                filter.units = ctx.authorizedUnitSOIds;
+                filter.units = ctx.effectiveUnitSOIds;
             }
         }
     }

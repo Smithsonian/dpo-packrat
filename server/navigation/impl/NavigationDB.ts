@@ -98,7 +98,7 @@ export class NavigationDB implements NAV.INavigation {
         const ctx = Authorization.getContext();
         if (ctx && !ctx.isAdmin) {
             const totalUnits = units.length;
-            const unitSet = new Set(ctx.authorizedUnitIds);
+            const unitSet = new Set(ctx.effectiveUnitIds);
             units = units.filter(u => unitSet.has(u.idUnit));
             Authorization.logFilteredResults('computeRootUnits', totalUnits, units.length);
         }
