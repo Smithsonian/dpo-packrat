@@ -61,9 +61,10 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
 
     // Enforce authorization on the filter
     const ctx = Authorization.getContext();
+
     if (ctx && !ctx.isAdmin) {
-        // Restrict projects to authorized set
-        if (ctx.effectiveProjectSOIds !== null) {
+        // Restrict projects to authorized set (use != to also catch undefined from stale sessions)
+        if (ctx.effectiveProjectSOIds != null) {
             if (filter.projects?.length) {
                 const totalProjects = filter.projects.length;
                 const authorized = new Set(ctx.effectiveProjectSOIds);
@@ -74,8 +75,8 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
             }
         }
 
-        // Restrict units to effective set (assigned units + parent units of restricted projects)
-        if (ctx.effectiveUnitSOIds !== null) {
+        // Restrict units to effective set (use != to also catch undefined from stale sessions)
+        if (ctx.effectiveUnitSOIds != null) {
             if (filter.units?.length) {
                 const totalUnits = filter.units.length;
                 const authorized = new Set(ctx.effectiveUnitSOIds);

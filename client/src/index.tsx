@@ -15,13 +15,13 @@ import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Slide, toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { EnvBanner, ErrorBoundary, Loader } from './components';
+import { EnvBanner, ErrorBoundary, Loader, ServiceStatusBanner } from './components';
 import { ROUTES } from './constants';
 import './global/root.css';
 import { apolloClient } from './graphql';
 import { Home, Login } from './pages';
 import * as serviceWorker from './serviceWorker';
-import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore, useObjectMetadataStore, useControlStore } from './store';
+import { useUserStore, useVocabularyStore, useLicenseStore, useUsersStore, useObjectMetadataStore, useControlStore, useServiceStatusStore } from './store';
 import theme from './theme';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import { createRoot } from 'react-dom/client';
@@ -54,6 +54,8 @@ function AppRouter(): React.ReactElement {
     const classes = useStyles();
     const [sideBarExpanded, toggleSidebar, initializeSidebarPosition] = useControlStore(state => [state.sideBarExpanded, state.toggleSidebar, state.initializeSidebarPosition]);
     const onToggle = (): void => toggleSidebar(!sideBarExpanded);
+    const startPolling = useServiceStatusStore(state => state.startPolling);
+    const stopPolling = useServiceStatusStore(state => state.stopPolling);
 
     useEffect(() => {
         initializeSidebarPosition();
@@ -65,15 +67,17 @@ function AppRouter(): React.ReactElement {
             await updateLicenseEntries();
             await updateUsersEntries();
             await initializeMdmEntries(getEntries(eVocabularySetID.eEdanMDMFields).map(entry => entry.Term));
+            startPolling();
             setLoading(false);
         } catch {
             toast.error('Cannot connect to the server, please try again later');
         }
-    }, [initialize, updateVocabularyEntries, updateLicenseEntries, updateUsersEntries, initializeMdmEntries, getEntries]);
+    }, [initialize, updateVocabularyEntries, updateLicenseEntries, updateUsersEntries, initializeMdmEntries, getEntries, startPolling]);
 
     useEffect(() => {
         initializeUser();
-    }, [initializeUser]);
+        return () => stopPolling();
+    }, [initializeUser, stopPolling]);
 
     let content: React.ReactNode = <Loader size={40} />;
 
@@ -81,6 +85,7 @@ function AppRouter(): React.ReactElement {
         <RequireAuth redirectTo={ROUTES.LOGIN}>
             <AliveScope>
                 <Box className={classes.container}>
+                    <ServiceStatusBanner />
                     <Header />
                     <Box className={classes.content}>
                         <SidePanel isExpanded={sideBarExpanded} onToggle={onToggle} />

@@ -18,6 +18,7 @@ import BreadcrumbsView from './shared/BreadcrumbsView';
 import NewTabLink from './shared/NewTabLink';
 import EmptyTable from './shared/EmptyTable';
 import EnvBanner from './shared/EnvBanner';
+import ServiceStatusBanner from './shared/ServiceStatusBanner';
 import DebounceNumberInput from './controls/DebounceNumberInput';
 import CheckboxField from './controls/CheckboxField';
 import ReadOnlyRow from './controls/ReadOnlyRow';
@@ -43,6 +44,7 @@ export {
     NewTabLink,
     EmptyTable,
     EnvBanner,
+    ServiceStatusBanner,
     DebounceNumberInput,
     CheckboxField,
     ReadOnlyRow,

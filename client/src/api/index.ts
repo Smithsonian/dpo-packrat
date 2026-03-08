@@ -190,6 +190,12 @@ export default class API {
         return this.request(`${API_ROUTES.AUTH_DENIALS}?startDate=${startDate}&endDate=${endDate}`, { method: 'GET' });
     }
 
+    // service status
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async getServiceStatus(): Promise<any> {
+        return this.request('api/status', { method: 'GET' });
+    }
+
     // system operations
     static async solrReindex(): Promise<RequestResponse> {
         return this.request('solrindex', { method: 'POST' });

@@ -94,9 +94,9 @@ export class NavigationDB implements NAV.INavigation {
             return [];
         }
 
-        // Filter by authorization context
+        // Filter by authorization context (guard effectiveUnitIds for stale sessions)
         const ctx = Authorization.getContext();
-        if (ctx && !ctx.isAdmin) {
+        if (ctx && !ctx.isAdmin && ctx.effectiveUnitIds) {
             const totalUnits = units.length;
             const unitSet = new Set(ctx.effectiveUnitIds);
             units = units.filter(u => unitSet.has(u.idUnit));

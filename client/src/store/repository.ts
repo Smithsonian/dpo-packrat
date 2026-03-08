@@ -13,6 +13,7 @@ import { apolloClient } from '../graphql';
 import { GetSystemObjectDetailsDocument } from '../types/graphql';
 import { eRepositoryChipFilterType } from '../pages/Repository/components/RepositoryFilterView/RepositoryFilterOptions';
 import { updateCookie } from './treeColumns';
+import { toast } from 'react-toastify';
 
 const FILTER_POSITION_COOKIE = 'isFilterExpanded';
 
@@ -127,6 +128,11 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             const { data, error } = await getObjectChildrenForRoot(filter);
             if (data && !error) {
                 const { getObjectChildren } = data;
+                if (getObjectChildren.success === false) {
+                    toast.warn('Repository search service is unavailable. Please try again later or contact support.', { toastId: 'solr-down' });
+                    set({ loading: false });
+                    return;
+                }
                 const { entries, cursorMark } = getObjectChildren;
                 if (cursorMark) {
                     const newCursors = new Map<string, string>();

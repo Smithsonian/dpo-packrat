@@ -26,6 +26,7 @@ import { getObjectStatus, patchObject } from './routes/api/object';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
 import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
+import { getServiceStatus } from './routes/api/status';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -235,6 +236,8 @@ export class HttpServer {
         this.app.get('/api/auth/projects', getAuthProjects);
         this.app.get('/api/auth/summary', getAuthSummary);
         this.app.get('/api/auth/denials', getAuthDenials);
+
+        this.app.get('/api/status', getServiceStatus);
 
         this.app.get('/api/sandbox/play',play);
 

@@ -476,7 +476,8 @@ export class NavigationSolr implements NAV.INavigation {
             const SR = await solrClient._client.search(SQ);
             return { result: SR.response, error: null };
         } catch (err) {
-            RK.logError(RK.LogSection.eNAV,'execute solr worker failed',H.Helpers.getErrorString(err),H.Helpers.removeEmptyFields(solr.Query),'Navigation.Solr');
+            const errStack = err instanceof Error ? err.stack : String(err);
+            RK.logError(RK.LogSection.eNAV,'execute solr worker failed',`${errStack}`,{},'Navigation.Solr');
             return { result: null, error: (err instanceof Error) ? err.toString() : 'Unexpected error' };
         }
     }

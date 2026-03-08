@@ -122,7 +122,7 @@ export class Authorization {
      */
     static canAccessProject(ctx: AuthorizationContext, idProject: number, surface?: string): boolean {
         if (ctx.isAdmin) return true;
-        if (ctx.effectiveProjectIds === null) return true;
+        if (ctx.effectiveProjectIds == null) return true;
         const allowed = ctx.effectiveProjectIds.includes(idProject);
         if (!allowed && surface)
             Authorization.logProjectDenial(ctx.idUser, idProject, surface);
@@ -135,7 +135,7 @@ export class Authorization {
      */
     static async canAccessSystemObject(ctx: AuthorizationContext, idSystemObject: number): Promise<boolean> {
         if (ctx.isAdmin) return true;
-        if (ctx.effectiveProjectIds === null) return true;
+        if (ctx.effectiveProjectIds == null) return true;
 
         const OG = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eAncestors, 32);
         if (!await OG.fetch()) return false;
@@ -165,7 +165,7 @@ export class Authorization {
      * Filter a list of projects to only those the user can access.
      */
     static filterProjects(projects: DBAPI.Project[], ctx: AuthorizationContext): DBAPI.Project[] {
-        if (ctx.isAdmin || ctx.effectiveProjectIds === null) return projects;
+        if (ctx.isAdmin || ctx.effectiveProjectIds == null) return projects;
         const idSet = new Set(ctx.effectiveProjectIds);
         return projects.filter(p => idSet.has(p.idProject));
     }

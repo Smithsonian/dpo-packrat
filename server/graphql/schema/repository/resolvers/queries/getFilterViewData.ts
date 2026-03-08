@@ -3,7 +3,6 @@ import { GetFilterViewDataResult } from '../../../../../types/graphql';
 import { Authorization } from '../../../../../auth/Authorization';
 
 export default async function getFilterViewData(): Promise<GetFilterViewDataResult> {
-
     let units: DBAPI.Unit[] = [];
     let projects: DBAPI.Project[] = [];
 
@@ -21,7 +20,7 @@ export default async function getFilterViewData(): Promise<GetFilterViewDataResu
 
     // Filter by authorization context
     const ctx = Authorization.getContext();
-    if (ctx && !ctx.isAdmin) {
+    if (ctx && !ctx.isAdmin && ctx.effectiveUnitIds) {
         const totalUnits = units.length;
         const totalProjects = projects.length;
         const unitSet = new Set(ctx.effectiveUnitIds);

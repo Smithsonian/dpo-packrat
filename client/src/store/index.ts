@@ -19,3 +19,4 @@ export * from './workflow';
 export * from './users';
 export * from './objectMetadata';
 export * from './treeColumns';
+export * from './serviceStatus';
