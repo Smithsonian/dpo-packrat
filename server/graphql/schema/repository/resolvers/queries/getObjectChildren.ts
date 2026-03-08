@@ -63,18 +63,6 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
     const ctx = Authorization.getContext();
 
     if (ctx && !ctx.isAdmin) {
-        // Restrict projects to authorized set (use != to also catch undefined from stale sessions)
-        if (ctx.effectiveProjectSOIds != null) {
-            if (filter.projects?.length) {
-                const totalProjects = filter.projects.length;
-                const authorized = new Set(ctx.effectiveProjectSOIds);
-                filter.projects = filter.projects.filter(p => authorized.has(p));
-                Authorization.logFilteredResults('getObjectChildren.projects', totalProjects, filter.projects.length);
-            } else {
-                filter.projects = ctx.effectiveProjectSOIds;
-            }
-        }
-
         // Restrict units to effective set (use != to also catch undefined from stale sessions)
         if (ctx.effectiveUnitSOIds != null) {
             if (filter.units?.length) {
@@ -84,6 +72,24 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
                 Authorization.logFilteredResults('getObjectChildren.units', totalUnits, filter.units.length);
             } else {
                 filter.units = ctx.effectiveUnitSOIds;
+            }
+        }
+
+        // Restrict projects to authorized set (use != to also catch undefined from stale sessions).
+        // At root level (idRoot is 0/null) with no explicit project selection, skip the
+        // default project filter: Unit documents in Solr lack HierarchyProjectID (projects
+        // are children of units, not ancestors), so adding that filter excludes every Unit
+        // from results.  The unit filter above is sufficient for root-level authorization.
+        // When drilling into a specific object (idRoot > 0), all child documents carry
+        // HierarchyProjectID, so the project filter works correctly.
+        if (ctx.effectiveProjectSOIds != null) {
+            if (filter.projects?.length) {
+                const totalProjects = filter.projects.length;
+                const authorized = new Set(ctx.effectiveProjectSOIds);
+                filter.projects = filter.projects.filter(p => authorized.has(p));
+                Authorization.logFilteredResults('getObjectChildren.projects', totalProjects, filter.projects.length);
+            } else if (filter.idRoot) {
+                filter.projects = ctx.effectiveProjectSOIds;
             }
         }
     }
