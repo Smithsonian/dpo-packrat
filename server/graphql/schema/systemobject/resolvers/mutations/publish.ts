@@ -8,9 +8,9 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
         input: { idSystemObject, eState }
     } = args;
 
-    // Authorization: check access to the target SystemObject
+    // Authorization: check access to the target SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();

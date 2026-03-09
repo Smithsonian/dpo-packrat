@@ -935,6 +935,7 @@ function DetailsView(): React.ReactElement {
                         onRetiredUpdate={onRetiredUpdate}
                         onLicenseUpdate={onLicenseUpdate}
                         onPublishUpdate={onPublishUpdate}
+                        onLicenseChange={onDetailUpdate}
                         originalFields={data.getSystemObjectDetails}
                         license={withDefaultValueNumber(details.idLicense, 0)}
                         idSystemObject={idSystemObject}

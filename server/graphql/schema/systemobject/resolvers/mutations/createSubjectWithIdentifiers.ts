@@ -17,10 +17,11 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
     const { user } = context;
     const { idUnit, Name, idGeoLocation } = subject;
 
-    // Authorization: check access to the target Unit
+    // Authorization: check access to the target Unit (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && !ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit)) {
-        Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubjectWithIdentifiers');
+    if (!ctx || (!ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit))) {
+        if (ctx)
+            Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubjectWithIdentifiers');
         return { success: false, message: AUTH_ERROR.UNIT_DENIED };
     }
 

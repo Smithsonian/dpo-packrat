@@ -8,8 +8,29 @@ import { Authorization } from '../../../auth/Authorization';
 import { Request, Response } from 'express';
 import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import { eAuditType } from '../../../db/api/ObjectType';
 
 const SRC = 'HTTP.Route.Authorization';
+
+async function auditAuthChange(
+    idAdminUser: number | null,
+    type: eAuditType.eAuthGranted | eAuditType.eAuthRevoked,
+    data: Record<string, unknown>
+): Promise<void> {
+    try {
+        const audit = new DBAPI.Audit({
+            idAudit: 0,
+            idUser: idAdminUser,
+            AuditDate: new Date(),
+            AuditType: type,
+            DBObjectType: null,
+            idDBObject: null,
+            idSystemObject: null,
+            Data: JSON.stringify(data),
+        });
+        await audit.create();
+    } catch (_error) { /* best-effort */ }
+}
 
 type AuthResponse = {
     success: boolean;
@@ -126,6 +147,12 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
 
     RK.logInfo(RK.LogSection.eHTTP, 'setUserUnits', `updated units for user ${idUser}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
 
+    // Audit permission changes
+    for (const idUnit of toAdd)
+        await auditAuthChange(idUserCreator, eAuditType.eAuthGranted, { surface: 'setUserUnits', idUser, idUnit, action: 'addUnitToUser' });
+    for (const idUnit of toRemove)
+        await auditAuthChange(idUserCreator, eAuditType.eAuthRevoked, { surface: 'setUserUnits', idUser, idUnit, action: 'removeUnitFromUser' });
+
     await refreshUserSessions([idUser]);
 
     res.status(200).send(JSON.stringify(generateResponse(true, 'Updated unit assignments', { unitIds })));
@@ -222,6 +249,12 @@ export async function setUnitAuth(req: Request, res: Response): Promise<void> {
     }
 
     RK.logInfo(RK.LogSection.eHTTP, 'setUnitAuth', `updated auth for unit ${idUnit}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+
+    // Audit permission changes
+    for (const idUser of toAdd)
+        await auditAuthChange(idUserCreator, eAuditType.eAuthGranted, { surface: 'setUnitAuth', idUser, idUnit, action: 'addUserToUnit' });
+    for (const idUser of toRemove)
+        await auditAuthChange(idUserCreator, eAuditType.eAuthRevoked, { surface: 'setUnitAuth', idUser, idUnit, action: 'removeUserFromUnit' });
 
     const affectedUserIds = [...new Set([...toAdd, ...toRemove])];
     await refreshUserSessions(affectedUserIds);
@@ -336,7 +369,30 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
         toAdd.forEach(id => affectedUserIds.add(id));
         toRemove.forEach(id => affectedUserIds.add(id));
 
+        // Audit permission changes
+        const LSAudit: LocalStore | undefined = ASL.getStore();
+        const idAuditAdmin: number | null = LSAudit?.idUser ?? null;
+        for (const idUser of toAdd)
+            await auditAuthChange(idAuditAdmin, eAuditType.eAuthGranted, { surface: 'setProjectAuth', idUser, idProject, action: 'addUserToProject' });
+        for (const idUser of toRemove)
+            await auditAuthChange(idAuditAdmin, eAuditType.eAuthRevoked, { surface: 'setProjectAuth', idUser, idProject, action: 'removeUserFromProject' });
+
         RK.logInfo(RK.LogSection.eHTTP, 'setProjectAuth', `updated auth for project ${idProject}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+
+        // Notify users added to a restricted project via email
+        if (project.isRestricted && toAdd.length > 0) {
+            for (const idUser of toAdd) {
+                const addedUser: DBAPI.User | null = await DBAPI.User.fetch(idUser);
+                if (addedUser?.EmailAddress) {
+                    RK.sendEmailRaw(
+                        RK.NotifyType.SECURITY_NOTICE,
+                        [addedUser.EmailAddress],
+                        `Packrat: Access Granted to Restricted Project "${project.Name}"`,
+                        `You have been granted access to the restricted project "${project.Name}" in Packrat.\n\nThis means you can now view and work with data in this project. If you believe this was done in error, please contact your administrator.`
+                    );
+                }
+            }
+        }
     }
 
     // If isRestricted changed, all users assigned to the parent unit are affected

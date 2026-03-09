@@ -106,7 +106,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     }
 
     const ctx = Authorization.getContext();
-    const allowed = ctx ? await Authorization.canAccessSystemObject(ctx, idSystemObject) : true;
+    const allowed = ctx ? await Authorization.canAccessSystemObject(ctx, idSystemObject) : false;
     const allowedReason = allowed ? null : AUTH_ERROR.ACCESS_DENIED;
 
     return {

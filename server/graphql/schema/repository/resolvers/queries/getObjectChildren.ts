@@ -2,6 +2,7 @@ import { GetObjectChildrenResult, QueryGetObjectChildrenArgs } from '../../../..
 import { Parent } from '../../../../../types/resolvers';
 import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } from '../../../../../navigation/interface';
 import { Authorization } from '../../../../../auth/Authorization';
+import { ASL } from '../../../../../utils/localStore';
 import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
@@ -60,7 +61,16 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
     };
 
     // Enforce authorization on the filter
-    const ctx = Authorization.getContext();
+    let ctx = Authorization.getContext();
+
+    // Fallback: build context on the fly if missing but user is known
+    if (!ctx) {
+        const LS = ASL.getStore();
+        if (LS?.idUser) {
+            ctx = await Authorization.buildContext(LS.idUser);
+            LS.authContext = ctx;
+        }
+    }
 
     if (ctx && !ctx.isAdmin) {
         // Restrict units to effective set (use != to also catch undefined from stale sessions)

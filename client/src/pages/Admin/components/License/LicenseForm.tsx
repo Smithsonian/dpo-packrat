@@ -1,7 +1,7 @@
 /* eslint-disable react/jsx-max-props-per-line */
 /* eslint-disable react/jsx-boolean-value */
 
-import { Box, FormControl, FormHelperText, Button, InputLabel } from '@material-ui/core';
+import { Box, FormControl, FormHelperText, Button, InputLabel, Tooltip } from '@material-ui/core';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -186,7 +186,8 @@ function LicenseForm(): React.ReactElement {
         if (!validUpdate) return;
 
         try {
-            const { data } = await updateLicense(Number(idLicense), name, description, Number(restrictLevel));
+            const parsedLevel = parseInt(restrictLevel, 10);
+            const { data } = await updateLicense(Number(idLicense), name, description, isNaN(parsedLevel) ? 0 : parsedLevel);
             await updateLicenseEntries();
 
             if (data) {
@@ -208,7 +209,8 @@ function LicenseForm(): React.ReactElement {
         }
 
         try {
-            const { data } = await createLicense(name, description, Number(restrictLevel));
+            const parsedLevel = parseInt(restrictLevel, 10);
+            const { data } = await createLicense(name, description, isNaN(parsedLevel) ? 0 : parsedLevel);
             await updateLicenseEntries();
 
             if (data?.createLicense) {
@@ -244,9 +246,23 @@ function LicenseForm(): React.ReactElement {
                     </FormControl>
                 </Box>
                 <Box className={classes.formRow}>
-                    <InputLabel className={classes.formRowLabel} htmlFor='licenseRestrictionLevelInput'>Restriction Level</InputLabel>
+                    <Tooltip
+                        title={
+                            <span>
+                                10 = CC0, Publishable w/ Downloads<br />
+                                20 = SI ToU, Publishable w/ Downloads<br />
+                                30 = Publishable, No Downloads<br />
+                                &gt;30 = Not Published
+                            </span>
+                        }
+                        arrow
+                        placement='bottom-start'
+                    >
+                        <InputLabel className={classes.formRowLabel} htmlFor='licenseRestrictionLevelInput'>Restriction Level</InputLabel>
+                    </Tooltip>
                     <DebounceInput
                         element='input'
+                        type='number'
                         className={classes.formField}
                         id='licenseRestrictionLevelInput'
                         value={restrictLevel || ''}

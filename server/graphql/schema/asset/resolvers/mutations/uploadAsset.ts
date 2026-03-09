@@ -27,10 +27,10 @@ interface ApolloFile {
 }
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
-    // Authorization: check access to the attachment target SystemObject
+    // Authorization: check access to the attachment target SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && args.idSOAttachment) {
-        if (!await Authorization.canAccessSystemObject(ctx, args.idSOAttachment))
+    if (args.idSOAttachment) {
+        if (!ctx || !await Authorization.canAccessSystemObject(ctx, args.idSOAttachment))
             return { status: UploadStatus.Failed, error: AUTH_ERROR.ACCESS_DENIED };
     }
 

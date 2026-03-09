@@ -19,9 +19,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
 
-    // Authorization: check access to the target SystemObject
+    // Authorization: check access to the target SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return sendResult(false, 'update object details failed', AUTH_ERROR.ACCESS_DENIED);
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))

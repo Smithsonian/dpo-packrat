@@ -12,10 +12,10 @@ export default async function deleteIdentifier(_: Parent, args: MutationDeleteId
         return { success: false };
     }
 
-    // Authorization: check access to the identifier's parent SystemObject
+    // Authorization: check access to the identifier's parent SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && identifier.idSystemObject) {
-        if (!await Authorization.canAccessSystemObject(ctx, identifier.idSystemObject))
+    if (identifier.idSystemObject) {
+        if (!ctx || !await Authorization.canAccessSystemObject(ctx, identifier.idSystemObject))
             return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
     }
 

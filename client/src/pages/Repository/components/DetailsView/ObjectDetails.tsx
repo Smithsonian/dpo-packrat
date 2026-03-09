@@ -106,6 +106,7 @@ interface ObjectDetailsProps {
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
     onLicenseUpdate?: (event) => void;
     onPublishUpdate?: () => void;
+    onLicenseChange?: () => void;
     path?: RepositoryPath[][] | null;
     updateData?: () => Promise<boolean>;
     idSystemObject: number;
@@ -136,7 +137,8 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         license,
         licenseInheritance,
         path,
-        updateData
+        updateData,
+        onLicenseChange
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const [loading, setLoading] = useState(false);
@@ -173,6 +175,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         if (data?.clearLicenseAssignment?.success) {
             const message: string | null | undefined = data?.clearLicenseAssignment?.message;
             toast.success(`License assignment successfully cleared${message ? ': ' + message : ''}`);
+            onLicenseChange?.();
         } else {
             toast.error(`License assignment failure: ${data?.clearLicenseAssignment?.message}`);
         }
@@ -188,6 +191,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             if (data?.assignLicense?.success) {
                 const message: string | null | undefined = data?.assignLicense?.message;
                 toast.success(`License assignment successfully assigned${message ? ': ' + message : ''}`);
+                onLicenseChange?.();
             } else
                 toast.error(`License assignment failure: ${data?.assignLicense?.message}`);
         }

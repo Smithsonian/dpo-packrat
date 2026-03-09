@@ -11,9 +11,9 @@ export default async function assignLicense(_: Parent, args: MutationAssignLicen
     const { input: { idSystemObject, idLicense } } = args;
     const { user } = context;
 
-    // Authorization: check access to the target SystemObject
+    // Authorization: check access to the target SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
     const LROld: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);

@@ -4,11 +4,17 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import * as COMMON from '@dpo-packrat/common';
 
 export default async function clearLicenseAssignment(_: Parent, args: MutationClearLicenseAssignmentArgs, context: Context): Promise<ClearLicenseAssignmentResult> {
     const { input: { idSystemObject, clearAll } } = args;
     const { user } = context;
+
+    // Authorization: check access to the target SystemObject
+    const ctx = Authorization.getContext();
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+        return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
     const LROld: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
     const LicenseOld: DBAPI.License | undefined = LROld?.License ?? undefined;

@@ -12,10 +12,10 @@ export default async function deleteMetadata(_: Parent, args: MutationDeleteMeta
         return { success: false };
     }
 
-    // Authorization: check access to the metadata's parent SystemObject
+    // Authorization: check access to the metadata's parent SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && metadata.idSystemObject) {
-        if (!await Authorization.canAccessSystemObject(ctx, metadata.idSystemObject))
+    if (metadata.idSystemObject) {
+        if (!ctx || !await Authorization.canAccessSystemObject(ctx, metadata.idSystemObject))
             return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
     }
 

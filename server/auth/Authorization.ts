@@ -10,6 +10,7 @@ export const AUTH_ERROR = {
     ACCESS_DENIED: 'You do not have permission to access this resource.',
     PROJECT_DENIED: 'You do not have access to this project.',
     UNIT_DENIED: 'You do not have access to this unit.',
+    ADMIN_REQUIRED: 'Admin access required.',
 } as const;
 // #endregion
 

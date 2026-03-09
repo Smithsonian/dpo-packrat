@@ -10,14 +10,14 @@ import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;
 
-    // Authorization: check access to either end of the connection
+    // Authorization: check access to either end of the connection (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx) {
-        if (!await Authorization.canAccessSystemObject(ctx, idSystemObjectMaster))
-            return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
-        if (!await Authorization.canAccessSystemObject(ctx, idSystemObjectDerived))
-            return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
-    }
+    if (!ctx)
+        return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
+    if (!await Authorization.canAccessSystemObject(ctx, idSystemObjectMaster))
+        return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
+    if (!await Authorization.canAccessSystemObject(ctx, idSystemObjectDerived))
+        return { success: false, details: AUTH_ERROR.ACCESS_DENIED };
 
     let result: DeleteObjectConnectionResult = { success: true, details: 'Relationship Removed!' };
 

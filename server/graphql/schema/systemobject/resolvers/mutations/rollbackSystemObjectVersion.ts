@@ -15,9 +15,9 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
         return { success: false, message };
     }
 
-    // Authorization: check access to the version's parent SystemObject
+    // Authorization: check access to the version's parent SystemObject (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && !await Authorization.canAccessSystemObject(ctx, SOV.idSystemObject))
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, SOV.idSystemObject))
         return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
     const timestampedRollbackNotes = `Rollback from version created at ${time}. \n ${rollbackNotes}`;

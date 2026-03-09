@@ -61,9 +61,11 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     const { input } = args;
     const { user } = context;
 
-    // Authorization: check project access if a project is specified
+    // Authorization: check project access (fail-closed)
     const ctx = Authorization.getContext();
-    if (ctx && input.project.id && input.project.id > 0) {
+    if (!ctx)
+        return { success: false, message: AUTH_ERROR.NOT_AUTHENTICATED };
+    if (input.project.id && input.project.id > 0) {
         if (!Authorization.canAccessProject(ctx, input.project.id, 'ingestData'))
             return { success: false, message: AUTH_ERROR.PROJECT_DENIED };
     }

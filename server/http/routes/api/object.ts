@@ -279,8 +279,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 else
                     return formatResultField(name,status,'fail','restricted and confidential models often cannot be CC0. double check before publishing.' + inheritedNote);
             }
-            default:
-                return formatResultField(name,'Not Assigned','fail','No license assigned');
+            default: {
+                const allowsDownloads: boolean = doesLicenseAllowDownloads(license.Name);
+                const fallbackStatus: string = licenseType + ((allowsDownloads) ? ' (Downloads)' : '');
+                return formatResultField(name,fallbackStatus,'warn','Unrecognized license type. Verify assignment is correct.' + inheritedNote);
+            }
         }
     };
     const licenseStatus: FieldStatus = await getLicenseStatus(sensitivityStatus.status);

@@ -1,4 +1,5 @@
 import { passport, authCorsConfig, authSession, AuthRouter } from '../auth';
+import { Authorization } from '../auth/Authorization';
 import { ApolloServerOptions } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
@@ -290,8 +291,20 @@ export class HttpServer {
         // Populate authorization context from session cache
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const reqSession = (req as any).session;
-        if (reqSession?.authContext)
+        if (reqSession?.authContext) {
             LS.authContext = reqSession.authContext;
+        } else if (id) {
+            // Build context for logged-in users whose session lacks a cached authContext
+            // (e.g. session created before authorization was enabled, or session restored without it)
+            try {
+                const authContext = await Authorization.buildContext(id);
+                LS.authContext = authContext;
+                if (reqSession) reqSession.authContext = authContext;
+            } catch (err) {
+                RK.logError(RK.LogSection.eAUTH, 'buildContext failed in assignLocalStore',
+                    err instanceof Error ? err.message : String(err), { idUser: id }, 'HttpServer');
+            }
+        }
 
         // run the store for this user
         ASL.run(LS, () => {

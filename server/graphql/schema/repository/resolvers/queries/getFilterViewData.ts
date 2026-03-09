@@ -1,6 +1,7 @@
 import * as DBAPI from '../../../../../db';
 import { GetFilterViewDataResult } from '../../../../../types/graphql';
 import { Authorization } from '../../../../../auth/Authorization';
+import { ASL } from '../../../../../utils/localStore';
 
 export default async function getFilterViewData(): Promise<GetFilterViewDataResult> {
     let units: DBAPI.Unit[] = [];
@@ -19,8 +20,18 @@ export default async function getFilterViewData(): Promise<GetFilterViewDataResu
     }
 
     // Filter by authorization context
-    const ctx = Authorization.getContext();
-    if (ctx && !ctx.isAdmin && ctx.effectiveUnitIds) {
+    let ctx = Authorization.getContext();
+
+    // Fallback: build context on the fly if missing but user is known
+    if (!ctx) {
+        const LS = ASL.getStore();
+        if (LS?.idUser) {
+            ctx = await Authorization.buildContext(LS.idUser);
+            LS.authContext = ctx;
+        }
+    }
+
+    if (ctx && !ctx.isAdmin) {
         const totalUnits = units.length;
         const totalProjects = projects.length;
         const unitSet = new Set(ctx.effectiveUnitIds);

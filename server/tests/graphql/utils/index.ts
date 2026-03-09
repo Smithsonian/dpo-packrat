@@ -7,6 +7,8 @@ import GraphQLApi from '../../../graphql';
 
 import * as DBC from '../../../db/connection';
 // import * as H from '../../../utils/helpers';
+import { ASL, LocalStore } from '../../../utils/localStore';
+import type { AuthorizationContext } from '../../../auth/Authorization';
 import {
     CreateUserInput,
     CreateVocabularySetInput,
@@ -33,6 +35,24 @@ class TestSuiteUtils {
 
     private beforeAll = (): void => {
         this.graphQLApi = new GraphQLApi(true); // true -> use special flavor of GraphQL resolvers, which avoid explicit use of graphql-upload's GraphQLUpload resolver for "Upload" scalar; instead, use default Apollo resolver
+
+        // Set up a LocalStore with admin auth context so mutation guards pass in tests.
+        // Tests run outside HTTP middleware, so Authorization.getContext() would return null
+        // without this, causing all fail-closed mutation guards to deny access.
+        const adminContext: AuthorizationContext = {
+            idUser: 1,
+            isAdmin: true,
+            authorizedUnitIds: [],
+            authorizedProjectIds: [],
+            effectiveProjectIds: null,
+            effectiveProjectSOIds: null,
+            effectiveUnitIds: [],
+            effectiveUnitSOIds: null,
+            authorizedUnitSOIds: null,
+        };
+        const LS = new LocalStore(true, 1);
+        LS.authContext = adminContext;
+        ASL.enterWith(LS);
     };
 
     private afterAll = async (done: () => void): Promise<void> => {

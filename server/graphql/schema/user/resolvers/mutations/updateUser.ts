@@ -3,11 +3,15 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { destroyUserSessions } from '../../../../../auth';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function updateUser(_: Parent, args: MutationUpdateUserArgs): Promise<CreateUserResult> {
+    const ctx = Authorization.getContext();
+    if (!ctx || !ctx.isAdmin)
+        throw new Error(AUTH_ERROR.ADMIN_REQUIRED);
+
     const { input } = args;
     const { idUser, Name, EmailAddress, Active, EmailSettings, WorkflowNotificationTime, SlackID } = input;
-
 
     const User = await DBAPI.User.fetch(idUser);
 
