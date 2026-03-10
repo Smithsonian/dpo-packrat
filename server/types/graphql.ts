@@ -468,6 +468,7 @@ export type DeleteIdentifierInput = {
 
 export type DeleteIdentifierResult = {
   __typename?: 'DeleteIdentifierResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -477,6 +478,7 @@ export type DeleteMetadataInput = {
 
 export type DeleteMetadataResult = {
   __typename?: 'DeleteMetadataResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -894,6 +896,7 @@ export type GetSystemObjectDetailsInput = {
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
   allowed: Scalars['Boolean'];
+  allowedReason?: Maybe<Scalars['String']>;
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;

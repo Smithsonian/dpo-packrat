@@ -33,6 +33,12 @@ const useStyles = makeStyles({
     oddTableRow: {
         backgroundColor: 'white'
     },
+    deactivatedRow: {
+        opacity: 0.5,
+        color: '#999',
+        '& td': { color: '#999' },
+        '& a': { color: '#999' },
+    },
     tableContainer: {
         marginTop: 15
     }
@@ -53,7 +59,9 @@ function AdminUsersList({ users }: { users: GetAllUsersResult['User'] }): React.
         pagination: false,
         elevation: 0,
         setRowProps: (_row, _dataIndex, _rowIndex) => {
-            return { className: _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow };
+            const baseClass = _rowIndex % 2 !== 0 ? classes.oddTableRow : classes.evenTableRow;
+            const isActive = _row[0];
+            return { className: clsx(baseClass, { [classes.deactivatedRow]: !isActive }) };
         }
     };
 

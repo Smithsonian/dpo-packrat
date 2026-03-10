@@ -178,7 +178,8 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 if (displayIndex > -1)
                     set({ metadataDisplay: [...metadataDisplay.slice(0, displayIndex), ...metadataDisplay.slice(displayIndex + 1)] });
             } else {
-                toast.error(`An error occurred when deleting metadata with id ${id}`);
+                const message = result.data.deleteMetadata.message || `An error occurred when deleting metadata with id ${id}`;
+                toast.error(message);
             }
         } else {
             set({ metadataControl: [...metadataControl.slice(0, index), ...metadataControl.slice(index + 1)] });

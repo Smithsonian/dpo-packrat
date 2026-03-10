@@ -10,6 +10,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import * as CACHE from '../../../cache';
 import { buildProjectSceneDef, SceneSummary } from './project';
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
+import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 
 //#region Types and Definitions
 
@@ -75,6 +76,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const systemObject: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if(!systemObject) {
         res.status(200).send(JSON.stringify(generateResponse(false,`getObjectStatus failed. no system object for: ${idSystemObject}`)));
+        return;
+    }
+
+    // Authorization: check access to the target SystemObject
+    const ctx = Authorization.getContext();
+    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
+        res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
         return;
     }
 
@@ -271,8 +279,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 else
                     return formatResultField(name,status,'fail','restricted and confidential models often cannot be CC0. double check before publishing.' + inheritedNote);
             }
-            default:
-                return formatResultField(name,'Not Assigned','fail','No license assigned');
+            default: {
+                const allowsDownloads: boolean = doesLicenseAllowDownloads(license.Name);
+                const fallbackStatus: string = licenseType + ((allowsDownloads) ? ' (Downloads)' : '');
+                return formatResultField(name,fallbackStatus,'warn','Unrecognized license type. Verify assignment is correct.' + inheritedNote);
+            }
         }
     };
     const licenseStatus: FieldStatus = await getLicenseStatus(sensitivityStatus.status);
@@ -414,6 +425,13 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
         const idSystemObject: number = parseInt(id);
         if(isNaN(idSystemObject) || idSystemObject <= 0) {
             res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: invalid idSystemObject')));
+            return;
+        }
+
+        // Authorization: check access to the target SystemObject
+        const ctx = Authorization.getContext();
+        if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
+            res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
             return;
         }
 

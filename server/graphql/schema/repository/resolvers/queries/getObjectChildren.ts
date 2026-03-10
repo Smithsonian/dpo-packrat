@@ -1,6 +1,8 @@
 import { GetObjectChildrenResult, QueryGetObjectChildrenArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import { NavigationFactory, INavigation, NavigationFilter, NavigationResult } from '../../../../../navigation/interface';
+import { Authorization } from '../../../../../auth/Authorization';
+import { ASL } from '../../../../../utils/localStore';
 import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
@@ -57,6 +59,50 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         rows,
         cursorMark
     };
+
+    // Enforce authorization on the filter
+    let ctx = Authorization.getContext();
+
+    // Fallback: build context on the fly if missing but user is known
+    if (!ctx) {
+        const LS = ASL.getStore();
+        if (LS?.idUser) {
+            ctx = await Authorization.buildContext(LS.idUser);
+            LS.authContext = ctx;
+        }
+    }
+
+    if (ctx && !ctx.isAdmin) {
+        // Restrict units to effective set (use != to also catch undefined from stale sessions)
+        if (ctx.effectiveUnitSOIds != null) {
+            if (filter.units?.length) {
+                const totalUnits = filter.units.length;
+                const authorized = new Set(ctx.effectiveUnitSOIds);
+                filter.units = filter.units.filter(u => authorized.has(u));
+                Authorization.logFilteredResults('getObjectChildren.units', totalUnits, filter.units.length);
+            } else {
+                filter.units = ctx.effectiveUnitSOIds;
+            }
+        }
+
+        // Restrict projects to authorized set (use != to also catch undefined from stale sessions).
+        // At root level (idRoot is 0/null) with no explicit project selection, skip the
+        // default project filter: Unit documents in Solr lack HierarchyProjectID (projects
+        // are children of units, not ancestors), so adding that filter excludes every Unit
+        // from results.  The unit filter above is sufficient for root-level authorization.
+        // When drilling into a specific object (idRoot > 0), all child documents carry
+        // HierarchyProjectID, so the project filter works correctly.
+        if (ctx.effectiveProjectSOIds != null) {
+            if (filter.projects?.length) {
+                const totalProjects = filter.projects.length;
+                const authorized = new Set(ctx.effectiveProjectSOIds);
+                filter.projects = filter.projects.filter(p => authorized.has(p));
+                Authorization.logFilteredResults('getObjectChildren.projects', totalProjects, filter.projects.length);
+            } else if (filter.idRoot) {
+                filter.projects = ctx.effectiveProjectSOIds;
+            }
+        }
+    }
 
     const result: NavigationResult = await navigation.getObjectChildren(filter);
     return result;

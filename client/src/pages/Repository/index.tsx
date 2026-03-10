@@ -34,7 +34,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         [breakpoints.down('lg')]: {
             paddingRight: 20
         },
-        height: 'calc(100vh - 80px)',
+        height: 'calc(100vh - 80px - var(--status-banner-height, 0px))',
         overflowY: 'auto'
     }
 }));

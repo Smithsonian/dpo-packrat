@@ -30,7 +30,12 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
         };
     },
     formatError: (err) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const origError: any = err.extensions?.exception || err.originalError || err;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const stack = origError?.stack || (err as any)?.stack || '(no stack)';
         RK.logError(RK.LogSection.eGQL,'Apollo server failed',`format error: ${H.Helpers.getErrorString(err)}`,{},'GraphQL.Apollo.ServerOptions');
+        RK.logError(RK.LogSection.eGQL,'Apollo server failed (stack)',`${stack}`,{},'GraphQL.Apollo.ServerOptions');
         return err;
     }
 };

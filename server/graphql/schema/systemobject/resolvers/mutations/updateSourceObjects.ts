@@ -3,10 +3,16 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { isValidParentChildRelationship } from '../../../ingestion/resolvers/mutations/ingestData';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function updateSourceObjects(_: Parent, args: MutationUpdateSourceObjectsArgs): Promise<UpdateSourceObjectsResult> {
     const { input } = args;
     const { idSystemObject, Sources, PreviouslySelected, ChildObjectType } = input;
+
+    // Authorization: check access to the target SystemObject
+    const ctx = Authorization.getContext();
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+        return { success: false, message: AUTH_ERROR.ACCESS_DENIED, status: 'error' };
     const uniqueHash = {};
     PreviouslySelected.forEach(previous => (uniqueHash[previous.idSystemObject] = previous));
     const newlySelectedArr: ExistingRelationship[] = [];

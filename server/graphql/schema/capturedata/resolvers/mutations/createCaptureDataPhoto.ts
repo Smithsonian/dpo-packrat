@@ -1,8 +1,13 @@
 import { CreateCaptureDataPhotoResult, MutationCreateCaptureDataPhotoArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function CreateCaptureDataPhoto(_: Parent, args: MutationCreateCaptureDataPhotoArgs): Promise<CreateCaptureDataPhotoResult> {
+    const ctx = Authorization.getContext();
+    if (!ctx || (!ctx.isAdmin && ctx.authorizedUnitIds.length === 0))
+        throw new Error(AUTH_ERROR.ACCESS_DENIED);
+
     const { input } = args;
     const {
         idCaptureData,

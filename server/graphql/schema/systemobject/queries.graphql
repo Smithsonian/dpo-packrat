@@ -158,6 +158,7 @@ type GetSystemObjectDetailsResult {
     retired: Boolean!
     objectType: Int!
     allowed: Boolean!
+    allowedReason: String
     publishedState: String!
     publishedEnum: Int!
     publishable: Boolean!

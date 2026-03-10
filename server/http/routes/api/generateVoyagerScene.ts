@@ -7,6 +7,7 @@ import { ASL, LocalStore } from '../../../utils/localStore';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
+import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
@@ -261,6 +262,23 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
         RK.logError(RK.LogSection.eHTTP,'generate scene failed','no IDs found in request',{},'HTTP.Route.GenVoyagerScene');
         res.status(200).send(JSON.stringify(generateResponse(false,'invalid id parameters/body. none found.')));
         return;
+    }
+
+    // Authorization: filter out SystemObjects the user cannot access
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin) {
+        const totalCount = idSystemObjects.length;
+        const authorized: number[] = [];
+        for (const idSO of idSystemObjects) {
+            if (await Authorization.canAccessSystemObject(ctx, idSO))
+                authorized.push(idSO);
+        }
+        idSystemObjects = authorized;
+        Authorization.logFilteredResults('generateVoyagerScene', totalCount, idSystemObjects.length);
+        if (idSystemObjects.length === 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
+            return;
+        }
     }
 
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat

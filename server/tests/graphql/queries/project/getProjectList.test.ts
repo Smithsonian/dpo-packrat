@@ -17,6 +17,7 @@ const getProjectListTest = (utils: TestSuiteUtils): void => {
             const projectArgs = {
                 Name: randomName,
                 Description: null,
+                isRestricted: false,
                 idProject: 0
             };
 

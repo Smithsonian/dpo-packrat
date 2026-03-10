@@ -420,6 +420,7 @@ input DeleteIdentifierInput {
 }
 
 type DeleteIdentifierResult {
+  message: String
   success: Boolean!
 }
 
@@ -428,6 +429,7 @@ input DeleteMetadataInput {
 }
 
 type DeleteMetadataResult {
+  message: String
   success: Boolean!
 }
 
@@ -806,6 +808,7 @@ input GetSystemObjectDetailsInput {
 
 type GetSystemObjectDetailsResult {
   allowed: Boolean!
+  allowedReason: String
   asset: RepositoryPath
   assetOwner: RepositoryPath
   derivedObjects: [RelatedObject!]!

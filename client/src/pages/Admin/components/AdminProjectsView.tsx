@@ -155,7 +155,7 @@ function AdminProjectsList({ projects }): React.ReactElement {
                 },
                 sort: false
             }
-        }
+        },
     ];
 
     return (

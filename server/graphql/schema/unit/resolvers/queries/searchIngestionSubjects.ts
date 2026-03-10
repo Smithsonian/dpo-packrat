@@ -2,6 +2,7 @@ import { QuerySearchIngestionSubjectsArgs, SearchIngestionSubjectsResult } from 
 import { Parent } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface/';
 import * as DBAPI from '../../../../../db';
+import { Authorization } from '../../../../../auth/Authorization';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 // import * as H from '../../../../../utils/helpers';
 
@@ -16,15 +17,24 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
     const results: DBAPI.SubjectUnitIdentifier[] = [];
     const resultSet: Set<string> = new Set<string>();
 
+    // Filter DB results by authorized Units
+    const ctx = Authorization.getContext();
+    const authorizedUnitSet = (ctx && !ctx.isAdmin) ? new Set(ctx.authorizedUnitIds) : null;
 
     if (resultsDB) {
+        const totalDB = resultsDB.length;
         for (const resultDB of resultsDB) {
             if (resultSet.has(resultDB.IdentifierPublic))
+                continue;
+            // Filter by authorized units (skip if admin or no enforcement)
+            if (authorizedUnitSet && !authorizedUnitSet.has(resultDB.idUnit))
                 continue;
             // LOG.info(`searchIngestionSubjects ${JSON.stringify(resultDB)}`, LOG.LS.eGQL);
             resultSet.add(resultDB.IdentifierPublic);
             results.push(resultDB);
         }
+        if (authorizedUnitSet)
+            Authorization.logFilteredResults('searchIngestionSubjects', totalDB, results.length);
     }
 
     if (resultsCOL && resultsCOL.records) {
@@ -55,7 +65,8 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
                 SubjectName: record.name,
                 UnitAbbreviation: record.unit,
                 IdentifierPublic: record.identifierPublic,
-                IdentifierCollection: record.identifierCollection
+                IdentifierCollection: record.identifierCollection,
+                idUnit: 0
             });
         }
 

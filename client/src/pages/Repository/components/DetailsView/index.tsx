@@ -418,13 +418,14 @@ function DetailsView(): React.ReactElement {
         if (idIdentifier) {
             const confirm = window.confirm('Are you sure you wish to remove this?');
             if (!confirm) return;
-            const deleteIdentifierSuccess = await deleteIdentifier(idIdentifier);
-            if (deleteIdentifierSuccess) {
+            const result = await deleteIdentifier(idIdentifier);
+            if (result?.data?.deleteIdentifier?.success) {
                 removeTargetIdentifier(idIdentifier);
                 setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
-                toast.error('Error when removing identifier');
+                const message = result?.data?.deleteIdentifier?.message || 'Error when removing identifier';
+                toast.error(message);
             }
         } else {
             removeTargetIdentifier(0, id);
@@ -882,6 +883,20 @@ function DetailsView(): React.ReactElement {
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
 
+    if (!allowed) {
+        return (
+            <Box className={classes.container}>
+                <Box className={classes.content}>
+                    <NoticeBanner
+                        state='warning'
+                        title='Access Denied'
+                        messageText='You do not have permission to access this resource. If you think this is in error please contact the Packrat Support Team (packrat@si.edu).'
+                    />
+                </Box>
+            </Box>
+        );
+    }
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -920,6 +935,7 @@ function DetailsView(): React.ReactElement {
                         onRetiredUpdate={onRetiredUpdate}
                         onLicenseUpdate={onLicenseUpdate}
                         onPublishUpdate={onPublishUpdate}
+                        onLicenseChange={onDetailUpdate}
                         originalFields={data.getSystemObjectDetails}
                         license={withDefaultValueNumber(details.idLicense, 0)}
                         idSystemObject={idSystemObject}
@@ -1077,6 +1093,7 @@ function DetailsView(): React.ReactElement {
                     <DetailsTab
                         disabled={disabled}
                         idSystemObject={idSystemObject}
+                        idObject={idObject}
                         objectType={objectType}
                         assetOwner={assetOwner}
                         sourceObjects={sourceObjects}
@@ -1166,19 +1183,19 @@ export function getNoticeConfig(properties: ObjectPropertyResult[] | null, conta
     // build our notice for return
     let messageHTML = '';
     switch(sensitiveProps.level) {
-        case 0: {
+        case 0:
             messageHTML += 'This object is deemed NOT sensitive, but still follows Smithsonian policy for digital assets.';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
-        } break;
-        case 1: {
+            break;
+        case 1:
             messageHTML += 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
-        } break;
-        case 2: {
+            break;
+        case 2:
             messageHTML += 'This object is confidential and visible only to selecet members.';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
             messageHTML += '</br></br>If you think you should be able to see this object please contact the individual below and Packrat support (<b>packrat@si.edu</b>)';
-        }
+            break;
     }
 
     // shared lines (contact/reason)

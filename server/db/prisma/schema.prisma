@@ -571,6 +571,7 @@ model Project {
   idProject            Int                    @id @default(autoincrement())
   Name                 String                 @mariasql.VarChar(128)
   Description          String?                @mariasql.VarChar(8000)
+  isRestricted         Boolean                @default(false)
   ProjectDocumentation ProjectDocumentation[]
   SystemObject         SystemObject?
   Workflow             Workflow[]
@@ -692,6 +693,7 @@ model SystemObject {
   SystemObjectVersion                                                   SystemObjectVersion[]
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectMaster  SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectMaster")
   SystemObjectXref_SystemObjectToSystemObjectXref_idSystemObjectDerived SystemObjectXref[]                @relation("SystemObjectToSystemObjectXref_idSystemObjectDerived")
+  UserAuthorization                                                     UserAuthorization[]
   UserPersonalizationSystemObject                                       UserPersonalizationSystemObject[]
   WorkflowStepSystemObjectXref                                          WorkflowStepSystemObjectXref[]
 
@@ -767,26 +769,28 @@ model UnitEdan {
 }
 
 model User {
-  idUser                          Int                               @id @default(autoincrement())
-  Name                            String                            @mariasql.VarChar(255)
-  EmailAddress                    String                            @mariasql.VarChar(255)
-  SecurityID                      String                            @mariasql.VarChar(255)
-  Active                          Boolean
-  DateActivated                   DateTime                          @mariasql.DateTime(0)
-  DateDisabled                    DateTime?                         @mariasql.DateTime(0)
-  WorkflowNotificationTime        DateTime?                         @mariasql.Time(0)
-  EmailSettings                   Int?
-  SlackID                         String                            @default("") @mariasql.LongText
-  AccessPolicy                    AccessPolicy[]
-  AssetVersion                    AssetVersion[]
-  Audit                           Audit[]
-  LicenseAssignment               LicenseAssignment[]
-  Metadata                        Metadata[]
-  Sentinel                        Sentinel[]
-  UserPersonalizationSystemObject UserPersonalizationSystemObject[]
-  UserPersonalizationUrl          UserPersonalizationUrl[]
-  Workflow                        Workflow[]
-  WorkflowStep                    WorkflowStep[]
+  idUser                                                  Int                               @id @default(autoincrement())
+  Name                                                    String                            @mariasql.VarChar(255)
+  EmailAddress                                            String                            @mariasql.VarChar(255)
+  SecurityID                                              String                            @mariasql.VarChar(255)
+  Active                                                  Boolean
+  DateActivated                                           DateTime                          @mariasql.DateTime(0)
+  DateDisabled                                            DateTime?                         @mariasql.DateTime(0)
+  WorkflowNotificationTime                                DateTime?                         @mariasql.Time(0)
+  EmailSettings                                           Int?
+  SlackID                                                 String                            @default("") @mariasql.LongText
+  AccessPolicy                                            AccessPolicy[]
+  AssetVersion                                            AssetVersion[]
+  Audit                                                   Audit[]
+  LicenseAssignment                                       LicenseAssignment[]
+  Metadata                                                Metadata[]
+  Sentinel                                                Sentinel[]
+  UserAuthorization                                       UserAuthorization[]
+  UserAuthorization_UserAuthorization_idUserCreatorToUser UserAuthorization[]               @relation("UserAuthorization_idUserCreatorToUser")
+  UserPersonalizationSystemObject                         UserPersonalizationSystemObject[]
+  UserPersonalizationUrl                                  UserPersonalizationUrl[]
+  Workflow                                                Workflow[]
+  WorkflowStep                                            WorkflowStep[]
 
   @@index([EmailAddress], map: "user_EmailAddress")
 }
@@ -961,6 +965,22 @@ model ObjectProperty {
   @@unique([idSystemObject, PropertyType], map: "ObjectProperty_idSystemObject_Type")
   @@index([idContact], map: "ObjectProperty_idContact")
   @@index([idSystemObject], map: "ObjectProperty_idSystemObject")
+}
+
+model UserAuthorization {
+  idUserAuthorization                        Int          @id @default(autoincrement())
+  idUser                                     Int
+  idSystemObject                             Int
+  DateCreated                                DateTime     @default(now()) @mariasql.DateTime(0)
+  idUserCreator                              Int?
+  SystemObject                               SystemObject @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_systemobject1")
+  User                                       User         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_user1")
+  User_UserAuthorization_idUserCreatorToUser User?        @relation("UserAuthorization_idUserCreatorToUser", fields: [idUserCreator], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_userauthorization_usercreator1")
+
+  @@unique([idUser, idSystemObject], map: "UserAuthorization_idUser_idSystemObject")
+  @@index([idUser], map: "UserAuthorization_idUser")
+  @@index([idSystemObject], map: "UserAuthorization_idSystemObject")
+  @@index([idUserCreator], map: "UserAuthorization_idUserCreator")
 }
 
 enum ObjectProperty_PropertyType {

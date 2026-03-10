@@ -12,11 +12,17 @@ import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl
 import * as COMMON from '@dpo-packrat/common';
 import { NameHelpers } from '../../../../../utils/nameHelpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
     const { user } = context;
     const { idSystemObject, idObject, objectType, data } = input;
+
+    // Authorization: check access to the target SystemObject (fail-closed)
+    const ctx = Authorization.getContext();
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
+        return sendResult(false, 'update object details failed', AUTH_ERROR.ACCESS_DENIED);
 
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');

@@ -2,6 +2,7 @@
 import { AsyncLocalStorage, AsyncResource } from 'async_hooks';
 import * as H from './helpers';
 import { RecordKeeper as RK } from '../records/recordKeeper';
+import type { AuthorizationContext } from '../auth/Authorization';
 
 export class LocalStore {
     idRequest: number;
@@ -14,6 +15,7 @@ export class LocalStore {
     private idWorkflowReport?: number | undefined;
     idWorkflowSet?: number | undefined;
     transactionNumber?: number | undefined;
+    authContext?: AuthorizationContext | undefined;
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {

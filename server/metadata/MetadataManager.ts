@@ -39,7 +39,7 @@ export class MetadataManager {
         }
         // LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) wrote ${metadataCount} DB Records`, LOG.LS.eMETA);
 
-        // update Solr metadata core
+        // update Solr metadata core (optional — not available in DB-only navigation mode)
         const navigation: NAV.INavigation | null = await NAV.NavigationFactory.getInstance();
         const indexer: NAV.IIndexer | null = navigation ? await navigation.getIndexer() : /* istanbul ignore next */ null; /* istanbul ignore else */
         if (indexer) {
@@ -47,9 +47,8 @@ export class MetadataManager {
             // LOG.info(`MetadataManager.persistExtractor(${idSystemObject}, ${idSystemObjectParent}) indexed ${metadataCount} Solr Records`, LOG.LS.eMETA);
             return { success, error: success ? '' : /* istanbul ignore next */ 'IIndexer.indexMetadata failed' };
         } else {
-            const error: string = 'MetadataManager.persistExtractor unable to fetch navigation indexer';
-            RK.logError(RK.LogSection.eMETA,'persist extractor failed','unable to fetch navigation indexer',{ metadataList },'Metadata.Manager');
-            return { success: false, error };
+            RK.logDebug(RK.LogSection.eMETA,'persist extractor','skipping Solr indexing (no indexer available)',{ metadataCount },'Metadata.Manager');
+            return { success: true };
         }
     }
 }

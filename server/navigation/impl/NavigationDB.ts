@@ -5,6 +5,7 @@ import * as DBAPI from '../../db';
 import { ObjectIDAndType } from '../../db';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { Authorization } from '../../auth/Authorization';
 
 export class NavigationDB implements NAV.INavigation {
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
@@ -87,10 +88,19 @@ export class NavigationDB implements NAV.INavigation {
     private static async computeRootUnits(filter: NAV.NavigationFilter): Promise<NAV.NavigationResultEntry[]> {
         const entries: NAV.NavigationResultEntry[] = [];
 
-        const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll(); /* istanbul ignore if */
+        let units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchAll(); /* istanbul ignore if */
         if (!units) {
             RK.logError(RK.LogSection.eNAV,'compute root units failed','unable to retrieve units',{},'Navigation.DB');
             return [];
+        }
+
+        // Filter by authorization context (guard effectiveUnitIds for stale sessions)
+        const ctx = Authorization.getContext();
+        if (ctx && !ctx.isAdmin && ctx.effectiveUnitIds) {
+            const totalUnits = units.length;
+            const unitSet = new Set(ctx.effectiveUnitIds);
+            units = units.filter(u => unitSet.has(u.idUnit));
+            Authorization.logFilteredResults('computeRootUnits', totalUnits, units.length);
         }
 
         for (const unit of units) {
@@ -154,10 +164,18 @@ export class NavigationDB implements NAV.INavigation {
     private static async computeRootProjects(filter: NAV.NavigationFilter): Promise<NAV.NavigationResultEntry[]> {
         const entries: NAV.NavigationResultEntry[] = [];
 
-        const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll(); /* istanbul ignore if */
+        let projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll(); /* istanbul ignore if */
         if (!projects) {
             RK.logError(RK.LogSection.eNAV,'compute root projects failed','unable to retrieve projects',{},'Navigation.DB');
             return [];
+        }
+
+        // Filter by authorization context
+        const ctx = Authorization.getContext();
+        if (ctx && !ctx.isAdmin) {
+            const totalProjects = projects.length;
+            projects = Authorization.filterProjects(projects, ctx);
+            Authorization.logFilteredResults('computeRootProjects', totalProjects, projects.length);
         }
 
         for (const project of projects) {

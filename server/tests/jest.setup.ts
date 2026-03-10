@@ -1,6 +1,7 @@
 // jest.setup.ts
 import { RecordKeeper as RK } from '../records/recordKeeper';
 import { EventFactory } from '../event/interface/EventFactory';
+import { NavigationFactory } from '../navigation/interface/NavigationFactory';
 
 beforeEach(async () => {
     // initialize our logger for all tests
@@ -22,5 +23,6 @@ afterEach(async () => {
 });
 
 afterAll(async () => {
+    NavigationFactory.cleanup();
     await RK.shutdown();
 });
