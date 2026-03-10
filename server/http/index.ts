@@ -318,6 +318,7 @@ export class HttpServer {
     private static stripWebDAVToken(req: Request, _res, next): void {
         const match: RegExpMatchArray | null = req.url.match(/^\/webdav\/token-([a-f0-9-]+)(\/.*)?$/i);
         if (match) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (req as any).webdavToken = match[1];
             req.url = `/webdav${match[2] || '/'}`;
         }

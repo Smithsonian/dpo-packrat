@@ -139,7 +139,8 @@ const ToolsAuthorizationOverview = (): React.ReactElement => {
             if (!projectMap.has(r.idProject)) {
                 projectMap.set(r.idProject, { row: r, users: [] });
             }
-            const entry = projectMap.get(r.idProject)!;
+            const entry = projectMap.get(r.idProject);
+            if (!entry) continue;
             if (r.UserName && !entry.users.includes(r.UserName))
                 entry.users.push(r.UserName);
         }
