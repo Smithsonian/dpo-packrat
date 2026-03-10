@@ -17,6 +17,11 @@ export class EventEngine implements EVENT.IEventEngine {
     }
 
     async initialize(): Promise<IOResults> {
+        // Skip if consumers are already registered to prevent accumulation
+        // when called repeatedly (e.g. from Jest beforeEach).
+        if (this.consumerMap.size > 0)
+            return { success: true, message: 'EventEngine already initialized', data: {} };
+
         RK.logDebug(RK.LogSection.eEVENT,'system initialize','wiring default consumers',{ consumers: 'DB, Auth, Publish, HTTP' },'Event.Engine');
 
         const createdConsumers: string[] = [];
