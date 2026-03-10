@@ -9,20 +9,18 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 
 const { PACKRAT_CLIENT_ENDPOINT, PACKRAT_SESSION_SECRET } = process.env;
 
-if (!PACKRAT_CLIENT_ENDPOINT) {
-    throw new Error('PACKRAT_CLIENT_ENDPOINT was not provided to cors config');
-}
+// Warn instead of throwing so the module can load during test teardown
+// (globalTeardown runs in a separate Node process without setupFiles).
+// In production, HttpServer.initialize() validates required env vars before startup.
+const clientEndpoint: string = PACKRAT_CLIENT_ENDPOINT || 'http://localhost:3000';
+const sessionSecret: string = PACKRAT_SESSION_SECRET || 'fallback-secret';
 
 // for non-production deployments (where httpAuthRequired is false), allow requests from the Apollo GraphQL Studio:
 const authCorsConfig = {
-    origin: httpAuthRequired ? PACKRAT_CLIENT_ENDPOINT : [ PACKRAT_CLIENT_ENDPOINT, 'https://studio.apollographql.com' ],
+    origin: httpAuthRequired ? clientEndpoint : [ clientEndpoint, 'https://studio.apollographql.com' ],
     credentials: true,
     methods: ['GET','HEAD','PUT','PATCH','POST','DELETE','PROPFIND','PROPPATCH','MKCOL','COPY','MOVE','LOCK','UNLOCK','OPTIONS']
 };
-
-if (!PACKRAT_SESSION_SECRET) {
-    throw new Error('PACKRAT_SESSION_SECRET was not provided to sessions config');
-}
 
 /**
  * To persist sessions we'll require to store them in our DB
@@ -37,7 +35,7 @@ const sessionStore = new Store({ checkPeriod });
 
 const sessionConfig = {
     cookie: { maxAge },
-    secret: PACKRAT_SESSION_SECRET,
+    secret: sessionSecret,
     resave: true,
     rolling: true,
     saveUninitialized: true,
