@@ -208,7 +208,7 @@ export const Config: ConfigType = {
         targetRate: process.env.PACKRAT_LOG_RATE ? parseInt(process.env.PACKRAT_LOG_RATE) : 100
     },
     navigation: {
-        type: NAVIGATION_TYPE.SOLR,
+        type: process.env.PACKRAT_NAVIGATION_TYPE === 'db' ? NAVIGATION_TYPE.DB : NAVIGATION_TYPE.SOLR,
     },
     slack: {
         apiKey: process.env.PACKRAT_SLACK_KEY ? process.env.PACKRAT_SLACK_KEY: 'undefined',
