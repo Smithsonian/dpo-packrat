@@ -10,7 +10,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
-import { useLocation, Route, Routes } from 'react-router';
+import { useLocation, useParams, Route, Routes } from 'react-router';
 import { REPOSITORY_ROUTE, resolveRoute } from '../../constants';
 import { useControlStore, useRepositoryStore } from '../../store';
 import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
@@ -59,11 +59,16 @@ export type RepositoryFilter = {
     idRoot?: number | null;
 };
 
+function DetailsViewKeyed(): React.ReactElement {
+    const { idSystemObject } = useParams();
+    return <DetailsView key={idSystemObject} />;
+}
+
 function Repository(): React.ReactElement {
 
     return (
         <Routes>
-            <Route path='details/:idSystemObject' element={<DetailsView />} />
+            <Route path='details/:idSystemObject' element={<DetailsViewKeyed />} />
             <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VOYAGER)} element={<VoyagerStoryView />} />
             <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VIEW)} element={<TreeViewPage />} />
         </Routes>
