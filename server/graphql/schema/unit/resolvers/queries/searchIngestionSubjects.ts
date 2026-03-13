@@ -17,23 +17,25 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
     const results: DBAPI.SubjectUnitIdentifier[] = [];
     const resultSet: Set<string> = new Set<string>();
 
-    // Filter DB results by authorized Units
+    // Filter DB results by effective Units (authorized units + units of assigned restricted projects)
     const ctx = Authorization.getContext();
-    const authorizedUnitSet = (ctx && !ctx.isAdmin) ? new Set(ctx.authorizedUnitIds) : null;
+    const effectiveUnitSet = (ctx && !ctx.isAdmin) ? new Set(ctx.effectiveUnitIds) : null;
 
     if (resultsDB) {
         const totalDB = resultsDB.length;
         for (const resultDB of resultsDB) {
             if (resultSet.has(resultDB.IdentifierPublic))
                 continue;
-            // Filter by authorized units (skip if admin or no enforcement)
-            if (authorizedUnitSet && !authorizedUnitSet.has(resultDB.idUnit))
+            // Filter by effective units (skip if admin or no enforcement)
+            if (effectiveUnitSet && !effectiveUnitSet.has(resultDB.idUnit)) {
+                resultSet.add(resultDB.IdentifierPublic); // prevent bypass via collection results
                 continue;
+            }
             // LOG.info(`searchIngestionSubjects ${JSON.stringify(resultDB)}`, LOG.LS.eGQL);
             resultSet.add(resultDB.IdentifierPublic);
             results.push(resultDB);
         }
-        if (authorizedUnitSet)
+        if (effectiveUnitSet)
             Authorization.logFilteredResults('searchIngestionSubjects', totalDB, results.length);
     }
 
