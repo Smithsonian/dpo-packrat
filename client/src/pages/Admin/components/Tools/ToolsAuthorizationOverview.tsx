@@ -15,8 +15,8 @@ import { useStyles as useTableStyles } from '../../../Repository/components/Deta
 // Types
 // -------------------------------------------------------------------
 type RawSummaryRow = {
-    idUnit: number;
-    UnitName: string;
+    idUnit: number | null;
+    UnitName: string | null;
     UnitAbbreviation: string | null;
     idProject: number;
     ProjectName: string;
@@ -27,7 +27,7 @@ type RawSummaryRow = {
 };
 
 type GroupedProject = DBReference & {
-    idUnit: number;
+    idUnit: number | null;
     unitName: string;
     isRestricted: boolean;
     authorizedUsers: string;
@@ -109,8 +109,8 @@ const ToolsAuthorizationOverview = (): React.ReactElement => {
     const unitOptions = useMemo<UnitOption[]>(() => {
         const map = new Map<number, string>();
         for (const r of rawRows) {
-            if (!map.has(r.idUnit))
-                map.set(r.idUnit, r.UnitName);
+            if (r.idUnit != null && !map.has(r.idUnit))
+                map.set(r.idUnit, r.UnitName ?? '(no unit)');
         }
         return Array.from(map, ([idUnit, name]) => ({ idUnit, name })).sort((a, b) => a.name.localeCompare(b.name));
     }, [rawRows]);
@@ -149,7 +149,7 @@ const ToolsAuthorizationOverview = (): React.ReactElement => {
             id: row.idProject,
             name: row.ProjectName,
             idUnit: row.idUnit,
-            unitName: row.UnitName,
+            unitName: row.UnitName ?? '(no unit)',
             isRestricted: row.isRestricted,
             authorizedUsers: users.sort().join(', ') || '(none)',
             userCount: users.length,

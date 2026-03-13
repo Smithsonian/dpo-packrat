@@ -5,8 +5,8 @@ import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export type AuthSummaryRow = {
-    idUnit: number;
-    UnitName: string;
+    idUnit: number | null;
+    UnitName: string | null;
     UnitAbbreviation: string | null;
     idProject: number;
     ProjectName: string;
@@ -208,20 +208,24 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
         try {
             return await DBC.DBConnection.prisma.$queryRaw<AuthSummaryRow[]>`
                 SELECT
-                    U_unit.idUnit,
-                    U_unit.Name        AS UnitName,
-                    U_unit.Abbreviation AS UnitAbbreviation,
+                    PU.idUnit,
+                    PU.UnitName,
+                    PU.UnitAbbreviation,
                     P.idProject,
                     P.Name             AS ProjectName,
                     P.isRestricted,
                     AuthUsers.idUser,
                     AuthUsers.UserName,
                     AuthUsers.EmailAddress
-                FROM Unit AS U_unit
-                JOIN SystemObject AS SO_unit ON (SO_unit.idUnit = U_unit.idUnit)
-                JOIN SystemObjectXref AS SOX ON (SOX.idSystemObjectMaster = SO_unit.idSystemObject)
-                JOIN SystemObject AS SO_proj ON (SO_proj.idSystemObject = SOX.idSystemObjectDerived)
-                JOIN Project AS P ON (P.idProject = SO_proj.idProject)
+                FROM Project AS P
+                LEFT JOIN (
+                    SELECT SO_p.idProject, U.idUnit, U.Name AS UnitName, U.Abbreviation AS UnitAbbreviation
+                    FROM SystemObject AS SO_p
+                    JOIN SystemObjectXref AS SOX ON (SOX.idSystemObjectDerived = SO_p.idSystemObject)
+                    JOIN SystemObject AS SO_u ON (SO_u.idSystemObject = SOX.idSystemObjectMaster AND SO_u.idUnit IS NOT NULL)
+                    JOIN Unit AS U ON (U.idUnit = SO_u.idUnit)
+                    WHERE SO_p.idProject IS NOT NULL
+                ) AS PU ON (PU.idProject = P.idProject)
                 LEFT JOIN (
                     SELECT UA.idUser, Usr.Name AS UserName, Usr.EmailAddress, SO_ua.idUnit AS authIdUnit, NULL AS authIdProject
                     FROM UserAuthorization AS UA
@@ -235,10 +239,10 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                     JOIN SystemObject AS SO_ua2 ON (SO_ua2.idSystemObject = UA2.idSystemObject)
                     WHERE SO_ua2.idProject IS NOT NULL
                 ) AS AuthUsers ON (
-                    (P.isRestricted = 0 AND AuthUsers.authIdUnit = U_unit.idUnit)
+                    (P.isRestricted = 0 AND AuthUsers.authIdUnit = PU.idUnit)
                     OR (P.isRestricted = 1 AND AuthUsers.authIdProject = P.idProject)
                 )
-                ORDER BY U_unit.Name, P.Name, AuthUsers.UserName`;
+                ORDER BY PU.UnitName, P.Name, AuthUsers.UserName`;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'fetchAuthSummary failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
             return [];
