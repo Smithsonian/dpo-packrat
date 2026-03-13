@@ -155,10 +155,15 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
 };
 const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResponse> => {
 
-    // grab it and make sure it's a scene
+    // grab it and make sure it's a model
     const model: DBAPI.Model | null = await DBAPI.Model.fetchBySystemObject(idSystemObject);
     if(!model) {
-        RK.logError(RK.LogSection.eHTTP,'get scene op status failed',`cannot find required model:${idSystemObject}`,{},'HTTP.Route.GenVoyagerScene');
+        // check if this system object is actually supposed to be a model
+        const so: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if(so?.idModel)
+            RK.logError(RK.LogSection.eHTTP,'get scene op status failed','Model record missing for model SystemObject',{ idSystemObject, idModel: so.idModel },'HTTP.Route.GenVoyagerScene');
+        else
+            RK.logDebug(RK.LogSection.eHTTP,'get scene op status','system object is not a model',{ idSystemObject },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,`cannot find required model: ${idSystemObject}`,idSystemObject);
     }
 

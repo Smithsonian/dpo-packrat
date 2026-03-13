@@ -409,7 +409,7 @@ export class SceneHelpers {
         }
 
         if (!hasImage)
-            return SceneHelpers.recordError(`sceneCanBeQCd(${idScene}) no thumbnails detected in scene`);
+            return SceneHelpers.recordExpected(`sceneCanBeQCd(${idScene}) no thumbnails detected in scene`);
 
         if (missingImageSet.size === 0)
             return { success: true };
@@ -422,7 +422,7 @@ export class SceneHelpers {
                 missingFiles += ', ';
             missingFiles += missing;
         }
-        return SceneHelpers.recordError(`sceneCanBeQCd(${idScene}) missing thumbnails ${missingFiles}`);
+        return SceneHelpers.recordExpected(`sceneCanBeQCd(${idScene}) missing thumbnails ${missingFiles}`);
     }
 
     static async recordResourceMetadata(resource: COL.Edan3DResource, idSystemObject: number, idSystemObjectParent: number, idUser: number | null): Promise<H.IOResults> {
@@ -1003,6 +1003,11 @@ export class SceneHelpers {
 
     private static recordError(error: string | undefined): H.IOResults {
         RK.logError(RK.LogSection.eSYS,'record error',error,{},'Utils.Scene');
+        return { success: false, error };
+    }
+
+    private static recordExpected(error: string | undefined): H.IOResults {
+        RK.logDebug(RK.LogSection.eSYS,'scene not QC-ready',error,{},'Utils.Scene');
         return { success: false, error };
     }
 

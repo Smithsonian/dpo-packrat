@@ -387,9 +387,9 @@ export class RecordKeeper {
             case NotifyUserGroup.USER: {
                 const { idUser, userSlack } = RecordKeeper.getContext();
 
-                // if no notification settings or user, nothing so email not sent
+                // if no notification settings or user, nothing so slack not sent
                 if(!idUser || !userSlack) {
-                    RecordKeeper.logError(LogSection.eSYS,'get user failed','user or slackID does not exist', { idUser, userSlack },'RecordKeeper.getSlackIDsFromGroup');
+                    RecordKeeper.logWarning(LogSection.eSYS,'get user skipped','user or slackID does not exist', { idUser, userSlack },'RecordKeeper.getSlackIDsFromGroup');
                     return undefined;
                 }
 
