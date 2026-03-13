@@ -18,6 +18,9 @@ export default async function getIngestionItems(_: Parent, args: QueryGetIngesti
     for (const item of items)
         idItems.push(item.idItem);
 
+    if (idItems.length === 0)
+        return { IngestionItem: [] };
+
     const ItemAndProjects: DBAPI.ItemAndProject[] | null = await DBAPI.Item.fetchRelatedItemsAndProjects(idItems);
     if (!ItemAndProjects) {
         RK.logError(RK.LogSection.eGQL,'get ingestion items failed','unable to fetch projects related to items',{ idItems },'GraphQL.Unit.IngestionItems');
