@@ -527,7 +527,7 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
         RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch asset from model',{ ...model },'HTTP.Route.Project');
         return null;
     } else if(modelAsset.length>1)
-        RK.logWarning(RK.LogSection.eHTTP,'build asset summary from model failed','more than one asset assigned to model. using first one.',{ ...model, numAssets: modelAsset.length },'HTTP.Route.Project');
+        RK.logDebug(RK.LogSection.eHTTP,'build asset summary from model','more than one asset assigned to model. using first one.',{ ...model, numAssets: modelAsset.length },'HTTP.Route.Project');
 
     // get our latest asset version
     const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());
