@@ -751,6 +751,33 @@ export class AssetStorageAdapter {
 
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${assetVersion.FilePath}/` : '';
+
+        // Detect single-folder wrapper: user zipped a folder instead of its contents.
+        // If all files share exactly one top-level directory and no files exist at the root,
+        // strip that directory prefix so the inner folder is treated as the ingestion root.
+        let stripPrefix: string = '';
+        if (!bulkIngest) {
+            const allFiles: string[] = await zip.getJustFiles(null);
+            if (allFiles.length > 0) {
+                const topLevelDirs = new Set<string>();
+                let hasRootFile: boolean = false;
+                for (const f of allFiles) {
+                    const firstSlash: number = f.indexOf('/');
+                    if (firstSlash === -1) {
+                        hasRootFile = true;
+                        break;
+                    }
+                    topLevelDirs.add(f.substring(0, firstSlash));
+                }
+                if (!hasRootFile && topLevelDirs.size === 1) {
+                    stripPrefix = topLevelDirs.values().next().value + '/';
+                    RK.logInfo(RK.LogSection.eSTR, 'bulk ingest zip worker',
+                        `detected single-folder wrapper "${stripPrefix.slice(0, -1)}", treating inner folder as root`,
+                        { assetVersion }, 'AssetStorageAdapter');
+                }
+            }
+        }
+
         for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
 
             if (bulkIngest && !entry.includes(fileID)) // only process assets found in our path
@@ -863,9 +890,10 @@ export class AssetStorageAdapter {
                 continue;
             }
 
-            // find/create asset and asset version
+            // find/create asset and asset version; strip single-folder wrapper prefix if detected
             const FileName: string = path.basename(entry);
-            let FilePath: string = path.dirname(entry);
+            const effectiveEntry: string = (stripPrefix && entry.startsWith(stripPrefix)) ? entry.substring(stripPrefix.length) : entry;
+            let FilePath: string = path.dirname(effectiveEntry);
             if (FilePath === '.')
                 FilePath = '';
 
