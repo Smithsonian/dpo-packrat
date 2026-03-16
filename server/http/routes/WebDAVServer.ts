@@ -482,7 +482,7 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
             const pathS: string = pathWD.toString();
             const DP: DownloaderParser = new DownloaderParser('', pathS);
-            const DPResults: DownloaderParserResults = await DP.parseArguments();
+            const DPResults: DownloaderParserResults = await DP.parseArguments(true);
             if (!DPResults.success && !DP.idSystemObjectV) {
                 const error: string = `WebDAVFileSystem._openWriteStream(${pathS}) failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
                 RK.logError(RK.LogSection.eHTTP,'open write stream failed',DPResults.message,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');

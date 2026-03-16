@@ -93,7 +93,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
                 const sceneCanBeQCdRes: H.IOResults = await SH.SceneHelpers.sceneCanBeQCd(systemObject.idScene);
                 if (!sceneCanBeQCdRes.success && sceneCanBeQCdRes.error)
-                    RK.logError(RK.LogSection.eGQL,'update source objects failed',`encountered error checking if sceneCanBeQCd: ${sceneCanBeQCdRes.error}`,{  ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
+                    RK.logDebug(RK.LogSection.eGQL,'scene not QC-ready',`sceneCanBeQCd: ${sceneCanBeQCdRes.error}`,{  ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
 
                 fields = {
                     ...fields,

@@ -111,16 +111,20 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
     // grab it and make sure it's a scene
     const scene: DBAPI.Scene | null = await DBAPI.Scene.fetchBySystemObject(idSystemObject);
     if(!scene) {
-        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot find Scene',{ idSystemObject },'HTTP.Route.GenDownloads');
+        // check if this system object is actually supposed to be a scene
+        const so: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if(so?.idScene)
+            RK.logError(RK.LogSection.eHTTP,'get scene op status failed','Scene record missing for scene SystemObject',{ idSystemObject, idScene: so.idScene },'HTTP.Route.GenDownloads');
+        else
+            RK.logDebug(RK.LogSection.eHTTP,'get scene op status','system object is not a scene',{ idSystemObject },'HTTP.Route.GenDownloads');
         return generateResponse(false,`cannot find scene: ${idSystemObject}`,idSystemObject);
     }
 
-    // see if scene is valid
-    // TODO: shouldn't be an error if first run by page but only when responding to user action
+    // see if scene is valid (expected to be false on initial page load before QC)
     const isValid: boolean = (scene.PosedAndQCd)?true:false;
     if(isValid === false) {
-        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','scene is not reviewed',{ ...scene },'HTTP.Route.GenDownloads');
-        return generateResponse(false,'scene has not be QC\'d.',idSystemObject);
+        RK.logDebug(RK.LogSection.eHTTP,'get scene op status','scene is not reviewed',{ ...scene },'HTTP.Route.GenDownloads');
+        return generateResponse(false,'scene has not been QC\'d.',idSystemObject,{ isValid: false, isJobRunning: false });
     }
 
     // get any active jobs

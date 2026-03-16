@@ -78,10 +78,12 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     // if subject is null, then we may be a subject and need to
     let idSubject: number = subject?.[0]?.idSystemObject ?? -1;
-    if(idSubject<0 && systemObject.idSubject)
-        idSubject = systemObject.idSystemObject;
-    else
-        RK.logWarning(RK.LogSection.eGQL,'get system object details warning','no subject found for object',{ systemObject },'GraphQL.SystemObject.Details');
+    if(idSubject<0) {
+        if(systemObject.idSubject)
+            idSubject = systemObject.idSystemObject;
+        else
+            RK.logWarning(RK.LogSection.eGQL,'get system object details warning','no subject found for object',{ systemObject },'GraphQL.SystemObject.Details');
+    }
 
     // gather and build our object properties
     const cleanedProperties: ObjectPropertyResult[] = [];

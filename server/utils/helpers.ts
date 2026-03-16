@@ -137,7 +137,7 @@ export class Helpers {
             if (!stats.isFile && !stats.isDirectory)
                 return { success: false, error: `${name} does not exist` };
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eSYS,'file exists failed',this.getErrorString(error),{ name },'Utils.Helpers');
+            RK.logDebug(RK.LogSection.eSYS,'file exists check',this.getErrorString(error),{ name },'Utils.Helpers');
             return { success: false, error: `${name} does not exist: ${error}` };
         }
         return { success: true };

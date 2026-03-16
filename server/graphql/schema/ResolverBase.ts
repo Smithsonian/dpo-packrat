@@ -27,8 +27,8 @@ export class ResolverBase {
         const seperator: string = (this.buffer) ? '<br/>\n' : '';
         if (!(this?.workflowHelper?.workflowReport)) {
             this.buffer += seperator + content;
-            RK.logError(RK.LogSection.eGQL,'append to WorkflowReport failed','no active WorkflowReport',{ ...this.workflowHelper },'GraphQL.Resolver');
-            return { success: false, error: 'No Active WorkflowReport' };
+            RK.logDebug(RK.LogSection.eGQL,'append to WorkflowReport deferred','no active WorkflowReport yet, buffering content',{ ...this.workflowHelper },'GraphQL.Resolver');
+            return { success: true };
         }
         const ret: H.IOResults = await this.workflowHelper.workflowReport.append(this.buffer + seperator + content);
         this.buffer = '';

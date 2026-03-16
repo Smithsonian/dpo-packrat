@@ -12,7 +12,7 @@ export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitl
     const { item, sourceObjects } = args.input;
     if (item) {
         let itemDB: DBAPI.Item | null = null;
-        if (item.id) {
+        if (item.id && item.id > 0) {
             itemDB = await DBAPI.Item.fetch(item.id);
             if (!itemDB)
                 RK.logError(RK.LogSection.eRPT,'get ingest title failed',`unable to load Item from ${item.id}`,{ args },'GraphQL.Schema.Ingestion');

@@ -43,7 +43,7 @@ export class ReportFactory {
             return new Report(workflowReport);
         }
 
-        RK.logError(RK.LogSection.eRPT,'get report failed','unable to locate active workflow report from LocalStorage',{ idWorkflow, idWorkflowReport },'Report.Factory');
+        RK.logDebug(RK.LogSection.eRPT,'get report skipped','no active workflow in LocalStorage',{ idWorkflow, idWorkflowReport },'Report.Factory');
         return null;
     }
 }

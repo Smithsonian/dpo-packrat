@@ -70,7 +70,7 @@ const getCookResourceStatus = async (address: string, port: number): Promise<Coo
 
         } catch (error: any) {
             const errorMessage = error.message ? error.message : JSON.stringify(error);
-            RK.logError(RK.LogSection.eSYS,'get resource status failed',errorMessage,{ address, attempt, endpoint },'Cook.Resource');
+            RK.logDebug(RK.LogSection.eSYS,'get resource status failed',errorMessage,{ address, attempt, endpoint },'Cook.Resource');
 
             if (attempt === maxRetries || !errorMessage.includes('getaddrinfo EAI_AGAIN'))
                 return { success: false, error: errorMessage, address };
