@@ -302,17 +302,39 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     resource = this.getResource(pathS);
 
                 if (!resource) {
-                    if (!allowMissing) {
+                    // Articles directory under an idSystemObject root: MKCOL
+                    // creates a real Directory resource so Voyager can manage
+                    // articles inside it.  All other property lookups report
+                    // "not found" so that Voyager's exists() returns false and
+                    // its built-in createArticleFolder() fires MKCOL naturally.
+                    if (/^\/idSystemObject-\d+\/articles\/?$/i.test(pathS)) {
+                        if (propertyName === 'create') {
+                            const utcMS: number = (new Date()).getTime();
+                            resource = new FileSystemResource(webdav.ResourceType.Directory, undefined, pathS, utcMS, utcMS);
+                            this.resources.set(pathS, resource);
+
+                            // Register with parent so subsequent PROPFIND includes articles
+                            const rootPath: string = pathS.replace(/\/articles\/?$/i, '');
+                            const rootRes: FileSystemResource | undefined = this.getResource(rootPath);
+                            if (rootRes)
+                                rootRes.addChild('articles');
+                        } else {
+                            RK.logDebug(RK.LogSection.eHTTP,'get property from resource','articles directory not yet created',{ path: pathS, propertyName },'HTTP.Route.WebDAV');
+                            callback(new Error(`${logPrefix} articles directory not found`));
+                            return;
+                        }
+                    } else if (!allowMissing) {
                         const error: string = `${logPrefix} failed to compute resource`;
                         RK.logError(RK.LogSection.eHTTP,'get property from resource failed','cannot compute resource',{},'HTTP.Route.WebDAV');
                         callback(new Error(error));
                         return;
-                    }
-                    RK.logWarning(RK.LogSection.eHTTP,'get property from resource failed',`failed to compute resource, adding: ${pathS}`,{},'HTTP.Route.WebDAV');
+                    } else {
+                        RK.logWarning(RK.LogSection.eHTTP,'get property from resource failed',`failed to compute resource, adding: ${pathS}`,{},'HTTP.Route.WebDAV');
 
-                    const utcMS: number = (new Date()).getTime();
-                    resource = new FileSystemResource(webdav.ResourceType.File, 0, '', utcMS, utcMS);
-                    this.resources.set(pathS, resource);
+                        const utcMS: number = (new Date()).getTime();
+                        resource = new FileSystemResource(webdav.ResourceType.File, 0, '', utcMS, utcMS);
+                        this.resources.set(pathS, resource);
+                    }
                 }
             }
             /*
@@ -675,6 +697,35 @@ class WebDAVFileSystem extends webdav.FileSystem {
     }
 
     async _readDir(pathWD: webdav.Path, _info: webdav.ReadDirInfo, callback: webdav.ReturnCallback<string[] | webdav.Path[]>): Promise<void> {
+        const pathS: string = pathWD.toString();
+
+        // Root-level idSystemObject directories: restrict the listing to the
+        // 'articles' folder only. Voyager Story's media panel builds its asset
+        // tree from the PROPFIND response; returning only 'articles' here
+        // ensures the panel shows article assets exclusively.
+        if (/^\/idSystemObject-\d+\/?$/.test(pathS)) {
+            const filteredCallback: webdav.ReturnCallback<string[] | webdav.Path[]> = (error, children) => {
+                if (error || !children) {
+                    callback(undefined, []);
+                    return;
+                }
+                const articlesOnly = (children as string[]).filter(name => name.toLowerCase() === 'articles');
+                callback(undefined, articlesOnly);
+            };
+            await this.getPropertyFromResource(pathWD, 'readDir', false, filteredCallback);
+            return;
+        }
+
+        // Articles directory: return actual children, or an empty array when
+        // the directory was just created via MKCOL and has no content yet.
+        if (/^\/idSystemObject-\d+\/articles\/?$/i.test(pathS)) {
+            const wrappedCallback: webdav.ReturnCallback<string[] | webdav.Path[]> = (error, children) => {
+                callback(undefined, error || !children ? [] : children);
+            };
+            await this.getPropertyFromResource(pathWD, 'readDir', false, wrappedCallback);
+            return;
+        }
+
         await this.getPropertyFromResource(pathWD, 'readDir', false, callback);
     }
 
