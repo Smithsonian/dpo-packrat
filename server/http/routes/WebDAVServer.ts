@@ -294,6 +294,13 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     this.addParentResources(fileNamePrefixed, utcMS);
                 }
 
+                // If the requested path is a directory (e.g. /articles), it won't match any
+                // fileNamePrefixed above, but addParentResources will have created a Directory
+                // resource for it. Re-check the resource map before falling through to the
+                // "missing resource" handling which would incorrectly overwrite it as a File.
+                if (!resource)
+                    resource = this.getResource(pathS);
+
                 if (!resource) {
                     if (!allowMissing) {
                         const error: string = `${logPrefix} failed to compute resource`;
