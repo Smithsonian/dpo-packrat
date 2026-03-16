@@ -29,6 +29,7 @@ import { getUnit } from './routes/api/object';
 import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
 import { getServiceStatus } from './routes/api/status';
 import { createWebDAVToken } from './routes/api/scene';
+import { sceneByUUID } from './routes/api/sceneByUUID';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -213,6 +214,9 @@ export class HttpServer {
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/:id/webdav-token', createWebDAVToken);
+
+        // External deep-link endpoints
+        this.app.get('/external/scene/:edanUUID', sceneByUUID);
 
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
