@@ -8,10 +8,10 @@ import { Box, Checkbox, Typography, Select, MenuItem, Tooltip } from '@material-
 import { withStyles, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
-import { GetSystemObjectDetailsResult, RepositoryPath, License, ObjectPropertyResult } from '../../../../types/graphql';
+import { GetSystemObjectDetailsResult, RepositoryPath, License, ObjectPropertyResult, Unit } from '../../../../types/graphql';
 import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
 import { withDefaultValueBoolean } from '../../../../utils/shared';
-import { useLicenseStore } from '../../../../store';
+import { useLicenseStore, useDetailTabStore } from '../../../../store';
 import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useDetailsView';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
@@ -19,6 +19,7 @@ import { toast } from 'react-toastify';
 import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 import { ToolTip } from '../../../../components';
 import { HelpOutline } from '@material-ui/icons';
+import { getUnitsList } from '../../../Admin/hooks/useAdminView';
 
 const useStyles = makeStyles(({ palette }) => createStyles({
     detail: {
@@ -142,9 +143,12 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const [loading, setLoading] = useState(false);
+    const [unitList, setUnitList] = useState<Unit[]>([]);
     const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
     const getEntries = useLicenseStore(state => state.getEntries);
+    const [ProjectDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDetails, state.updateDetailField]);
     const classes = useObjectDetailsStyles(props);
+    const isProject = objectType === eSystemObjectType.eProject;
 
     useEffect(() => {
         const licenses = getEntries();
@@ -153,6 +157,19 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         }
         setLicenseList(licenses);
     }, [getEntries]);
+
+    useEffect(() => {
+        if (!isProject) return;
+        const fetchUnits = async () => {
+            const { data } = await getUnitsList();
+            if (data?.getUnitsFromNameSearch.Units && data?.getUnitsFromNameSearch.Units.length) {
+                const fetched = data.getUnitsFromNameSearch.Units.slice();
+                fetched.sort((a, b) => a.Name.localeCompare(b.Name));
+                setUnitList(fetched);
+            }
+        };
+        fetchUnits();
+    }, [isProject]);
 
     let licenseSource: RepositoryPath | null = null;
     if (licenseInheritance && path) {
@@ -227,9 +244,32 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         setLoading(false);
     };
 
+    const onUnitChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+        updateDetailField(eSystemObjectType.eProject, 'idUnit', event.target.value as number);
+    };
+
     return (
         <Box display='flex' flex={2} flexDirection='column'>
-            {unit && (<Detail label='Unit' paths={unit} />)}
+            {isProject ? (
+                <Detail
+                    label='Unit'
+                    valueComponent={
+                        <Select
+                            name='Unit'
+                            className={classes.select}
+                            style={{ width: '16rem' }}
+                            disabled={disabled}
+                            value={ProjectDetails?.idUnit ?? 0}
+                            onChange={onUnitChange}
+                        >
+                            <MenuItem value={0}><em>None</em></MenuItem>
+                            {unitList.map(u => (
+                                <MenuItem key={u.idUnit} value={u.idUnit}>{u.Name}</MenuItem>
+                            ))}
+                        </Select>
+                    }
+                />
+            ) : unit && (<Detail label='Unit' paths={unit} />)}
             {project && (<Detail label='Project' paths={project} />)}
             {subject && (<Detail label='Subject' paths={subject} />)}
             {item && (<Detail label='Media Group' paths={item} />)}

@@ -40,17 +40,21 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
     }
 
     if (resultsCOL && resultsCOL.records) {
-        const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number }> = new Map<string, { idSubject: number, idSystemObject: number }>();
+        const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number, idUnit: number }> = new Map<string, { idSubject: number, idSystemObject: number, idUnit: number }>();
         for (const record of resultsCOL.records) {
             if (resultSet.has(record.identifierPublic))
                 continue;
-            identifierSubjectMap.set(record.identifierPublic, { idSubject: 0, idSystemObject: 0 });
+            identifierSubjectMap.set(record.identifierPublic, { idSubject: 0, idSystemObject: 0, idUnit: 0 });
         }
 
         if (identifierSubjectMap.size > 0)
             if (!await DBAPI.Subject.populateIdentifierSubjectMap(identifierSubjectMap))
                 RK.logError(RK.LogSection.eGQL,'search ingest subjects failed','received failure when calling populateIdentifierSubjectMap',{ identifierSubjectMap, resultsCOL },'GraphQL.Unit.IngestionSubjects');
 
+        // Build abbreviation → idUnit cache for collection records not matched in DB
+        const abbreviationUnitCache: Map<string, number> = new Map<string, number>();
+
+        const totalCOL = resultsCOL.records.length;
         for (const record of resultsCOL.records) {
             if (resultSet.has(record.identifierPublic))
                 continue;
@@ -58,7 +62,27 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
             const identifierInfo = identifierSubjectMap.get(record.identifierPublic);
             const idSubject: number = identifierInfo?.idSubject ?? 0;
             const idSystemObject: number = identifierInfo?.idSystemObject ?? 0;
-            // LOG.info(`searchIngestionSubjects ${JSON.stringify(record)}, subject = ${idSubject}`, LOG.LS.eGQL);
+            let idUnit: number = identifierInfo?.idUnit ?? 0;
+
+            // If no idUnit from DB match, resolve from collection record's unit abbreviation
+            if (idUnit === 0 && record.unit) {
+                if (abbreviationUnitCache.has(record.unit)) {
+                    idUnit = abbreviationUnitCache.get(record.unit) ?? 0;
+                } else {
+                    const units: DBAPI.Unit[] | null = await DBAPI.Unit.fetchFromUnitEdanAbbreviation(record.unit);
+                    const resolvedId = units && units.length > 0 ? units[0].idUnit : 0;
+                    abbreviationUnitCache.set(record.unit, resolvedId);
+                    idUnit = resolvedId;
+                }
+            }
+
+            // Apply unit authorization filter for non-admins
+            if (effectiveUnitSet) {
+                if (idUnit === 0 || !effectiveUnitSet.has(idUnit)) {
+                    resultSet.add(record.identifierPublic);
+                    continue;
+                }
+            }
 
             resultSet.add(record.identifierPublic);
             results.push({
@@ -68,9 +92,12 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
                 UnitAbbreviation: record.unit,
                 IdentifierPublic: record.identifierPublic,
                 IdentifierCollection: record.identifierCollection,
-                idUnit: 0
+                idUnit
             });
         }
+
+        if (effectiveUnitSet)
+            Authorization.logFilteredResults('searchIngestionSubjects(collection)', totalCOL, results.length);
 
         return { SubjectUnitIdentifier: results };
     }

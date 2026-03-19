@@ -57,7 +57,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
     const classes = useStyles();
 
     const { completed, loadCompleted } = useUploadStore();
-    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument);
+    const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument, { fetchPolicy: 'network-only' });
 
     useEffect(() => {
         if (!loading && !error) {

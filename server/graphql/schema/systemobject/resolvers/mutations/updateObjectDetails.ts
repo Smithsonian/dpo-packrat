@@ -124,6 +124,29 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (data.Project) {
                 const { Description } = data.Project;
                 Project.Description = maybe<string>(Description);
+
+                // Handle unit assignment/reassignment
+                if (data.Project.idUnit != null && data.Project.idUnit > 0) {
+                    const newUnit: DBAPI.Unit | null = await DBAPI.Unit.fetch(data.Project.idUnit);
+                    if (!newUnit)
+                        return sendResult(false,'update object details failed',`Unable to fetch Unit with id ${data.Project.idUnit}; update failed`);
+
+                    // Find existing unit xref
+                    const masterXrefs: DBAPI.SystemObjectXref[] | null = await DBAPI.SystemObjectXref.fetchMasters(idSystemObject);
+                    if (masterXrefs) {
+                        for (const xref of masterXrefs) {
+                            const masterSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(xref.idSystemObjectMaster);
+                            if (masterSO?.idUnit && masterSO.idUnit !== data.Project.idUnit) {
+                                if (!await xref.delete())
+                                    return sendResult(false,'update object details failed',`Unable to remove old unit xref for Project ${idObject}; update failed`);
+                            }
+                        }
+                    }
+
+                    // Wire new unit → project
+                    if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(newUnit, Project))
+                        return sendResult(false,'update object details failed',`Unable to wire Unit ${data.Project.idUnit} to Project ${idObject}; update failed`);
+                }
             }
 
             if (!await Project.update())

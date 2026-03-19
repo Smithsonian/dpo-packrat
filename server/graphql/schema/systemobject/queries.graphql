@@ -24,6 +24,7 @@ type UnitDetailFields {
 
 type ProjectDetailFields {
     Description: String
+    idUnit: Int
 }
 
 type SubjectDetailFields {

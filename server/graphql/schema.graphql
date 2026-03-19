@@ -1505,10 +1505,12 @@ type Project {
 
 type ProjectDetailFields {
   Description: String
+  idUnit: Int
 }
 
 input ProjectDetailFieldsInput {
   Description: String
+  idUnit: Int
 }
 
 type ProjectDocumentation {

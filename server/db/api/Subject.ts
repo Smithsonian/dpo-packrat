@@ -194,16 +194,17 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
         }
     }
 
-    /** Populates identifierSubjectMap with { idSubject, idSystemObject }'s for those identifiers in identifierSubjectMap.keys that are mapped to subjects */
-    static async populateIdentifierSubjectMap(identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number }>): Promise<boolean> {
+    /** Populates identifierSubjectMap with { idSubject, idSystemObject, idUnit }'s for those identifiers in identifierSubjectMap.keys that are mapped to subjects */
+    static async populateIdentifierSubjectMap(identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number, idUnit: number }>): Promise<boolean> {
         if (identifierSubjectMap.size === 0)
             return true;
         try {
-            const identifierSubjectInfo: { IdentifierValue: string, idSubject: number, idSystemObject: number }[] | null =
-                await DBC.DBConnection.prisma.$queryRaw<{ IdentifierValue: string, idSubject: number, idSystemObject: number }[]>`
-                SELECT ID.IdentifierValue, SO.idSubject, SO.idSystemObject
+            const identifierSubjectInfo: { IdentifierValue: string, idSubject: number, idSystemObject: number, idUnit: number }[] | null =
+                await DBC.DBConnection.prisma.$queryRaw<{ IdentifierValue: string, idSubject: number, idSystemObject: number, idUnit: number }[]>`
+                SELECT ID.IdentifierValue, SO.idSubject, SO.idSystemObject, S.idUnit
                 FROM Identifier AS ID
                 JOIN SystemObject AS SO ON (ID.idSystemObject = SO.idSystemObject)
+                JOIN Subject AS S ON (SO.idSubject = S.idSubject)
                 WHERE SO.idSubject IS NOT NULL
                   AND ID.IdentifierValue IN (${Prisma.join([...identifierSubjectMap.keys()])})`; /* istanbul ignore next */
 
@@ -212,7 +213,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 return false;
             }
             for (const info of identifierSubjectInfo)
-                identifierSubjectMap.set(info.IdentifierValue, { idSubject: info.idSubject, idSystemObject: info.idSystemObject });
+                identifierSubjectMap.set(info.IdentifierValue, { idSubject: info.idSubject, idSystemObject: info.idSystemObject, idUnit: info.idUnit });
             return true;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'populate identifier subject map failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');

@@ -4,7 +4,7 @@
  * This component renders search list used in SubjectItem component.
  */
 import { useLazyQuery } from '@apollo/client';
-import { Box, TextField } from '@material-ui/core';
+import { Box, TextField, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { IoIosSearch } from 'react-icons/io';
@@ -81,8 +81,17 @@ function SearchList(props: SearchListProps): React.ReactElement {
     };
 
     let content: React.ReactNode = null;
-    if (subjects.length)
+    if (subjects.length) {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
+    } else if (called && !loading && !error) {
+        content = (
+            <Box display='flex' justifyContent='center' py={2}>
+                <Typography variant='body2' style={{ color: '#999', fontStyle: 'italic' }}>
+                    No subjects found matching your search
+                </Typography>
+            </Box>
+        );
+    }
 
     return (
         <FieldType
