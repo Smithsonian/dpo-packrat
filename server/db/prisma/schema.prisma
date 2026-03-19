@@ -752,6 +752,7 @@ model Unit {
   Abbreviation String?       @mariasql.VarChar(20)
   ARKPrefix    String?       @mariasql.VarChar(255)
   Actor        Actor[]
+  Contact      Contact[]
   Subject      Subject[]
   SystemObject SystemObject?
   UnitEdan     UnitEdan[]
@@ -778,7 +779,7 @@ model User {
   DateDisabled                                            DateTime?                         @mariasql.DateTime(0)
   WorkflowNotificationTime                                DateTime?                         @mariasql.Time(0)
   EmailSettings                                           Int?
-  SlackID                                                 String                            @default("") @mariasql.LongText
+  SlackID                                                 String                            @mariasql.VarChar(255)
   AccessPolicy                                            AccessPolicy[]
   AssetVersion                                            AssetVersion[]
   Audit                                                   Audit[]
@@ -949,7 +950,10 @@ model Contact {
   Title          String?          @mariasql.VarChar(255)
   idUnit         Int?
   Department     String?          @mariasql.VarChar(255)
+  Unit           Unit?            @relation(fields: [idUnit], references: [idUnit], onDelete: NoAction, onUpdate: NoAction, map: "fk_contact_unit1")
   ObjectProperty ObjectProperty[]
+
+  @@index([idUnit], map: "Contact_idUnit")
 }
 
 model ObjectProperty {
@@ -962,7 +966,7 @@ model ObjectProperty {
   Contact          Contact?                    @relation(fields: [idContact], references: [idContact], onDelete: NoAction, onUpdate: NoAction, map: "fk_objectproperty_contact1")
   SystemObject     SystemObject                @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_objectproperty_systemobject1")
 
-  @@unique([idSystemObject, PropertyType], map: "ObjectProperty_idSystemObject_Type")
+  @@unique([idSystemObject, PropertyType], map: "ObjectProperty_idSystemObject_PropertyType")
   @@index([idContact], map: "ObjectProperty_idContact")
   @@index([idSystemObject], map: "ObjectProperty_idSystemObject")
 }

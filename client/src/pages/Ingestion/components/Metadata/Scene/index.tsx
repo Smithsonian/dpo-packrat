@@ -14,7 +14,7 @@ import ReferenceModels from './ReferenceModels';
 import NonModelAssets from './NonModelAssets';
 import SceneDataForm from './SceneDataForm';
 import { apolloClient } from '../../../../../graphql/index';
-import { GetSceneForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery, GetIngestTitleDocument, GetIngestTitleQuery } from '../../../../../types/graphql';
+import { GetSceneForAssetVersionDocument, RelatedObjectType, GetSubjectDocument, GetIngestTitleDocument, GetIngestTitleQuery } from '../../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { toast } from 'react-toastify';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
@@ -144,15 +144,19 @@ function Scene(props: SceneProps): React.ReactElement {
         fetchSceneConstellation();
     }, [idAssetVersion, metadataIndex, setInvalidMetadataStep, scene.directory]);
 
-    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
-    const subjectIdSystemObject = useGetSubjectQuery({
-        variables: {
-            input: {
-                idSubject: validSubjectId
-            }
+    const getSubjectIdSystemObjects = async (): Promise<number[]> => {
+        const validSubjects = subjects.filter((subject) => subject.id > 0);
+        const idSystemObjects: number[] = [];
+        for (const subject of validSubjects) {
+            const { data } = await apolloClient.query({
+                query: GetSubjectDocument,
+                variables: { input: { idSubject: subject.id } }
+            });
+            const idSO = data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+            if (idSO) idSystemObjects.push(idSO);
         }
-    });
-    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+        return idSystemObjects;
+    };
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.scene);
@@ -169,13 +173,15 @@ function Scene(props: SceneProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eScene, idSystemObject);
+        const idRoots = await getSubjectIdSystemObjects();
+        await setDefaultIngestionFilters(eSystemObjectType.eScene, idRoots);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eScene, idSystemObject);
+        const idRoots = await getSubjectIdSystemObjects();
+        await setDefaultIngestionFilters(eSystemObjectType.eScene, idRoots);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };

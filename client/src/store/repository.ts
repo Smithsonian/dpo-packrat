@@ -52,7 +52,7 @@ type RepositoryStore = {
     modelFileType: number[];
     dateCreatedFrom: Date | string | null;
     dateCreatedTo: Date | string | null;
-    idRoot: number | null;
+    idRoots: number[] | null;
     repositoryBrowserRootObjectType: string | null;
     repositoryBrowserRootName: string | null;
     getFilterState: () => RepositoryFilter;
@@ -67,8 +67,8 @@ type RepositoryStore = {
     getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter, isModal: boolean) => void;
     setCookieToState: () => void;
-    setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoot: number | undefined) => Promise<void>;
-    getChildrenForIngestion: (idRoot: number) => void;
+    setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoots: number[]) => Promise<void>;
+    getChildrenForIngestion: (idRoots: number[]) => void;
     closeRepositoryBrowser: () => void;
     resetRepositoryBrowserRoot: () => void;
     setLoading: (isLoading: boolean) => void;
@@ -100,7 +100,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     modelFileType: [],
     dateCreatedFrom: null,
     dateCreatedTo: null,
-    idRoot: null,
+    idRoots: null,
     repositoryBrowserRootObjectType: null,
     repositoryBrowserRootName: null,
     updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean): void => {
@@ -120,10 +120,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState, getChildrenForIngestion, idRoot } = get();
+        const { getFilterState, getChildrenForIngestion, idRoots } = get();
         const filter = getFilterState();
-        if (idRoot) {
-            getChildrenForIngestion(idRoot);
+        if (idRoots && idRoots.length > 0) {
+            getChildrenForIngestion(idRoots);
         } else {
             const { data, error } = await getObjectChildrenForRoot(filter);
             if (data && !error) {
@@ -182,7 +182,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         const { tree, getFilterState, cursors } = get();
         const filter = getFilterState();
         const { idSystemObject, hierarchy } = parseRepositoryTreeNodeId(nodeId);
-        const { data, error } = await getObjectChildren(idSystemObject, filter);
+        const { data, error } = await getObjectChildren([idSystemObject], filter);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
@@ -227,7 +227,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ tree: treeCopy });
 
         if (cursorMark) filter.cursorMark = cursorMark;
-        const { data, error } = await getObjectChildren(idSystemObject, filter);
+        const { data, error } = await getObjectChildren([idSystemObject], filter);
         if (data && !error) {
             const { getObjectChildren } = data;
             const { entries, cursorMark } = getObjectChildren;
@@ -359,22 +359,22 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 variantType: validateArray<number>(filter.variantType, variantType),
                 modelPurpose: validateArray<number>(filter.modelPurpose, modelPurpose),
                 modelFileType: validateArray<number>(filter.modelFileType, modelFileType),
-                idRoot: filter.idRoot
+                idRoots: filter.idRoots
                 // dateCreatedFrom: filter.dateCreatedFrom,
                 // dateCreatedTo: filter.dateCreatedTo,
             };
             set(stateValues);
 
-            if (filter.idRoot) {
+            if (filter.idRoots && filter.idRoots.length > 0) {
                 const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
                     query: GetSystemObjectDetailsDocument,
                     variables: {
                         input: {
-                            idSystemObject: filter.idRoot
+                            idSystemObject: filter.idRoots[0]
                         }
                     }
                 });
-                set({ idRoot: filter.idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
+                set({ idRoots: filter.idRoots, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
             }
         }
         if (!isModal) setCookieToState();
@@ -397,7 +397,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null,
-            idRoot: null,
+            idRoots: null,
             repositoryBrowserRootObjectType: null,
             repositoryBrowserRootName: null
         };
@@ -424,7 +424,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType,
             modelPurpose,
             modelFileType,
-            idRoot,
+            idRoots,
             dateCreatedFrom,
             dateCreatedTo
         } = get();
@@ -443,7 +443,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             variantType,
             modelPurpose,
             modelFileType,
-            idRoot,
+            idRoots,
             dateCreatedFrom,
             dateCreatedTo
         };
@@ -464,7 +464,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             dateCreatedFrom,
             dateCreatedTo,
-            idRoot
+            idRoots
         } = getFilterState();
         const currentFilterState = {
             repositoryRootType,
@@ -480,24 +480,25 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             dateCreatedFrom,
             dateCreatedTo,
-            idRoot
+            idRoots
         };
         // 20 years
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};path=/;max-age=630700000`;
     },
-    setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoot: number | undefined): Promise<void> => {
+    setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoots: number[]): Promise<void> => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
-        if (idRoot !== undefined && systemObjectType) {
+        if (idRoots.length > 0 && systemObjectType) {
             const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
                 query: GetSystemObjectDetailsDocument,
                 variables: {
                     input: {
-                        idSystemObject: idRoot
+                        idSystemObject: idRoots[0]
                     }
                 }
             });
             resetRepositoryFilter(false);
-            set({ isExpanded: false, idRoot, repositoryBrowserRootName: name, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
+            const rootName = idRoots.length > 1 ? `${name} (+${idRoots.length - 1} more)` : name;
+            set({ isExpanded: false, idRoots, repositoryBrowserRootName: rootName, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
         }
         resetKeywordSearch();
 
@@ -513,12 +514,12 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             set({ repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });
         }
 
-        getChildrenForIngestion(idRoot || 0);
+        getChildrenForIngestion(idRoots);
     },
-    getChildrenForIngestion: async (idSystemObject: number): Promise<void> => {
+    getChildrenForIngestion: async (idSystemObjects: number[]): Promise<void> => {
         const { getFilterState } = get();
         const filter = getFilterState();
-        const { data, error } = await getObjectChildrenForRoot(filter, idSystemObject);
+        const { data, error } = await getObjectChildrenForRoot(filter, idSystemObjects);
 
         // set root to 0 for testing
         // const { data, error } = await getObjectChildrenForRoot(filter, 0);
@@ -533,10 +534,10 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         }
     },
     closeRepositoryBrowser: (): void => {
-        set({ isExpanded: true, idRoot: null });
+        set({ isExpanded: true, idRoots: null });
     },
     resetRepositoryBrowserRoot: (): void => {
-        set({  idRoot: null, repositoryBrowserRootObjectType: null, repositoryBrowserRootName: null });
+        set({  idRoots: null, repositoryBrowserRootObjectType: null, repositoryBrowserRootName: null });
     },
     setLoading: (isLoading: boolean): void => {
         set({ loading: isLoading });

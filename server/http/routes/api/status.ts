@@ -34,7 +34,7 @@ export async function getServiceStatus(_: Request, response: Response): Promise<
         const nav: INavigation | null = await NavigationFactory.getInstance();
         if (nav) {
             const result = await nav.getObjectChildren({
-                idRoot: 0,
+                idRoots: [],
                 objectTypes: [],
                 metadataColumns: [],
                 search: '',
