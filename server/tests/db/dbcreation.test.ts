@@ -3048,10 +3048,10 @@ describe('DB Fetch By ID Test Suite', () => {
     });
 
     test('DB Fetch Subject: Subject.populateIdentifierSubjectMap', async () => {
-        const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number }> = new Map<string, { idSubject: number, idSystemObject: number }>();
+        const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number, idUnit: number }> = new Map<string, { idSubject: number, idSystemObject: number, idUnit: number }>();
 
         if (identifierSubjectHookup) {
-            identifierSubjectMap.set(identifierSubjectHookup.IdentifierValue, { idSubject: 0, idSystemObject: 0 });
+            identifierSubjectMap.set(identifierSubjectHookup.IdentifierValue, { idSubject: 0, idSystemObject: 0, idUnit: 0 });
             expect(await DBAPI.Subject.populateIdentifierSubjectMap(identifierSubjectMap)).toBeTruthy();
 
             const identifierInfo = identifierSubjectMap.get(identifierSubjectHookup.IdentifierValue);
@@ -8097,7 +8097,7 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
         expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
         expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
-        expect(await DBAPI.Subject.populateIdentifierSubjectMap(new Map<string, { idSubject: number, idSystemObject: number }>())).toBeTruthy();
+        expect(await DBAPI.Subject.populateIdentifierSubjectMap(new Map<string, { idSubject: number, idSystemObject: number, idUnit: number }>())).toBeTruthy();
         expect(await DBAPI.Subject.fetch(0)).toBeNull();
         expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
         expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();

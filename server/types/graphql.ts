@@ -1774,10 +1774,12 @@ export type Project = {
 export type ProjectDetailFields = {
   __typename?: 'ProjectDetailFields';
   Description?: Maybe<Scalars['String']>;
+  idUnit?: Maybe<Scalars['Int']>;
 };
 
 export type ProjectDetailFieldsInput = {
   Description?: InputMaybe<Scalars['String']>;
+  idUnit?: InputMaybe<Scalars['Int']>;
 };
 
 export type ProjectDocumentation = {

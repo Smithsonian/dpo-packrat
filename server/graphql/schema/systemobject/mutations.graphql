@@ -26,6 +26,7 @@ input UnitDetailFieldsInput {
 
 input ProjectDetailFieldsInput {
     Description: String
+    idUnit: Int
 }
 
 input SubjectDetailFieldsInput {
