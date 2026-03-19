@@ -295,6 +295,8 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
 
         if (count === 0 && expected <= 0)
             return { name, status: 'Missing', level: 'fail', notes: 'no datasets found linked to the MediaGroup or source model' };
+        else if(count > 0 && expected <= 0)
+            return { name, status: 'Found', level: 'pass', notes: `${count} datasets found via source model` };
         else if(expected > 0 && count < expected)
             return { name, status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. more linked to MediaGroup than source model` };
         else if(count === expected)
