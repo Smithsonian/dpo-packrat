@@ -415,6 +415,138 @@ INSERT INTO Project (idProject, Name) VALUES (106, 'Pullman Car'); INSERT INTO S
 INSERT INTO Project (idProject, Name) VALUES (107, 'Vz And Hop Migration'); INSERT INTO SystemObject (idProject, Retired) VALUES (107, 0);
 INSERT INTO Project (idProject, Name) VALUES (108, 'Slippers'); INSERT INTO SystemObject (idProject, Retired) VALUES (108, 0);
 INSERT INTO Project (idProject, Name) VALUES (109, 'Molina Gallery'); INSERT INTO SystemObject (idProject, Retired) VALUES (109, 0);
+INSERT INTO Project (idProject, Name) VALUES (110, 'Awesome Tests'); INSERT INTO SystemObject (idProject, Retired) VALUES (110, 0);
+
+-- Unit-Project associations (Unit=master, Project=derived)
+-- Unknown Unit (idUnit=1)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 1  AND SOP.idProject = 42;
+-- Cooper-Hewitt, National Design Museum (idUnit=6)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 6  AND SOP.idProject = 1;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 6  AND SOP.idProject = 2;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 6  AND SOP.idProject = 3;
+-- Freer Gallery of Art and Arthur M. Sackler Gallery (idUnit=7)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 4;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 5;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 6;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 7;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 8;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 9;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 10;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 11;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 12;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 13;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 7  AND SOP.idProject = 14;
+-- Hirshhorn Museum and Sculpture Garden (idUnit=8)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 8  AND SOP.idProject = 15;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 8  AND SOP.idProject = 16;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 8  AND SOP.idProject = 17;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 8  AND SOP.idProject = 18;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 8  AND SOP.idProject = 19;
+-- National Air and Space Museum (idUnit=12)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 20;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 21;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 22;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 23;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 24;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 25;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 12 AND SOP.idProject = 26;
+-- National Museum of African American History and Culture (idUnit=14)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 14 AND SOP.idProject = 27;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 14 AND SOP.idProject = 28;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 14 AND SOP.idProject = 29;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 14 AND SOP.idProject = 30;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 14 AND SOP.idProject = 101;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 14 AND SOP.idProject = 106;
+-- National Museum of African Art (idUnit=15)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 15 AND SOP.idProject = 31;
+-- National Museum of American History (idUnit=16)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 32;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 33;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 34;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 35;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 36;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 37;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 38;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 40;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 41;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 100;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 102;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 16 AND SOP.idProject = 108;
+-- National Museum of the American Latino (idUnit=17)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 17 AND SOP.idProject = 39;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 17 AND SOP.idProject = 109;
+-- National Museum of Natural History (idUnit=18)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 44;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 45;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 46;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 47;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 48;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 49;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 50;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 51;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 52;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 53;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 54;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 55;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 56;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 57;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 58;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 59;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 60;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 61;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 62;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 63;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 64;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 65;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 66;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 67;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 68;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 69;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 70;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 71;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 72;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 73;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 74;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 75;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 76;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 77;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 78;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 79;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 81;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 82;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 83;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 84;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 85;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 86;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 98;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 99;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 104;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 105;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 18 AND SOP.idProject = 107;
+-- National Museum of the American Indian (idUnit=19)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 19 AND SOP.idProject = 43;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 19 AND SOP.idProject = 80;
+-- National Portrait Gallery (idUnit=20)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 20 AND SOP.idProject = 87;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 20 AND SOP.idProject = 88;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 20 AND SOP.idProject = 89;
+-- National Postal Museum (idUnit=21)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 21 AND SOP.idProject = 90;
+-- Office of the Chief Information Officer (idUnit=24)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 24 AND SOP.idProject = 110;
+-- Smithsonian American Art Museum (idUnit=25)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 25 AND SOP.idProject = 91;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 25 AND SOP.idProject = 92;
+-- Smithsonian Astrophysical Observatory (idUnit=27)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 27 AND SOP.idProject = 93;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 27 AND SOP.idProject = 103;
+-- Smithsonian Environmental Research Center (idUnit=29)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 29 AND SOP.idProject = 94;
+-- Smithsonian Gardens (idUnit=30)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 30 AND SOP.idProject = 95;
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 30 AND SOP.idProject = 96;
+-- Smithsonian Libraries (idUnit=32)
+INSERT INTO SystemObjectXref (idSystemObjectMaster, idSystemObjectDerived) SELECT SOU.idSystemObject, SOP.idSystemObject FROM SystemObject SOU JOIN SystemObject SOP WHERE SOU.idUnit = 32 AND SOP.idProject = 97;
 
 -- INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated, SlackID) VALUES ('Jon Tyson', 'tysonj@si.edu', '', 1, NOW(), '');
 INSERT INTO User (Name, EmailAddress, SecurityID, Active, DateActivated, SlackID) VALUES ('Jon Blundell', 'blundellj@si.edu', '', 1, NOW(), '');
