@@ -686,7 +686,7 @@ input GetObjectChildrenInput {
   dateCreatedFrom: DateTime
   dateCreatedTo: DateTime
   has: [Int!]!
-  idRoot: Int!
+  idRoots: [Int!]!
   metadataColumns: [Int!]!
   missing: [Int!]!
   modelFileType: [Int!]!

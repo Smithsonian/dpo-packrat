@@ -762,7 +762,7 @@ export type GetObjectChildrenInput = {
   dateCreatedFrom?: InputMaybe<Scalars['DateTime']>;
   dateCreatedTo?: InputMaybe<Scalars['DateTime']>;
   has: Array<Scalars['Int']>;
-  idRoot: Scalars['Int'];
+  idRoots: Array<Scalars['Int']>;
   metadataColumns: Array<Scalars['Int']>;
   missing: Array<Scalars['Int']>;
   modelFileType: Array<Scalars['Int']>;

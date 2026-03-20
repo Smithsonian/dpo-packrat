@@ -2,7 +2,7 @@ import * as COMMON from '@dpo-packrat/common';
 import { IIndexer } from './IIndexer';
 
 export type NavigationFilter = {
-    idRoot: number;                         // idSystemObject of item for which we should get children; 0 means get everything
+    idRoots: number[];                      // idSystemObject[] of items for which we should get children; empty means get everything
     objectTypes: COMMON.eSystemObjectType[];       // empty array means give all appropriate children types
     metadataColumns: COMMON.eMetadata[];           // empty array means give no metadata
     search: string;                         // search string from the user

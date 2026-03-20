@@ -9,13 +9,13 @@ import { apolloClient } from '../../../graphql';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';
 import { repositoryRowCount } from '@dpo-packrat/common';
 
-function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
+function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObjects: number[] = []): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
         fetchPolicy: 'network-only',
         variables: {
             input: {
-                idRoot: filter?.idRoot ?? idSystemObject,
+                idRoots: filter?.idRoots ?? (idSystemObjects.length > 0 ? idSystemObjects : []),
                 objectTypes: filter.repositoryRootType,
                 metadataColumns: filter.metadataToDisplay,
                 objectsToDisplay: filter.objectsToDisplay,
@@ -37,13 +37,13 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObject = 0):
     });
 }
 
-function getObjectChildren(idRoot: number, filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
+function getObjectChildren(idRoots: number[], filter: RepositoryFilter): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
         fetchPolicy: 'network-only',
         variables: {
             input: {
-                idRoot,
+                idRoots,
                 objectTypes: [],
                 metadataColumns: filter.metadataToDisplay,
                 objectsToDisplay: filter.objectsToDisplay,

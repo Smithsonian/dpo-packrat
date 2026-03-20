@@ -9,7 +9,7 @@ import { Authorization } from '../../auth/Authorization';
 
 export class NavigationDB implements NAV.INavigation {
     async getObjectChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
-        return (filter.idRoot == 0)
+        return (filter.idRoots.length === 0)
             ? await NavigationDB.getRoot(filter)
             : await NavigationDB.getChildren(filter);
     }
@@ -52,11 +52,11 @@ export class NavigationDB implements NAV.INavigation {
 
     private static async getChildren(filter: NAV.NavigationFilter): Promise<NAV.NavigationResult> {
         // LOG.info(`NavigationDB.getChildren(${JSON.stringify(filter)})`, LOG.LS.eNAV);
-        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoot);
+        const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(filter.idRoots[0]);
         if (!oID)
             return { success: false, error: `NavigationDB.getChildren unable to fetch information for filter ${JSON.stringify(filter)}`, entries: [], metadataColumns: filter.metadataColumns };
 
-        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(filter.idRoot, DBAPI.eObjectGraphMode.eDescendents, 1); /* istanbul ignore if */
+        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(filter.idRoots[0], DBAPI.eObjectGraphMode.eDescendents, 1); /* istanbul ignore if */
         if (!await OG.fetch())
             return { success: false, error: `NavigationDB.getChildren unable to fetch descendents for filter ${JSON.stringify(filter)}`, entries: [], metadataColumns: filter.metadataColumns };
 

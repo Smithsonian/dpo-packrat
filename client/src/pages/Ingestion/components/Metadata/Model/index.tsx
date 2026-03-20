@@ -12,7 +12,7 @@ import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
-import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
+import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
 import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
@@ -240,16 +240,20 @@ function Model(props: ModelProps): React.ReactElement {
         }
     }, [metadata.model.modelFileType, metadata.model.units, metadata.model.purpose]);
 
-    // use subject's idSystemObject as the root to initialize the repository browser
-    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
-    const subjectIdSystemObject = useGetSubjectQuery({
-        variables: {
-            input: {
-                idSubject: validSubjectId
-            }
+    // fetch all subject idSystemObjects for the repository browser filter
+    const getSubjectIdSystemObjects = async (): Promise<number[]> => {
+        const validSubjects = subjects.filter((subject) => subject.id > 0);
+        const idSystemObjects: number[] = [];
+        for (const subject of validSubjects) {
+            const { data } = await apolloClient.query({
+                query: GetSubjectDocument,
+                variables: { input: { idSubject: subject.id } }
+            });
+            const idSO = data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+            if (idSO) idSystemObjects.push(idSO);
         }
-    });
-    const idSystemObject: number | undefined = subjects.length > 0 ? subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject : undefined;
+        return idSystemObjects;
+    };
 
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.model);
@@ -321,13 +325,15 @@ function Model(props: ModelProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        const idRoots = await getSubjectIdSystemObjects();
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idRoots);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idSystemObject);
+        const idRoots = await getSubjectIdSystemObjects();
+        await setDefaultIngestionFilters(eSystemObjectType.eModel, idRoots);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };

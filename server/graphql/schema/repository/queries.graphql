@@ -6,7 +6,7 @@ type Query {
 }
 
 input GetObjectChildrenInput {
-    idRoot: Int!
+    idRoots: [Int!]!
     objectTypes: [Int!]!
     objectsToDisplay: [Int!]!
     metadataColumns: [Int!]!

@@ -8,7 +8,7 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
 export default async function getObjectChildren(_: Parent, args: QueryGetObjectChildrenArgs): Promise<GetObjectChildrenResult> {
     const {
-        idRoot,
+        idRoots,
         objectTypes,
         metadataColumns,
         search,
@@ -41,7 +41,7 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
     }
 
     const filter: NavigationFilter = {
-        idRoot,
+        idRoots,
         objectTypes,
         metadataColumns,
         search,
@@ -86,11 +86,11 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         }
 
         // Restrict projects to authorized set (use != to also catch undefined from stale sessions).
-        // At root level (idRoot is 0/null) with no explicit project selection, skip the
+        // At root level (idRoots is empty) with no explicit project selection, skip the
         // default project filter: Unit documents in Solr lack HierarchyProjectID (projects
         // are children of units, not ancestors), so adding that filter excludes every Unit
         // from results.  The unit filter above is sufficient for root-level authorization.
-        // When drilling into a specific object (idRoot > 0), all child documents carry
+        // When drilling into a specific object (idRoots has entries), all child documents carry
         // HierarchyProjectID, so the project filter works correctly.
         if (ctx.effectiveProjectSOIds != null) {
             if (filter.projects?.length) {
@@ -98,7 +98,7 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
                 const authorized = new Set(ctx.effectiveProjectSOIds);
                 filter.projects = filter.projects.filter(p => authorized.has(p));
                 Authorization.logFilteredResults('getObjectChildren.projects', totalProjects, filter.projects.length);
-            } else if (filter.idRoot) {
+            } else if (filter.idRoots.length > 0) {
                 filter.projects = ctx.effectiveProjectSOIds;
             }
         }
