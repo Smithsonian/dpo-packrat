@@ -99,8 +99,8 @@ export class ObjectGraphTestSetup {
 
         this.unit1 = await UTIL.createUnitTest({ Name: 'OA Test unit1', Abbreviation: 'DPO', ARKPrefix: 'http://dpo/', idUnit: 0 });
         this.unit2 = await UTIL.createUnitTest({ Name: 'OA Test unit2', Abbreviation: 'NMNH', ARKPrefix: 'http://nmnh/', idUnit: 0 });
-        this.project1 = await UTIL.createProjectTest({ Name: 'OA Test project1', Description: 'OA Test', idProject: 0 });
-        this.project2 = await UTIL.createProjectTest({ Name: 'OA Test project2', Description: 'OA Test', idProject: 0 });
+        this.project1 = await UTIL.createProjectTest({ Name: 'OA Test project1', Description: 'OA Test', isRestricted: false, idProject: 0 });
+        this.project2 = await UTIL.createProjectTest({ Name: 'OA Test project2', Description: 'OA Test', isRestricted: false, idProject: 0 });
 
         this.assetT1 = await UTIL.createAssetTest({ FileName: 'OA Test assetT1', idAssetGroup: null, idVAssetType: this.v1.idVocabulary, idSystemObject: null, StorageKey: UTIL.randomStorageKey('/'), idAsset: 0 });
         this.assetVersionT1 = await UTIL.createAssetVersionTest({ idAsset: this.assetT1.idAsset, idUserCreator: this.user1.idUser, DateCreated: UTIL.nowCleansed(), StorageHash: 'OA Test', StorageSize: BigInt(500), idAssetVersion: 0, Ingested: true, BulkIngest: false, FileName: 'OA Test assetVersionT1', StorageKeyStaging: '', idSOAttachment: null, FilePath: '/OA Test', Comment: 'OA Test assetVersionT1', Version: 0 });

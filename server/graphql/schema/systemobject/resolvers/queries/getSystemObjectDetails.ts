@@ -13,6 +13,7 @@ import {
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { SceneHelpers } from '../../../../../utils/sceneHelpers';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 type PublishedStateInfo = {
     publishedState: string;
@@ -77,10 +78,12 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
     // if subject is null, then we may be a subject and need to
     let idSubject: number = subject?.[0]?.idSystemObject ?? -1;
-    if(idSubject<0 && systemObject.idSubject)
-        idSubject = systemObject.idSystemObject;
-    else
-        RK.logWarning(RK.LogSection.eGQL,'get system object details warning','no subject found for object',{ systemObject },'GraphQL.SystemObject.Details');
+    if(idSubject<0) {
+        if(systemObject.idSubject)
+            idSubject = systemObject.idSystemObject;
+        else
+            RK.logWarning(RK.LogSection.eGQL,'get system object details warning','no subject found for object',{ systemObject },'GraphQL.SystemObject.Details');
+    }
 
     // gather and build our object properties
     const cleanedProperties: ObjectPropertyResult[] = [];
@@ -104,6 +107,10 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         }
     }
 
+    const ctx = Authorization.getContext();
+    const allowed = ctx ? await Authorization.canAccessSystemObject(ctx, idSystemObject) : false;
+    const allowedReason = allowed ? null : AUTH_ERROR.ACCESS_DENIED;
+
     return {
         idSystemObject,
         idObject: oID.idObject,
@@ -111,7 +118,8 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         subTitle,
         retired: systemObject.Retired,
         objectType: oID.eObjectType,
-        allowed: true, // TODO: True until Access control is implemented (Post MVP)
+        allowed,
+        allowedReason,
         publishedState: publishedStateInfo.publishedState,
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,

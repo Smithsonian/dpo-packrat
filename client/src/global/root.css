@@ -1,5 +1,6 @@
 html {
     scroll-behavior: smooth;
+    --status-banner-height: 0px;
 }
 
 body {

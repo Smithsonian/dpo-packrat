@@ -178,6 +178,13 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: false, message: 'cannot get SystemObject', data: { isValid: false } };
         }
 
+        // check for multiple master models (not yet supported for download generation)
+        const masterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchMasterFromScene(scene.idScene);
+        if(masterModels && masterModels.length > 1) {
+            RK.logError(RK.LogSection.eWF,'generate downloads blocked','download generation is not yet supported for scenes with multiple master models',{ idScene, numModels: masterModels.length },'Workflow.Engine');
+            return { success: false, message: 'download generation is not yet supported for scenes with multiple master models', data: { isValid: false } };
+        }
+
         // get our information about the scene
         const CSIR: ComputeSceneInfoResult | null = await this.computeSceneInfo(scene.idScene,sceneSO.idSystemObject);
         if(!CSIR || !CSIR.idScene || CSIR.exitEarly==true) {

@@ -107,6 +107,31 @@ export class Helpers {
         return !bInvalid;
     }
 
+    /** Normalizes Unicode look-alike characters in filenames to their ASCII equivalents.
+     *  Prevents DB encoding errors when tables use latin1 or limited character sets. */
+    static sanitizeFilename(filename: string): string {
+        return filename
+            // Unicode hyphens/dashes → ASCII hyphen-minus (U+002D)
+            .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\uFE58\uFE63\uFF0D]/g, '-')
+            // Unicode spaces → ASCII space
+            .replace(/[\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, ' ')
+            // Smart quotes → ASCII quotes
+            .replace(/[\u2018\u2019\u201A\uFF07]/g, '\'')
+            .replace(/[\u201C\u201D\u201E\uFF02]/g, '"')
+            // Fullwidth parentheses/brackets → ASCII
+            .replace(/\uFF08/g, '(').replace(/\uFF09/g, ')')
+            .replace(/\uFF3B/g, '[').replace(/\uFF3D/g, ']')
+            // Fullwidth period/comma → ASCII
+            .replace(/\uFF0E/g, '.').replace(/\uFF0C/g, ',')
+            // Fullwidth underscore → ASCII
+            .replace(/\uFF3F/g, '_');
+    }
+
+    /** Returns true if the string contains characters outside the ASCII printable range (0x20-0x7E) */
+    static containsNonAsciiCharacters(value: string): boolean {
+        return /[^\x20-\x7E]/.test(value);
+    }
+
     static async copyFile(nameSource: string, nameDestination: string, allowOverwrite: boolean = true): Promise<IOResults> {
         try {
             await fsp.copyFile(nameSource, nameDestination, allowOverwrite ? 0 : fs.constants.COPYFILE_EXCL);
@@ -137,7 +162,7 @@ export class Helpers {
             if (!stats.isFile && !stats.isDirectory)
                 return { success: false, error: `${name} does not exist` };
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eSYS,'file exists failed',this.getErrorString(error),{ name },'Utils.Helpers');
+            RK.logDebug(RK.LogSection.eSYS,'file exists check',this.getErrorString(error),{ name },'Utils.Helpers');
             return { success: false, error: `${name} does not exist: ${error}` };
         }
         return { success: true };

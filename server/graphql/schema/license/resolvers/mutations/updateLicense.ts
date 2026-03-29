@@ -1,8 +1,13 @@
 import { CreateLicenseResult, MutationUpdateLicenseArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function updateLicense(_: Parent, args: MutationUpdateLicenseArgs): Promise<CreateLicenseResult> {
+    const ctx = Authorization.getContext();
+    if (!ctx || !ctx.isAdmin)
+        throw new Error(AUTH_ERROR.ADMIN_REQUIRED);
+
     const { input } = args;
     const { idLicense, Name, Description, RestrictLevel } = input;
 

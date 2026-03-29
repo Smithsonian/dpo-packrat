@@ -15,7 +15,8 @@ import { withDefaultValueNumber, withDefaultValueBoolean } from '../../../../../
 import AssetContents from './AssetContents';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
-import { RelatedObjectType, useGetSubjectQuery } from '../../../../../types/graphql';
+import { RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
+import { apolloClient } from '../../../../../graphql/index';
 import clsx from 'clsx';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
@@ -139,16 +140,20 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
             updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.photogrammetry);
     }, [metadataIndex, idAsset, updateMetadataField]);
 
-    const validSubjectId = subjects.find((subject) => subject.id > 0)?.id ?? 0;
-    const subjectIdSystemObject = useGetSubjectQuery({
-        variables: {
-            input: {
-                idSubject: validSubjectId
-            }
+    const getSubjectIdSystemObjects = async (): Promise<number[]> => {
+        const validSubjects = subjects.filter((subject) => subject.id > 0);
+        const idSystemObjects: number[] = [];
+        for (const subject of validSubjects) {
+            const { data } = await apolloClient.query({
+                query: GetSubjectDocument,
+                variables: { input: { idSubject: subject.id } }
+            });
+            const idSO = data?.getSubject?.Subject?.SystemObject?.idSystemObject;
+            if (idSO) idSystemObjects.push(idSO);
         }
-    });
+        return idSystemObjects;
+    };
 
-    const idSystemObject: number | undefined = subjectIdSystemObject?.data?.getSubject?.Subject?.SystemObject?.idSystemObject;
     const setField = ({ target }): void => {
         const { name, value } = target;
         updateMetadataField(metadataIndex, name, value, MetadataType.photogrammetry);
@@ -213,13 +218,15 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     };
 
     const openSourceObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eCaptureData, idSystemObject);
+        const idRoots = await getSubjectIdSystemObjects();
+        await setDefaultIngestionFilters(eSystemObjectType.eCaptureData, idRoots);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
 
     const openDerivedObjectModal = async () => {
-        await setDefaultIngestionFilters(eSystemObjectType.eCaptureData, idSystemObject);
+        const idRoots = await getSubjectIdSystemObjects();
+        await setDefaultIngestionFilters(eSystemObjectType.eCaptureData, idRoots);
         await setObjectRelationship(RelatedObjectType.Derived);
         await setModalOpen(true);
     };

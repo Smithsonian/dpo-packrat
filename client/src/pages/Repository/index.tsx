@@ -10,7 +10,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
-import { useLocation, Route, Routes } from 'react-router';
+import { useLocation, useParams, Route, Routes } from 'react-router';
 import { REPOSITORY_ROUTE, resolveRoute } from '../../constants';
 import { useControlStore, useRepositoryStore } from '../../store';
 import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
@@ -34,7 +34,7 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         [breakpoints.down('lg')]: {
             paddingRight: 20
         },
-        height: 'calc(100vh - 80px)',
+        height: 'calc(100vh - 80px - var(--status-banner-height, 0px))',
         overflowY: 'auto'
     }
 }));
@@ -56,14 +56,19 @@ export type RepositoryFilter = {
     dateCreatedFrom?: Date | string | null;
     dateCreatedTo?: Date | string | null;
     cursorMark?: string | null;
-    idRoot?: number | null;
+    idRoots?: number[] | null;
 };
+
+function DetailsViewKeyed(): React.ReactElement {
+    const { idSystemObject } = useParams();
+    return <DetailsView key={idSystemObject} />;
+}
 
 function Repository(): React.ReactElement {
 
     return (
         <Routes>
-            <Route path='details/:idSystemObject' element={<DetailsView />} />
+            <Route path='details/:idSystemObject' element={<DetailsViewKeyed />} />
             <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VOYAGER)} element={<VoyagerStoryView />} />
             <Route path={resolveRoute(REPOSITORY_ROUTE.ROUTES.VIEW)} element={<TreeViewPage />} />
         </Routes>
@@ -90,7 +95,7 @@ function TreeViewPage(): React.ReactElement {
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
-        idRoot,
+        idRoots,
         updateRepositoryFilter
     } = useRepositoryStore();
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
@@ -112,7 +117,7 @@ function TreeViewPage(): React.ReactElement {
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null,
-            idRoot: null
+            idRoots: null
         })};path=/`;
     };
 
@@ -155,7 +160,7 @@ function TreeViewPage(): React.ReactElement {
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
-        idRoot
+        idRoots
     };
     const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
     if (route !== location.search) {

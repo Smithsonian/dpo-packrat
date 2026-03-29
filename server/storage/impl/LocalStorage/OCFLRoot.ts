@@ -51,6 +51,7 @@ export class OCFLRoot {
 
         if (!fileName || !H.Helpers.validFilename(fileName))
             fileName = H.Helpers.randomSlug();
+        fileName = H.Helpers.sanitizeFilename(fileName);
         const directoryName: string = H.Helpers.randomSlug();
         const directoryPath: string = path.join(this.computeLocationStagingRoot(), directoryName);
         results.ioResults = await H.Helpers.createDirectory(directoryPath);

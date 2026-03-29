@@ -655,10 +655,14 @@ export class VocabularyCache {
 
         // early out if known type (image, mtl, etc)
         const nonModelTypes: string[] = [
-            // images
+            // images (processed)
             '.jpg','.jpeg','.png',
             '.tif','.tiff',
             '.tga','.bmp',
+
+            // images (raw capture)
+            '.cr2','.cr3','.nef','.arw',
+            '.dng','.raf','.rw2','.orf',
 
             // model support files
             '.mtl',
@@ -690,7 +694,7 @@ export class VocabularyCache {
             case '.pts':  return COMMON.eVocabularyID.eModelFileTypepts;
 
             default: {
-                RK.logError(RK.LogSection.eCACHE,'map model extension failed','unsupported model file extension',{ extension },'Cache.Vocabulary');
+                RK.logDebug(RK.LogSection.eCACHE,'map model extension failed','unsupported model file extension',{ extension },'Cache.Vocabulary');
                 return undefined;
             }
         }

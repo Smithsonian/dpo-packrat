@@ -468,6 +468,7 @@ export type DeleteIdentifierInput = {
 
 export type DeleteIdentifierResult = {
   __typename?: 'DeleteIdentifierResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -477,6 +478,7 @@ export type DeleteMetadataInput = {
 
 export type DeleteMetadataResult = {
   __typename?: 'DeleteMetadataResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -760,7 +762,7 @@ export type GetObjectChildrenInput = {
   dateCreatedFrom?: InputMaybe<Scalars['DateTime']>;
   dateCreatedTo?: InputMaybe<Scalars['DateTime']>;
   has: Array<Scalars['Int']>;
-  idRoot: Scalars['Int'];
+  idRoots: Array<Scalars['Int']>;
   metadataColumns: Array<Scalars['Int']>;
   missing: Array<Scalars['Int']>;
   modelFileType: Array<Scalars['Int']>;
@@ -894,6 +896,7 @@ export type GetSystemObjectDetailsInput = {
 export type GetSystemObjectDetailsResult = {
   __typename?: 'GetSystemObjectDetailsResult';
   allowed: Scalars['Boolean'];
+  allowedReason?: Maybe<Scalars['String']>;
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;
@@ -1771,10 +1774,12 @@ export type Project = {
 export type ProjectDetailFields = {
   __typename?: 'ProjectDetailFields';
   Description?: Maybe<Scalars['String']>;
+  idUnit?: Maybe<Scalars['Int']>;
 };
 
 export type ProjectDetailFieldsInput = {
   Description?: InputMaybe<Scalars['String']>;
+  idUnit?: InputMaybe<Scalars['Int']>;
 };
 
 export type ProjectDocumentation = {

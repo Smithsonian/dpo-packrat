@@ -187,7 +187,7 @@ function AddProjectForm(): React.ReactElement {
                         Description: description
                     }
                 },
-                refetchQueries: ['getProjectList']
+                refetchQueries: ['getProjectList', 'getFilterViewData']
             });
             if (data?.createProject) {
                 toast.success('Project created successfully');

@@ -12,6 +12,7 @@ import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
 import { WebDAVTokenStore } from './WebDAVToken';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { Authorization } from '../../auth/Authorization';
 import { Readable, Writable } from 'stream';
 
 import { v2 as webdav } from 'webdav-server';
@@ -293,18 +294,47 @@ class WebDAVFileSystem extends webdav.FileSystem {
                     this.addParentResources(fileNamePrefixed, utcMS);
                 }
 
+                // If the requested path is a directory (e.g. /articles), it won't match any
+                // fileNamePrefixed above, but addParentResources will have created a Directory
+                // resource for it. Re-check the resource map before falling through to the
+                // "missing resource" handling which would incorrectly overwrite it as a File.
+                if (!resource)
+                    resource = this.getResource(pathS);
+
                 if (!resource) {
-                    if (!allowMissing) {
+                    // Articles directory under an idSystemObject root: MKCOL
+                    // creates a real Directory resource so Voyager can manage
+                    // articles inside it.  All other property lookups report
+                    // "not found" so that Voyager's exists() returns false and
+                    // its built-in createArticleFolder() fires MKCOL naturally.
+                    if (/^\/idSystemObject-\d+\/articles\/?$/i.test(pathS)) {
+                        if (propertyName === 'create') {
+                            const utcMS: number = (new Date()).getTime();
+                            resource = new FileSystemResource(webdav.ResourceType.Directory, undefined, pathS, utcMS, utcMS);
+                            this.resources.set(pathS, resource);
+
+                            // Register with parent so subsequent PROPFIND includes articles
+                            const rootPath: string = pathS.replace(/\/articles\/?$/i, '');
+                            const rootRes: FileSystemResource | undefined = this.getResource(rootPath);
+                            if (rootRes)
+                                rootRes.addChild('articles');
+                        } else {
+                            RK.logDebug(RK.LogSection.eHTTP,'get property from resource','articles directory not yet created',{ path: pathS, propertyName },'HTTP.Route.WebDAV');
+                            callback(new Error(`${logPrefix} articles directory not found`));
+                            return;
+                        }
+                    } else if (!allowMissing) {
                         const error: string = `${logPrefix} failed to compute resource`;
                         RK.logError(RK.LogSection.eHTTP,'get property from resource failed','cannot compute resource',{},'HTTP.Route.WebDAV');
                         callback(new Error(error));
                         return;
-                    }
-                    RK.logWarning(RK.LogSection.eHTTP,'get property from resource failed',`failed to compute resource, adding: ${pathS}`,{},'HTTP.Route.WebDAV');
+                    } else {
+                        RK.logWarning(RK.LogSection.eHTTP,'get property from resource failed',`failed to compute resource, adding: ${pathS}`,{},'HTTP.Route.WebDAV');
 
-                    const utcMS: number = (new Date()).getTime();
-                    resource = new FileSystemResource(webdav.ResourceType.File, 0, '', utcMS, utcMS);
-                    this.resources.set(pathS, resource);
+                        const utcMS: number = (new Date()).getTime();
+                        resource = new FileSystemResource(webdav.ResourceType.File, 0, '', utcMS, utcMS);
+                        this.resources.set(pathS, resource);
+                    }
                 }
             }
             /*
@@ -395,6 +425,16 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 return;
             }
 
+            // Authorization: check access to the target SystemObject
+            const ctx = Authorization.getContext();
+            if (ctx) {
+                const idSO: number | null = DP.idSystemObjectV ?? (DPResults.assetVersion ? (await DBAPI.Asset.fetch(DPResults.assetVersion.idAsset))?.idSystemObject ?? null : null);
+                if (idSO && !await Authorization.canAccessSystemObject(ctx, idSO)) {
+                    callback(new Error(`WebDAVFileSystem._openReadStream(${pathS}) access denied`));
+                    return;
+                }
+            }
+
             // Audit download
             const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
             const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
@@ -471,13 +511,22 @@ class WebDAVFileSystem extends webdav.FileSystem {
 
             const pathS: string = pathWD.toString();
             const DP: DownloaderParser = new DownloaderParser('', pathS);
-            const DPResults: DownloaderParserResults = await DP.parseArguments();
+            const DPResults: DownloaderParserResults = await DP.parseArguments(true);
             if (!DPResults.success && !DP.idSystemObjectV) {
                 const error: string = `WebDAVFileSystem._openWriteStream(${pathS}) failed: ${DPResults.statusCode}${DPResults.message ? ' (' + DPResults.message + ')' : ''}`;
                 RK.logError(RK.LogSection.eHTTP,'open write stream failed',DPResults.message,{ pathSource: pathS, pathWebDAV: pathWD },'HTTP.Route.WebDAV');
                 callback(new Error(error));
                 // await this.removeLock(pathWD, info.context, lockUUID);
                 return;
+            }
+
+            // Authorization: check access to the target SystemObject
+            const ctx = Authorization.getContext();
+            if (ctx && DP.idSystemObjectV) {
+                if (!await Authorization.canAccessSystemObject(ctx, DP.idSystemObjectV)) {
+                    callback(new Error(`WebDAVFileSystem._openWriteStream(${pathS}) access denied`));
+                    return;
+                }
             }
 
             // Audit upload
@@ -648,6 +697,35 @@ class WebDAVFileSystem extends webdav.FileSystem {
     }
 
     async _readDir(pathWD: webdav.Path, _info: webdav.ReadDirInfo, callback: webdav.ReturnCallback<string[] | webdav.Path[]>): Promise<void> {
+        const pathS: string = pathWD.toString();
+
+        // Root-level idSystemObject directories: restrict the listing to the
+        // 'articles' folder only. Voyager Story's media panel builds its asset
+        // tree from the PROPFIND response; returning only 'articles' here
+        // ensures the panel shows article assets exclusively.
+        if (/^\/idSystemObject-\d+\/?$/.test(pathS)) {
+            const filteredCallback: webdav.ReturnCallback<string[] | webdav.Path[]> = (error, children) => {
+                if (error || !children) {
+                    callback(undefined, []);
+                    return;
+                }
+                const articlesOnly = (children as string[]).filter(name => name.toLowerCase() === 'articles');
+                callback(undefined, articlesOnly);
+            };
+            await this.getPropertyFromResource(pathWD, 'readDir', false, filteredCallback);
+            return;
+        }
+
+        // Articles directory: return actual children, or an empty array when
+        // the directory was just created via MKCOL and has no content yet.
+        if (/^\/idSystemObject-\d+\/articles\/?$/i.test(pathS)) {
+            const wrappedCallback: webdav.ReturnCallback<string[] | webdav.Path[]> = (error, children) => {
+                callback(undefined, error || !children ? [] : children);
+            };
+            await this.getPropertyFromResource(pathWD, 'readDir', false, wrappedCallback);
+            return;
+        }
+
         await this.getPropertyFromResource(pathWD, 'readDir', false, callback);
     }
 

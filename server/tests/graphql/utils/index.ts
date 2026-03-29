@@ -7,6 +7,9 @@ import GraphQLApi from '../../../graphql';
 
 import * as DBC from '../../../db/connection';
 // import * as H from '../../../utils/helpers';
+import { ASL, LocalStore } from '../../../utils/localStore';
+import { Authorization } from '../../../auth/Authorization';
+import type { AuthorizationContext } from '../../../auth/Authorization';
 import {
     CreateUserInput,
     CreateVocabularySetInput,
@@ -25,18 +28,49 @@ import * as COMMON from '@dpo-packrat/common';
 
 class TestSuiteUtils {
     graphQLApi!: GraphQLApi;
+    private adminContext!: AuthorizationContext;
+    private adminLS!: LocalStore;
 
     setupJest = (): void => {
         global.beforeAll(this.beforeAll);
+        global.beforeEach(this.beforeEach);
         global.afterAll(this.afterAll);
     };
 
     private beforeAll = (): void => {
         this.graphQLApi = new GraphQLApi(true); // true -> use special flavor of GraphQL resolvers, which avoid explicit use of graphql-upload's GraphQLUpload resolver for "Upload" scalar; instead, use default Apollo resolver
+
+        // Set up a LocalStore with admin auth context so mutation guards pass in tests.
+        // Tests run outside HTTP middleware, so Authorization.getContext() would return null
+        // without this, causing all fail-closed mutation guards to deny access.
+        this.adminContext = {
+            idUser: 1,
+            isAdmin: true,
+            authorizedUnitIds: [],
+            authorizedProjectIds: [],
+            effectiveProjectIds: null,
+            effectiveProjectSOIds: null,
+            effectiveUnitIds: [],
+            effectiveUnitSOIds: null,
+            authorizedUnitSOIds: null,
+        };
+        this.adminLS = new LocalStore(true, 1);
+        this.adminLS.authContext = this.adminContext;
+        ASL.enterWith(this.adminLS);
+
+        // Mock Authorization.getContext() directly since ASL.enterWith()
+        // does not propagate reliably across Jest's async execution contexts.
+        jest.spyOn(Authorization, 'getContext').mockReturnValue(this.adminContext);
+    };
+
+    // Re-apply admin context before each test to ensure ASL propagation
+    // across Jest's async execution boundaries.
+    private beforeEach = (): void => {
+        ASL.enterWith(this.adminLS);
     };
 
     private afterAll = async (done: () => void): Promise<void> => {
-        // await H.Helpers.sleep(5000);
+        jest.restoreAllMocks();
         await DBC.DBConnection.disconnect();
         done();
     };

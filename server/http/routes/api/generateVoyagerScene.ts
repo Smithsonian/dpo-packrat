@@ -7,6 +7,7 @@ import { ASL, LocalStore } from '../../../utils/localStore';
 import { eEventKey } from '../../../event/interface/EventEnums';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { isAuthenticated } from '../../auth';
+import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 
 import { Request, Response } from 'express';
 import { WorkflowFactory, IWorkflowEngine, WorkflowCreateResult, WorkflowParameters } from '../../../workflow/interface';
@@ -102,9 +103,13 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
 
         // get our master model
         const models: DBAPI.Model[] | null = await DBAPI.Model.fetchMasterFromScene(scene.idScene);
-        if(!models || models.length>1) {
-            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','cannot get scene master model',{ idSystemObject, numModels: models?.length ?? -1 },'HTTP.Route.GenVoyagerScene');
-            return generateResponse(false,`cannot get scene's master model: ${idSystemObject}`,idSystemObject);
+        if(!models || models.length === 0) {
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','no master model found for scene',{ idSystemObject },'HTTP.Route.GenVoyagerScene');
+            return generateResponse(false,'no master model found for scene',idSystemObject);
+        }
+        if(models.length > 1) {
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op blocked','scene generation is not yet supported for scenes with multiple master models',{ idSystemObject, numModels: models.length },'HTTP.Route.GenVoyagerScene');
+            return generateResponse(false,'scene generation is not yet supported for scenes with multiple master models',idSystemObject);
         }
         model = models[0];
     }
@@ -154,10 +159,15 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
 };
 const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResponse> => {
 
-    // grab it and make sure it's a scene
+    // grab it and make sure it's a model
     const model: DBAPI.Model | null = await DBAPI.Model.fetchBySystemObject(idSystemObject);
     if(!model) {
-        RK.logError(RK.LogSection.eHTTP,'get scene op status failed',`cannot find required model:${idSystemObject}`,{},'HTTP.Route.GenVoyagerScene');
+        // check if this system object is actually supposed to be a model
+        const so: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if(so?.idModel)
+            RK.logError(RK.LogSection.eHTTP,'get scene op status failed','Model record missing for model SystemObject',{ idSystemObject, idModel: so.idModel },'HTTP.Route.GenVoyagerScene');
+        else
+            RK.logDebug(RK.LogSection.eHTTP,'get scene op status','system object is not a model',{ idSystemObject },'HTTP.Route.GenVoyagerScene');
         return generateResponse(false,`cannot find required model: ${idSystemObject}`,idSystemObject);
     }
 
@@ -261,6 +271,23 @@ export async function generateScene(req: Request, res: Response): Promise<void> 
         RK.logError(RK.LogSection.eHTTP,'generate scene failed','no IDs found in request',{},'HTTP.Route.GenVoyagerScene');
         res.status(200).send(JSON.stringify(generateResponse(false,'invalid id parameters/body. none found.')));
         return;
+    }
+
+    // Authorization: filter out SystemObjects the user cannot access
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin) {
+        const totalCount = idSystemObjects.length;
+        const authorized: number[] = [];
+        for (const idSO of idSystemObjects) {
+            if (await Authorization.canAccessSystemObject(ctx, idSO))
+                authorized.push(idSO);
+        }
+        idSystemObjects = authorized;
+        Authorization.logFilteredResults('generateVoyagerScene', totalCount, idSystemObjects.length);
+        if (idSystemObjects.length === 0) {
+            res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
+            return;
+        }
     }
 
     // TEMP: limit IDs to a number that can be handled by Cook/Packrat

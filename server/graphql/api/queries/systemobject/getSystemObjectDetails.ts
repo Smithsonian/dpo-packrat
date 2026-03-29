@@ -10,6 +10,7 @@ const getSystemObjectDetails = gql`
             retired
             objectType
             allowed
+            allowedReason
             publishedState
             publishedEnum
             publishable

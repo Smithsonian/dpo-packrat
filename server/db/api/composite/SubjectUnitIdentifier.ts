@@ -13,6 +13,7 @@ export class SubjectUnitIdentifier {
     UnitAbbreviation!: string;
     IdentifierPublic!: string;
     IdentifierCollection!: string;
+    idUnit!: number;
 
     static initialized: boolean = false;
     static idVocabARK: number;
@@ -68,8 +69,8 @@ export class SubjectUnitIdentifier {
                 JOIN _IDMatches AS IDM ON (ID.idSystemObject = IDM.idSystemObject)
                 WHERE idVIdentifierType = ${SubjectUnitIdentifier.idVocabEdanRecordID}
             )
-            SELECT DISTINCT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation', 
-                IDA.IdentifierValue AS 'IdentifierPublic', IDU.IdentifierValue AS 'IdentifierCollection'
+            SELECT DISTINCT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation',
+                IDA.IdentifierValue AS 'IdentifierPublic', IDU.IdentifierValue AS 'IdentifierCollection', S.idUnit
             FROM Subject AS S
             JOIN Unit AS U ON (S.idUnit = U.idUnit)
             JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
@@ -133,7 +134,7 @@ export class SubjectUnitIdentifier {
             queryRawParams.push(`${rowCount}`);
 
             const sql: string = `SELECT S.idSubject, SO.idSystemObject, S.Name AS 'SubjectName', U.Abbreviation AS 'UnitAbbreviation',
-                    ID.IdentifierValue AS 'IdentifierPublic', '' AS 'IdentifierCollection'
+                    ID.IdentifierValue AS 'IdentifierPublic', '' AS 'IdentifierCollection', S.idUnit
                 FROM Subject AS S
                 JOIN SystemObject AS SO ON (S.idSubject = SO.idSubject)
                 LEFT JOIN Identifier AS ID ON (S.idIdentifierPreferred = ID.idIdentifier)

@@ -14,6 +14,7 @@ import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eEventKey } from '../../../../../event/interface/EventEnums';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 interface StreamOptions {
     highWaterMark?: number;  // the buffer size and should range between 64kb and 1024kb depending on disk & network I/O.
@@ -26,6 +27,13 @@ interface ApolloFile {
 }
 
 export default async function uploadAsset(_: Parent, args: MutationUploadAssetArgs, context: Context): Promise<UploadAssetResult> {
+    // Authorization: check access to the attachment target SystemObject (fail-closed)
+    const ctx = Authorization.getContext();
+    if (args.idSOAttachment) {
+        if (!ctx || !await Authorization.canAccessSystemObject(ctx, args.idSOAttachment))
+            return { status: UploadStatus.Failed, error: AUTH_ERROR.ACCESS_DENIED };
+    }
+
     const profileKey: string = 'upload: '+H.Helpers.randomSlug();
     RK.logInfo(RK.LogSection.eGQL,'upload asset request',undefined,args,'GraphQL.Upload.Asset',true);
     RK.profile(profileKey,RK.LogSection.eGQL,'upload asset',{},'GraphQL.Upload.Asset');
@@ -98,7 +106,10 @@ class UploadAssetWorker extends ResolverBase {
         // creates a WorkflowReport for the upload request allowing for asynchronous handling
         RK.logDebug(RK.LogSection.eGQL,'upload worker started',undefined,{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
 
-        const { filename, createReadStream } = this.apolloFile;
+        const { filename: rawFilename, createReadStream } = this.apolloFile;
+        const filename = H.Helpers.sanitizeFilename(rawFilename);
+        if (filename !== rawFilename)
+            RK.logWarning(RK.LogSection.eGQL,'filename sanitized','Unicode characters replaced with ASCII equivalents',{ original: rawFilename, sanitized: filename },'GraphQL.Upload.AssetWorker');
         const url: string = `/ingestion/uploads/${filename}`;
         const auditResult: boolean = await AuditFactory.audit({ url, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
         if(auditResult===false) {

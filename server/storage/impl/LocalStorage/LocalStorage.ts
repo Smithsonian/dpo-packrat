@@ -218,7 +218,7 @@ export class LocalStorage implements STORE.IStorage {
     async removeStagedFolder(fileDir: string, storageKey: string, maxTries: number): Promise<H.IOResults> {
         let resDirRemove: H.IOResults = { success: true };
         for (let tryCount: number = 1; tryCount <= maxTries; tryCount++) {
-            resDirRemove = await H.Helpers.removeDirectory(fileDir, false, false);
+            resDirRemove = await H.Helpers.removeDirectory(fileDir, true, false);
             if (resDirRemove.success) {
                 RK.logDebug(RK.LogSection.eSTR,'staged folder remove success',undefined,{ fileDir, storageKey, tryCount, maxTries },'LocalStorage');
                 return resDirRemove;

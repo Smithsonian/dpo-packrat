@@ -20,6 +20,7 @@ enum eArkIDIdentifier {
 
 interface SolrQueryResult {
     result: any;
+    nextCursorMark: string | undefined;
     error: any;
 }
 
@@ -56,7 +57,7 @@ export class NavigationSolr implements NAV.INavigation {
         SQ = SQ.matchFilter('CommonRetired', 0);
 
         // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
-        if (filter.search && !filter.idRoot) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
+        if (filter.search && filter.idRoots.length === 0) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
             switch (this.testSearchStringForArkID(filter.search)) {
                 case eArkIDIdentifier.eNone:                                // Not an ARK ID
                     SQ = SQ.q(filter.search.replace(/:/g, '\\:'));          // search text, escaping :
@@ -71,20 +72,20 @@ export class NavigationSolr implements NAV.INavigation {
                     SQ = SQ.qf({ CommonIdentifier: 5 });                    // match only common identifiers
                     break;
             }
-            SQ = SQ.sort({ CommonOTNumber: 'asc', score: 'desc' }); // sort by the object type enumeration, then by Solr score pseudofield
+            SQ = SQ.sort({ CommonOTNumber: 'asc', score: 'desc', id: 'asc' }); // sort by the object type enumeration, then by Solr score pseudofield, then by id for cursor pagination
         } else {
             SQ = SQ.q('*:*');
             SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', id: 'asc' }); // sort by the object type enumeration, then by name, then by id (idSystemObject)
-            SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
         }
+        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
 
-        // idRoot: number;                          // idSystemObject of item for which we should get children; 0 means get everything
-        if (filter.idRoot) {                        // objectsToDisplay: COMMON.eSystemObjectType[];  // objects to display
+        // idRoots: number[];                      // idSystemObject[] of items for which we should get children; empty means get everything
+        if (filter.idRoots.length > 0) {          // objectsToDisplay: COMMON.eSystemObjectType[];  // objects to display
             // if we have no explicit object types to display, show the children
             if (!filter.objectsToDisplay || filter.objectsToDisplay.length == 0)
-                SQ = SQ.matchFilter('HierarchyParentID', filter.idRoot);
-            else {  // if we have explicit object types to display, show all objects of the type specified that have idRoot as an ancestor
-                SQ = SQ.matchFilter('HierarchyAncestorID', filter.idRoot);
+                SQ = this.computeFilterParamFromNumbers(SQ, filter.idRoots, 'HierarchyParentID', '||');
+            else {  // if we have explicit object types to display, show all objects of the type specified that have any idRoot as an ancestor
+                SQ = this.computeFilterParamFromNumbers(SQ, filter.idRoots, 'HierarchyAncestorID', '||');
                 SQ = await this.computeFilterParamFromSystemObjectType(SQ, filter.objectsToDisplay, 'CommonObjectType', '||');
             }
         } else {
@@ -272,12 +273,12 @@ export class NavigationSolr implements NAV.INavigation {
             entries.push(entry);
         }
 
-        let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
+        let cursorMark: string | null = queryResult.nextCursorMark ?? null;
         if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
             cursorMark = null;
 
         // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
-        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.result.nextCursorMark },'Navigation.Solr');
+        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.nextCursorMark },'Navigation.Solr');
         return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
@@ -451,13 +452,13 @@ export class NavigationSolr implements NAV.INavigation {
             entries.push(entry);
         }
 
-        let cursorMark: string | null = queryResult.result.nextCursorMark ? queryResult.result.nextCursorMark : null;
+        let cursorMark: string | null = queryResult.nextCursorMark ?? null;
         if (cursorMark == filter.cursorMark)    // solr returns the same cursorMark as the initial query when there are no more results; if so, clear out cursorMark
             cursorMark = null;
 
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         // LOG.info(`NavigationSolr.executeSolrMetaQuery: ${JSON.stringify(entries)}`, LOG.LS.eNAV);
-        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.result.nextCursorMark },'Navigation.Solr');
+        RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.nextCursorMark },'Navigation.Solr');
         return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
     }
 
@@ -474,10 +475,11 @@ export class NavigationSolr implements NAV.INavigation {
     private async executeSolrQueryWorker(solrClient: SolrClient, SQ: solr.Query): Promise<SolrQueryResult> {
         try {
             const SR = await solrClient._client.search(SQ);
-            return { result: SR.response, error: null };
+            return { result: SR.response, nextCursorMark: SR.nextCursorMark, error: null };
         } catch (err) {
-            RK.logError(RK.LogSection.eNAV,'execute solr worker failed',H.Helpers.getErrorString(err),H.Helpers.removeEmptyFields(solr.Query),'Navigation.Solr');
-            return { result: null, error: (err instanceof Error) ? err.toString() : 'Unexpected error' };
+            const errStack = err instanceof Error ? err.stack : String(err);
+            RK.logError(RK.LogSection.eNAV,'execute solr worker failed',`${errStack}`,{},'Navigation.Solr');
+            return { result: null, nextCursorMark: undefined, error: (err instanceof Error) ? err.toString() : 'Unexpected error' };
         }
     }
 

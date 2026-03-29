@@ -27,7 +27,7 @@ const useStyles = makeStyles(({ palette }) => ({
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px)'
+        maxHeight: 'calc(100vh - 60px - var(--status-banner-height, 0px))'
     },
     content: {
         display: 'flex',

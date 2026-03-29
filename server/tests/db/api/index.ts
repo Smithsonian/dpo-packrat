@@ -18,6 +18,7 @@ export * from './SystemObjectXref.util';
 export * from './Unit.util';
 export * from './UnitEdan.util';
 export * from './User.util';
+export * from './UserAuthorization.util';
 export * from './Workflow.util';
 export * from './WorkflowReport.util';
 export * from './WorkflowSet.util';

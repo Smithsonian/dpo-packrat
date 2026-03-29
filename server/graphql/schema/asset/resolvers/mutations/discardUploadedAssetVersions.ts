@@ -4,12 +4,17 @@ import * as DBAPI from '../../../../../db';
 import * as STORE from '../../../../../storage/interface';
 // import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization } from '../../../../../auth/Authorization';
 
 export default async function discardUploadedAssetVersions(
     _: Parent,
     args: MutationDiscardUploadedAssetVersionsArgs,
     _context: Context
 ): Promise<DiscardUploadedAssetVersionsResult | void> {
+    const ctx = Authorization.getContext();
+    if (!ctx || (!ctx.isAdmin && ctx.authorizedUnitIds.length === 0))
+        return { success: false };
+
     const { idAssetVersions } = args.input;
 
     let success: boolean = true;

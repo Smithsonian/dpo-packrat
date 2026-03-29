@@ -29,7 +29,7 @@ describe('Navigation Init', () => {
 });
 
 const mockFilter: NavigationFilter = {
-    idRoot: 0,
+    idRoots: [],
     objectTypes: [],
     metadataColumns: [],
     objectsToDisplay: [],
@@ -52,43 +52,43 @@ describe('Navigation Traversal', () => {
     test('Navigation Root', async () => {
         jest.setTimeout(60000);
 
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eUnit], metadataColumns });
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eProject], metadataColumns });
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eUnit], metadataColumns });
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eProject], metadataColumns });
 
         // Not yet implemented:
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eSubject], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eItem], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eCaptureData], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eModel], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eScene], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eIntermediaryFile], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eProjectDocumentation], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eAssetVersion], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eActor], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eStakeholder], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: 0, objectTypes: [COMMON.eSystemObjectType.eUnknown], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eSubject], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eItem], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eCaptureData], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eModel], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eScene], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eIntermediaryFile], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eProjectDocumentation], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eAssetVersion], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eActor], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eStakeholder], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [], objectTypes: [COMMON.eSystemObjectType.eUnknown], metadataColumns }, false);
     });
 
     test('Navigation Children', async () => {
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.unit1), objectTypes: [COMMON.eSystemObjectType.eSubject], metadataColumns });
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.subject1), objectTypes: [COMMON.eSystemObjectType.eItem], metadataColumns });
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.item1), objectTypes: [COMMON.eSystemObjectType.eCaptureData, COMMON.eSystemObjectType.eModel, COMMON.eSystemObjectType.eScene], metadataColumns });
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.unit1)], objectTypes: [COMMON.eSystemObjectType.eSubject], metadataColumns });
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.subject1)], objectTypes: [COMMON.eSystemObjectType.eItem], metadataColumns });
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.item1)], objectTypes: [COMMON.eSystemObjectType.eCaptureData, COMMON.eSystemObjectType.eModel, COMMON.eSystemObjectType.eScene], metadataColumns });
 
         // Not yet implemented:
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.captureData1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.model1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.scene1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.projectDocumentation1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.intermediaryFile1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.actor1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.stakeholder1), objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.asset1), objectTypes: [COMMON.eSystemObjectType.eAssetVersion], metadataColumns }, false);
-        await testNavigation({ ...mockFilter, idRoot: await getSOID(OHTS.assetVersion1a), objectTypes: [COMMON.eSystemObjectType.eAssetVersion], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.captureData1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.model1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.scene1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.projectDocumentation1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.intermediaryFile1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.actor1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.stakeholder1)], objectTypes: [COMMON.eSystemObjectType.eAsset], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.asset1)], objectTypes: [COMMON.eSystemObjectType.eAssetVersion], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [await getSOID(OHTS.assetVersion1a)], objectTypes: [COMMON.eSystemObjectType.eAssetVersion], metadataColumns }, false);
     });
 
     test('Navigation Invalid', async () => {
-        await testNavigation({ ...mockFilter, idRoot: 100000000000, objectTypes: [COMMON.eSystemObjectType.eSubject], metadataColumns }, false);
+        await testNavigation({ ...mockFilter, idRoots: [100000000000], objectTypes: [COMMON.eSystemObjectType.eSubject], metadataColumns }, false);
     });
 
 });

@@ -26,6 +26,7 @@ input UnitDetailFieldsInput {
 
 input ProjectDetailFieldsInput {
     Description: String
+    idUnit: Int
 }
 
 input SubjectDetailFieldsInput {
@@ -210,6 +211,7 @@ input DeleteObjectConnectionInput {
 
 type DeleteIdentifierResult {
     success: Boolean!
+    message: String
 }
 
 input DeleteIdentifierInput {
@@ -218,6 +220,7 @@ input DeleteIdentifierInput {
 
 type DeleteMetadataResult {
     success: Boolean!
+    message: String
 }
 
 input DeleteMetadataInput {

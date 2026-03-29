@@ -4,6 +4,7 @@ const deleteIdentifier = gql`
     mutation deleteIdentifier($input: DeleteIdentifierInput!) {
         deleteIdentifier(input: $input) {
             success
+            message
         }
     }
 `;

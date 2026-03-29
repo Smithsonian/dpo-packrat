@@ -1,4 +1,5 @@
 import { passport, authCorsConfig, authSession, AuthRouter } from '../auth';
+import { Authorization } from '../auth/Authorization';
 import { ApolloServerOptions } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
@@ -25,7 +26,10 @@ import { createReport, getReportList, getReportFile } from './routes/api/report'
 import { getObjectStatus, patchObject } from './routes/api/object';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
+import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
+import { getServiceStatus } from './routes/api/status';
 import { createWebDAVToken } from './routes/api/scene';
+import { sceneByUUID } from './routes/api/sceneByUUID';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -179,7 +183,7 @@ export class HttpServer {
         // authentication and graphQL endpoints
         this.app.use('/auth', AuthRouter);
         this.app.use('/graphql', graphqlUploadExpress({
-            maxFileSize: 64 * 1024 * 1024 * 1024, // 64 Gb
+            maxFileSize: 256 * 1024 * 1024 * 1024, // 256 Gb
             maxFiles: 10,
             tmpdir: path.join(Config.storage.rootStaging,'tmp'),
             debug: true,
@@ -211,6 +215,9 @@ export class HttpServer {
         this.app.post('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/:id/webdav-token', createWebDAVToken);
 
+        // External deep-link endpoints
+        this.app.get('/external/scene/:edanUUID', sceneByUUID);
+
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
 
@@ -228,6 +235,20 @@ export class HttpServer {
         this.app.get('/api/report/:type/:date/:format',getReportFile);  // get a specific report file
         this.app.get('/api/report/:type',getReportList);                // get a list of reports for the given type
         this.app.post('/api/report/:type', createReport);               // run report creation for asset-files
+
+        this.app.get('/api/auth/user/:idUser/units', getUserUnits);
+        this.app.put('/api/auth/user/:idUser/units', setUserUnits);
+        this.app.get('/api/auth/unit/:idUnit', getUnitAuth);
+        this.app.put('/api/auth/unit/:idUnit', setUnitAuth);
+        this.app.get('/api/auth/project/:idProject', getProjectAuth);
+        this.app.put('/api/auth/project/:idProject', setProjectAuth);
+        this.app.get('/api/auth/users', getAuthUsers);
+        this.app.get('/api/auth/units', getAuthUnits);
+        this.app.get('/api/auth/projects', getAuthProjects);
+        this.app.get('/api/auth/summary', getAuthSummary);
+        this.app.get('/api/auth/denials', getAuthDenials);
+
+        this.app.get('/api/status', getServiceStatus);
 
         this.app.get('/api/sandbox/play',play);
 
@@ -271,6 +292,23 @@ export class HttpServer {
             }
         }
 
+        // Populate authorization context from session cache
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const reqSession = (req as any).session;
+        if (reqSession?.authContext) {
+            LS.authContext = reqSession.authContext;
+        } else if (id) {
+            // Build context for logged-in users whose session lacks a cached authContext
+            // (e.g. session created before authorization was enabled, or session restored without it)
+            try {
+                const authContext = await Authorization.buildContext(id);
+                LS.authContext = authContext;
+                if (reqSession) reqSession.authContext = authContext;
+            } catch (err) {
+                RK.logError(RK.LogSection.eAUTH, 'buildContext failed in assignLocalStore',
+                    err instanceof Error ? err.message : String(err), { idUser: id }, 'HttpServer');
+            }
+        }
 
         // run the store for this user
         ASL.run(LS, () => {
@@ -284,6 +322,7 @@ export class HttpServer {
     private static stripWebDAVToken(req: Request, _res, next): void {
         const match: RegExpMatchArray | null = req.url.match(/^\/webdav\/token-([a-f0-9-]+)(\/.*)?$/i);
         if (match) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (req as any).webdavToken = match[1];
             req.url = `/webdav${match[2] || '/'}`;
         }

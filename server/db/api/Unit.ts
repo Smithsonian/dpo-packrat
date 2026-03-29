@@ -136,6 +136,18 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
         }
     }
 
+    static async fetchFromAbbreviation(Abbreviation: string): Promise<Unit[] | null> {
+        if (!Abbreviation)
+            return null;
+        try {
+            return DBC.CopyArray<UnitBase, Unit>(
+                await DBC.DBConnection.prisma.unit.findMany({ where: { Abbreviation }, }), Unit);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch from abbreviation failed',H.Helpers.getErrorString(error),{ ...this },'DB.Unit');
+            return null;
+        }
+    }
+
     static async fetchFromNameSearch(search: string): Promise<Unit[] | null> {
         if (!search)
             return this.fetchAll();

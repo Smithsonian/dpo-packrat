@@ -9,6 +9,7 @@ const getDetailsTabDataForObject = gql`
             }
             Project {
                 Description
+                idUnit
             }
             Subject {
                 Altitude

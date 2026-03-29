@@ -114,7 +114,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         ARKPrefix: ''
     },
     ProjectDetails: {
-        Description: ''
+        Description: '',
+        idUnit: null
     },
     SubjectDetails: {
         Latitude: null,
@@ -447,9 +448,10 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
 
         if (objectType === eSystemObjectType.eProject) {
             const {
-                Project: { Description }
+                Project: { Description, idUnit }
             } = getDetailsTabDataForObject;
             updateDetailField(eSystemObjectType.eProject, 'Description', Description);
+            updateDetailField(eSystemObjectType.eProject, 'idUnit', idUnit);
         }
 
         if (objectType === eSystemObjectType.eSubject) {

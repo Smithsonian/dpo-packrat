@@ -8,6 +8,7 @@ import { RecordKeeper as RK } from '../../records/recordKeeper';
 export class NavigationFactory {
     private static instance: INavigation | null = null;
     private static objectIndexSet: Set<number> | null = null;
+    private static objectIndexTimer: ReturnType<typeof setTimeout> | null = null;
     private static OBJECT_INDEX_BATCH_TIME: number = 30000; // 30s
 
     static async getInstance(eNavType: NAVIGATION_TYPE = NAVIGATION_TYPE.DEFAULT): Promise<INavigation| null> {
@@ -43,8 +44,17 @@ export class NavigationFactory {
         // LOG.info(`NavigationFactory.objectIndexer scheduling ${idSystemObject}`, LOG.LS.eNAV);
         if (scheduleIndexing) {
             // LOG.info('NavigationFactory.objectIndexer starting timer', LOG.LS.eNAV);
-            setTimeout(NavigationFactory.objectIndexer, NavigationFactory.OBJECT_INDEX_BATCH_TIME);
+            NavigationFactory.objectIndexTimer = setTimeout(NavigationFactory.objectIndexer, NavigationFactory.OBJECT_INDEX_BATCH_TIME);
         }
+    }
+
+    static cleanup(): void {
+        if (NavigationFactory.objectIndexTimer) {
+            clearTimeout(NavigationFactory.objectIndexTimer);
+            NavigationFactory.objectIndexTimer = null;
+        }
+        NavigationFactory.objectIndexSet = null;
+        NavigationFactory.instance = null;
     }
 
     static async objectIndexer(): Promise<void> {

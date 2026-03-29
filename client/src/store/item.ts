@@ -74,8 +74,10 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
         const { items } = get();
         const currentDefaultItem = lodash.find(items, { id: defaultItem.id });
 
-        if (!fetchedItems.length)
+        if (!fetchedItems.length) {
+            set({ items: [], hasNewItem: false, newItem: { ...defaultItem } });
             return;
+        }
 
         const newItemSelected = lodash.find(fetchedItems, { selected: true });
 
@@ -159,7 +161,6 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
         set({ loading: true });
     },
     fetchAndInitializeIngestionItems: async (idSubjects: number[]): Promise<void> => {
-        const { hasNewItem } = get();
         try {
             const ingestionItemQuery: ApolloQueryResult<GetIngestionItemsQuery> = await apolloClient.query({
                 query: GetIngestionItemsDocument,
@@ -172,8 +173,8 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
             });
             const { data: { getIngestionItems: { IngestionItem } } } = ingestionItemQuery;
             const ingestionItemState = IngestionItem?.map(item => parseIngestionItemToState(item));
-            if (ingestionItemState?.length === 1 && !hasNewItem) ingestionItemState[0].selected = true;
-            set({ items: ingestionItemState });
+            if (ingestionItemState?.length === 1) ingestionItemState[0].selected = true;
+            set({ items: ingestionItemState, hasNewItem: false, newItem: { ...defaultItem } });
         } catch (error) {
             toast.error('Failed to get media group for subjects');
         }

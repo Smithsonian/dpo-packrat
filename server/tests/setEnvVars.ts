@@ -25,3 +25,5 @@ if (!process.env.PACKRAT_SMTP_HOST)
     process.env.PACKRAT_SMTP_HOST = 'smtp.si.edu';
 if (!process.env.PACKRAT_LOG_ROOT)
     process.env.PACKRAT_LOG_ROOT = './var/logs';
+if (!process.env.PACKRAT_NAVIGATION_TYPE)
+    process.env.PACKRAT_NAVIGATION_TYPE = 'db';

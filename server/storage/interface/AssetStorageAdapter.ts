@@ -255,8 +255,12 @@ export class AssetStorageAdapter {
         /* istanbul ignore else */
         if (assetVersion)
             return { assets: [ asset ], assetVersions: [ assetVersion ], success: true };
-        else
-            return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionNonBulk unable to create assets & asset versions' };
+        else {
+            const charHint = H.Helpers.containsNonAsciiCharacters(asset.FileName)
+                ? ` The filename "${asset.FileName}" contains non-standard Unicode characters that may not be supported by the database. Please rename the file using only standard ASCII characters and try again.`
+                : '';
+            return { assets: null, assetVersions: null, success: false, error: `AssetStorageAdapter.commitNewAssetVersionNonBulk unable to create assets & asset versions.${charHint}` };
+        }
     }
 
     // split bulk ingest into separate assets and asset versions, one per system object in the bulk ingest
@@ -314,8 +318,11 @@ export class AssetStorageAdapter {
                 assets.push(assetClone);
                 assetVersions.push(assetVersion);
             } else {
-                RK.logError(RK.LogSection.eSTR,'commit asset version failed','unable to crerate assets and asset versions',{ ...context, stagingFileName },'AssetStorageAdapter');
-                return { assets: null, assetVersions: null, success: false, error: 'AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions' };
+                const charHint = H.Helpers.containsNonAsciiCharacters(asset.FileName)
+                    ? ` The filename "${asset.FileName}" contains non-standard Unicode characters that may not be supported by the database. Please rename the file using only standard ASCII characters and try again.`
+                    : '';
+                RK.logError(RK.LogSection.eSTR,'commit asset version failed','unable to create assets and asset versions',{ ...context, stagingFileName },'AssetStorageAdapter');
+                return { assets: null, assetVersions: null, success: false, error: `AssetStorageAdapter.commitNewAssetVersionBulk unable to create assets & asset versions.${charHint}` };
             }
         }
 
@@ -751,6 +758,33 @@ export class AssetStorageAdapter {
 
         // for bulk ingest, the folder from the zip from which to extract assets is specified in asset.FilePath
         const fileID = bulkIngest ? `/${BAGIT_DATA_DIRECTORY}${assetVersion.FilePath}/` : '';
+
+        // Detect single-folder wrapper: user zipped a folder instead of its contents.
+        // If all files share exactly one top-level directory and no files exist at the root,
+        // strip that directory prefix so the inner folder is treated as the ingestion root.
+        let stripPrefix: string = '';
+        if (!bulkIngest) {
+            const allFiles: string[] = await zip.getJustFiles(null);
+            if (allFiles.length > 0) {
+                const topLevelDirs = new Set<string>();
+                let hasRootFile: boolean = false;
+                for (const f of allFiles) {
+                    const firstSlash: number = f.indexOf('/');
+                    if (firstSlash === -1) {
+                        hasRootFile = true;
+                        break;
+                    }
+                    topLevelDirs.add(f.substring(0, firstSlash));
+                }
+                if (!hasRootFile && topLevelDirs.size === 1) {
+                    stripPrefix = topLevelDirs.values().next().value + '/';
+                    RK.logInfo(RK.LogSection.eSTR, 'bulk ingest zip worker',
+                        `detected single-folder wrapper "${stripPrefix.slice(0, -1)}", treating inner folder as root`,
+                        { assetVersion }, 'AssetStorageAdapter');
+                }
+            }
+        }
+
         for (const entry of (bulkIngest ? await zip.getAllEntries(null) : await zip.getJustFiles(null))) {
 
             if (bulkIngest && !entry.includes(fileID)) // only process assets found in our path
@@ -863,9 +897,10 @@ export class AssetStorageAdapter {
                 continue;
             }
 
-            // find/create asset and asset version
+            // find/create asset and asset version; strip single-folder wrapper prefix if detected
             const FileName: string = path.basename(entry);
-            let FilePath: string = path.dirname(entry);
+            const effectiveEntry: string = (stripPrefix && entry.startsWith(stripPrefix)) ? entry.substring(stripPrefix.length) : entry;
+            let FilePath: string = path.dirname(effectiveEntry);
             if (FilePath === '.')
                 FilePath = '';
 

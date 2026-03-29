@@ -43,7 +43,23 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
             if (systemObject?.idUnit) result.Unit = await DBAPI.Unit.fetch(systemObject.idUnit);
             break;
         case COMMON.eSystemObjectType.eProject:
-            if (systemObject?.idProject) result.Project = await DBAPI.Project.fetch(systemObject.idProject);
+            if (systemObject?.idProject) {
+                const Project = await DBAPI.Project.fetch(systemObject.idProject);
+                if (Project) {
+                    let idUnit: number | null = null;
+                    const masterXrefs: DBAPI.SystemObjectXref[] | null = await DBAPI.SystemObjectXref.fetchMasters(idSystemObject);
+                    if (masterXrefs) {
+                        for (const xref of masterXrefs) {
+                            const masterSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(xref.idSystemObjectMaster);
+                            if (masterSO?.idUnit) {
+                                idUnit = masterSO.idUnit;
+                                break;
+                            }
+                        }
+                    }
+                    result.Project = { Description: Project.Description, idUnit };
+                }
+            }
             break;
         case COMMON.eSystemObjectType.eSubject: {
             if (systemObject?.idSubject) {
@@ -93,7 +109,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
                 const sceneCanBeQCdRes: H.IOResults = await SH.SceneHelpers.sceneCanBeQCd(systemObject.idScene);
                 if (!sceneCanBeQCdRes.success && sceneCanBeQCdRes.error)
-                    RK.logError(RK.LogSection.eGQL,'update source objects failed',`encountered error checking if sceneCanBeQCd: ${sceneCanBeQCdRes.error}`,{  ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
+                    RK.logDebug(RK.LogSection.eGQL,'scene not QC-ready',`sceneCanBeQCd: ${sceneCanBeQCdRes.error}`,{  ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
 
                 fields = {
                     ...fields,

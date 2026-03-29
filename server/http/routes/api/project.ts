@@ -8,6 +8,7 @@ import { isAuthenticated } from '../../auth';
 import { Request, Response } from 'express';
 import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 
 //#region Types and Definitions
 // NOTE: 'Summary' types/objects are intended for return via the API and for external use
@@ -70,13 +71,18 @@ export async function getProjects(req: Request, res: Response): Promise<void> {
     }
 
     // get our list of projects from the DB
-    const projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll();
+    let projects: DBAPI.Project[] | null = await DBAPI.Project.fetchAll();
     if(!projects || projects.length===0) {
         const error = `no projects found ${!projects ? '(is NULL)':''}`;
         RK.logError(RK.LogSection.eHTTP,'get projects failed',error,{},'HTTP.Route.Project');
         res.status(200).send(JSON.stringify(generateResponse(false,`getProjects: ${error}`)));
         return;
     }
+
+    // Filter by authorization context
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin)
+        projects = Authorization.filterProjects(projects, ctx);
 
     // return success
     res.status(200).send(JSON.stringify(generateResponse(true,`Returned ${projects.length} projects`,[...projects])));
@@ -96,6 +102,13 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
     const { id } = req.params;
     const idProject: number = parseInt(id);
     RK.logInfo(RK.LogSection.eHTTP,'get projects failed',`get project scenes: ${idProject}`,{},'HTTP.Route.Project');
+
+    // Authorization: check project access for specific project requests
+    const ctx = Authorization.getContext();
+    if (ctx && !ctx.isAdmin && idProject > 0 && !Authorization.canAccessProject(ctx, idProject, 'getProjectScenes')) {
+        res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.PROJECT_DENIED)));
+        return;
+    }
 
     // our holder for final scenes
     let project: DBAPI.Project | null = null;
@@ -514,7 +527,7 @@ const buildAssetSummaryFromModel = async (idModel: number): Promise<AssetSummary
         RK.logError(RK.LogSection.eHTTP,'build asset summary from model failed','cannot fetch asset from model',{ ...model },'HTTP.Route.Project');
         return null;
     } else if(modelAsset.length>1)
-        RK.logWarning(RK.LogSection.eHTTP,'build asset summary from model failed','more than one asset assigned to model. using first one.',{ ...model, numAssets: modelAsset.length },'HTTP.Route.Project');
+        RK.logDebug(RK.LogSection.eHTTP,'build asset summary from model','more than one asset assigned to model. using first one.',{ ...model, numAssets: modelAsset.length },'HTTP.Route.Project');
 
     // get our latest asset version
     const modelAssetVer: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(modelAsset[0].fetchID());

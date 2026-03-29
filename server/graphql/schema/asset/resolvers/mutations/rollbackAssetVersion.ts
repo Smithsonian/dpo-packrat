@@ -5,6 +5,7 @@ import * as DBAPI from '../../../../../db';
 import * as STORE from '../../../../../storage/interface';
 import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function rollbackAssetVersion(_: Parent, args: MutationRollbackAssetVersionArgs, context: Context): Promise<RollbackAssetVersionResult> {
     const { input } = args;
@@ -20,6 +21,13 @@ export default async function rollbackAssetVersion(_: Parent, args: MutationRoll
     const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersionOrig.idAsset);
     if (!asset)
         return sendResponse(false,'rollback asset version failed',`unable to load asset for ${assetVersionOrig.idAsset}`);
+
+    // Authorization: check access to the asset's parent SystemObject
+    if (asset.idSystemObject) {
+        const ctx = Authorization.getContext();
+        if (!ctx || !await Authorization.canAccessSystemObject(ctx, asset.idSystemObject))
+            return sendResponse(false, 'rollback asset version failed', AUTH_ERROR.ACCESS_DENIED);
+    }
 
     let SOBased: DBAPI.SystemObjectBased | null = null;
     if (asset.idSystemObject) {

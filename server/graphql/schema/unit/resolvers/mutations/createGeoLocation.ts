@@ -1,8 +1,13 @@
 import { CreateGeoLocationResult, MutationCreateGeoLocationArgs } from '../../../../../types/graphql';
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
+import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 export default async function createGeoLocation(_: Parent, args: MutationCreateGeoLocationArgs): Promise<CreateGeoLocationResult> {
+    const ctx = Authorization.getContext();
+    if (!ctx || (!ctx.isAdmin && ctx.authorizedUnitIds.length === 0))
+        throw new Error(AUTH_ERROR.ACCESS_DENIED);
+
     const { input } = args;
     const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = input;
 

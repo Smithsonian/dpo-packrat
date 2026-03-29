@@ -17,6 +17,7 @@ import { Helmet } from 'react-helmet';
 import ToolsBatchGeneration from './Tools/ToolsBatchGeneration';
 import ToolsAssetValidation from './Tools/ToolsAssetValidation';
 import ToolsSystemOps from './Tools/ToolsSystemOps';
+import ToolsAuthorizationOverview from './Tools/ToolsAuthorizationOverview';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -76,10 +77,12 @@ function AdminToolsView(): React.ReactElement {
     const location = useLocation();
     const { user } = useUserStore();
     const isAuthorized = user?.canAccessTools ?? false;
+    const isAdmin = user?.isAdmin ?? false;
     const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
         batchOps: false,
         assetValidation: false,
         systemOps: false,
+        authorization: false,
     });
 
     const toggleSection = (section: string) => {
@@ -130,6 +133,19 @@ function AdminToolsView(): React.ReactElement {
                                     <ToolsSystemOps />
                                 </Collapse>
                             </Box>
+
+                            {/* Authorization Overview Section (admin only) */}
+                            {isAdmin && (
+                                <Box>
+                                    <IconButton className={classes.collapseHeader} onClick={() => toggleSection('authorization')}>
+                                        Authorization
+                                        {openSections.authorization ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                    </IconButton>
+                                    <Collapse in={openSections.authorization} className={classes.collapseContainer}>
+                                        <ToolsAuthorizationOverview />
+                                    </Collapse>
+                                </Box>
+                            )}
                         </>
                     ):(
                         <p>You are <b>Not Authorized</b> to use these tools. Contact support.</p>

@@ -295,7 +295,12 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                         label={label}
                         childNodesContent={childNodesContent}
                         triggerOnce
-                        onView={async () => await getMoreRoot()}
+                        onView={async () => {
+                            const rootCursor = cursors.get('root');
+                            if (rootCursor && rootCursor.length) {
+                                await getMoreRoot();
+                            }
+                        }}
                     />
                 );
             }

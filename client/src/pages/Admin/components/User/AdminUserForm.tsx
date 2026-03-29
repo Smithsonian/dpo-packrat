@@ -11,7 +11,8 @@
 import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import React, { useState, useEffect } from 'react';
-import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@material-ui/core';
+import { Box, TextField, Button, Select, MenuItem, InputLabel, FormControl, IconButton, Typography } from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
 import { extractISOMonthDateYear, formatISOToHoursMinutes } from '../../../../constants/index';
 import { useParams, useLocation, useNavigate } from 'react-router';
 import { useGetUserQuery, CreateUserDocument, UpdateUserDocument, GetAllUsersDocument, User_Status } from '../../../../types/graphql';
@@ -23,6 +24,7 @@ import * as yup from 'yup';
 import { useUsersStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
 import { DebounceInput } from 'react-debounce-input';
+import API from '../../../../api';
 
 const useStyles = makeStyles(({ typography }) => createStyles({
     container: {
@@ -133,6 +135,11 @@ function AdminUserForm(): React.ReactElement {
     const [validEmailInput, setValidEmailInput] = useState<boolean | null>(null);
     const updateUsersEntries = useUsersStore(state => state.updateUsersEntries);
 
+    // Unit assignment state
+    const [assignedUnits, setAssignedUnits] = useState<{ idUnit: number; Name: string; Abbreviation: string | null }[]>([]);
+    const [allUnits, setAllUnits] = useState<{ idUnit: number; Name: string; Abbreviation: string | null }[]>([]);
+    const [selectedUnitId, setSelectedUnitId] = useState<number>(0);
+
     const location = useLocation();
     const create: boolean = idUser === 'create';
     const schema = yup.object().shape({
@@ -163,6 +170,58 @@ function AdminUserForm(): React.ReactElement {
             setSlack(fetchedUser?.SlackID);
         }
     }, [fetchedUser]);
+
+    // Fetch all units for the picker
+    useEffect(() => {
+        const fetchUnits = async () => {
+            const result = await API.getAuthUnits();
+            if (result?.success && result.data)
+                setAllUnits(result.data);
+        };
+        fetchUnits();
+    }, []);
+
+    // Fetch user's assigned units (edit mode only)
+    useEffect(() => {
+        if (create || !idUser) return;
+        const fetchUserUnits = async () => {
+            const result = await API.getUserUnits(Number(idUser));
+            if (result?.success && result.data?.units)
+                setAssignedUnits(result.data.units);
+        };
+        fetchUserUnits();
+    }, [idUser, create]);
+
+    const handleAddUnit = () => {
+        if (!selectedUnitId) return;
+        if (assignedUnits.some(u => u.idUnit === selectedUnitId)) {
+            toast.warn('Unit already assigned');
+            return;
+        }
+        const unit = allUnits.find(u => u.idUnit === selectedUnitId);
+        if (unit) {
+            setAssignedUnits(prev => [...prev, unit]);
+            setSelectedUnitId(0);
+        }
+    };
+
+    const handleRemoveUnit = (idUnit: number) => {
+        setAssignedUnits(prev => prev.filter(u => u.idUnit !== idUnit));
+    };
+
+    const saveUnitAssignments = async (targetIdUser: number): Promise<boolean> => {
+        const unitIds = assignedUnits.map(u => u.idUnit);
+        if (unitIds.length === 0) {
+            toast.warn('At least one unit must be assigned');
+            return false;
+        }
+        const result = await API.setUserUnits(targetIdUser, unitIds);
+        if (!result?.success) {
+            toast.error(`Failed to save unit assignments: ${result?.message}`);
+            return false;
+        }
+        return true;
+    };
 
     const validateFields = async (): Promise<boolean | void> => {
         try {
@@ -209,6 +268,8 @@ function AdminUserForm(): React.ReactElement {
             });
             await updateUsersEntries();
             if (data?.updateUser) {
+                const unitsSaved = await saveUnitAssignments(Number(idUser));
+                if (!unitsSaved) return;
                 toast.success('User updated successfully');
                 navigate('/admin/users');
             } else {
@@ -241,7 +302,9 @@ function AdminUserForm(): React.ReactElement {
                 awaitRefetchQueries: true
             });
             updateUsersEntries();
-            if (data?.createUser) {
+            if (data?.createUser?.User?.idUser) {
+                const unitsSaved = await saveUnitAssignments(data.createUser.User.idUser);
+                if (!unitsSaved) return;
                 toast.success('User created successfully');
                 navigate('/admin/users');
             } else {
@@ -392,6 +455,45 @@ function AdminUserForm(): React.ReactElement {
                             }
                         }}
                     />
+                </Box>
+
+                {/* Unit Assignments Section */}
+                <Box style={{ padding: '5px', borderTop: '2px solid #B7D2E5CC', marginTop: '5px' }}>
+                    <Typography variant='caption' style={{ fontWeight: 600, fontSize: '0.85rem', color: '#3F536E' }}>Unit Assignments</Typography>
+
+                    {assignedUnits.length > 0 && (
+                        <Box style={{ marginTop: '4px', marginBottom: '4px' }}>
+                            {assignedUnits.map(unit => (
+                                <Box key={unit.idUnit} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 0' }}>
+                                    <Typography variant='caption' style={{ fontSize: '0.8rem' }}>
+                                        {unit.Name}{unit.Abbreviation ? ` (${unit.Abbreviation})` : ''}
+                                    </Typography>
+                                    <IconButton size='small' onClick={() => handleRemoveUnit(unit.idUnit)} aria-label='remove unit'>
+                                        <DeleteIcon fontSize='small' />
+                                    </IconButton>
+                                </Box>
+                            ))}
+                        </Box>
+                    )}
+
+                    <Box style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                        <Select
+                            value={selectedUnitId}
+                            className={classes.select}
+                            disableUnderline
+                            onChange={e => setSelectedUnitId(Number(e.target.value))}
+                            displayEmpty
+                        >
+                            <MenuItem value={0} disabled>(Select Unit)</MenuItem>
+                            {allUnits
+                                .filter(u => !assignedUnits.some(a => a.idUnit === u.idUnit))
+                                .map(u => (
+                                    <MenuItem key={u.idUnit} value={u.idUnit}>{u.Name}{u.Abbreviation ? ` (${u.Abbreviation})` : ''}</MenuItem>
+                                ))
+                            }
+                        </Select>
+                        <Button size='small' variant='outlined' onClick={handleAddUnit} disabled={!selectedUnitId}>Add</Button>
+                    </Box>
                 </Box>
             </Box>
             <Box className={classes.buttonGroup}>

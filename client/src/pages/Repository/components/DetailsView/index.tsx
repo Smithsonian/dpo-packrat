@@ -167,6 +167,7 @@ function DetailsView(): React.ReactElement {
     const [isUpdatingData, setIsUpdatingData] = useState(false);
     const [isGeneratingDownloads, setIsGeneratingDownloads] = useState(false);
     const [canGenerateDownloads, setCanGenerateDownloads] = useState(true);
+    const [downloadDisabledReason, setDownloadDisabledReason] = useState<string>('');
 
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
     const [loadingIdentifiers, setLoadingIdentifiers] = useState(true);
@@ -262,29 +263,30 @@ function DetailsView(): React.ReactElement {
     };
     const verifyGenerateDownloads = async (): Promise<boolean> => {
         // check whether we can actually generate downloads
-        // TODO: check QC checkbox status, (ideally) if a generate downloads is already running, ...
         console.log('[PACKRAT] Verifying Generate Downloads...');
 
         // make a call to our generate downloads endpoint with the current scene id
         const response: RequestResponse = await API.generateDownloads([idSystemObject], true);
-        if((response.success === false || !response.data || response.data.length===0)) {
+        if(!response.data || response.data.length === 0) {
             console.log(`[Packrat:ERROR] cannot verify if generate downloads is available. (${response.message})`);
             setCanGenerateDownloads(false);
+            setDownloadDisabledReason('Unable to verify scene status');
             return false;
         }
-        // console.log(`[PACKRAT:DEBUG] array: ${response.data && Array.isArray(response.data)} | isRunning: ${response.data[0].state.isJobRunning}, isValid: ${response.data[0].state.isValid}`,response);
 
-        // see if we can actually run based on if a job isn't already running
-        // and our scene meets the core requirements
-        // should only receive one response here since this is from the details page
-        const canRun: boolean = (response.data && Array.isArray(response.data))
-            && (response.data[0].state.isJobRunning === false)
-            && (response.data[0].state.isValid === true);
+        const state = response.data[0]?.state;
 
-        // we have success so enable it
-        // console.log(`[PACKRAT:DEBUG] can generate downloads: ${canRun}`);
-        setCanGenerateDownloads(canRun);
-        return canRun;
+        // disable only when scene is invalid (not QC'd); job-running is handled by toast on click
+        if(state && state.isValid === false) {
+            setCanGenerateDownloads(false);
+            setDownloadDisabledReason('Scene has not been reviewed (QC\'d)');
+            return false;
+        }
+
+        // scene is valid — keep button enabled even if a job is running (toast handles that)
+        setCanGenerateDownloads(true);
+        setDownloadDisabledReason('');
+        return true;
     };
 
     useEffect(() => {
@@ -418,13 +420,14 @@ function DetailsView(): React.ReactElement {
         if (idIdentifier) {
             const confirm = window.confirm('Are you sure you wish to remove this?');
             if (!confirm) return;
-            const deleteIdentifierSuccess = await deleteIdentifier(idIdentifier);
-            if (deleteIdentifierSuccess) {
+            const result = await deleteIdentifier(idIdentifier);
+            if (result?.data?.deleteIdentifier?.success) {
                 removeTargetIdentifier(idIdentifier);
                 setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
-                toast.error('Error when removing identifier');
+                const message = result?.data?.deleteIdentifier?.message || 'Error when removing identifier';
+                toast.error(message);
             }
         } else {
             removeTargetIdentifier(0, id);
@@ -882,6 +885,20 @@ function DetailsView(): React.ReactElement {
 
     const immutableNameTypes = new Set([eSystemObjectType.eItem, eSystemObjectType.eModel, eSystemObjectType.eScene]);
 
+    if (!allowed) {
+        return (
+            <Box className={classes.container}>
+                <Box className={classes.content}>
+                    <NoticeBanner
+                        state='warning'
+                        title='Access Denied'
+                        messageText='You do not have permission to access this resource. If you think this is in error please contact the Packrat Support Team (packrat@si.edu).'
+                    />
+                </Box>
+            </Box>
+        );
+    }
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -920,6 +937,7 @@ function DetailsView(): React.ReactElement {
                         onRetiredUpdate={onRetiredUpdate}
                         onLicenseUpdate={onLicenseUpdate}
                         onPublishUpdate={onPublishUpdate}
+                        onLicenseChange={onDetailUpdate}
                         originalFields={data.getSystemObjectDetails}
                         license={withDefaultValueNumber(details.idLicense, 0)}
                         idSystemObject={idSystemObject}
@@ -960,12 +978,20 @@ function DetailsView(): React.ReactElement {
                         >View</LoadingButton>}
 
                     {(objectType === eSystemObjectType.eScene) &&
-                        <LoadingButton className={classes.updateButton}
-                            loading={isGeneratingDownloads}
-                            disabled={!canGenerateDownloads}
-                            onClick={generateDownloads}
-                            style={{ marginLeft: 5, width: '200px' }}
-                        >Generate Downloads</LoadingButton>}
+                        <Tooltip title={!canGenerateDownloads ? downloadDisabledReason : ''} arrow>
+                            <span>
+                                <LoadingButton className={classes.updateButton}
+                                    loading={isGeneratingDownloads}
+                                    disabled={!canGenerateDownloads}
+                                    onClick={generateDownloads}
+                                    style={{
+                                        marginLeft: 5,
+                                        width: '200px',
+                                        ...(!canGenerateDownloads ? { backgroundColor: '#b71c1c', color: 'white', opacity: 0.8 } : {})
+                                    }}
+                                >Generate Downloads</LoadingButton>
+                            </span>
+                        </Tooltip>}
 
                     {(objectType === eSystemObjectType.eModel) &&
                     <>
@@ -1077,6 +1103,7 @@ function DetailsView(): React.ReactElement {
                     <DetailsTab
                         disabled={disabled}
                         idSystemObject={idSystemObject}
+                        idObject={idObject}
                         objectType={objectType}
                         assetOwner={assetOwner}
                         sourceObjects={sourceObjects}
@@ -1166,19 +1193,19 @@ export function getNoticeConfig(properties: ObjectPropertyResult[] | null, conta
     // build our notice for return
     let messageHTML = '';
     switch(sensitiveProps.level) {
-        case 0: {
+        case 0:
             messageHTML += 'This object is deemed NOT sensitive, but still follows Smithsonian policy for digital assets.';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
-        } break;
-        case 1: {
+            break;
+        case 1:
             messageHTML += 'This object is marked as sensitive and must not be modified or published without proper authorization. ';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
-        } break;
-        case 2: {
+            break;
+        case 2:
             messageHTML += 'This object is confidential and visible only to selecet members.';
             messageHTML += '</br>Governing policy: <a href="https://www.si.edu/sites/default/files/about/sd609.pdf" target="_blank" rel="noopener noreferrer">DIGITAL ASSET ACCESS AND USE (SD-609)</a>.';
             messageHTML += '</br></br>If you think you should be able to see this object please contact the individual below and Packrat support (<b>packrat@si.edu</b>)';
-        }
+            break;
     }
 
     // shared lines (contact/reason)

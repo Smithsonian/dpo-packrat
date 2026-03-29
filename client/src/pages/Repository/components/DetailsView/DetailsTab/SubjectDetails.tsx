@@ -469,13 +469,12 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
 
     const getLevelOptions = (propertyType: string): { label: string, value: number }[] => {
         switch(propertyType) {
-            case 'sensitivity': {
+            case 'sensitivity':
                 return [
                     { label: 'None', value: 0 },
                     { label: 'Sensitive', value: 1 },
                     { label: 'Confidential', value: 2 },
                 ];
-            } break;
 
             default:
                 return [];

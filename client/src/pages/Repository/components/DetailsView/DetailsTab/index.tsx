@@ -54,6 +54,8 @@ import { eIngestionMode } from '../../../../../constants';
 import AssetGrid from './AssetGrid';
 import MetadataControlTable from './MetadataControlTable';
 import MetadataDisplayTable from './MetadataDisplayTable';
+import UnitAuthorizedUsers from './UnitAuthorizedUsers';
+import ProjectAuthorizedUsers from './ProjectAuthorizedUsers';
 
 const useStyles = makeStyles(({ palette }) => ({
     tab: {
@@ -87,6 +89,7 @@ export interface DetailComponentProps extends GetDetailsTabDataForObjectQueryRes
     onUpdateDetail: (objectType: number, data: UpdateDataFields) => void;
     publishedState: string;
     idSystemObject: number;
+    idObject?: number;
     refreshTick?: number;
     onDetailUpdate?: () => void;
 }
@@ -108,6 +111,7 @@ export type UpdateDataFields =
 type DetailsTabParams = {
     disabled: boolean;
     idSystemObject: number;
+    idObject?: number;
     objectType: eSystemObjectType;
     assetOwner: RepositoryPath | undefined | null;
     sourceObjects: StateRelatedObject[];
@@ -132,6 +136,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     const {
         disabled,
         idSystemObject,
+        idObject,
         objectType,
         assetOwner,
         sourceObjects,
@@ -240,6 +245,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         ...sharedProps,
         publishedState,
         idSystemObject,
+        idObject,
         refreshTick,
         onDetailUpdate,
     };
@@ -250,26 +256,32 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     }
     switch (objectType) {
         case eSystemObjectType.eUnit:
-            tabs = ['Details', 'Related', 'Metadata'];
+            tabs = ['Details', 'Auth', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0} id='tab-0'>
                         <UnitDetails {...detailsProps} />
                     </TabPanel>
-                    {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
+                    <TabPanel value={tab} index={1} id='tab-1'>
+                        <UnitAuthorizedUsers idUnit={idObject} />
+                    </TabPanel>
+                    {RelatedTab(2)}
+                    {MetadataTab(3, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
         case eSystemObjectType.eProject:
-            tabs = ['Details', 'Related', 'Metadata'];
+            tabs = ['Details', 'Auth', 'Related', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
                     <TabPanel value={tab} index={0} id='tab-0'>
                         <ProjectDetails {...detailsProps} />
                     </TabPanel>
-                    {RelatedTab(1)}
-                    {MetadataTab(2, eObjectMetadataType.eDetailView, metadata)}
+                    <TabPanel value={tab} index={1} id='tab-1'>
+                        <ProjectAuthorizedUsers idProject={idObject} />
+                    </TabPanel>
+                    {RelatedTab(2)}
+                    {MetadataTab(3, eObjectMetadataType.eDetailView, metadata)}
                 </React.Fragment>
             );
             break;
