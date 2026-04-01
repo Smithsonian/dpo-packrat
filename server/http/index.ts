@@ -261,10 +261,15 @@ export class HttpServer {
                 RK.logInfo(RK.LogSection.eSYS,'system started: Express server',undefined,{ port: Config.http.port, url: Config.http.serverUrl },'HttpServer');
             });
 
-            // Set keep-alive parameters on the server
-            server.timeout = 60 * 60 * 1000; // 1hr
-            server.keepAliveTimeout = 6000 * 1000; //600000; // 10 minutes
-            server.headersTimeout = 6100 * 1000;   //610000;  // Slightly larger than keepAliveTimeout
+            // Set connection parameters for large file uploads
+            // Disable socket inactivity timeout — nginx enforces upstream timeouts
+            server.timeout = 0;
+            server.keepAliveTimeout = 600 * 1000;   // 10 minutes between requests
+            server.headersTimeout = 610 * 1000;     // slightly larger than keepAliveTimeout
+            // Disable request completion timeout so large uploads (70GB+) are not killed mid-stream.
+            // Prior values of headersTimeout (6100s) caused uploads exceeding ~101 minutes to abort
+            // with "Request disconnected during file upload stream parsing."
+            (server as any).requestTimeout = 0;
         }
 
         // only gets here if no other route is satisfied
