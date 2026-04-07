@@ -18,6 +18,7 @@ import ToolsBatchGeneration from './Tools/ToolsBatchGeneration';
 import ToolsAssetValidation from './Tools/ToolsAssetValidation';
 import ToolsSystemOps from './Tools/ToolsSystemOps';
 import ToolsAuthorizationOverview from './Tools/ToolsAuthorizationOverview';
+import ToolsExternalSources from './Tools/ToolsExternalSources';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -83,6 +84,7 @@ function AdminToolsView(): React.ReactElement {
         assetValidation: false,
         systemOps: false,
         authorization: false,
+        externalSources: false,
     });
 
     const toggleSection = (section: string) => {
@@ -143,6 +145,19 @@ function AdminToolsView(): React.ReactElement {
                                     </IconButton>
                                     <Collapse in={openSections.authorization} className={classes.collapseContainer}>
                                         <ToolsAuthorizationOverview />
+                                    </Collapse>
+                                </Box>
+                            )}
+
+                            {/* External Sources Section (admin only) */}
+                            {isAdmin && (
+                                <Box>
+                                    <IconButton className={classes.collapseHeader} onClick={() => toggleSection('externalSources')}>
+                                        External Sources
+                                        {openSections.externalSources ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                    </IconButton>
+                                    <Collapse in={openSections.externalSources} className={classes.collapseContainer}>
+                                        <ToolsExternalSources />
                                     </Collapse>
                                 </Box>
                             )}

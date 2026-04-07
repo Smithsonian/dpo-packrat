@@ -792,6 +792,7 @@ model User {
   UserPersonalizationUrl                                  UserPersonalizationUrl[]
   Workflow                                                Workflow[]
   WorkflowStep                                            WorkflowStep[]
+  ExternalSource                                          ExternalSource[]
 
   @@index([EmailAddress], map: "user_EmailAddress")
 }
@@ -985,6 +986,19 @@ model UserAuthorization {
   @@index([idUser], map: "UserAuthorization_idUser")
   @@index([idSystemObject], map: "UserAuthorization_idSystemObject")
   @@index([idUserCreator], map: "UserAuthorization_idUserCreator")
+}
+
+model ExternalSource {
+  idExternalSource Int      @id @default(autoincrement())
+  ClientId         String   @unique @mariasql.VarChar(36)
+  Name             String   @mariasql.VarChar(255)
+  ReferrerPattern  String?  @mariasql.VarChar(1024)
+  idContact        Int?
+  isActive         Boolean  @default(true)
+  DateCreated      DateTime @default(now())
+  User             User?    @relation(fields: [idContact], references: [idUser])
+
+  @@index([idContact], map: "fk_aes_contact")
 }
 
 enum ObjectProperty_PropertyType {

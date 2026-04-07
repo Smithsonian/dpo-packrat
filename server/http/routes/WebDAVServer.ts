@@ -10,7 +10,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL, ASR, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
 import { DownloaderParser, DownloaderParserResults } from './DownloaderParser';
-import { WebDAVTokenStore } from './WebDAVToken';
+import { TokenStore } from './TokenStore';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { Authorization } from '../../auth/Authorization';
 import { Readable, Writable } from 'stream';
@@ -120,8 +120,9 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
             const idSystemObject: number = idSOMatch ? parseInt(idSOMatch[1], 10) : 0;
 
             if (idSystemObject > 0) {
-                const idUser: number | null = WebDAVTokenStore.validate(token, idSystemObject);
-                if (idUser) {
+                const entry = TokenStore.validate(token);
+                if (entry && entry.type === 'webdav' && entry.idSystemObject === idSystemObject) {
+                    const idUser: number = entry.idUser;
                     const user: DBAPI.User | undefined = await CACHE.UserCache.getUser(idUser);
                     if (user) {
                         // Update the existing LocalStore with the authenticated user

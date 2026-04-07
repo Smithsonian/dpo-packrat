@@ -373,6 +373,29 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const edanRecordIdStatus: FieldStatus = getEdanRecordIdStatus(edanResult);
     //#endregion
 
+    //#region edanUUID
+    const getEdanUUIDStatus = (uuid: string | null, pubStatus: string): FieldStatus => {
+        const name = 'EDAN UUID';
+        const isPublished: boolean = !pubStatus.includes('Unpublished');
+
+        if (uuid) {
+            if (isPublished) {
+                const serverBase: string = Config.http.serverUrl.replace(/\/server\/?$/, '');
+                const previewUrl: string = `${serverBase}/preview/${encodeURIComponent(uuid)}`;
+                return formatResultField(name, 'Available', 'pass',
+                    `${uuid} (<a href="${previewUrl}" target="_blank"><b>Preview</b></a>)`);
+            }
+            return formatResultField(name, 'Available', 'pass', uuid);
+        }
+
+        // no UUID
+        if (isPublished)
+            return formatResultField(name, 'Missing', 'fail', 'Scene is published but has no EDAN UUID. Contact support.');
+        return formatResultField(name, 'Not Assigned', 'warn', 'Publish scene to generate an EDAN UUID.');
+    };
+    const edanUUIDStatus: FieldStatus = getEdanUUIDStatus(scene.EdanUUID ?? null, publishedStatus.status);
+    //#endregion
+
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
@@ -388,6 +411,8 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             await getReviewedStatus(sceneSummary.isReviewed),
         edanRecordId:
             edanRecordIdStatus,
+        edanUUID:
+            edanUUIDStatus,
         edanRecordIdRaw: {
             svx: edanResult.svxEdanRecordId,
             db: edanResult.dbEdanRecordId,
@@ -670,6 +695,122 @@ export async function getUnit(req: Request, res: Response): Promise<void> {
         RK.logError(RK.LogSection.eHTTP,'get unit',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
         res.status(200).send(JSON.stringify(generateResponse(false,`no units: ${error}`)));
         return;
+    }
+}
+//#endregion
+
+//#region EXTERNAL SOURCE
+export async function getExternalSources(req: Request, res: Response): Promise<void> {
+    const authResult = await isAuthorized(req, true);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`getExternalSources: ${authResult.error}`)));
+        return;
+    }
+
+    try {
+        const sources: DBAPI.ExternalSource[] | null = await DBAPI.ExternalSource.fetchAll();
+        if(!sources)
+            throw new Error('cannot fetch from DB');
+
+        // resolve contact names
+        const data = await Promise.all(sources.map(async (s) => {
+            let contactName: string = '';
+            if(s.idContact) {
+                const user: DBAPI.User | null = await DBAPI.User.fetch(s.idContact);
+                contactName = user?.Name ?? '';
+            }
+            return {
+                idExternalSource: s.idExternalSource,
+                ClientId: s.ClientId,
+                Name: s.Name,
+                ReferrerPattern: s.ReferrerPattern,
+                idContact: s.idContact,
+                isActive: s.isActive,
+                DateCreated: s.DateCreated,
+                ContactName: contactName,
+            };
+        }));
+
+        res.status(200).send(JSON.stringify(generateResponse(true,`returned ${data.length} external sources`,data)));
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'get external sources',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`no external sources: ${error}`)));
+    }
+}
+
+export async function createExternalSource(req: Request, res: Response): Promise<void> {
+    const authResult = await isAuthorized(req, true);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`createExternalSource: ${authResult.error}`)));
+        return;
+    }
+
+    try {
+        const body = req.body;
+        if(!body || !body.Name?.trim())
+            throw new Error('Name is required');
+
+        const { v4: uuidv4 } = await import('uuid');
+        const sourceArgs = {
+            idExternalSource: 0,
+            ClientId: uuidv4(),
+            Name: body.Name.trim(),
+            ReferrerPattern: body.ReferrerPattern?.trim() || null,
+            idContact: body.idContact ?? null,
+            isActive: true,
+            DateCreated: new Date(),
+        };
+        const source = new DBAPI.ExternalSource(sourceArgs);
+        const result: boolean = await source.create();
+        if(!result)
+            throw new Error('failed to create DB row');
+
+        RK.logInfo(RK.LogSection.eHTTP,'create external source',`success: ${source.Name} (${source.ClientId})`,source,'HTTP.Object.CreateExternalSource',true);
+        res.status(200).send(JSON.stringify(generateResponse(true,`created external source: ${source.Name}`,source)));
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'create external source',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`cannot create external source: ${error}`)));
+    }
+}
+
+export async function updateExternalSource(req: Request, res: Response): Promise<void> {
+    const authResult = await isAuthorized(req, true);
+    if(authResult.success===false) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`updateExternalSource: ${authResult.error}`)));
+        return;
+    }
+
+    try {
+        const { id } = req.params;
+        const idExternalSource = id ? parseInt(id, 10) : NaN;
+        if(!id || isNaN(idExternalSource) || idExternalSource <= 0)
+            throw new Error(`invalid id: ${id}`);
+
+        const body = req.body;
+        if(!body)
+            throw new Error('invalid body');
+
+        const source: DBAPI.ExternalSource | null = await DBAPI.ExternalSource.fetch(idExternalSource);
+        if(!source)
+            throw new Error(`no ExternalSource found for id: ${idExternalSource}`);
+
+        if(body.Name !== undefined) source.Name = body.Name.trim();
+        if(body.ReferrerPattern !== undefined) source.ReferrerPattern = body.ReferrerPattern?.trim() || null;
+        if(body.idContact !== undefined) source.idContact = body.idContact ?? null;
+        if(body.isActive !== undefined) source.isActive = body.isActive;
+
+        const result: boolean = await source.update();
+        if(!result)
+            throw new Error('failed to update ExternalSource');
+
+        RK.logInfo(RK.LogSection.eHTTP,'update external source',`success: ${source.Name} (${source.idExternalSource})`,source,'HTTP.Object.UpdateExternalSource',true);
+        res.status(200).send(JSON.stringify(generateResponse(true,`updated external source: ${source.Name}`)));
+    } catch(err) {
+        const error = H.Helpers.getErrorString(err);
+        RK.logError(RK.LogSection.eHTTP,'update external source',`failed: ${error}`,H.Helpers.cleanExpressRequest(req,false,true,true));
+        res.status(200).send(JSON.stringify(generateResponse(false,`cannot update external source: ${error}`)));
     }
 }
 //#endregion

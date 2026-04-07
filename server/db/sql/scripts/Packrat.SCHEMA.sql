@@ -718,6 +718,21 @@ CREATE TABLE IF NOT EXISTS `WorkflowStepSystemObjectXref` (
   KEY `WorkflowStepSystemObjectXref_idSystemObject_Input` (`idSystemObject`,`Input`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `ExternalSource` (
+  `idExternalSource` int(11) NOT NULL AUTO_INCREMENT,
+  `ClientId` varchar(36) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `ReferrerPattern` varchar(1024) DEFAULT NULL,
+  `idContact` int(11) DEFAULT NULL,
+  `isActive` tinyint(1) NOT NULL DEFAULT 1,
+  `DateCreated` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`idExternalSource`),
+  UNIQUE KEY `ClientId` (`ClientId`),
+  KEY `fk_aes_contact` (`idContact`),
+  CONSTRAINT `fk_aes_contact` FOREIGN KEY (`idContact`)
+    REFERENCES `User` (`idUser`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 -- Foreign Keys
 ALTER TABLE `AccessContextObject` 
 ADD CONSTRAINT `fk_accesscontextobject_accesscontext1`

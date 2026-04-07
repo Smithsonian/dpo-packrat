@@ -8,6 +8,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
 import { SitemapGenerator } from './SitemapGenerator';
 import { isAuthenticated } from '../auth';
+import { TokenStore } from './TokenStore';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { Authorization } from '../../auth/Authorization';
 
@@ -59,7 +60,18 @@ export class Downloader {
     }
 
     async execute(): Promise<boolean> {
-        if (!isAuthenticated(this.request)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const previewToken: string | undefined = (this.request as any).previewToken;
+        let previewScope: { idSystemObject: number; clientId: string; userId: string } | null = null;
+
+        if (previewToken) {
+            const entry = TokenStore.validate(previewToken);
+            if (!entry || entry.type !== 'preview') {
+                RK.logError(RK.LogSection.eHTTP,'download error','invalid or expired preview token',{},'HTTP.Route.Download');
+                return this.sendError(403, 'Invalid or expired preview token');
+            }
+            previewScope = entry;
+        } else if (!isAuthenticated(this.request)) {
             AuditFactory.audit({ url: this.request.path, auth: false }, { eObjectType: 0, idObject: 0 }, eEventKey.eHTTPDownload);
             RK.logError(RK.LogSection.eHTTP,'download error','not authenticated',{ url: this.request.path },'HTTP.Route.Download');
             return this.sendError(403);
@@ -71,12 +83,26 @@ export class Downloader {
             return this.sendError(DPResults.statusCode ?? 200, DPResults.message);
         }
 
-        // Authorization: check access to the target SystemObject
-        const ctx = Authorization.getContext();
-        if (ctx) {
+        if (previewScope) {
             const idSO: number | null = await this.resolveSystemObjectForAuth(DPResults);
-            if (idSO && !await Authorization.canAccessSystemObject(ctx, idSO))
+            if (!idSO || idSO !== previewScope.idSystemObject) {
+                RK.logError(RK.LogSection.eHTTP,'download error','preview token scope mismatch',
+                    { expected: previewScope.idSystemObject, actual: idSO },'HTTP.Route.Download');
                 return this.sendError(403, 'Access denied');
+            }
+            AuditFactory.audit(
+                { url: this.request.path, auth: false, preview: true, clientId: previewScope.clientId, userId: previewScope.userId },
+                { eObjectType: this.downloaderParser.eObjectTypeV, idObject: this.downloaderParser.idObjectV },
+                eEventKey.eHTTPDownload
+            );
+        } else {
+            // Authorization: check access to the target SystemObject
+            const ctx = Authorization.getContext();
+            if (ctx) {
+                const idSO: number | null = await this.resolveSystemObjectForAuth(DPResults);
+                if (idSO && !await Authorization.canAccessSystemObject(ctx, idSO))
+                    return this.sendError(403, 'Access denied');
+            }
         }
 
         // Audit download
