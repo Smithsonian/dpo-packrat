@@ -88,9 +88,15 @@ class UploadAssetWorker extends ResolverBase {
         const UAR: UploadAssetResult = await this.uploadWorker();
 
         const success: boolean = (UAR.status === UploadStatus.Complete);
-        if (this.workflowHelper?.workflow)
-            await this.workflowHelper.workflow.updateStatus(success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
 
+        // If upload failed before workflow was created (e.g. stream timeout/disconnect),
+        // create a minimal workflow now so errors are captured in a WorkflowReport
+        // and the user receives a failure notification instead of silent log-only errors.
+        if (!success && !this.workflowHelper && this.user) {
+            this.workflowHelper = await this.createFailureWorkflow();
+        }
+
+        // Flush report content before updating status so the notification includes all details
         if (success) {
             await this.appendToWFReport('<b>Upload succeeded</b>');
             RK.logInfo(RK.LogSection.eGQL,'asset upload success',undefined,{ file: this.apolloFile.filename, ...UAR },'GraphQL.Upload.AssetWorker');
@@ -98,6 +104,9 @@ class UploadAssetWorker extends ResolverBase {
             await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
             RK.logError(RK.LogSection.eGQL,'asset upload failed',UAR.error ?? 'unknown error',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
         }
+
+        if (this.workflowHelper?.workflow)
+            await this.workflowHelper.workflow.updateStatus(success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
 
         return UAR;
     }
@@ -404,6 +413,28 @@ class UploadAssetWorker extends ResolverBase {
             this.idAssetVersions.push(assetVersion.idAssetVersion);
 
         RK.logInfo(RK.LogSection.eGQL,'workflow create success',undefined,{ file: this.apolloFile.filename, idWorkflow: workflowObj?.idWorkflow ?? -1 },'GraphQL.Upload.AssetWorker');
+        return { success: true, workflowEngine, workflow, workflowReport };
+    }
+
+    private async createFailureWorkflow(): Promise<IWorkflowHelper> {
+        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+        if (!workflowEngine) {
+            RK.logError(RK.LogSection.eGQL,'failure workflow failed','cannot load WorkflowEngine',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
+            return { success: false, error: 'Unable to create failure workflow' };
+        }
+
+        const wfParams: WF.WorkflowParameters = {
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeUpload,
+            idUserInitiator: this.user!.idUser, // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        };
+
+        const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
+        if (!workflow) {
+            RK.logError(RK.LogSection.eGQL,'failure workflow failed','unable to create workflow',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
+            return { success: false, error: 'Unable to create failure workflow' };
+        }
+
+        const workflowReport: REP.IReport | null = await REP.ReportFactory.getReport();
         return { success: true, workflowEngine, workflow, workflowReport };
     }
 
