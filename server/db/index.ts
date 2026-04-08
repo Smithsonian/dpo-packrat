@@ -21,6 +21,7 @@ export * from './api/CaptureDataGroupCaptureDataXref';
 export * from './api/CaptureDataPhoto';
 export * from './api/Contact';
 export * from './api/CookResource';
+export * from './api/ExternalSource';
 export * from './api/GeoLocation';
 export * from './api/Identifier';
 export * from './api/IntermediaryFile';

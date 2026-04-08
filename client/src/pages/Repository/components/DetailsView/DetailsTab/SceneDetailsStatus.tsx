@@ -50,6 +50,7 @@ interface SceneQCData {
     captureData: QCStatus;
     arModels: QCStatus;
     edanRecordId: QCStatus;
+    edanUUID: QCStatus;
     edanRecordIdRaw?: EdanRecordIdRaw;
     // network: QCStatus;
 }
@@ -59,6 +60,7 @@ interface QCRow {
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
+    tooltip: string;
 }
 interface SceneDetailsStatusProps {
     idSceneSO: number;
@@ -72,12 +74,26 @@ const qcRowKeys: (keyof SceneQCData)[] = [
     'license',
     'reviewed',
     'edanRecordId',
+    'edanUUID',
     // 'thumbnails',
     'baseModels',
     'downloads',
     'arModels',
     'captureData'
 ];
+
+const qcRowTooltips: Record<string, string> = {
+    published: 'Current publication state of this scene on EDAN/3d.si.edu',
+    license: 'License assigned to this scene and whether it permits publishing and downloads',
+    reviewed: 'Whether the scene has been marked as reviewed (QC\'d) by a team member',
+    edanRecordId: 'EDAN Record ID linking this scene to its subject in the EDAN catalog',
+    edanUUID: 'Unique identifier used by EDAN to reference this scene\'s 3D package',
+    thumbnails: 'Presence of generated thumbnail images for this scene',
+    baseModels: 'Base 3D models (master geometry) linked to this scene',
+    downloads: 'Generated download packages (GLB, OBJ, USDZ) for public distribution',
+    arModels: 'AR-ready models (WebXR and native) for augmented reality viewing',
+    captureData: 'Source capture datasets (photogrammetry, CT, etc.) linked to this scene',
+};
 
 // Define styles
 const useStyles = makeStyles(() =>
@@ -170,6 +186,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 status: row.status,
                 level: row.level,
                 notes: (publishedNotes) ?? row.notes,
+                tooltip: qcRowTooltips[key as string] ?? '',
             };
         });
     }, []);
@@ -193,6 +210,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                     arModels: response.data.arModels,
                     captureData: response.data.captureData,
                     edanRecordId: response.data.edanRecordId,
+                    edanUUID: response.data.edanUUID,
                     edanRecordIdRaw: response.data.edanRecordIdRaw,
                 };
                 setData(objectData);
@@ -261,6 +279,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 arModels: statusResponse.data.arModels,
                 captureData: statusResponse.data.captureData,
                 edanRecordId: statusResponse.data.edanRecordId,
+                edanUUID: statusResponse.data.edanUUID,
                 edanRecordIdRaw: statusResponse.data.edanRecordIdRaw,
             };
             setData(updatedData);
@@ -308,7 +327,9 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                         {rows && rows.map((row, index) => (
                             <TableRow key={index} hover>
                                 <TableCell component='th' scope='row'>
-                                    {row.property}
+                                    <Tooltip title={row.tooltip} placement='right' arrow>
+                                        <span>{row.property}</span>
+                                    </Tooltip>
                                 </TableCell>
                                 <TableCell className={`${classes.statusCell} ${getStatusClass(row.level)}`}>
                                     {row.status}

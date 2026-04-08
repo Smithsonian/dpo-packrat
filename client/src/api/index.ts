@@ -152,6 +152,19 @@ export default class API {
         return this.request(uri, { method: 'GET' });
     }
 
+    // external sources
+    static async getExternalSources(): Promise<RequestResponse> {
+        return this.request('api/external-source', { method: 'GET' });
+    }
+    static async createExternalSource(data: { Name: string; ReferrerPattern?: string | null }): Promise<RequestResponse> {
+        const body = JSON.stringify(data);
+        return this.request('api/external-source', { method: 'POST', body });
+    }
+    static async updateExternalSource(id: number, data: { Name?: string; ReferrerPattern?: string | null; isActive?: boolean }): Promise<RequestResponse> {
+        const body = JSON.stringify(data);
+        return this.request(`api/external-source/${id}`, { method: 'PUT', body });
+    }
+
     // webdav token
     static async getWebDAVToken(idSystemObject: number): Promise<RequestResponse> {
         return this.request(`api/scene/${idSystemObject}/webdav-token`, { method: 'POST' });

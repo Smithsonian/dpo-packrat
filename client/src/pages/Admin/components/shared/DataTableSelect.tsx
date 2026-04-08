@@ -355,8 +355,11 @@ function DataTableSelectInner<T extends DBReference>(
                                         .map((row: T, index: number) => {
                                             const isItemSelected = isSelected(row);
                                             const labelId = `table-checkbox-${index}`;
-                                            // base colSpan: data columns that render (id + non-id)
+                                            // base colSpan: id cell is always rendered outside the columns loop,
+                                            // so add 1 unless columns already includes an 'id' key (which is skipped in the loop)
+                                            const hasIdColumn = columns.some(c => c.key === 'id');
                                             const expandColSpan = columns.length
+                                                + (hasIdColumn ? 0 : 1) // id cell rendered outside columns loop
                                                 + (selectable ? 1 : 0)  // header checkbox col (if present)
                                                 + (expandable ? 1 : 0); // chevron col (if present)
                                             return (

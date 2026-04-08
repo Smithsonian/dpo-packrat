@@ -48,6 +48,7 @@ const schema: GraphQLSchema = mergeSchemas({
 // resolver for "Upload" scalar; instead, use default Apollo resolver
 const schemaForTest: GraphQLSchema = mergeSchemas({
     resolvers: [
+
         assetResolversForTest,
         captureDataResolvers,
         licenseResolvers,

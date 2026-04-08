@@ -20,6 +20,7 @@ module.exports = {
         // '**/tests/navigation/**/*.test.ts',
         // '**/tests/storage/**/*.test.ts',
         // '**/tests/utils/**/*.test.ts',
+        // '**/tests/http/**/*.test.ts'
 
         // Needs test cases written:
         // '**/tests/utils/parser/bulkIngestReader.test.ts',

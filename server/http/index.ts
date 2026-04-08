@@ -17,6 +17,7 @@ import { errorhandler } from './routes/errorhandler';
 import { WebDAVServer } from './routes/WebDAVServer';
 import { getCookResource } from './routes/resources';
 
+import { preview } from './routes/preview';
 import { play } from './routes/sandbox';
 
 import { generateDownloads } from './routes/api/generateDownloads';
@@ -26,6 +27,7 @@ import { createReport, getReportList, getReportFile } from './routes/api/report'
 import { getObjectStatus, patchObject } from './routes/api/object';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
+import { getExternalSources, createExternalSource, updateExternalSource } from './routes/api/object';
 import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
 import { getServiceStatus } from './routes/api/status';
 import { createWebDAVToken } from './routes/api/scene';
@@ -175,6 +177,7 @@ export class HttpServer {
 
         // strip token from WebDAV URLs before the WebDAV server processes them
         this.app.use(HttpServer.stripWebDAVToken);
+        this.app.use(HttpServer.stripPreviewToken);
 
         // if we have a WebDAV server (always), attach it to express
         if(this.WDSV)
@@ -217,6 +220,7 @@ export class HttpServer {
 
         // External deep-link endpoints
         this.app.get('/external/scene/:edanUUID', sceneByUUID);
+        this.app.get('/preview/:edanUUID', preview);
 
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
@@ -228,6 +232,10 @@ export class HttpServer {
 
         this.app.get('/api/unit',getUnit);
         this.app.get('/api/unit/:id',getUnit);
+
+        this.app.get('/api/external-source',getExternalSources);
+        this.app.post('/api/external-source',createExternalSource);
+        this.app.put('/api/external-source/:id',updateExternalSource);
 
         this.app.get('/api/workflow/gen-scene', generateScene);
         this.app.post('/api/workflow/gen-scene', generateScene);
@@ -330,6 +338,18 @@ export class HttpServer {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (req as any).webdavToken = match[1];
             req.url = `/webdav${match[2] || '/'}`;
+        }
+        next();
+    }
+
+    // strips preview token from download URLs (e.g. /download/preview-XXXXX/...)
+    // and stashes the token on the request for downstream authentication
+    private static stripPreviewToken(req: Request, _res, next): void {
+        const match: RegExpMatchArray | null = req.url.match(/^\/download\/preview-([a-f0-9-]+)(\/.*)?$/i);
+        if (match) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (req as any).previewToken = match[1];
+            req.url = `/download${match[2] || '/'}`;
         }
         next();
     }

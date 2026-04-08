@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { isAuthenticated } from '../../auth';
 import { ASL, LocalStore } from '../../../utils/localStore';
-import { WebDAVTokenStore } from '../WebDAVToken';
+import { TokenStore } from '../TokenStore';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export async function createWebDAVToken(req: Request, res: Response): Promise<void> {
@@ -26,7 +26,7 @@ export async function createWebDAVToken(req: Request, res: Response): Promise<vo
             return;
         }
 
-        const token: string = WebDAVTokenStore.generate(LS.idUser, idSystemObject);
+        const token: string = TokenStore.generate('webdav', { idUser: LS.idUser, idSystemObject });
         res.json({ success: true, data: { token } });
     } catch (error) {
         RK.logError(RK.LogSection.eHTTP, 'webdav token failed', `${error}`, {}, 'HTTP.Route.Scene');

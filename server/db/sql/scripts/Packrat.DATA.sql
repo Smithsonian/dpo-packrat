@@ -5296,3 +5296,6 @@ INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, Gene
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('Cook Server: 2', 'http://si-3dcook02.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'server');
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: Digitization', 'http://ocio-73qycx3.us.sinet.si.edu', 8000, 3, 3, 3, 0, 0, 'workstation');
 INSERT INTO CookResource (Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType) VALUES ('DPO Workstation: #9', 'http://ocio-3ddigisi-9.us.sinet.si.edu', 8000, 3, 1, 1, 0, 0, 'workstation');
+
+-- Default External Sources
+INSERT INTO ExternalSource (ClientId, Name, isActive) VALUES ('a1b2c3d4-e5f6-7890-abcd-ef1234567890', 'Packrat Preview (Test)', 1);
