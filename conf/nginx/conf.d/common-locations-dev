@@ -1,3 +1,10 @@
+location /preview {
+    proxy_pass http://server-dev;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+
 location /server {
     rewrite /server/(.*) /$1 break;
     proxy_pass http://server-dev;

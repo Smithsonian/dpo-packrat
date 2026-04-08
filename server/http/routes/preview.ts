@@ -9,6 +9,7 @@ import { renderPreviewPage } from './preview/template';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { Config } from '../../config';
 
 export async function preview(req: Request, res: Response): Promise<void> {
     const edanUUID: string = req.params.edanUUID;
@@ -161,9 +162,12 @@ export async function preview(req: Request, res: Response): Promise<void> {
         TokenStore.generate('preview', { idSystemObject, clientId, userId });
 
     // 13. Build Voyager root URL
+    // In production, nginx routes /server/* to Express — download URLs need this prefix.
+    // Locally (no nginx), serverUrl has no path prefix so this resolves to empty string.
+    const serverPrefix: string = new URL(Config.http.serverUrl).pathname.replace(/\/$/, '');
     const pathSegment: string = voyagerParams.path ? `/${voyagerParams.path}` : '';
     const rootUrl: string =
-        `/download/preview-${token}/idSystemObject-${idSystemObject}${pathSegment}/`;
+        `${serverPrefix}/download/preview-${token}/idSystemObject-${idSystemObject}${pathSegment}/`;
 
     // 14. Audit: allowed
     logAudit(idSystemObject, clientId, userId, referer, 'allowed', null);
@@ -176,14 +180,7 @@ export async function preview(req: Request, res: Response): Promise<void> {
         + (licenseInherited ? ' (inherited)' : '');
 
     // 16. Build Packrat base URL for "Open in Packrat" link
-    // In production the client is served from the same origin;
-    // in development the React dev server runs on port 3000.
-    const protocol: string = req.protocol;
-    const host: string = req.get('host') ?? 'localhost:4000';
-    const port: string = host.includes(':') ? host.split(':')[1] : '';
-    const packratBaseUrl: string = port === '4000'
-        ? `${protocol}://${host.replace(':4000', ':3000')}`
-        : `${protocol}://${host}`;
+    const packratBaseUrl: string = Config.http.clientUrl.replace(/\/$/, '');
 
     // 17. Render
     res.status(200).send(renderPreviewPage({
