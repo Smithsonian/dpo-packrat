@@ -59,14 +59,14 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
             return;
         }
 
-        if (selectedSubjects.length > 1)
-            updateNewItemEntireSubject(false);
-
         try {
             await fetchAndInitializeIngestionItems(selectedSubjects.map(subject => subject.id));
         } catch (error) {
             toast.error('Failed to get ingestion items');
         }
+
+        if (selectedSubjects.length > 1)
+            updateNewItemEntireSubject(false);
     },
     reset: () => {
         set({ subjects: [] });

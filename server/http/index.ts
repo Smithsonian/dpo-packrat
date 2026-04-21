@@ -277,7 +277,7 @@ export class HttpServer {
             // Disable request completion timeout so large uploads (70GB+) are not killed mid-stream.
             // Prior values of headersTimeout (6100s) caused uploads exceeding ~101 minutes to abort
             // with "Request disconnected during file upload stream parsing."
-            (server as any).requestTimeout = 0;
+            (server as import('http').Server & { requestTimeout: number }).requestTimeout = 0;
         }
 
         // only gets here if no other route is satisfied
