@@ -4351,8 +4351,8 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
     test('DB Fetch SystemObject: COMMON.PublishedStateEnumToString', async () => {
         expect(COMMON.PublishedStateEnumToString(0)).toEqual('Not Published'); // testing int input. -1 not compiling since enums are 0+
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished)).toEqual('Not Published');
-        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('API Only');
-        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Published');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eAPIOnly)).toEqual('Public (Unlisted)');
+        expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished)).toEqual('Public');
         expect(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eInternal)).toEqual('Internal');
     });
 

@@ -815,6 +815,7 @@ type GetSystemObjectDetailsResult {
   idObject: Int!
   idSystemObject: Int!
   identifiers: [IngestIdentifier!]!
+  isDraft: Boolean!
   item: [RepositoryPath!]
   license: License
   licenseInheritance: Int

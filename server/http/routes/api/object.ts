@@ -161,11 +161,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 case COMMON.ePublishedState.eNotPublished:
                     return { status: 'Not Published', notes: 'Scene is not published.' };
                 case COMMON.ePublishedState.eAPIOnly:
-                    return { status: 'Unlisted', notes: 'Scene is accessible publicly via the url, but <b><u>IS NOT</u></b> searchable via 3d.si.edu.' };
+                    return { status: 'Public (Unlisted)', notes: 'Scene was published via <b>Public (Unlisted)</b>. Accessible publicly via the url, but <b><u>IS NOT</u></b> searchable via 3d.si.edu.' };
                 case COMMON.ePublishedState.ePublished:
-                    return { status: 'Public', notes: 'Scene is accessible publicly via the url and can be found on 3d.si.edu.' };
+                    return { status: 'Public', notes: 'Scene was published via <b>Public</b>. Accessible publicly via the url and searchable on 3d.si.edu.' };
                 case COMMON.ePublishedState.eInternal:
-                    return { status: 'Internal', notes: 'Scene can only be accessed by those behind the Smithsonian firewall.' };
+                    return { status: 'Internal', notes: 'Scene was published via <b>Internal</b>. Only accessible to those behind the Smithsonian firewall.' };
                 default:
                     return { status: 'Unknown', notes: `Unknown published state: ${s}` };
             }
@@ -179,7 +179,17 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         // If the latest version ID is greater than the last published version ID and the latest
         // is not published, then we have unpublished changes (a draft)
         if (latestId > lastPubId && !isPublished(latest.PublishedState)) {
-            return formatResultField('Published','Draft','warn','Latest scene changes have not been published');
+            const prior = mapStateToStatus(lastPublished.PublishedState);
+            const d: Date = lastPublished.DateCreated instanceof Date
+                ? lastPublished.DateCreated
+                : new Date(String(lastPublished.DateCreated));
+            const priorDateTime: string = isNaN(d.getTime())
+                ? String(lastPublished.DateCreated)
+                : `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)} UTC`;
+            const draftNotes: string =
+                'Latest scene changes have not been published. Previously published as '
+                + `<b>'${prior.status}'</b> on ${priorDateTime}.`;
+            return formatResultField('Published','Draft','warn',draftNotes);
         }
 
         // Otherwise, the latest is not newer than the last published (or ties but latest isn't published),

@@ -20,6 +20,7 @@ type PublishedStateInfo = {
     publishedEnum: COMMON.ePublishedState;
     publishable: boolean;
     publishBlocker: string | null;
+    isDraft: boolean;
 };
 
 const UNKNOWN_NAME: string = '<UNKNOWN>';
@@ -124,6 +125,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,
         publishBlocker: publishedStateInfo.publishBlocker,
+        isDraft: publishedStateInfo.isDraft,
         thumbnail: null,
         unit,
         project,
@@ -148,6 +150,23 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
     const publishedEnum: COMMON.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : COMMON.ePublishedState.eNotPublished;
     const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
+
+    // A scene is a "draft" when the latest version is newer than the last published version
+    // and the latest version itself is not published.
+    let isDraft: boolean = false;
+    const allVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
+    if (allVersions && allVersions.length > 0) {
+        const sorted = [...allVersions].sort((a, b) => b.idSystemObjectVersion - a.idSystemObjectVersion);
+        const latest = sorted[0];
+        const isPublished = (s: COMMON.ePublishedState): boolean =>
+            s === COMMON.ePublishedState.ePublished ||
+            s === COMMON.ePublishedState.eAPIOnly ||
+            s === COMMON.ePublishedState.eInternal;
+        const lastPublished = sorted.find(v => isPublished(v.publishedStateEnum())) ?? null;
+        if (lastPublished)
+            isDraft = latest.idSystemObjectVersion > lastPublished.idSystemObjectVersion
+                && !isPublished(latest.publishedStateEnum());
+    }
 
     let publishable: boolean = false;
     let publishBlocker: string | null = null;
@@ -184,7 +203,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                 break;
         }
     }
-    return { publishedState, publishedEnum, publishable, publishBlocker };
+    return { publishedState, publishedEnum, publishable, publishBlocker, isDraft };
 }
 
 export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {

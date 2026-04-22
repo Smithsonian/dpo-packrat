@@ -390,6 +390,7 @@ function DetailsView(): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        isDraft,
         thumbnail,
         unit,
         project,
@@ -931,6 +932,7 @@ function DetailsView(): React.ReactElement {
                         publishedState={publishedState}
                         publishedEnum={publishedEnum}
                         publishable={publishable}
+                        isDraft={isDraft}
                         retired={withDefaultValueBoolean(details.retired, false)}
                         hideRetired={hideRetired}
                         objectType={objectType}
@@ -945,7 +947,7 @@ function DetailsView(): React.ReactElement {
                         path={objectAncestors}
                         updateData={updateData}
                     />
-                    <Box display='flex' flex={2.2} flexDirection='column'>
+                    <Box display='flex' flex={2} flexDirection='column'>
                         <IdentifierList
                             viewMode
                             disabled={disabled}

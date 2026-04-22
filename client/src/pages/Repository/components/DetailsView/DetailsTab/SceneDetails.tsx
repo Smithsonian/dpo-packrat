@@ -10,7 +10,9 @@ import { Loader } from '../../../../../components';
 import { GetSceneDocument } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { apolloClient } from '../../../../../graphql/index';
-import { ReadOnlyRow, CheckboxField, InputField, FieldType } from '../../../../../components/index';
+import { ReadOnlyRow, InputField, FieldType } from '../../../../../components/index';
+import { scenePublishRequirementsNotes } from '../ObjectDetails';
+import { ToolTip } from '../../../../../components';
 import { useDetailTabStore } from '../../../../../store';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -139,16 +141,28 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     containerStyle={{ borderTopLeftRadius: '5px', borderTopRightRadius: '5px', paddingTop: '4px' }}
                     updated={subtitle !== originalSubtitle}
                 />
-                <CheckboxField
-                    label='Approved for Publication'
-                    name='ApprovedForPublication'
-                    value={SceneDetails.ApprovedForPublication}
-                    onChange={setCheckboxField}
+                <FieldType
                     required
+                    label='Approved for Publication'
+                    direction='row'
+                    containerProps={{ alignItems: 'center', justifyContent: 'space-between', style: { borderRadius: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 } }}
                     padding='1px 10px'
-                    containerStyle={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-                    updated={isFieldUpdated(SceneDetails, sceneData,'ApprovedForPublication')}
-                />
+                >
+                    <div style={{ display: 'flex' }}>
+                        <Tooltip arrow title={<ToolTip text={scenePublishRequirementsNotes} />} placement='left'>
+                            <HelpOutline
+                                style={{ alignSelf: 'center', cursor: 'pointer', fontSize: '18px' }}
+                            />
+                        </Tooltip>
+                        <CheckboxNoPadding
+                            name='ApprovedForPublication'
+                            checked={withDefaultValueBoolean(SceneDetails.ApprovedForPublication, false)}
+                            onChange={setCheckboxField}
+                            {...getUpdatedCheckboxProps(isFieldUpdated(SceneDetails, sceneData,'ApprovedForPublication'))}
+                            size='small'
+                        />
+                    </div>
+                </FieldType>
                 <FieldType
                     required
                     label="Posed and QC'd"
