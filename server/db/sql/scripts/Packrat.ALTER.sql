@@ -781,3 +781,6 @@ CREATE TABLE IF NOT EXISTS `ExternalSource` (
   CONSTRAINT `fk_aes_contact` FOREIGN KEY (`idContact`)
     REFERENCES `User` (`idUser`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+-- 2026-04-23 Audit Phase 1 / I.2: composite index on (AuditType, AuditDate) (Eric)
+CREATE INDEX `Audit_AuditType_AuditDate` ON `Audit` (`AuditType`, `AuditDate`);

@@ -72,7 +72,7 @@ export abstract class DBObject<T> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
             if (await this.createManyWorker<T>(data)) /* istanbul ignore else */ {
                 for (const dataItem of data)
-                    dataItem.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+                    dataItem.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
                 return true;
             } else if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);

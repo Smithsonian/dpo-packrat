@@ -161,6 +161,7 @@ model Audit {
   @@index([DBObjectType, idDBObject, AuditDate], map: "Audit_idAsset_DBObjectType_idDBObject_AuditDate")
   @@index([idSystemObject, AuditDate], map: "Audit_idAsset_idSystemObject_AuditDate")
   @@index([idUser, AuditDate], map: "Audit_idAsset_idUser_AuditDate")
+  @@index([AuditType, AuditDate], map: "Audit_AuditType_AuditDate")
 }
 
 model CaptureData {

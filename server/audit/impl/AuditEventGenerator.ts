@@ -51,6 +51,7 @@ export class AuditEventGenerator {
                 case EVENT.eEventKey.eHTTPDownload: AuditType = eAuditType.eHTTPDownload;   eventTopic = EVENT.eEventTopic.eHTTP;       break;
                 case EVENT.eEventKey.eHTTPUpload:   AuditType = eAuditType.eHTTPUpload;     eventTopic = EVENT.eEventTopic.eHTTP;       break;
                 case EVENT.eEventKey.eSolrRebuild:  AuditType = eAuditType.eSolrRebuild;    eventTopic = EVENT.eEventTopic.eHTTP;       break;
+                case EVENT.eEventKey.eGenDownloads: AuditType = eAuditType.eGenDownloads;   eventTopic = EVENT.eEventTopic.eHTTP;       break;
             }
 
             const value: Audit = {

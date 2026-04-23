@@ -277,6 +277,26 @@ export enum eAuditType {
     eSolrRebuild = 10,
     eAuthGranted = 11,
     eAuthRevoked = 12,
+    eGenDownloads = 13,
+
+    // Semantic business actions. Declared in Phase 1 (I.3); emission wiring in Deferred-B.
+    // Exception: eActionRetire / eActionReinstate ARE wired in Phase 1 (see I.11).
+    eActionPublish = 100,
+    eActionUnpublish = 101,
+    eActionAssignLicense = 102,
+    eActionClearLicense = 103,
+    eActionLicenseUpdate = 104,
+    eActionEDANIDChange = 105,
+    eActionRollbackSOV = 106,
+    eActionRollbackAssetVersion = 107,
+    eActionRetire = 108,
+    eActionReinstate = 109,
+    eActionApproveForPublication = 110,
+    eActionPoseAndQC = 111,
+    eActionIngest = 112,
+    eActionAccessGrant = 113,
+    eActionAccessRevoke = 114,
+    eActionSystemMaintenance = 115,
 }
 
 export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): COMMON.ePublishedState {
