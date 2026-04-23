@@ -1,7 +1,7 @@
 import { Config, AuditTier } from '../../config';
 import { eAuditType } from '../../db/api/ObjectType';
 
-describe('Config.audit (Phase 1 / Commit 2)', () => {
+describe('Config.audit', () => {
     test('defines all three DB-bound retention tiers', () => {
         expect(Config.audit.tiers[AuditTier.PROTECT].retainFullDataDays).toBe('forever');
         expect(Config.audit.tiers[AuditTier.PROTECT].retainSkeletonDays).toBe('forever');

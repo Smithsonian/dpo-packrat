@@ -3,6 +3,8 @@ import { Authorization } from '../auth/Authorization';
 import { ApolloServerOptions } from '../graphql';
 import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
+import { resolveActorFromRequest } from '../audit/resolveActor';
+import { Actor } from '../audit/Actor';
 import { Config } from '../config';
 import * as H from '../utils/helpers';
 import { User } from '../db/api/User';
@@ -322,6 +324,17 @@ export class HttpServer {
                     err instanceof Error ? err.message : String(err), { idUser: id }, 'HttpServer');
             }
         }
+
+        // Resolve Actor once at the entry boundary; downstream audit writes
+        // read via LS.getActor(). WebDAV machine traffic without a session is
+        // attributed as system('WebDAV'); other unauthenticated tooling falls
+        // back to system('InternalHTTP').
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const isWebDAV = typeof req.url === 'string' && req.url.startsWith('/webdav');
+        const fallback = isWebDAV ? 'WebDAV' : 'InternalHTTP';
+        LS.actor = resolveActorFromRequest(req, fallback);
+        if (!Actor.isValid(LS.actor))
+            RK.logError(RK.LogSection.eSYS, 'invalid actor at entry', undefined, { actor: LS.actor, url: req.url }, 'HttpServer');
 
         // run the store for this user
         ASL.run(LS, () => {

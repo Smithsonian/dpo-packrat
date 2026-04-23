@@ -279,8 +279,9 @@ export enum eAuditType {
     eAuthRevoked = 12,
     eGenDownloads = 13,
 
-    // Semantic business actions. Declared in Phase 1 (I.3); emission wiring in Deferred-B.
-    // Exception: eActionRetire / eActionReinstate ARE wired in Phase 1 (see I.11).
+    // Semantic business actions. Most are declared here for forward compatibility
+    // and wired by their owning service. eActionRetire/eActionReinstate are emitted
+    // directly by SystemObject.retireObject / reinstateObject.
     eActionPublish = 100,
     eActionUnpublish = 101,
     eActionAssignLicense = 102,

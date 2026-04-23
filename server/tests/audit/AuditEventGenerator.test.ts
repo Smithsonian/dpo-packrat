@@ -38,7 +38,7 @@ describe('AuditEventGenerator eEventKey → eAuditType mapping', () => {
         [eEventKey.eHTTPDownload, eAuditType.eHTTPDownload],
         [eEventKey.eHTTPUpload,   eAuditType.eHTTPUpload],
         [eEventKey.eSolrRebuild,  eAuditType.eSolrRebuild],
-        [eEventKey.eGenDownloads, eAuditType.eGenDownloads], // Phase 1 / I.1: previously fell through to eDBUpdate
+        [eEventKey.eGenDownloads, eAuditType.eGenDownloads],
     ];
 
     test.each(cases)('maps %s to expected eAuditType', async (key, expectedAuditType) => {

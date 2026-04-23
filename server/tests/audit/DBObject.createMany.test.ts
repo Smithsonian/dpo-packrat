@@ -16,8 +16,8 @@ class FakeDBObject extends DBObject<FakeInput> {
     protected static async createManyWorker<T>(_data: DBObject<T>[]): Promise<boolean> { return true; }
 }
 
-describe('DBObject.createMany audit key (Phase 1 / I.1)', () => {
-    test('emits eDBCreate for each item (previously mislabeled as eDBDelete)', async () => {
+describe('DBObject.createMany audit key', () => {
+    test('emits eDBCreate for each item', async () => {
         // Confirm our fake resolves to a real object type (not eUnknown).
         expect(DBObjectNameToType('Scene')).toBe(COMMON.eSystemObjectType.eScene);
 

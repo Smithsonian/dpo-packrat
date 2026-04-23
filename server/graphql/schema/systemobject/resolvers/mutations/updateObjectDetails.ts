@@ -593,7 +593,7 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
         return { success: false, error: `Unable to fetch SystemObject ${idSystemObject}` };
     }
 
-    // Step 1: Cascade to derived/child objects (Scenes first, then Models)
+    // Cascade to derived/child objects (Scenes first, then Models)
     const derivedObjects: DBAPI.SystemObject[] | null = await DBAPI.SystemObject.fetchDerivedFromXref(idSystemObject);
     if (derivedObjects && derivedObjects.length > 0) {
         // Sort: Scenes first, then Models, then others
@@ -642,7 +642,7 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
         }
     }
 
-    // Step 2: Retire assets - use fetchFromSceneByVersion for Scenes to get all assets including model assets
+    // Retire assets - use fetchFromSceneByVersion for Scenes to get all assets including model assets
     if (SO.idScene) {
         // For Scenes, use the comprehensive fetch that includes model assets
         const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSceneByVersion(SO.idScene);

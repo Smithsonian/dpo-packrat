@@ -786,12 +786,10 @@ CREATE TABLE IF NOT EXISTS `ExternalSource` (
 CREATE INDEX `Audit_AuditType_AuditDate` ON `Audit` (`AuditType`, `AuditDate`);
 
 -- Audit actor + correlation id columns on Audit (Eric)
--- Both nullable/additive; CorrelationId wiring deferred to Deferred-C.
 ALTER TABLE `Audit` ADD COLUMN `SystemActor` varchar(32) NULL;
 ALTER TABLE `Audit` ADD COLUMN `CorrelationId` varchar(40) NULL;
 CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
 
--- Audit Cook processing-lock columns on SystemObject (Eric)
--- Both nullable/additive; lock acquisition/release wired in Commit 8.
+-- Cook processing-lock columns on SystemObject (Eric)
 ALTER TABLE `SystemObject` ADD COLUMN `ProcessingLockedBy` int(11) NULL;
 ALTER TABLE `SystemObject` ADD COLUMN `ProcessingLockedAt` datetime NULL;

@@ -27,8 +27,8 @@ async function auditAuthChange(
             idDBObject: null,
             idSystemObject: null,
             Data: JSON.stringify(data),
-            SystemActor: null,    // populated in Commit 3 (I.6 Actor model)
-            CorrelationId: null,  // wiring deferred to Deferred-C
+            SystemActor: null,
+            CorrelationId: null,
         });
         await audit.create();
     } catch (_error) { /* best-effort */ }

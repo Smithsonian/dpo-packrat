@@ -3,6 +3,7 @@ import { AsyncLocalStorage, AsyncResource } from 'async_hooks';
 import * as H from './helpers';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 import type { AuthorizationContext } from '../auth/Authorization';
+import { Actor } from '../audit/Actor';
 
 export class LocalStore {
     idRequest: number;
@@ -16,6 +17,13 @@ export class LocalStore {
     idWorkflowSet?: number | undefined;
     transactionNumber?: number | undefined;
     authContext?: AuthorizationContext | undefined;
+    /**
+     * Set once at the entry-point (HTTP middleware, GraphQL context, scheduled-job
+     * wrapper). Audit writers read via `getActor()` which falls back to
+     * `user(idUser)` when this slot is empty and idUser is known. Never populated
+     * from downstream code.
+     */
+    actor?: Actor | undefined;
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
@@ -74,6 +82,18 @@ export class LocalStore {
 
     incrementRequestID(): void {
         this.idRequest = LocalStore.getIDRequestNext();
+    }
+
+    /**
+     * Returns the Actor for audit-row attribution.
+     * - If an explicit Actor was set at entry, returns it.
+     * - Otherwise falls back to user(idUser) when idUser is known.
+     * - Otherwise undefined — caller must supply a system Actor explicitly.
+     */
+    getActor(): Actor | undefined {
+        if (this.actor) return this.actor;
+        if (typeof this.idUser === 'number') return Actor.user(this.idUser);
+        return undefined;
     }
 }
 
