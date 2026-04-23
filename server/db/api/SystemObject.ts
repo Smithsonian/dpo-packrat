@@ -27,6 +27,8 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
     idActor!: number | null;
     idStakeholder!: number | null;
     Retired!: boolean;
+    ProcessingLockedBy!: number | null;
+    ProcessingLockedAt!: Date | null;
 
     constructor(input: P.SystemObject) {
         super(input);

@@ -302,6 +302,8 @@ export class Authorization {
                 idDBObject: null,
                 idSystemObject,
                 Data: JSON.stringify(data),
+                SystemActor: null,    // populated in Commit 3 (I.6 Actor model)
+                CorrelationId: null,  // wiring deferred to Deferred-C
             });
             await audit.create();
         } catch (error) { /* best-effort; log failure already handled by Audit.createWorker */ }

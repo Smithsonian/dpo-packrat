@@ -62,6 +62,8 @@ export class AuditEventGenerator {
                 idDBObject,
                 idSystemObject: null, // avoid computing with (await CACHE.SystemObjectCache.getSystemFromObjectID(oID))?.idSystemObject ?? null,
                 Data: JSON.stringify(obj, H.Helpers.stringifyDatabaseRow),
+                SystemActor: null,      // populated in Commit 3 (I.6 Actor model)
+                CorrelationId: null,    // wiring deferred to Deferred-C
                 idAudit: 0
             };
 

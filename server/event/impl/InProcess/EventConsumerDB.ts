@@ -87,6 +87,8 @@ export class EventConsumerDB extends EventConsumer {
         const idSystemObject: number | null = H.Helpers.safeNumber(data.idSystemObject) || null;
         const Data: string | null = H.Helpers.safeString(data.Data);
         const idAudit: number | null = H.Helpers.safeNumber(data.idAudit) || 0;
-        return new DBAPI.Audit({ idUser, AuditDate, AuditType, DBObjectType, idDBObject, idSystemObject, Data, idAudit });
+        const SystemActor: string | null = H.Helpers.safeString(data.SystemActor);
+        const CorrelationId: string | null = H.Helpers.safeString(data.CorrelationId);
+        return new DBAPI.Audit({ idUser, AuditDate, AuditType, DBObjectType, idDBObject, idSystemObject, Data, SystemActor, CorrelationId, idAudit });
     }
 }

@@ -782,5 +782,16 @@ CREATE TABLE IF NOT EXISTS `ExternalSource` (
     REFERENCES `User` (`idUser`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
--- 2026-04-23 Audit Phase 1 / I.2: composite index on (AuditType, AuditDate) (Eric)
+-- Audit composite index on (AuditType, AuditDate) (Eric)
 CREATE INDEX `Audit_AuditType_AuditDate` ON `Audit` (`AuditType`, `AuditDate`);
+
+-- Audit actor + correlation id columns on Audit (Eric)
+-- Both nullable/additive; CorrelationId wiring deferred to Deferred-C.
+ALTER TABLE `Audit` ADD COLUMN `SystemActor` varchar(32) NULL;
+ALTER TABLE `Audit` ADD COLUMN `CorrelationId` varchar(40) NULL;
+CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
+
+-- Audit Cook processing-lock columns on SystemObject (Eric)
+-- Both nullable/additive; lock acquisition/release wired in Commit 8.
+ALTER TABLE `SystemObject` ADD COLUMN `ProcessingLockedBy` int(11) NULL;
+ALTER TABLE `SystemObject` ADD COLUMN `ProcessingLockedAt` datetime NULL;

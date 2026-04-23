@@ -113,7 +113,7 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             oIDFetch = SystemObjectCache.convertSystemObjectToObjectID(null);
             expect(oIDFetch).toBeFalsy();
 
-            const SOInvalid: DBAPI.SystemObject = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false });
+            const SOInvalid: DBAPI.SystemObject = new DBAPI.SystemObject({ idSystemObject: 0, idUnit: 0, idProject: 0, idSubject: 0, idItem: 0, idCaptureData: 0, idModel: 0, idScene: 0, idIntermediaryFile: 0, idAsset: 0, idAssetVersion: 0, idProjectDocumentation: 0, idActor: 0, idStakeholder: 0, Retired: false, ProcessingLockedBy: null, ProcessingLockedAt: null });
             oIDFetch = SystemObjectCache.convertSystemObjectToObjectID(SOInvalid);
             expect(oIDFetch).toBeFalsy();
         });

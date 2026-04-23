@@ -25,6 +25,8 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     idDBObject!: number | null;
     idSystemObject!: number | null;
     Data!: string | null;
+    SystemActor!: string | null;
+    CorrelationId!: string | null;
 
     constructor(input: AuditBase) {
         super(input);

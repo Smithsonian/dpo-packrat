@@ -716,6 +716,8 @@ describe('DB Creation Test Suite', () => {
                 idDBObject: subject.idSubject,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 Data: JSON.stringify(subject, H.Helpers.stringifyDatabaseRow),
+                SystemActor: null,
+                CorrelationId: null,
                 idAudit: 0
             });
         expect(audit).toBeTruthy();
@@ -731,6 +733,8 @@ describe('DB Creation Test Suite', () => {
                 idDBObject: null,
                 idSystemObject: null,
                 Data: '',
+                SystemActor: null,
+                CorrelationId: null,
                 idAudit: 0
             });
         expect(auditNulls).toBeTruthy();
@@ -4122,6 +4126,7 @@ describe('DB Fetch SystemObject Fetch Pair Test Suite', () => {
             idSystemObject: 0, idUnit: null, idProject: null, idSubject: null, idItem: null, idCaptureData: null,
             idModel: null, idScene: null, idIntermediaryFile: null, idAsset: null, idAssetVersion: null,
             idProjectDocumentation: null, idActor: null, idStakeholder: null, Retired: false,
+            ProcessingLockedBy: null, ProcessingLockedAt: null,
             Actor: null, Asset_AssetToSystemObject_idAsset: null, AssetVersion_AssetVersionToSystemObject_idAssetVersion: null, CaptureData: null, // eslint-disable-line camelcase
             IntermediaryFile: null, Item: null, Model: null, Project: null, ProjectDocumentation: null,
             Scene: null, Stakeholder: null, Subject: null, Unit: null
@@ -8220,6 +8225,8 @@ describe('DB Null/Zero ID Test', () => {
             idSystemObject: 0,
             idUnit: 0,
             Retired: false,
+            ProcessingLockedBy: null,
+            ProcessingLockedAt: null,
         });
 
         await expect(SO.create()).rejects.toThrow('DBAPI.SystemObject.create() should never be called');
