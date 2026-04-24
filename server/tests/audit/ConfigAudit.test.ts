@@ -30,7 +30,7 @@ describe('Config.audit', () => {
 
     test('tx and retention knobs have sensible defaults', () => {
         expect(Config.audit.retentionBatchSize).toBeGreaterThan(0);
-        expect(Config.audit.retentionJobCron).toMatch(/^[\d*\/, -]+(\s+[\d*\/, -]+){4}$/);
+        expect(Config.audit.retentionJobCron).toMatch(/^[\d*/, -]+(\s+[\d*/, -]+){4}$/);
         expect(Config.audit.txStatementTimeoutMs).toBeGreaterThan(0);
         expect(Config.audit.txDeadlockRetries).toBeGreaterThanOrEqual(0);
     });

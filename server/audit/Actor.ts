@@ -56,10 +56,10 @@ export const Actor = {
         }
     },
 
-    /** Enforced invariant: idUser and SystemActor MUST NOT both be null. */
+    /** Enforced invariant: idUser and SystemActor MUST NOT both be null/undefined. */
     isValid(actor: Actor): boolean {
         const { idUser, SystemActor } = Actor.toAuditColumns(actor);
-        return idUser !== null || SystemActor !== null;
+        return (idUser != null) || (SystemActor != null && SystemActor.length > 0);
     },
 
     describe(actor: Actor): string {

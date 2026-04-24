@@ -1,31 +1,145 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
-import { IAuditEngine } from './IAuditEngine';
-import { AuditEngine } from '../impl/AuditEngine';
-import { Config, AUDIT_TYPE } from '../../config';
-
-import { ObjectIDAndType } from '../../db/api/ObjectType';
+import { Actor } from '../Actor';
+import * as DBC from '../../db/connection';
+import * as CACHE from '../../cache';
+import { ObjectIDAndType, eAuditType, eDBObjectType, eNonSystemObjectType } from '../../db/api/ObjectType';
+import { SystemObjectInvalidation } from '../../cache/SystemObjectInvalidation';
 import { eEventKey } from '../../event/interface/EventEnums';
+import { ASL } from '../../utils/localStore';
+import { RecordKeeper as RK } from '../../records/recordKeeper';
+import * as H from '../../utils/helpers';
 
+/** Args accepted by AuditFactory.emit — the forward-looking audit API. */
+export type EmitArgs = {
+    /** Semantic or CRUD action; stored as Audit.AuditType. */
+    action: eAuditType;
+    /** Who performed the action. Required at the type level. */
+    actor: Actor;
+    /** Optional business-object target (populates DBObjectType + idDBObject). */
+    target?: ObjectIDAndType;
+    /** Explicit SystemObject id. If omitted, resolved via SystemObjectCache from target. */
+    idSystemObject?: number | null;
+    /** Arbitrary JSON-serializable payload written to Audit.Data. */
+    payload?: unknown;
+    /** Optional override for the audit row timestamp; defaults to now. */
+    when?: Date;
+    /** Optional correlation id for grouping related rows; column wiring is server-side. */
+    correlationId?: string | null;
+};
+
+/**
+ * Central audit write API. All audit rows must originate here — direct
+ * prisma.audit.create calls are banned outside server/audit/** by ESLint.
+ *
+ * Writes are direct (no event-pipeline indirection). Cache flush and Solr
+ * reindex for the target SystemObject happen AFTER the write as fire-and-forget
+ * side effects via SystemObjectInvalidation.
+ */
 export class AuditFactory {
-    private static instance: IAuditEngine | null = null;
+    /**
+     * Write an audit row.
+     *
+     * Returns true on success. On failure, logs at critical and returns false
+     * (current behavior — transactional atomicity with business writes is
+     * layered in by the upcoming prisma.$transaction work).
+     */
+    static async emit(args: EmitArgs): Promise<boolean> {
+        const action: eAuditType = args.action;
+        const actor: Actor = args.actor;
 
-    static async getInstance(): Promise<IAuditEngine | null> {
-        /* istanbul ignore else */
-        if (!AuditFactory.instance) {
-            switch (Config.audit.type) {
-                /* istanbul ignore next */
-                default:
-                case AUDIT_TYPE.LOCAL: {
-                    AuditFactory.instance = new AuditEngine();
-                    break;
-                }
+        if (!Actor.isValid(actor)) {
+            RK.logError(RK.LogSection.eAUDIT, 'emit refused invalid actor',
+                'both idUser and SystemActor would be null', { actor, action }, 'Audit.Factory');
+            return false;
+        }
+
+        const cols = Actor.toAuditColumns(actor);
+        const AuditDate: Date = args.when ?? new Date();
+        const DBObjectType: eDBObjectType | null = args.target?.eObjectType ?? null;
+        const idDBObject: number | null = args.target?.idObject ?? null;
+        const CorrelationId: string | null = args.correlationId ?? null;
+
+        // Resolve idSystemObject synchronously from the cache if the caller
+        // didn't supply it and we have a typed target.
+        let idSystemObject: number | null = args.idSystemObject ?? null;
+        if (idSystemObject === null && args.target && args.target.eObjectType !== eNonSystemObjectType.eAudit) {
+            try {
+                const SOInfo = await CACHE.SystemObjectCache.getSystemFromObjectID(args.target);
+                if (SOInfo) idSystemObject = SOInfo.idSystemObject;
+            } catch (err) {
+                RK.logError(RK.LogSection.eAUDIT, 'idSystemObject resolve failed',
+                    err instanceof Error ? err.message : String(err),
+                    { target: args.target }, 'Audit.Factory');
             }
         }
-        return AuditFactory.instance;
+
+        const Data: string | null = args.payload === undefined
+            ? null
+            : JSON.stringify(args.payload, H.Helpers.stringifyDatabaseRow);
+
+        try {
+            await DBC.DBConnection.prisma.audit.create({
+                data: {
+                    User:           cols.idUser ? { connect: { idUser: cols.idUser } } : undefined,
+                    AuditDate,
+                    AuditType:      action,
+                    DBObjectType:   DBObjectType ?? undefined,
+                    idDBObject:     idDBObject ?? undefined,
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject } } : undefined,
+                    Data,
+                    SystemActor:    cols.SystemActor,
+                    CorrelationId,
+                },
+            });
+        } catch (err) {
+            RK.logCritical(RK.LogSection.eAUDIT, 'audit write failed',
+                err instanceof Error ? err.message : String(err),
+                { action, actor: Actor.describe(actor), target: args.target, idSystemObject },
+                'Audit.Factory');
+            return false;
+        }
+
+        SystemObjectInvalidation.invalidate(idSystemObject);
+        return true;
     }
 
+    /**
+     * Legacy entry point retained for DBObject.audit(). Resolves the Actor from
+     * the current LocalStore and maps the event key to an AuditType. Prefer
+     * AuditFactory.emit for new code.
+     */
     static async audit(obj: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
-        const engine: IAuditEngine | null = await this.getInstance();
-        return (engine) ? engine.audit(obj, oID, key) : false;
+        const LS = ASL.getStore();
+        const actor: Actor | undefined = LS?.getActor();
+        if (!actor) {
+            RK.logError(RK.LogSection.eAUDIT, 'audit write skipped',
+                'no Actor on LocalStore — caller must run inside an entry-point scope or use withActor',
+                { oID, key }, 'Audit.Factory');
+            return false;
+        }
+
+        return AuditFactory.emit({
+            action: AuditFactory.keyToAuditType(key),
+            actor,
+            target: oID,
+            payload: obj,
+        });
+    }
+
+    /** Deterministic mapping from eEventKey to eAuditType for the legacy shim. */
+    static keyToAuditType(key: eEventKey): eAuditType {
+        switch (key) {
+            case eEventKey.eDBCreate:     return eAuditType.eDBCreate;
+            case eEventKey.eDBUpdate:     return eAuditType.eDBUpdate;
+            case eEventKey.eDBDelete:     return eAuditType.eDBDelete;
+            case eEventKey.eAuthLogin:    return eAuditType.eAuthLogin;
+            case eEventKey.eAuthFailed:   return eAuditType.eAuthFailed;
+            case eEventKey.eSceneQCd:     return eAuditType.eSceneQCd;
+            case eEventKey.eHTTPDownload: return eAuditType.eHTTPDownload;
+            case eEventKey.eHTTPUpload:   return eAuditType.eHTTPUpload;
+            case eEventKey.eSolrRebuild:  return eAuditType.eSolrRebuild;
+            case eEventKey.eGenDownloads: return eAuditType.eGenDownloads;
+            default:                      return eAuditType.eUnknown;
+        }
     }
 }

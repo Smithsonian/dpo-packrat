@@ -1,6 +1,5 @@
 import { IEventEngine } from './IEventEngine';
 import { EventEngine } from '../impl/InProcess';
-import { AuditEventGenerator } from '../../audit/impl/AuditEventGenerator';
 import { Config, EVENT_TYPE } from '../../config';
 
 export class EventFactory {
@@ -17,9 +16,6 @@ export class EventFactory {
                     break;
                 }
             }
-            // Hack in an attempt to avoid circular dependencies
-            // Here, we tell the AuditEventGenerator to use our newly-created EventFactory
-            AuditEventGenerator.setEventEngine(EventFactory.instance);
         }
         return EventFactory.instance;
     }

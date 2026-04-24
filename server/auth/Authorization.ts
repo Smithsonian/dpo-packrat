@@ -3,6 +3,8 @@ import { Config } from '../config';
 import * as DBAPI from '../db';
 import { ASL, LocalStore } from '../utils/localStore';
 import { RecordKeeper as RK } from '../records/recordKeeper';
+import { AuditFactory } from '../audit/interface/AuditFactory';
+import { Actor } from '../audit/Actor';
 
 // #region Error Constants
 export const AUTH_ERROR = {
@@ -292,21 +294,18 @@ export class Authorization {
     }
 
     private static async auditDenial(idUser: number, idSystemObject: number | null, data: Record<string, unknown>): Promise<void> {
-        try {
-            const audit = new DBAPI.Audit({
-                idAudit: 0,
-                idUser,
-                AuditDate: new Date(),
-                AuditType: DBAPI.eAuditType.eAuthDenied,
-                DBObjectType: null,
-                idDBObject: null,
-                idSystemObject,
-                Data: JSON.stringify(data),
-                SystemActor: null,
-                CorrelationId: null,
-            });
-            await audit.create();
-        } catch (error) { /* best-effort; log failure already handled by Audit.createWorker */ }
+        // Denial rows always carry the authenticated user whose action was refused;
+        // emit records them via the unified path so they participate in tier policy
+        // and invariant checks. Failures are logged critical inside AuditFactory.
+        const ok = await AuditFactory.emit({
+            action: DBAPI.eAuditType.eAuthDenied,
+            actor: Actor.user(idUser),
+            idSystemObject,
+            payload: data,
+        });
+        if (!ok)
+            RK.logCritical(RK.LogSection.eAUDIT, 'denial audit write failed',
+                undefined, { idUser, idSystemObject, data }, 'Authorization');
     }
 
     // #endregion

@@ -9,6 +9,8 @@ import * as H from '../../../utils/helpers';
 import * as COOKRES from '../../../job/impl/Cook/CookResource';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
+import { Actor } from '../../../audit/Actor';
+import { withActor } from '../../../audit/resolveActor';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
 import { Writable, Readable } from 'stream';
@@ -262,11 +264,36 @@ export abstract class JobCook<T> extends JobPackrat {
             return { success: false, error: verifyResult.error, allowRetry: false };
         }
 
-        const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
-            RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, semaphoreCount: value },'Job.Cook');
-            return this.startJobWorkerInternal(fireDate);
+        // Resolve the Actor once for the full job lifecycle (queueing + polling
+        // + completion handlers). Audit rows written during Cook-driven updates
+        // attribute to the originating user via impersonation; otherwise to the
+        // Cook subsystem.
+        const actor: Actor = await this.resolveCookActor();
+
+        return withActor(actor, async () => {
+            const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
+                RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, semaphoreCount: value, actor: Actor.describe(actor) },'Job.Cook');
+                return this.startJobWorkerInternal(fireDate);
+            });
+            return res;
         });
-        return res;
+    }
+
+    private async resolveCookActor(): Promise<Actor> {
+        try {
+            const steps: DBAPI.WorkflowStep[] | null = await DBAPI.WorkflowStep.fetchFromJobRun(this._dbJobRun.idJobRun);
+            const idWorkflow: number | undefined = steps && steps.length > 0 ? steps[0].idWorkflow : undefined;
+            if (idWorkflow) {
+                const workflow: DBAPI.Workflow | null = await DBAPI.Workflow.fetch(idWorkflow);
+                if (workflow && workflow.idUserInitiator)
+                    return Actor.impersonation(workflow.idUserInitiator, 'Cook');
+            }
+        } catch (err) {
+            RK.logWarning(RK.LogSection.eJOB, 'resolve Cook actor',
+                err instanceof Error ? err.message : String(err),
+                { idJobRun: this._dbJobRun.idJobRun }, 'Job.Cook');
+        }
+        return Actor.system('Cook');
     }
 
     private async startJobWorkerInternal(_fireDate: Date): Promise<JobIOResults> {

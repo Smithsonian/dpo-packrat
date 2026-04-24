@@ -9,6 +9,8 @@ import { Request, Response } from 'express';
 import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { eAuditType } from '../../../db/api/ObjectType';
+import { AuditFactory } from '../../../audit/interface/AuditFactory';
+import { Actor } from '../../../audit/Actor';
 
 const SRC = 'HTTP.Route.Authorization';
 
@@ -17,21 +19,20 @@ async function auditAuthChange(
     type: eAuditType.eAuthGranted | eAuditType.eAuthRevoked,
     data: Record<string, unknown>
 ): Promise<void> {
-    try {
-        const audit = new DBAPI.Audit({
-            idAudit: 0,
-            idUser: idAdminUser,
-            AuditDate: new Date(),
-            AuditType: type,
-            DBObjectType: null,
-            idDBObject: null,
-            idSystemObject: null,
-            Data: JSON.stringify(data),
-            SystemActor: null,
-            CorrelationId: null,
-        });
-        await audit.create();
-    } catch (_error) { /* best-effort */ }
+    // idAdminUser is the operator performing the grant/revoke. When the REST
+    // caller isn't authenticated we attribute the change to a system actor so
+    // the row still satisfies the "never both-null" invariant.
+    const actor: Actor = idAdminUser != null
+        ? Actor.user(idAdminUser)
+        : Actor.system('AuthorizationAPI');
+    const ok = await AuditFactory.emit({
+        action: type,
+        actor,
+        payload: data,
+    });
+    if (!ok)
+        RK.logCritical(RK.LogSection.eAUDIT, 'auth-change audit write failed',
+            undefined, { idAdminUser, type, data }, SRC);
 }
 
 type AuthResponse = {

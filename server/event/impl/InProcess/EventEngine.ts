@@ -1,43 +1,24 @@
 import * as EVENT from '../../interface';
 import { EventProducer } from './EventProducer';
 import { EventConsumer } from './EventConsumer';
-import { EventConsumerAuth } from './EventConsumerAuth';
-import { EventConsumerDB } from './EventConsumerDB';
-import { EventConsumerPublish } from './EventConsumerPublish';
-import { EventConsumerHTTP } from './EventConsumerHTTP';
 import { IEventData } from '../../interface';
 import { RecordKeeper as RK, IOResults } from '../../../records/recordKeeper';
 // import * as H from '../../../utils/helpers';
 
-// Maintains a set of registered consumers per topic
-// EventConsumer.poll registerers a consumer and then deregisters it
+// Maintains a set of registered consumers per topic. Audit writes no longer
+// travel this pipeline; it exists for future domain events that register their
+// own consumers via createConsumer().
 export class EventEngine implements EVENT.IEventEngine {
     private consumerMap: Map<EVENT.eEventTopic, Set<EventConsumer>> = new Map<EVENT.eEventTopic, Set<EventConsumer>>();
     constructor() {
     }
 
     async initialize(): Promise<IOResults> {
-        // Skip if consumers are already registered to prevent accumulation
-        // when called repeatedly (e.g. from Jest beforeEach).
-        if (this.consumerMap.size > 0)
-            return { success: true, message: 'EventEngine already initialized', data: {} };
-
-        RK.logDebug(RK.LogSection.eEVENT,'system initialize','wiring default consumers',{ consumers: 'DB, Auth, Publish, HTTP' },'Event.Engine');
-
-        const createdConsumers: string[] = [];
-        await this.createConsumer(EVENT.eEventTopic.eDB) && createdConsumers.push('DB');
-        await this.createConsumer(EVENT.eEventTopic.eAuth) && createdConsumers.push('Auth');
-        await this.createConsumer(EVENT.eEventTopic.ePublish) && createdConsumers.push('Publish');
-        await this.createConsumer(EVENT.eEventTopic.eHTTP) && createdConsumers.push('HTTP');
-
-        if(createdConsumers.length===4)
-            return { success: true, message: 'EventEngine initialized', data: { consumers: createdConsumers.join(', ') } };
-        else
-            return { success: false, message: 'EventEngine failed to initialize', data: { consumers: createdConsumers.join(', ') } };
+        RK.logDebug(RK.LogSection.eEVENT, 'system initialize', 'no default consumers', undefined, 'Event.Engine');
+        return { success: true, message: 'EventEngine initialized', data: {} };
     }
 
     async createProducer(): Promise<EVENT.IEventProducer | null> {
-        // RK.logDebug(RK.LogSection.eEVENT,'create event producer',undefined,undefined,'Event.Engine');
         return new EventProducer(this);
     }
 
@@ -45,31 +26,16 @@ export class EventEngine implements EVENT.IEventEngine {
     async createConsumer(eTopic: EVENT.eEventTopic): Promise<EVENT.IEventConsumer | null>;
     async createConsumer(eTopic?: EVENT.eEventTopic): Promise<EVENT.IEventConsumer | null> {
         if (!eTopic) {
-            RK.logError(RK.LogSection.eEVENT,'create event consumer failed','called without expected topic',undefined,'Event.Engine');
+            RK.logError(RK.LogSection.eEVENT, 'create event consumer failed',
+                'called without expected topic', undefined, 'Event.Engine');
             return null;
         }
-
-        let consumer: EventConsumer | null = null;
-
-        switch (eTopic) {
-            case EVENT.eEventTopic.eAuth: consumer = new EventConsumerAuth(this); break;
-            case EVENT.eEventTopic.eDB: consumer = new EventConsumerDB(this); break;
-            case EVENT.eEventTopic.ePublish: consumer = new EventConsumerPublish(this); break;
-            case EVENT.eEventTopic.eHTTP: consumer = new EventConsumerHTTP(this); break;
-            default: {
-                RK.logError(RK.LogSection.eEVENT,'create event consumer failed','called without unexpected topic',{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
-                return null;
-            }
-        }
-
-        const registerResult: IOResults = await this.registerConsumer(eTopic, consumer);
-        if(registerResult.success===false) {
-            RK.logError(RK.LogSection.eEVENT,'create event consumer failed',registerResult.message,{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
-            return null;
-        }
-
-        RK.logDebug(RK.LogSection.eEVENT,'create event consumer success',undefined,{ topic: EVENT.eEventTopic[eTopic] },'Event.Engine');
-        return consumer;
+        // No default consumers are registered by the engine itself. Callers that
+        // need a consumer attach one via registerConsumer(eTopic, consumer).
+        RK.logWarning(RK.LogSection.eEVENT, 'create event consumer',
+            'no default consumer registered for topic',
+            { topic: EVENT.eEventTopic[eTopic] }, 'Event.Engine');
+        return null;
     }
 
     // #region EventEngine interface, for receiving events from EventProducer

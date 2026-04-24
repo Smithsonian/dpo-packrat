@@ -100,7 +100,7 @@ export class HttpServer {
         }
         RK.logInfo(RK.LogSection.eSYS,'system started: Middleware and Routes',undefined,undefined,'HttpServer');
 
-        // call to initalize the EventFactory, which in turn will initialize the AuditEventGenerator, supplying the IEventEngine
+        // Initialize the EventFactory so non-audit event consumers wire up.
         const eventEngine: IEventEngine | null = await EventFactory.getInstance();
         const eventResult: IOResults = await eventEngine?.initialize() ?? { success: false, message: 'no engine instance' };
         if (eventResult.success===false) {
