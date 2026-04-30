@@ -1,147 +1,248 @@
 #!/bin/bash
+#
+# ops_menu.sh - top-level dispatcher for Packrat server_ops
+#
+# Interactive menu + CLI router. Every domain script is a sibling of
+# this file - no absolute paths, uses $HERE discovery so the whole
+# `new_ops/` tree can be moved/renamed without touching this script.
+#
+# Usage:
+#   ./ops_menu.sh                                   # interactive menu
+#   ./ops_menu.sh <domain> [domain-args...]         # route to sibling
+#   ./ops_menu.sh --list                            # every <domain> <op>
+#   ./ops_menu.sh --help                            # one-line summary per domain
+#
+# Domains:
+#   database   - drop | rebuild | prune | backup | optimize | metrics ...
+#   logs       - tail | less | copy | backup
+#   disk       - usage | watch | cleanup | monitor
+#   system     - monitor | files | remount | perf | procinfo
+#   container  - status | start | stop | restart | service | reclaim | pre-deploy
+#   solr       - status | clear | reindex
+#   data       - clear | backup
+#   cert       - inspect | format | expiry
+#
+# Examples:
+#   ./ops_menu.sh database prod backup /3ddigip01/Packrat/Backups/Database zip
+#   ./ops_menu.sh logs prod tail
+#   ./ops_menu.sh cert expiry /etc/ssl/packrat.pem --warn-days 14
+#   ./ops_menu.sh --list
+#
 
-LOG_BASE_PROD="/3ddigip01/Packrat/Logs"
-LOG_BASE_DEV="/3ddigip01/Packrat/Logs-Dev"
-TAIL_SCRIPT="/data/Packrat/Scripts/ops_logTail.sh"
-LESS_SCRIPT="/data/Packrat/Scripts/ops_logLess.sh"
-COPY_SCRIPT="/data/Packrat/Scripts/ops_logCopy.sh"
+set -euo pipefail
 
-disk_cleanup_menu() {
-    echo ""
-    echo "Disk Cleanup Options:"
-    echo "[1] /staging"
-    echo "[2] Custom path"
-    read -p "Choose an option: " CLEAN_CHOICE
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OPS_SCRIPT_NAME="ops_menu.sh"
 
-    case "$CLEAN_CHOICE" in
-        1)
-            CLEAN_PATH="/staging"
-            ;;
-        2)
-            read -p "Enter full path to clean: " CUSTOM_PATH
-            if [[ -z "$CUSTOM_PATH" || ! -d "$CUSTOM_PATH" ]]; then
-                echo "Invalid directory: $CUSTOM_PATH"
-                pause_and_return
-            fi
-            CLEAN_PATH="$CUSTOM_PATH"
-            ;;
-        *)
-            echo "Invalid choice."
-            pause_and_return
-            ;;
-    esac
+# shellcheck source=lib/common.sh
+source "$HERE/lib/common.sh"
 
-    echo ""
-    read -p "Dry run? (List files only, no delete) [y/N]: " DRY_CONFIRM
-    DRY_FLAG=""
-    if [[ "$DRY_CONFIRM" =~ ^[Yy]$ ]]; then
-        DRY_FLAG="--dry-run"
-    fi
+# init_traps so INT cleans up (the dispatch path uses `exec` and won't
+# reach our summary; these traps cover the non-dispatch flows).
+init_traps
 
-    echo ""
-    read -p "Protect recent files (last 2 days)? [Y/n]: " RECENT_CONFIRM
-    IGNORE_RECENT_FLAG="--ignore-recent"
-    if [[ "$RECENT_CONFIRM" =~ ^[Nn]$ ]]; then
-        IGNORE_RECENT_FLAG=""
-    fi
+# ---------------------------------------------------------------------------
+# Domain registry
+# ---------------------------------------------------------------------------
+#
+# Single source of truth for everything this dispatcher offers. Each
+# entry is:   <key> | <script-basename> | <one-line description>
+# Operations listed below drive `--list`; keep in sync with the
+# per-script help blocks.
 
-    echo ""
-    if [[ -z "$DRY_FLAG" ]]; then
-        echo "⚠️  WARNING: This will permanently delete files from: $CLEAN_PATH"
-        read -p "Are you sure you want to continue? [y/N]: " CONFIRM
-        if ! [[ "$CONFIRM" =~ ^[Yy]$ ]]; then
-            echo "Cancelled."
-            pause_and_return
-            return
+DOMAINS=(
+    "database|ops_database.sh|MariaDB ops (backup, prune, metrics, ...)"
+    "logs|ops_logs.sh|Log tail / less / copy / daily backup"
+    "disk|ops_disk.sh|Disk usage / watch / cleanup / inotify monitor"
+    "system|ops_system.sh|System monitor / file activity / remount / perf / procinfo"
+    "container|ops_container.sh|Docker container ops + pre-deploy cleanup"
+    "solr|ops_solr.sh|Solr status / clear / reindex"
+    "data|ops_data.sh|Transient staging clear + repository rsync backup"
+    "cert|ops_cert.sh|Certificate inspect / format / expiry"
+)
+
+DOMAIN_OPS_database="drop rebuild prune backup optimize metrics"
+DOMAIN_OPS_logs="tail less copy backup"
+DOMAIN_OPS_disk="usage watch cleanup monitor"
+DOMAIN_OPS_system="monitor files remount perf procinfo"
+DOMAIN_OPS_container="status start stop restart service reclaim pre-deploy"
+DOMAIN_OPS_solr="status clear reindex"
+DOMAIN_OPS_data="clear backup"
+DOMAIN_OPS_cert="inspect format expiry"
+
+# Metrics expands to subops in Phase 5 (the rest are deferred). Rendered
+# explicitly under --list.
+DOMAIN_OPS_database_metrics="size inspect"
+
+# ---------------------------------------------------------------------------
+# Domain helpers
+# ---------------------------------------------------------------------------
+
+# Look up the script basename for a domain key. Empty + rc=1 if unknown.
+domain_script() {
+    local key="$1" entry k script
+    for entry in "${DOMAINS[@]}"; do
+        k="${entry%%|*}"
+        if [[ "$k" == "$key" ]]; then
+            entry="${entry#*|}"
+            script="${entry%%|*}"
+            printf '%s' "$script"
+            return 0
         fi
-    fi
-
-    echo "Running disk cleanup: $CLEAN_PATH"
-    /data/Packrat/Scripts/ops_diskCleanup.sh $DRY_FLAG $IGNORE_RECENT_FLAG "$CLEAN_PATH"
-
-    pause_and_return
+    done
+    return 1
 }
+
+# Look up the description for a domain key. Empty + rc=1 if unknown.
+domain_desc() {
+    local key="$1" entry k
+    for entry in "${DOMAINS[@]}"; do
+        k="${entry%%|*}"
+        if [[ "$k" == "$key" ]]; then
+            entry="${entry#*|}"
+            printf '%s' "${entry#*|}"
+            return 0
+        fi
+    done
+    return 1
+}
+
+# ---------------------------------------------------------------------------
+# Dispatch
+# ---------------------------------------------------------------------------
+
+# Exec a domain's sibling script with the remaining args. Uses exec so
+# the child process replaces us - signals and exit code pass through
+# cleanly, no nested summary output.
+dispatch_domain() {
+    local key="$1"; shift
+    local script
+    if ! script=$(domain_script "$key"); then
+        err "unknown domain: '$key'"
+        err "see: $OPS_SCRIPT_NAME --list"
+        return 1
+    fi
+    local path="$HERE/$script"
+    if [[ ! -x "$path" ]]; then
+        err "sibling script not executable or missing: $path"
+        return 1
+    fi
+    # Hand off. Once exec runs, we don't come back - so print_summary
+    # below won't fire for this path (the child emits its own).
+    exec "$path" "$@"
+}
+
+# ---------------------------------------------------------------------------
+# --list and --help renderers
+# ---------------------------------------------------------------------------
+
+op_list() {
+    OPS_CURRENT_OP="list"
+    local entry key script ops op
+    for entry in "${DOMAINS[@]}"; do
+        key="${entry%%|*}"
+        entry="${entry#*|}"
+        script="${entry%%|*}"
+        # shellcheck disable=SC2086
+        eval "ops=\$DOMAIN_OPS_${key}"
+        for op in $ops; do
+            if [[ "$key" == "database" && "$op" == "metrics" ]]; then
+                local sub
+                for sub in $DOMAIN_OPS_database_metrics; do
+                    printf '%-10s metrics %s\n' "$key" "$sub"
+                done
+            else
+                printf '%-10s %s\n' "$key" "$op"
+            fi
+        done
+    done
+}
+
+op_help() {
+    OPS_CURRENT_OP="help"
+    local entry key script desc
+    echo "Packrat server_ops top-level dispatcher"
+    echo ""
+    echo "Usage:"
+    echo "  ops_menu.sh                             # interactive menu"
+    echo "  ops_menu.sh <domain> [args...]          # route to sibling"
+    echo "  ops_menu.sh --list                      # every <domain> <op> combo"
+    echo "  ops_menu.sh --help                      # this output"
+    echo ""
+    echo "Domains:"
+    for entry in "${DOMAINS[@]}"; do
+        key="${entry%%|*}"
+        entry="${entry#*|}"
+        script="${entry%%|*}"
+        desc="${entry#*|}"
+        printf '  %-10s %s\n' "$key" "$desc"
+    done
+    echo ""
+    echo "Run 'ops_menu.sh <domain> --help' for per-domain usage."
+}
+
+# ---------------------------------------------------------------------------
+# Interactive menu
+# ---------------------------------------------------------------------------
 
 main_menu() {
     clear
-    echo "*****************************************************"
-    echo "PACKRAT OPS MENU"
-    echo "*****************************************************"
-    echo "[1] Tail Log"
-    echo "[2] View Log (less)"
-    echo "[3] System Monitor"
-    echo "[4] Disk Cleanup"
-    echo "[5] Log Copy"
+    banner "PACKRAT OPS MENU"
+    echo ""
+    local i=1 entry key desc
+    for entry in "${DOMAINS[@]}"; do
+        key="${entry%%|*}"
+        entry="${entry#*|}"
+        desc="${entry#*|}"
+        printf '[%d] %-11s %s\n' "$i" "${key^}" "$desc"
+        i=$((i+1))
+    done
+    echo "[L] List all ops"
     echo "[Q] Quit"
     echo ""
-
-    read -p "Choose an option: " MAIN_CHOICE
-
-    case "$MAIN_CHOICE" in
-        1) log_menu "tail" ;;
-        2) log_menu "less" ;;
-        3) /data/Packrat/Scripts/ops_monitor.sh ;;
-        4) disk_cleanup_menu ;;
-        5) "$COPY_SCRIPT" ;;
-        [Qq]) echo "Goodbye!"; exit 0 ;;
-        *) echo "Invalid option."; pause_and_return ;;
+    local c
+    read -r -p "Choose: " c
+    case "$c" in
+        [Ll]) op_list; exit 0 ;;
+        [Qq]) exit 0 ;;
     esac
+    if ! [[ "$c" =~ ^[0-9]+$ ]]; then
+        err "invalid choice"
+        return 1
+    fi
+    local idx=$((c - 1))
+    if (( idx < 0 || idx >= ${#DOMAINS[@]} )); then
+        err "out of range: $c"
+        return 1
+    fi
+    entry="${DOMAINS[idx]}"
+    key="${entry%%|*}"
+    dispatch_domain "$key"   # execs - we do not return
 }
 
-log_menu() {
-    ACTION=$1
-    SCRIPT=""
-    case "$ACTION" in
-        tail) SCRIPT="$TAIL_SCRIPT" ;;
-        less) SCRIPT="$LESS_SCRIPT" ;;
-    esac
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
-    echo ""
-    echo "[1] Production"
-    echo "[2] Staging"
-    read -p "Choose environment: " ENV
+status="OK"
+rc=0
 
-    case "$ENV" in
-        1) BASE_PATH="$LOG_BASE_PROD" ;;
-        2) BASE_PATH="$LOG_BASE_DEV" ;;
-        *) echo "Invalid environment."; pause_and_return ;;
-    esac
+case "${1:-}" in
+    -h|--help)
+        op_help
+        ;;
+    --list)
+        op_list
+        ;;
+    "")
+        main_menu || rc=$?
+        ;;
+    *)
+        # Route to sibling. Unknown domain -> error + suggestion.
+        dispatch_domain "$@" || rc=$?
+        ;;
+esac
 
-    echo ""
-    echo "[1] Latest"
-    echo "[2] Specific Date"
-    read -p "Choose log option: " LOG_OPTION
-
-    case "$LOG_OPTION" in
-        1)
-            echo "Launching latest log..."
-            YEAR=$(date +%Y)
-            "$SCRIPT" "$BASE_PATH/$YEAR"
-            ;;
-        2)
-            read -p "Enter date (YYYY-MM-DD): " DATE
-            if [[ ! "$DATE" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
-                echo "Invalid date format."
-                pause_and_return
-            fi
-            YEAR=$(echo "$DATE" | cut -d'-' -f1)
-            MONTH=$(echo "$DATE" | cut -d'-' -f2)
-            LOG_PATH="$BASE_PATH/$YEAR/$MONTH/PackratLog_${DATE}.log"
-            echo "Opening log: $LOG_PATH"
-            "$SCRIPT" "$LOG_PATH"
-            ;;
-        *) echo "Invalid log option."; pause_and_return ;;
-    esac
-
-    pause_and_return
-}
-
-pause_and_return() {
-    echo ""
-    read -p "Press [Enter] to return to the main menu..." dummy
-    main_menu
-}
-
-# Start the menu
-main_menu
-
+(( rc != 0 )) && status="FAIL"
+print_summary "$status"
+exit $rc

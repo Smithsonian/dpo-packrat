@@ -16,10 +16,14 @@
 #   metrics_size_sql [table]       - information_schema.TABLES report SQL
 #   metrics_bucket_case <col> N... - CASE/WHEN age-bucket fragment
 #
-# .env.* discovery order (first hit wins):
-#   1. $PROD_ENV_FILE / $STAGING_ENV_FILE (server layout)
-#   2. <repo-root>/.env.prod or <repo-root>/.env.dev (dev workstation)
-#   3. Hard fail with the list of paths checked
+# Credential resolution order (first hit wins):
+#   1. $PACKRAT_DATABASE_URL already in the environment (typically loaded
+#      from the sibling ops .env by lib/common.sh, but also honored if set
+#      by the shell or a cron entry directly)
+#   2. $PROD_ENV_FILE / $STAGING_ENV_FILE (the application's .env on the
+#      server - falls back to this when the ops .env does not pin DB creds)
+#   3. <repo-root>/.env.prod or <repo-root>/.env.dev (dev workstation)
+#   4. Hard fail with the list of paths checked
 #
 
 if [[ -n "${__PACKRAT_LIB_CREDENTIALS_SOURCED:-}" ]]; then
@@ -153,41 +157,50 @@ load_credentials() {
             ;;
     esac
 
+    # Honor PACKRAT_DATABASE_URL already in the environment first - this is
+    # how the sibling ops .env (loaded by common.sh) injects credentials
+    # without ever touching the application's .env file.
+    local url="${PACKRAT_DATABASE_URL:-}"
     local env_file=""
-    if [[ -f "$server_path" ]]; then
-        env_file="$server_path"
+
+    if [[ -n "$url" ]]; then
+        ENV_FILE_USED="${OPS_ENV_FILE_USED:-<environment>}"
     else
-        # Dev-workstation fallback: repo root's .env.prod / .env.dev
-        if fallback_root="$(__find_repo_root)"; then
-            if [[ "$ENVIRONMENT" == "prod" ]]; then
-                fallback_path="$fallback_root/.env.prod"
-            else
-                fallback_path="$fallback_root/.env.dev"
-            fi
-            if [[ -f "$fallback_path" ]]; then
-                env_file="$fallback_path"
-                SQL_PATH="$fallback_root/server/db/sql/scripts"
-                CODE_ROOT="$fallback_root"
+        if [[ -f "$server_path" ]]; then
+            env_file="$server_path"
+        else
+            # Dev-workstation fallback: repo root's .env.prod / .env.dev
+            if fallback_root="$(__find_repo_root)"; then
+                if [[ "$ENVIRONMENT" == "prod" ]]; then
+                    fallback_path="$fallback_root/.env.prod"
+                else
+                    fallback_path="$fallback_root/.env.dev"
+                fi
+                if [[ -f "$fallback_path" ]]; then
+                    env_file="$fallback_path"
+                    SQL_PATH="$fallback_root/server/db/sql/scripts"
+                    CODE_ROOT="$fallback_root"
+                fi
             fi
         fi
-    fi
 
-    if [[ -z "$env_file" ]]; then
-        err "cannot locate .env file for environment '$ENVIRONMENT'"
-        err "  tried: $server_path"
-        [[ -n "$fallback_path" ]] && err "  tried: $fallback_path"
-        err "  missing key would be: PACKRAT_DATABASE_URL"
-        return 1
-    fi
+        if [[ -z "$env_file" ]]; then
+            err "cannot locate .env file for environment '$ENVIRONMENT'"
+            err "  tried: \$PACKRAT_DATABASE_URL (unset)"
+            err "  tried: $server_path"
+            [[ -n "$fallback_path" ]] && err "  tried: $fallback_path"
+            err "  set PACKRAT_DATABASE_URL in the ops .env or provide one of the files above"
+            return 1
+        fi
 
-    ENV_FILE_USED="$env_file"
+        ENV_FILE_USED="$env_file"
 
-    # Pull the URL without sourcing the file (avoid executing arbitrary shell).
-    local url
-    url=$(grep -E '^[[:space:]]*PACKRAT_DATABASE_URL=' "$env_file" | head -n 1 | cut -d= -f2-)
-    if [[ -z "$url" ]]; then
-        err "PACKRAT_DATABASE_URL not found in $env_file"
-        return 1
+        # Pull the URL without sourcing the file (avoid executing arbitrary shell).
+        url=$(grep -E '^[[:space:]]*PACKRAT_DATABASE_URL=' "$env_file" | head -n 1 | cut -d= -f2-)
+        if [[ -z "$url" ]]; then
+            err "PACKRAT_DATABASE_URL not found in $env_file"
+            return 1
+        fi
     fi
 
     # Strip surrounding quotes if present

@@ -27,6 +27,51 @@ fi
 __PACKRAT_LIB_COMMON_SOURCED=1
 
 # ---------------------------------------------------------------------------
+# Sibling .env loader
+# ---------------------------------------------------------------------------
+#
+# Optional sibling .env in the script root (parent of lib/) provides paths
+# and credentials decoupled from the application's .env.prod/.env.dev.
+# Loaded once, before the constants below resolve their defaults, so any
+# ${VAR:-default} pattern in the ops scripts can be overridden via this file.
+#
+# Lookup order:
+#   1. $OPS_ENV_FILE              (explicit override)
+#   2. $HERE/../.env              (sibling of lib/, i.e., script root)
+#
+# Parser is intentionally restrictive: KEY=VALUE lines only, surrounding
+# quotes stripped, comments and blanks ignored, no shell interpolation,
+# no `source`. Process-environment values win - the file fills gaps only.
+
+OPS_ENV_FILE_USED=""
+
+__load_ops_env_file() {
+    local lib_dir env_file line key value
+    lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    env_file="${OPS_ENV_FILE:-$lib_dir/../.env}"
+    [[ -f "$env_file" ]] || return 0
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ "$line" != *=* ]] && continue
+        key="${line%%=*}"
+        value="${line#*=}"
+        key="${key#"${key%%[![:space:]]*}"}"
+        key="${key%"${key##*[![:space:]]}"}"
+        value="${value%\"}"; value="${value#\"}"
+        value="${value%\'}"; value="${value#\'}"
+        if [[ -z "${!key:-}" ]]; then
+            export "$key=$value"
+        fi
+    done < "$env_file"
+
+    OPS_ENV_FILE_USED="$env_file"
+}
+
+__load_ops_env_file
+
+# ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
