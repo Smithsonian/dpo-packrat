@@ -211,6 +211,7 @@ RUN_ENV=(
     STAGING_ENV_FILE="$STAGING_ROOT/.env.dev"
     PROD_SQL_PATH="$PROD_ROOT/server/db/sql/scripts"
     STAGING_SQL_PATH="$STAGING_ROOT/server/db/sql/scripts"
+    STAGING_DB_NAME="PackratStaging"
     OPS_AUDIT_LOG="$AUDIT"
     OPS_LOCK_DIR="$LOCKS"
 )

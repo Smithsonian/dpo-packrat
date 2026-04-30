@@ -9,7 +9,8 @@
 #   parse_database_url <url>       - populates DB_HOST/PORT/USER/PASS/NAME
 #   load_credentials               - reads $ENVIRONMENT, resolves env file,
 #                                    extracts PACKRAT_DATABASE_URL, applies
-#                                    staging-name override, sets SQL_PATH +
+#                                    per-environment overrides, enforces
+#                                    DB-name guardrail, sets SQL_PATH +
 #                                    CODE_ROOT + ENV_FILE_USED
 #   mysql_exec "SQL"               - batch/no-header query via loaded creds
 #   mysql_exec_file path.sql       - pipe a file into mysql
@@ -24,6 +25,15 @@
 #      server - falls back to this when the ops .env does not pin DB creds)
 #   3. <repo-root>/.env.prod or <repo-root>/.env.dev (dev workstation)
 #   4. Hard fail with the list of paths checked
+#
+# After the URL is parsed, per-environment overrides are applied:
+#   ENVIRONMENT=prod    -> $PROD_DB_HOST / $PROD_DB_NAME (if set)
+#   ENVIRONMENT=staging -> $STAGING_DB_HOST / $STAGING_DB_NAME (if set)
+#
+# Then a guardrail enforces the env-to-database mapping:
+#   prod    -> DB_NAME must be PackratProduction
+#   staging -> DB_NAME must be PackratStaging (or "Packrat")
+# A mismatch returns 1 before any SQL is executed.
 #
 
 if [[ -n "${__PACKRAT_LIB_CREDENTIALS_SOURCED:-}" ]]; then
@@ -130,7 +140,8 @@ __find_repo_root() {
 }
 
 # ---------------------------------------------------------------------------
-# load_credentials - resolve env file, extract URL, apply staging override
+# load_credentials - resolve env file, extract URL, apply per-env overrides,
+#                    enforce env-to-database guardrail
 # ---------------------------------------------------------------------------
 
 load_credentials() {
@@ -212,12 +223,44 @@ load_credentials() {
 
     parse_database_url "$url"
 
-    # Staging env file points at dev DB ("Packrat"), but on the shared
-    # staging host the DB is named "PackratStaging". Honor an explicit
-    # STAGING_DB_NAME if the operator set one; otherwise override.
-    if [[ "$ENVIRONMENT" == "staging" && "$DB_NAME" == "Packrat" ]]; then
-        DB_NAME="${STAGING_DB_NAME:-PackratStaging}"
-    fi
+    # Apply explicit per-environment overrides. The operator declares the
+    # target host and database in the ops .env; the script does not infer
+    # them from URL string-matching. This prevents a misconfigured URL
+    # from accidentally pointing a staging op at the production database
+    # (and is also how we force loopback on the DB host so connections
+    # match the 'packrat'@'localhost' grant instead of being rejected as
+    # 'packrat'@'<fqdn>').
+    case "$ENVIRONMENT" in
+        prod)
+            [[ -n "${PROD_DB_HOST:-}" ]] && DB_HOST="$PROD_DB_HOST"
+            [[ -n "${PROD_DB_NAME:-}" ]] && DB_NAME="$PROD_DB_NAME"
+            ;;
+        staging)
+            [[ -n "${STAGING_DB_HOST:-}" ]] && DB_HOST="$STAGING_DB_HOST"
+            [[ -n "${STAGING_DB_NAME:-}" ]] && DB_NAME="$STAGING_DB_NAME"
+            ;;
+    esac
+
+    # Guardrail: refuse to run when the resolved DB name does not match
+    # the chosen environment. Catches a fat-fingered URL or a missing
+    # override before any SQL executes. "Packrat" is allowed for staging
+    # because that is what the dev .env file ships with by convention.
+    case "$ENVIRONMENT" in
+        prod)
+            if [[ "$DB_NAME" != "PackratProduction" ]]; then
+                err "ENVIRONMENT=prod but resolved DB_NAME='$DB_NAME' (expected PackratProduction)"
+                err "  set PROD_DB_NAME in the ops .env, or fix PACKRAT_DATABASE_URL"
+                return 1
+            fi
+            ;;
+        staging)
+            if [[ "$DB_NAME" != "PackratStaging" && "$DB_NAME" != "Packrat" ]]; then
+                err "ENVIRONMENT=staging but resolved DB_NAME='$DB_NAME' (expected PackratStaging)"
+                err "  set STAGING_DB_NAME in the ops .env, or fix PACKRAT_DATABASE_URL"
+                return 1
+            fi
+            ;;
+    esac
 }
 
 # ---------------------------------------------------------------------------
