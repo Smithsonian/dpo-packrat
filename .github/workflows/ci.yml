@@ -72,8 +72,11 @@ jobs:
         with:
           node-version: 18.9.0
 
-      - name: Install git
-        run: sudo apt-add-repository ppa:git-core/ppa && sudo apt-get update && sudo apt-get install git
+      # Disabled: ubuntu-latest already ships a modern git, and apt-add-repository
+      # reaches api.launchpad.net which has been timing out from GitHub-hosted runners
+      # (TimeoutError: [Errno 110] Connection timed out), failing the test stage.
+      # - name: Install git
+      #   run: sudo apt-add-repository ppa:git-core/ppa && sudo apt-get update && sudo apt-get install git
 
       # Install dependencies in CI mode
       - name: Install dependencies

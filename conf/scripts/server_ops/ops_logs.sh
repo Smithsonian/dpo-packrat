@@ -13,7 +13,7 @@
 # ops        :
 #   tail    [date|latest|today] [--raw]
 #   less    [date|latest|today] [--raw]
-#   copy    <start-date> <end-date> [dest-dir]
+#   copy    <start-date> <end-date> [dest-dir]   (output: flat .zip)
 #   backup  [date] [--format zip|tar.gz]       (default: yesterday, zip)
 #
 # Log layout (constants near top - adjust if paths change):
@@ -33,6 +33,17 @@ source "$HERE/lib/common.sh"
 source "$HERE/lib/log_format.sh"
 
 init_traps
+
+# Capture color decision before any pipelines/subshells mask the TTY.
+# Honors NO_COLOR (https://no-color.org). Set OPS_USE_COLOR=0|1 to override.
+if [[ -z "${OPS_USE_COLOR:-}" ]]; then
+    if { [[ -t 1 ]] || [[ -t 2 ]]; } && [[ -z "${NO_COLOR:-}" ]]; then
+        OPS_USE_COLOR=1
+    else
+        OPS_USE_COLOR=0
+    fi
+fi
+export OPS_USE_COLOR
 
 # ---------------------------------------------------------------------------
 # Path constants
@@ -65,7 +76,9 @@ validate_date() {
     date -d "$val" >/dev/null 2>&1
 }
 
-# Print the path of the log file matching the given hint.
+# Print the path of the live log file matching the given hint.
+# For tail: we only want the active file (Winston writes here with
+# `tailable: true`, so size-rollover keeps the live name stable).
 #   hint = "today" | "" | "latest" | YYYY-MM-DD
 # Supports both filename prefixes seen in the wild ("PackratLog_", "PackratLog-").
 resolve_log_file() {
@@ -107,6 +120,81 @@ resolve_log_file() {
 
     err "log not found for $target under $dir"
     return 1
+}
+
+# Print every log file for a date, oldest first (rollovers .log.N down to .log).
+#
+# Winston rolls by size with `tailable: true`. The live file keeps the
+# stable name PackratLog_DATE.log; older chunks are renamed
+# PackratLog_DATE.log.1 (most recent rollover), .log.2, ... up to maxFiles.
+# Higher N = older content, so chronological order is .log.N -> .log.1 -> .log.
+resolve_log_files() {
+    local hint="${1:-today}"
+
+    if [[ "$hint" == "latest" ]]; then
+        local f
+        f=$(get_most_recent_log "$LOG_BASE") || true
+        if [[ -z "$f" ]]; then
+            err "no .log files under $LOG_BASE"
+            return 1
+        fi
+        printf '%s\n' "$f"
+        return 0
+    fi
+
+    local target
+    if [[ "$hint" == "today" || -z "$hint" ]]; then
+        target=$(date +%F)
+    else
+        target="$hint"
+        if ! validate_date "$target"; then
+            err "invalid date: '$target' (use YYYY-MM-DD | today | latest)"
+            return 1
+        fi
+    fi
+
+    local y m
+    y=$(date -d "$target" +%Y)
+    m=$(date -d "$target" +%m)
+    local dir="$LOG_BASE/$y/$m"
+    if [[ ! -d "$dir" ]]; then
+        err "log dir not found: $dir"
+        return 1
+    fi
+
+    shopt -s nullglob
+    local f rolled=() live=()
+    for f in "$dir"/PackratLog_"$target".log.[0-9]* "$dir"/PackratLog-"$target".log.[0-9]*; do
+        [[ -f "$f" ]] && rolled+=("$f")
+    done
+    for f in "$dir"/PackratLog_"$target".log "$dir"/PackratLog-"$target".log; do
+        [[ -f "$f" ]] && live+=("$f")
+    done
+    shopt -u nullglob
+
+    if (( ${#rolled[@]} == 0 )) && (( ${#live[@]} == 0 )); then
+        err "log not found for $target under $dir"
+        return 1
+    fi
+
+    # Sort rolled files by numeric suffix descending (highest N = oldest).
+    local sorted_rolled=()
+    if (( ${#rolled[@]} > 0 )); then
+        mapfile -t sorted_rolled < <(
+            printf '%s\n' "${rolled[@]}" | awk '
+                {
+                    n = $0
+                    sub(/.*\.log\./, "", n)
+                    print n "\t" $0
+                }
+            ' | sort -k1,1 -rn | cut -f2-
+        )
+    fi
+
+    local out
+    for out in "${sorted_rolled[@]}" "${live[@]}"; do
+        printf '%s\n' "$out"
+    done
 }
 
 # ---------------------------------------------------------------------------
@@ -161,26 +249,47 @@ op_less() {
         esac
         shift
     done
+
+    # Interactive: prompt for date when none was supplied. Cron / scripted
+    # callers (no TTY) silently fall through to "today".
+    if [[ -z "$hint" ]] && is_tty; then
+        local input
+        read -r -p "Date (YYYY-MM-DD, blank=today, 'latest'): " input
+        hint="${input:-today}"
+    fi
     [[ -z "$hint" ]] && hint="today"
 
     require_cmd less || return 127
 
-    local file
-    file=$(resolve_log_file "$hint") || return 1
+    local resolved
+    resolved=$(resolve_log_files "$hint") || return 1
+    local files=()
+    mapfile -t files <<< "$resolved"
+    if (( ${#files[@]} == 0 )); then
+        err "no logs found for $hint"
+        return 1
+    fi
 
     banner "LESS LOG ($ENV_LABEL)"
-    echo "File: $file"
+    echo "Date    : $hint"
+    echo "Files   : ${#files[@]} (concatenated oldest -> newest)"
+    local f
+    for f in "${files[@]}"; do echo "  - $f"; done
 
     if (( raw == 1 )) || ! command -v jq >/dev/null 2>&1; then
         if (( raw == 0 )); then
-            warn "jq not installed - showing raw file"
+            warn "jq not installed - showing raw files"
         fi
-        less -R -- "$file"
+        less -R -- "${files[@]}"
     else
         # Pretty-print into less. -R preserves ANSI.
-        while IFS= read -r line; do
-            process_line "$line"
-        done < "$file" | less -R
+        {
+            for f in "${files[@]}"; do
+                while IFS= read -r line; do
+                    process_line "$line"
+                done < "$f"
+            done
+        } | less -R
     fi
 }
 
@@ -220,7 +329,7 @@ op_copy() {
     mkdir -p -- "$dest_dir"
     dest_dir="$(cd "$dest_dir" && pwd -P)"
 
-    require_cmd tar || return 127
+    require_cmd zip || return 127
 
     hr
     echo "Root Path  : $LOG_BASE"
@@ -240,7 +349,13 @@ op_copy() {
         m=$(date -d "$current" +%m)
         local day_dir="$LOG_BASE/$y/$m"
         if [[ -d "$day_dir" ]]; then
-            for f in "$day_dir"/PackratLog_*"$current"*.log "$day_dir"/PackratLog-"$current"*.log; do
+            # Include both the live file AND Winston rollover siblings
+            # (.log.1, .log.2, ...). Otherwise high-volume days lose data.
+            for f in \
+                "$day_dir"/PackratLog_"$current".log \
+                "$day_dir"/PackratLog_"$current".log.[0-9]* \
+                "$day_dir"/PackratLog-"$current".log \
+                "$day_dir"/PackratLog-"$current".log.[0-9]*; do
                 [[ -f "$f" ]] || continue
                 printf '%s\0' "$f" >> "$tmp_list"
             done
@@ -248,6 +363,7 @@ op_copy() {
         [[ "$current" == "$end_date" ]] && break
         current="$(date -I -d "$current + 1 day")"
     done
+    shopt -u nullglob
 
     local file_count
     file_count=$(tr -cd '\0' < "$tmp_list" | wc -c | awk '{print $1}')
@@ -271,13 +387,17 @@ op_copy() {
     fi
 
     local archive_name tmp_archive
-    archive_name="PackratLogs_${ENV_DIR_NAME,,}_${start_date}_to_${end_date}.tar.gz"
+    archive_name="PackratLogs_${ENV_DIR_NAME,,}_${start_date}_to_${end_date}.zip"
     tmp_archive="/tmp/$archive_name"
     register_tmp_file "$tmp_archive"
 
+    # Build file list as an array for `zip -j` (junk paths -> flat archive).
+    local zip_files=()
+    while IFS= read -r -d '' f; do zip_files+=("$f"); done < "$tmp_list"
+
     note "found $file_count file(s)"
     note "building archive: $tmp_archive"
-    tar --null --files-from="$tmp_list" -czf "$tmp_archive" --transform='s#.*/##'
+    zip -jq "$tmp_archive" "${zip_files[@]}"
 
     note "moving to: $dest_dir"
     mv -f -- "$tmp_archive" "$dest_dir/"
@@ -330,21 +450,27 @@ op_backup() {
     local src_dir="$LOG_BASE/$y/$m"
     local dst_dir="$LOG_BACKUP_ROOT/$y/$ENV_DIR_NAME"
 
-    # Locate the source log (support both filename prefixes)
-    local src_file="" candidate
-    for candidate in "$src_dir/PackratLog_$date_arg.log" "$src_dir/PackratLog-$date_arg.log"; do
-        [[ -f "$candidate" ]] && { src_file="$candidate"; break; }
+    # Locate any source log for the date (live + rollover siblings).
+    shopt -s nullglob
+    local src_files=() candidate
+    for candidate in \
+        "$src_dir/PackratLog_$date_arg".log \
+        "$src_dir/PackratLog_$date_arg".log.[0-9]* \
+        "$src_dir/PackratLog-$date_arg".log \
+        "$src_dir/PackratLog-$date_arg".log.[0-9]*; do
+        [[ -f "$candidate" ]] && src_files+=("$candidate")
     done
+    shopt -u nullglob
 
     banner "BACKUP LOG ($ENV_LABEL / $date_arg)"
-    echo "Source  : $src_dir/PackratLog_$date_arg.log"
+    echo "Source  : $src_dir/PackratLog_$date_arg.log{,.N}"
     echo "Dest    : $dst_dir"
     echo "Format  : $format"
 
     # Exit 0 cleanly with nothing to do - cron should not page on this.
-    if [[ -z "$src_file" ]]; then
+    if (( ${#src_files[@]} == 0 )); then
         echo ""
-        note "no log file found for $date_arg (nothing to archive)"
+        note "no log files found for $date_arg (nothing to archive)"
         return 0
     fi
 
@@ -361,18 +487,33 @@ op_backup() {
 
     # Cron-safe: serialize concurrent invocations on the same archive.
     with_lock "logs-backup-${ENVIRONMENT}-${date_prefix}-${format}" -- \
-        __do_backup "$format" "$archive" "$src_file" "$src_dir"
+        __do_backup "$format" "$archive" "" "$src_dir" "$date_arg"
 }
 
 # Internals for op_backup. Split so with_lock can invoke as a subcommand.
 __do_backup() {
-    local format="$1" archive="$2" src_file="$3" src_dir="$4"
+    local format="$1" archive="$2" src_file="$3" src_dir="$4" date_arg="$5"
     case "$format" in
         zip)
             require_cmd zip || return 127
+            # Pull every file for this date (live .log + rollover .log.N).
+            shopt -s nullglob
+            local day_files=() f
+            for f in \
+                "$src_dir"/PackratLog_"$date_arg".log \
+                "$src_dir"/PackratLog_"$date_arg".log.[0-9]* \
+                "$src_dir"/PackratLog-"$date_arg".log \
+                "$src_dir"/PackratLog-"$date_arg".log.[0-9]*; do
+                [[ -f "$f" ]] && day_files+=("$f")
+            done
+            shopt -u nullglob
+            if (( ${#day_files[@]} == 0 )); then
+                note "no log files for $date_arg in $src_dir"
+                return 0
+            fi
             # -u update in place; -q quiet; -j junk paths (flatten).
-            if zip -uqj "$archive" "$src_file"; then
-                echo "archived: $(basename "$src_file") -> $(basename "$archive")"
+            if zip -uqj "$archive" "${day_files[@]}"; then
+                echo "archived ${#day_files[@]} file(s) for $date_arg -> $(basename "$archive")"
             else
                 err "zip failed (rc=$?)"
                 return 1
@@ -381,13 +522,18 @@ __do_backup() {
         tar.gz)
             require_cmd tar || return 127
             # tar.gz cannot cleanly append; rebuild the month archive fresh
-            # each run. Idempotent.
+            # each run. Idempotent. Includes rollover siblings.
             shopt -s nullglob
             local month_files=()
             local f
-            for f in "$src_dir"/PackratLog_*.log "$src_dir"/PackratLog-*.log; do
+            for f in \
+                "$src_dir"/PackratLog_*.log \
+                "$src_dir"/PackratLog_*.log.[0-9]* \
+                "$src_dir"/PackratLog-*.log \
+                "$src_dir"/PackratLog-*.log.[0-9]*; do
                 [[ -f "$f" ]] && month_files+=("$f")
             done
+            shopt -u nullglob
             if (( ${#month_files[@]} == 0 )); then
                 note "no logs in $src_dir to tar"
                 return 0
@@ -408,20 +554,23 @@ main_menu() {
     echo ""
     echo "[1] Tail     - follow today's log"
     echo "[2] Less     - page through today's log"
-    echo "[3] Copy     - archive date range to tar.gz"
+    echo "[3] Copy     - archive date range to zip"
     echo "[4] Backup   - daily rollup (default: yesterday)"
-    echo "[Q] Quit"
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c
     read -r -p "Choose: " c
     case "$c" in
-        1) op_tail ;;
-        2) op_less ;;
-        3) op_copy ;;
-        4) op_backup ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        1)    run_op op_tail   || return $MENU_RC_QUIT ;;
+        2)    run_op op_less   || return $MENU_RC_QUIT ;;
+        3)    run_op op_copy   || return $MENU_RC_QUIT ;;
+        4)    run_op op_backup || return $MENU_RC_QUIT ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *)    err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -460,7 +609,19 @@ apply_env_paths
 status="OK"
 rc=0
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    # Interactive menu loop. Initial clear; subsequent iterations leave
+    # op output visible so operators can scroll back to it.
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    # Park unless the dispatcher will (it parks at its own exit).
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
         tail)   op_tail   "$@" || rc=$? ;;
@@ -469,8 +630,8 @@ else
         backup) op_backup "$@" || rc=$? ;;
         *)      err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

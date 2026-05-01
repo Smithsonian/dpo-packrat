@@ -9,18 +9,28 @@
 #   ./ops_disk.sh <op> [args...]                  # non-interactive
 #
 # Operations:
-#   usage   [folder] [--path a,b,c]               # one-shot df + optional du
-#   watch   [folder] [--interval N] [--path ...]  # real-time loop (default 10s)
-#   cleanup <path> [--dry-run] [--ignore-recent] [--yes]
-#                                                 # release deleted-file FDs
+#   usage      [folder...] [--path a,b,c] [--no-folders]
+#                                                 # df over filesystems
+#                                                 # + du over default + extra dirs
+#   disk-watch [folder...] [--interval N] [--path ...] [--no-folders]
+#                                                 # real-time loop (default 10s)
+#                                                 # df+du only - for the full
+#                                                 # CPU/mem/net/disk dashboard
+#                                                 # use ops_system.sh monitor
+#   release-deleted <path> [--dry-run] [--ignore-recent] [--yes]
+#                                                 # release blocks held by deleted-
+#                                                 # but-still-open files (truncate
+#                                                 # /proc/<pid>/fd/<fd>). Does NOT
+#                                                 # remove anything from the FS.
 #                                                 # --ignore-recent skips files
 #                                                 # modified in last 2 days
-#   monitor <path>                                # inotify event stream
+#   monitor    <path> [--events e1,e2,...]        # inotify event stream
+#                                                 # default: create,delete,modify,move
 #
 # Disk ops are path-keyed, not env-keyed, so no env prompt is shown.
 #
 # Dependencies (checked per-op):
-#   usage/watch : df, du
+#   usage/watch : df, du, timeout
 #   cleanup     : lsof, awk, stat, truncate
 #   monitor     : inotifywait   (sudo apt-get install inotify-tools)
 #
@@ -39,8 +49,17 @@ init_traps
 # Defaults (top of file - adjust if Packrat volumes change)
 # ---------------------------------------------------------------------------
 
-DEFAULT_MONITOR_FS=("/data" "/staging")
-DEFAULT_MONITOR_DIRS=("/staging/Packrat/Storage-Dev/tmp" "/data/Packrat/Temp/docker/overlay2")
+# Filesystems checked with `df` (capacity / % used).
+DEFAULT_MONITOR_FS=("/data" "/staging" "/3ddigip01")
+
+# Folders shown via `du -sh` (size of a directory tree, NOT its filesystem).
+# All three Packrat dirs live on the /3ddigip01 mount, so showing them via
+# df would just print the same row three times - du is what we actually want.
+DEFAULT_MONITOR_DIRS=(
+    "/3ddigip01/Packrat/Logs"
+    "/3ddigip01/Packrat/Backups"
+    "/3ddigip01/Packrat/Repository"
+)
 
 # ---------------------------------------------------------------------------
 # Shared rendering helpers
@@ -65,19 +84,22 @@ render_fs_usage() {
     done
 }
 
-# If a folder was provided, print its du -sh line.
+# Print one du -sh line per folder. Bounded by `timeout` so a slow tree
+# (e.g. cold-cache /3ddigip01/Packrat/Repository) can't stall the watch loop.
 render_folder_usage() {
-    local folder="$1"
-    [[ -z "$folder" ]] && return 0
-    if [[ ! -d "$folder" ]]; then
-        echo ""
-        warn "folder '$folder' does not exist or is not accessible"
-        return 0
-    fi
-    local size
-    size=$(du -sh -- "$folder" 2>/dev/null | awk '{print $1}')
-    echo ""
-    printf "Folder: %-40s %s\n" "$folder" "${size:-?}"
+    local folder size
+    for folder in "$@"; do
+        [[ -z "$folder" ]] && continue
+        if [[ ! -d "$folder" ]]; then
+            printf "Folder: %-44s %s\n" "$folder" "(not found)"
+            continue
+        fi
+        size=$(timeout 30 du -sh -- "$folder" 2>/dev/null | awk '{print $1}')
+        if [[ -z "$size" ]]; then
+            size="(timeout)"
+        fi
+        printf "Folder: %-44s %s\n" "$folder" "$size"
+    done
 }
 
 # ---------------------------------------------------------------------------
@@ -86,8 +108,9 @@ render_folder_usage() {
 
 op_usage() {
     OPS_CURRENT_OP="usage"
-    local folder=""
     local -a paths=("${DEFAULT_MONITOR_FS[@]}")
+    local -a extra_folders=()
+    local include_default_folders=true
 
     while (( $# > 0 )); do
         case "$1" in
@@ -99,12 +122,15 @@ op_usage() {
             --path=*)
                 IFS=',' read -r -a paths <<< "${1#--path=}"
                 ;;
+            --no-folders)
+                include_default_folders=false
+                ;;
             -h|--help)
-                echo "usage: ops_disk.sh usage [folder] [--path /a,/b]"
+                echo "usage: ops_disk.sh usage [folder...] [--path /a,/b] [--no-folders]"
                 return 0
                 ;;
             *)
-                [[ -z "$folder" ]] && folder="$1"
+                extra_folders+=("$1")
                 ;;
         esac
         shift
@@ -116,9 +142,13 @@ op_usage() {
     print_usage_header
     render_fs_usage "${paths[@]}"
 
-    if [[ -n "$folder" ]]; then
+    local -a folders=()
+    $include_default_folders && folders+=("${DEFAULT_MONITOR_DIRS[@]}")
+    folders+=("${extra_folders[@]}")
+    if (( ${#folders[@]} > 0 )); then
         require_cmd du || return 127
-        render_folder_usage "$folder"
+        echo ""
+        render_folder_usage "${folders[@]}"
     fi
 
     echo ""
@@ -131,9 +161,10 @@ op_usage() {
 
 op_watch() {
     OPS_CURRENT_OP="watch"
-    local folder=""
     local interval=10
     local -a paths=("${DEFAULT_MONITOR_FS[@]}")
+    local -a extra_folders=()
+    local include_default_folders=true
 
     while (( $# > 0 )); do
         case "$1" in
@@ -147,12 +178,15 @@ op_watch() {
             --path=*)
                 IFS=',' read -r -a paths <<< "${1#--path=}"
                 ;;
+            --no-folders)
+                include_default_folders=false
+                ;;
             -h|--help)
-                echo "usage: ops_disk.sh watch [folder] [--interval N] [--path /a,/b]"
+                echo "usage: ops_disk.sh disk-watch [folder...] [--interval N] [--path /a,/b] [--no-folders]"
                 return 0
                 ;;
             *)
-                [[ -z "$folder" ]] && folder="$1"
+                extra_folders+=("$1")
                 ;;
         esac
         shift
@@ -164,7 +198,11 @@ op_watch() {
     fi
 
     require_cmd df || return 127
-    [[ -n "$folder" ]] && { require_cmd du || return 127; }
+
+    local -a folders=()
+    $include_default_folders && folders+=("${DEFAULT_MONITOR_DIRS[@]}")
+    folders+=("${extra_folders[@]}")
+    (( ${#folders[@]} > 0 )) && { require_cmd du || return 127; }
 
     # Initial blank frame. We redraw in place; scrollback above is preserved.
     echo ""
@@ -174,7 +212,10 @@ op_watch() {
         banner "DISK USAGE (watch - interval ${interval}s, Ctrl+C to stop)"
         print_usage_header
         render_fs_usage "${paths[@]}"
-        render_folder_usage "$folder"
+        if (( ${#folders[@]} > 0 )); then
+            echo ""
+            render_folder_usage "${folders[@]}"
+        fi
         echo ""
         echo "Last updated: $(date '+%Y-%m-%d %H:%M:%S')"
         printf '\033[J'
@@ -183,7 +224,7 @@ op_watch() {
 }
 
 # ---------------------------------------------------------------------------
-# Operation: cleanup (release deleted-file FDs)
+# Operation: release-deleted (release blocks of deleted-but-open files)
 # ---------------------------------------------------------------------------
 #
 # On Linux, when a process holds an open FD to a deleted file, the blocks
@@ -205,7 +246,7 @@ op_cleanup() {
             --ignore-recent)  ignore_recent=true ;;
             --yes|-y)         assume_yes=true ;;
             -h|--help)
-                echo "usage: ops_disk.sh cleanup <path> [--dry-run] [--ignore-recent] [--yes]"
+                echo "usage: ops_disk.sh release-deleted <path> [--dry-run] [--ignore-recent] [--yes]"
                 return 0
                 ;;
             *)
@@ -216,14 +257,14 @@ op_cleanup() {
     done
 
     if [[ -z "$path_prefix" ]]; then
-        err "cleanup requires <path>"
-        echo "usage: ops_disk.sh cleanup <path> [--dry-run] [--ignore-recent] [--yes]" >&2
+        err "release-deleted requires <path>"
+        echo "usage: ops_disk.sh release-deleted <path> [--dry-run] [--ignore-recent] [--yes]" >&2
         return 1
     fi
 
     require_cmd lsof awk stat truncate || return 127
 
-    banner "DISK CLEANUP ($path_prefix)"
+    banner "RELEASE DELETED-BUT-OPEN FDs ($path_prefix)"
     if $dry_run;       then echo "Mode         : DRY RUN (listing only)"; fi
     if $ignore_recent; then echo "Age filter   : skip files modified <2d ago"; fi
     echo "Path prefix  : $path_prefix"
@@ -233,7 +274,7 @@ op_cleanup() {
     # prefix would just duplicate work - with_lock makes the second invocation
     # exit 75 instead.
     local lock_key
-    lock_key="disk-cleanup-$(echo -n "$path_prefix" | tr -c 'A-Za-z0-9' '-')"
+    lock_key="disk-release-deleted-$(echo -n "$path_prefix" | tr -c 'A-Za-z0-9' '-')"
     with_lock "$lock_key" -- __cleanup_run \
         "$path_prefix" "$dry_run" "$ignore_recent" "$assume_yes"
 }
@@ -370,11 +411,32 @@ __cleanup_apply() {
 
 op_monitor() {
     OPS_CURRENT_OP="monitor"
-    local target="${1:-}"
+    # Default events: lifecycle (create/delete), content changes (modify),
+    # and renames into/out of the tree (move == moved_to + moved_from).
+    # On a hot directory `modify` is noisy - tune with `--events`.
+    local target=""
+    local events_csv="create,delete,modify,move"
+
+    while (( $# > 0 )); do
+        case "$1" in
+            --events)   events_csv="${2:-}"; shift 2; continue ;;
+            --events=*) events_csv="${1#--events=}" ;;
+            -h|--help)
+                echo "usage: ops_disk.sh monitor <path> [--events e1,e2,...]"
+                echo "events: create, delete, modify, move, attrib,"
+                echo "        access, open, close, close_write, ..."
+                return 0
+                ;;
+            *)
+                [[ -z "$target" ]] && target="$1"
+                ;;
+        esac
+        shift
+    done
 
     if [[ -z "$target" ]]; then
         err "monitor requires <path>"
-        echo "usage: ops_disk.sh monitor <path>" >&2
+        echo "usage: ops_disk.sh monitor <path> [--events e1,e2,...]" >&2
         return 1
     fi
     if [[ ! -d "$target" ]]; then
@@ -388,13 +450,27 @@ op_monitor() {
         return 127
     fi
 
+    # Build -e flags from the comma-separated event list.
+    local -a event_flags=() __evs=()
+    local e
+    IFS=',' read -r -a __evs <<< "$events_csv"
+    for e in "${__evs[@]}"; do
+        e="${e//[[:space:]]/}"
+        [[ -n "$e" ]] && event_flags+=(-e "$e")
+    done
+    if (( ${#event_flags[@]} == 0 )); then
+        err "no events specified (use --events e1,e2,...)"
+        return 1
+    fi
+
     banner "DISK MONITOR ($target)"
-    echo "Watching recursively for create/delete events. Ctrl+C to stop."
+    echo "Events       : $events_csv"
+    echo "Watching recursively. Ctrl+C to stop."
     echo ""
 
     # inotifywait's own --timefmt handles timestamps, so the old background
     # 'divider' subshell (which could leak on unclean exit) is gone.
-    inotifywait -r -m -e create -e delete \
+    inotifywait -r -m "${event_flags[@]}" \
         --format '%T %w%f %e' \
         --timefmt '%Y-%m-%d %H:%M:%S' \
         -- "$target" | while IFS= read -r line; do
@@ -408,34 +484,40 @@ op_monitor() {
 
 main_menu() {
     banner "PACKRAT DISK OPS"
-    echo "[1] Usage    - one-shot df + optional du"
-    echo "[2] Watch    - real-time df loop"
-    echo "[3] Cleanup  - release deleted-file FDs"
-    echo "[4] Monitor  - inotify event stream"
-    echo "[Q] Quit"
+    echo "[1] Usage            - one-shot df + optional du"
+    echo "[2] Disk-Watch       - real-time df loop (no CPU/mem/net; use system monitor for that)"
+    echo "[3] Release-Deleted  - reclaim blocks held by deleted-but-open FDs"
+    echo "                       Does NOT delete files (they were already unlinked)."
+    echo "                       Holding processes keep running, just lose the FD."
+    echo "[4] Monitor          - inotify event stream (create/delete/modify/move)"
+    echo "                       'modify' is noisy on hot dirs; tune with --events."
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c arg
     read -r -p "Choose: " c
     case "$c" in
         1)
-            read -r -p "Folder to include (blank to skip): " arg
-            op_usage "$arg"
+            read -r -p "Extra folder for du (blank=defaults only): " arg
+            run_op op_usage ${arg:+"$arg"} || return $MENU_RC_QUIT
             ;;
         2)
-            read -r -p "Folder to include (blank to skip): " arg
-            op_watch "$arg"
+            read -r -p "Extra folder for du (blank=defaults only): " arg
+            run_op op_watch ${arg:+"$arg"} || return $MENU_RC_QUIT
             ;;
         3)
             read -r -p "Path prefix (e.g. /staging): " arg
-            op_cleanup "$arg"
+            run_op op_cleanup "$arg" || return $MENU_RC_QUIT
             ;;
         4)
             read -r -p "Directory to monitor: " arg
-            op_monitor "$arg"
+            run_op op_monitor "$arg" || return $MENU_RC_QUIT
             ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -456,17 +538,36 @@ OP="${1:-}"
 status="OK"
 rc=0
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
-        usage)   op_usage   "$@" || rc=$? ;;
-        watch)   op_watch   "$@" || rc=$? ;;
-        cleanup) op_cleanup "$@" || rc=$? ;;
-        monitor) op_monitor "$@" || rc=$? ;;
-        *)       err "unknown op: $OP"; rc=1 ;;
+        usage)            op_usage   "$@" || rc=$? ;;
+        disk-watch)       op_watch   "$@" || rc=$? ;;
+        release-deleted)  op_cleanup "$@" || rc=$? ;;
+        monitor)          op_monitor "$@" || rc=$? ;;
+        watch)
+            err "'watch' has been renamed to 'disk-watch' (clarifies scope vs ops_system.sh monitor)"
+            err "rerun: ops_disk.sh disk-watch $*"
+            rc=1
+            ;;
+        cleanup)
+            err "'cleanup' has been renamed to 'release-deleted' (clarifies it does NOT delete files)"
+            err "rerun: ops_disk.sh release-deleted $*"
+            rc=1
+            ;;
+        *)                err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

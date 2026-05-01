@@ -234,17 +234,24 @@ main_menu() {
     echo "Environment: $ENV_LABEL"
     echo ""
     echo "[1] Clear transient staging"
+    echo "    !! rm -rf under this env's staging tree. Irreversible."
+    echo "    Anything mid-write into staging (active ingest) loses its work."
     echo "[2] Backup repository (rsync)"
-    echo "[Q] Quit"
+    echo "    rsync -ah, no --delete (backup grows monotonically)."
+    echo "    Default dest is on the same /3ddigip01 mount - NOT off-host."
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c
     read -r -p "Choose: " c
     case "$c" in
-        1) op_clear ;;
-        2) op_backup ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        1)    run_op op_clear  || return $MENU_RC_QUIT ;;
+        2)    run_op op_backup || return $MENU_RC_QUIT ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -278,15 +285,24 @@ status="OK"
 rc=0
 
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
         clear)  op_clear  "$@" || rc=$? ;;
         backup) op_backup "$@" || rc=$? ;;
         *)      err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

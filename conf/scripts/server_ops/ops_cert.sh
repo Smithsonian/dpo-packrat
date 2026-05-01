@@ -9,23 +9,32 @@
 #   ./ops_cert.sh <op> <file> [args...]             # non-interactive
 #
 # Subcommands:
-#   inspect <file> [keyfile] [--json]               # per-block details, optional key-match
+#   inspect [file] [keyfile] [--json]               # per-block details, optional key-match
+#                                                   # no <file> -> walks $CERT_DEFAULTS
 #   format  <file> [--strict]                       # reorder LEAF + intermediates; omit root
 #                                                   # --strict requires exactly 4 blocks
-#   expiry  <file> [--warn-days N]                  # exit 1 if ANY cert expires within N days
+#   expiry  [file] [--warn-days N]                  # exit 1 if ANY cert expires within N days
 #                                                   # default N = 30
+#                                                   # no <file> -> walks $CERT_DEFAULTS
 #
 # Cert ops are path-keyed, not env-keyed, so no env prompt is shown.
+#
+# Default certs (used when <file> is omitted on inspect/expiry):
+#   /etc/pki/tls/certs/packrat.si.edu.cert        (prod)
+#   /etc/pki/tls/certs/packrat-test.si.edu.cert   (staging/test)
+# Override via $CERT_DEFAULT_FILES (whitespace-separated path list).
 #
 # Dependencies (checked per-op):
 #   openssl (all subops)
 #   file    (inspect/format: auto-detect PKCS#7/DER)
 #
 # Examples:
-#   ./ops_cert.sh inspect /etc/ssl/packrat.pem
+#   ./ops_cert.sh inspect                                  # default Packrat certs
+#   ./ops_cert.sh inspect /etc/pki/tls/certs/packrat.si.edu.cert
 #   ./ops_cert.sh inspect bundle.pem server.key --json
-#   ./ops_cert.sh format bundle.pem
-#   ./ops_cert.sh expiry /etc/ssl/packrat.pem --warn-days 14
+#   ./ops_cert.sh format  bundle.pem
+#   ./ops_cert.sh expiry  --warn-days 14                   # default Packrat certs
+#   ./ops_cert.sh expiry  /etc/ssl/packrat.pem --warn-days 14
 #
 
 set -euo pipefail
@@ -37,6 +46,26 @@ OPS_SCRIPT_NAME="ops_cert.sh"
 source "$HERE/lib/common.sh"
 
 init_traps
+
+# ---------------------------------------------------------------------------
+# Default certificate locations
+# ---------------------------------------------------------------------------
+#
+# When inspect/expiry are run without a <file> arg, they iterate over the
+# certs Packrat actually serves. Sourced from conf/nginx/nginx-prod.conf:
+#   ssl_certificate "/etc/pki/tls/certs/packrat.si.edu.cert";
+#   ssl_certificate "/etc/pki/tls/certs/packrat-test.si.edu.cert";
+# Override via $CERT_DEFAULT_FILES (whitespace-separated list).
+
+if [[ -n "${CERT_DEFAULT_FILES:-}" ]]; then
+    # Operator-provided list (whitespace-separated path string).
+    read -r -a CERT_DEFAULTS <<< "$CERT_DEFAULT_FILES"
+else
+    CERT_DEFAULTS=(
+        "/etc/pki/tls/certs/packrat.si.edu.cert"
+        "/etc/pki/tls/certs/packrat-test.si.edu.cert"
+    )
+fi
 
 # ---------------------------------------------------------------------------
 # Shared PEM helpers
@@ -136,7 +165,8 @@ op_inspect() {
         case "$1" in
             --json)    json=true ;;
             -h|--help)
-                echo "usage: ops_cert.sh inspect <file> [keyfile] [--json]"
+                echo "usage: ops_cert.sh inspect [file] [keyfile] [--json]"
+                echo "  with no <file>: iterates over CERT_DEFAULTS (${CERT_DEFAULTS[*]})"
                 return 0
                 ;;
             *)
@@ -148,19 +178,47 @@ op_inspect() {
         esac
         shift
     done
-    if [[ -z "$cert_file" ]]; then
-        err "inspect requires <file>"
-        echo "usage: ops_cert.sh inspect <file> [keyfile] [--json]" >&2
-        return 1
-    fi
-    if [[ ! -f "$cert_file" ]]; then
-        err "file not found: $cert_file"
-        return 1
-    fi
+
     if [[ -n "$key_file" && ! -f "$key_file" ]]; then
         err "keyfile not found: $key_file"
         return 1
     fi
+
+    # No file -> walk the defaults. Key-match check is incompatible with
+    # batch mode (which key matches which cert?) so refuse that combo.
+    if [[ -z "$cert_file" ]]; then
+        if [[ -n "$key_file" ]]; then
+            err "inspect: --keyfile requires an explicit <file>"
+            return 1
+        fi
+        local f rc=0 missing=0
+        for f in "${CERT_DEFAULTS[@]}"; do
+            if [[ ! -f "$f" ]]; then
+                warn "default cert not found, skipping: $f"
+                missing=$(( missing + 1 ))
+                continue
+            fi
+            __inspect_one "$f" "" "$json" || rc=$?
+        done
+        if (( missing == ${#CERT_DEFAULTS[@]} )); then
+            err "no default cert files were readable"
+            return 1
+        fi
+        return $rc
+    fi
+
+    if [[ ! -f "$cert_file" ]]; then
+        err "file not found: $cert_file"
+        return 1
+    fi
+
+    __inspect_one "$cert_file" "$key_file" "$json"
+}
+
+# Run inspect against one cert file. Hoisted out so the multi-file path
+# can call it in a loop with each default.
+__inspect_one() {
+    local cert_file="$1" key_file="$2" json="$3"
 
     require_cmd openssl sha256sum awk || return 127
 
@@ -184,7 +242,7 @@ op_inspect() {
         key_fp=$(pubkey_fp_key "$key_file")
     fi
 
-    if $json; then
+    if [[ "$json" == "true" ]]; then
         emit_inspect_json "$cert_file" "$key_fp" "${certs[@]}"
     else
         emit_inspect_text "$cert_file" "$key_fp" "${certs[@]}"
@@ -427,7 +485,8 @@ op_expiry() {
             --warn-days)   warn_days="${2:-}"; shift 2; continue ;;
             --warn-days=*) warn_days="${1#--warn-days=}" ;;
             -h|--help)
-                echo "usage: ops_cert.sh expiry <file> [--warn-days N]"
+                echo "usage: ops_cert.sh expiry [file] [--warn-days N]"
+                echo "  with no <file>: iterates over CERT_DEFAULTS (${CERT_DEFAULTS[*]})"
                 return 0
                 ;;
             *)
@@ -438,18 +497,44 @@ op_expiry() {
         esac
         shift
     done
-    if [[ -z "$cert_file" ]]; then
-        err "expiry requires <file>"
-        return 1
-    fi
-    if [[ ! -f "$cert_file" ]]; then
-        err "file not found: $cert_file"
-        return 1
-    fi
     if ! [[ "$warn_days" =~ ^[0-9]+$ ]]; then
         err "--warn-days must be a non-negative integer (got: '$warn_days')"
         return 1
     fi
+
+    # No file -> walk the defaults. Aggregate exit code: 1 if ANY default
+    # is bad/expired (cron-friendly), 0 only if all are OK.
+    if [[ -z "$cert_file" ]]; then
+        local f any_bad=0 missing=0
+        for f in "${CERT_DEFAULTS[@]}"; do
+            if [[ ! -f "$f" ]]; then
+                warn "default cert not found, skipping: $f"
+                missing=$(( missing + 1 ))
+                continue
+            fi
+            if ! __expiry_one "$f" "$warn_days"; then
+                any_bad=1
+            fi
+        done
+        if (( missing == ${#CERT_DEFAULTS[@]} )); then
+            err "no default cert files were readable"
+            return 1
+        fi
+        (( any_bad )) && return 1
+        return 0
+    fi
+
+    if [[ ! -f "$cert_file" ]]; then
+        err "file not found: $cert_file"
+        return 1
+    fi
+    __expiry_one "$cert_file" "$warn_days"
+}
+
+# Run expiry against one cert file. Returns 0 when every block is OK,
+# 1 when any block is WARN / EXPIRED / UNKNOWN.
+__expiry_one() {
+    local cert_file="$1" warn_days="$2"
 
     require_cmd openssl awk date || return 127
 
@@ -515,34 +600,44 @@ op_expiry() {
 
 main_menu() {
     banner "PACKRAT CERT OPS"
-    echo "[1] Inspect"
-    echo "[2] Format"
-    echo "[3] Expiry"
-    echo "[Q] Quit"
+    echo "[1] Inspect  - per-block details (read-only). Blank file = Packrat defaults."
+    echo "[2] Format   - !! REWRITES the cert bundle in place."
+    echo "                  A timestamped .bak.* is written first; verify before reload."
+    echo "[3] Expiry   - exit 1 if any cert is in the warn window. Blank file = defaults."
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c arg keyarg
     read -r -p "Choose: " c
     case "$c" in
         1)
-            read -r -p "Cert file: " arg
+            read -r -p "Cert file (blank=Packrat defaults): " arg
             read -r -p "Key file (optional, blank to skip): " keyarg
-            if [[ -n "$keyarg" ]]; then
-                op_inspect "$arg" "$keyarg"
+            if [[ -n "$arg" && -n "$keyarg" ]]; then
+                run_op op_inspect "$arg" "$keyarg" || return $MENU_RC_QUIT
+            elif [[ -n "$arg" ]]; then
+                run_op op_inspect "$arg" || return $MENU_RC_QUIT
             else
-                op_inspect "$arg"
+                run_op op_inspect || return $MENU_RC_QUIT
             fi
             ;;
         2)
             read -r -p "Cert file: " arg
-            op_format "$arg"
+            run_op op_format "$arg" || return $MENU_RC_QUIT
             ;;
         3)
-            read -r -p "Cert file: " arg
-            op_expiry "$arg"
+            read -r -p "Cert file (blank=Packrat defaults): " arg
+            if [[ -n "$arg" ]]; then
+                run_op op_expiry "$arg" || return $MENU_RC_QUIT
+            else
+                run_op op_expiry || return $MENU_RC_QUIT
+            fi
             ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -550,7 +645,7 @@ main_menu() {
 # ---------------------------------------------------------------------------
 
 print_help() {
-    sed -n '2,30p' "$0"
+    sed -n '2,38p' "$0"
 }
 
 case "${1:-}" in
@@ -564,7 +659,16 @@ status="OK"
 rc=0
 
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
         inspect) op_inspect "$@" || rc=$? ;;
@@ -572,8 +676,8 @@ else
         expiry)  op_expiry  "$@" || rc=$? ;;
         *)       err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

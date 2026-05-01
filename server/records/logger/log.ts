@@ -115,8 +115,19 @@ export class Logger {
         // when outputting to the console/terminal we want cleaner, single-line logs so it's easier
         // to follow visually.
         const timestamp: string = new Date(info.timestamp).toISOString().replace('T', ' ').replace('Z', '').split('.')[0]; // Removes milliseconds;
-        const requestId: string = (info.context.idRequest && info.context.idRequest>=0) ? `[${String(info.context.idRequest).padStart(5, '0')}]` : '[00000]';
-        const userId: string = (info.context && info.context.idUser>=0) ? `U${String(info.context.idUser).padStart(3, '0')}` : 'U---';
+        // Single-letter prefix tokens (5 chars wide) so request and user ids
+        // are easy to grep for and visually distinct:
+        //   R0042 - request 42        U0007 - user 7
+        //   X---- - no request        U---- - no user
+        // X (instead of R----) makes "no session" trivially searchable.
+        // The raw JSON file transport (customJsonFormat above) still records
+        // the underlying -1 for downstream parsing.
+        const requestId: string = (info.context?.idRequest != null && info.context.idRequest >= 0)
+            ? `R${String(info.context.idRequest).padStart(4, '0')}`
+            : 'X----';
+        const userId: string = (info.context?.idUser != null && info.context.idUser >= 0)
+            ? `U${String(info.context.idUser).padStart(4, '0')}`
+            : 'U----';
         const section: string = info.context.section ? info.context.section.padStart(5) : '-----';
         const message: string = info.message;
         const caller: string | undefined = (info.context.caller) ? `[${info.context.caller}] ` : undefined;

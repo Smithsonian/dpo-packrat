@@ -530,30 +530,40 @@ __predeploy_run() {
 
 main_menu() {
     banner "PACKRAT CONTAINER OPS"
-    echo "[1] Status"
-    echo "[2] Start"
-    echo "[3] Stop"
-    echo "[4] Restart"
-    echo "[5] Service status"
-    echo "[6] Service restart"
-    echo "[7] Reclaim space"
-    echo "[8] Pre-deploy"
-    echo "[Q] Quit"
+    echo "[1] Status              Read-only. Always safe."
+    echo "[2] Start               Bring a stopped container up. Not gated."
+    echo "[3] Stop                !! Brief downtime for the named container."
+    echo "                           Protected prod containers refused (edit"
+    echo "                           PROTECTED_PROD_CONTAINERS in lib/common.sh to override)."
+    echo "[4] Restart             !! Same downtime as stop; same prod-protection gate."
+    echo "[5] Service status      Read-only systemctl status."
+    echo "[6] Service restart     !! Bounces the docker daemon = ALL containers on"
+    echo "                           this host. Planned windows only."
+    echo "[7] Reclaim space       Prunes dangling images, stopped containers, unused"
+    echo "                           volumes/networks. Safe anytime; running stuff untouched."
+    echo "                           --cache also wipes BuildKit cache (slower next build)."
+    echo "[8] Pre-deploy          !! Stops + removes target env's containers, removes"
+    echo "                           their images and unused volumes. Use ONLY before"
+    echo "                           a real deploy - not a routine reclaim."
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c
     read -r -p "Choose: " c
     case "$c" in
-        1) op_status ;;
-        2) op_start ;;
-        3) op_stop ;;
-        4) op_restart ;;
-        5) op_service status ;;
-        6) op_service restart ;;
-        7) op_reclaim ;;
-        8) op_predeploy ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        1)    run_op op_status         || return $MENU_RC_QUIT ;;
+        2)    run_op op_start          || return $MENU_RC_QUIT ;;
+        3)    run_op op_stop           || return $MENU_RC_QUIT ;;
+        4)    run_op op_restart        || return $MENU_RC_QUIT ;;
+        5)    run_op op_service status || return $MENU_RC_QUIT ;;
+        6)    run_op op_service restart|| return $MENU_RC_QUIT ;;
+        7)    run_op op_reclaim        || return $MENU_RC_QUIT ;;
+        8)    run_op op_predeploy      || return $MENU_RC_QUIT ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -613,7 +623,16 @@ status="OK"
 rc=0
 
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
         status)     op_status     "$@" || rc=$? ;;
@@ -628,8 +647,8 @@ else
             op_predeploy "$@" || rc=$? ;;
         *)          err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

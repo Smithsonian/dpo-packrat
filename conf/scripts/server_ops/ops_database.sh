@@ -535,28 +535,37 @@ op_metrics() {
     local sub="${1:-}"
     [[ -n "$sub" ]] && shift
 
-    if [[ -z "$sub" ]]; then
+    # Direct CLI invocation (sub already given) - run once and return.
+    if [[ -n "$sub" ]]; then
+        case "$sub" in
+            size)    op_metrics_size    "$@" ;;
+            inspect) op_metrics_inspect "$@" ;;
+            bloat|payload|age|types|disk)
+                err "metrics '$sub' is deferred (see PLAN_SERVER_OPS_REFACTOR.md)"
+                return 1
+                ;;
+            *) err "unknown metrics subop: $sub"; return 1 ;;
+        esac
+        return $?
+    fi
+
+    # Interactive: loop the submenu so picking Size/Inspect returns here
+    # rather than dropping all the way out of the database menu.
+    while :; do
         print_metrics_submenu
         local c
         read -r -p "Choose: " c
         case "$c" in
-            1) sub="size" ;;
-            7) sub="inspect" ;;
-            2|3|4|5|6) err "subop deferred (see PLAN_SERVER_OPS_REFACTOR.md)"; return 1 ;;
-            [Bb]) return 0 ;;
-            *) err "invalid choice"; return 1 ;;
+            1) run_op op_metrics_size    || return $MENU_RC_QUIT ;;
+            7) run_op op_metrics_inspect || return $MENU_RC_QUIT ;;
+            2|3|4|5|6)
+                err "subop deferred (see PLAN_SERVER_OPS_REFACTOR.md)"
+                ;;
+            [Bb]) return 0 ;;                       # back to database menu
+            [Qq]) return $MENU_RC_QUIT ;;           # quit script entirely
+            *) err "invalid choice" ;;
         esac
-    fi
-
-    case "$sub" in
-        size)    op_metrics_size    "$@" ;;
-        inspect) op_metrics_inspect "$@" ;;
-        bloat|payload|age|types|disk)
-            err "metrics '$sub' is deferred (see PLAN_SERVER_OPS_REFACTOR.md)"
-            return 1
-            ;;
-        *) err "unknown metrics subop: $sub"; return 1 ;;
-    esac
+    done
 }
 
 print_metrics_submenu() {
@@ -568,8 +577,53 @@ print_metrics_submenu() {
     echo "[5] Types      - (deferred)"
     echo "[6] Disk       - (deferred)"
     echo "[7] Inspect    - combined report for a single table"
-    echo "[B] Back"
     echo ""
+    echo "[B] Back to database menu     [Q] Quit"
+    echo ""
+}
+
+# Reformat raw `metrics_size_sql` output (tab-separated rows of
+#   table_name \t rows \t data_bytes \t index_bytes \t free_bytes \t total_bytes
+# ) into an aligned table with auto-scaled units (B / KB / MB / GB / TB).
+# Reads from stdin; writes to stdout.
+format_metrics_size() {
+    awk -F'\t' '
+        function fmt_bytes(b,    units, u, val) {
+            split("B KB MB GB TB PB", units, " ")
+            u = 1
+            val = b + 0
+            while (val >= 1024 && u < 6) {
+                val = val / 1024
+                u = u + 1
+            }
+            if (u == 1) return sprintf("%d %s", val, units[u])
+            return sprintf("%.1f %s", val, units[u])
+        }
+        function fmt_rows(r,    s, out) {
+            s = sprintf("%d", r + 0)
+            out = ""
+            while (length(s) > 3) {
+                out = "," substr(s, length(s) - 2) out
+                s = substr(s, 1, length(s) - 3)
+            }
+            return s out
+        }
+        function dash(n,    s) { s = ""; while (length(s) < n) s = s "-"; return s }
+        BEGIN {
+            fmt = "%-44s  %14s  %11s  %11s  %11s  %11s\n"
+            printf fmt, "TABLE", "ROWS", "DATA", "INDEX", "FREE", "TOTAL"
+            printf fmt, dash(44), dash(14), dash(11), dash(11), dash(11), dash(11)
+        }
+        NF >= 6 {
+            printf fmt,
+                $1,
+                fmt_rows($2),
+                fmt_bytes($3),
+                fmt_bytes($4),
+                fmt_bytes($5),
+                fmt_bytes($6)
+        }
+    '
 }
 
 # metrics size [table] [--top N]
@@ -598,7 +652,7 @@ op_metrics_size() {
     if [[ -n "$table" ]]; then
         echo "Table: $table"
     else
-        echo "Top $top tables by total size"
+        echo "Top $top tables by total size (data + index)"
     fi
     echo ""
 
@@ -609,7 +663,7 @@ op_metrics_size() {
         # trailing semicolon; replace it with ' LIMIT N;'.
         sql="${sql%;*} LIMIT $top;"
     fi
-    mysql_exec "$sql"
+    mysql_exec "$sql" | format_metrics_size
 }
 
 # metrics inspect <table>
@@ -623,6 +677,11 @@ op_metrics_size() {
 # Emits a progress line per fat column so operators can watch long scans.
 op_metrics_inspect() {
     local table="${1:-}"
+    # Prompt when missing + interactive (avoids the "requires <table>"
+    # dead-end after picking [7] Inspect from the metrics submenu).
+    if [[ -z "$table" ]] && is_tty; then
+        read -r -p "Table to inspect: " table
+    fi
     if [[ -z "$table" ]]; then
         err "metrics inspect requires <table>"
         echo "usage: ops_database.sh [env] metrics inspect <table>" >&2
@@ -636,7 +695,7 @@ op_metrics_inspect() {
     banner "METRICS INSPECT ($ENV_LABEL / $DB_NAME / $table)"
 
     echo "--- 1. Size ---"
-    mysql_exec "$(metrics_size_sql "$table")"
+    mysql_exec "$(metrics_size_sql "$table")" | format_metrics_size
 
     echo ""
     echo "--- 2. Bloat (DATA_FREE vs total) ---"
@@ -702,45 +761,73 @@ op_metrics_inspect() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
-    clear
     banner "PACKRAT DATABASE OPS"
     echo "Environment: $ENV_LABEL ($DB_NAME @ $DB_HOST)"
     echo "Env file   : $ENV_FILE_USED"
     echo "DB user    : $DB_USER"
     echo ""
-    # drop/rebuild are staging-only - hide them on prod to avoid confusion.
-    if [[ "$ENVIRONMENT" == "staging" ]]; then
-        echo "[1] Drop database"
-        echo "[2] Rebuild database"
-    fi
+    # Common ops first (numbered identically on prod + staging so muscle
+    # memory works), then a staging-only section. On prod we still LIST
+    # the staging-only options so operators see they exist - selecting
+    # them prints a clear "not allowed on production" message instead
+    # of silently being unavailable.
+    echo "[1] Metrics"
+    echo "    Read-only against information_schema. Safe."
+    echo "[2] Backup database"
+    echo "    mysqldump + optional zip. Safe anytime; never auto-prunes old backups."
     echo "[3] Prune audit records"
-    echo "[4] Backup database"
-    echo "[5] Optimize table"
-    echo "[6] Metrics"
-    echo "[Q] Quit"
+    echo "    Deletes rows from the Audit table only; other tables untouched."
+    echo "    Tier1=light .. Tier4=aggressive. Use Tier2 unless you've read the policy."
+    echo "[4] Optimize table"
+    echo "    Locks the table for the duration (can be many minutes). Off-hours only."
+    echo ""
+    echo "--- staging-only ---"
+    if [[ "$ENVIRONMENT" == "staging" ]]; then
+        echo "[5] Drop database"
+        echo "    !! DROPS all tables. Irreversible."
+        echo "[6] Rebuild database"
+        echo "    !! DROP + reload schema/proc/data. All current data is lost."
+    else
+        echo "[5] Drop database     (disabled on production)"
+        echo "[6] Rebuild database  (disabled on production)"
+    fi
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c
     read -r -p "Choose: " c
     case "$c" in
         1)
-            if [[ "$ENVIRONMENT" != "staging" ]]; then
-                err "drop is staging-only"; return 1
-            fi
-            op_drop
+            # op_metrics drives its own submenu loop; propagate its rc
+            # so a [Q] from the submenu exits the whole script.
+            op_metrics
+            local mrc=$?
+            (( mrc == MENU_RC_QUIT )) && return $MENU_RC_QUIT
             ;;
-        2)
+        2) run_op op_backup   || return $MENU_RC_QUIT ;;
+        3) run_op op_prune    || return $MENU_RC_QUIT ;;
+        4) run_op op_optimize || return $MENU_RC_QUIT ;;
+        5)
             if [[ "$ENVIRONMENT" != "staging" ]]; then
-                err "rebuild is staging-only"; return 1
+                err "drop is not allowed on production from this script"
+                err "if you truly need to drop production, do it manually as DBA"
+            else
+                run_op op_drop || return $MENU_RC_QUIT
             fi
-            op_rebuild
             ;;
-        3) op_prune ;;
-        4) op_backup ;;
-        5) op_optimize ;;
-        6) op_metrics ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        6)
+            if [[ "$ENVIRONMENT" != "staging" ]]; then
+                err "rebuild is not allowed on production from this script"
+                err "if you truly need to rebuild production, do it manually as DBA"
+            else
+                run_op op_rebuild || return $MENU_RC_QUIT
+            fi
+            ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -782,7 +869,16 @@ status="OK"
 rc=0
 
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     # Enforce staging-only ops at the dispatch layer too, so CLI callers
     # can't bypass the interactive menu gating.
@@ -801,8 +897,8 @@ else
             *)        err "unknown op: $OP"; rc=1 ;;
         esac
     fi
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

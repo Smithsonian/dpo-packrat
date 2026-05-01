@@ -15,8 +15,8 @@
 # Domains:
 #   database   - drop | rebuild | prune | backup | optimize | metrics ...
 #   logs       - tail | less | copy | backup
-#   disk       - usage | watch | cleanup | monitor
-#   system     - monitor | files | remount | perf | procinfo
+#   disk       - usage | disk-watch | release-deleted | monitor
+#   system     - monitor | remount | perf | procinfo
 #   container  - status | start | stop | restart | service | reclaim | pre-deploy
 #   solr       - status | clear | reindex
 #   data       - clear | backup
@@ -53,8 +53,8 @@ init_traps
 DOMAINS=(
     "database|ops_database.sh|MariaDB ops (backup, prune, metrics, ...)"
     "logs|ops_logs.sh|Log tail / less / copy / daily backup"
-    "disk|ops_disk.sh|Disk usage / watch / cleanup / inotify monitor"
-    "system|ops_system.sh|System monitor / file activity / remount / perf / procinfo"
+    "disk|ops_disk.sh|Disk usage / disk-watch / release-deleted / inotify monitor"
+    "system|ops_system.sh|System monitor / remount / perf / procinfo"
     "container|ops_container.sh|Docker container ops + pre-deploy cleanup"
     "solr|ops_solr.sh|Solr status / clear / reindex"
     "data|ops_data.sh|Transient staging clear + repository rsync backup"
@@ -63,8 +63,8 @@ DOMAINS=(
 
 DOMAIN_OPS_database="drop rebuild prune backup optimize metrics"
 DOMAIN_OPS_logs="tail less copy backup"
-DOMAIN_OPS_disk="usage watch cleanup monitor"
-DOMAIN_OPS_system="monitor files remount perf procinfo"
+DOMAIN_OPS_disk="usage disk-watch release-deleted monitor"
+DOMAIN_OPS_system="monitor remount perf procinfo"
 DOMAIN_OPS_container="status start stop restart service reclaim pre-deploy"
 DOMAIN_OPS_solr="status clear reindex"
 DOMAIN_OPS_data="clear backup"
@@ -127,9 +127,31 @@ dispatch_domain() {
         err "sibling script not executable or missing: $path"
         return 1
     fi
-    # Hand off. Once exec runs, we don't come back - so print_summary
-    # below won't fire for this path (the child emits its own).
+    # CLI passthrough. Once exec runs, we don't come back - the child
+    # emits its own print_summary, signals reach it directly, exit code
+    # is its own. Cron-friendly.
     exec "$path" "$@"
+}
+
+# Run a domain script as a child (interactive menu path). Returns the
+# child's exit code so the menu loop can detect MENU_RC_QUIT (operator
+# chose [Q] from inside the domain) and propagate the quit upward.
+dispatch_domain_child() {
+    local key="$1"; shift
+    local script
+    if ! script=$(domain_script "$key"); then
+        err "unknown domain: '$key'"
+        return 1
+    fi
+    local path="$HERE/$script"
+    if [[ ! -x "$path" ]]; then
+        err "sibling script not executable or missing: $path"
+        return 1
+    fi
+    # OPS_INVOKED_FROM_DISPATCHER tells the child to exit with the raw
+    # MENU_RC_QUIT instead of translating it to 0 - so we can detect
+    # operator [Q] inside the domain and propagate the quit upward.
+    OPS_INVOKED_FROM_DISPATCHER=1 "$path" "$@"
 }
 
 # ---------------------------------------------------------------------------
@@ -186,8 +208,8 @@ op_help() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
-    clear
     banner "PACKRAT OPS MENU"
+    echo "(per-domain menus annotate destructive ops with '!!' notes)"
     echo ""
     local i=1 entry key desc
     for entry in "${DOMAINS[@]}"; do
@@ -203,21 +225,28 @@ main_menu() {
     local c
     read -r -p "Choose: " c
     case "$c" in
-        [Ll]) op_list; exit 0 ;;
-        [Qq]) exit 0 ;;
+        [Ll]) op_list; return 0 ;;
+        [Qq]) return $MENU_RC_QUIT ;;
     esac
     if ! [[ "$c" =~ ^[0-9]+$ ]]; then
         err "invalid choice"
-        return 1
+        return 0
     fi
     local idx=$((c - 1))
     if (( idx < 0 || idx >= ${#DOMAINS[@]} )); then
         err "out of range: $c"
-        return 1
+        return 0
     fi
     entry="${DOMAINS[idx]}"
     key="${entry%%|*}"
-    dispatch_domain "$key"   # execs - we do not return
+    # Run as child. If the domain script exited with MENU_RC_QUIT the
+    # operator hit [Q] inside it - propagate so the dispatcher also exits.
+    dispatch_domain_child "$key"
+    local child_rc=$?
+    if (( child_rc == MENU_RC_QUIT )); then
+        return $MENU_RC_QUIT
+    fi
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -235,14 +264,36 @@ case "${1:-}" in
         op_list
         ;;
     "")
-        main_menu || rc=$?
+        # Interactive: loop the dispatcher menu so quitting a domain
+        # script ([B] or [Q]) returns here. [Q] from inside a domain
+        # propagates via MENU_RC_QUIT and exits everything.
+        menu_clear
+        while :; do
+            main_menu
+            menu_rc=$?
+            case "$menu_rc" in
+                "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+                *) ;;
+            esac
+        done
+        # Top of the chain - park the session so SSH idle timeout
+        # doesn't drop the operator's terminal.
+        menu_keepalive
         ;;
     *)
-        # Route to sibling. Unknown domain -> error + suggestion.
+        # CLI passthrough. Routes to sibling via exec - we do not return.
         dispatch_domain "$@" || rc=$?
         ;;
 esac
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+# Don't print a session summary for the interactive dispatcher path -
+# each child wrote its own audit lines per op via run_op. Only summary
+# the CLI passthrough case (which only fires when exec failed up front).
+if [[ -n "${1:-}" && "${1:-}" != --* ]]; then
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
+fi
+
+# menu_translate_exit turns operator-Q (MENU_RC_QUIT) into a clean 0
+# unless we ourselves were spawned from another dispatcher (rare).
+exit "$(menu_translate_exit "$rc")"

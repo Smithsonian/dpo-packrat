@@ -240,20 +240,24 @@ main_menu() {
     echo "Solr       : $SOLR_BASE_URL"
     echo "Server     : ${SERVER_BASE_URL:-<unset>}"
     echo ""
-    echo "[1] Status"
-    echo "[2] Clear"
-    echo "[3] Reindex"
-    echo "[Q] Quit"
+    echo "[1] Status   - ping each core + doc counts (read-only)"
+    echo "[2] Clear    - !! deletes ALL docs from packrat + packratMeta cores."
+    echo "                 Search returns nothing until you Reindex afterwards."
+    echo "[3] Reindex  - hits server/solrindex; can run for HOURS on prod"
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c
     read -r -p "Choose: " c
     case "$c" in
-        1) op_status ;;
-        2) op_clear ;;
-        3) op_reindex ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        1)    run_op op_status  || return $MENU_RC_QUIT ;;
+        2)    run_op op_clear   || return $MENU_RC_QUIT ;;
+        3)    run_op op_reindex || return $MENU_RC_QUIT ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -295,7 +299,16 @@ status="OK"
 rc=0
 
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
         status)  op_status  "$@" || rc=$? ;;
@@ -303,8 +316,8 @@ else
         reindex) op_reindex "$@" || rc=$? ;;
         *)       err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

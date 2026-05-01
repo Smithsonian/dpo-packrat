@@ -783,6 +783,7 @@ model User {
   AccessPolicy                                            AccessPolicy[]
   AssetVersion                                            AssetVersion[]
   Audit                                                   Audit[]
+  ExternalSource                                          ExternalSource[]
   LicenseAssignment                                       LicenseAssignment[]
   Metadata                                                Metadata[]
   Sentinel                                                Sentinel[]
@@ -792,7 +793,6 @@ model User {
   UserPersonalizationUrl                                  UserPersonalizationUrl[]
   Workflow                                                Workflow[]
   WorkflowStep                                            WorkflowStep[]
-  ExternalSource                                          ExternalSource[]
 
   @@index([EmailAddress], map: "user_EmailAddress")
 }
@@ -990,13 +990,13 @@ model UserAuthorization {
 
 model ExternalSource {
   idExternalSource Int      @id @default(autoincrement())
-  ClientId         String   @unique @mariasql.VarChar(36)
+  ClientId         String   @unique(map: "ClientId") @mariasql.VarChar(36)
   Name             String   @mariasql.VarChar(255)
   ReferrerPattern  String?  @mariasql.VarChar(1024)
   idContact        Int?
   isActive         Boolean  @default(true)
-  DateCreated      DateTime @default(now())
-  User             User?    @relation(fields: [idContact], references: [idUser])
+  DateCreated      DateTime @default(now()) @mariasql.DateTime(0)
+  User             User?    @relation(fields: [idContact], references: [idUser], onUpdate: Restrict, map: "fk_aes_contact")
 
   @@index([idContact], map: "fk_aes_contact")
 }

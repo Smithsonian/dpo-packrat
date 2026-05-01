@@ -103,7 +103,18 @@ fi
 # ---------------------------------------------------------------------------
 
 is_tty() {
-    [[ -t 1 ]]
+    # When OPS_USE_COLOR is set (typically captured once at script entry,
+    # before any pipelines/subshells mask the TTY), honor it. Otherwise
+    # fall back to a live check on stdout. Pipelines like
+    #     tail -F | while read; do process_line; done
+    # and command substitutions like  level=$(colorize_level ...)  both
+    # detach stdout, so a naive [[ -t 1 ]] inside helpers reports false
+    # even when the script itself is running in a terminal.
+    if [[ -n "${OPS_USE_COLOR:-}" ]]; then
+        [[ "$OPS_USE_COLOR" == "1" ]]
+    else
+        [[ -t 1 ]]
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -361,4 +372,92 @@ print_summary() {
     echo "ELAPSED  : ${mins}m ${secs}s"
     hr
     audit_log "$status"
+}
+
+# ---------------------------------------------------------------------------
+# Interactive menu helpers
+# ---------------------------------------------------------------------------
+#
+# Pattern: each domain script wraps its main_menu in a `while :; do … done`
+# loop. main_menu returns one of:
+#   0                = redraw menu (continue loop)
+#   $MENU_RC_BACK    = exit script normally (return to dispatcher / shell)
+#   $MENU_RC_QUIT    = exit script and signal dispatcher to also exit
+#
+# The dispatcher (ops_menu.sh, interactive path) detects $MENU_RC_QUIT
+# from the script's exit code and propagates the quit upward.
+
+MENU_RC_BACK=11
+MENU_RC_QUIT=22
+
+# menu_translate_exit <rc>
+# Domain scripts call this on the way to `exit`. When invoked directly
+# from the shell (no dispatcher), MENU_RC_QUIT is translated to 0 so
+# the operator's prompt sees a clean exit. When invoked via the
+# dispatcher (OPS_INVOKED_FROM_DISPATCHER=1), the raw MENU_RC_QUIT is
+# preserved so the dispatcher can detect operator-Q and propagate it.
+menu_translate_exit() {
+    local rc="${1:-0}"
+    if (( rc == MENU_RC_QUIT )) && [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]]; then
+        printf '0'
+    else
+        printf '%d' "$rc"
+    fi
+}
+
+# menu_keepalive
+# After an interactive [Q], park the terminal on `tail -f /dev/null`
+# instead of returning to the shell. The Packrat servers have aggressive
+# SSH idle timeouts and an operator who steps away for a minute should
+# not have to re-authenticate. Ctrl+C breaks out and exits the script.
+# TTY-only - cron / piped invocations skip the park entirely.
+menu_keepalive() {
+    [[ -t 0 && -t 1 ]] || return 0
+    # Swap the script's loud INT trap for a quiet exit - here Ctrl+C is
+    # the operator's intentional way out, not an abort that needs the
+    # "Cleaning up..." banner or an INTERRUPTED audit row.
+    trap 'echo ""; exit 0' INT
+    echo ""
+    echo "Session parked. Press Ctrl+C to reach the shell."
+    # tail -f /dev/null blocks indefinitely without producing output.
+    # Foreground SIGINT kills tail, the trap above fires, script exits 0.
+    tail -f /dev/null
+}
+
+# menu_clear - clear the screen for a fresh menu draw. TTY-only.
+menu_clear() {
+    [[ -t 1 ]] && clear 2>/dev/null
+}
+
+# menu_pause [rc] - "Press Enter to return / [Q] to quit" prompt.
+# Returns 0 to continue the loop, 1 if the operator chose Q.
+# Always returns 0 when stdin is not a TTY (cron path).
+menu_pause() {
+    local rc="${1:-0}"
+    [[ -t 0 ]] || return 0
+    echo ""
+    if (( rc == 0 )); then
+        echo "--- op finished (OK) ---"
+    else
+        echo "--- op finished (rc=$rc) ---"
+    fi
+    local ans
+    read -r -p "Press Enter for menu, [Q] to quit: " ans
+    case "$ans" in [Qq]) return 1 ;; esac
+    return 0
+}
+
+# run_op <fn> [args...] - call an op function inside a menu loop.
+# Captures rc, writes a per-op audit line (so each menu choice gets its
+# own audit row, not just one per session), and pauses for the operator.
+# Returns the return code of menu_pause: 0 = continue, 1 = quit.
+run_op() {
+    "$@"
+    local op_rc=$?
+    if (( op_rc == 0 )); then
+        audit_log "OK"
+    else
+        audit_log "FAIL"
+    fi
+    menu_pause "$op_rc"
 }

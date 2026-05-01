@@ -86,8 +86,10 @@ process_line() {
 
     local timestamp requestId userId section level message caller data
     timestamp=$(echo "$line" | jq -r '.timestamp // ""'                     2>/dev/null)
-    requestId=$(echo "$line" | jq -r '.context.idRequest // "00000"'        2>/dev/null)
-    userId=$(echo "$line"    | jq -r '.context.idUser   // "----"'          2>/dev/null)
+    # Defaults are -1 so missing fields take the same dashes branch
+    # below as an explicit -1 (matches the server's customConsoleFormat).
+    requestId=$(echo "$line" | jq -r '.context.idRequest // -1'             2>/dev/null)
+    userId=$(echo "$line"    | jq -r '.context.idUser   // -1'              2>/dev/null)
     section=$(echo "$line"   | jq -r '.context.section  // "-----"'         2>/dev/null)
     level=$(echo "$line"     | jq -r '(.level // "") | ascii_downcase'       2>/dev/null)
     message=$(echo "$line"   | jq -r '.message // ""'                       2>/dev/null)
@@ -101,24 +103,35 @@ process_line() {
         return 0
     fi
 
-    # requestId: 5-digit zero-pad if numeric, otherwise leave as-is.
+    # Single-letter prefix tokens (5 chars wide), matching the server's
+    # customConsoleFormat (server/records/logger/log.ts):
+    #   R0042 - request 42        U0007 - user 7
+    #   X---- - no request        U---- - no user
+    # X (rather than R----) makes "no session" trivially greppable.
     if [[ "$requestId" =~ ^[0-9]+$ ]]; then
-        requestId=$(printf "%05d" "$requestId")
+        requestId=$(printf "R%04d" "$requestId")
+    else
+        requestId="X----"
     fi
 
-    # userId: U#### if numeric, U---- otherwise
     if [[ "$userId" =~ ^[0-9]+$ ]]; then
         userId=$(printf "U%04d" "$userId")
     else
         userId="U----"
     fi
 
-    section=$(printf "%-5s" "$section")
+    # Section: right-align in 5 chars (matches server padStart(5)).
+    section=$(printf "%5s" "$section")
 
     local colored_level raw_level level_pad
     colored_level=$(colorize_level "$level")
     raw_level=$(strip_ansi "$colored_level")
-    level_pad=$(printf "%*s" $((5 - ${#raw_level})) "")
+    # Level pad: right-align level in 6 chars (matches server padStart(6)).
+    if (( ${#raw_level} < 6 )); then
+        level_pad=$(printf "%*s" $((6 - ${#raw_level})) "")
+    else
+        level_pad=""
+    fi
 
     if [[ -n "$data" ]]; then
         local clean_data
@@ -138,7 +151,13 @@ process_line() {
     # ISO timestamp → "YYYY-MM-DD HH:MM:SS"
     timestamp=$(echo "$timestamp" | sed -e 's/T/ /' -e 's/\..*//')
 
-    echo -e "${timestamp} [${requestId}] ${userId} ${section} ${level_pad}${colored_level}: [${caller}] ${message} ${data}"
+    # Caller: omit the brackets entirely when there is no caller (matches server).
+    local caller_part=""
+    if [[ -n "$caller" ]]; then
+        caller_part="[${caller}] "
+    fi
+
+    echo -e "${timestamp} ${requestId} ${userId} ${section} ${level_pad}${colored_level}: ${caller_part}${message} ${data}"
 }
 
 # ---------------------------------------------------------------------------

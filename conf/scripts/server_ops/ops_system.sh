@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-# ops_system.sh - Packrat system ops (monitor, files, remount, perf, procinfo)
+# ops_system.sh - Packrat system ops (monitor, remount, perf, procinfo)
 #
-# Replaces: ops_monitor.sh, ops_monitorFiles.sh, ops_system.sh (old)
+# Replaces: ops_monitor.sh, ops_system.sh (old)
 #
 # Usage:
 #   ./ops_system.sh                           # fully interactive
@@ -10,18 +10,22 @@
 #
 # Operations:
 #   monitor                                   # real-time CPU/mem/disk/net dashboard
-#   files <path>                              # lsof activity watcher
 #   remount                                   # umount + mount $MOUNT_POINT
 #   perf [1|2|3] | [10G|100G|1TB]             # dd read/write test on $MOUNT_POINT
 #   procinfo [pid]                            # detail for PID; top-5 CPU if omitted
 #
 # These ops are host-scoped, not env-scoped, so no env prompt is shown.
 #
+# For "what file events are happening under <path>?" use:
+#     ./ops_disk.sh monitor <path>
+# (inotify event stream - lower cost than the old `files` lsof loop).
+# For a one-shot snapshot of who has handles open under a tree:
+#     lsof +D <path> | head
+#
 # Dependencies (checked per-op):
-#   monitor  : df, free, bc, tput, ip, awk
-#   files    : lsof
+#   monitor  : df, free, tput, awk
 #   remount  : mount, umount, sudo
-#   perf     : dd, sudo
+#   perf     : dd  (rerun with sudo if your --src or --dst is root-owned)
 #   procinfo : ps
 #
 
@@ -42,9 +46,10 @@ init_traps
 MOUNT_POINT="${MOUNT_POINT:-/3ddigip01}"
 MOUNT_SOURCE="${MOUNT_SOURCE:-si-ocio-qnas2.si.edu:/si-3ddigi-staging}"
 
-# Sample file for perf op - only ever created under MOUNT_POINT.
-# (The old script also rm'd /data/samplefile, which was never written.)
-PERF_SAMPLE_FILE="${PERF_SAMPLE_FILE:-$MOUNT_POINT/samplefile}"
+# Default src/dst for the perf op. The headline measurement is
+# throughput between two locations - typically local-disk -> NFS.
+PERF_DEFAULT_SRC="${PERF_DEFAULT_SRC:-/data}"
+PERF_DEFAULT_DST="${PERF_DEFAULT_DST:-$MOUNT_POINT}"
 
 # Dashboard rendering
 BAR_WIDTH=30
@@ -79,39 +84,83 @@ snapshot_counters() {
     printf -v "${prefix}_CPU_TOTAL" '%d' "$total"
     printf -v "${prefix}_CPU_IDLE"  '%d' "$idle"
 
-    # Disk: sum sectors across physical devices
-    # /proc/diskstats: maj min name reads reads_merged sect_r ms_r writes w_m sect_w ms_w ...
+    # Disk: sum sectors across whole physical disks ONLY.
+    # /proc/diskstats fields: maj min name reads reads_merged sect_r ms_r
+    #                         writes writes_merged sect_w ms_w ...
+    # /sys/block/<name>/ exists for whole disks but not partitions
+    # (partitions live one level deeper: /sys/block/sda/sda1/).
+    # We also exclude dm-*/md* so LVM/RAID I/O isn't double-counted on top
+    # of the underlying physical devices.
     local d_read=0 d_write=0
-    local line _maj _min name _r _rm sr _msr _w _wm sw _rest2
+    local _maj _min name _r _rm sr _msr _w _wm sw _rest2
     while read -r _maj _min name _r _rm sr _msr _w _wm sw _rest2; do
+        [[ -d "/sys/block/$name" ]] || continue
         case "$name" in
-            loop*|ram*|sr*|md*|dm-*) continue ;;
+            loop*|ram*|sr*|fd*|zram*|dm-*|md*) continue ;;
         esac
         d_read=$(( d_read + ${sr:-0} ))
         d_write=$(( d_write + ${sw:-0} ))
     done < /proc/diskstats
-    printf -v "${prefix}_DISK_READ"  '%d' "$d_read"
-    printf -v "${prefix}_DISK_WRITE" '%d' "$d_write"
+    # Sectors are 512B in /proc/diskstats regardless of hw_sector_size.
+    printf -v "${prefix}_DISK_READ_BYTES"  '%d' "$(( d_read  * 512 ))"
+    printf -v "${prefix}_DISK_WRITE_BYTES" '%d' "$(( d_write * 512 ))"
 
-    # Network: RX + TX bytes on the default interface
-    local rx=0 tx=0
-    if [[ -n "${NET_DEV:-}" ]]; then
-        read -r rx tx < <(awk -v d="$NET_DEV" '$0 ~ d {print $2, $10}' /proc/net/dev)
-    fi
-    printf -v "${prefix}_NET_RX" '%d' "${rx:-0}"
-    printf -v "${prefix}_NET_TX" '%d' "${tx:-0}"
+    # Network: sum RX + TX bytes across "real" interfaces.
+    # /proc/net/dev fields after the colon:
+    #   1=rx_bytes 2=rx_packets ... 9=tx_bytes 10=tx_packets ...
+    # Skip lo and the usual virtual / container interfaces; this gives a
+    # number that tracks actual NIC throughput (NFS, client traffic, etc.)
+    # rather than docker bridge chatter.
+    local rx tx
+    read -r rx tx < <(
+        awk '
+            NR <= 2 { next }
+            {
+                # strip trailing colon from interface name
+                ifname = $1
+                sub(/:$/, "", ifname)
+                if (ifname == "lo") next
+                if (ifname ~ /^(docker|veth|br-|virbr|tun|tap|cni|flannel|kube|cali|weave|vxlan|gre|geneve)/) next
+                rx += $2
+                tx += $10
+            }
+            END { printf "%d %d\n", rx+0, tx+0 }
+        ' /proc/net/dev
+    )
+    printf -v "${prefix}_NET_RX_BYTES" '%d' "${rx:-0}"
+    printf -v "${prefix}_NET_TX_BYTES" '%d' "${tx:-0}"
 }
 
 format_bytes() {
-    local bytes=$1
+    local bytes="${1:-0}"
     if (( bytes >= 1073741824 )); then
-        bc <<< "scale=2; $bytes/1073741824" | awk '{print $1" GB"}'
+        local x100=$(( bytes * 100 / 1073741824 ))
+        printf '%d.%02d GB' "$(( x100 / 100 ))" "$(( x100 % 100 ))"
     elif (( bytes >= 1048576 )); then
-        bc <<< "scale=2; $bytes/1048576"    | awk '{print $1" MB"}'
+        local x100=$(( bytes * 100 / 1048576 ))
+        printf '%d.%02d MB' "$(( x100 / 100 ))" "$(( x100 % 100 ))"
     elif (( bytes >= 1024 )); then
-        bc <<< "scale=2; $bytes/1024"       | awk '{print $1" KB"}'
+        local x100=$(( bytes * 100 / 1024 ))
+        printf '%d.%02d KB' "$(( x100 / 100 ))" "$(( x100 % 100 ))"
     else
-        echo "${bytes} B"
+        printf '%d B' "$bytes"
+    fi
+}
+
+# Fixed-width auto-scaled rate (always 11 chars: "  0.0 KB/s" .. "1234.5 MB/s")
+format_rate() {
+    local bps="${1:-0}"
+    if (( bps >= 1073741824 )); then
+        local x10=$(( bps * 10 / 1073741824 ))
+        printf '%4d.%d GB/s' "$(( x10 / 10 ))" "$(( x10 % 10 ))"
+    elif (( bps >= 1048576 )); then
+        local x10=$(( bps * 10 / 1048576 ))
+        printf '%4d.%d MB/s' "$(( x10 / 10 ))" "$(( x10 % 10 ))"
+    elif (( bps >= 1024 )); then
+        local x10=$(( bps * 10 / 1024 ))
+        printf '%4d.%d KB/s' "$(( x10 / 10 ))" "$(( x10 % 10 ))"
+    else
+        printf '%6d B/s' "$bps"
     fi
 }
 
@@ -134,12 +183,7 @@ __monitor_cleanup() {
 op_monitor() {
     OPS_CURRENT_OP="monitor"
 
-    require_cmd df free bc tput awk ip || return 127
-
-    NET_DEV=$(ip route | awk '/default/ {print $5}' | head -n 1)
-    if [[ -z "$NET_DEV" ]]; then
-        warn "no default route found - network counters will read 0"
-    fi
+    require_cmd df free tput awk || return 127
 
     clear
     tput civis
@@ -149,6 +193,19 @@ op_monitor() {
     # script's exit path).
     trap '__monitor_cleanup; INTERRUPTED=1; print_summary "INTERRUPTED"; exit 130' INT TERM
     trap '__monitor_cleanup' EXIT
+
+    # Filter for the disk-usage block: drop virtual filesystems (tmpfs,
+    # cgroup, etc.) and docker overlay/snap mounts. What's left is the
+    # set of "real" disk-backed mounts the operator actually cares about.
+    local df_filter='
+        NR == 1 { next }
+        $1 ~ /\/docker\/overlay2\// { next }
+        $1 ~ /\/var\/lib\/docker\// { next }
+        $1 ~ /\/snap\// { next }
+        $2 ~ /^(tmpfs|devtmpfs|cgroup|cgroup2|proc|sysfs|overlay|squashfs|devpts|nsfs|securityfs|debugfs|tracefs|configfs|fusectl|mqueue|hugetlbfs|pstore|bpf|autofs|binfmt_misc|rpc_pipefs)$/ { next }
+        $2 ~ /^fuse\./ { next }
+        { print $1, $3 }
+    '
 
     while :; do
         snapshot_counters BEFORE
@@ -161,13 +218,11 @@ op_monitor() {
         local cpu_used=0
         (( cpu_delta > 0 )) && cpu_used=$(( 100 * (cpu_delta - idle_delta) / cpu_delta ))
 
-        # Disk I/O (sectors * 512 = bytes; report MB/s)
-        local disk_read_mb=$(( (AFTER_DISK_READ  - BEFORE_DISK_READ ) * 512 / 1048576 ))
-        local disk_write_mb=$(( (AFTER_DISK_WRITE - BEFORE_DISK_WRITE) * 512 / 1048576 ))
-
-        # Network I/O (KB/s)
-        local rx_kb=$(( (AFTER_NET_RX - BEFORE_NET_RX) / 1024 ))
-        local tx_kb=$(( (AFTER_NET_TX - BEFORE_NET_TX) / 1024 ))
+        # Disk I/O bytes-per-second (sample window is 1s, so delta == /s).
+        local disk_read_bps=$(( AFTER_DISK_READ_BYTES  - BEFORE_DISK_READ_BYTES  ))
+        local disk_write_bps=$(( AFTER_DISK_WRITE_BYTES - BEFORE_DISK_WRITE_BYTES ))
+        local net_rx_bps=$(( AFTER_NET_RX_BYTES - BEFORE_NET_RX_BYTES ))
+        local net_tx_bps=$(( AFTER_NET_TX_BYTES - BEFORE_NET_TX_BYTES ))
 
         # Memory
         local mem_line swap_line mem_total mem_used mem_cache swap_used swap_total
@@ -178,75 +233,41 @@ op_monitor() {
         local mem_pct=0
         (( mem_total > 0 )) && mem_pct=$(( 100 * mem_used / mem_total ))
 
-        # Move to home, render frame, clear to end of screen.
+        # Move to home, render frame with per-line clear-to-EOL so previous
+        # (possibly longer) frames cannot bleed through.
         printf '\033[H'
-        echo "PACKRAT SYSTEM MONITOR  (Ctrl+C to exit)"
-        echo "================================================="
+        printf 'PACKRAT SYSTEM MONITOR  (Ctrl+C to exit)\033[K\n'
+        printf '=================================================\033[K\n'
 
-        printf "%-16s " "CPU Usage:"
-        draw_bar "$cpu_used"
-        echo ""
+        printf '%-16s %s\033[K\n' "CPU Usage:"    "$(draw_bar "$cpu_used")"
+        printf '%-16s %s\033[K\n' "Memory Usage:" "$(draw_bar "$mem_pct")"
+        printf '   Cache: %s MB   Swap: %s/%s MB\033[K\n' \
+            "$mem_cache" "$swap_used" "$swap_total"
 
-        printf "%-16s " "Memory Usage:"
-        draw_bar "$mem_pct"
-        echo ""
-        echo "   Cache: ${mem_cache} MB   Swap: ${swap_used}/${swap_total} MB"
+        printf '\033[K\n'
+        printf 'Disk I/O:        Read %s   Write %s\033[K\n' \
+            "$(format_rate "$disk_read_bps")" "$(format_rate "$disk_write_bps")"
+        printf 'Network I/O:     RX   %s   TX   %s\033[K\n' \
+            "$(format_rate "$net_rx_bps")" "$(format_rate "$net_tx_bps")"
 
-        echo ""
-        printf "Disk I/O:      Read %4d MB/s   Write %4d MB/s\n" "$disk_read_mb" "$disk_write_mb"
-        printf "Network I/O:   RX %5d KB/s   TX %5d KB/s\n"       "$rx_kb"        "$tx_kb"
+        printf '\033[K\n'
+        printf 'Disk Usage:\033[K\n'
+        local m p pct
+        while read -r m p; do
+            pct=${p%\%}
+            [[ -z "$pct" ]] && continue
+            printf '  %-30s %s\033[K\n' "$m" "$(draw_bar "$pct")"
+        done < <(df -h --output=target,fstype,pcent 2>/dev/null | awk "$df_filter")
 
-        echo ""
-        echo "Disk Usage:"
-        df -h --output=target,pcent | awk 'NR>1 {print}' | while read -r m p; do
-            local pct=${p%\%}
-            local bar_str
-            bar_str=$(draw_bar "$pct")
-            printf "%-30s %s\n" "$m" "$bar_str"
-        done
-
-        echo ""
+        printf '\033[K\n'
         local deleted_bytes deleted_hr
         deleted_bytes=$(get_deleted_bytes)
         deleted_hr=$(format_bytes "${deleted_bytes:-0}")
-        echo "Deleted files on /staging: ${deleted_hr} pending"
+        printf 'Deleted files on /staging: %s pending\033[K\n' "$deleted_hr"
 
-        # Clear anything left over from the previous (possibly longer) frame
+        # Belt-and-suspenders: clear anything below the new frame in case
+        # the previous frame had MORE rows (e.g. a transient mount appeared).
         printf '\033[J'
-    done
-}
-
-# ---------------------------------------------------------------------------
-# Operation: files (lsof activity watcher)
-# ---------------------------------------------------------------------------
-
-op_files() {
-    OPS_CURRENT_OP="files"
-    local target="${1:-}"
-    local interval="${2:-2}"
-
-    if [[ -z "$target" ]]; then
-        err "files requires <path>"
-        echo "usage: ops_system.sh files <path> [interval-seconds]" >&2
-        return 1
-    fi
-    if [[ ! -d "$target" ]]; then
-        err "not a directory: $target"
-        return 1
-    fi
-
-    require_cmd lsof || return 127
-
-    banner "FILE ACTIVITY ($target, every ${interval}s)"
-    echo "Press Ctrl+C to stop."
-    echo ""
-
-    while :; do
-        echo "------------------------------------------"
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] open under $target"
-        lsof +D "$target" 2>/dev/null || true
-        echo "------------------------------------------"
-        sleep "$interval"
     done
 }
 
@@ -302,60 +323,122 @@ op_remount() {
 
 op_perf() {
     OPS_CURRENT_OP="perf"
-    local size_arg="${1:-}"
+    local size_arg=""
+    local src=""
+    local dst=""
     local bs count label
 
-    # Accept numeric choice (1|2|3) or literal size (10G|100G|1TB).
-    case "$size_arg" in
-        1|10G|10g)     bs=10M;  count=1024; label="10G"  ;;
-        2|100G|100g)   bs=100M; count=1024; label="100G" ;;
-        3|1T|1t|1TB|1tb) bs=1G; count=1024; label="1TB"  ;;
-        "")
+    while (( $# > 0 )); do
+        case "$1" in
+            --src)    src="${2:-}"; shift 2; continue ;;
+            --src=*)  src="${1#--src=}" ;;
+            --dst)    dst="${2:-}"; shift 2; continue ;;
+            --dst=*)  dst="${1#--dst=}" ;;
+            -h|--help)
+                echo "usage: ops_system.sh perf [1|2|3|10G|100G|1TB] [--src DIR] [--dst DIR]"
+                echo "  default src=$PERF_DEFAULT_SRC  default dst=$PERF_DEFAULT_DST"
+                return 0
+                ;;
+            *)
+                [[ -z "$size_arg" ]] && size_arg="$1"
+                ;;
+        esac
+        shift
+    done
+
+    # Test size: prompt only if not specified and we have a TTY.
+    if [[ -z "$size_arg" ]]; then
+        if is_tty; then
             echo "Select test size:"
             echo "  [1] 10G   (fast)"
             echo "  [2] 100G  (medium)"
             echo "  [3] 1TB   (long)"
             local c
             read -r -p "Choose: " c
-            op_perf "$c"
-            return $?
-            ;;
+            size_arg="$c"
+        else
+            err "perf needs a size when run non-interactively (use 1|2|3 or 10G|100G|1TB)"
+            return 1
+        fi
+    fi
+    case "$size_arg" in
+        1|10G|10g)        bs=10M;  count=1024; label="10G"  ;;
+        2|100G|100g)      bs=100M; count=1024; label="100G" ;;
+        3|1T|1t|1TB|1tb)  bs=1G;   count=1024; label="1TB"  ;;
         *)
             err "unknown size: '$size_arg' (use 1|2|3 or 10G|100G|1TB)"
             return 1
             ;;
     esac
 
+    # Source / dest dirs: prompt only when interactive and unset.
+    if [[ -z "$src" ]]; then
+        if is_tty; then
+            local input
+            read -r -p "Source dir (blank=$PERF_DEFAULT_SRC): " input
+            src="${input:-$PERF_DEFAULT_SRC}"
+        else
+            src="$PERF_DEFAULT_SRC"
+        fi
+    fi
+    if [[ -z "$dst" ]]; then
+        if is_tty; then
+            local input
+            read -r -p "Dest dir   (blank=$PERF_DEFAULT_DST): " input
+            dst="${input:-$PERF_DEFAULT_DST}"
+        else
+            dst="$PERF_DEFAULT_DST"
+        fi
+    fi
+
     require_cmd dd || return 127
-    if [[ ! -d "$MOUNT_POINT" ]]; then
-        err "$MOUNT_POINT is not mounted (or not a directory)"
+    [[ -d "$src" ]] || { err "source not a directory: $src"; return 1; }
+    [[ -d "$dst" ]] || { err "dest not a directory: $dst"; return 1; }
+    [[ -w "$src" ]] || { err "source not writable: $src (rerun with sudo or pick a writable dir)"; return 1; }
+    [[ -w "$dst" ]] || { err "dest not writable: $dst (rerun with sudo or pick a writable dir)"; return 1; }
+
+    # Refuse identical paths - meaningless test and could collide on the same file.
+    local src_real dst_real
+    src_real="$(readlink -f -- "$src")"
+    dst_real="$(readlink -f -- "$dst")"
+    if [[ "$src_real" == "$dst_real" ]]; then
+        err "source and dest resolve to the same directory ($src_real)"
         return 1
     fi
 
-    local SUDO=""
-    if (( EUID != 0 )); then
-        require_cmd sudo || return 127
-        SUDO="sudo"
-    fi
+    # Per-run unique filenames so concurrent invocations cannot clobber each other.
+    local stamp="$(date +%s).$$"
+    local src_file="$src/.packrat-perf-${stamp}"
+    local dst_file="$dst/.packrat-perf-${stamp}"
+    register_tmp_file "$src_file"
+    register_tmp_file "$dst_file"
 
-    banner "DISK PERF ($MOUNT_POINT / $label)"
-    echo "Sample file : $PERF_SAMPLE_FILE"
+    banner "DISK PERF ($label)"
+    echo "Source      : $src"
+    echo "Dest        : $dst"
     echo "Block size  : $bs   Count: $count"
     echo ""
 
-    # Make sure we clean up only what we created, even on interrupt.
-    register_tmp_file "$PERF_SAMPLE_FILE"
-
-    echo "Testing write speeds (${count} x ${bs}) ..."
-    $SUDO dd if=/dev/zero of="$PERF_SAMPLE_FILE" bs="$bs" count="$count" oflag=direct
-
+    # Stage 1: source write speed (also produces the file we'll copy).
+    # oflag=direct bypasses the page cache so the number reflects the
+    # underlying device, not RAM. NFS / overlayfs may reject O_DIRECT;
+    # if dd errors out, the operator can switch to a local source dir.
+    echo "[1/3] Source write speed (write to $src) ..."
+    dd if=/dev/zero of="$src_file" bs="$bs" count="$count" oflag=direct
     echo ""
-    echo "Testing read speeds (${count} x ${bs}) ..."
-    $SUDO dd if="$PERF_SAMPLE_FILE" of=/dev/null bs="$bs" count="$count" iflag=direct
 
+    # Stage 2: cross-mount transfer - the headline measurement.
+    echo "[2/3] Cross-mount transfer ($src -> $dst) ..."
+    dd if="$src_file" of="$dst_file" bs="$bs" iflag=direct oflag=direct
     echo ""
-    echo "Cleaning up $PERF_SAMPLE_FILE ..."
-    $SUDO rm -f -- "$PERF_SAMPLE_FILE"
+
+    # Stage 3: dest read speed (read back from the file we just copied).
+    echo "[3/3] Dest read speed (read from $dst) ..."
+    dd if="$dst_file" of=/dev/null bs="$bs" count="$count" iflag=direct
+    echo ""
+
+    echo "Cleaning up sample files ..."
+    rm -f -- "$src_file" "$dst_file"
 }
 
 # ---------------------------------------------------------------------------
@@ -398,26 +481,31 @@ op_procinfo() {
 main_menu() {
     banner "PACKRAT SYSTEM OPS"
     echo "[1] Monitor   - real-time CPU/mem/disk/net dashboard"
-    echo "[2] Files     - lsof activity watcher"
-    echo "[3] Remount   - unmount + remount $MOUNT_POINT"
-    echo "[4] Perf      - dd read/write test"
-    echo "[5] Procinfo  - process detail"
-    echo "[Q] Quit"
+    echo "[2] Remount   - unmount + remount $MOUNT_POINT"
+    echo "                !! Requires root. Brief unmount - any active job that"
+    echo "                   has a file open under $MOUNT_POINT WILL fail."
+    echo "[3] Perf      - dd cross-mount throughput test"
+    echo "                Writes 10G / 100G / 1TB sample files at src + dst."
+    echo "                Auto-cleaned even on Ctrl+C, but uses real space during run."
+    echo "[4] Procinfo  - process detail (read-only)"
+    echo ""
+    echo "[B] Back to top menu     [Q] Quit"
     echo ""
     local c arg
     read -r -p "Choose: " c
     case "$c" in
-        1) op_monitor ;;
-        2) read -r -p "Path to watch: " arg; op_files "$arg" ;;
-        3) op_remount ;;
-        4) op_perf ;;
-        5)
+        1) run_op op_monitor || return $MENU_RC_QUIT ;;
+        2) run_op op_remount || return $MENU_RC_QUIT ;;
+        3) run_op op_perf    || return $MENU_RC_QUIT ;;
+        4)
             read -r -p "PID (blank=top5): " arg
-            op_procinfo "$arg"
+            run_op op_procinfo "$arg" || return $MENU_RC_QUIT
             ;;
-        [Qq]) exit 0 ;;
-        *) err "invalid choice"; return 1 ;;
+        [Bb]) return $MENU_RC_BACK ;;
+        [Qq]) return $MENU_RC_QUIT ;;
+        *) err "invalid choice" ;;
     esac
+    return 0
 }
 
 # ---------------------------------------------------------------------------
@@ -425,7 +513,7 @@ main_menu() {
 # ---------------------------------------------------------------------------
 
 print_help() {
-    sed -n '2,28p' "$0"
+    sed -n '2,30p' "$0"
 }
 
 case "${1:-}" in
@@ -438,18 +526,31 @@ OP="${1:-}"
 status="OK"
 rc=0
 if [[ -z "$OP" ]]; then
-    main_menu || rc=$?
+    menu_clear
+    while :; do
+        main_menu
+        menu_rc=$?
+        case "$menu_rc" in
+            "$MENU_RC_QUIT") rc=$MENU_RC_QUIT; break ;;
+            "$MENU_RC_BACK") rc=0;             break ;;
+        esac
+    done
+    [[ -z "${OPS_INVOKED_FROM_DISPATCHER:-}" ]] && menu_keepalive
 else
     case "$OP" in
         monitor)  op_monitor  "$@" || rc=$? ;;
-        files)    op_files    "$@" || rc=$? ;;
         remount)  op_remount  "$@" || rc=$? ;;
         perf)     op_perf     "$@" || rc=$? ;;
         procinfo) op_procinfo "$@" || rc=$? ;;
+        files)
+            err "'files' has been removed (redundant with: ops_disk.sh monitor <path>)"
+            err "for a snapshot of open FDs:  lsof +D <path> | head"
+            rc=1
+            ;;
         *)        err "unknown op: $OP"; rc=1 ;;
     esac
+    (( rc != 0 )) && status="FAIL"
+    print_summary "$status"
 fi
 
-(( rc != 0 )) && status="FAIL"
-print_summary "$status"
-exit $rc
+exit "$(menu_translate_exit "$rc")"

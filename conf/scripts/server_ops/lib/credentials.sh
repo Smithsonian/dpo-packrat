@@ -333,23 +333,28 @@ mysql_exec_file() {
 
 # metrics_size_sql [table]
 #   - with a table name: single-row report for that table
-#   - without:           whole-schema report sorted by total_gb desc
+#   - without:           whole-schema report sorted by total bytes desc
+#
+# Returns RAW byte counts. A bash-side formatter (format_metrics_size in
+# ops_database.sh) auto-scales each cell to B/KB/MB/GB and aligns the
+# columns. The previous formatter rounded to GB-with-3-decimals which
+# made every Packrat staging table read as 0.000.
 metrics_size_sql() {
     local table="${1:-}"
     local where=""
-    local order="ORDER BY total_gb DESC"
+    local order="ORDER BY total_bytes DESC"
     if [[ -n "$table" ]]; then
         where="AND TABLE_NAME = '$table'"
         order=""
     fi
     cat <<SQL
 SELECT
-    TABLE_NAME                                                  AS table_name,
-    TABLE_ROWS                                                  AS rows_est,
-    ROUND(DATA_LENGTH  / 1024 / 1024 / 1024, 3)                 AS data_gb,
-    ROUND(INDEX_LENGTH / 1024 / 1024 / 1024, 3)                 AS index_gb,
-    ROUND(DATA_FREE    / 1024 / 1024 / 1024, 3)                 AS free_gb,
-    ROUND((DATA_LENGTH + INDEX_LENGTH) / 1024 / 1024 / 1024, 3) AS total_gb
+    TABLE_NAME                            AS table_name,
+    TABLE_ROWS                            AS rows_est,
+    DATA_LENGTH                           AS data_bytes,
+    INDEX_LENGTH                          AS index_bytes,
+    DATA_FREE                             AS free_bytes,
+    (DATA_LENGTH + INDEX_LENGTH)          AS total_bytes
 FROM information_schema.TABLES
 WHERE TABLE_SCHEMA = '$DB_NAME'
   $where
