@@ -52,14 +52,24 @@ init_traps
 # Filesystems checked with `df` (capacity / % used).
 DEFAULT_MONITOR_FS=("/data" "/staging" "/3ddigip01")
 
-# Folders shown via `du -sh` (size of a directory tree, NOT its filesystem).
-# All three Packrat dirs live on the /3ddigip01 mount, so showing them via
-# df would just print the same row three times - du is what we actually want.
+# Folders shown via parallel `du` (tree size, NOT filesystem capacity).
+# Both prod and staging Repository roots are listed; nonexistent paths are
+# silently skipped at render time, so each host shows only its own.
 DEFAULT_MONITOR_DIRS=(
     "/3ddigip01/Packrat/Logs"
     "/3ddigip01/Packrat/Backups"
-    "/3ddigip01/Packrat/Repository"
+    "/3ddigip01/Packrat/Storage/Repository"
+    "/3ddigip01/Packrat/Storage-Dev/Repository"
 )
+
+# Wall-clock cap on a single folder size lookup. Repositories with many
+# small OCFL objects can take ~tens of seconds to walk over NFS even with
+# parallelism.
+DU_TIMEOUT_S="${DU_TIMEOUT_S:-90}"
+
+# Parallelism for the per-folder du. Tuned for NFS - too high and the
+# server starts queuing requests; too low and we lose the speedup.
+DU_PARALLELISM="${DU_PARALLELISM:-8}"
 
 # ---------------------------------------------------------------------------
 # Shared rendering helpers
@@ -84,20 +94,55 @@ render_fs_usage() {
     done
 }
 
-# Print one du -sh line per folder. Bounded by `timeout` so a slow tree
-# (e.g. cold-cache /3ddigip01/Packrat/Repository) can't stall the watch loop.
+# Sum the apparent size of $1 by fanning du across its top-level entries
+# in parallel. Falls back to serial `du -sh` when xargs is unavailable.
+# Echoes a human-readable size on stdout (or "(timeout)" / "(empty)").
+fast_folder_size() {
+    local folder="$1"
+    local timeout_s="${2:-$DU_TIMEOUT_S}"
+    local parallel="${3:-$DU_PARALLELISM}"
+
+    if ! command -v xargs >/dev/null 2>&1 || ! command -v numfmt >/dev/null 2>&1; then
+        local size
+        size=$(timeout "$timeout_s" du -sh -- "$folder" 2>/dev/null | awk '{print $1}')
+        [[ -z "$size" ]] && size="(timeout)"
+        printf '%s' "$size"
+        return
+    fi
+
+    local total
+    total=$(timeout "$timeout_s" bash -c '
+        folder="$1"
+        parallel="$2"
+        # Sum direct children + the entries directly under $folder. Hidden
+        # dotfiles are picked up because find does not exclude them.
+        {
+            find "$folder" -mindepth 1 -maxdepth 1 -print0 2>/dev/null \
+                | xargs -0 -r -P "$parallel" -n 32 du -sb 2>/dev/null \
+                | awk "{sum+=\$1} END {print sum+0}"
+        }
+    ' _ "$folder" "$parallel" 2>/dev/null)
+
+    if [[ -z "$total" ]]; then
+        printf '(timeout)'
+        return
+    fi
+    if [[ "$total" == "0" ]]; then
+        printf '(empty)'
+        return
+    fi
+    numfmt --to=iec --suffix=B --format='%.1f' "$total" 2>/dev/null \
+        || printf '%s B' "$total"
+}
+
+# Print one size line per folder. Nonexistent folders are skipped silently
+# so the default list can carry both prod + staging paths.
 render_folder_usage() {
     local folder size
     for folder in "$@"; do
         [[ -z "$folder" ]] && continue
-        if [[ ! -d "$folder" ]]; then
-            printf "Folder: %-44s %s\n" "$folder" "(not found)"
-            continue
-        fi
-        size=$(timeout 30 du -sh -- "$folder" 2>/dev/null | awk '{print $1}')
-        if [[ -z "$size" ]]; then
-            size="(timeout)"
-        fi
+        [[ -d "$folder" ]] || continue
+        size=$(fast_folder_size "$folder")
         printf "Folder: %-44s %s\n" "$folder" "$size"
     done
 }
@@ -483,14 +528,12 @@ op_monitor() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT DISK OPS"
-    echo "[1] Usage            - one-shot df + optional du"
-    echo "[2] Disk-Watch       - real-time df loop (no CPU/mem/net; use system monitor for that)"
-    echo "[3] Release-Deleted  - reclaim blocks held by deleted-but-open FDs"
-    echo "                       Does NOT delete files (they were already unlinked)."
-    echo "                       Holding processes keep running, just lose the FD."
-    echo "[4] Monitor          - inotify event stream (create/delete/modify/move)"
-    echo "                       'modify' is noisy on hot dirs; tune with --events."
+    echo "[1] Usage           - one-shot df + parallel du on monitored folders"
+    echo "[2] Disk-Watch      - real-time df loop (df only; system menu for I/O)"
+    echo "[3] Release-Deleted - reclaim blocks of deleted-but-open files"
+    echo "[4] Monitor         - inotify event stream on a path"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""

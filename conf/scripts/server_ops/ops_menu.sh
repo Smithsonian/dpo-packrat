@@ -208,6 +208,7 @@ op_help() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT OPS MENU"
     echo "(per-domain menus annotate destructive ops with '!!' notes)"
     echo ""

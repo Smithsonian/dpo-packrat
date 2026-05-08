@@ -230,15 +230,12 @@ __backup_run() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT DATA OPS"
     echo "Environment: $ENV_LABEL"
     echo ""
-    echo "[1] Clear transient staging"
-    echo "    !! rm -rf under this env's staging tree. Irreversible."
-    echo "    Anything mid-write into staging (active ingest) loses its work."
-    echo "[2] Backup repository (rsync)"
-    echo "    rsync -ah, no --delete (backup grows monotonically)."
-    echo "    Default dest is on the same /3ddigip01 mount - NOT off-host."
+    echo "[1] Clear staging   - !! rm -rf the env's staging tree, irreversible"
+    echo "[2] Backup repo     - rsync -ah to backup mount (no --delete)"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""

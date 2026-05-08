@@ -6,7 +6,8 @@
 # exercised end-to-end. Asserts:
 #
 #   - --help works
-#   - env-derived Solr URL (PACKRAT_SOLR_HOST + _PORT composed)
+#   - Solr URL composed as localhost:$PACKRAT_SOLR_PORT
+#   - $SOLR_HOST override pins host[:port]
 #   - env-derived server URL (REACT_APP_PACKRAT_SERVER_ENDPOINT)
 #   - status hits each core's ping + select?q=*:*&rows=0
 #   - clear requires typed 'yes' (non-interactive fails without --yes)
@@ -153,17 +154,25 @@ set -e
 (( rc != 0 )) || fail "unknown op should exit non-zero"
 pass "unknown op rejected"
 
-banner_line "staging status uses env-derived Solr URL"
+banner_line "staging status uses localhost:\$PACKRAT_SOLR_PORT"
 : > "$CURL_LOG"
 out=$(run_s_staging staging status 2>&1)
-echo "$out" | grep -q "solr-staging.local:8984" || fail "Solr URL not derived from env"
-grep -q "solr-staging.local:8984/solr/packrat/admin/ping" "$CURL_LOG" \
+echo "$out" | grep -q "localhost:8984" || fail "Solr URL not localhost-based"
+grep -q "localhost:8984/solr/packrat/admin/ping" "$CURL_LOG" \
     || fail "ping not hit for primary core"
-grep -q "solr-staging.local:8984/solr/packratMeta/admin/ping" "$CURL_LOG" \
+grep -q "localhost:8984/solr/packratMeta/admin/ping" "$CURL_LOG" \
     || fail "ping not hit for meta core"
-grep -q "solr-staging.local:8984/solr/packrat/select" "$CURL_LOG" \
+grep -q "localhost:8984/solr/packrat/select" "$CURL_LOG" \
     || fail "count not hit for primary core"
-pass "status uses env-derived URL and hits both cores"
+pass "status hits localhost:\$PACKRAT_SOLR_PORT for both cores"
+
+banner_line "\$SOLR_HOST override pins host[:port]"
+: > "$CURL_LOG"
+SOLR_HOST="solr-elsewhere.test:1234" run_s_staging staging status >/dev/null 2>&1 \
+    || fail "status with SOLR_HOST override failed"
+grep -q "solr-elsewhere.test:1234/solr/packrat/admin/ping" "$CURL_LOG" \
+    || fail "SOLR_HOST override not honored"
+pass "SOLR_HOST override applied"
 
 banner_line "clear non-interactive without --yes refused"
 set +e

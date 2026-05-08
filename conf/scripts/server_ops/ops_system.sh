@@ -58,17 +58,16 @@ BAR_WIDTH=30
 # Operation: monitor (real-time dashboard)
 # ---------------------------------------------------------------------------
 
-# Draw an N-char progress bar for $1 percent
+# Draw a $BAR_WIDTH-char progress bar for $1 percent.
 draw_bar() {
     local pct="$1"
     local filled=$(( pct * BAR_WIDTH / 100 ))
     (( filled < 0 )) && filled=0
     (( filled > BAR_WIDTH )) && filled=BAR_WIDTH
     local empty=$(( BAR_WIDTH - filled ))
-    printf "["
-    printf "%0.s#" $(seq 1 "$filled")
-    (( empty > 0 )) && printf "%0.s " $(seq 1 "$empty")
-    printf "] %3d%%" "$pct"
+    local hashes='##############################'
+    local spaces='                              '
+    printf '[%s%s] %3d%%' "${hashes:0:filled}" "${spaces:0:empty}" "$pct"
 }
 
 # Snapshot CPU/disk/network counters into vars named ${prefix}_<...>.
@@ -197,6 +196,7 @@ op_monitor() {
     # Filter for the disk-usage block: drop virtual filesystems (tmpfs,
     # cgroup, etc.) and docker overlay/snap mounts. What's left is the
     # set of "real" disk-backed mounts the operator actually cares about.
+    # Emits: target  size  used  pcent
     local df_filter='
         NR == 1 { next }
         $1 ~ /\/docker\/overlay2\// { next }
@@ -204,7 +204,7 @@ op_monitor() {
         $1 ~ /\/snap\// { next }
         $2 ~ /^(tmpfs|devtmpfs|cgroup|cgroup2|proc|sysfs|overlay|squashfs|devpts|nsfs|securityfs|debugfs|tracefs|configfs|fusectl|mqueue|hugetlbfs|pstore|bpf|autofs|binfmt_misc|rpc_pipefs)$/ { next }
         $2 ~ /^fuse\./ { next }
-        { print $1, $3 }
+        { print $1, $3, $4, $5 }
     '
 
     while :; do
@@ -252,12 +252,13 @@ op_monitor() {
 
         printf '\033[K\n'
         printf 'Disk Usage:\033[K\n'
-        local m p pct
-        while read -r m p; do
+        local m sz used p pct
+        while read -r m sz used p; do
             pct=${p%\%}
             [[ -z "$pct" ]] && continue
-            printf '  %-30s %s\033[K\n' "$m" "$(draw_bar "$pct")"
-        done < <(df -h --output=target,fstype,pcent 2>/dev/null | awk "$df_filter")
+            printf '  %-30s %s  %6s / %-6s\033[K\n' \
+                "$m" "$(draw_bar "$pct")" "$used" "$sz"
+        done < <(df -h --output=target,fstype,size,used,pcent 2>/dev/null | awk "$df_filter")
 
         printf '\033[K\n'
         local deleted_bytes deleted_hr
@@ -479,15 +480,12 @@ op_procinfo() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT SYSTEM OPS"
-    echo "[1] Monitor   - real-time CPU/mem/disk/net dashboard"
-    echo "[2] Remount   - unmount + remount $MOUNT_POINT"
-    echo "                !! Requires root. Brief unmount - any active job that"
-    echo "                   has a file open under $MOUNT_POINT WILL fail."
-    echo "[3] Perf      - dd cross-mount throughput test"
-    echo "                Writes 10G / 100G / 1TB sample files at src + dst."
-    echo "                Auto-cleaned even on Ctrl+C, but uses real space during run."
-    echo "[4] Procinfo  - process detail (read-only)"
+    echo "[1] Monitor  - real-time CPU/mem/disk/net dashboard"
+    echo "[2] Remount  - !! unmount + remount $MOUNT_POINT (root required)"
+    echo "[3] Perf     - dd cross-mount throughput test (10G/100G/1TB)"
+    echo "[4] Procinfo - process detail (read-only)"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""

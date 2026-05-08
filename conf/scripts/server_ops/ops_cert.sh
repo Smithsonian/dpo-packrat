@@ -599,11 +599,11 @@ __expiry_one() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT CERT OPS"
-    echo "[1] Inspect  - per-block details (read-only). Blank file = Packrat defaults."
-    echo "[2] Format   - !! REWRITES the cert bundle in place."
-    echo "                  A timestamped .bak.* is written first; verify before reload."
-    echo "[3] Expiry   - exit 1 if any cert is in the warn window. Blank file = defaults."
+    echo "[1] Inspect - per-block details (read-only)"
+    echo "[2] Format  - !! rewrite cert bundle in place (.bak.* saved first)"
+    echo "[3] Expiry  - check days remaining (exit 1 if within warn-days)"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""

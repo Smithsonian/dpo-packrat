@@ -569,14 +569,15 @@ op_metrics() {
 }
 
 print_metrics_submenu() {
-    echo ""
-    echo "[1] Size       - per-table footprint"
-    echo "[2] Bloat      - (deferred)"
-    echo "[3] Payload    - (deferred)"
-    echo "[4] Age        - (deferred)"
-    echo "[5] Types      - (deferred)"
-    echo "[6] Disk       - (deferred)"
-    echo "[7] Inspect    - combined report for a single table"
+    menu_clear
+    banner "PACKRAT DATABASE METRICS"
+    echo "[1] Size    - per-table footprint"
+    echo "[2] Bloat   - (deferred)"
+    echo "[3] Payload - (deferred)"
+    echo "[4] Age     - (deferred)"
+    echo "[5] Types   - (deferred)"
+    echo "[6] Disk    - (deferred)"
+    echo "[7] Inspect - combined report for a single table"
     echo ""
     echo "[B] Back to database menu     [Q] Quit"
     echo ""
@@ -761,35 +762,24 @@ op_metrics_inspect() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT DATABASE OPS"
     echo "Environment: $ENV_LABEL ($DB_NAME @ $DB_HOST)"
     echo "Env file   : $ENV_FILE_USED"
     echo "DB user    : $DB_USER"
     echo ""
-    # Common ops first (numbered identically on prod + staging so muscle
-    # memory works), then a staging-only section. On prod we still LIST
-    # the staging-only options so operators see they exist - selecting
-    # them prints a clear "not allowed on production" message instead
-    # of silently being unavailable.
-    echo "[1] Metrics"
-    echo "    Read-only against information_schema. Safe."
-    echo "[2] Backup database"
-    echo "    mysqldump + optional zip. Safe anytime; never auto-prunes old backups."
-    echo "[3] Prune audit records"
-    echo "    Deletes rows from the Audit table only; other tables untouched."
-    echo "    Tier1=light .. Tier4=aggressive. Use Tier2 unless you've read the policy."
-    echo "[4] Optimize table"
-    echo "    Locks the table for the duration (can be many minutes). Off-hours only."
+    echo "[1] Metrics          - per-table size + inspect (read-only)"
+    echo "[2] Backup database  - mysqldump to disk, optional zip"
+    echo "[3] Prune audit      - delete old Audit rows by tier or AuditType"
+    echo "[4] Optimize table   - rebuild a table (locks it; off-hours only)"
     echo ""
     echo "--- staging-only ---"
     if [[ "$ENVIRONMENT" == "staging" ]]; then
-        echo "[5] Drop database"
-        echo "    !! DROPS all tables. Irreversible."
-        echo "[6] Rebuild database"
-        echo "    !! DROP + reload schema/proc/data. All current data is lost."
+        echo "[5] Drop database    - !! DROPs all tables, irreversible"
+        echo "[6] Rebuild database - !! DROP + reload schema/proc/data"
     else
-        echo "[5] Drop database     (disabled on production)"
-        echo "[6] Rebuild database  (disabled on production)"
+        echo "[5] Drop database    (disabled on production)"
+        echo "[6] Rebuild database (disabled on production)"
     fi
     echo ""
     echo "[B] Back to top menu     [Q] Quit"

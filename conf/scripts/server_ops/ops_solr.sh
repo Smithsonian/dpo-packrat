@@ -16,8 +16,11 @@
 #   reindex  - hit the Packrat server's /server/solrindex endpoint
 #
 # URL discovery (no hardcoded hosts):
-#   Solr host   : $PACKRAT_SOLR_HOST from .env.* (fallback: $SOLR_HOST,
-#                 then localhost:$PACKRAT_SOLR_PORT or localhost:8983)
+#   Solr host   : localhost:$PACKRAT_SOLR_PORT (from .env.*).
+#                 Override with $SOLR_HOST (host[:port]) when running off-box.
+#                 PACKRAT_SOLR_HOST in .env.* is the Docker container name and
+#                 is intentionally NOT used here - it only resolves inside the
+#                 Docker network.
 #   Server URL  : $REACT_APP_PACKRAT_SERVER_ENDPOINT from .env.*
 #
 # Safety:
@@ -60,18 +63,19 @@ SERVER_BASE_URL=""
 # ---------------------------------------------------------------------------
 
 resolve_urls() {
-    # Solr host: explicit override first, then .env.*, then default.
+    # Script runs on the host - reach Solr via the published port on
+    # localhost. Operator can point at a different host[:port] via $SOLR_HOST.
     local host port
     host="${SOLR_HOST:-}"
-    if [[ -z "$host" ]]; then
-        host=$(read_env_var PACKRAT_SOLR_HOST 2>/dev/null || true)
-    fi
     port=$(read_env_var PACKRAT_SOLR_PORT 2>/dev/null || true)
 
-    if [[ -n "$host" && "$host" != *:* && -n "$port" ]]; then
+    if [[ -z "$host" ]]; then
+        host="localhost"
+    fi
+    if [[ "$host" != *:* ]]; then
+        [[ -z "$port" ]] && port="${DEFAULT_SOLR_HOST##*:}"
         host="$host:$port"
     fi
-    [[ -z "$host" ]] && host="$DEFAULT_SOLR_HOST"
     # Force http - Solr's admin API isn't typically TLS-wrapped on this box.
     SOLR_BASE_URL="http://$host/solr"
 
@@ -235,15 +239,15 @@ op_reindex() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT SOLR OPS"
     echo "Environment: $ENV_LABEL"
     echo "Solr       : $SOLR_BASE_URL"
     echo "Server     : ${SERVER_BASE_URL:-<unset>}"
     echo ""
-    echo "[1] Status   - ping each core + doc counts (read-only)"
-    echo "[2] Clear    - !! deletes ALL docs from packrat + packratMeta cores."
-    echo "                 Search returns nothing until you Reindex afterwards."
-    echo "[3] Reindex  - hits server/solrindex; can run for HOURS on prod"
+    echo "[1] Status  - ping each core + doc counts (read-only)"
+    echo "[2] Clear   - !! deletes ALL docs from both cores (run Reindex after)"
+    echo "[3] Reindex - hits server/solrindex; can take hours on prod"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""

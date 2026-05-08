@@ -549,13 +549,14 @@ __do_backup() {
 # ---------------------------------------------------------------------------
 
 main_menu() {
+    menu_clear
     banner "PACKRAT LOG OPS"
     echo "Environment: $ENV_LABEL ($LOG_BASE)"
     echo ""
-    echo "[1] Tail     - follow today's log"
-    echo "[2] Less     - page through today's log"
-    echo "[3] Copy     - archive date range to zip"
-    echo "[4] Backup   - daily rollup (default: yesterday)"
+    echo "[1] Tail   - follow today's log"
+    echo "[2] Less   - page through a day's log"
+    echo "[3] Copy   - archive a date range to zip"
+    echo "[4] Backup - daily rollup (default: yesterday)"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""
