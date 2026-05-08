@@ -32,7 +32,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Identifier');
             return false;
         }
     }
@@ -50,7 +50,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Identifier');
             return false;
         }
     }
@@ -69,7 +69,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                 where: { idIdentifier, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Identifier');
             return false;
         }
     }
@@ -81,7 +81,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyObject<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findUnique({ where: { idIdentifier, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idIdentifier },'DB.Identifier');
             return null;
         }
     }
@@ -92,7 +92,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyArray<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findMany({ where: { IdentifierValue, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Identifier failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch from Identifier failed',H.Helpers.getErrorString(error),{ IdentifierValue },'DB.Identifier');
             return null;
         }
     }
@@ -111,7 +111,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                     WHERE S.idSubject = ${idSubject}`, Identifier);
             return (IDArray && IDArray.length > 0) ? IDArray[0] : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Subject preferred failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch from Subject preferred failed',H.Helpers.getErrorString(error),{ idSubject },'DB.Identifier');
             return null;
         }
     }
@@ -123,7 +123,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyArray<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Identifier');
             return null;
         }
     }

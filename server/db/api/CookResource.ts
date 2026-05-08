@@ -39,7 +39,7 @@ export class CookResource extends DBC.DBObject<CookResourceBase> implements Cook
                 await DBC.DBConnection.prisma.cookResource.create({ data: { Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType }, }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.CookResource');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.CookResource');
             return false;
         }
     }
@@ -52,7 +52,7 @@ export class CookResource extends DBC.DBObject<CookResourceBase> implements Cook
                 data: { Name, Address, Port, Inspection, SceneGeneration, GenerateDownloads, Photogrammetry, LargeFiles, MachineType },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.CookResource');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.CookResource');
             return false;
         }
     }
@@ -64,7 +64,7 @@ export class CookResource extends DBC.DBObject<CookResourceBase> implements Cook
             return DBC.CopyObject<CookResourceBase, CookResource>(
                 await DBC.DBConnection.prisma.cookResource.findUnique({ where: { idCookResource, }, }), CookResource);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.CookResource');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idCookResource },'DB.CookResource');
             return null;
         }
     }
@@ -74,7 +74,7 @@ export class CookResource extends DBC.DBObject<CookResourceBase> implements Cook
             return DBC.CopyArray<CookResourceBase, CookResource>(
                 await DBC.DBConnection.prisma.cookResource.findMany({ orderBy: { Name: 'asc' } }), CookResource);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.CookResource');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.CookResource');
             return null;
         }
     }

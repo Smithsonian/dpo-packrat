@@ -9,6 +9,7 @@ import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL } from '../../utils/localStore';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import * as H from '../../utils/helpers';
+import { buildCompactSnapshot, buildDiffPayload, DiffPayload, SnapshotPayload } from '../impl/AuditPayload';
 
 /** Args accepted by AuditFactory.emit — the forward-looking audit API. */
 export type EmitArgs = {
@@ -174,8 +175,58 @@ export class AuditFactory {
             action: AuditFactory.keyToAuditType(key),
             actor,
             target: oID,
-            payload: obj,
+            payload: AuditFactory.shapePayload(obj, key),
         });
+    }
+
+    /**
+     * Project the DB object into the compact form written to Audit.Data.
+     *
+     * - For eDBUpdate on an object carrying *Orig fields, emit a diff covering
+     *   only the tracked fields that actually changed.
+     * - Otherwise emit a compact snapshot: scalar columns only, with long
+     *   strings replaced by { __omitted, bytes } markers. No relation spreads.
+     *
+     * Non-DB keys (eAuthLogin, eHTTPDownload, ...) receive whatever the caller
+     * passed, passed through unchanged — those payloads are already small.
+     */
+    private static shapePayload(obj: any, key: eEventKey): unknown {
+        if (!obj || typeof obj !== 'object') return obj;
+
+        const isDBMutation = key === eEventKey.eDBCreate
+            || key === eEventKey.eDBUpdate
+            || key === eEventKey.eDBDelete;
+        if (!isDBMutation) return obj;
+
+        if (key === eEventKey.eDBUpdate) {
+            const tracked = AuditFactory.extractTrackedFields(obj);
+            if (tracked.length > 0) {
+                const before: Record<string, unknown> = {};
+                const after: Record<string, unknown> = {};
+                for (const field of tracked) {
+                    before[field] = obj[`${field}Orig`];
+                    after[field] = obj[field];
+                }
+                const diff: DiffPayload = buildDiffPayload(before, after, tracked);
+                if (Object.keys(diff.changed).length > 0) return diff;
+                // If the tracked fields didn't change, fall through to a snapshot
+                // so the row still reflects what was touched.
+            }
+        }
+
+        const snapshot: SnapshotPayload = buildCompactSnapshot(obj);
+        return snapshot;
+    }
+
+    /** Names of mutable fields a DB API class tracks via FieldNameOrig properties. */
+    private static extractTrackedFields(obj: Record<string, unknown>): string[] {
+        const fields: string[] = [];
+        for (const key of Object.keys(obj)) {
+            if (!key.endsWith('Orig')) continue;
+            const base = key.slice(0, -'Orig'.length);
+            if (base && base in obj) fields.push(base);
+        }
+        return fields;
     }
 
     /** Deterministic mapping from eEventKey to eAuditType for the legacy shim. */

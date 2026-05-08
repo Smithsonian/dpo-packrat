@@ -40,7 +40,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Stakeholder');
             return false;
         }
     }
@@ -60,7 +60,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Stakeholder');
             return  false;
         }
     }
@@ -71,7 +71,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idStakeholder, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Stakeholder');
             return null;
         }
     }
@@ -83,7 +83,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return DBC.CopyObject<StakeholderBase, Stakeholder>(
                 await DBC.DBConnection.prisma.stakeholder.findUnique({ where: { idStakeholder, }, }), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idStakeholder },'DB.Stakeholder');
             return null;
         }
     }
@@ -93,7 +93,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
             return DBC.CopyArray<StakeholderBase, Stakeholder>(
                 await DBC.DBConnection.prisma.stakeholder.findMany(), Stakeholder);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Stakeholder');
             return null;
         }
     }
@@ -117,7 +117,7 @@ export class Stakeholder extends DBC.DBObject<StakeholderBase> implements Stakeh
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Stakeholder);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived from projects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'fetch derived from projects failed',H.Helpers.getErrorString(error),{ idProjects },'DB.Stakeholder');
             return null;
         }
     }

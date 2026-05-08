@@ -42,7 +42,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Metadata');
             return false;
         }
     }
@@ -65,7 +65,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Metadata');
             return false;
         }
     }
@@ -78,7 +78,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                 where: { idMetadata, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Metadata');
             return false;
         }
     }
@@ -88,7 +88,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             const retValue: Prisma.BatchPayload = await DBC.DBConnection.prisma.metadata.createMany({ data });
             return retValue.count === data.length;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create many failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'create many failed',H.Helpers.getErrorString(error),{ count: data.length },'DB.Metadata');
             return false;
         }
     }
@@ -100,7 +100,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return DBC.CopyObject<MetadataBase, Metadata>(
                 await DBC.DBConnection.prisma.metadata.findUnique({ where: { idMetadata, }, }), Metadata);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idMetadata },'DB.Metadata');
             return null;
         }
     }
@@ -112,7 +112,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return DBC.CopyArray<MetadataBase, Metadata>(
                 await DBC.DBConnection.prisma.metadata.findMany({ where: { idUser } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUser },'DB.Metadata');
             return null;
         }
     }
@@ -124,7 +124,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
             return DBC.CopyArray<MetadataBase, Metadata>(
                 await DBC.DBConnection.prisma.metadata.findMany({ where: { idSystemObject } }), Metadata);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Metadata');
             return null;
         }
     }
@@ -144,7 +144,7 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
                 });
             return DBC.CopyArray<MetadataBase, Metadata>(rawResult, Metadata);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all by page failed',H.Helpers.getErrorString(error),{ ...this },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'fetch all by page failed',H.Helpers.getErrorString(error),{ idMetadataLast, pageSize },'DB.Metadata');
             return null;
         }
     }

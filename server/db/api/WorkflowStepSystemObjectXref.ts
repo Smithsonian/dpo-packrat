@@ -31,7 +31,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step.SystemObjectXref');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Step.SystemObjectXref');
             return false;
         }
     }
@@ -48,7 +48,7 @@ export class WorkflowStepSystemObjectXref extends DBC.DBObject<WorkflowStepSyste
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step.SystemObjectXref');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Step.SystemObjectXref');
             return  false;
         }
     }

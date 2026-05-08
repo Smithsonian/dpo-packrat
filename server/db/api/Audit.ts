@@ -48,7 +48,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Audit');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Audit');
             return false;
         }
     }
@@ -66,7 +66,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Audit');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Audit');
             return false;
         }
     }
@@ -110,7 +110,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             return DBC.CopyObject<AuditBase, Audit>(
                 await DBC.DBConnection.prisma.audit.findUnique({ where: { idAudit, }, }), Audit);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAudit, ...this },'DB.Audit');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAudit },'DB.Audit');
             return null;
         }
     }
@@ -125,7 +125,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                   AND AU.AuditDate BETWEEN ${startDate} AND ${endDate}
                 ORDER BY AU.AuditDate DESC`;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchAuthDenialsByDateRange failed',H.Helpers.getErrorString(error),{ startDate, endDate, ...this },'DB.Audit');
+            RK.logError(RK.LogSection.eDB,'fetchAuthDenialsByDateRange failed',H.Helpers.getErrorString(error),{ startDate, endDate },'DB.Audit');
             return [];
         }
     }
@@ -146,7 +146,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             // LOG.info(`DBAPI.Audit.fetchLastUser(${idSystemObject}, ${eAudit}) raw ${JSON.stringify(userBaseList, H.Helpers.saferStringify)}`, LOG.LS.eDB);
             return (userBaseList && userBaseList.length > 0) ? User.constructFromPrisma(userBaseList[0]) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch last User failed',H.Helpers.getErrorString(error),{ idSystemObject, eAudit, ...this },'DB.Audit');
+            RK.logError(RK.LogSection.eDB,'fetch last User failed',H.Helpers.getErrorString(error),{ idSystemObject, eAudit },'DB.Audit');
             return null;
         }
     }

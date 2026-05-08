@@ -37,7 +37,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Subject');
             return false;
         }
     }
@@ -57,7 +57,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Subject');
             return  false;
         }
     }
@@ -68,7 +68,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObjectfailed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Subject');
             return null;
         }
     }
@@ -80,7 +80,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyObject<SubjectBase, Subject>(
                 await DBC.DBConnection.prisma.subject.findUnique({ where: { idSubject, }, }), Subject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSubject },'DB.Subject');
             return null;
         }
     }
@@ -90,7 +90,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyArray<SubjectBase, Subject>(
                 await DBC.DBConnection.prisma.subject.findMany(), Subject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Subject');
             return null;
         }
     }
@@ -102,7 +102,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
             return DBC.CopyArray<SubjectBase, Subject>(
                 await DBC.DBConnection.prisma.subject.findMany({ where: { idUnit } }), Subject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Unit failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch from Unit failed',H.Helpers.getErrorString(error),{ idUnit },'DB.Subject');
             return null;
         }
     }
@@ -126,7 +126,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectDerived = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItems)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch master from Item failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch master from Item failed',H.Helpers.getErrorString(error),{ idItems },'DB.Subject');
             return null;
         }
     }
@@ -150,7 +150,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 JOIN SystemObject AS SOP ON (SOX.idSystemObjectMaster = SOP.idSystemObject)
                 WHERE SOP.idProject IN (${Prisma.join(idProjects)})`, Subject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived from Project failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch derived from Project failed',H.Helpers.getErrorString(error),{ idProjects },'DB.Subject');
             return null;
         }
     }
@@ -178,7 +178,7 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 WHERE idIdentifierPreferred = ${idIdentifier}`, Subject); /* istanbul ignore next */
 
             if (!subjects) {
-                RK.logError(RK.LogSection.eDB,'clear preferred identifier failed','no subjects found',{ ...this },'DB.Subject');
+                RK.logError(RK.LogSection.eDB,'clear preferred identifier failed','no subjects found',{ idIdentifier },'DB.Subject');
                 return false;
             }
             for (const subject of subjects) {
@@ -186,10 +186,10 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                 retValue = await subject.update() && retValue;
             }
 
-            RK.logDebug(RK.LogSection.eDB,'clear preferred identifier',`${idIdentifier} from ${subjects.length} Subjects`,{ ...this },'DB.Subject');
+            RK.logDebug(RK.LogSection.eDB,'clear preferred identifier',`${idIdentifier} from ${subjects.length} Subjects`,{ idIdentifier },'DB.Subject');
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'clear preferred identifier failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'clear preferred identifier failed',H.Helpers.getErrorString(error),{ idIdentifier },'DB.Subject');
             return false;
         }
     }
@@ -209,14 +209,14 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
                   AND ID.IdentifierValue IN (${Prisma.join([...identifierSubjectMap.keys()])})`; /* istanbul ignore next */
 
             if (!identifierSubjectInfo) {
-                RK.logError(RK.LogSection.eDB,'populate identifier subject map  failed','could not find objects',{ ...this },'DB.Subject');
+                RK.logError(RK.LogSection.eDB,'populate identifier subject map  failed','could not find objects',{ size: identifierSubjectMap.size },'DB.Subject');
                 return false;
             }
             for (const info of identifierSubjectInfo)
                 identifierSubjectMap.set(info.IdentifierValue, { idSubject: info.idSubject, idSystemObject: info.idSystemObject, idUnit: info.idUnit });
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'populate identifier subject map failed',H.Helpers.getErrorString(error),{ ...this },'DB.Subject');
+            RK.logError(RK.LogSection.eDB,'populate identifier subject map failed',H.Helpers.getErrorString(error),{ size: identifierSubjectMap.size },'DB.Subject');
             return false;
         }
     }

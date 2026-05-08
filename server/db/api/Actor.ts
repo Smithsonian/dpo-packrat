@@ -32,7 +32,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Actor');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Actor');
             return false;
         }
     }
@@ -50,7 +50,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Actor');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Actor');
             return false;
         }
     }
@@ -61,7 +61,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idActor, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Actor');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Actor');
             return null;
         }
     }
@@ -73,7 +73,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return DBC.CopyObject<ActorBase, Actor>(
                 await DBC.DBConnection.prisma.actor.findUnique({ where: { idActor, }, }), Actor);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idActor, ...this },'DB.Actor');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idActor },'DB.Actor');
             return null;
         }
     }
@@ -83,7 +83,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return DBC.CopyArray<ActorBase, Actor>(
                 await DBC.DBConnection.prisma.actor.findMany(), Actor);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Actor');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Actor');
             return null;
         }
     }
@@ -95,7 +95,7 @@ export class Actor extends DBC.DBObject<ActorBase> implements ActorBase, SystemO
             return DBC.CopyArray<ActorBase, Actor>(
                 await DBC.DBConnection.prisma.actor.findMany({ where: { idUnit } }), Actor);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Unit failed',H.Helpers.getErrorString(error),{ idUnit, ...this },'DB.Actor');
+            RK.logError(RK.LogSection.eDB,'fetch from Unit failed',H.Helpers.getErrorString(error),{ idUnit },'DB.Actor');
             return null;
         }
     }

@@ -51,7 +51,7 @@ export class SystemObjectActor extends SystemObject implements SystemObjectActor
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idActor, }, include: { Actor: true, }, });
             return SOPair ? new SystemObjectActor(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Actor');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idActor },'DB.SystemObject.Pairs.Actor');
             return null;
         }
     }
@@ -80,7 +80,7 @@ export class SystemObjectAsset extends SystemObject implements SystemObjectAsset
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAsset, }, include: { Asset_AssetToSystemObject_idAsset: true, }, });
             return SOPair ? new SystemObjectAsset(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Asset');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAsset },'DB.SystemObject.Pairs.Asset');
             return null;
         }
     }
@@ -102,7 +102,7 @@ export class SystemObjectAssetVersion extends SystemObject implements SystemObje
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, include: { AssetVersion_AssetVersionToSystemObject_idAssetVersion: true, }, });
             return SOPair ? new SystemObjectAssetVersion(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.AssetVersion');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAssetVersion },'DB.SystemObject.Pairs.AssetVersion');
             return null;
         }
     }
@@ -124,7 +124,7 @@ export class SystemObjectCaptureData extends SystemObject implements SystemObjec
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idCaptureData, }, include: { CaptureData: true, }, });
             return SOPair ? new SystemObjectCaptureData(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.CaptureData');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idCaptureData },'DB.SystemObject.Pairs.CaptureData');
             return null;
         }
     }
@@ -146,7 +146,7 @@ export class SystemObjectIntermediaryFile extends SystemObject implements System
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idIntermediaryFile, }, include: { IntermediaryFile: true, }, });
             return SOPair ? new SystemObjectIntermediaryFile(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.IntermediaryFile');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idIntermediaryFile },'DB.SystemObject.Pairs.IntermediaryFile');
             return null;
         }
     }
@@ -168,7 +168,7 @@ export class SystemObjectItem extends SystemObject implements SystemObjectItemBa
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idItem, }, include: { Item: true, }, });
             return SOPair ? new SystemObjectItem(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Item');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idItem },'DB.SystemObject.Pairs.Item');
             return null;
         }
     }
@@ -190,7 +190,7 @@ export class SystemObjectModel extends SystemObject implements SystemObjectModel
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idModel, }, include: { Model: true, }, });
             return SOPair ? new SystemObjectModel(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Model');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModel },'DB.SystemObject.Pairs.Model');
             return null;
         }
     }
@@ -212,7 +212,7 @@ export class SystemObjectProject extends SystemObject implements SystemObjectPro
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProject, }, include: { Project: true, }, });
             return SOPair ? new SystemObjectProject(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Project');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idProject },'DB.SystemObject.Pairs.Project');
             return null;
         }
     }
@@ -234,7 +234,7 @@ export class SystemObjectProjectDocumentation extends SystemObject implements Sy
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProjectDocumentation, }, include: { ProjectDocumentation: true, }, });
             return SOPair ? new SystemObjectProjectDocumentation(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Documentation');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idProjectDocumentation },'DB.SystemObject.Pairs.Documentation');
             return null;
         }
     }
@@ -256,7 +256,7 @@ export class SystemObjectScene extends SystemObject implements SystemObjectScene
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idScene, }, include: { Scene: true, }, });
             return SOPair ? new SystemObjectScene(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idScene },'DB.SystemObject.Pairs.Scene');
             return null;
         }
     }
@@ -278,7 +278,7 @@ export class SystemObjectStakeholder extends SystemObject implements SystemObjec
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idStakeholder, }, include: { Stakeholder: true, }, });
             return SOPair ? new SystemObjectStakeholder(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Stakeholder');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idStakeholder },'DB.SystemObject.Pairs.Stakeholder');
             return null;
         }
     }
@@ -300,7 +300,7 @@ export class SystemObjectSubject extends SystemObject implements SystemObjectSub
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idSubject, }, include: { Subject: true, }, });
             return SOPair ? new SystemObjectSubject(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Subject');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSubject },'DB.SystemObject.Pairs.Subject');
             return null;
         }
     }
@@ -322,7 +322,7 @@ export class SystemObjectUnit extends SystemObject implements SystemObjectUnitBa
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idUnit, }, include: { Unit: true, }, });
             return SOPair ? new SystemObjectUnit(SOPair) : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs.Unit');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idUnit },'DB.SystemObject.Pairs.Unit');
             return null;
         }
     }
@@ -416,7 +416,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                 });
             return (SOAPB ? new SystemObjectPairs(SOAPB) : null);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.SystemObject.Pairs');
             return null;
         }
     }
@@ -449,7 +449,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                 }), SystemObjectPairs);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs');
+            RK.logError(RK.LogSection.eDB,'fetch derived from xref failed',H.Helpers.getErrorString(error),{ idSystemObjectMaster },'DB.SystemObject.Pairs');
             return null;
         }
     }
@@ -482,7 +482,7 @@ export class SystemObjectPairs extends SystemObject implements SystemObjectPairs
                     },
                 }), SystemObjectPairs);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch master from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Pairs');
+            RK.logError(RK.LogSection.eDB,'fetch master from xref failed',H.Helpers.getErrorString(error),{ idSystemObjectDerived },'DB.SystemObject.Pairs');
             return null;
         }
     }

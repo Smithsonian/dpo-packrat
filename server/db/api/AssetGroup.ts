@@ -19,7 +19,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
             ({ idAssetGroup: this.idAssetGroup } = await DBC.DBConnection.prisma.assetGroup.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Group');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Asset.Group');
             return false;
         }
     }
@@ -32,7 +32,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Group');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Asset.Group');
             return false;
         }
     }
@@ -44,7 +44,7 @@ export class AssetGroup extends DBC.DBObject<AssetGroupBase> implements AssetGro
             return DBC.CopyObject<AssetGroupBase, AssetGroup>(
                 await DBC.DBConnection.prisma.assetGroup.findUnique({ where: { idAssetGroup, }, }), AssetGroup);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Group');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAssetGroup },'DB.Asset.Group');
             return null;
         }
     }

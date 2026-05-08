@@ -35,7 +35,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Model.Processing.Action');
             return false;
         }
     }
@@ -54,7 +54,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Model.Processing.Action');
             return false;
         }
     }
@@ -66,7 +66,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return DBC.CopyObject<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBC.DBConnection.prisma.modelProcessingAction.findUnique({ where: { idModelProcessingAction, }, }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelProcessingAction },'DB.Model.Processing.Action');
             return null;
         }
     }
@@ -78,7 +78,7 @@ export class ModelProcessingAction extends DBC.DBObject<ModelProcessingActionBas
             return DBC.CopyArray<ModelProcessingActionBase, ModelProcessingAction>(
                 await DBC.DBConnection.prisma.modelProcessingAction.findMany({ where: { idModel } }), ModelProcessingAction);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action');
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ idModel },'DB.Model.Processing.Action');
             return null;
         }
     }

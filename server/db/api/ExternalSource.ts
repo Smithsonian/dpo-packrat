@@ -36,7 +36,7 @@ export class ExternalSource extends DBC.DBObject<ExternalSourceBase> implements 
             }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB, 'create failed', H.Helpers.getErrorString(error), { ...this }, 'DB.ExternalSource');
+            RK.logError(RK.LogSection.eDB, 'create failed', H.Helpers.getErrorString(error), undefined, 'DB.ExternalSource');
             return false;
         }
     }
@@ -49,7 +49,7 @@ export class ExternalSource extends DBC.DBObject<ExternalSourceBase> implements 
                 data: { ClientId, Name, ReferrerPattern, idContact, isActive, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB, 'update failed', H.Helpers.getErrorString(error), { ...this }, 'DB.ExternalSource');
+            RK.logError(RK.LogSection.eDB, 'update failed', H.Helpers.getErrorString(error), undefined, 'DB.ExternalSource');
             return false;
         }
     }
@@ -61,7 +61,7 @@ export class ExternalSource extends DBC.DBObject<ExternalSourceBase> implements 
             return DBC.CopyObject<ExternalSourceBase, ExternalSource>(
                 await DBC.DBConnection.prisma.externalSource.findUnique({ where: { idExternalSource, }, }), ExternalSource);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB, 'fetch failed', H.Helpers.getErrorString(error), { ...this }, 'DB.ExternalSource');
+            RK.logError(RK.LogSection.eDB, 'fetch failed', H.Helpers.getErrorString(error),{ idExternalSource }, 'DB.ExternalSource');
             return null;
         }
     }
@@ -73,7 +73,7 @@ export class ExternalSource extends DBC.DBObject<ExternalSourceBase> implements 
             return DBC.CopyObject<ExternalSourceBase, ExternalSource>(
                 await DBC.DBConnection.prisma.externalSource.findUnique({ where: { ClientId, }, }), ExternalSource);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB, 'fetch by ClientId failed', H.Helpers.getErrorString(error), { ...this }, 'DB.ExternalSource');
+            RK.logError(RK.LogSection.eDB, 'fetch by ClientId failed', H.Helpers.getErrorString(error),{ ClientId }, 'DB.ExternalSource');
             return null;
         }
     }
@@ -83,7 +83,7 @@ export class ExternalSource extends DBC.DBObject<ExternalSourceBase> implements 
             return DBC.CopyArray<ExternalSourceBase, ExternalSource>(
                 await DBC.DBConnection.prisma.externalSource.findMany({ orderBy: { Name: 'asc' } }), ExternalSource);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB, 'fetch all failed', H.Helpers.getErrorString(error), { ...this }, 'DB.ExternalSource');
+            RK.logError(RK.LogSection.eDB, 'fetch all failed', H.Helpers.getErrorString(error), undefined, 'DB.ExternalSource');
             return null;
         }
     }
@@ -96,7 +96,7 @@ export class ExternalSource extends DBC.DBObject<ExternalSourceBase> implements 
                     orderBy: { Name: 'asc' }
                 }), ExternalSource);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB, 'fetch active failed', H.Helpers.getErrorString(error), { ...this }, 'DB.ExternalSource');
+            RK.logError(RK.LogSection.eDB, 'fetch active failed', H.Helpers.getErrorString(error), undefined, 'DB.ExternalSource');
             return null;
         }
     }

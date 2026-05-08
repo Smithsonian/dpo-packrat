@@ -88,7 +88,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Asset.Version');
             return false;
         }
 
@@ -122,7 +122,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 WHERE AV.idAsset = ${idAsset};`;
             return (VersionInfo && VersionInfo.length > 0) ? Number(VersionInfo[0].Version) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'compute next version number failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'compute next version number failed',H.Helpers.getErrorString(error),{ idAsset },'DB.Asset.Version');
             return null;
         }
     }
@@ -139,7 +139,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             if (Ingested && !Version) {
                 const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset); /* istanbul ignore next*/
                 if (!nextVersion) {
-                    RK.logError(RK.LogSection.eDB,'update failed','failed to compute nextVersion',{ ...this },'DB.Asset.Version');
+                    RK.logError(RK.LogSection.eDB,'update failed','failed to compute nextVersion',{ id: this.fetchID(), idAsset },'DB.Asset.Version');
                     return false;
                 }
                 Version = nextVersion;
@@ -165,7 +165,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Asset.Version');
             return false;
         }
     }
@@ -176,7 +176,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idAssetVersion, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Asset.Version');
             return null;
         }
     }
@@ -188,7 +188,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyObject<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findUnique({ where: { idAssetVersion, }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAssetVersion, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAssetVersion },'DB.Asset.Version');
             return null;
         }
     }
@@ -198,7 +198,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany(), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Asset.Version');
             return null;
         }
     }
@@ -210,7 +210,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idAsset, Version }, }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by Asset and version failed',H.Helpers.getErrorString(error),{ idAsset, Version, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch by Asset and version failed',H.Helpers.getErrorString(error),{ idAsset, Version },'DB.Asset.Version');
             return null;
         }
     }
@@ -238,7 +238,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Asset failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from Asset failed',H.Helpers.getErrorString(error),{ idAsset },'DB.Asset.Version');
             return null;
         }
     }
@@ -264,7 +264,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Asset.Version');
             return null;
         }
     }
@@ -287,7 +287,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObjectVersion failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObjectVersion failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion },'DB.Asset.Version');
             return null;
         }
     }
@@ -303,13 +303,13 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
         if (SOV) {
             assetVersions = await AssetVersion.fetchFromSystemObjectVersion(SOV.idSystemObjectVersion); /* istanbul ignore next */
             if (!assetVersions)
-                RK.logInfo(RK.LogSection.eDB,'fetch latest from SystemObject',`failed to retrieve asset versions from SystemObjectVersion; falling back to all asset versions for idSystemObject ${idSystemObject}`,{ SOV, ...this },'DB.Asset.Version');
+                RK.logInfo(RK.LogSection.eDB,'fetch latest from SystemObject',`failed to retrieve asset versions from SystemObjectVersion; falling back to all asset versions for idSystemObject ${idSystemObject}`,{ SOV },'DB.Asset.Version');
         }
 
         if (!assetVersions)
             assetVersions = await AssetVersion.fetchFromSystemObject(idSystemObject); /* istanbul ignore next */
         if (!assetVersions) {
-            RK.logInfo(RK.LogSection.eDB,'fetch latest from SystemObject',`retrieved no asset versions for ${idSystemObject}`,{ ...this },'DB.Asset.Version');
+            RK.logInfo(RK.LogSection.eDB,'fetch latest from SystemObject',`retrieved no asset versions for ${idSystemObject}`,{ idSystemObject },'DB.Asset.Version');
             return null;
         }
         return assetVersions;
@@ -332,7 +332,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return AssetVersion.constructFromPrisma(assetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch first from Asset failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch first from Asset failed',H.Helpers.getErrorString(error),{ idAsset },'DB.Asset.Version');
             return null;
         }
     }
@@ -356,7 +356,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             // Manually construct AssetVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return AssetVersion.constructFromPrisma(assetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch latest from Asset failed',H.Helpers.getErrorString(error),{ idAsset, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch latest from Asset failed',H.Helpers.getErrorString(error),{ idAsset },'DB.Asset.Version');
             return null;
         }
     }
@@ -456,7 +456,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 res.push(AssetVersion.constructFromPrisma(assetVersion));
             return res;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Scene by version failed',H.Helpers.getErrorString(error),{ idScene, idSystemObjectVersion, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from Scene by version failed',H.Helpers.getErrorString(error),{ idScene, idSystemObjectVersion },'DB.Asset.Version');
             return null;
         }
     }
@@ -480,7 +480,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                     LIMIT 1`,AssetVersion);
             return (!assetVersion || assetVersion.length===0) ? null : assetVersion[0];
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch Voyager scene from Scene failed',H.Helpers.getErrorString(error),{ idScene, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch Voyager scene from Scene failed',H.Helpers.getErrorString(error),{ idScene },'DB.Asset.Version');
             return null;
         }
     }
@@ -492,7 +492,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { idUserCreator } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUserCreator, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUserCreator },'DB.Asset.Version');
             return null;
         }
     }
@@ -528,7 +528,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
                 return res;
             }
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch ingested from User failed',H.Helpers.getErrorString(error),{ idUserCreator, Ingested, Retired, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch ingested from User failed',H.Helpers.getErrorString(error),{ idUserCreator, Ingested, Retired },'DB.Asset.Version');
             return null;
         }
     }
@@ -538,7 +538,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { Ingested } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by ingested failed',H.Helpers.getErrorString(error),{ Ingested, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch by ingested failed',H.Helpers.getErrorString(error),{ Ingested },'DB.Asset.Version');
             return null;
         }
     }
@@ -548,7 +548,7 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             return DBC.CopyArray<AssetVersionBase, AssetVersion>(
                 await DBC.DBConnection.prisma.assetVersion.findMany({ where: { StorageKeyStaging } }), AssetVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by staging storage key failed',H.Helpers.getErrorString(error),{ StorageKeyStaging, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'fetch by staging storage key failed',H.Helpers.getErrorString(error),{ StorageKeyStaging },'DB.Asset.Version');
             return null;
         }
     }
@@ -567,13 +567,13 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
 
             /* istanbul ignore next */
             if (storageKeyStagingCount.length != 1) { // array of wrong length returned, error ... should never happen
-                RK.logError(RK.LogSection.eDB,'fetch by ingested failed',`received invalid query response ${JSON.stringify(storageKeyStagingCount)}`,{ StorageKeyStaging, Ingested, Retired, ...this },'DB.Asset.Version');
+                RK.logError(RK.LogSection.eDB,'fetch by ingested failed',`received invalid query response ${JSON.stringify(storageKeyStagingCount)}`,{ StorageKeyStaging, Ingested, Retired },'DB.Asset.Version');
                 return null;
             }
 
             return Number(storageKeyStagingCount[0].RowCount);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'count storage key staging failed',H.Helpers.getErrorString(error),{ StorageKeyStaging, Ingested, Retired, ...this },'DB.Asset.Version');
+            RK.logError(RK.LogSection.eDB,'count storage key staging failed',H.Helpers.getErrorString(error),{ StorageKeyStaging, Ingested, Retired },'DB.Asset.Version');
             return null;
         }
     }

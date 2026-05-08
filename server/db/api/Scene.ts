@@ -68,7 +68,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Scene');
             return false;
         }
     }
@@ -96,7 +96,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Scene');
             return  false;
         }
     }
@@ -107,7 +107,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idScene, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Scene');
             return null;
         }
     }
@@ -119,7 +119,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyObject<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findUnique({ where: { idScene, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idScene },'DB.Scene');
             return null;
         }
     }
@@ -129,7 +129,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyArray<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findMany(), Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Scene');
             return null;
         }
     }
@@ -141,7 +141,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyArray<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findMany({ where: { ModelSceneXref: { some: { idModel }, }, }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ idModel },'DB.Scene');
             return null;
         }
     }
@@ -153,7 +153,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             return DBC.CopyArray<SceneBase, Scene>(
                 await DBC.DBConnection.prisma.scene.findMany({ where: { EdanUUID }, }), Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by UUID failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch by UUID failed',H.Helpers.getErrorString(error),{ EdanUUID },'DB.Scene');
             return null;
         }
     }
@@ -174,7 +174,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
             return null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch by SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Scene');
             return null;
         }
     }
@@ -198,7 +198,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 JOIN SystemObject AS SOI ON (SOX.idSystemObjectMaster = SOI.idSystemObject)
                 WHERE SOI.idItem IN (${Prisma.join(idItem)})`, Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived from Items failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch derived from Items failed',H.Helpers.getErrorString(error),{ idItem },'DB.Scene');
             return null;
         }
     }
@@ -218,7 +218,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 JOIN SystemObject AS SOM ON (SOX.idSystemObjectMaster = SOM.idSystemObject)
                 WHERE SOM.idModel = ${idModelParent}`, Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch child scenes failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch child scenes failed',H.Helpers.getErrorString(error),{ idModelParent },'DB.Scene');
             return null;
         }
     }
@@ -237,7 +237,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 JOIN SystemObject AS SOD ON (SOX.idSystemObjectDerived = SOD.idSystemObject)
                 WHERE SOD.idModel = ${idModelChild}`, Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch parent scenes failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch parent scenes failed',H.Helpers.getErrorString(error),{ idModelChild },'DB.Scene');
             return null;
         }
     }
@@ -261,7 +261,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                     JOIN Scene AS s ON soScene.idScene = s.idScene
                 ;`, Scene);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by Project list failed',H.Helpers.getErrorString(error),{ ...this },'DB.Scene');
+            RK.logError(RK.LogSection.eDB,'fetch by Project list failed',H.Helpers.getErrorString(error),{ idProject },'DB.Scene');
             return null;
         }
     }

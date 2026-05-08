@@ -26,7 +26,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial');
             return false;
         }
     }
@@ -42,7 +42,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial');
             return false;
         }
     }
@@ -54,7 +54,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 where: { idModelMaterial, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial');
             return false;
         }
     }
@@ -66,7 +66,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
             return DBC.CopyObject<ModelMaterialBase, ModelMaterial>(
                 await DBC.DBConnection.prisma.modelMaterial.findUnique({ where: { idModelMaterial, }, }), ModelMaterial);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelMaterial },'DB.ModelMaterial');
             return null;
         }
     }
@@ -88,7 +88,7 @@ export class ModelMaterial extends DBC.DBObject<ModelMaterialBase> implements Mo
                 ModelMaterial
             );
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from ModelObjects failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial');
+            RK.logError(RK.LogSection.eDB,'fetch from ModelObjects failed',H.Helpers.getErrorString(error),{ modelObjects },'DB.ModelMaterial');
             return null;
         }
     }

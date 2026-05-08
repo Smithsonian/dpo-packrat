@@ -24,7 +24,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 await DBC.DBConnection.prisma.license.create({ data: { Name, Description, RestrictLevel }, }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.License');
             return false;
         }
     }
@@ -37,7 +37,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 data: { Name, Description, RestrictLevel, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.License');
             return false;
         }
     }
@@ -49,7 +49,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return DBC.CopyObject<LicenseBase, License>(
                 await DBC.DBConnection.prisma.license.findUnique({ where: { idLicense, }, }), License);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idLicense },'DB.License');
             return null;
         }
     }
@@ -59,7 +59,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
             return DBC.CopyArray<LicenseBase, License>(
                 await DBC.DBConnection.prisma.license.findMany({ orderBy: { Name: 'asc' } }), License);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.License');
             return null;
         }
     }
@@ -73,7 +73,7 @@ export class License extends DBC.DBObject<LicenseBase> implements LicenseBase {
                 where: { Name: { contains: search }, },
             }), License);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch License list failed',H.Helpers.getErrorString(error),{ ...this },'DB.License');
+            RK.logError(RK.LogSection.eDB,'fetch License list failed',H.Helpers.getErrorString(error),{ search },'DB.License');
             return null;
         }
     }

@@ -35,7 +35,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Project');
             return false;
         }
     }
@@ -48,7 +48,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 data: { Name, Description, isRestricted, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Project');
             return false;
         }
     }
@@ -59,7 +59,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProject, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Project');
             return null;
         }
     }
@@ -71,7 +71,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyObject<ProjectBase, Project>(
                 await DBC.DBConnection.prisma.project.findUnique({ where: { idProject, }, }), Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idProject },'DB.Project');
             return null;
         }
     }
@@ -81,7 +81,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
             return DBC.CopyArray<ProjectBase, Project>(
                 await DBC.DBConnection.prisma.project.findMany({ orderBy: { Name: 'asc' } }), Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Project');
             return null;
         }
     }
@@ -107,7 +107,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 WHERE SOI.idItem IS NOT NULL
                   AND SOS.idSubject IN (${Prisma.join(idSubjects)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch related to Subjects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch related to Subjects failed',H.Helpers.getErrorString(error),{ idSubjects },'DB.Project');
             return null;
         }
     }
@@ -131,7 +131,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOS ON (SOX.idSystemObjectDerived = SOS.idSystemObject)
                 WHERE SOS.idStakeholder IN (${Prisma.join(idStakeholders)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch master from Stakeholders failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch master from Stakeholders failed',H.Helpers.getErrorString(error),{ idStakeholders },'DB.Project');
             return null;
         }
     }
@@ -155,7 +155,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS IOS ON (SOX.idSystemObjectDerived = IOS.idSystemObject AND IOS.idItem IS NOT NULL)
                 WHERE IOS.idItem IN (${Prisma.join(idItems)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch master from Items failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch master from Items failed',H.Helpers.getErrorString(error),{ idItems },'DB.Project');
             return null;
         }
     }
@@ -175,7 +175,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN ProjectDocumentation AS PD ON (PD.idProject = P.idProject)
                 WHERE PD.idProjectDocumentation IN (${Prisma.join(idProjectDocumentations)})`, Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch master from Documentation failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch master from Documentation failed',H.Helpers.getErrorString(error),{ idProjectDocumentations },'DB.Project');
             return null;
         }
     }
@@ -189,7 +189,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 where: { Name: { contains: search }, },
             }), Project);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch Project list failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetch Project list failed',H.Helpers.getErrorString(error),{ search },'DB.Project');
             return null;
         }
     }
@@ -227,7 +227,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN SystemObject AS SOU ON (SOX.idSystemObjectMaster = SOU.idSystemObject)
                 WHERE SOU.idUnit IN (${Prisma.join(unitIds)}) AND P.isRestricted = false`, Project) ?? [];
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchUnrestrictedByUnits failed',H.Helpers.getErrorString(error),{ unitIds, ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetchUnrestrictedByUnits failed',H.Helpers.getErrorString(error),{ unitIds },'DB.Project');
             return [];
         }
     }
@@ -250,7 +250,7 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
                 JOIN UserAuthorization AS UA ON (SO.idSystemObject = UA.idSystemObject)
                 WHERE UA.idUser = ${idUser}`, Project) ?? [];
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchWithUserAuthorization failed',H.Helpers.getErrorString(error),{ idUser, ...this },'DB.Project');
+            RK.logError(RK.LogSection.eDB,'fetchWithUserAuthorization failed',H.Helpers.getErrorString(error),{ idUser },'DB.Project');
             return [];
         }
     }

@@ -28,7 +28,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Action');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Action');
             return false;
         }
     }
@@ -41,7 +41,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                 data: { Name, SortOrder, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Action');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Action');
             return false;
         }
     }
@@ -53,7 +53,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
             return DBC.CopyObject<AccessActionBase, AccessAction>(
                 await DBC.DBConnection.prisma.accessAction.findUnique({ where: { idAccessAction, }, }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessAction, ...this },'DB.Access.Action');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessAction },'DB.Access.Action');
             return null;
         }
     }
@@ -71,7 +71,7 @@ export class AccessAction extends DBC.DBObject<AccessActionBase> implements Acce
                     },
                 }), AccessAction);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ idAccessRole, ...this },'DB.Access.Action');
+            RK.logError(RK.LogSection.eDB,'fetch from xref failed',H.Helpers.getErrorString(error),{ idAccessRole },'DB.Access.Action');
             return null;
         }
     }

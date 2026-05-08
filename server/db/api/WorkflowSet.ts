@@ -21,7 +21,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             ({ idWorkflowSet: this.idWorkflowSet } = await DBC.DBConnection.prisma.workflowSet.create({ data: { } }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Set');
             return false;
         }
     }
@@ -34,7 +34,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
                 data: { },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Set');
             return  false;
         }
     }
@@ -46,7 +46,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
             return DBC.CopyObject<WorkflowSetBase, WorkflowSet>(
                 await DBC.DBConnection.prisma.workflowSet.findUnique({ where: { idWorkflowSet, }, }), WorkflowSet);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
+            RK.logError(RK.LogSection.eDB,'fetch',H.Helpers.getErrorString(error),{ idWorkflowSet },'DB.Workflow.Set');
             return null;
         }
     }
@@ -64,7 +64,7 @@ export class WorkflowSet extends DBC.DBObject<WorkflowSetBase> implements Workfl
                     },
                 }), WorkflowSet);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Workflow',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Set');
+            RK.logError(RK.LogSection.eDB,'fetch from Workflow',H.Helpers.getErrorString(error),{ idWorkflow },'DB.Workflow.Set');
             return null;
         }
     }
