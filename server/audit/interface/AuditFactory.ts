@@ -4,6 +4,7 @@ import * as DBC from '../../db/connection';
 import * as CACHE from '../../cache';
 import { ObjectIDAndType, eAuditType, eDBObjectType, eNonSystemObjectType } from '../../db/api/ObjectType';
 import { SystemObjectInvalidation } from '../../cache/SystemObjectInvalidation';
+import { Config } from '../../config';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL } from '../../utils/localStore';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
@@ -59,6 +60,29 @@ export class AuditFactory {
         const idDBObject: number | null = args.target?.idObject ?? null;
         const CorrelationId: string | null = args.correlationId ?? null;
 
+        // Log-only tier: write the audit line to the logs (picked up by
+        // OpenObserve) and skip the DB insert entirely. Still preserve
+        // cache/Solr invalidation for mutations on SystemObjectXref — the
+        // derived object must refresh even though no Audit row is persisted.
+        if (AuditFactory.isLogOnlyTarget(DBObjectType)) {
+            const payload = {
+                action,
+                actor: Actor.describe(actor),
+                target: args.target,
+                CorrelationId,
+                payload: args.payload,
+            };
+            RK.logInfo(RK.LogSection.eAUDIT, `log-only ${eAuditType[action] ?? action}`,
+                undefined, payload, 'Audit.Factory', /* audit */ true);
+
+            if (DBObjectType === eNonSystemObjectType.eSystemObjectXref && idDBObject) {
+                void AuditFactory.invalidateDerivedFromXref(idDBObject);
+            } else if (args.idSystemObject) {
+                SystemObjectInvalidation.invalidate(args.idSystemObject);
+            }
+            return true;
+        }
+
         // Resolve idSystemObject synchronously from the cache if the caller
         // didn't supply it and we have a typed target.
         let idSystemObject: number | null = args.idSystemObject ?? null;
@@ -101,6 +125,34 @@ export class AuditFactory {
 
         SystemObjectInvalidation.invalidate(idSystemObject);
         return true;
+    }
+
+    /**
+     * True when the target entity type is enumerated in Config.audit.logOnlyObjectTypes.
+     * Log-only targets bypass the Audit table and land in OpenObserve instead.
+     */
+    private static isLogOnlyTarget(type: eDBObjectType | null): boolean {
+        if (type === null) return false;
+        return Config.audit.logOnlyObjectTypes.includes(type);
+    }
+
+    /**
+     * Invalidate the derived SystemObject for an xref row. Preserves the
+     * cascading-refresh behavior that the retired event consumer used to
+     * provide when an xref was created/updated/deleted.
+     */
+    private static async invalidateDerivedFromXref(idSystemObjectXref: number): Promise<void> {
+        try {
+            // Lazy import to avoid a static cycle through db/api -> connection.
+            const { SystemObjectXref } = await import('../../db/api/SystemObjectXref');
+            const xref = await SystemObjectXref.fetch(idSystemObjectXref);
+            if (xref)
+                SystemObjectInvalidation.invalidate(xref.idSystemObjectDerived);
+        } catch (err) {
+            RK.logError(RK.LogSection.eAUDIT, 'xref invalidation failed',
+                err instanceof Error ? err.message : String(err),
+                { idSystemObjectXref }, 'Audit.Factory');
+        }
     }
 
     /**
