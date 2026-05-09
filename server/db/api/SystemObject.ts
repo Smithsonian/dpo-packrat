@@ -6,6 +6,7 @@ import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { RecordKeeper as RK  } from '../../records/recordKeeper';
+import { withAuditTransaction } from '../../audit/withAuditTransaction';
 
 export interface SystemObjectBased {
     fetchSystemObject(): Promise<SystemObject | null>;
@@ -72,18 +73,22 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
     }
 
     private async updateRetired(): Promise<boolean> {
+        // Atomic: the Retired flag flip and its audit row commit together.
+        // The audit emission buffers onto the tx; the post-commit helper
+        // fires cache + Solr invalidation only after the tx is durable.
         try {
-            this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
-            const { idSystemObject, Retired } = this;
-            const retValue: boolean = await DBC.DBConnection.prisma.systemObject.update({
-                where: { idSystemObject, },
-                data: {
-                    Retired
-                },
-            }) ? true : /* istanbul ignore next */ false;
-            return retValue;
+            return await withAuditTransaction(async () => {
+                await this.audit(eEventKey.eDBUpdate);
+                const { idSystemObject, Retired } = this;
+                const updated = await DBC.DBConnection.prisma.systemObject.update({
+                    where: { idSystemObject },
+                    data: { Retired },
+                });
+                return !!updated;
+            });
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update retired failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject');
+            RK.logError(RK.LogSection.eDB, 'update retired failed',
+                H.Helpers.getErrorString(error), { id: this.fetchID() }, 'DB.SystemObject');
             return false;
         }
     }

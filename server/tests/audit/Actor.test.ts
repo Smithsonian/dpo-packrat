@@ -76,16 +76,17 @@ describe('withActor', () => {
         const actor = Actor.system('AuditRetention');
         let seen: ReturnType<typeof Actor.toAuditColumns> | null = null;
         await withActor(actor, async () => {
-            const LS = ASL.getStore()!;
-            seen = Actor.toAuditColumns(LS.getActor()!);
+            const LS = ASL.getStore();
+            const scoped = LS?.getActor();
+            if (scoped) seen = Actor.toAuditColumns(scoped);
         });
         expect(seen).toEqual({ idUser: null, SystemActor: 'AuditRetention' });
     });
 
     test('impersonation also populates LS.idUser for legacy readers', async () => {
-        let seenIdUser: number | null | undefined = 'unread' as unknown as number;
+        let seenIdUser: number | null | undefined;
         await withActor(Actor.impersonation(42, 'Cook'), async () => {
-            seenIdUser = ASL.getStore()!.idUser;
+            seenIdUser = ASL.getStore()?.idUser;
         });
         expect(seenIdUser).toBe(42);
     });

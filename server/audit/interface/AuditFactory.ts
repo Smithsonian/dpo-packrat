@@ -102,6 +102,27 @@ export class AuditFactory {
             ? null
             : JSON.stringify(args.payload, H.Helpers.stringifyDatabaseRow);
 
+        // If a transaction is active on the current LocalStore, buffer the row
+        // into the tx-scoped buffer; it commits atomically with the business
+        // write. Otherwise fall through to a direct insert (the existing path).
+        const LS = ASL.getStore();
+        if (LS?.auditBuffer) {
+            LS.auditBuffer.push({
+                idUser:         cols.idUser,
+                AuditDate,
+                AuditType:      action,
+                DBObjectType:   DBObjectType ?? null,
+                idDBObject:     idDBObject ?? null,
+                idSystemObject,
+                Data,
+                SystemActor:    cols.SystemActor,
+                CorrelationId,
+            });
+            if (idSystemObject && LS.invalidationQueue)
+                LS.invalidationQueue.add(idSystemObject);
+            return true;
+        }
+
         try {
             await DBC.DBConnection.prisma.audit.create({
                 data: {

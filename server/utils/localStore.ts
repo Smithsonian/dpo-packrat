@@ -4,6 +4,7 @@ import * as H from './helpers';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 import type { AuthorizationContext } from '../auth/Authorization';
 import { Actor } from '../audit/Actor';
+import type { AuditBufferEntry } from '../audit/xferBuffer';
 
 export class LocalStore {
     idRequest: number;
@@ -24,6 +25,22 @@ export class LocalStore {
      * from downstream code.
      */
     actor?: Actor | undefined;
+
+    /**
+     * Active audit-row buffer during an open prisma.$transaction. Populated by
+     * withAuditTransaction before entering the tx callback and cleared after.
+     * AuditFactory.emit appends entries here when the buffer exists, rather than
+     * writing directly — rows flush via a single tx.audit.createMany before
+     * commit. Downstream code never touches this slot.
+     */
+    auditBuffer?: AuditBufferEntry[] | undefined;
+
+    /**
+     * SystemObject ids that need cache-flush + Solr reindex after the current
+     * transaction commits. Populated alongside auditBuffer; drained by the
+     * withAuditTransaction post-commit hook. Empty / undefined outside a tx.
+     */
+    invalidationQueue?: Set<number> | undefined;
 
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
