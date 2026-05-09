@@ -158,6 +158,8 @@ export type ConfigType = {
     },
     workflow: {
         type: WORKFLOW_TYPE;
+        /** Stale-lock threshold for Cook-style ProcessingLockedAt on SystemObject. */
+        processingLockTimeoutMs: number;
     }
 };
 
@@ -326,6 +328,8 @@ export const Config: ConfigType = {
     },
     workflow: {
         type: WORKFLOW_TYPE.PACKRAT,
+        processingLockTimeoutMs: process.env.PACKRAT_WORKFLOW_PROCESSING_LOCK_TIMEOUT_MS
+            ? parseInt(process.env.PACKRAT_WORKFLOW_PROCESSING_LOCK_TIMEOUT_MS) : 2 * 60 * 60 * 1000,
     }
 };
 
