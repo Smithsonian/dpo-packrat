@@ -169,14 +169,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             this.cleanupCalled = true;
 
             const results: H.IOResults = await this.createSystemObjects();
-            if(results.success==false)
-                this.recordFailure(null,results.error);
-            else
-                await this.appendToReportAndLog(`${this.name()} succeeded`, false);
+            await this.appendToReportAndLog(`${this.name()} ${results.success ? 'succeeded' : 'failed: ' + results.error}`, !results.success);
             return results;
         } catch (error) {
             return this.logError('cleanup job failed',H.Helpers.getErrorString(error),undefined,false);
-            return { success: false, error: H.Helpers.JSONStringify(error) };
         }
     }
 
@@ -447,84 +443,40 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         }
     }
 
+    private get notificationContext(): {
+        subjectName?: string; sceneName?: string; idSystemObjectModel?: number;
+        unitName?: string; projectName?: string; successUrl?: string;
+    } {
+        return {
+            subjectName: this.sceneParameterHelper?.OG?.subject?.[0]?.Name,
+            sceneName: this.sceneParameterHelper?.sceneName,
+            idSystemObjectModel: this.sceneParameterHelper?.SOModelSource.idSystemObject,
+            unitName: this.sceneParameterHelper?.OG?.unit?.[0]?.Name,
+            projectName: this.sceneParameterHelper?.OG?.project?.[0]?.Name,
+            successUrl: this.sceneParameterHelper
+                ? RouteBuilder.RepositoryDetails(this.sceneParameterHelper.SOModelSource.idSystemObject, eHrefMode.ePrependClientURL)
+                : undefined,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
-        // TODO:
-        // - links for source model details
-        // - button goes to report
-
         const updated: boolean = await super.recordSuccess(output);
-        if(updated) {
-
-            // attempt to get our report either from the WorkflowSet (preferred) or the
-            // individual Workflow.
-            const detailsMessage: string = `
-                <b>Scene Name</b>: ${this.sceneParameterHelper?.sceneName ?? 'NA'}</br>
-                <b>Source Model</b>: ${this.sceneParameterHelper?.SOModelSource.idSystemObject}</br></br>
-                <b>Unit</b>: ${this.sceneParameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
-                <b>Subject</b>: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
-                <b>Project</b>: ${this.sceneParameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
-            `;
-
-            RK.logInfo(RK.LogSection.eJOB,'download generation completed',
-                undefined,undefined,
-                'Job.GenerateDownloads'
-            );
-
-            // build our URL
-            const url: string = (this.sceneParameterHelper) ?
-                RouteBuilder.RepositoryDetails(this.sceneParameterHelper.SOModelSource.idSystemObject,eHrefMode.ePrependClientURL) :
-                Config.http.clientUrl +'/workflow';
-
-            // send email out
-            await RK.sendMessage(
-                RK.NotifyType.JOB_PASSED,
-                RK.NotifyGroup.USER,
-                `Download Generation Finished: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name}`,
-                detailsMessage,
-                this._dbJobRun.DateStart ?? new Date(),
-                this._dbJobRun.DateEnd ?? undefined,
-                (url.length>0) ? { url, label: 'Details' } : undefined
-            );
+        if (updated) {
+            RK.logInfo(RK.LogSection.eJOB,'download generation completed',undefined,undefined,'Job.GenerateDownloads');
+            await this.sendJobNotification({ success: true, titlePrefix: 'Download Generation', ...this.notificationContext });
+        } else if (this._dbJobRun.getStatus() === COMMON.eWorkflowJobRunStatus.eError) {
+            // success was reverted due to cleanup failure — send failure notification
+            RK.logError(RK.LogSection.eJOB,'download generation failed','post-processing failed after Cook success','Job.GenerateDownloads');
+            await this.sendJobNotification({ success: false, titlePrefix: 'Download Generation', ...this.notificationContext });
         }
         return updated;
     }
+
     protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
-        // TODO:
-        // - links for source model details
-        // - button goes to report
-
         const updated: boolean = await super.recordFailure(output, errorMsg);
-        if(updated) {
-
-            // get our context for the message
-            const detailsMessage: string = `
-                <b>Error: ${this._dbJobRun.Error}</b></br></br>
-                <b>Scene Name</b>: ${this.sceneParameterHelper?.sceneName ?? 'NA'}</br>
-                <b>Source Model</b>: ${this.sceneParameterHelper?.SOModelSource.idSystemObject}</br></br>
-                <b>Unit</b>: ${this.sceneParameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
-                <b>Subject</b>: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
-                <b>Project</b>: ${this.sceneParameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
-            `;
-
-            RK.logError(RK.LogSection.eJOB,'download generation failed',
-                undefined,
-                'Job.DownloadGeneration.recordFailure'
-            );
-
-            // build our URL
-            // const url: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
-            const url: string = Config.http.clientUrl +'/workflow';
-
-            // send email out
-            await RK.sendMessage(
-                RK.NotifyType.JOB_FAILED,
-                RK.NotifyGroup.USER,
-                `Download Generation Failed: ${this.sceneParameterHelper?.OG?.subject?.[0]?.Name}`,
-                detailsMessage,
-                this._dbJobRun.DateStart ?? new Date(),
-                this._dbJobRun.DateEnd ?? undefined,
-                (url.length>0) ? { url, label: 'Details' } : undefined
-            );
+        if (updated) {
+            RK.logError(RK.LogSection.eJOB,'download generation failed',undefined,'Job.GenerateDownloads');
+            await this.sendJobNotification({ success: false, titlePrefix: 'Download Generation', ...this.notificationContext });
         }
         return updated;
     }

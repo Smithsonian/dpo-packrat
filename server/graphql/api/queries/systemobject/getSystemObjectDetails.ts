@@ -14,6 +14,7 @@ const getSystemObjectDetails = gql`
             publishedState
             publishedEnum
             publishable
+            isDraft
             thumbnail
             identifiers {
                 identifier

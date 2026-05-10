@@ -231,23 +231,19 @@ function ItemListNewItem(props: ItemListNewItemProps) {
                 </Select>
             </TableCell>
             <TableCell style={cellStyle} align='center'>
-                {hasMultipleSubjects ? (
-                    <Typography style={{ fontSize: '0.75rem' }}>No</Typography>
-                ) : (
-                    <Select
-                        value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}
-                        disabled={idProject < 0}
-                        className={classes.projectSelect}
-                        renderValue={() => entireSubject === null ? 'Yes/No' : !entireSubject ? 'No' : 'Yes'}
-                        disableUnderline
-                        style={{ width: 'fit-content' }}
-                        onChange={(e) => onUpdateEntireSubject(Number(e.target.value) > 0 ? true : false) }
-                    >
-                        <MenuItem value={-1} disabled><em>Yes/No</em></MenuItem>
-                        <MenuItem value={0}>No</MenuItem>
-                        <MenuItem value={1}>Yes</MenuItem>
-                    </Select>
-                )}
+                <Select
+                    value={entireSubject === null ? -1 : !entireSubject ? 0 : 1}
+                    disabled={idProject < 0}
+                    className={classes.projectSelect}
+                    renderValue={() => entireSubject === null ? 'Yes/No' : !entireSubject ? 'No' : 'Yes'}
+                    disableUnderline
+                    style={{ width: 'fit-content' }}
+                    onChange={(e) => onUpdateEntireSubject(Number(e.target.value) > 0 ? true : false) }
+                >
+                    <MenuItem value={-1} disabled><em>Yes/No</em></MenuItem>
+                    <MenuItem value={0}>No</MenuItem>
+                    <MenuItem value={1}>Yes</MenuItem>
+                </Select>
             </TableCell>
             <TableCell>
                 {(idProject > -1) && (

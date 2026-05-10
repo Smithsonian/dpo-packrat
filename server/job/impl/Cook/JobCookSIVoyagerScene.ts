@@ -567,85 +567,46 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         return JobCookSIVoyagerScene.vocabAssetTypeModelGeometryFile;
     }
 
+    private get notificationContext(): {
+        subjectName?: string; sceneName?: string; idSystemObjectModel?: number;
+        unitName?: string; projectName?: string; successUrl?: string;
+    } {
+        return {
+            subjectName: this.parameterHelper?.OG?.subject?.[0]?.Name,
+            sceneName: this.parameterHelper?.sceneName,
+            idSystemObjectModel: this.parameterHelper?.SOModelSource.idSystemObject,
+            unitName: this.parameterHelper?.OG?.unit?.[0]?.Name,
+            projectName: this.parameterHelper?.OG?.project?.[0]?.Name,
+            successUrl: this.parameterHelper
+                ? RouteBuilder.RepositoryDetails(this.parameterHelper.SOModelSource.idSystemObject, eHrefMode.ePrependClientURL)
+                : undefined,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
-        // TODO:
-        // - links for source model details
-        // - button goes to report
-
         const updated: boolean = await super.recordSuccess(output);
-        if(updated) {
-
-            // attempt to get our report either from the WorkflowSet (preferred) or the
-            // individual Workflow.
-            const detailsMessage: string = `
-                <b>Scene Name</b>: ${this.parameterHelper?.sceneName ?? 'NA'}</br>
-                <b>Source Model</b>: ${this.parameterHelper?.SOModelSource.idSystemObject}</br></br>
-                <b>Unit</b>: ${this.parameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
-                <b>Subject</b>: ${this.parameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
-                <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
-            `;
-
-            RK.logInfo(RK.LogSection.eJOB,'scene generation completed',
-                undefined,undefined,
-                'Job.VoyagerScene.recordSuccess'
-            );
-
-            // build our URL
-            const url: string = (this.parameterHelper) ?
-                RouteBuilder.RepositoryDetails(this.parameterHelper.SOModelSource.idSystemObject,eHrefMode.ePrependClientURL) :
-                Config.http.clientUrl +'/workflow';
-
-            // send email out
-            await RK.sendMessage(
-                RK.NotifyType.JOB_PASSED,
-                RK.NotifyGroup.USER,
-                `Scene Generation Finished: : ${this.parameterHelper?.OG?.subject?.[0]?.Name}`,
-                detailsMessage,
-                this._dbJobRun.DateStart ?? new Date(),
-                this._dbJobRun.DateEnd ?? undefined,
-                (url.length>0) ? { url, label: 'Details' } : undefined
-            );
+        if (updated) {
+            RK.logInfo(RK.LogSection.eJOB,'scene generation completed',undefined,undefined,'Job.VoyagerScene');
+            await this.sendJobNotification({ success: true, titlePrefix: 'Scene Generation', ...this.notificationContext });
+        } else if (this._dbJobRun.getStatus() === COMMON.eWorkflowJobRunStatus.eError) {
+            // success was reverted due to cleanup failure — send failure notification
+            RK.logError(RK.LogSection.eJOB,'scene generation failed','post-processing failed after Cook success',undefined,'Job.VoyagerScene');
+            await this.sendJobNotification({
+                success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
+                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+            });
         }
         return updated;
     }
+
     protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
-        // TODO:
-        // - links for source model details
-        // - button goes to report
-
         const updated: boolean = await super.recordFailure(output, errorMsg);
-        if(updated) {
-
-            // get our context for the message
-            const detailsMessage: string = `
-                <b>Error: ${this._dbJobRun.Error}</b></br></br>
-                <b>Scene Name</b>: ${this.parameterHelper?.sceneName ?? 'NA'}</br>
-                <b>Source Model</b>: ${this.parameterHelper?.SOModelSource.idSystemObject}</br></br>
-                <b>Unit</b>: ${this.parameterHelper?.OG?.unit?.[0]?.Name ?? 'NA'}</br>
-                <b>Subject</b>: ${this.parameterHelper?.OG?.subject?.[0]?.Name ?? 'NA'}</br>
-                <b>Project</b>: ${this.parameterHelper?.OG?.project?.[0]?.Name ?? 'NA'}</br>
-                <p><b>Parameters</b>: ${this.parameters}<p>
-            `;
-
-            RK.logError(RK.LogSection.eJOB,'scene generation failed',
-                undefined,undefined,
-                'Job.VoyagerScene'
-            );
-
-            // build our URL
-            // const url: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
-            const url: string = Config.http.clientUrl +'/workflow';
-
-            // send email out
-            await RK.sendMessage(
-                RK.NotifyType.JOB_FAILED,
-                RK.NotifyGroup.USER,
-                `Scene Generation Failed: ${this.parameterHelper?.OG?.subject?.[0]?.Name}`,
-                detailsMessage,
-                this._dbJobRun.DateStart ?? new Date(),
-                this._dbJobRun.DateEnd ?? undefined,
-                (url.length>0) ? { url, label: 'Details' } : undefined
-            );
+        if (updated) {
+            RK.logError(RK.LogSection.eJOB,'scene generation failed',undefined,undefined,'Job.VoyagerScene');
+            await this.sendJobNotification({
+                success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
+                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+            });
         }
         return updated;
     }

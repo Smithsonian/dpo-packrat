@@ -695,6 +695,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     private parameters: JobCookSIPackratInspectParameters;
     private sourceMeshStream: NodeJS.ReadableStream | undefined;
     private tempFilePath: string | undefined = undefined;
+    private cleanupCalled: boolean = false;
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIPackratInspectParameters, dbJobRun: DBAPI.JobRun) {
@@ -711,6 +712,10 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
     }
 
     async cleanupJob(): Promise<H.IOResults> {
+        if (this.cleanupCalled)
+            return { success: true, error: 'cleanupJob already called, exiting early' };
+        this.cleanupCalled = true;
+
         // if we have a temp file path, see if it exists, and clean it up.
         if(this.tempFilePath) {
             RK.logDebug(RK.LogSection.eJOB,'cleanup job','removing temp file',{ path: this.tempFilePath, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');

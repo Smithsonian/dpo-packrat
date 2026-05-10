@@ -903,6 +903,7 @@ export type GetSystemObjectDetailsResult = {
   idObject: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   identifiers: Array<IngestIdentifier>;
+  isDraft: Scalars['Boolean'];
   item?: Maybe<Array<RepositoryPath>>;
   license?: Maybe<License>;
   licenseInheritance?: Maybe<Scalars['Int']>;

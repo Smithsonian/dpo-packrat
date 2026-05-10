@@ -57,6 +57,11 @@ export type SceneSummary = DBAPI.DBReference & {
         captureData: AssetList,
     }
 };
+
+// Cook fix for material properties during inspection landed on 2024-06-14.
+// Downloads/AR assets produced before this date may have material issues and
+// should be flagged as outdated until regenerated.
+const COOK_MATERIAL_FIX_DATE: Date = new Date('2024-06-14T00:00:00Z');
 //#endregion
 
 //#region Get Projects & Scenes
@@ -666,11 +671,12 @@ const getStatusDownload = (downloads: AssetSummary[]): string => {
         return 'Missing';
 
     // check the dates to see if any are before a fix in Cook on June 14th, 2024
-    // which better handled material properties during inspection.
-    const targetDate: Date = new Date('2024-06-14T00:00:00Z');
+    // which better handled material properties during inspection. use dateModified
+    // (latest asset version date) not dateCreated (model record date) so that
+    // regenerating downloads clears the flag.
     for(let i=0; i<downloads.length; i++) {
-        if(downloads[i].dateCreated < targetDate) {
-            RK.logDebug(RK.LogSection.eHTTP,'get download model status',`${downloads[i].name} [${i}] (${downloads[i].dateCreated} - ${targetDate})`,{},'HTTP.Route.Project');
+        if(downloads[i].dateModified < COOK_MATERIAL_FIX_DATE) {
+            RK.logDebug(RK.LogSection.eHTTP,'get download model status',`${downloads[i].name} [${i}] (${downloads[i].dateModified} - ${COOK_MATERIAL_FIX_DATE})`,{},'HTTP.Route.Project');
             return 'Error';
         }
     }
@@ -683,7 +689,6 @@ const getStatusARModels = (models: AssetSummary[], meshCount: number = 1): strin
         return 'Missing: All';
     }
 
-    const targetDate: Date = new Date('2024-06-14T00:00:00Z');
     let nonDownloadableCount: number = 0;   // WebAR: 1 per mesh
     let downloadableCount: number = 0;      // NativeAR: 2 per scene (usdz + draco)
 
@@ -691,9 +696,9 @@ const getStatusARModels = (models: AssetSummary[], meshCount: number = 1): strin
 
         // if any model's asset version is too old or prior to known error return error
         // use dateModified (asset version date) not dateCreated (model record date)
-        if(model.dateModified < targetDate) {
-            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateModified} - ${targetDate})`,{},'HTTP.Route.Project');
-            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateModified} - ${targetDate}) WebAR`;
+        if(model.dateModified < COOK_MATERIAL_FIX_DATE) {
+            RK.logDebug(RK.LogSection.eHTTP,'get AR model status',`${model.name} (${model.dateModified} - ${COOK_MATERIAL_FIX_DATE})`,{},'HTTP.Route.Project');
+            return (model.downloadable===true)?'Error: NativeAR':`Error: ${model.name} (${model.dateModified} - ${COOK_MATERIAL_FIX_DATE}) WebAR`;
         }
 
         // build our counts for comparison

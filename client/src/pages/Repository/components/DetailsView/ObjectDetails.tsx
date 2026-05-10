@@ -4,7 +4,7 @@
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Checkbox, Typography, Select, MenuItem, Tooltip } from '@material-ui/core';
+import { Box, Checkbox, Typography, Select, MenuItem, Tooltip, Divider } from '@material-ui/core';
 import { withStyles, makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { NewTabLink } from '../../../../components';
@@ -69,6 +69,19 @@ const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
         whiteSpace: 'pre-wrap',
         flexWrap: 'wrap'
     },
+    buttonRow: {
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: 6,
+        rowGap: 6,
+        marginTop: 4
+    },
+    sectionDivider: {
+        marginTop: 8,
+        marginBottom: 8
+    },
     link: {
         display: 'flex',
         color: 'rgb(0, 121, 196)',
@@ -100,6 +113,7 @@ interface ObjectDetailsProps {
     publishedState: string;
     publishedEnum: number;
     publishable: boolean;
+    isDraft?: boolean;
     retired: boolean;
     hideRetired?: boolean;
     objectType?: number;
@@ -126,6 +140,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        isDraft,
         retired,
         hideRetired,
         objectType,
@@ -216,10 +231,10 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         setLoading(false);
     };
 
-    const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish'); };
-    const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish for API Only'); };
+    const onPublish = async () => { onPublishWorker(ePublishedState.ePublished, 'Publish as Public'); };
+    const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish as Public (Unlisted)'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
-    const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Publish for Internal Only'); };
+    const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Publish as Internal'); };
     const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {
@@ -249,7 +264,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     };
 
     return (
-        <Box display='flex' flex={2} flexDirection='column'>
+        <Box display='flex' flex={3} flexDirection='column'>
             {isProject ? (
                 <Detail
                     label='Unit'
@@ -275,25 +290,28 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             {item && (<Detail label='Media Group' paths={item} />)}
             {(asset && objectType !== eSystemObjectType.eAsset && <Detail idSystemObject={asset?.idSystemObject} label='Asset' value={asset?.name} />)}
             {(objectType === eSystemObjectType.eScene) && (
-                <Detail
-                    label='Publish State'
-                    valueComponent={
-                        <Box className={classes.inheritedLicense}>
-                            <Typography className={classes.value}>{publishedState}</Typography>
-                            &nbsp;<LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Publish</LoadingButton>
-                            &nbsp;<LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>API Only</LoadingButton>
-                            &nbsp;<LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
-                            &nbsp;{(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
-                            &nbsp;<Tooltip arrow title={ <ToolTip text={scenePublishNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
-                            {/* <Select name='PublishedState' className={classes.select} style={{ width: '16rem' }} onChange={onPublishUpdate} value={publishedState}>
-                                <MenuItem value={0}>Unpublished</MenuItem>
-                                <MenuItem value={1}>Unlisted (API)</MenuItem>
-                                <MenuItem value={2}>Public Site</MenuItem>
-                                <MenuItem value={3}>Internal</MenuItem>
-                            </Select> */}
-                        </Box>
-                    }
-                />
+                <>
+                    <Divider className={classes.sectionDivider} />
+                    <Detail
+                        label='Publish State'
+                        valueComponent={
+                            <Box display='flex' flexDirection='column' width='100%'>
+                                <Box className={classes.inheritedLicense}>
+                                    <Typography className={classes.value}>
+                                        {publishedState}{isDraft ? ' (draft)' : ''}
+                                    </Typography>
+                                    &nbsp;<Tooltip arrow title={ <ToolTip text={scenePublishButtonNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+                                </Box>
+                                <Box className={classes.buttonRow}>
+                                    <LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public</LoadingButton>
+                                    <LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public (Unlisted)</LoadingButton>
+                                    <LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
+                                    {(isDraft || publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                                </Box>
+                            </Box>
+                        }
+                    />
+                </>
             )}
             {(objectType === eSystemObjectType.eSubject) && (
                 <Detail
@@ -306,21 +324,27 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     }
                 />
             )}
+            {(objectType === eSystemObjectType.eScene) && <Divider className={classes.sectionDivider} />}
             {licenseSource ? (
                 <Detail
                     label='License'
                     valueComponent={
-                        <Box className={classes.inheritedLicense}>
-                            <Box fontStyle='italic'>
-                                <Typography className={classes.value}>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
+                        <Box display='flex' flexDirection='column' width='100%'>
+                            <Box className={classes.inheritedLicense}>
+                                <Box fontStyle='italic'>
+                                    <Typography className={classes.value}>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
+                                </Box>
+                                <Typography className={classes.value}>{' inherited from '}</Typography>
+                                <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
+                                    <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
+                                </NewTabLink>
+                                &nbsp;<Tooltip arrow title={ <ToolTip text={licenseNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
                             </Box>
-                            <Typography className={classes.value}>{' inherited from '}</Typography>
-                            <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
-                                <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
-                            </NewTabLink>
-                            <LoadingButton onClick={onAssignInheritedLicense} className={classes.loadingBtn} loading={loading}>
-                                Assign License
-                            </LoadingButton>
+                            <Box className={classes.buttonRow}>
+                                <LoadingButton onClick={onAssignInheritedLicense} className={classes.loadingBtn} loading={loading}>
+                                    Assign License
+                                </LoadingButton>
+                            </Box>
                         </Box>
                     }
                 />
@@ -328,38 +352,46 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                 <Detail
                     label='License'
                     valueComponent={
-                        <Box className={classes.assignedLicense}>
-                            <Select name='License' className={classes.select}  style={{ width: '16rem' }} onChange={onLicenseUpdate} value={license}>
-                                <MenuItem value={0}>None</MenuItem>
-                                {licenseList.map(license => (
-                                    <MenuItem value={license.idLicense} key={license.idLicense}>
-                                        {license.Name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                            <LoadingButton onClick={onClearLicenseAssignment} loading={loading} className={classes.loadingBtn}>
-                                Clear Assignment
-                            </LoadingButton>
+                        <Box display='flex' flexDirection='column' width='100%'>
+                            <Box className={classes.assignedLicense}>
+                                <Select name='License' className={classes.select}  style={{ width: '16rem' }} onChange={onLicenseUpdate} value={license}>
+                                    <MenuItem value={0}>None</MenuItem>
+                                    {licenseList.map(license => (
+                                        <MenuItem value={license.idLicense} key={license.idLicense}>
+                                            {license.Name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                                &nbsp;<Tooltip arrow title={ <ToolTip text={licenseNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+                            </Box>
+                            <Box className={classes.buttonRow}>
+                                <LoadingButton onClick={onClearLicenseAssignment} loading={loading} className={classes.loadingBtn}>
+                                    Clear Assignment
+                                </LoadingButton>
+                            </Box>
                         </Box>
                     }
                 />
             )}
             {!hideRetired && (
-                <Detail
-                    label='Retired'
-                    name='retired'
-                    valueComponent={
-                        <CheckboxNoPadding
-                            id='retired'
-                            name='retired'
-                            disabled={disabled}
-                            checked={withDefaultValueBoolean(retired, false)}
-                            onChange={onRetiredUpdate}
-                            {...getUpdatedCheckboxProps(isRetiredUpdated)}
-                            color='primary'
-                        />
-                    }
-                />
+                <>
+                    <Divider className={classes.sectionDivider} />
+                    <Detail
+                        label='Retired'
+                        name='retired'
+                        valueComponent={
+                            <CheckboxNoPadding
+                                id='retired'
+                                name='retired'
+                                disabled={disabled}
+                                checked={withDefaultValueBoolean(retired, false)}
+                                onChange={onRetiredUpdate}
+                                {...getUpdatedCheckboxProps(isRetiredUpdated)}
+                                color='primary'
+                            />
+                        }
+                    />
+                </>
             )}
         </Box>
     );
@@ -409,14 +441,22 @@ function Detail(props: DetailProps): React.ReactElement {
 
 export default ObjectDetails;
 
-const scenePublishNotes =
+const scenePublishButtonNotes =
+`Public: transmits the scene package to EDAN and marks the EDAN record as searchable on 3d.si.edu. Scene downloads are sent if the license allows.
+.
+Public (Unlisted): transmits the scene package to EDAN, but the record is not searchable; it is accessible only via direct URL. Downloads are sent if the license allows.
+.
+Internal: transmits the scene package to EDAN, but access is restricted to users behind the Smithsonian firewall.
+.
+Unpublish: marks the EDAN package as inactive and not searchable.`;
+
+export const scenePublishRequirementsNotes =
 `In order to publish a scene to EDAN, the following criteria must be met:
 -The scene must have thumbnails.
 -The scene must be Posed and QC'd (and marked as such on the Details tab).
--The scene must be Approved for Publishing (and marked as such on the Details tab).
+-The scene must be Approved for Publication (and marked as such on the Details tab).
 -The license controlling the scene must allow for publishing (i.e. not "None" and not "Restricted").
-Clicking "Publish" transmits the scene package to EDAN and marks the EDAN record as searchable. Scene downloads will be sent, too, if the license allows it.
-Clicking "API Only" transmits the scene package to EDAN, but marks the EDAN record as not searchable.  As well, scene downloads are sent if allowed by the license.
-For published scenes, clicking "Unpublish" marks the scene package as inactive and not searchable.
-Changes made to scenes are only published to EDAN when the user makes use of "Publish", "API Only", or "Unpublish".
-Users must explicitly publish these changes to EDAN.`;
+Changes made to scenes are only published to EDAN when the user clicks "Publish", "API Only", "Internal", or "Unpublish". Users must explicitly publish these changes to EDAN.`;
+
+const licenseNotes =
+'The license assigned to this object. It controls whether the scene can be published to EDAN and whether downloads are made available. Licenses can be inherited from an ancestor (Unit, Project, Subject, or Media Group) or assigned directly to this object.';

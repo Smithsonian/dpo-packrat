@@ -164,6 +164,7 @@ type GetSystemObjectDetailsResult {
     publishedEnum: Int!
     publishable: Boolean!
     publishBlocker: String
+    isDraft: Boolean!
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!

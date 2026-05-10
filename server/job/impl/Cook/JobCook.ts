@@ -177,11 +177,12 @@ export abstract class JobCook<T> extends JobPackrat {
     }
 
     async signalCompletion(): Promise<void> {
-        // when the Cook job has compeleted and returned
+        // when the Cook job has completed and returned.
+        // cleanup is handled by updateEngines during recordSuccess/recordFailure,
+        // so this only needs to release waiters.
         this._complete = true;
         for (const mutex of this._completionMutexes)
             mutex.cancel();
-        await this.cleanupJob();
     }
 
     async waitForCompletion(timeout: number): Promise<H.IOResults> {
@@ -811,6 +812,49 @@ export abstract class JobCook<T> extends JobPackrat {
 
         // return success
         return baseName;
+    }
+
+    protected async sendJobNotification(params: {
+        success: boolean;
+        titlePrefix: string;
+        subjectName?: string;
+        sceneName?: string;
+        idSystemObjectModel?: number;
+        unitName?: string;
+        projectName?: string;
+        successUrl?: string;
+        extraContent?: string;
+    }): Promise<void> {
+        const { success, titlePrefix, subjectName, sceneName,
+            idSystemObjectModel, unitName, projectName,
+            successUrl, extraContent } = params;
+
+        let detailsMessage: string = '';
+        if (!success)
+            detailsMessage += `<b>Error: ${this._dbJobRun.Error}</b></br></br>\n`;
+        detailsMessage += `
+                <b>Scene Name</b>: ${sceneName ?? 'NA'}</br>
+                <b>Source Model</b>: ${idSystemObjectModel}</br></br>
+                <b>Unit</b>: ${unitName ?? 'NA'}</br>
+                <b>Subject</b>: ${subjectName ?? 'NA'}</br>
+                <b>Project</b>: ${projectName ?? 'NA'}</br>
+            `;
+        if (extraContent)
+            detailsMessage += extraContent;
+
+        const url: string = success
+            ? (successUrl ?? Config.http.clientUrl + '/workflow')
+            : Config.http.clientUrl + '/workflow';
+
+        await RK.sendMessage(
+            success ? RK.NotifyType.JOB_PASSED : RK.NotifyType.JOB_FAILED,
+            RK.NotifyGroup.USER,
+            `${titlePrefix} ${success ? 'Finished' : 'Failed'}: ${subjectName ?? 'Unknown'}`,
+            detailsMessage,
+            this._dbJobRun.DateStart ?? new Date(),
+            this._dbJobRun.DateEnd ?? undefined,
+            url.length > 0 ? { url, label: 'Details' } : undefined
+        );
     }
 
     protected async recordSuccess(output: string): Promise<boolean> {

@@ -13,6 +13,12 @@ export type JobIOResults = H.IOResults & {
     allowRetry?: boolean | undefined,
 };
 
+type UpdateEnginesResult = {
+    success: boolean;            // true only if ALL operations succeeded
+    cleanupFailed: boolean;      // post-processing of Cook results failed (data integrity)
+    workflowUpdateFailed: boolean; // WorkflowStep DB update failed (system state)
+};
+
 const JOB_RETRY_COUNT = 2;
 
 export abstract class JobPackrat implements JOB.IJob {
@@ -87,25 +93,51 @@ export abstract class JobPackrat implements JOB.IJob {
     }
     // #endregion
 
-    private async updateEngines(updateWorkflowEngine: boolean, sendJobCompletion: boolean = false): Promise<boolean> {
-        let res: boolean = true;
+    private async updateEngines(updateWorkflowEngine: boolean, sendJobCompletion: boolean = false): Promise<UpdateEnginesResult> {
+        const result: UpdateEnginesResult = { success: true, cleanupFailed: false, workflowUpdateFailed: false };
+
+        // run cleanup BEFORE notifying the workflow so the DB status is finalized
+        // before anyone reads it. cleanup only runs on the success path — on
+        // failure/cancel the Cook results don't need post-processing.
+        if (sendJobCompletion && this._dbJobRun.getStatus() === COMMON.eWorkflowJobRunStatus.eDone) {
+            const cleanupRes: H.IOResults = await this.cleanupJob();
+            if (!cleanupRes.success) {
+                RK.logError(RK.LogSection.eJOB,'cleanup failed','post-processing failed, reverting success to error',{ idJobRun: this._dbJobRun.idJobRun, error: cleanupRes.error },'Job.Packrat');
+                result.cleanupFailed = true;
+                result.success = false;
+
+                // revert job status so the workflow and all downstream consumers
+                // see the correct final state on their first read
+                this._results = { success: false, error: cleanupRes.error ?? 'Post-processing failed after Cook job success' };
+                this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eError);
+                this._dbJobRun.Error = cleanupRes.error ?? 'Post-processing failed after Cook job success';
+                await this._dbJobRun.update();
+                await this.appendToReportAndLog(`JobPackrat [${this.name()}] Success Reverted: ${cleanupRes.error}`, true);
+            }
+        }
+
+        // notify the workflow engine of the (now finalized) job status.
+        // this updates the WorkflowStep in the DB — it is system state, not a notification.
         if (updateWorkflowEngine) {
             const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
             if (!workflowEngine) {
                 RK.logError(RK.LogSection.eJOB,'update engines failed','no WorkflowFactory instance',{ idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
-                return false;
+                result.workflowUpdateFailed = true;
+                result.success = false;
+            } else {
+                const wfResult: boolean = await workflowEngine.jobUpdated(this._dbJobRun.idJobRun);
+                if (!wfResult) {
+                    RK.logError(RK.LogSection.eJOB,'update engines failed','workflow engine jobUpdated returned false',{ idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                    result.workflowUpdateFailed = true;
+                    result.success = false;
+                }
             }
-            res = await workflowEngine.jobUpdated(this._dbJobRun.idJobRun) && res;
         }
 
-        if (sendJobCompletion) {
+        if (sendJobCompletion)
             await this._jobEngine.jobCompleted(this);
-            const cleanupRes: H.IOResults = await this.cleanupJob();
-            if (!cleanupRes.success)
-                RK.logError(RK.LogSection.eJOB,'execute job failed','failed to cleanup job',{ idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
-        }
 
-        return res;
+        return result;
     }
 
     // #region JobPackrat helper methods
@@ -139,18 +171,17 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eCreated);
 
             // update the status/values of our job
-            let result: boolean = await this._dbJobRun.update();
+            const result: boolean = await this._dbJobRun.update();
             if(!result) {
                 RK.logError(RK.LogSection.eJOB,'job create failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             }
 
             // update our workflow engine with new job status
-            result = await this.updateEngines(true); // was: don't block
-            if(!result) {
+            const engineResult = await this.updateEngines(true);
+            if(!engineResult.success)
                 RK.logError(RK.LogSection.eJOB,'job create failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
-                return false;
-            } else
+            else
                 RK.logInfo(RK.LogSection.eJOB,'job created',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
         }
         return updated;
@@ -163,18 +194,17 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eWaiting);
 
             // update the status/values of our job
-            let result: boolean = await this._dbJobRun.update();
+            const result: boolean = await this._dbJobRun.update();
             if(!result) {
                 RK.logError(RK.LogSection.eJOB,'job waiting failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             }
 
             // update our workflow engine with new job status
-            result = await this.updateEngines(true); // was: don't block
-            if(!result) {
+            const engineResult = await this.updateEngines(true);
+            if(!engineResult.success)
                 RK.logError(RK.LogSection.eJOB,'job waiting failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
-                return false;
-            } else
+            else
                 RK.logInfo(RK.LogSection.eJOB,'job waiting',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
         }
         return updated;
@@ -188,18 +218,17 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eRunning);
 
             // update the status/values of our job
-            let result: boolean = await this._dbJobRun.update();
+            const result: boolean = await this._dbJobRun.update();
             if(!result) {
                 RK.logError(RK.LogSection.eJOB,'job start failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
                 return false;
             }
 
             // update our workflow engine with new job status
-            result = await this.updateEngines(true); // was: don't block
-            if(!result) {
+            const engineResult = await this.updateEngines(true);
+            if(!engineResult.success)
                 RK.logError(RK.LogSection.eJOB,'job start failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
-                return false;
-            } else
+            else
                 RK.logInfo(RK.LogSection.eJOB,'job start',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idCookJob: idJob },'Job.Packrat');
         }
         return updated;
@@ -217,7 +246,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eDone);
 
             // update the status/values of our job
-            let result: boolean = await this._dbJobRun.update();
+            const result: boolean = await this._dbJobRun.update();
             if(!result) {
                 RK.logError(RK.LogSection.eJOB,'job record success failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, config: this._dbJobRun.Configuration },'Job.Packrat');
                 return false;
@@ -231,13 +260,19 @@ export abstract class JobPackrat implements JOB.IJob {
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record success','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
-            // update our workflow engine with new job status
-            result = await this.updateEngines(true, true); // was: don't block
-            if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record success failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+            // run cleanup, notify workflow, and complete the job.
+            // if cleanup fails, updateEngines reverts the status to eError in the DB
+            // before the workflow is notified, ensuring a single consistent state.
+            const engineResult: UpdateEnginesResult = await this.updateEngines(true, true);
+            if (engineResult.cleanupFailed) {
+                RK.logError(RK.LogSection.eJOB,'job record success reverted','post-processing failed after Cook success',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
-            } else
-                RK.logInfo(RK.LogSection.eJOB,'job record success',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
+            }
+            if (engineResult.workflowUpdateFailed) {
+                RK.logError(RK.LogSection.eJOB,'job record success','workflow step update failed, workflow state may be inaccurate',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                await this.appendToReportAndLog(`JobPackrat [${this.name()}] Warning: workflow status update failed, workflow screen may not reflect completion`, true);
+            }
+            RK.logInfo(RK.LogSection.eJOB,'job record success',undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
         }
         return updated;
     }
@@ -255,7 +290,7 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.Error = errorMsg ?? '';
 
             // update the status/values of our job
-            let result: boolean = await this._dbJobRun.update();
+            const result: boolean = await this._dbJobRun.update();
             if(!result) {
                 RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, config: this._dbJobRun.Configuration },'Job.Packrat');
                 return false;
@@ -270,13 +305,13 @@ export abstract class JobPackrat implements JOB.IJob {
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
-            // update our workflow engine with new job status
-            result = await this.updateEngines(true, true); // was: don't block
-            if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
-                return false;
-            } else
-                RK.logInfo(RK.LogSection.eJOB,'job record failure',this._dbJobRun.Error,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
+            // notify workflow and complete the job.
+            const engineResult: UpdateEnginesResult = await this.updateEngines(true, true);
+            if (engineResult.workflowUpdateFailed) {
+                RK.logError(RK.LogSection.eJOB,'job record failure','workflow step update failed, workflow state may be inaccurate',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                await this.appendToReportAndLog(`JobPackrat [${this.name()}] Warning: workflow status update failed, workflow screen may not reflect failure`, true);
+            }
+            RK.logInfo(RK.LogSection.eJOB,'job record failure',this._dbJobRun.Error,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
         }
 
         return updated;
@@ -284,7 +319,7 @@ export abstract class JobPackrat implements JOB.IJob {
 
     protected async recordCancel(output: string | null, errorMsg?: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eCancelled);
-        if (!updated) {
+        if (updated) {
             if (errorMsg) {
                 this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`, true);
                 this._dbJobRun.Error = errorMsg;
@@ -298,9 +333,9 @@ export abstract class JobPackrat implements JOB.IJob {
             this._dbJobRun.Output = output ?? this._dbJobRun.Output; // if we don't have output, keep what we've got.
 
             // update the status/values of our job
-            let result: boolean = await this._dbJobRun.update();
+            const result: boolean = await this._dbJobRun.update();
             if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                RK.logError(RK.LogSection.eJOB,'job record cancel failed','cannot update JobRun',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
                 return false;
             }
 
@@ -311,15 +346,15 @@ export abstract class JobPackrat implements JOB.IJob {
             if (this._report)
                 await this._report.append(`${hrefDownload}<br/>\n`);
             else
-                RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
+                RK.logWarning(RK.LogSection.eJOB,'job record cancel','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
-            // update our workflow engine with new job status
-            result = await this.updateEngines(true, true); // was: don't block
-            if(!result) {
-                RK.logError(RK.LogSection.eJOB,'job record failure failed','cannot update job engines',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
-                return false;
-            } else
-                RK.logInfo(RK.LogSection.eJOB,'job record failure',errorMsg ?? undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
+            // notify workflow and complete the job
+            const engineResult: UpdateEnginesResult = await this.updateEngines(true, true);
+            if (engineResult.workflowUpdateFailed) {
+                RK.logError(RK.LogSection.eJOB,'job record cancel','workflow step update failed, workflow state may be inaccurate',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
+                await this.appendToReportAndLog(`JobPackrat [${this.name()}] Warning: workflow status update failed, workflow screen may not reflect cancellation`, true);
+            }
+            RK.logInfo(RK.LogSection.eJOB,'job record cancel',errorMsg ?? undefined,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload },'Job.Packrat');
         }
 
         return updated;

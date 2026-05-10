@@ -376,8 +376,8 @@ export function LicenseEnumToString(eState: eLicense): string {
 
 export function PublishedStateEnumToString(eState: ePublishedState): string {
     switch (eState) {
-        case ePublishedState.eAPIOnly:                  return 'API Only';
-        case ePublishedState.ePublished:                return 'Published';
+        case ePublishedState.eAPIOnly:                  return 'Public (Unlisted)';
+        case ePublishedState.ePublished:                return 'Public';
         case ePublishedState.eInternal:                 return 'Internal';
         default:
         case ePublishedState.eNotPublished:             return 'Not Published';
