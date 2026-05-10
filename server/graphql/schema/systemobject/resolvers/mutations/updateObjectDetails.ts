@@ -32,17 +32,20 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         return sendResult(false,'update object details failed',`Error fetching object ${idSystemObject}; update failed`);
 
     if (!SO.Retired && data.Retired) {
-        if (!await SO.retireObject())
+        // Root retire emits a semantic eActionRetire row; its idAudit threads
+        // into cascade children as parentRetirement.idAudit so the full
+        // retirement tree can be reconstructed from the Audit table.
+        const rootResult = await SO.retireObjectWithContext({ reason: null });
+        if (!rootResult.success)
             return sendResult(false,'update object details failed','Error retiring object; update failed');
-        // Cascade retirement to child Assets
-        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, true);
+        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, true, rootResult.idAudit);
         if (!cascadeResult.success)
             return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error retiring child assets');
     } else if (SO.Retired && !data.Retired) {
-        if (!await SO.reinstateObject())
+        const rootResult = await SO.reinstateObjectWithContext({ reason: null });
+        if (!rootResult.success)
             return sendResult(false,'update object details failed','Error reinstating object; update failed');
-        // Cascade reinstatement to child Assets
-        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, false);
+        const cascadeResult = await cascadeRetirementToAssets(idSystemObject, false, rootResult.idAudit);
         if (!cascadeResult.success)
             return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error reinstating child assets');
     }
@@ -587,7 +590,7 @@ function computeNewName(oldName: string, oldTitle: string | null, newTitle: stri
  * 2. Retire direct Assets
  * For Scenes, uses fetchFromSceneByVersion to get all assets including model assets.
  */
-async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean): Promise<H.IOResults> {
+async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean, parentAuditId: number | null = null): Promise<H.IOResults> {
     const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if (!SO) {
         return { success: false, error: `Unable to fetch SystemObject ${idSystemObject}` };
@@ -616,11 +619,10 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
         for (const derivedSO of orderedDerived) {
             if (retire) {
                 if (!derivedSO.Retired) {
-                    if (!await derivedSO.retireObject()) {
+                    const res = await derivedSO.retireObjectWithContext({ parentAuditId });
+                    if (!res.success)
                         return { success: false, error: `Failed to retire derived object SO ${derivedSO.idSystemObject}` };
-                    }
-                    // Recursively cascade to the derived object's assets and children
-                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire);
+                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId);
                     if (!cascadeResult.success) {
                         return cascadeResult;
                     }
@@ -628,11 +630,10 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
                 }
             } else {
                 if (derivedSO.Retired) {
-                    if (!await derivedSO.reinstateObject()) {
+                    const res = await derivedSO.reinstateObjectWithContext({ parentAuditId });
+                    if (!res.success)
                         return { success: false, error: `Failed to reinstate derived object SO ${derivedSO.idSystemObject}` };
-                    }
-                    // Recursively cascade to the derived object's assets and children
-                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire);
+                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId);
                     if (!cascadeResult.success) {
                         return cascadeResult;
                     }
@@ -660,7 +661,7 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
                     continue;
                 }
 
-                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${idAsset}`, idSystemObject);
+                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${idAsset}`, idSystemObject, parentAuditId);
                 if (!result.success) {
                     return result;
                 }
@@ -677,7 +678,7 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
                     continue;
                 }
 
-                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${asset.idAsset}`, idSystemObject);
+                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${asset.idAsset}`, idSystemObject, parentAuditId);
                 if (!result.success) {
                     return result;
                 }
@@ -691,19 +692,19 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
 /**
  * Helper to retire or reinstate a single SystemObject with logging.
  */
-async function retireOrReinstateObject(so: DBAPI.SystemObject, retire: boolean, objectDesc: string, parentIdSystemObject: number): Promise<H.IOResults> {
+async function retireOrReinstateObject(so: DBAPI.SystemObject, retire: boolean, objectDesc: string, parentIdSystemObject: number, parentAuditId: number | null = null): Promise<H.IOResults> {
     if (retire) {
         if (!so.Retired) {
-            if (!await so.retireObject()) {
+            const res = await so.retireObjectWithContext({ parentAuditId });
+            if (!res.success)
                 return { success: false, error: `Failed to retire ${objectDesc}` };
-            }
             RK.logInfo(RK.LogSection.eGQL, 'cascade retirement', `Retired ${objectDesc} (SO ${so.idSystemObject})`, { parentIdSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
         }
     } else {
         if (so.Retired) {
-            if (!await so.reinstateObject()) {
+            const res = await so.reinstateObjectWithContext({ parentAuditId });
+            if (!res.success)
                 return { success: false, error: `Failed to reinstate ${objectDesc}` };
-            }
             RK.logInfo(RK.LogSection.eGQL, 'cascade reinstatement', `Reinstated ${objectDesc} (SO ${so.idSystemObject})`, { parentIdSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
         }
     }

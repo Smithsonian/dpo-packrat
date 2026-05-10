@@ -150,6 +150,92 @@ export class AuditFactory {
     }
 
     /**
+     * Like emit() but always writes the row eagerly (never buffered) and
+     * returns the created idAudit. Use this when a follow-up row needs to
+     * reference the first row's primary key — e.g. retirement-cascade children
+     * carrying Data.parentRetirement.idAudit.
+     *
+     * Still participates in the active transaction when one is open (via
+     * DBConnection.prisma auto-resolving to the tx client), so the row commits
+     * atomically with the surrounding business write.
+     *
+     * Log-only tiers return null because no DB row exists.
+     */
+    static async emitWithId(args: EmitArgs): Promise<number | null> {
+        const action: eAuditType = args.action;
+        const actor: Actor = args.actor;
+
+        if (!Actor.isValid(actor)) {
+            RK.logError(RK.LogSection.eAUDIT, 'emitWithId refused invalid actor',
+                'both idUser and SystemActor would be null', { actor, action }, 'Audit.Factory');
+            return null;
+        }
+
+        const cols = Actor.toAuditColumns(actor);
+        const AuditDate: Date = args.when ?? new Date();
+        const DBObjectType: eDBObjectType | null = args.target?.eObjectType ?? null;
+        const idDBObject: number | null = args.target?.idObject ?? null;
+        const CorrelationId: string | null = args.correlationId ?? null;
+
+        if (AuditFactory.isLogOnlyTarget(DBObjectType)) {
+            // Log-only has no persistent row; delegate to emit() for the log
+            // line and return null so the caller knows there is no id to link.
+            await AuditFactory.emit(args);
+            return null;
+        }
+
+        let idSystemObject: number | null = args.idSystemObject ?? null;
+        if (idSystemObject === null && args.target && args.target.eObjectType !== eNonSystemObjectType.eAudit) {
+            try {
+                const SOInfo = await CACHE.SystemObjectCache.getSystemFromObjectID(args.target);
+                if (SOInfo) idSystemObject = SOInfo.idSystemObject;
+            } catch (err) {
+                RK.logError(RK.LogSection.eAUDIT, 'idSystemObject resolve failed',
+                    err instanceof Error ? err.message : String(err),
+                    { target: args.target }, 'Audit.Factory');
+            }
+        }
+
+        const Data: string | null = args.payload === undefined
+            ? null
+            : JSON.stringify(args.payload, H.Helpers.stringifyDatabaseRow);
+
+        try {
+            const row = await DBC.DBConnection.prisma.audit.create({
+                data: {
+                    User:           cols.idUser ? { connect: { idUser: cols.idUser } } : undefined,
+                    AuditDate,
+                    AuditType:      action,
+                    DBObjectType:   DBObjectType ?? undefined,
+                    idDBObject:     idDBObject ?? undefined,
+                    SystemObject:   idSystemObject ? { connect: { idSystemObject } } : undefined,
+                    Data,
+                    SystemActor:    cols.SystemActor,
+                    CorrelationId,
+                },
+                select: { idAudit: true },
+            });
+
+            // Queue invalidation: inside a wrapped tx it fires post-commit;
+            // outside a tx it fires immediately.
+            const LS = ASL.getStore();
+            if (idSystemObject) {
+                if (LS?.invalidationQueue)
+                    LS.invalidationQueue.add(idSystemObject);
+                else
+                    SystemObjectInvalidation.invalidate(idSystemObject);
+            }
+            return row.idAudit;
+        } catch (err) {
+            RK.logCritical(RK.LogSection.eAUDIT, 'audit write failed (withId)',
+                err instanceof Error ? err.message : String(err),
+                { action, actor: Actor.describe(actor), target: args.target, idSystemObject },
+                'Audit.Factory');
+            return null;
+        }
+    }
+
+    /**
      * True when the target entity type is enumerated in Config.audit.logOnlyObjectTypes.
      * Log-only targets bypass the Audit table and land in OpenObserve instead.
      */

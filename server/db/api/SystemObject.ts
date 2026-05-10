@@ -7,6 +7,10 @@ import * as H from '../../utils/helpers';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { RecordKeeper as RK  } from '../../records/recordKeeper';
 import { withAuditTransaction } from '../../audit/withAuditTransaction';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { Actor } from '../../audit/Actor';
+import { ASL } from '../../utils/localStore';
+import { eAuditType, eNonSystemObjectType } from './ObjectType';
 
 export interface SystemObjectBased {
     fetchSystemObject(): Promise<SystemObject | null>;
@@ -48,6 +52,38 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
         throw new ReferenceError('DBAPI.SystemObject.update() should never be called; used the explict update methods of objects linked to SystemObject');
     }
 
+    /**
+     * Optional context for a retire or reinstate write. When `reason` is set,
+     * a semantic eActionRetire / eActionReinstate audit row is emitted in
+     * addition to the base eDBUpdate. parentAuditId links a cascade child to
+     * the root retire's audit row so the retirement tree can be reconstructed
+     * from the Audit table.
+     */
+    static retirementContext: {
+        actor?: Actor;
+        reason?: string | null;
+        parentAuditId?: number | null;
+    };
+
+    /**
+     * Result of a retire that wrote a semantic audit row; surfaced so a
+     * caller running a cascade can thread the resulting idAudit into each
+     * child's retirement as parentRetirement.idAudit.
+     */
+    async retireObjectWithContext(ctx?: { actor?: Actor; reason?: string | null; parentAuditId?: number | null }):
+    Promise<{ success: boolean; idAudit: number | null }> {
+        if (this.Retired) return { success: true, idAudit: null };
+        this.Retired = true;
+        return this.updateRetiredWithContext(eAuditType.eActionRetire, ctx);
+    }
+
+    async reinstateObjectWithContext(ctx?: { actor?: Actor; reason?: string | null; parentAuditId?: number | null }):
+    Promise<{ success: boolean; idAudit: number | null }> {
+        if (!this.Retired) return { success: true, idAudit: null };
+        this.Retired = false;
+        return this.updateRetiredWithContext(eAuditType.eActionReinstate, ctx);
+    }
+
     static async retireSystemObject(SOBased: SystemObjectBased): Promise<boolean> {
         const SO: SystemObject | null = await SOBased.fetchSystemObject();
         return (SO != null) ? await SO.retireObject() : /* istanbul ignore next */ false;
@@ -59,37 +95,64 @@ export class SystemObject extends DBC.DBObject<P.SystemObject> implements P.Syst
     }
 
     async retireObject(): Promise<boolean> {
-        if (this.Retired)
-            return true;
-        this.Retired = true;
-        return this.updateRetired();
+        const { success } = await this.retireObjectWithContext();
+        return success;
     }
 
     async reinstateObject(): Promise<boolean> {
-        if (!this.Retired)
-            return true;
-        this.Retired = false;
-        return this.updateRetired();
+        const { success } = await this.reinstateObjectWithContext();
+        return success;
     }
 
-    private async updateRetired(): Promise<boolean> {
-        // Atomic: the Retired flag flip and its audit row commit together.
-        // The audit emission buffers onto the tx; the post-commit helper
-        // fires cache + Solr invalidation only after the tx is durable.
+    private async updateRetiredWithContext(
+        semanticAction: eAuditType.eActionRetire | eAuditType.eActionReinstate,
+        ctx?: { actor?: Actor; reason?: string | null; parentAuditId?: number | null },
+    ): Promise<{ success: boolean; idAudit: number | null }> {
+        // Atomic: the Retired flag flip, the base eDBUpdate audit, and the
+        // semantic eActionRetire/eActionReinstate row all commit together.
         try {
-            return await withAuditTransaction(async () => {
+            let idAuditOut: number | null = null;
+            const success = await withAuditTransaction(async () => {
                 await this.audit(eEventKey.eDBUpdate);
                 const { idSystemObject, Retired } = this;
                 const updated = await DBC.DBConnection.prisma.systemObject.update({
                     where: { idSystemObject },
                     data: { Retired },
                 });
-                return !!updated;
+                if (!updated) return false;
+
+                // Emit the semantic row only when the caller provided context;
+                // callers that went through the legacy no-arg path get the
+                // prior behavior (just the eDBUpdate row).
+                const hasContext = !!(ctx && (ctx.actor || ctx.reason || ctx.parentAuditId != null));
+                if (hasContext) {
+                    const actor: Actor | undefined = ctx?.actor ?? ASL.getStore()?.getActor();
+                    if (!actor) {
+                        RK.logError(RK.LogSection.eAUDIT, 'retirement semantic skipped',
+                            'no Actor available', { idSystemObject, semanticAction },
+                            'DB.SystemObject');
+                    } else {
+                        idAuditOut = await AuditFactory.emitWithId({
+                            action: semanticAction,
+                            actor,
+                            target: { idObject: idSystemObject, eObjectType: eNonSystemObjectType.eSystemObject },
+                            idSystemObject,
+                            payload: {
+                                reason: ctx?.reason ?? null,
+                                parentRetirement: ctx?.parentAuditId != null
+                                    ? { idAudit: ctx.parentAuditId } : null,
+                            },
+                        });
+                    }
+                }
+                return true;
             });
+            return { success, idAudit: idAuditOut };
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB, 'update retired failed',
-                H.Helpers.getErrorString(error), { id: this.fetchID() }, 'DB.SystemObject');
-            return false;
+                H.Helpers.getErrorString(error),
+                { id: this.fetchID(), semanticAction }, 'DB.SystemObject');
+            return { success: false, idAudit: null };
         }
     }
 
