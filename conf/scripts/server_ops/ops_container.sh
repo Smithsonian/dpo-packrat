@@ -352,17 +352,23 @@ op_predeploy() {
     local deploy_user=""
     local clean_cache=false
     local remount_tmp=false
+    # Anything still "unset" after arg parse is prompted for (when interactive)
+    # instead of silently defaulting to false.
+    local clean_cache_set=false
+    local remount_tmp_set=false
 
     # env may already be set via the leading env token; the flag parser
     # below is agnostic to that.
     while (( $# > 0 )); do
         case "$1" in
-            -u|--user)       deploy_user="${2:-}"; shift 2; continue ;;
-            --user=*)        deploy_user="${1#--user=}" ;;
-            -c|--clean-cache) clean_cache=true ;;
-            --remount-tmp)   remount_tmp=true ;;
+            -u|--user)        deploy_user="${2:-}"; shift 2; continue ;;
+            --user=*)         deploy_user="${1#--user=}" ;;
+            -c|--clean-cache) clean_cache=true;  clean_cache_set=true ;;
+            --no-clean-cache) clean_cache=false; clean_cache_set=true ;;
+            --remount-tmp)    remount_tmp=true;  remount_tmp_set=true ;;
+            --no-remount-tmp) remount_tmp=false; remount_tmp_set=true ;;
             -h|--help)
-                echo "usage: ops_container.sh pre-deploy <env> [--user <u>] [--clean-cache] [--remount-tmp]"
+                echo "usage: ops_container.sh pre-deploy <env> [--user <u>] [--clean-cache|--no-clean-cache] [--remount-tmp|--no-remount-tmp]"
                 return 0
                 ;;
             *)
@@ -397,6 +403,17 @@ op_predeploy() {
             deploy_user="${input_user:-$USER}"
         else
             deploy_user="$USER"
+        fi
+    fi
+
+    if ! $clean_cache_set && [[ -t 0 ]]; then
+        if confirm "Also prune the BuildKit builder cache? (slower next build)"; then
+            clean_cache=true
+        fi
+    fi
+    if ! $remount_tmp_set && [[ -t 0 ]]; then
+        if confirm "Remount /tmp with exec for this user?"; then
+            remount_tmp=true
         fi
     fi
 

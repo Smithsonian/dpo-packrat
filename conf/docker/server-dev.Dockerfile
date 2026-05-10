@@ -5,8 +5,9 @@ WORKDIR /app
 ADD package.json .
 COPY . .
 
-# Remove client to prevent duplication
-RUN rm -rf client
+# Drop client (duplication) and e2e (Playwright's postinstall pulls Chromium,
+# which is irrelevant to the server image).
+RUN rm -rf client e2e
 
 # Install perl, needed by exiftool, and git, needed to fetch npm-server-webdav
 RUN apk update

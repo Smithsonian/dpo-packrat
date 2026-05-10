@@ -4,8 +4,9 @@ WORKDIR /app
 ADD package.json yarn.lock ./
 COPY . .
 
-# Remove server from client build
-RUN rm -rf server
+# Drop server (not needed) and e2e (Playwright's postinstall pulls Chromium,
+# which is irrelevant to the client image).
+RUN rm -rf server e2e
 
 # Install bash
 RUN apk update
