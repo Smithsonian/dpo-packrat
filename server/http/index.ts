@@ -5,6 +5,7 @@ import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { resolveActorFromRequest } from '../audit/resolveActor';
 import { Actor } from '../audit/Actor';
+import { JobAuditRetention } from '../job/impl/NS/JobAuditRetention';
 import { Config } from '../config';
 import * as H from '../utils/helpers';
 import { User } from '../db/api/User';
@@ -135,6 +136,12 @@ export class HttpServer {
         // NOTIFY: set our slack ID groups, pulling from the database
         RK.setSlackIDsForGroup(RK.NotifyGroup.ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
         RK.logInfo(RK.LogSection.eSYS,'system started: Slack Notifications',undefined,notifySlackResult.data,'HttpServer');
+
+        // Audit retention job: schedule outside NODE_ENV=test so jest runs don't
+        // leave a node-schedule timer registered.
+        if (process.env.NODE_ENV !== 'test') {
+            JobAuditRetention.schedule();
+        }
 
         // return our response
         RK.logInfo(RK.LogSection.eSYS,'Packrat server running...',undefined,{ environment: Config.environment.type, port: Config.http.port, url: Config.http.serverUrl },'HttpServer');

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Audit as AuditBase, User as UserBase } from '@prisma/client';
+import { Audit as AuditBase, User as UserBase, Prisma } from '@prisma/client';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
@@ -127,6 +127,95 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'fetchAuthDenialsByDateRange failed',H.Helpers.getErrorString(error),{ startDate, endDate },'DB.Audit');
             return [];
+        }
+    }
+
+    /**
+     * Null out Data for one batch of rows whose AuditType is in `tiers` and
+     * whose AuditDate is older than `cutoff`. Returns the rows affected.
+     * Used by the retention job's skeleton pass on STANDARD and TRANSIENT
+     * tiers — the row shell survives forever; only the payload is dropped.
+     *
+     * Before the UPDATE runs we snapshot the affected rows and emit them as
+     * a log line with `audit=true` so OpenObserve preserves the about-to-be-
+     * dropped Data for the configured log retention window. This gives
+     * operators a recovery path if a tier-window mistake nukes a payload that
+     * was still wanted.
+     */
+    static async skeletonBefore(tiers: eAuditType[], cutoff: Date, batchSize: number): Promise<number> {
+        if (tiers.length === 0 || batchSize <= 0) return 0;
+        try {
+            const inList = Prisma.join(tiers);
+            const target = await DBC.DBConnection.prisma.audit.findMany({
+                where: {
+                    AuditType: { in: tiers as number[] },
+                    AuditDate: { lt: cutoff },
+                    Data: { not: null },
+                },
+                take: batchSize,
+            });
+
+            if (target.length > 0) {
+                RK.logInfo(RK.LogSection.eAUDIT, 'retention skeleton snapshot',
+                    `nulling Data on ${target.length} audit row(s)`,
+                    { count: target.length, cutoff, rows: target },
+                    'DB.Audit', /* audit */ true);
+            }
+
+            const result = await DBC.DBConnection.prisma.$executeRaw`
+                UPDATE Audit SET Data = NULL
+                WHERE AuditType IN (${inList})
+                  AND AuditDate < ${cutoff}
+                  AND Data IS NOT NULL
+                LIMIT ${batchSize}`;
+            return Number(result);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB, 'skeletonBefore failed',
+                H.Helpers.getErrorString(error),
+                { tiersCount: tiers.length, cutoff, batchSize }, 'DB.Audit');
+            return 0;
+        }
+    }
+
+    /**
+     * Delete one batch of rows whose AuditType is in `tiers` and whose
+     * AuditDate is older than `cutoff`. Returns the rows affected.
+     * Used by the retention job's delete pass on TRANSIENT tier.
+     *
+     * Before the DELETE runs we snapshot the full row content and emit it as
+     * a log line with `audit=true` so the deletion is itself audited and the
+     * row content is preserved in OpenObserve for its retention window.
+     */
+    static async deleteBefore(tiers: eAuditType[], cutoff: Date, batchSize: number): Promise<number> {
+        if (tiers.length === 0 || batchSize <= 0) return 0;
+        try {
+            const inList = Prisma.join(tiers);
+            const target: AuditBase[] = await DBC.DBConnection.prisma.audit.findMany({
+                where: {
+                    AuditType: { in: tiers as number[] },
+                    AuditDate: { lt: cutoff },
+                },
+                take: batchSize,
+            });
+
+            if (target.length > 0) {
+                RK.logInfo(RK.LogSection.eAUDIT, 'retention delete snapshot',
+                    `deleting ${target.length} audit row(s)`,
+                    { count: target.length, cutoff, rows: target },
+                    'DB.Audit', /* audit */ true);
+            }
+
+            const result = await DBC.DBConnection.prisma.$executeRaw`
+                DELETE FROM Audit
+                WHERE AuditType IN (${inList})
+                  AND AuditDate < ${cutoff}
+                LIMIT ${batchSize}`;
+            return Number(result);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB, 'deleteBefore failed',
+                H.Helpers.getErrorString(error),
+                { tiersCount: tiers.length, cutoff, batchSize }, 'DB.Audit');
+            return 0;
         }
     }
 
