@@ -6,6 +6,8 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import * as COMMON from '@dpo-packrat/common';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
 
 export default async function clearLicenseAssignment(_: Parent, args: MutationClearLicenseAssignmentArgs, context: Context): Promise<ClearLicenseAssignmentResult> {
     const { input: { idSystemObject, clearAll } } = args;
@@ -25,6 +27,16 @@ export default async function clearLicenseAssignment(_: Parent, args: MutationCl
 
     const LRNew: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
     const LicenseNew: DBAPI.License | undefined = LRNew?.License ?? undefined;
+
+    await AuditFactory.emitSemantic({
+        action: eAuditType.eActionClearLicense,
+        idSystemObject,
+        payload: {
+            clearAll: Boolean(clearAll),
+            before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+            after:  LicenseNew ? { idLicense: LicenseNew.idLicense, Name: LicenseNew.Name, RestrictLevel: LicenseNew.RestrictLevel } : null,
+        },
+    });
 
     // If this is a scene, handle license changes:
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);

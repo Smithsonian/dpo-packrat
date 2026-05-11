@@ -5,6 +5,9 @@ import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import { eEventKey } from '../../event/interface/EventEnums';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { eAuditType } from './ObjectType';
+import * as COMMON from '@dpo-packrat/common';
 
 export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
@@ -62,10 +65,22 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 }));
 
             // Audit if someone marks this scene as QC'd
-            if (ApprovedForPublication)
+            if (ApprovedForPublication) {
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
-            if (PosedAndQCd)
+                AuditFactory.emitSemantic({
+                    action: eAuditType.eActionApproveForPublication,
+                    target: { idObject: this.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                    payload: { before: { ApprovedForPublication: false }, after: { ApprovedForPublication: true } },
+                });
+            }
+            if (PosedAndQCd) {
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
+                AuditFactory.emitSemantic({
+                    action: eAuditType.eActionPoseAndQC,
+                    target: { idObject: this.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                    payload: { before: { PosedAndQCd: false }, after: { PosedAndQCd: true } },
+                });
+            }
             return true;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Scene');
@@ -90,10 +105,28 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
             }) ? true : /* istanbul ignore next */ false;
 
             // Audit if someone marks this scene as QC'd
-            if (ApprovedForPublication && !ApprovedForPublicationOrig)
+            if (ApprovedForPublication && !ApprovedForPublicationOrig) {
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
-            if (PosedAndQCd && !PosedAndQCdOrig)
+                AuditFactory.emitSemantic({
+                    action: eAuditType.eActionApproveForPublication,
+                    target: { idObject: idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                    payload: {
+                        before: { ApprovedForPublication: false },
+                        after:  { ApprovedForPublication: true },
+                    },
+                });
+            }
+            if (PosedAndQCd && !PosedAndQCdOrig) {
                 this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
+                AuditFactory.emitSemantic({
+                    action: eAuditType.eActionPoseAndQC,
+                    target: { idObject: idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                    payload: {
+                        before: { PosedAndQCd: false },
+                        after:  { PosedAndQCd: true },
+                    },
+                });
+            }
             return retValue;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Scene');

@@ -26,6 +26,8 @@ import * as COMMON from '@dpo-packrat/common';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
 import * as fs from 'fs';
 
 type ModelInfo = {
@@ -255,6 +257,27 @@ class IngestDataWorker extends ResolverBase {
         // notify workflow engine about this ingestion:
         if (!await this.sendWorkflowIngestionEvent(ingestResMap, modelTransformUpdated))
             return { success: false, message: 'failure to notify workflow engine about ingestion event' };
+
+        // Single semantic row marking the ingest event. The ~30 sub-create CRUD
+        // rows that already emitted alongside cover forensic detail; this row
+        // is the operator-visible summary.
+        const idItem: number | null = itemDB ? itemDB.idItem : null;
+        let idSystemObjectAnchor: number | null = null;
+        if (itemDB) {
+            const SOIItem: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromItem(itemDB);
+            idSystemObjectAnchor = SOIItem ? SOIItem.idSystemObject : null;
+        }
+        await AuditFactory.emitSemantic({
+            action: eAuditType.eActionIngest,
+            target: idItem ? { idObject: idItem, eObjectType: COMMON.eSystemObjectType.eItem } : undefined,
+            idSystemObject: idSystemObjectAnchor,
+            payload: {
+                mode: { ingestNew: this.ingestNew, ingestUpdate: this.ingestUpdate, ingestAttachment: this.ingestAttachment },
+                kinds: { photogrammetry: this.ingestPhotogrammetry, model: this.ingestModel, scene: this.ingestScene, other: this.ingestOther, attachmentScene: this.ingestAttachmentScene },
+                counts: { assetVersions: this.assetVersionSet.size, subjects: subjectsDB.length, idItem },
+                idProject: this.input.project.id ?? null,
+            },
+        });
         return { success: true };
     }
 

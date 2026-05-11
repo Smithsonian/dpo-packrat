@@ -3,6 +3,8 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType, eNonSystemObjectType } from '../../../../../db/api/ObjectType';
 
 export default async function rollbackSystemObjectVersion(_: Parent, args: MutationRollbackSystemObjectVersionArgs): Promise<RollbackSystemObjectVersionResult> {
     const { input } = args;
@@ -27,6 +29,17 @@ export default async function rollbackSystemObjectVersion(_: Parent, args: Mutat
         RK.logError(RK.LogSection.eGQL,'rollback system object version failed','cannot clone object and xrefs',{ ...SOV },'GraphQL.SystemObject.ObjectVersion');
         return { success: false, message };
     }
+
+    await AuditFactory.emitSemantic({
+        action: eAuditType.eActionRollbackSOV,
+        target: { idObject: SOVRollback.idSystemObjectVersion, eObjectType: eNonSystemObjectType.eSystemObjectVersion },
+        idSystemObject: SOV.idSystemObject,
+        payload: {
+            rollbackNotes,
+            from: { idSystemObjectVersion: SOV.idSystemObjectVersion },
+            to:   { idSystemObjectVersion: SOVRollback.idSystemObjectVersion },
+        },
+    });
 
     return { success: true, message: '' };
 }

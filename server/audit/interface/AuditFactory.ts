@@ -30,6 +30,13 @@ export type EmitArgs = {
 };
 
 /**
+ * Args accepted by emitSemantic. Identical to EmitArgs except actor is
+ * optional — defaults to the entry-point Actor on LocalStore so resolver-layer
+ * call sites don't have to thread it themselves.
+ */
+export type EmitSemanticArgs = Omit<EmitArgs, 'actor'> & { actor?: Actor };
+
+/**
  * Central audit write API. All audit rows must originate here — direct
  * prisma.audit.create calls are banned outside server/audit/** by ESLint.
  *
@@ -147,6 +154,27 @@ export class AuditFactory {
 
         SystemObjectInvalidation.invalidate(idSystemObject);
         return true;
+    }
+
+    /**
+     * Wrapper for semantic business-action emissions (publish, license,
+     * rollback, ingest, access grant, etc.). Behaves identically to emit()
+     * except the Actor defaults to LocalStore.getActor() when omitted, which
+     * matches the typical resolver-layer call shape: the HTTP middleware has
+     * already resolved the Actor onto LocalStore by the time the resolver
+     * fires, so the call site shouldn't have to thread it through.
+     *
+     * Returns false if no Actor can be resolved.
+     */
+    static async emitSemantic(args: EmitSemanticArgs): Promise<boolean> {
+        const actor: Actor | undefined = args.actor ?? ASL.getStore()?.getActor();
+        if (!actor) {
+            RK.logError(RK.LogSection.eAUDIT, 'emitSemantic missing actor',
+                'no Actor on LocalStore — caller must run inside an entry-point scope or pass actor explicitly',
+                { action: args.action, target: args.target }, 'Audit.Factory');
+            return false;
+        }
+        return AuditFactory.emit({ ...args, actor });
     }
 
     /**

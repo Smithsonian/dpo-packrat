@@ -16,7 +16,7 @@ const SRC = 'HTTP.Route.Authorization';
 
 async function auditAuthChange(
     idAdminUser: number | null,
-    type: eAuditType.eAuthGranted | eAuditType.eAuthRevoked,
+    type: eAuditType.eActionAccessGrant | eAuditType.eActionAccessRevoke,
     data: Record<string, unknown>
 ): Promise<void> {
     // idAdminUser is the operator performing the grant/revoke. When the REST
@@ -152,9 +152,9 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
 
     // Audit permission changes
     for (const idUnit of toAdd)
-        await auditAuthChange(idUserCreator, eAuditType.eAuthGranted, { surface: 'setUserUnits', idUser, idUnit, action: 'addUnitToUser' });
+        await auditAuthChange(idUserCreator, eAuditType.eActionAccessGrant, { surface: 'setUserUnits', idUser, idUnit, action: 'addUnitToUser' });
     for (const idUnit of toRemove)
-        await auditAuthChange(idUserCreator, eAuditType.eAuthRevoked, { surface: 'setUserUnits', idUser, idUnit, action: 'removeUnitFromUser' });
+        await auditAuthChange(idUserCreator, eAuditType.eActionAccessRevoke, { surface: 'setUserUnits', idUser, idUnit, action: 'removeUnitFromUser' });
 
     await refreshUserSessions([idUser]);
 
@@ -255,9 +255,9 @@ export async function setUnitAuth(req: Request, res: Response): Promise<void> {
 
     // Audit permission changes
     for (const idUser of toAdd)
-        await auditAuthChange(idUserCreator, eAuditType.eAuthGranted, { surface: 'setUnitAuth', idUser, idUnit, action: 'addUserToUnit' });
+        await auditAuthChange(idUserCreator, eAuditType.eActionAccessGrant, { surface: 'setUnitAuth', idUser, idUnit, action: 'addUserToUnit' });
     for (const idUser of toRemove)
-        await auditAuthChange(idUserCreator, eAuditType.eAuthRevoked, { surface: 'setUnitAuth', idUser, idUnit, action: 'removeUserFromUnit' });
+        await auditAuthChange(idUserCreator, eAuditType.eActionAccessRevoke, { surface: 'setUnitAuth', idUser, idUnit, action: 'removeUserFromUnit' });
 
     const affectedUserIds = [...new Set([...toAdd, ...toRemove])];
     await refreshUserSessions(affectedUserIds);
@@ -376,9 +376,9 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
         const LSAudit: LocalStore | undefined = ASL.getStore();
         const idAuditAdmin: number | null = LSAudit?.idUser ?? null;
         for (const idUser of toAdd)
-            await auditAuthChange(idAuditAdmin, eAuditType.eAuthGranted, { surface: 'setProjectAuth', idUser, idProject, action: 'addUserToProject' });
+            await auditAuthChange(idAuditAdmin, eAuditType.eActionAccessGrant, { surface: 'setProjectAuth', idUser, idProject, action: 'addUserToProject' });
         for (const idUser of toRemove)
-            await auditAuthChange(idAuditAdmin, eAuditType.eAuthRevoked, { surface: 'setProjectAuth', idUser, idProject, action: 'removeUserFromProject' });
+            await auditAuthChange(idAuditAdmin, eAuditType.eActionAccessRevoke, { surface: 'setProjectAuth', idUser, idProject, action: 'removeUserFromProject' });
 
         RK.logInfo(RK.LogSection.eHTTP, 'setProjectAuth', `updated auth for project ${idProject}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
 

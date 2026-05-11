@@ -6,6 +6,9 @@ import * as STORE from '../../../../../storage/interface';
 import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
+import * as COMMON from '@dpo-packrat/common';
 
 export default async function rollbackAssetVersion(_: Parent, args: MutationRollbackAssetVersionArgs, context: Context): Promise<RollbackAssetVersionResult> {
     const { input } = args;
@@ -100,6 +103,18 @@ export default async function rollbackAssetVersion(_: Parent, args: MutationRoll
     const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
     if (!IAR.success)
         return sendResponse(false,'rollback asset version failed',`failed to ingest rolled back asset ${IAR.error}`);
+
+    const newAssetVersion: DBAPI.AssetVersion | undefined = IAR.assetVersions && IAR.assetVersions.length > 0 ? IAR.assetVersions[0] : undefined;
+    await AuditFactory.emitSemantic({
+        action: eAuditType.eActionRollbackAssetVersion,
+        target: { idObject: asset.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset },
+        idSystemObject: asset.idSystemObject ?? null,
+        payload: {
+            rollbackNotes,
+            from: { idAssetVersion: assetVersionOrig.idAssetVersion, Version: assetVersionOrig.Version, FileName: assetVersionOrig.FileName },
+            to:   newAssetVersion ? { idAssetVersion: newAssetVersion.idAssetVersion, Version: newAssetVersion.Version, FileName: newAssetVersion.FileName } : null,
+        },
+    });
 
     return sendResponse(true,'rollback asset version success',undefined,{ ...args.input });
 }
