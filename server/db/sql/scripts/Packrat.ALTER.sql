@@ -789,7 +789,3 @@ CREATE INDEX `Audit_AuditType_AuditDate` ON `Audit` (`AuditType`, `AuditDate`);
 ALTER TABLE `Audit` ADD COLUMN `SystemActor` varchar(32) NULL;
 ALTER TABLE `Audit` ADD COLUMN `CorrelationId` varchar(40) NULL;
 CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
-
--- Cook processing-lock columns on SystemObject (Eric)
-ALTER TABLE `SystemObject` ADD COLUMN `ProcessingLockedBy` int(11) NULL;
-ALTER TABLE `SystemObject` ADD COLUMN `ProcessingLockedAt` datetime NULL;

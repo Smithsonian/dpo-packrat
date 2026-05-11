@@ -672,8 +672,6 @@ model SystemObject {
   idActor                                                               Int?                              @unique(map: "idActor")
   idStakeholder                                                         Int?                              @unique(map: "idStakeholder")
   Retired                                                               Boolean
-  ProcessingLockedBy                                                    Int?
-  ProcessingLockedAt                                                    DateTime?                         @mariasql.DateTime(0)
   AccessContextObject                                                   AccessContextObject[]
   Asset_Asset_idSystemObjectToSystemObject                              Asset[]                           @relation("Asset_idSystemObjectToSystemObject")
   AssetVersion_AssetVersion_idSOAttachmentToSystemObject                AssetVersion[]                    @relation("AssetVersion_idSOAttachmentToSystemObject")

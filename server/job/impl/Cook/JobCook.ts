@@ -11,7 +11,6 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import { Actor } from '../../../audit/Actor';
 import { withActor } from '../../../audit/resolveActor';
-import { ProcessingLock } from '../../../workflow/impl/Packrat/ProcessingLock';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
 import { Writable, Readable } from 'stream';
@@ -271,53 +270,13 @@ export abstract class JobCook<T> extends JobPackrat {
         // Cook subsystem.
         const actor: Actor = await this.resolveCookActor();
 
-        // Processing-lock acquisition: any SystemObject id returned by the
-        // subclass's getProcessingLockTargets() is claimed before work starts
-        // and released in a finally block. Subclasses that return an empty
-        // list (the default) pass through unchanged.
-        const lockTargets: number[] = await this.getProcessingLockTargets();
-        const lockedBy: number = actor.kind === 'user' ? actor.idUser
-            : actor.kind === 'impersonation' ? actor.onBehalfOfIdUser
-                : 0;
-        const claimed: number[] = [];
-        for (const idSystemObject of lockTargets) {
-            const result = await ProcessingLock.acquire(idSystemObject, lockedBy);
-            if (result.kind === 'locked') {
-                // Release anything we already took before bailing, so we never
-                // leave a partial lock-set on the floor.
-                for (const taken of claimed) await ProcessingLock.release(taken);
-                const msg = `SystemObject ${idSystemObject} is already locked by user ${result.lockedBy}`;
-                RK.logWarning(RK.LogSection.eJOB, 'processing lock contention', msg,
-                    { idSystemObject, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },
-                    'Job.Cook');
-                this.recordFailure(msg, msg);
-                return { success: false, error: msg, allowRetry: false };
-            }
-            claimed.push(idSystemObject);
-        }
-
         return withActor(actor, async () => {
-            try {
-                const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
-                    RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, semaphoreCount: value, actor: Actor.describe(actor) },'Job.Cook');
-                    return this.startJobWorkerInternal(fireDate);
-                });
-                return res;
-            } finally {
-                for (const idSystemObject of claimed)
-                    await ProcessingLock.release(idSystemObject);
-            }
+            const res: H.IOResults = await JobCook._cookJobSempaphore.runExclusive(async (value) => {
+                RK.logInfo(RK.LogSection.eJOB,'start job worker','starting job',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, semaphoreCount: value, actor: Actor.describe(actor) },'Job.Cook');
+                return this.startJobWorkerInternal(fireDate);
+            });
+            return res;
         });
-    }
-
-    /**
-     * SystemObject ids this job holds a processing lock on for its full
-     * lifetime. Subclasses override to list the Scene/Model targets whose
-     * writes collide with user mutations or duplicate workflow runs.
-     * Default: no lock target (passthrough).
-     */
-    protected async getProcessingLockTargets(): Promise<number[]> {
-        return [];
     }
 
     private async resolveCookActor(): Promise<Actor> {
