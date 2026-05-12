@@ -22,7 +22,7 @@ import { SystemObjectInvalidation } from '../cache/SystemObjectInvalidation';
 import { ASL, LocalStore } from '../utils/localStore';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 import { Config } from '../config';
-import type { AuditBufferEntry } from './xferBuffer';
+import type { AuditBufferEntry } from './auditBuffer';
 
 const DEADLOCK_CODE = 'P2034';
 const BACKOFF_MS = [250, 500, 1000];

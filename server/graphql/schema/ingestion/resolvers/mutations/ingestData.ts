@@ -123,6 +123,15 @@ class IngestDataWorker extends ResolverBase {
         return IDR;
     }
 
+    // ingestWorker is intentionally NOT wrapped in withAuditTransaction.
+    // The body interleaves DB writes with two long-running boundaries that
+    // must run outside any Prisma transaction:
+    //   - promoteAssetsIntoRepository (storage I/O; potentially many MB)
+    //   - sendWorkflowIngestionEvent (external workflow-engine notification)
+    // Wrapping the pre-promotion and post-promotion DB segments in separate
+    // transactions is the right design but is deferred until the I.13 E2E
+    // suite is in place to validate baseline behavior. Audit rows still
+    // persist via the direct-insert fallback in the meantime.
     private async ingestWorker(): Promise<IngestDataResult> {
         RK.logInfo(RK.LogSection.eGQL,'ingest worker',undefined,{ ...this.input },'GraphQL.Ingestion.Data');
 

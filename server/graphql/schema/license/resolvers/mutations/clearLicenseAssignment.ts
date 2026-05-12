@@ -8,6 +8,7 @@ import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import * as COMMON from '@dpo-packrat/common';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eAuditType } from '../../../../../db/api/ObjectType';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function clearLicenseAssignment(_: Parent, args: MutationClearLicenseAssignmentArgs, context: Context): Promise<ClearLicenseAssignmentResult> {
     const { input: { idSystemObject, clearAll } } = args;
@@ -21,22 +22,31 @@ export default async function clearLicenseAssignment(_: Parent, args: MutationCl
     const LROld: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
     const LicenseOld: DBAPI.License | undefined = LROld?.License ?? undefined;
 
-    const clearAssignmentSuccess = await DBAPI.LicenseManager.clearAssignment(idSystemObject, clearAll ?? undefined);
-    if (!clearAssignmentSuccess)
-        return { success: false, message: 'There was an error clearing the assigned license. Please try again.' };
+    // DB-mutating section commits atomically with its audit row. The Cook
+    // workflow trigger via PublishScene.handleSceneUpdates runs post-commit.
+    const dbResult = await withAuditTransaction(async () => {
+        const clearAssignmentSuccess = await DBAPI.LicenseManager.clearAssignment(idSystemObject, clearAll ?? undefined);
+        if (!clearAssignmentSuccess)
+            return { ok: false as const, message: 'There was an error clearing the assigned license. Please try again.' };
 
-    const LRNew: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
-    const LicenseNew: DBAPI.License | undefined = LRNew?.License ?? undefined;
+        const LRNewInner: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
+        const LicenseNewInner: DBAPI.License | undefined = LRNewInner?.License ?? undefined;
 
-    await AuditFactory.emitSemantic({
-        action: eAuditType.eActionClearLicense,
-        idSystemObject,
-        payload: {
-            clearAll: Boolean(clearAll),
-            before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
-            after:  LicenseNew ? { idLicense: LicenseNew.idLicense, Name: LicenseNew.Name, RestrictLevel: LicenseNew.RestrictLevel } : null,
-        },
+        await AuditFactory.emitSemantic({
+            action: eAuditType.eActionClearLicense,
+            idSystemObject,
+            payload: {
+                clearAll: Boolean(clearAll),
+                before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+                after:  LicenseNewInner ? { idLicense: LicenseNewInner.idLicense, Name: LicenseNewInner.Name, RestrictLevel: LicenseNewInner.RestrictLevel } : null,
+            },
+        });
+        return { ok: true as const, LicenseNew: LicenseNewInner };
     });
+
+    if (!dbResult.ok)
+        return { success: false, message: dbResult.message };
+    const LicenseNew = dbResult.LicenseNew;
 
     // If this is a scene, handle license changes:
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);

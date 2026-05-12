@@ -10,12 +10,23 @@ import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eAuditType } from '../../../../../db/api/ObjectType';
 import * as COMMON from '@dpo-packrat/common';
 
+// Not wrapped in withAuditTransaction: the body streams file content from
+// storage into a new asset version (potentially many MB), then calls
+// AssetStorageAdapter.ingestAsset which performs storage promotion + multiple
+// DB writes. Holding a Prisma transaction open across that streaming would
+// blow past the statement timeout and hold table locks for orders of magnitude
+// longer than necessary. CRUD audit rows for the new AssetVersion and
+// SystemObjectVersion are still emitted via the standard DBObject path; the
+// supplementary semantic eActionRollbackAssetVersion row is appended after.
 export default async function rollbackAssetVersion(_: Parent, args: MutationRollbackAssetVersionArgs, context: Context): Promise<RollbackAssetVersionResult> {
     const { input } = args;
     const { idAssetVersion, rollbackNotes } = input;
     const { user } = context;
     if (!user)
         return sendResponse(false,'rollback asset version failed','unable to detemine user from context');
+
+    if (!rollbackNotes || rollbackNotes.trim().length === 0)
+        return sendResponse(false, 'rollback asset version failed', 'rollbackNotes is required');
 
     const assetVersionOrig: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
     if (!assetVersionOrig)

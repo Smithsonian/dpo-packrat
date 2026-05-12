@@ -23,6 +23,10 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     const SOVPrior: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
     const prevState: COMMON.ePublishedState | null = SOVPrior ? SOVPrior.publishedStateEnum() : null;
 
+    // ICol.publish performs external EDAN HTTP calls and stages files into the
+    // hot folder; it must NOT run inside a Prisma transaction. The audit row
+    // captures whether the EDAN call succeeded; the SystemObjectVersion update
+    // it performs writes its own audit row through the standard DBObject path.
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
     const success: boolean = await ICol.publish(idSystemObject, eState);
     if (success) {

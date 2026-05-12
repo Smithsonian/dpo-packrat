@@ -11,6 +11,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { eAuditType } from '../../../db/api/ObjectType';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { Actor } from '../../../audit/Actor';
+import { withAuditTransaction } from '../../../audit/withAuditTransaction';
 
 const SRC = 'HTTP.Route.Authorization';
 
@@ -119,42 +120,44 @@ export async function setUserUnits(req: Request, res: Response): Promise<void> {
     const toAdd: number[] = unitIds.filter((id: number) => !currentUnitIds.includes(id));
     const toRemove: number[] = currentUnitIds.filter(id => !unitIds.includes(id));
 
-    // Remove assignments no longer desired
-    for (const idUnit of toRemove) {
-        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
-        if (!SO) continue;
-        const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
-        if (ua)
-            await ua.delete();
-    }
-
-    // Add new assignments
     const LS: LocalStore | undefined = ASL.getStore();
     const idUserCreator: number | null = LS?.idUser ?? null;
 
-    for (const idUnit of toAdd) {
-        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
-        if (!SO) {
-            RK.logError(RK.LogSection.eHTTP, 'setUserUnits', `no SystemObject for unit ${idUnit}`, {}, SRC);
-            continue;
+    // DB-mutating section commits atomically with the access grant/revoke
+    // audit rows. Session refresh runs post-commit so a tx rollback never
+    // invalidates sessions for assignments that did not persist.
+    await withAuditTransaction(async () => {
+        for (const idUnit of toRemove) {
+            const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
+            if (!SO) continue;
+            const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
+            if (ua)
+                await ua.delete();
         }
-        const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
-            idUserAuthorization: 0,
-            idUser,
-            idSystemObject: SO.idSystemObject,
-            DateCreated: new Date(),
-            idUserCreator,
-        });
-        await ua.create();
-    }
+
+        for (const idUnit of toAdd) {
+            const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromUnitID(idUnit);
+            if (!SO) {
+                RK.logError(RK.LogSection.eHTTP, 'setUserUnits', `no SystemObject for unit ${idUnit}`, {}, SRC);
+                continue;
+            }
+            const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
+                idUserAuthorization: 0,
+                idUser,
+                idSystemObject: SO.idSystemObject,
+                DateCreated: new Date(),
+                idUserCreator,
+            });
+            await ua.create();
+        }
+
+        for (const idUnit of toAdd)
+            await auditAuthChange(idUserCreator, eAuditType.eActionAccessGrant, { surface: 'setUserUnits', idUser, idUnit, action: 'addUnitToUser' });
+        for (const idUnit of toRemove)
+            await auditAuthChange(idUserCreator, eAuditType.eActionAccessRevoke, { surface: 'setUserUnits', idUser, idUnit, action: 'removeUnitFromUser' });
+    });
 
     RK.logInfo(RK.LogSection.eHTTP, 'setUserUnits', `updated units for user ${idUser}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
-
-    // Audit permission changes
-    for (const idUnit of toAdd)
-        await auditAuthChange(idUserCreator, eAuditType.eActionAccessGrant, { surface: 'setUserUnits', idUser, idUnit, action: 'addUnitToUser' });
-    for (const idUnit of toRemove)
-        await auditAuthChange(idUserCreator, eAuditType.eActionAccessRevoke, { surface: 'setUserUnits', idUser, idUnit, action: 'removeUnitFromUser' });
 
     await refreshUserSessions([idUser]);
 
@@ -231,33 +234,35 @@ export async function setUnitAuth(req: Request, res: Response): Promise<void> {
     const toAdd: number[] = authorizedUserIds.filter((id: number) => !currentUserIds.includes(id));
     const toRemove: number[] = currentUserIds.filter(id => !authorizedUserIds.includes(id));
 
-    for (const idUser of toRemove) {
-        const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
-        if (ua)
-            await ua.delete();
-    }
-
     const LS: LocalStore | undefined = ASL.getStore();
     const idUserCreator: number | null = LS?.idUser ?? null;
 
-    for (const idUser of toAdd) {
-        const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
-            idUserAuthorization: 0,
-            idUser,
-            idSystemObject: SO.idSystemObject,
-            DateCreated: new Date(),
-            idUserCreator,
-        });
-        await ua.create();
-    }
+    // DB writes + audit rows commit atomically; refreshUserSessions runs post-commit.
+    await withAuditTransaction(async () => {
+        for (const idUser of toRemove) {
+            const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
+            if (ua)
+                await ua.delete();
+        }
+
+        for (const idUser of toAdd) {
+            const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
+                idUserAuthorization: 0,
+                idUser,
+                idSystemObject: SO.idSystemObject,
+                DateCreated: new Date(),
+                idUserCreator,
+            });
+            await ua.create();
+        }
+
+        for (const idUser of toAdd)
+            await auditAuthChange(idUserCreator, eAuditType.eActionAccessGrant, { surface: 'setUnitAuth', idUser, idUnit, action: 'addUserToUnit' });
+        for (const idUser of toRemove)
+            await auditAuthChange(idUserCreator, eAuditType.eActionAccessRevoke, { surface: 'setUnitAuth', idUser, idUnit, action: 'removeUserFromUnit' });
+    });
 
     RK.logInfo(RK.LogSection.eHTTP, 'setUnitAuth', `updated auth for unit ${idUnit}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
-
-    // Audit permission changes
-    for (const idUser of toAdd)
-        await auditAuthChange(idUserCreator, eAuditType.eActionAccessGrant, { surface: 'setUnitAuth', idUser, idUnit, action: 'addUserToUnit' });
-    for (const idUser of toRemove)
-        await auditAuthChange(idUserCreator, eAuditType.eActionAccessRevoke, { surface: 'setUnitAuth', idUser, idUnit, action: 'removeUserFromUnit' });
 
     const affectedUserIds = [...new Set([...toAdd, ...toRemove])];
     await refreshUserSessions(affectedUserIds);
@@ -321,89 +326,96 @@ export async function setProjectAuth(req: Request, res: Response): Promise<void>
 
     const isRestrictedBefore: boolean = project.isRestricted;
 
-    // Update isRestricted if provided
-    if (typeof isRestricted === 'boolean') {
-        project.isRestricted = isRestricted;
-        await project.update();
-    }
-
-    // Warn if restricted with no authorized users
-    if (project.isRestricted && (!Array.isArray(authorizedUserIds) || authorizedUserIds.length === 0)) {
-        RK.logWarning(RK.LogSection.eHTTP, 'setProjectAuth', `project ${idProject} set to restricted with no authorized users`, {}, SRC);
-    }
-
-    // Track affected users for session refresh
+    // Track affected users for session refresh; populated inside the tx.
     const affectedUserIds = new Set<number>();
+    let toAddNotify: number[] = [];
 
-    // Diff user authorizations if provided
-    if (Array.isArray(authorizedUserIds)) {
-        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(idProject);
-        if (!SO) {
-            res.status(200).send(JSON.stringify(generateResponse(false, `setProjectAuth: no SystemObject for project ${idProject}`)));
-            return;
+    // DB writes + access-grant/revoke audit rows commit atomically. Email
+    // notifications and refreshUserSessions run post-commit so they never
+    // fire for changes that did not persist.
+    const txOk = await withAuditTransaction(async (): Promise<boolean> => {
+        if (typeof isRestricted === 'boolean') {
+            project.isRestricted = isRestricted;
+            await project.update();
         }
 
-        const currentRows: DBAPI.UserAuthorization[] | null = await DBAPI.UserAuthorization.fetchFromSystemObject(SO.idSystemObject);
-        const currentUserIds: number[] = currentRows ? currentRows.map(r => r.idUser) : [];
+        if (project.isRestricted && (!Array.isArray(authorizedUserIds) || authorizedUserIds.length === 0))
+            RK.logWarning(RK.LogSection.eHTTP, 'setProjectAuth', `project ${idProject} set to restricted with no authorized users`, {}, SRC);
 
-        const toAdd: number[] = authorizedUserIds.filter((id: number) => !currentUserIds.includes(id));
-        const toRemove: number[] = currentUserIds.filter(id => !authorizedUserIds.includes(id));
+        if (Array.isArray(authorizedUserIds)) {
+            const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromProjectID(idProject);
+            if (!SO)
+                return false;
 
-        for (const idUser of toRemove) {
-            const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
-            if (ua)
-                await ua.delete();
-        }
+            const currentRows: DBAPI.UserAuthorization[] | null = await DBAPI.UserAuthorization.fetchFromSystemObject(SO.idSystemObject);
+            const currentUserIds: number[] = currentRows ? currentRows.map(r => r.idUser) : [];
 
-        const LSProj: LocalStore | undefined = ASL.getStore();
-        const idUserCreatorProj: number | null = LSProj?.idUser ?? null;
+            const toAdd: number[] = authorizedUserIds.filter((id: number) => !currentUserIds.includes(id));
+            const toRemove: number[] = currentUserIds.filter(id => !authorizedUserIds.includes(id));
 
-        for (const idUser of toAdd) {
-            const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
-                idUserAuthorization: 0,
-                idUser,
-                idSystemObject: SO.idSystemObject,
-                DateCreated: new Date(),
-                idUserCreator: idUserCreatorProj,
-            });
-            await ua.create();
-        }
+            for (const idUser of toRemove) {
+                const ua: DBAPI.UserAuthorization | null = await DBAPI.UserAuthorization.fetchByUserAndSystemObject(idUser, SO.idSystemObject);
+                if (ua)
+                    await ua.delete();
+            }
 
-        toAdd.forEach(id => affectedUserIds.add(id));
-        toRemove.forEach(id => affectedUserIds.add(id));
+            const LSProj: LocalStore | undefined = ASL.getStore();
+            const idUserCreatorProj: number | null = LSProj?.idUser ?? null;
 
-        // Audit permission changes
-        const LSAudit: LocalStore | undefined = ASL.getStore();
-        const idAuditAdmin: number | null = LSAudit?.idUser ?? null;
-        for (const idUser of toAdd)
-            await auditAuthChange(idAuditAdmin, eAuditType.eActionAccessGrant, { surface: 'setProjectAuth', idUser, idProject, action: 'addUserToProject' });
-        for (const idUser of toRemove)
-            await auditAuthChange(idAuditAdmin, eAuditType.eActionAccessRevoke, { surface: 'setProjectAuth', idUser, idProject, action: 'removeUserFromProject' });
-
-        RK.logInfo(RK.LogSection.eHTTP, 'setProjectAuth', `updated auth for project ${idProject}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
-
-        // Notify users added to a restricted project via email
-        if (project.isRestricted && toAdd.length > 0) {
             for (const idUser of toAdd) {
-                const addedUser: DBAPI.User | null = await DBAPI.User.fetch(idUser);
-                if (addedUser?.EmailAddress) {
-                    RK.sendEmailRaw(
-                        RK.NotifyType.SECURITY_NOTICE,
-                        [addedUser.EmailAddress],
-                        `Packrat: Access Granted to Restricted Project "${project.Name}"`,
-                        `You have been granted access to the restricted project "${project.Name}" in Packrat.\n\nThis means you can now view and work with data in this project. If you believe this was done in error, please contact your administrator.`
-                    );
-                }
+                const ua: DBAPI.UserAuthorization = new DBAPI.UserAuthorization({
+                    idUserAuthorization: 0,
+                    idUser,
+                    idSystemObject: SO.idSystemObject,
+                    DateCreated: new Date(),
+                    idUserCreator: idUserCreatorProj,
+                });
+                await ua.create();
+            }
+
+            toAdd.forEach(id => affectedUserIds.add(id));
+            toRemove.forEach(id => affectedUserIds.add(id));
+            toAddNotify = toAdd;
+
+            const LSAudit: LocalStore | undefined = ASL.getStore();
+            const idAuditAdmin: number | null = LSAudit?.idUser ?? null;
+            for (const idUser of toAdd)
+                await auditAuthChange(idAuditAdmin, eAuditType.eActionAccessGrant, { surface: 'setProjectAuth', idUser, idProject, action: 'addUserToProject' });
+            for (const idUser of toRemove)
+                await auditAuthChange(idAuditAdmin, eAuditType.eActionAccessRevoke, { surface: 'setProjectAuth', idUser, idProject, action: 'removeUserFromProject' });
+
+            RK.logInfo(RK.LogSection.eHTTP, 'setProjectAuth', `updated auth for project ${idProject}: added ${toAdd.length}, removed ${toRemove.length}`, {}, SRC);
+        }
+
+        // If isRestricted changed, all users assigned to the parent unit are affected
+        if (typeof isRestricted === 'boolean' && project.isRestricted !== isRestrictedBefore) {
+            const parentUnitId = await Authorization.getProjectParentUnitId(idProject);
+            if (parentUnitId !== null) {
+                const unitUsers = await DBAPI.UserAuthorization.fetchUsersForUnit(parentUnitId);
+                unitUsers.forEach(u => affectedUserIds.add(u.idUser));
             }
         }
+
+        return true;
+    });
+
+    if (!txOk) {
+        res.status(200).send(JSON.stringify(generateResponse(false, `setProjectAuth: no SystemObject for project ${idProject}`)));
+        return;
     }
 
-    // If isRestricted changed, all users assigned to the parent unit are affected
-    if (typeof isRestricted === 'boolean' && project.isRestricted !== isRestrictedBefore) {
-        const parentUnitId = await Authorization.getProjectParentUnitId(idProject);
-        if (parentUnitId !== null) {
-            const unitUsers = await DBAPI.UserAuthorization.fetchUsersForUnit(parentUnitId);
-            unitUsers.forEach(u => affectedUserIds.add(u.idUser));
+    // Post-commit: notify users added to a restricted project via email.
+    if (project.isRestricted && toAddNotify.length > 0) {
+        for (const idUser of toAddNotify) {
+            const addedUser: DBAPI.User | null = await DBAPI.User.fetch(idUser);
+            if (addedUser?.EmailAddress) {
+                RK.sendEmailRaw(
+                    RK.NotifyType.SECURITY_NOTICE,
+                    [addedUser.EmailAddress],
+                    `Packrat: Access Granted to Restricted Project "${project.Name}"`,
+                    `You have been granted access to the restricted project "${project.Name}" in Packrat.\n\nThis means you can now view and work with data in this project. If you believe this was done in error, please contact your administrator.`
+                );
+            }
         }
     }
 

@@ -13,6 +13,15 @@ import * as COMMON from '@dpo-packrat/common';
 import { NameHelpers } from '../../../../../utils/nameHelpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
+
+type PendingSceneUpdate = {
+    idScene: number;
+    oldPosedAndQCd: boolean;
+    newPosedAndQCd: boolean;
+    LicenseOld: DBAPI.License | undefined;
+    LicenseNew: DBAPI.License | undefined;
+};
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
@@ -24,6 +33,11 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return sendResult(false, 'update object details failed', AUTH_ERROR.ACCESS_DENIED);
 
+    // Capture-by-reference for handleSceneUpdates to fire post-commit for the
+    // Scene case. Cook download generation/removal must NOT run inside the tx.
+    let pendingSceneUpdate: PendingSceneUpdate | null = null;
+
+    const txResult = await withAuditTransaction(async (): Promise<UpdateObjectDetailsResult> => {
     if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
         return sendResult(false,'update object details failed','Error with Name and/or Retired field(s); update failed');
 
@@ -378,12 +392,15 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
             if (!await Scene.update())
                 return sendResult(false,'update object details failed',`Unable to update ${SystemObjectTypeToName(objectType)} with id ${idObject}; update failed`);
 
-            // if we've changed Posed and QC'd, and/or we've updated our license, create or remove downloads
-            const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(Scene.idScene, idSystemObject, user?.idUser,
-                oldPosedAndQCd, Scene.PosedAndQCd, LicenseOld, LicenseNew);
-            if (!res.success)
-                return sendResult(false,'update object details failed',res.error);
-            return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
+            // Defer Cook download generation/removal until after the tx commits.
+            pendingSceneUpdate = {
+                idScene: Scene.idScene,
+                oldPosedAndQCd,
+                newPosedAndQCd: Scene.PosedAndQCd,
+                LicenseOld,
+                LicenseNew,
+            };
+            break;
         }
         case COMMON.eSystemObjectType.eIntermediaryFile: {
             const IntermediaryFile = await DBAPI.IntermediaryFile.fetch(idObject);
@@ -522,6 +539,25 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     }
 
     return { success: true, message: '' };
+    });
+
+    // Tx errored, or business logic returned a failure result inside the tx.
+    if (!txResult.success)
+        return txResult;
+
+    // Post-commit: fire Cook download generation/removal for the Scene case.
+    // Stays outside the tx so the workflow trigger does not extend the lock.
+    if (pendingSceneUpdate) {
+        const psu: PendingSceneUpdate = pendingSceneUpdate;
+        const res: SceneUpdateResult = await PublishScene.handleSceneUpdates(
+            psu.idScene, idSystemObject, user?.idUser,
+            psu.oldPosedAndQCd, psu.newPosedAndQCd, psu.LicenseOld, psu.LicenseNew);
+        if (!res.success)
+            return sendResult(false, 'update object details failed', res.error);
+        return { success: true, message: res.downloadsGenerated ? 'Scene downloads are being generated' : res.downloadsRemoved ? 'Scene downloads were removed' : '' };
+    }
+
+    return txResult;
 }
 
 function sendResult(success: boolean, message: string, reason?: string, data?: any): UpdateObjectDetailsResult {

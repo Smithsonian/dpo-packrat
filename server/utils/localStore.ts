@@ -4,7 +4,7 @@ import * as H from './helpers';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 import type { AuthorizationContext } from '../auth/Authorization';
 import { Actor } from '../audit/Actor';
-import type { AuditBufferEntry } from '../audit/xferBuffer';
+import type { AuditBufferEntry } from '../audit/auditBuffer';
 
 export class LocalStore {
     idRequest: number;

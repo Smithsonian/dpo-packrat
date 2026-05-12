@@ -2,6 +2,7 @@ import { CreateCaptureDataPhotoResult, MutationCreateCaptureDataPhotoArgs } from
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function CreateCaptureDataPhoto(_: Parent, args: MutationCreateCaptureDataPhotoArgs): Promise<CreateCaptureDataPhotoResult> {
     const ctx = Authorization.getContext();
@@ -25,25 +26,27 @@ export default async function CreateCaptureDataPhoto(_: Parent, args: MutationCr
         CaptureDatasetUse,
     } = input;
 
-    const captureDataPhotoArgs = {
-        idCaptureDataPhoto: 0,
-        idCaptureData,
-        idVCaptureDatasetType,
-        CaptureDatasetFieldID,
-        ItemPositionFieldID,
-        ItemArrangementFieldID,
-        idVBackgroundRemovalMethod,
-        ClusterGeometryFieldID,
-        CameraSettingsUniform,
-        idVItemPositionType: idVItemPositionType || null,
-        idVFocusType: idVFocusType || null,
-        idVLightSourceType: idVLightSourceType || null,
-        idVClusterType: idVClusterType || null,
-        CaptureDatasetUse,
-    };
+    return withAuditTransaction(async () => {
+        const captureDataPhotoArgs = {
+            idCaptureDataPhoto: 0,
+            idCaptureData,
+            idVCaptureDatasetType,
+            CaptureDatasetFieldID,
+            ItemPositionFieldID,
+            ItemArrangementFieldID,
+            idVBackgroundRemovalMethod,
+            ClusterGeometryFieldID,
+            CameraSettingsUniform,
+            idVItemPositionType: idVItemPositionType || null,
+            idVFocusType: idVFocusType || null,
+            idVLightSourceType: idVLightSourceType || null,
+            idVClusterType: idVClusterType || null,
+            CaptureDatasetUse,
+        };
 
-    const CaptureDataPhoto = new DBAPI.CaptureDataPhoto(captureDataPhotoArgs);
-    await CaptureDataPhoto.create();
+        const CaptureDataPhoto = new DBAPI.CaptureDataPhoto(captureDataPhotoArgs);
+        await CaptureDataPhoto.create();
 
-    return { CaptureDataPhoto };
+        return { CaptureDataPhoto };
+    });
 }

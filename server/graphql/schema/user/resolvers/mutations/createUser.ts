@@ -2,6 +2,7 @@ import { CreateUserResult, MutationCreateUserArgs } from '../../../../../types/g
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function createUser(_: Parent, args: MutationCreateUserArgs): Promise<CreateUserResult> {
     const ctx = Authorization.getContext();
@@ -11,20 +12,22 @@ export default async function createUser(_: Parent, args: MutationCreateUserArgs
     const { input } = args;
     const { Name, EmailAddress, EmailSettings, SlackID } = input;
 
-    const userArgs = {
-        idUser: 0,
-        Name,
-        EmailAddress,
-        SecurityID: '',
-        Active: true,
-        DateActivated: new Date(),
-        DateDisabled: null,
-        WorkflowNotificationTime: null,
-        EmailSettings: EmailSettings ?? null,
-        SlackID: SlackID ?? '',
-    };
+    return withAuditTransaction(async () => {
+        const userArgs = {
+            idUser: 0,
+            Name,
+            EmailAddress,
+            SecurityID: '',
+            Active: true,
+            DateActivated: new Date(),
+            DateDisabled: null,
+            WorkflowNotificationTime: null,
+            EmailSettings: EmailSettings ?? null,
+            SlackID: SlackID ?? '',
+        };
 
-    const User = new DBAPI.User(userArgs);
-    await User.create();
-    return { User };
+        const User = new DBAPI.User(userArgs);
+        await User.create();
+        return { User };
+    });
 }

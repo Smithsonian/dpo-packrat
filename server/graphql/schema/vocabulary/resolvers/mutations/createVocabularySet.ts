@@ -2,6 +2,7 @@ import { CreateVocabularySetResult, MutationCreateVocabularySetArgs } from '../.
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function createVocabularySet(_: Parent, args: MutationCreateVocabularySetArgs): Promise<CreateVocabularySetResult> {
     const ctx = Authorization.getContext();
@@ -11,13 +12,15 @@ export default async function createVocabularySet(_: Parent, args: MutationCreat
     const { input } = args;
     const { Name, SystemMaintained } = input;
 
-    const vocabularySetArgs = {
-        idVocabularySet: 0,
-        Name,
-        SystemMaintained
-    };
+    return withAuditTransaction(async () => {
+        const vocabularySetArgs = {
+            idVocabularySet: 0,
+            Name,
+            SystemMaintained
+        };
 
-    const VocabularySet = new DBAPI.VocabularySet(vocabularySetArgs);
-    await VocabularySet.create();
-    return { VocabularySet };
+        const VocabularySet = new DBAPI.VocabularySet(vocabularySetArgs);
+        await VocabularySet.create();
+        return { VocabularySet };
+    });
 }
