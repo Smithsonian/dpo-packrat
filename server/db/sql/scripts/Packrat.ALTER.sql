@@ -781,3 +781,10 @@ CREATE TABLE IF NOT EXISTS `ExternalSource` (
   CONSTRAINT `fk_aes_contact` FOREIGN KEY (`idContact`)
     REFERENCES `User` (`idUser`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+-- 2026-05-12 CaptureData.LightSourceType vocab: rename Strobe -> Flash, add Flash, Parallel, rename Patterned/Structured -> Patterned (Eric)
+UPDATE Vocabulary SET Term = 'Flash, Standard' WHERE idVocabularySet = 5 AND Term = 'Strobe Standard';
+UPDATE Vocabulary SET Term = 'Flash, Cross'    WHERE idVocabularySet = 5 AND Term = 'Strobe Cross';
+UPDATE Vocabulary SET Term = 'Patterned'       WHERE idVocabularySet = 5 AND Term = 'Patterned/Structured';
+UPDATE Vocabulary SET SortOrder = SortOrder + 1 WHERE idVocabularySet = 5 AND SortOrder >= 3;
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 3, 'Flash, Parallel');

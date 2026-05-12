@@ -466,9 +466,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFocusType, 'Fixed');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataFocusType, 'Variable');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Ambient');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Strobe Standard');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Strobe Cross');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Patterned/Structured');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Flash, Standard');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Flash, Parallel');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Flash, Cross');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataLightSourceType, 'Patterned');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'None');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip Black');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod, 'Clip White');
