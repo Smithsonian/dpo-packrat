@@ -25,6 +25,12 @@ module.exports = {
         // Needs test cases written:
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
 
+        // Audit pipeline E2E (I.13). Runs against mocked Prisma boundaries
+        // — does not need a live DB. Kept out of the main run until CI
+        // compatibility is verified; invoke manually with:
+        //   yarn test --testPathPattern="tests/e2e/audit.test.ts"
+        // '**/tests/e2e/**/*.test.ts',
+
         // Individual tests, left here to aid in quick, focused testing:
         // '**/tests/auth/local/login.test.ts',
         // '**/tests/auth/local/logout.test.ts',
