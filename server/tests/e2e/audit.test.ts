@@ -187,7 +187,7 @@ describe('Audit E2E — DB API call produces correct row shape', () => {
         });
         const row = rowFromCreateArgs(createSpy.mock.calls[0][0]);
         expect(row.Data).toBeTruthy();
-        expect(Buffer.byteLength(row.Data!, 'utf8')).toBeLessThan(500);
+        expect(Buffer.byteLength(row.Data ?? '', 'utf8')).toBeLessThan(500);
     });
 
     test('createMany audits as eDBCreate (regression: was eDBDelete pre-Phase-1)', () => {
@@ -293,10 +293,10 @@ describe('Audit E2E — retire cascade links children to root via parentRetireme
 
         // First call is the root, three children follow.
         expect(createSpy).toHaveBeenCalledTimes(4);
-        const root = JSON.parse(rowFromCreateArgs(createSpy.mock.calls[0][0]).Data!);
+        const root = JSON.parse(rowFromCreateArgs(createSpy.mock.calls[0][0]).Data ?? 'null');
         expect(root.parentRetirement).toBeNull();
         for (let i = 1; i <= 3; i++) {
-            const child = JSON.parse(rowFromCreateArgs(createSpy.mock.calls[i][0]).Data!);
+            const child = JSON.parse(rowFromCreateArgs(createSpy.mock.calls[i][0]).Data ?? 'null');
             expect(child.parentRetirement).toEqual({ idAudit: rootIdAudit });
         }
     });
@@ -311,7 +311,7 @@ describe('Audit E2E — retire cascade links children to root via parentRetireme
         });
         const row = rowFromCreateArgs(createSpy.mock.calls[0][0]);
         expect(row.AuditType).toBe(eAuditType.eActionReinstate);
-        expect(JSON.parse(row.Data!).reason).toBe('mistake');
+        expect(JSON.parse(row.Data ?? 'null').reason).toBe('mistake');
     });
 });
 
@@ -338,7 +338,8 @@ describe('Audit E2E — retention job dry + real run accounting', () => {
         // Summary row is the last emit; payload preserves the counts.
         const summary = emitSpy.mock.calls.find(c => c[0].action === eAuditType.eActionSystemMaintenance);
         expect(summary).toBeDefined();
-        expect(summary![0].payload).toMatchObject({
+        const summaryArgs = summary?.[0];
+        expect(summaryArgs?.payload).toMatchObject({
             skeletoned: 123 + 45,
             transientDeleted: 67,
             cancelled: false,
@@ -354,8 +355,8 @@ describe('Audit E2E — retention job dry + real run accounting', () => {
         expect(result.skeletoned).toBe(0);
         expect(result.transientDeleted).toBe(0);
 
-        const summaryArgs = emitSpy.mock.calls.find(c => c[0].action === eAuditType.eActionSystemMaintenance)![0];
-        expect(summaryArgs.actor).toEqual(Actor.system('AuditRetention'));
+        const summaryCall = emitSpy.mock.calls.find(c => c[0].action === eAuditType.eActionSystemMaintenance);
+        expect(summaryCall?.[0].actor).toEqual(Actor.system('AuditRetention'));
     });
 
     test('PROTECT tier types never appear in skeleton or delete invocations', async () => {
@@ -401,9 +402,11 @@ describe('Audit E2E — actor resolution at entry points', () => {
     test('Cook webhook with idUserInitiator threads as impersonation', async () => {
         // Cook lifecycle runs under withActor(Actor.impersonation(idUserInitiator, 'Cook')).
         await withActor(Actor.impersonation(33, 'Cook'), async () => {
+            const ambientActor = ASL.getStore()?.getActor();
+            expect(ambientActor).toBeDefined();
             await AuditFactory.emit({
                 action: eAuditType.eActionIngest,
-                actor: ASL.getStore()!.getActor()!,
+                actor: ambientActor as Actor,
                 idSystemObject: 200,
                 payload: { stage: 'complete' },
             });
