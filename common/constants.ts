@@ -180,6 +180,7 @@ export enum eVocabularyID {
     eWorkflowTypeCookJob,
     eWorkflowTypeIngestion,
     eWorkflowTypeUpload,
+    eWorkflowTypeAuditRetention,
     eWorkflowStepTypeStart,
     eWorkflowEventIngestionUploadAssetVersion,
     eWorkflowEventIngestionIngestObject,

@@ -12,17 +12,29 @@
  * Each pass chunks writes to Config.audit.retentionBatchSize so the lock
  * window stays bounded. SIGINT between batches aborts cleanly.
  *
- * The job is a plain function — no Workflow wrapper. Hash-chain integrity
- * and Workflow wrapping are intentional follow-ups, not requirements here.
+ * Each run is wrapped in a Workflow + WorkflowStep + WorkflowReport so it
+ * appears in the Workflow UI alongside Cook jobs / ingestions. The wrapper
+ * is best-effort: if the 'Audit Retention' vocabulary term hasn't been seeded
+ * yet, the wrap silently no-ops and the retention work still runs.
  */
 import * as NS from 'node-schedule';
+import * as COMMON from '@dpo-packrat/common';
 import { Audit } from '../../../db/api/Audit';
+import { Workflow } from '../../../db/api/Workflow';
+import { WorkflowStep } from '../../../db/api/WorkflowStep';
+import { WorkflowReport } from '../../../db/api/WorkflowReport';
 import { eAuditType } from '../../../db/api/ObjectType';
 import { Config, AuditTier } from '../../../config';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
 import { Actor } from '../../../audit/Actor';
 import { withActor } from '../../../audit/resolveActor';
+import { VocabularyCache } from '../../../cache/VocabularyCache';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+
+type WorkflowFrame = {
+    workflow: Workflow;
+    step: WorkflowStep;
+};
 
 type RunResult = {
     skeletoned: number;
@@ -38,7 +50,9 @@ export class JobAuditRetention {
 
     /**
      * Run the full retention pass once. Safe to invoke directly from tests or
-     * an admin entry point. Emits its own summary audit row.
+     * an admin entry point. Emits its own summary audit row and creates a
+     * Workflow + WorkflowStep + WorkflowReport so the run is visible in the
+     * Workflow UI alongside Cook jobs.
      */
     static async run(): Promise<RunResult> {
         const started = Date.now();
@@ -57,8 +71,17 @@ export class JobAuditRetention {
         const standardTypes = tierTypes(AuditTier.STANDARD);
         const transientTypes = tierTypes(AuditTier.TRANSIENT);
 
+        let frame: WorkflowFrame | null = null;
+        let workflowError: string | null = null;
+
         try {
             await withActor(Actor.system('AuditRetention'), async () => {
+                frame = await JobAuditRetention.startWorkflowFrame({
+                    standardTypesCount: standardTypes.length,
+                    transientTypesCount: transientTypes.length,
+                    standardFull, transientFull, transientSkeleton, batchSize,
+                });
+
                 // Pass 1: skeleton STANDARD past full-data cutoff.
                 if (standardTypes.length > 0 && standardFull) {
                     result.skeletoned += await JobAuditRetention.runPass(
@@ -101,13 +124,103 @@ export class JobAuditRetention {
                     },
                 });
             });
+        } catch (err) {
+            workflowError = err instanceof Error ? err.message : String(err);
+            result.durationMs = Date.now() - started;
+            RK.logError(RK.LogSection.eAUDIT, 'retention job threw',
+                workflowError, result, 'Job.AuditRetention');
+            throw err;
         } finally {
             JobAuditRetention.cancelRequested = false;
+            if (frame) await JobAuditRetention.closeWorkflowFrame(frame, result, workflowError);
         }
 
         RK.logInfo(RK.LogSection.eAUDIT, 'retention job complete',
             undefined, result, 'Job.AuditRetention');
         return result;
+    }
+
+    /**
+     * Create a Workflow + WorkflowStep (eRunning) for this retention run.
+     * Returns null when the workflow type vocabulary isn't seeded yet so the
+     * caller skips the wrap silently — the retention pass itself still runs.
+     */
+    private static async startWorkflowFrame(params: Record<string, unknown>): Promise<WorkflowFrame | null> {
+        try {
+            const idVWorkflowType = await VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eWorkflowTypeAuditRetention);
+            const idVWorkflowStepType = await VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eWorkflowStepTypeStart);
+            if (!idVWorkflowType || !idVWorkflowStepType) {
+                RK.logWarning(RK.LogSection.eAUDIT, 'retention workflow wrap skipped',
+                    'vocabulary terms not seeded (run Packrat.ALTER.sql)',
+                    { idVWorkflowType, idVWorkflowStepType }, 'Job.AuditRetention');
+                return null;
+            }
+            const dtNow = new Date();
+            const workflow = new Workflow({
+                idVWorkflowType,
+                idProject: null,
+                idUserInitiator: null,
+                DateInitiated: dtNow,
+                DateUpdated: dtNow,
+                Parameters: JSON.stringify(params),
+                idWorkflowSet: null,
+                idWorkflow: 0,
+            });
+            if (!await workflow.create()) return null;
+
+            const step = new WorkflowStep({
+                idWorkflow: workflow.idWorkflow,
+                idJobRun: null,
+                idUserOwner: null,
+                idVWorkflowStepType,
+                State: COMMON.eWorkflowJobRunStatus.eRunning,
+                DateCreated: dtNow,
+                DateCompleted: null,
+                idWorkflowStep: 0,
+            });
+            if (!await step.create()) return null;
+            return { workflow, step };
+        } catch (err) {
+            RK.logError(RK.LogSection.eAUDIT, 'retention workflow wrap failed',
+                err instanceof Error ? err.message : String(err), undefined, 'Job.AuditRetention');
+            return null;
+        }
+    }
+
+    /**
+     * Close out the Workflow frame: write a WorkflowReport with the run summary,
+     * update WorkflowStep state (eDone / eError / eCancelled), and stamp
+     * Workflow.DateUpdated. Failures here log but never mask the caller's
+     * result — the retention work itself has already happened.
+     */
+    private static async closeWorkflowFrame(frame: WorkflowFrame, result: RunResult, error: string | null): Promise<void> {
+        try {
+            const dtNow = new Date();
+            const finalState: number = error
+                ? COMMON.eWorkflowJobRunStatus.eError
+                : result.cancelled
+                    ? COMMON.eWorkflowJobRunStatus.eCancelled
+                    : COMMON.eWorkflowJobRunStatus.eDone;
+            frame.step.State = finalState;
+            frame.step.DateCompleted = dtNow;
+            await frame.step.update();
+
+            const report = new WorkflowReport({
+                idWorkflowReport: 0,
+                idWorkflow: frame.workflow.idWorkflow,
+                MimeType: 'application/json',
+                Name: 'Audit Retention Run Summary',
+                Data: JSON.stringify({ ...result, error: error ?? undefined }),
+            });
+            await report.create();
+
+            frame.workflow.DateUpdated = dtNow;
+            await frame.workflow.update();
+        } catch (err) {
+            RK.logError(RK.LogSection.eAUDIT, 'retention workflow close failed',
+                err instanceof Error ? err.message : String(err),
+                { idWorkflow: frame.workflow.idWorkflow }, 'Job.AuditRetention');
+        }
     }
 
     /**

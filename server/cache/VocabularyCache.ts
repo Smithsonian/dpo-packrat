@@ -323,6 +323,7 @@ export class VocabularyCache {
                         case 'Cook Job':                        eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeCookJob; break;
                         case 'Ingestion':                       eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeIngestion; break;
                         case 'Upload':                          eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeUpload; break;
+                        case 'Audit Retention':                 eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeAuditRetention; break;
                     }
                 } break;
 

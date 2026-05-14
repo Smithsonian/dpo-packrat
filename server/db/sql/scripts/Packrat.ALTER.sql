@@ -789,3 +789,6 @@ CREATE INDEX `Audit_AuditType_AuditDate` ON `Audit` (`AuditType`, `AuditDate`);
 ALTER TABLE `Audit` ADD COLUMN `SystemActor` varchar(32) NULL;
 ALTER TABLE `Audit` ADD COLUMN `CorrelationId` varchar(40) NULL;
 CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
+
+-- Workflow Type vocab term for audit retention runs (Eric)
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit Retention');
