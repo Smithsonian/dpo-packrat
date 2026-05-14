@@ -25,7 +25,11 @@ export type EmitArgs = {
     payload?: unknown;
     /** Optional override for the audit row timestamp; defaults to now. */
     when?: Date;
-    /** Optional correlation id for grouping related rows; column wiring is server-side. */
+    /**
+     * Optional correlation id for grouping related rows. When omitted, falls
+     * back to LocalStore.correlationId (minted at the entry point). Callers
+     * rarely need to pass this explicitly.
+     */
     correlationId?: string | null;
 };
 
@@ -62,11 +66,12 @@ export class AuditFactory {
             return false;
         }
 
+        const LS = ASL.getStore();
         const cols = Actor.toAuditColumns(actor);
         const AuditDate: Date = args.when ?? new Date();
         const DBObjectType: eDBObjectType | null = args.target?.eObjectType ?? null;
         const idDBObject: number | null = args.target?.idObject ?? null;
-        const CorrelationId: string | null = args.correlationId ?? null;
+        const CorrelationId: string | null = args.correlationId ?? LS?.correlationId ?? null;
 
         // Log-only tier: write the audit line to the logs (picked up by
         // OpenObserve) and skip the DB insert entirely. Still preserve
@@ -112,7 +117,6 @@ export class AuditFactory {
         // If a transaction is active on the current LocalStore, buffer the row
         // into the tx-scoped buffer; it commits atomically with the business
         // write. Otherwise fall through to a direct insert (the existing path).
-        const LS = ASL.getStore();
         if (LS?.auditBuffer) {
             LS.auditBuffer.push({
                 idUser:         cols.idUser,
@@ -199,11 +203,12 @@ export class AuditFactory {
             return null;
         }
 
+        const LS = ASL.getStore();
         const cols = Actor.toAuditColumns(actor);
         const AuditDate: Date = args.when ?? new Date();
         const DBObjectType: eDBObjectType | null = args.target?.eObjectType ?? null;
         const idDBObject: number | null = args.target?.idObject ?? null;
-        const CorrelationId: string | null = args.correlationId ?? null;
+        const CorrelationId: string | null = args.correlationId ?? LS?.correlationId ?? null;
 
         if (AuditFactory.isLogOnlyTarget(DBObjectType)) {
             // Log-only has no persistent row; delegate to emit() for the log
@@ -246,7 +251,6 @@ export class AuditFactory {
 
             // Queue invalidation: inside a wrapped tx it fires post-commit;
             // outside a tx it fires immediately.
-            const LS = ASL.getStore();
             if (idSystemObject) {
                 if (LS?.invalidationQueue)
                     LS.invalidationQueue.add(idSystemObject);

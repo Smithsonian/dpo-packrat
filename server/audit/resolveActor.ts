@@ -3,6 +3,7 @@
  * stash the result on LocalStore.actor. Downstream code should never re-resolve.
  */
 import type { Request } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { Actor, Subsystem } from './Actor';
 import { ASL, LocalStore } from '../utils/localStore';
 
@@ -44,9 +45,12 @@ export async function withActor<T>(actor: Actor, fn: () => Promise<T>): Promise<
         existing.actor = actor;
         if (actor.kind === 'impersonation')
             existing.idUser = actor.onBehalfOfIdUser;
+        // Inherit the parent scope's correlationId so audit rows from
+        // job-triggered-by-request stay grouped with the originating request.
         return fn();
     }
     const LS = new LocalStore(true, actor.kind === 'impersonation' ? actor.onBehalfOfIdUser : null);
     LS.actor = actor;
+    LS.correlationId = uuidv4();
     return ASL.run(LS, fn);
 }

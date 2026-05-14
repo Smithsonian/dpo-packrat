@@ -42,6 +42,15 @@ export class LocalStore {
      */
     invalidationQueue?: Set<number> | undefined;
 
+    /**
+     * Stable UUID shared by every audit row produced under this scope.
+     * Set once at the entry-point (HTTP middleware / withActor) and read by
+     * AuditFactory at emit time. All audit rows from one HTTP request, one
+     * Cook job, or one scheduled run share this value so a downstream query
+     * can group "everything that happened in one operation".
+     */
+    correlationId: string | null = null;
+
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
         // RK.logDebug(RK.LogSection.eSYS,'incrementing ID',undefined,{ idRequest: LocalStore.idRequestNext, idRequestNew: LocalStore.idRequestNext+1 },'AsyncLocalStore');
