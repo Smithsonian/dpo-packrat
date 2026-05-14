@@ -26,16 +26,32 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
     ApprovedForPublication!: boolean;
     Title!: string | null;
 
-    ApprovedForPublicationOrig!: boolean;
+    NameOrig!: string;
+    idAssetThumbnailOrig!: number | null;
+    CountSceneOrig!: number | null;
+    CountNodeOrig!: number | null;
+    CountCameraOrig!: number | null;
+    CountLightOrig!: number | null;
+    CountModelOrig!: number | null;
+    CountMetaOrig!: number | null;
+    CountSetupOrig!: number | null;
+    CountTourOrig!: number | null;
+    EdanUUIDOrig!: string | null;
     PosedAndQCdOrig!: boolean;
+    ApprovedForPublicationOrig!: boolean;
+    TitleOrig!: string | null;
 
     constructor(input: SceneBase) {
         super(input);
     }
 
     protected updateCachedValues(): void {
-        this.ApprovedForPublicationOrig = this.ApprovedForPublication;
-        this.PosedAndQCdOrig = this.PosedAndQCd;
+        this.snapshotTrackedFields([
+            'Name', 'idAssetThumbnail',
+            'CountScene', 'CountNode', 'CountCamera', 'CountLight', 'CountModel',
+            'CountMeta', 'CountSetup', 'CountTour',
+            'EdanUUID', 'PosedAndQCd', 'ApprovedForPublication', 'Title',
+        ]);
     }
 
     public fetchTableName(): string { return 'Scene'; }

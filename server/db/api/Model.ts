@@ -31,8 +31,44 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     Title!: string | null;
     Variant!: string;
 
+    NameOrig!: string;
+    DateCreatedOrig!: Date;
+    idVCreationMethodOrig!: number | null;
+    idVModalityOrig!: number | null;
+    idVPurposeOrig!: number | null;
+    idVUnitsOrig!: number | null;
+    idVFileTypeOrig!: number | null;
+    idAssetThumbnailOrig!: number | null;
+    CountAnimationsOrig!: number | null;
+    CountCamerasOrig!: number | null;
+    CountFacesOrig!: number | null;
+    CountLightsOrig!: number | null;
+    CountMaterialsOrig!: number | null;
+    CountMeshesOrig!: number | null;
+    CountVerticesOrig!: number | null;
+    CountEmbeddedTexturesOrig!: number | null;
+    CountLinkedTexturesOrig!: number | null;
+    FileEncodingOrig!: string | null;
+    IsDracoCompressedOrig!: boolean | null;
+    AutomationTagOrig!: string | null;
+    CountTrianglesOrig!: number | null;
+    TitleOrig!: string | null;
+    VariantOrig!: string;
+
     constructor(input: ModelBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields([
+            'Name', 'DateCreated',
+            'idVCreationMethod', 'idVModality', 'idVPurpose', 'idVUnits', 'idVFileType',
+            'idAssetThumbnail',
+            'CountAnimations', 'CountCameras', 'CountFaces', 'CountLights', 'CountMaterials',
+            'CountMeshes', 'CountVertices', 'CountEmbeddedTextures', 'CountLinkedTextures',
+            'FileEncoding', 'IsDracoCompressed', 'AutomationTag', 'CountTriangles',
+            'Title', 'Variant',
+        ]);
     }
 
     public fetchTableName(): string { return 'Model'; }

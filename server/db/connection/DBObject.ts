@@ -17,6 +17,25 @@ export abstract class DBObject<T> {
     protected static async createManyWorker<T>(_data: DBObject<T>[]): Promise<boolean> { return false; }
     protected updateCachedValues(): void { }
 
+    /**
+     * Snapshot tracked scalar fields onto sibling `<Field>Orig` properties.
+     * Subclasses override `updateCachedValues` and call this with the list of
+     * mutable scalar columns whose pre-mutation value should be available for
+     * diff-based audit payloads. The audit pipeline reads `*Orig` siblings via
+     * AuditPayload.extractTrackedFields after the DB write to emit a compact
+     * { changed: { field: { before, after } } } row instead of the full entity.
+     *
+     * Snapshot only scalars — never relations, arrays, or sub-records. The
+     * audit payload shaper coerces non-scalars to omission markers anyway, so
+     * tracking them produces no useful diff and inflates the snapshot.
+     */
+    protected snapshotTrackedFields(fields: readonly string[]): void {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const self = this as any;
+        for (const field of fields)
+            self[`${field}Orig`] = self[field];
+    }
+
     constructor(input: T) {
         Object.assign(this, input);
         this.updateCachedValues();
@@ -49,8 +68,12 @@ export abstract class DBObject<T> {
     async update(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
             if (await this.updateWorker()) /* istanbul ignore else */ {
-                this.updateCachedValues();
+                // Audit BEFORE updateCachedValues so *Orig still reflects the
+                // pre-mutation snapshot for diff-payload shaping. After the
+                // audit emits, refresh *Orig so any subsequent update on the
+                // same instance compares against the now-persisted state.
                 this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
+                this.updateCachedValues();
                 return this.logSuccess('update', retry);
             } else if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);

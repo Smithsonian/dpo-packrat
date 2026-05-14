@@ -14,6 +14,54 @@
  *     replaced by { __omitted: 'LongText', bytes: N } markers.
  *
  * The helpers never throw; pass anything and they return something JSON-safe.
+ *
+ * `*Orig` tracking pattern (DB API subclasses):
+ *
+ *   class Foo extends DBObject<FooBase> {
+ *       Name!: string;
+ *       Description!: string | null;
+ *       // ...
+ *       NameOrig!: string;
+ *       DescriptionOrig!: string | null;
+ *
+ *       protected updateCachedValues(): void {
+ *           this.snapshotTrackedFields(['Name', 'Description', ...]);
+ *       }
+ *   }
+ *
+ * Why: at update time the audit row carries a diff covering ONLY the fields
+ * that actually moved — `{ before: 'old name', after: 'new name' }` — instead
+ * of a full snapshot of every column. That keeps payloads small (a typical
+ * scene rename audits at <500 bytes vs ~10 KB without tracking) AND makes
+ * forensic queries usable: "who renamed Scene X last month" becomes a single
+ * SELECT against `JSON_EXTRACT(Data, '$.changed.Name')` instead of diffing
+ * adjacent snapshots by hand. The diff-only path activates automatically once
+ * `*Orig` siblings exist; classes without coverage still emit a compact
+ * snapshot, so tracking is opt-in and incremental.
+ *
+ * extractTrackedFields() below scans for any property ending in 'Orig' whose
+ * base name is also present on the object — that is how the diff path
+ * discovers tracked columns at audit time without per-class wiring.
+ *
+ * Why this shape (and not inline patch-based diffing)?
+ *
+ * The codebase mutates DB-API instances in place — load → assign fields →
+ * call .update() — and the audit emit happens inside .update(), at which
+ * point the original values have already been overwritten in memory. The
+ * `*Orig` siblings are simply where the pre-mutation values are parked at
+ * load time so the diff path has something to compare against.
+ *
+ * A patch-based API (e.g. `obj.applyPatch({ Name: 'new' })` that internally
+ * fetches `before`, applies the patch, and emits a diff scoped to the patch
+ * keys) would eliminate the per-class `*Orig` declarations entirely and
+ * scope diffs to "what the caller actually changed" rather than "every
+ * column the class author remembered to track." That is the better long-term
+ * shape and is scoped as a future cleanup; rolling it out today would
+ * require migrating every mutate-then-update call site (hundreds of them
+ * across resolvers, REST handlers, and workers) plus rewiring the few
+ * workers that consult `*Orig` for transition detection (e.g. Scene's
+ * ApprovedForPublication / PosedAndQCd flag flips). `*Orig` is the pattern
+ * that fits the existing call-site shape with the least surface change.
  */
 
 /** Strings above this length become { __omitted } markers in compact snapshots. */

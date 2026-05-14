@@ -11,8 +11,16 @@ export class Unit extends DBC.DBObject<UnitBase> implements UnitBase, SystemObje
     Abbreviation!: string | null;
     ARKPrefix!: string | null;
 
+    NameOrig!: string;
+    AbbreviationOrig!: string | null;
+    ARKPrefixOrig!: string | null;
+
     constructor(input: UnitBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields(['Name', 'Abbreviation', 'ARKPrefix']);
     }
 
     public fetchTableName(): string { return 'Unit'; }

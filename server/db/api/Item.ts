@@ -16,8 +16,18 @@ export class Item extends DBC.DBObject<ItemBase> implements ItemBase, SystemObje
     EntireSubject!: boolean;
     Title!: string | null;
 
+    idAssetThumbnailOrig!: number | null;
+    idGeoLocationOrig!: number | null;
+    NameOrig!: string;
+    EntireSubjectOrig!: boolean;
+    TitleOrig!: string | null;
+
     constructor(input: ItemBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields(['idAssetThumbnail', 'idGeoLocation', 'Name', 'EntireSubject', 'Title']);
     }
 
     public fetchTableName(): string { return 'Item'; }

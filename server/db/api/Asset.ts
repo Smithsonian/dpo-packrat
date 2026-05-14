@@ -17,8 +17,18 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
     idSystemObject!: number | null;
     StorageKey!: string | null;
 
+    FileNameOrig!: string;
+    idAssetGroupOrig!: number | null;
+    idVAssetTypeOrig!: number;
+    idSystemObjectOrig!: number | null;
+    StorageKeyOrig!: string | null;
+
     constructor(input: AssetBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields(['FileName', 'idAssetGroup', 'idVAssetType', 'idSystemObject', 'StorageKey']);
     }
 
     public fetchTableName(): string { return 'Asset'; }

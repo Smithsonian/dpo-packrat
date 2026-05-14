@@ -15,8 +15,25 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
     idSystemObject!: number | null;
     idSystemObjectParent!: number | null;
 
+    NameOrig!: string;
+    ValueShortOrig!: string | null;
+    ValueExtendedOrig!: string | null;
+    idAssetVersionValueOrig!: number | null;
+    idUserOrig!: number | null;
+    idVMetadataSourceOrig!: number | null;
+    idSystemObjectOrig!: number | null;
+    idSystemObjectParentOrig!: number | null;
+
     constructor(input: MetadataBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields([
+            'Name', 'ValueShort', 'ValueExtended',
+            'idAssetVersionValue', 'idUser', 'idVMetadataSource',
+            'idSystemObject', 'idSystemObjectParent',
+        ]);
     }
 
     public fetchTableName(): string { return 'Metadata'; }

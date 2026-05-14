@@ -11,10 +11,21 @@ export class Project extends DBC.DBObject<ProjectBase> implements ProjectBase, S
     Description!: string | null;
     isRestricted!: boolean;
 
+    NameOrig!: string;
+    DescriptionOrig!: string | null;
+    isRestrictedOrig!: boolean;
+
     constructor(input: ProjectBase) {
         super(input);
         // $queryRaw returns MySQL booleans as 0/1; coerce to true/false
         this.isRestricted = Boolean(this.isRestricted);
+        // Re-snapshot after the boolean coercion above so isRestrictedOrig
+        // reflects the corrected value rather than the raw 0/1 from the row.
+        this.snapshotTrackedFields(['Name', 'Description', 'isRestricted']);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields(['Name', 'Description', 'isRestricted']);
     }
 
     public fetchTableName(): string { return 'Project'; }

@@ -13,8 +13,18 @@ export class CaptureData extends DBC.DBObject<CaptureDataBase> implements Captur
     Description!: string;
     idAssetThumbnail!: number | null;
 
+    NameOrig!: string;
+    idVCaptureMethodOrig!: number;
+    DateCapturedOrig!: Date;
+    DescriptionOrig!: string;
+    idAssetThumbnailOrig!: number | null;
+
     constructor(input: CaptureDataBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields(['Name', 'idVCaptureMethod', 'DateCaptured', 'Description', 'idAssetThumbnail']);
     }
 
     public fetchTableName(): string { return 'CaptureData'; }

@@ -20,8 +20,31 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
     CameraSettingsUniform!: boolean | null;
     CaptureDatasetUse!: string;             // JSON field, stored as a string
 
+    idVCaptureDatasetTypeOrig!: number;
+    CaptureDatasetFieldIDOrig!: number | null;
+    idVItemPositionTypeOrig!: number | null;
+    ItemPositionFieldIDOrig!: number | null;
+    ItemArrangementFieldIDOrig!: number | null;
+    idVFocusTypeOrig!: number | null;
+    idVLightSourceTypeOrig!: number | null;
+    idVBackgroundRemovalMethodOrig!: number | null;
+    idVClusterTypeOrig!: number | null;
+    ClusterGeometryFieldIDOrig!: number | null;
+    CameraSettingsUniformOrig!: boolean | null;
+    CaptureDatasetUseOrig!: string;
+
     constructor(input: CaptureDataPhotoBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields([
+            'idVCaptureDatasetType', 'CaptureDatasetFieldID',
+            'idVItemPositionType', 'ItemPositionFieldID', 'ItemArrangementFieldID',
+            'idVFocusType', 'idVLightSourceType', 'idVBackgroundRemovalMethod',
+            'idVClusterType', 'ClusterGeometryFieldID', 'CameraSettingsUniform',
+            'CaptureDatasetUse',
+        ]);
     }
 
     public fetchTableName(): string { return 'CaptureDataPhoto'; }

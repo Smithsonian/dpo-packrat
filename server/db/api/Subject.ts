@@ -13,8 +13,18 @@ export class Subject extends DBC.DBObject<SubjectBase> implements SubjectBase, S
     Name!: string;
     idIdentifierPreferred!: number | null;
 
+    idUnitOrig!: number;
+    idAssetThumbnailOrig!: number | null;
+    idGeoLocationOrig!: number | null;
+    NameOrig!: string;
+    idIdentifierPreferredOrig!: number | null;
+
     constructor(input: SubjectBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields(['idUnit', 'idAssetThumbnail', 'idGeoLocation', 'Name', 'idIdentifierPreferred']);
     }
 
     public fetchTableName(): string { return 'Subject'; }
