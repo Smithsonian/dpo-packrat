@@ -1,20 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * Audit pipeline E2E.
+ * Audit pipeline integration tests.
  *
- * Exercises the public audit surface end-to-end against mocked Prisma /
- * Cache / Invalidation boundaries. Each describe block maps to one
- * acceptance scenario from the I.13 plan: login attribution, DB API row
- * shape, log-only short-circuit, retire cascade linking, retention pass
+ * Exercises the public audit surface against mocked Prisma / Cache /
+ * Invalidation boundaries. Each describe block maps to one acceptance
+ * scenario: login attribution, DB API row shape,
+ * log-only short-circuit, retire cascade linking, retention pass
  * accounting, actor resolution (user / system / impersonation),
  * concurrent-write isolation across LocalStore, and tx rollback rolling
  * back business writes alongside their audit rows.
  *
- * The suite never reaches a real database: it stubs prisma.audit.create,
+ * it stubs prisma.audit.create,
  * prisma.audit.createMany, prisma.audit.findMany, prisma.$executeRaw, and
  * the SystemObjectCache resolver. This keeps it runnable in CI without a
- * provisioned schema. The standalone full-stack harness that hits a real
- * MariaDB is Deferred-G in the audit plan.
+ * provisioned schema.
  */
 import { Prisma } from '@prisma/client';
 
@@ -86,7 +85,7 @@ function rowFromBufferEntry(entry: AuditBufferEntry): CapturedRow {
     };
 }
 
-describe('Audit E2E — login + failed-login attribution', () => {
+describe('Audit integration — login + failed-login attribution', () => {
     let createSpy: jest.SpyInstance;
 
     beforeEach(() => {
@@ -133,9 +132,7 @@ describe('Audit E2E — login + failed-login attribution', () => {
     });
 
     test('Authorization.logDenial routes through AuditFactory.emit with eAuthDenied', async () => {
-        Authorization.logDenial(7, 1234, 'getDetailsTabDataForObject');
-        // logDenial dispatches asynchronously — give the microtask queue a turn.
-        await new Promise(r => setImmediate(r));
+        await Authorization.logDenial(7, 1234, 'getDetailsTabDataForObject');
         expect(createSpy).toHaveBeenCalledTimes(1);
         const row = rowFromCreateArgs(createSpy.mock.calls[0][0]);
         expect(row.AuditType).toBe(eAuditType.eAuthDenied);
@@ -144,7 +141,7 @@ describe('Audit E2E — login + failed-login attribution', () => {
     });
 });
 
-describe('Audit E2E — DB API call produces correct row shape', () => {
+describe('Audit integration — DB API call produces correct row shape', () => {
     let createSpy: jest.SpyInstance;
 
     beforeEach(() => {
@@ -190,7 +187,7 @@ describe('Audit E2E — DB API call produces correct row shape', () => {
         expect(Buffer.byteLength(row.Data ?? '', 'utf8')).toBeLessThan(500);
     });
 
-    test('createMany audits as eDBCreate (regression: was eDBDelete pre-Phase-1)', () => {
+    test('createMany audits as eDBCreate (regression: previously eDBDelete)', () => {
         // The bug fix lives in DBObject.createMany. Direct unit coverage in
         // server/tests/audit/DBObject.createMany.test.ts; we re-assert here at
         // the AuditFactory level via the legacy shim.
@@ -211,7 +208,7 @@ describe('Audit E2E — DB API call produces correct row shape', () => {
     });
 });
 
-describe('Audit E2E — log-only tier short-circuits the DB write', () => {
+describe('Audit integration — log-only tier short-circuits the DB write', () => {
     let createSpy: jest.SpyInstance;
     let logSpy: jest.SpyInstance;
     let invalidateSpy: jest.SpyInstance;
@@ -258,7 +255,7 @@ describe('Audit E2E — log-only tier short-circuits the DB write', () => {
     });
 });
 
-describe('Audit E2E — retire cascade links children to root via parentRetirement.idAudit', () => {
+describe('Audit integration — retire cascade links children to root via parentRetirement.idAudit', () => {
     let createSpy: jest.SpyInstance;
 
     beforeEach(() => {
@@ -315,7 +312,7 @@ describe('Audit E2E — retire cascade links children to root via parentRetireme
     });
 });
 
-describe('Audit E2E — retention job dry + real run accounting', () => {
+describe('Audit integration — retention job dry + real run accounting', () => {
     afterEach(() => jest.restoreAllMocks());
 
     test('seeded fixture: skeleton STANDARD, delete TRANSIENT, summary emitted', async () => {
@@ -377,7 +374,7 @@ describe('Audit E2E — retention job dry + real run accounting', () => {
     });
 });
 
-describe('Audit E2E — actor resolution at entry points', () => {
+describe('Audit integration — actor resolution at entry points', () => {
     let createSpy: jest.SpyInstance;
 
     beforeEach(() => {
@@ -440,7 +437,7 @@ describe('Audit E2E — actor resolution at entry points', () => {
     });
 });
 
-describe('Audit E2E — concurrent writes on distinct rows do not collide', () => {
+describe('Audit integration — concurrent writes on distinct rows do not collide', () => {
     afterEach(() => jest.restoreAllMocks());
 
     test('two parallel withAuditTransaction blocks each see their own buffer', async () => {
@@ -506,7 +503,7 @@ describe('Audit E2E — concurrent writes on distinct rows do not collide', () =
     });
 });
 
-describe('Audit E2E — tx rollback rolls back business + audit together', () => {
+describe('Audit integration — tx rollback rolls back business + audit together', () => {
     afterEach(() => jest.restoreAllMocks());
 
     test('audit flush failure aborts the tx; post-commit invalidations never fire', async () => {
@@ -561,9 +558,9 @@ describe('Audit E2E — tx rollback rolls back business + audit together', () =>
     });
 });
 
-describe('Audit E2E — audit type coverage acceptance', () => {
-    test('every Phase-1 semantic action is mapped to a tier', () => {
-        const phaseOneSemantics = [
+describe('Audit integration — audit type coverage acceptance', () => {
+    test('every semantic business action is mapped to a tier', () => {
+        const semanticActions = [
             eAuditType.eActionPublish,
             eAuditType.eActionUnpublish,
             eAuditType.eActionAssignLicense,
@@ -580,7 +577,7 @@ describe('Audit E2E — audit type coverage acceptance', () => {
             eAuditType.eActionAccessGrant,
             eAuditType.eActionAccessRevoke,
         ];
-        for (const action of phaseOneSemantics)
+        for (const action of semanticActions)
             expect(Config.audit.actionTiers[action]).toBe(AuditTier.PROTECT);
     });
 

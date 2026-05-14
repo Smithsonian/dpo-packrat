@@ -12,8 +12,8 @@
  * Each pass chunks writes to Config.audit.retentionBatchSize so the lock
  * window stays bounded. SIGINT between batches aborts cleanly.
  *
- * The job is a plain function — no Workflow wrapper — per the plan's staging.
- * Hash-chain integrity + Workflow wrapping is a deferred follow-up.
+ * The job is a plain function — no Workflow wrapper. Hash-chain integrity
+ * and Workflow wrapping are intentional follow-ups, not requirements here.
  */
 import * as NS from 'node-schedule';
 import { Audit } from '../../../db/api/Audit';
@@ -178,11 +178,19 @@ function resolveCutoff(days: number | 'forever', nowMs: number): Date | null {
     return new Date(nowMs - days * 24 * 60 * 60 * 1000);
 }
 
-/** Collect eAuditType values that map to the given tier from Config.audit.actionTiers. */
+/**
+ * Collect eAuditType values that resolve to the given tier. Walks every numeric
+ * eAuditType value and uses AuditFactory.resolveTier so unmapped types are
+ * placed by Config.audit.defaultUnmappedTier rather than dropped.
+ */
 function tierTypes(tier: AuditTier): eAuditType[] {
     const out: eAuditType[] = [];
-    for (const [key, value] of Object.entries(Config.audit.actionTiers)) {
-        if (value === tier) out.push(Number(key) as eAuditType);
+    for (const key of Object.keys(eAuditType)) {
+        const numeric = Number(key);
+        if (!Number.isFinite(numeric)) continue;
+        if (numeric === eAuditType.eUnknown) continue;
+        if (AuditFactory.resolveTier(numeric as eAuditType) === tier)
+            out.push(numeric as eAuditType);
     }
     return out;
 }

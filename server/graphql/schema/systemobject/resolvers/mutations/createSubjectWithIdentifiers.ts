@@ -22,7 +22,7 @@ export default async function createSubjectWithIdentifiers(_: Parent, args: Muta
     const ctx = Authorization.getContext();
     if (!ctx || (!ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit))) {
         if (ctx)
-            Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubjectWithIdentifiers');
+            await Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubjectWithIdentifiers');
         return { success: false, message: AUTH_ERROR.UNIT_DENIED };
     }
 

@@ -68,7 +68,7 @@ export default async function ingestData(_: Parent, args: MutationIngestDataArgs
     if (!ctx)
         return { success: false, message: AUTH_ERROR.NOT_AUTHENTICATED };
     if (input.project.id && input.project.id > 0) {
-        if (!Authorization.canAccessProject(ctx, input.project.id, 'ingestData'))
+        if (!await Authorization.canAccessProject(ctx, input.project.id, 'ingestData'))
             return { success: false, message: AUTH_ERROR.PROJECT_DENIED };
     }
 
@@ -129,9 +129,8 @@ class IngestDataWorker extends ResolverBase {
     //   - promoteAssetsIntoRepository (storage I/O; potentially many MB)
     //   - sendWorkflowIngestionEvent (external workflow-engine notification)
     // Wrapping the pre-promotion and post-promotion DB segments in separate
-    // transactions is the right design but is deferred until the I.13 E2E
-    // suite is in place to validate baseline behavior. Audit rows still
-    // persist via the direct-insert fallback in the meantime.
+    // transactions is the eventual design; audit rows currently persist via
+    // the direct-insert fallback.
     private async ingestWorker(): Promise<IngestDataResult> {
         RK.logInfo(RK.LogSection.eGQL,'ingest worker',undefined,{ ...this.input },'GraphQL.Ingestion.Data');
 

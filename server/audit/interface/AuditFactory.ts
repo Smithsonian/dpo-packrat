@@ -273,6 +273,39 @@ export class AuditFactory {
     }
 
     /**
+     * Resolve the tier for an action via Config.audit.actionTiers, falling back to
+     * Config.audit.defaultUnmappedTier when the action has no explicit entry.
+     * Surfaced for the startup self-check and the retention job.
+     */
+    static resolveTier(action: eAuditType): import('../../config').AuditTier {
+        const explicit = Config.audit.actionTiers[action];
+        return explicit ?? Config.audit.defaultUnmappedTier;
+    }
+
+    /**
+     * Walk every numeric eAuditType value and warn for any missing actionTiers
+     * entry. Called once at server startup. Does not throw — a missing entry now
+     * resolves to defaultUnmappedTier (STANDARD) rather than silently disappearing.
+     */
+    static auditTierCoverageSelfCheck(): { missing: eAuditType[] } {
+        const missing: eAuditType[] = [];
+        for (const key of Object.keys(eAuditType)) {
+            const numeric = Number(key);
+            if (!Number.isFinite(numeric)) continue;
+            if (numeric === eAuditType.eUnknown) continue;
+            if (Config.audit.actionTiers[numeric as eAuditType] === undefined)
+                missing.push(numeric as eAuditType);
+        }
+        if (missing.length > 0) {
+            RK.logWarning(RK.LogSection.eAUDIT, 'audit tier coverage gap',
+                `${missing.length} eAuditType value(s) missing from actionTiers; falling back to ${Config.audit.defaultUnmappedTier}`,
+                { missing: missing.map(m => `${eAuditType[m]} (${m})`), fallback: Config.audit.defaultUnmappedTier },
+                'Audit.Factory');
+        }
+        return { missing };
+    }
+
+    /**
      * Invalidate the derived SystemObject for an xref row. Preserves the
      * cascading-refresh behavior that the retired event consumer used to
      * provide when an xref was created/updated/deleted.

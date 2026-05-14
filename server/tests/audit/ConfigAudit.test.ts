@@ -24,7 +24,7 @@ describe('Config.audit', () => {
         expect(missing).toEqual([]);
     });
 
-    test('logOnlyObjectTypes covers the plan-enumerated FILLER entities', () => {
+    test('logOnlyObjectTypes covers the high-volume FILLER entities', () => {
         expect(Config.audit.logOnlyObjectTypes.length).toBeGreaterThanOrEqual(8);
     });
 

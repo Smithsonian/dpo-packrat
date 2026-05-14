@@ -77,8 +77,14 @@ export type ConfigType = {
             [AuditTier.STANDARD]: AuditRetention;
             [AuditTier.TRANSIENT]: AuditRetention;
         };
-        /** Code-defined mapping from eAuditType -> AuditTier. Unassigned types default to FILLER. */
+        /** Code-defined mapping from eAuditType -> AuditTier. Unassigned types fall back to defaultUnmappedTier (STANDARD by default). */
         actionTiers: Partial<Record<eAuditType, AuditTier>>;
+        /**
+         * Tier applied when an emitted eAuditType has no entry in actionTiers. Defaults to STANDARD so a forgotten
+         * map entry produces an audit row at default retention rather than silently disappearing. Startup self-check
+         * logs a warning for any eAuditType missing from actionTiers.
+         */
+        defaultUnmappedTier: AuditTier;
         /** DB object types routed to log-only (OpenObserve), never to the Audit table. */
         logOnlyObjectTypes: eDBObjectType[];
         /** Batch size for retention job's skeleton / delete passes. */
@@ -218,6 +224,7 @@ export const Config: ConfigType = {
             // Maintenance (retention job emits one row per run)
             [eAuditType.eActionSystemMaintenance]:  AuditTier.STANDARD,
         },
+        defaultUnmappedTier: AuditTier.STANDARD,
         logOnlyObjectTypes: [
             eNonSystemObjectType.eSystemObjectXref,
             eNonSystemObjectType.eModelObject,

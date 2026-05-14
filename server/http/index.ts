@@ -1,11 +1,11 @@
 import { passport, authCorsConfig, authSession, AuthRouter } from '../auth';
 import { Authorization } from '../auth/Authorization';
 import { ApolloServerOptions } from '../graphql';
-import { EventFactory } from '../event/interface/EventFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { resolveActorFromRequest } from '../audit/resolveActor';
 import { Actor } from '../audit/Actor';
 import { JobAuditRetention } from '../job/impl/NS/JobAuditRetention';
+import { AuditFactory } from '../audit/interface/AuditFactory';
 import { Config } from '../config';
 import * as H from '../utils/helpers';
 import { User } from '../db/api/User';
@@ -43,7 +43,6 @@ import cookieParser from 'cookie-parser';
 import { v2 as webdav } from 'webdav-server';
 import graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 import * as path from 'path';
-import { IEventEngine } from '../event/interface';
 
 require('json-bigint-patch'); // patch JSON.stringify's handling of BigInt
 
@@ -101,16 +100,6 @@ export class HttpServer {
         }
         RK.logInfo(RK.LogSection.eSYS,'system started: Middleware and Routes',undefined,undefined,'HttpServer');
 
-        // Initialize the EventFactory so non-audit event consumers wire up.
-        const eventEngine: IEventEngine | null = await EventFactory.getInstance();
-        const eventResult: IOResults = await eventEngine?.initialize() ?? { success: false, message: 'no engine instance' };
-        if (eventResult.success===false) {
-            RK.logCritical(RK.LogSection.eSYS,'system failed: Event Engine', `failed to initialize EventEngine. ${eventResult.message}}`,undefined,'HttpServer');
-            RK.logCritical(RK.LogSection.eSYS,'server failed','No Event Engine');
-            return false;
-        }
-        RK.logInfo(RK.LogSection.eSYS,'system started: Event Engine',undefined,eventResult.data,'HttpServer');
-
         // start usage monitoring
         if (monitorCPU) {
             const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
@@ -136,6 +125,11 @@ export class HttpServer {
         // NOTIFY: set our slack ID groups, pulling from the database
         RK.setSlackIDsForGroup(RK.NotifyGroup.ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
         RK.logInfo(RK.LogSection.eSYS,'system started: Slack Notifications',undefined,notifySlackResult.data,'HttpServer');
+
+        // Audit tier-coverage self-check: log loudly if any eAuditType is missing
+        // from Config.audit.actionTiers. Missing entries fall back to
+        // Config.audit.defaultUnmappedTier — never silent no-audit.
+        AuditFactory.auditTierCoverageSelfCheck();
 
         // Audit retention job: schedule outside NODE_ENV=test so jest runs don't
         // leave a node-schedule timer registered.
@@ -420,12 +414,16 @@ process.on('unhandledRejection', (reason, promise) => {
 // to how those environments manage processes
 if (!Config.environment.isJest && !Config.environment.isGitCI) {
     process.on('SIGINT', async () => {
+        console.log('SIGINT: requesting retention-job cancel...');
+        JobAuditRetention.requestCancel();
         console.log('SIGINT: shutting down RecordKeeper...');
         await RK.shutdown();
         process.exit(0);
     });
 
     process.on('SIGTERM', async () => {
+        console.log('SIGTERM: requesting retention-job cancel...');
+        JobAuditRetention.requestCancel();
         console.log('SIGTERM: shutting down RecordKeeper...');
         await RK.shutdown();
         process.exit(0);

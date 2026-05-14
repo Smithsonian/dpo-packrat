@@ -12,7 +12,7 @@ export default async function createSubject(_: Parent, args: MutationCreateSubje
     const ctx = Authorization.getContext();
     if (!ctx || (!ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit))) {
         if (ctx)
-            Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubject');
+            await Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubject');
         throw new Error(AUTH_ERROR.UNIT_DENIED);
     }
 
