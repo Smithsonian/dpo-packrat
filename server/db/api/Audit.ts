@@ -16,6 +16,43 @@ export type AuditDenialRow = {
     Data: string | null;
 };
 
+/**
+ * Per-SystemObject lifeline row: one audit event with actor and payload fields
+ * joined for display. AuditTypeName is the reverse-mapped enum name for human
+ * readers; Data is the raw JSON string from the column (callers parse as needed
+ * to follow links like Data.parentRetirement.idAudit).
+ */
+export type AuditLifelineRow = {
+    idAudit: number;
+    AuditDate: Date;
+    idUser: number | null;
+    UserName: string | null;
+    EmailAddress: string | null;
+    SystemActor: string | null;
+    AuditType: number;
+    AuditTypeName: string;
+    DBObjectType: number | null;
+    idDBObject: number | null;
+    idSystemObject: number | null;
+    Data: string | null;
+    CorrelationId: string | null;
+};
+
+export type AuditLifelineOptions = {
+    /** Rows to skip from the head of the result set. Default 0. */
+    offset?: number;
+    /** Max rows to return. Default 50. Clamped to [1, 500]. */
+    limit?: number;
+    /** True (default) returns newest-first; false returns oldest-first. */
+    descending?: boolean;
+};
+
+export type AuditLifelineResult = {
+    rows: AuditLifelineRow[];
+    /** Total matching rows ignoring offset/limit — for paging the UI. */
+    total: number;
+};
+
 export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
     idAudit!: number;
     idUser!: number | null;
@@ -216,6 +253,60 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
                 H.Helpers.getErrorString(error),
                 { tiersCount: tiers.length, cutoff, batchSize }, 'DB.Audit');
             return 0;
+        }
+    }
+
+    /**
+     * Return every audit row referencing the given SystemObject, ordered by date.
+     * Used by the admin lifeline endpoint. Each row carries the actor (idUser+name
+     * or SystemActor), action, parsed enum name, payload, and correlation id so a
+     * consumer can render the full history of one object in one call.
+     */
+    static async fetchByIdSystemObject(idSystemObject: number, options: AuditLifelineOptions = {}): Promise<AuditLifelineResult> {
+        if (!idSystemObject) return { rows: [], total: 0 };
+
+        const offset: number = Math.max(0, Math.floor(options.offset ?? 0));
+        const rawLimit: number = Math.floor(options.limit ?? 50);
+        const limit: number = Math.max(1, Math.min(500, rawLimit));
+        const orderClause = options.descending === false ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+
+        try {
+            const rawRows = await DBC.DBConnection.prisma.$queryRaw<Array<{
+                idAudit: number;
+                AuditDate: Date;
+                idUser: number | null;
+                UserName: string | null;
+                EmailAddress: string | null;
+                SystemActor: string | null;
+                AuditType: number;
+                DBObjectType: number | null;
+                idDBObject: number | null;
+                idSystemObject: number | null;
+                Data: string | null;
+                CorrelationId: string | null;
+            }>>`
+                SELECT AU.idAudit, AU.AuditDate, AU.idUser, U.Name AS UserName, U.EmailAddress,
+                       AU.SystemActor, AU.AuditType, AU.DBObjectType, AU.idDBObject, AU.idSystemObject,
+                       AU.Data, AU.CorrelationId
+                FROM Audit AS AU
+                LEFT JOIN User AS U ON (AU.idUser = U.idUser)
+                WHERE AU.idSystemObject = ${idSystemObject}
+                ORDER BY AU.AuditDate ${orderClause}, AU.idAudit ${orderClause}
+                LIMIT ${limit} OFFSET ${offset}`;
+
+            const totalRow = await DBC.DBConnection.prisma.$queryRaw<Array<{ total: bigint | number }>>`
+                SELECT COUNT(*) AS total FROM Audit WHERE idSystemObject = ${idSystemObject}`;
+            const total: number = Number(totalRow[0]?.total ?? 0);
+
+            const rows: AuditLifelineRow[] = rawRows.map(r => ({
+                ...r,
+                AuditTypeName: eAuditType[r.AuditType] ?? `eAuditType(${r.AuditType})`,
+            }));
+            return { rows, total };
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB, 'fetchByIdSystemObject failed',
+                H.Helpers.getErrorString(error), { idSystemObject, options }, 'DB.Audit');
+            return { rows: [], total: 0 };
         }
     }
 

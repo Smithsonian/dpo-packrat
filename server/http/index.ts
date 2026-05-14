@@ -35,6 +35,7 @@ import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, s
 import { getServiceStatus } from './routes/api/status';
 import { createWebDAVToken } from './routes/api/scene';
 import { sceneByUUID } from './routes/api/sceneByUUID';
+import { getAuditLifeline } from './routes/api/auditLifeline';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -233,6 +234,8 @@ export class HttpServer {
 
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
+
+        this.app.get('/api/audit/lifeline/:id', getAuditLifeline);  // admin-only: per-SystemObject audit history
 
         this.app.get('/api/contact',getContact);                        // get all contacts
         this.app.get('/api/contact/:id',getContact);                    // get a specific contact
