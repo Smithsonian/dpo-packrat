@@ -106,7 +106,12 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                 const Scene: DBAPI.Scene | null = await DBAPI.Scene.fetch(systemObject.idScene);
                 if (!Scene)
                     RK.logError(RK.LogSection.eGQL,'update source objects failed','unable to compute Scene details',{ ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
-                const User: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
+                // Query the semantic action that fires on the actual flag transition.
+                // Fall back to legacy eSceneQCd for pre-refactor scenes whose audit
+                // history predates the eActionApproveForPublication / eActionPoseAndQC split.
+                const PublicationApproverUser: DBAPI.User | null =
+                    await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eActionApproveForPublication)
+                    ?? await DBAPI.Audit.fetchLastUser(systemObject.idSystemObject, DBAPI.eAuditType.eSceneQCd);
                 const sceneCanBeQCdRes: H.IOResults = await SH.SceneHelpers.sceneCanBeQCd(systemObject.idScene);
                 if (!sceneCanBeQCdRes.success && sceneCanBeQCdRes.error)
                     RK.logDebug(RK.LogSection.eGQL,'scene not QC-ready',`sceneCanBeQCd: ${sceneCanBeQCdRes.error}`,{  ...H.Helpers.removeEmptyFields(systemObject) },'GraphQL.SystemObject.DetailsTab');
@@ -123,7 +128,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
                     CountTour: Scene?.CountTour,
                     EdanUUID: Scene?.EdanUUID,
                     ApprovedForPublication: Scene?.ApprovedForPublication,
-                    PublicationApprover: User?.Name ?? null,
+                    PublicationApprover: PublicationApproverUser?.Name ?? null,
                     PosedAndQCd: Scene?.PosedAndQCd,
                     CanBeQCd: sceneCanBeQCdRes.success,
                     idScene: systemObject.idScene,

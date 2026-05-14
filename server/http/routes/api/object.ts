@@ -116,7 +116,12 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
         const name = 'Is Reviewed';
         if(isReviewed) {
-            const reviewer: DBAPI.User | null = await DBAPI.Audit.fetchLastUser(idSystemObject, DBAPI.eAuditType.eSceneQCd);
+            // Query the semantic action that fires on PosedAndQCd transition.
+            // Fall back to legacy eSceneQCd for pre-refactor scenes whose audit
+            // history predates the eActionPoseAndQC split.
+            const reviewer: DBAPI.User | null =
+                await DBAPI.Audit.fetchLastUser(idSystemObject, DBAPI.eAuditType.eActionPoseAndQC)
+                ?? await DBAPI.Audit.fetchLastUser(idSystemObject, DBAPI.eAuditType.eSceneQCd);
             const notes = reviewer ? `Marked as reviewed by ${reviewer.Name}` : 'Marked as reviewed';
             return formatResultField(name,'Reviewed','pass',notes);
         } else
