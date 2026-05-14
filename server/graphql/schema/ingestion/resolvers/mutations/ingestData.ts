@@ -28,7 +28,52 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { eAuditType } from '../../../../../db/api/ObjectType';
+import { ASL } from '../../../../../utils/localStore';
 import * as fs from 'fs';
+
+/**
+ * Snapshot of what landed in the database and storage as ingestData ran. The
+ * resolver does NOT roll partial state back; if a failure happens after some
+ * phases have committed, this snapshot is emitted at logCritical so an
+ * operator (or a future automated cleanup tool) can locate and remove the
+ * orphaned rows / staged files.
+ *
+ * Only used on failure — the successful path does not log this payload.
+ */
+type IngestPartialStatePhase = 'init' | 'pre-storage' | 'storage' | 'post-storage' | 'workflow' | 'audit';
+
+type IngestPartialState = {
+    phase: IngestPartialStatePhase;
+    idSubjects: number[];
+    idItems: number[];
+    idProjects: number[];
+    idCaptureDatas: number[];
+    idModels: number[];
+    idScenes: number[];
+    idOthers: number[];
+    idAssetVersionsStaged: number[];
+    correlationId: string | null;
+    startedMs: number;
+};
+
+const PARTIAL_STATE_SENTINEL = 'INGEST_PARTIAL_STATE_FAILURE';
+
+/** Per-phase recovery guidance — pure text, consumed by humans and dashboards. */
+function recoveryHintForPhase(phase: IngestPartialStatePhase): string {
+    switch (phase) {
+        case 'init':
+        case 'pre-storage':
+            return 'pre-storage failure: rollback the listed DB ids; no storage cleanup needed';
+        case 'storage':
+            return 'mid-storage failure: some assets staged; rollback DB ids and delete the listed staged asset versions';
+        case 'post-storage':
+            return 'post-storage failure: storage promoted but derived objects/wiring incomplete; rollback derived objects and delete staged asset versions if intent is to retry';
+        case 'workflow':
+            return 'ingest complete but workflow not notified; trigger Cook manually if downstream processing is required';
+        case 'audit':
+            return 'ingest complete; audit-summary emission failed; no data loss, retry the summary emit';
+    }
+}
 
 type ModelInfo = {
     model: IngestModelInput;
@@ -104,14 +149,90 @@ class IngestDataWorker extends ResolverBase {
     private static vocabularyARK: DBAPI.Vocabulary | undefined = undefined;
     private static vocabularyEdanRecordID: DBAPI.Vocabulary | undefined = undefined;
 
+    /**
+     * Running snapshot of what has landed in the DB and storage. Mutated as
+     * each phase progresses; read by recordPartialStateFailure() on failure
+     * to populate the structured cleanup payload.
+     */
+    private partialState: IngestPartialState = {
+        phase: 'init',
+        idSubjects: [], idItems: [], idProjects: [],
+        idCaptureDatas: [], idModels: [], idScenes: [], idOthers: [],
+        idAssetVersionsStaged: [],
+        correlationId: null,
+        startedMs: 0,
+    };
+
     constructor(input: IngestDataInput, user: User | undefined) {
         super();
         this.input = input;
         this.user = user;
     }
 
+    /**
+     * Emit a single logCritical with the structured cleanup payload. Called
+     * from the soft-failure return paths and the catch block in ingest().
+     * Never called on successful ingest.
+     */
+    private recordPartialStateFailure(reason: string, error: unknown | null): void {
+        const phase = this.partialState.phase;
+        const payload = {
+            sentinel: PARTIAL_STATE_SENTINEL,
+            phase,
+            reason,
+            errorMessage: error instanceof Error ? error.message : (error ? String(error) : undefined),
+            errorStack: error instanceof Error ? error.stack : undefined,
+            recoveryHint: recoveryHintForPhase(phase),
+            correlationId: this.partialState.correlationId,
+            durationMs: Date.now() - this.partialState.startedMs,
+            idUser: this.user?.idUser ?? null,
+            // Counts at the top level for dashboards; arrays for cleanup tooling
+            counts: {
+                subjects: this.partialState.idSubjects.length,
+                items: this.partialState.idItems.length,
+                projects: this.partialState.idProjects.length,
+                captureDatas: this.partialState.idCaptureDatas.length,
+                models: this.partialState.idModels.length,
+                scenes: this.partialState.idScenes.length,
+                others: this.partialState.idOthers.length,
+                assetVersionsStaged: this.partialState.idAssetVersionsStaged.length,
+            },
+            ids: {
+                idSubjects: this.partialState.idSubjects,
+                idItems: this.partialState.idItems,
+                idProjects: this.partialState.idProjects,
+                idCaptureDatas: this.partialState.idCaptureDatas,
+                idModels: this.partialState.idModels,
+                idScenes: this.partialState.idScenes,
+                idOthers: this.partialState.idOthers,
+                idAssetVersionsStaged: this.partialState.idAssetVersionsStaged,
+            },
+        };
+        RK.logCritical(RK.LogSection.eHTTP, PARTIAL_STATE_SENTINEL, reason, payload, 'GraphQL.Ingestion.Data');
+    }
+
     async ingest(): Promise<IngestDataResult> {
-        const IDR: IngestDataResult = await this.ingestWorker();
+        // Seed the partial-state snapshot before any work begins so a failure
+        // in the first DB call still surfaces correlationId + start time.
+        this.partialState.correlationId = ASL.getStore()?.correlationId ?? null;
+        this.partialState.startedMs = Date.now();
+
+        let IDR: IngestDataResult;
+        try {
+            IDR = await this.ingestWorker();
+        } catch (err) {
+            // Hard failure: ingestWorker threw. Emit the cleanup payload and
+            // surface a generic failure to the caller. Behaviour preserved
+            // (resolver returns success:false, same as a soft failure).
+            this.recordPartialStateFailure('ingestWorker threw', err);
+            IDR = { success: false, message: err instanceof Error ? err.message : 'ingest threw an exception' };
+        }
+
+        // Soft failure: ingestWorker returned success:false. The body has
+        // already populated partialState.phase by the time it returns, so
+        // the cleanup payload reflects the right phase.
+        if (!IDR.success)
+            this.recordPartialStateFailure(IDR.message ?? 'ingestWorker returned failure', null);
 
         if (this.workflowHelper?.workflow)
             await this.workflowHelper.workflow.updateStatus(IDR.success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
@@ -139,6 +260,8 @@ class IngestDataWorker extends ResolverBase {
             return { success: results.success, message: results.error };
 
         this.workflowHelper = await this.createWorkflow(); // do this *after* this.validateInput, and *after* returning from validation failure, to avoid creating ingestion workflows that failed due to validation issues
+
+        this.partialState.phase = 'pre-storage';
         const subjectsDB: DBAPI.Subject[] = [];
         let itemDB: DBAPI.Item | null = null;
         if (this.ingestNew) {
@@ -168,11 +291,13 @@ class IngestDataWorker extends ResolverBase {
                 await this.appendToWFReport(`Subject ${href} (ARK ID ${subject.arkId}) ${subject.id ? 'validated' : 'created'}`);
 
                 subjectsDB.push(subjectDB);
+                if (!subject.id) this.partialState.idSubjects.push(subjectDB.idSubject);
             }
 
             itemDB = await this.fetchOrCreateItem(this.input.item, subjectsDB);
             if (!itemDB)
                 return { success: false, message: 'failure to retrieve or create media group' };
+            if (!this.input.item.id) this.partialState.idItems.push(itemDB.idItem);
 
             SOI = await CACHE.SystemObjectCache.getSystemFromItem(itemDB);
             path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
@@ -184,6 +309,7 @@ class IngestDataWorker extends ResolverBase {
                 const projectDB: DBAPI.Project | null = await this.wireProjectToItem(this.input.project.id, itemDB);
                 if (!projectDB)
                     return { success: false, message: 'failure to wire project to media group' };
+                this.partialState.idProjects.push(projectDB.idProject);
 
                 SOI = await CACHE.SystemObjectCache.getSystemFromProject(projectDB);
                 path = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
@@ -240,10 +366,17 @@ class IngestDataWorker extends ResolverBase {
         }
 
         // next, promote asset into repository storage
+        this.partialState.phase = 'storage';
         const { ingestResMap, transformUpdated } = await this.promoteAssetsIntoRepository();
         if (transformUpdated)
             modelTransformUpdated = true;
+        // Record every idAssetVersion that completed promotion so cleanup
+        // tooling can locate the orphaned staged content on failure.
+        for (const [idAssetVersion, ingestResult] of ingestResMap) {
+            if (ingestResult) this.partialState.idAssetVersionsStaged.push(idAssetVersion);
+        }
 
+        this.partialState.phase = 'post-storage';
         // use results to create/update derived objects
         if (this.ingestPhotogrammetry)
             await this.createPhotogrammetryDerivedObjects(ingestResMap);
@@ -263,12 +396,14 @@ class IngestDataWorker extends ResolverBase {
         }
 
         // notify workflow engine about this ingestion:
+        this.partialState.phase = 'workflow';
         if (!await this.sendWorkflowIngestionEvent(ingestResMap, modelTransformUpdated))
             return { success: false, message: 'failure to notify workflow engine about ingestion event' };
 
         // Single semantic row marking the ingest event. The ~30 sub-create CRUD
         // rows that already emitted alongside cover forensic detail; this row
         // is the operator-visible summary.
+        this.partialState.phase = 'audit';
         const idItem: number | null = itemDB ? itemDB.idItem : null;
         let idSystemObjectAnchor: number | null = null;
         if (itemDB) {
