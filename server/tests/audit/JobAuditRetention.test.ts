@@ -3,6 +3,7 @@ import { Audit } from '../../db/api/Audit';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { Config, AuditTier } from '../../config';
 import { eAuditType } from '../../db/api/ObjectType';
+import { VocabularyCache } from '../../cache/VocabularyCache';
 
 describe('JobAuditRetention.run', () => {
     let skeletonSpy: jest.SpyInstance;
@@ -14,6 +15,9 @@ describe('JobAuditRetention.run', () => {
         skeletonSpy = jest.spyOn(Audit, 'skeletonBefore').mockResolvedValue(0);
         deleteSpy = jest.spyOn(Audit, 'deleteBefore').mockResolvedValue(0);
         emitSpy = jest.spyOn(AuditFactory, 'emit').mockResolvedValue(true);
+        // Skip workflow wrap so its DB writes don't fire incidental DBCreate audits.
+        // Workflow wrapping is covered in JobAuditRetentionWorkflow.test.ts.
+        jest.spyOn(VocabularyCache, 'vocabularyEnumToId').mockResolvedValue(undefined);
     });
     afterEach(() => jest.restoreAllMocks());
 

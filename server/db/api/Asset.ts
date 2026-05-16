@@ -266,7 +266,7 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         if (!SO)
             return false;
         this.idSystemObject = SO.idSystemObject;
-        return this.updateWorker();
+        return this.update();
     }
 
     async assetType(): Promise<COMMON.eVocabularyID | undefined> {
