@@ -4,9 +4,8 @@
  * AuditLifelineTable
  *
  * Renders the full audit history for one SystemObject as a chronological list.
- * Hits `GET /api/audit/lifeline/:id`, which is admin-only on the server side
- * (admin/tools users only). The parent DetailsTab gates this tab on
- * `user.isAdmin`, but the server enforces the auth check independently.
+ * Hits `GET /api/audit/lifeline/:id`, which requires an authenticated user and
+ * is shown to anyone with access to the object's detail page.
  *
  * Each row reads as a sentence: "On <date>, <actor> <verb> <object>." The
  * Action column folds the affected entity name into the verb so the row is

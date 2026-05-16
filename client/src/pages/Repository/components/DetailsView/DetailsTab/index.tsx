@@ -131,7 +131,6 @@ type DetailsTabParams = {
     refreshTick?: number;
     parentRetired?: boolean;
     onDetailUpdate?: () => void;
-    isAdmin?: boolean;
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -156,8 +155,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         publishedState,
         refreshTick,
         parentRetired = false,
-        onDetailUpdate,
-        isAdmin = false
+        onDetailUpdate
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
@@ -442,10 +440,10 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             break;
     }
 
-    // Append the per-object audit lifeline as the trailing tab for admin users.
-    // Server-side the endpoint is admin/tools-gated as well, so a non-admin
-    // navigating directly would still get a 403 — this just hides the surface.
-    if (isAdmin && objectType !== undefined) {
+    // Append the per-object audit lifeline as the trailing tab for any
+    // authenticated viewer of the object's detail page. The server endpoint
+    // requires auth but otherwise has parity with detail visibility.
+    if (objectType !== undefined) {
         const auditTabIndex = tabs.length;
         tabs = [...tabs, 'Lifeline'];
         tabPanels = (

@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 import * as DBAPI from '../../../db';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { isAuthenticated } from '../../auth';
-import { Config } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 type LifelineResponse = {
@@ -19,12 +18,6 @@ type LifelineResponse = {
 };
 
 /**
- * Admin-only by default. Listed here as a module constant so an opt-in flip
- * for a downstream UI-facing variant is a one-line edit when product asks.
- */
-const ADMIN_ONLY = true;
-
-/**
  * GET /api/audit/lifeline/:idSystemObject
  *
  * Returns the full audit history for one SystemObject, ordered by AuditDate
@@ -38,8 +31,8 @@ const ADMIN_ONLY = true;
  *   limit       number  max rows; default 50; clamped to [1, 500]
  *   order       'asc' | 'desc' (default 'desc')
  *
- * Auth: admin or tools user. Returns 401 when not authenticated,
- * 403 when authenticated but not authorized.
+ * Auth: any authenticated user (parity with detail page visibility).
+ * Returns 401 when not authenticated.
  */
 export async function getAuditLifeline(req: Request, res: Response): Promise<void> {
     try {
@@ -51,13 +44,6 @@ export async function getAuditLifeline(req: Request, res: Response): Promise<voi
         if (!LS || !LS.idUser) {
             res.status(401).send(JSON.stringify({ success: false, message: 'missing local store/user' } as LifelineResponse));
             return;
-        }
-        if (ADMIN_ONLY) {
-            const authorized: number[] = [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
-            if (!authorized.includes(LS.idUser)) {
-                res.status(403).send(JSON.stringify({ success: false, message: 'admin only' } as LifelineResponse));
-                return;
-            }
         }
 
         const idSystemObject: number = parseInt(req.params.id, 10);
