@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import * as DBAPI from '../../../db';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { isAuthenticated } from '../../auth';
+import { Authorization } from '../../../auth/Authorization';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 type LifelineResponse = {
@@ -31,8 +32,10 @@ type LifelineResponse = {
  *   limit       number  max rows; default 50; clamped to [1, 500]
  *   order       'asc' | 'desc' (default 'desc')
  *
- * Auth: any authenticated user (parity with detail page visibility).
- * Returns 401 when not authenticated.
+ * Auth: authenticated user with project/unit access to the object (mirrors
+ * `Authorization.canAccessSystemObject`, the same check the detail query
+ * uses). Returns 401 when not authenticated, 403 when authenticated but
+ * outside the object's project/unit assignment.
  */
 export async function getAuditLifeline(req: Request, res: Response): Promise<void> {
     try {
@@ -49,6 +52,21 @@ export async function getAuditLifeline(req: Request, res: Response): Promise<voi
         const idSystemObject: number = parseInt(req.params.id, 10);
         if (!Number.isFinite(idSystemObject) || idSystemObject <= 0) {
             res.status(400).send(JSON.stringify({ success: false, message: `invalid idSystemObject: ${req.params.id}` } as LifelineResponse));
+            return;
+        }
+
+        // Mirror the detail query: require project/unit access to the object.
+        // Admins and users without scoped projects pass through; everyone else
+        // must have the object's project ancestry (or unit, when project-less)
+        // in their effective project/unit set.
+        const authCtx = Authorization.getContext();
+        if (!authCtx) {
+            res.status(401).send(JSON.stringify({ success: false, message: 'missing authorization context' } as LifelineResponse));
+            return;
+        }
+        const accessAllowed = await Authorization.canAccessSystemObject(authCtx, idSystemObject);
+        if (!accessAllowed) {
+            res.status(403).send(JSON.stringify({ success: false, message: 'access denied' } as LifelineResponse));
             return;
         }
 
