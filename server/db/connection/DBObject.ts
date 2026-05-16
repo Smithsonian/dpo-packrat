@@ -3,6 +3,7 @@ import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import * as H from '../../utils/helpers';
+import { withAuditTransaction } from '../../audit/withAuditTransaction';
 
 const DB_OPERATION_RETRIES: number = 3;
 const DB_OPERATION_RETRY_DELAY: number = 1500;
@@ -56,41 +57,49 @@ export abstract class DBObject<T> {
 
     async create(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.createWorker()) /* istanbul ignore else */ {
+            // Each attempt is its own tx so the business write + buffered
+            // audit row commit atomically. withAuditTransaction is idempotent:
+            // when an outer wrapper is active, this short-circuits and the
+            // outer commit flushes the audit row.
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.createWorker()) return false;
                 this.updateCachedValues();
-                // Await the audit emit. Inside a wrapped tx the audit emit
-                // can touch the same Prisma client (cache lookups etc.) as
-                // the next business call; Prisma forbids concurrent queries
-                // on one transaction client, so racing them yields an
-                // "Invalid invocation" error on whichever lands second.
                 await this.audit(eEventKey.eDBCreate);
-                return this.logSuccess('create', retry);
-            } else if (retry < DB_OPERATION_RETRIES)
+                return true;
+            });
+            if (ok) return this.logSuccess('create', retry);
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;
     }
     async update(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.updateWorker()) /* istanbul ignore else */ {
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.updateWorker()) return false;
                 // Audit BEFORE updateCachedValues so *Orig still reflects the
                 // pre-mutation snapshot for diff-payload shaping. After the
                 // audit emits, refresh *Orig so any subsequent update on the
                 // same instance compares against the now-persisted state.
                 await this.audit(eEventKey.eDBUpdate);
                 this.updateCachedValues();
-                return this.logSuccess('update', retry);
-            } else if (retry < DB_OPERATION_RETRIES)
+                return true;
+            });
+            if (ok) return this.logSuccess('update', retry);
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;
     }
     async delete(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.deleteWorker()) /* istanbul ignore else */ {
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.deleteWorker()) return false;
                 await this.audit(eEventKey.eDBDelete);
-                return this.logSuccess('delete', retry);
-            } else if (retry < DB_OPERATION_RETRIES)
+                return true;
+            });
+            if (ok) return this.logSuccess('delete', retry);
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;
@@ -98,11 +107,14 @@ export abstract class DBObject<T> {
 
     static async createMany<T>(data: DBObject<T>[]): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.createManyWorker<T>(data)) /* istanbul ignore else */ {
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.createManyWorker<T>(data)) return false;
                 for (const dataItem of data)
                     await dataItem.audit(eEventKey.eDBCreate);
                 return true;
-            } else if (retry < DB_OPERATION_RETRIES)
+            });
+            if (ok) return true;
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;

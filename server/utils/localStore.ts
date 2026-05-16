@@ -27,18 +27,31 @@ export class LocalStore {
     actor?: Actor | undefined;
 
     /**
-     * Active audit-row buffer during an open prisma.$transaction. Populated by
-     * withAuditTransaction before entering the tx callback and cleared after.
-     * AuditFactory.emit appends entries here when the buffer exists, rather than
-     * writing directly — rows flush via a single tx.audit.createMany before
-     * commit. Downstream code never touches this slot.
+     * Active audit-row buffer during an open prisma.$transaction. Lives only
+     * on the per-wrap *child* LocalStore that withAuditTransaction creates via
+     * forkChildScope() — the parent that the entry-point established is never
+     * mutated. AuditFactory.emit appends entries here when it sees the slot
+     * set on the current ASL store (which inside a wrap is the child); rows
+     * flush via a single tx.audit.createMany before commit.
+     *
+     * INTERNAL: this slot is private to withAuditTransaction.ts and
+     * AuditFactory.ts. Reading or writing it from any other code path is
+     * unsupported and will produce surprising results (undefined outside a
+     * wrap; a wrap's in-flight buffer only via ASL.getStore() inside the
+     * wrap body; never visible on the parent LocalStore).
      */
     auditBuffer?: AuditBufferEntry[] | undefined;
 
     /**
      * SystemObject ids that need cache-flush + Solr reindex after the current
-     * transaction commits. Populated alongside auditBuffer; drained by the
-     * withAuditTransaction post-commit hook. Empty / undefined outside a tx.
+     * transaction commits. Lives on the same per-wrap child LocalStore as
+     * auditBuffer; populated by AuditFactory.emit during the wrap, drained
+     * by withAuditTransaction's post-commit hook.
+     *
+     * INTERNAL: this slot is private to withAuditTransaction.ts and
+     * AuditFactory.ts. Same visibility rules as auditBuffer — adds made from
+     * outside the wrap go onto the parent LocalStore, where nothing drains
+     * them, and would silently leak.
      */
     invalidationQueue?: Set<number> | undefined;
 
@@ -64,6 +77,32 @@ export class LocalStore {
         this.userEmail = null;
         this.userNotify = false;
         this.userSlack = null;
+    }
+
+    /**
+     * Build a sibling LocalStore that inherits identity/correlation/auth slots
+     * from this one but starts with no audit-buffer / invalidation-queue / tx
+     * binding. Used by withAuditTransaction to give each wrap its own private
+     * scope, so concurrent or async-leaked sibling wraps cannot clobber each
+     * other's auditBuffer (the bug that prompted this helper).
+     *
+     * Identity fields are copied so audit rows written inside the wrap carry
+     * the same actor / idUser / correlationId / authContext as the parent.
+     * The workflow stack is intentionally NOT copied — pushes inside a wrap
+     * land on the child and disappear when the wrap returns, matching the
+     * existing LocalStore.clone() contract (changes do not propagate out).
+     */
+    forkChildScope(): LocalStore {
+        const child = new LocalStore(false, this.idUser, this.idRequest);
+        child.actor = this.actor;
+        child.correlationId = this.correlationId;
+        child.authContext = this.authContext;
+        child.userEmail = this.userEmail;
+        child.userNotify = this.userNotify;
+        child.userSlack = this.userSlack;
+        // auditBuffer / invalidationQueue / transactionNumber intentionally
+        // left undefined — the caller sets them for the duration of the wrap.
+        return child;
     }
 
     setUserNotify(email: string, doNotify: boolean = false, slackID?: string): void {

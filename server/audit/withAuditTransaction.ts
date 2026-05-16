@@ -13,11 +13,22 @@
  *   - On Prisma P2034 (deadlock / write conflict) the wrapper retries up to
  *     Config.audit.txDeadlockRetries times with exponential backoff.
  *
+ * Idempotent under nesting: when invoked inside a scope that already has a
+ * wrapping tx (LS.auditBuffer is set), the call short-circuits and just runs
+ * `fn` directly. The outer wrapper's buffer collects any audit emits and
+ * flushes them atomically on its own commit. This makes the wrapper safe to
+ * sprinkle through DBObject CRUD without worrying about whether the caller
+ * already opened a tx.
+ *
  * This wrapper does NOT manage entry-point Actor resolution; the caller must
  * already have an Actor on LocalStore (via HTTP middleware or withActor).
  */
 import { Prisma } from '@prisma/client';
-import * as DBC from '../db/connection';
+// Import DBConnection directly rather than via the connection index barrel so
+// we don't pull DBObject back into this module — DBObject imports us, and a
+// barrel import would close a runtime-evaluation cycle.
+import { DBConnection } from '../db/connection/DBConnection';
+import type { PrismaClientTrans } from '../db/connection/DBConnection';
 import { SystemObjectInvalidation } from '../cache/SystemObjectInvalidation';
 import { ASL, LocalStore } from '../utils/localStore';
 import { RecordKeeper as RK } from '../records/recordKeeper';
@@ -42,6 +53,14 @@ export async function withAuditTransaction<T>(
     fn: () => Promise<T>,
     options: TransactionOptions = {},
 ): Promise<T> {
+    // Short-circuit when already inside a wrapping tx. The outer wrapper's
+    // auditBuffer accumulates emits and the outer commit flushes them; nesting
+    // a fresh Prisma $transaction inside one is not supported and would split
+    // the audit rows away from the business writes anyway.
+    const existingLS: LocalStore | undefined = ASL.getStore();
+    if (existingLS?.auditBuffer !== undefined)
+        return fn();
+
     const timeout = options.timeoutMs ?? Config.audit.txStatementTimeoutMs;
     const maxRetries = options.maxRetries ?? Config.audit.txDeadlockRetries;
 
@@ -63,34 +82,41 @@ export async function withAuditTransaction<T>(
 }
 
 async function runTransactionOnce<T>(fn: () => Promise<T>, timeoutMs: number): Promise<T> {
-    const prismaClient = DBC.DBConnection.prisma;
-    if (!DBC.DBConnection.isFullPrismaClient(prismaClient))
+    const prismaClient = DBConnection.prisma;
+    if (!DBConnection.isFullPrismaClient(prismaClient))
         throw new Error('withAuditTransaction cannot nest: the active prisma client is already a transaction');
 
-    const LS: LocalStore = await ASL.getOrCreateStore();
+    // Build a private child LocalStore for this wrap rather than mutating the
+    // parent's auditBuffer / invalidationQueue slots. Two reasons:
+    //   1. Sibling wraps that overlap (e.g. through async boundaries that
+    //      ASL didn't propagate cleanly across) would otherwise clobber each
+    //      other's audit buffer via a shared slot.
+    //   2. Nested wraps that fail the idempotency short-circuit (because
+    //      ASL lost the outer scope) would otherwise corrupt the parent's
+    //      buffer when their `finally` restored a stale priorBuffer.
+    // The child carries the parent's identity / correlation / auth fields so
+    // audit rows look identical; everything tx-scoped lives on the child.
+    const parent: LocalStore = await ASL.getOrCreateStore();
+    const child: LocalStore = parent.forkChildScope();
+    child.auditBuffer = [];
+    child.invalidationQueue = new Set<number>();
 
-    const invalidations = new Set<number>();
     return prismaClient.$transaction(async (tx) => {
-        // Pin the captured LS inside the tx callback. Prisma's $transaction
-        // body runs through internal async hops where ASL.getStore() can lose
-        // its connection to the caller's scope. Re-entering the same LS via
-        // ASL.run keeps LS.transactionNumber visible to every DB API call
-        // inside the tx, so DBC.DBConnection.prisma routes consistently to
-        // the tx client rather than alternating to the regular client.
-        return ASL.run(LS, async () => {
-            const txNumber = await DBC.DBConnection.setPrismaTransaction(tx);
-            const priorBuffer = LS.auditBuffer;
-            const priorQueue = LS.invalidationQueue;
-            LS.auditBuffer = [];
-            LS.invalidationQueue = invalidations;
+        // Pin the child LS inside the tx callback. Prisma's $transaction body
+        // runs through internal async hops where ASL.getStore() can lose its
+        // connection to the caller's scope. ASL.run keeps the child (with
+        // transactionNumber set) visible to every DB API call inside the tx,
+        // so DBConnection.prisma routes consistently to the tx client rather
+        // than alternating to the regular client.
+        return ASL.run(child, async () => {
+            const txNumber = await DBConnection.setPrismaTransaction(tx);
             try {
                 const result = await fn();
-                await flushAuditBuffer(tx, LS.auditBuffer);
+                await flushAuditBuffer(tx, child.auditBuffer!);
                 return result;
             } finally {
-                LS.auditBuffer = priorBuffer;
-                LS.invalidationQueue = priorQueue;
-                DBC.DBConnection.clearPrismaTransaction(txNumber);
+                DBConnection.clearPrismaTransaction(txNumber);
+                // No restore needed: child is per-wrap, parent untouched.
             }
         });
     }, {
@@ -98,13 +124,13 @@ async function runTransactionOnce<T>(fn: () => Promise<T>, timeoutMs: number): P
         maxWait: Math.min(timeoutMs, 10000),
     }).then(async result => {
         // Post-commit invalidation. Runs outside the tx lock window.
-        for (const id of invalidations)
+        for (const id of child.invalidationQueue!)
             SystemObjectInvalidation.invalidate(id);
         return result;
     });
 }
 
-async function flushAuditBuffer(tx: DBC.PrismaClientTrans, buffer: AuditBufferEntry[]): Promise<void> {
+async function flushAuditBuffer(tx: PrismaClientTrans, buffer: AuditBufferEntry[]): Promise<void> {
     if (buffer.length === 0) return;
     const CHUNK = 500;
     for (let i = 0; i < buffer.length; i += CHUNK) {

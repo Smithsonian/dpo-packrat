@@ -4,6 +4,12 @@ import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { DBObjectNameToType } from '../../db/api/ObjectType';
 
+// withAuditTransaction now wraps every CRUD; stub it out so the test isolates
+// audit-emit behavior without opening a real Prisma $transaction.
+jest.mock('../../audit/withAuditTransaction', () => ({
+    withAuditTransaction: <T>(fn: () => Promise<T>): Promise<T> => fn(),
+}));
+
 // Minimal DBObject subclass that stubs its workers and reports a valid ObjectType
 // so createMany() exercises the audit-key path without touching the DB.
 type FakeInput = { id: number };
@@ -28,9 +34,6 @@ describe('DBObject.createMany audit key', () => {
             const ok = await (FakeDBObject as unknown as { createMany: (d: FakeDBObject[]) => Promise<boolean> })
                 .createMany(items);
             expect(ok).toBe(true);
-
-            // Allow the fire-and-forget audit() calls to settle.
-            await new Promise(resolve => setImmediate(resolve));
 
             expect(spy).toHaveBeenCalledTimes(2);
             for (const call of spy.mock.calls)

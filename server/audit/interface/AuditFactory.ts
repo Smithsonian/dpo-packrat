@@ -52,9 +52,19 @@ export class AuditFactory {
     /**
      * Write an audit row.
      *
-     * Returns true on success. On failure, logs at critical and returns false
-     * (current behavior — transactional atomicity with business writes is
-     * layered in by the upcoming prisma.$transaction work).
+     * Two delivery paths:
+     *  - Buffered (atomic): when LocalStore.auditBuffer is set (inside a
+     *    withAuditTransaction scope, which DBObject CRUD now enters by
+     *    default), the row is pushed onto the buffer and flushes via a
+     *    single tx.audit.createMany right before commit. Audit + business
+     *    write commit together; a flush failure rolls back the whole tx.
+     *  - Direct insert: when no buffer is set (HTTP-route telemetry, ad-hoc
+     *    audit calls), the row goes straight to prisma.audit.create. No
+     *    atomicity coupling because there is no business write to couple to.
+     *
+     * Returns true on success. On failure, logs at critical and returns
+     * false; callers that need atomicity should ensure they run inside a
+     * withAuditTransaction so the failure rolls back their business write.
      */
     static async emit(args: EmitArgs): Promise<boolean> {
         const action: eAuditType = args.action;
