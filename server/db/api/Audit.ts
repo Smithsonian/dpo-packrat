@@ -271,21 +271,23 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
         const limit: number = Math.max(1, Math.min(500, rawLimit));
         const orderClause = options.descending === false ? Prisma.sql`ASC` : Prisma.sql`DESC`;
 
+        type RawLifelineRow = {
+            idAudit: number;
+            AuditDate: Date;
+            idUser: number | null;
+            UserName: string | null;
+            EmailAddress: string | null;
+            SystemActor: string | null;
+            AuditType: number;
+            DBObjectType: number | null;
+            idDBObject: number | null;
+            idSystemObject: number | null;
+            Data: string | null;
+            CorrelationId: string | null;
+        };
+
         try {
-            const rawRows = await DBC.DBConnection.prisma.$queryRaw<Array<{
-                idAudit: number;
-                AuditDate: Date;
-                idUser: number | null;
-                UserName: string | null;
-                EmailAddress: string | null;
-                SystemActor: string | null;
-                AuditType: number;
-                DBObjectType: number | null;
-                idDBObject: number | null;
-                idSystemObject: number | null;
-                Data: string | null;
-                CorrelationId: string | null;
-            }>>`
+            const rawRows = await DBC.DBConnection.prisma.$queryRaw<RawLifelineRow[]>`
                 SELECT AU.idAudit, AU.AuditDate, AU.idUser, U.Name AS UserName, U.EmailAddress,
                        AU.SystemActor, AU.AuditType, AU.DBObjectType, AU.idDBObject, AU.idSystemObject,
                        AU.Data, AU.CorrelationId
