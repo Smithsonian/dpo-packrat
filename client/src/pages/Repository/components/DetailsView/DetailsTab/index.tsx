@@ -46,6 +46,7 @@ import StakeholderDetails from './StakeholderDetails';
 import SubjectDetails from './SubjectDetails';
 import UnitDetails from './UnitDetails';
 import ObjectVersionTable from './ObjectVersionTable';
+import AuditLifelineTable from './AuditLifelineTable';
 import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
@@ -130,6 +131,7 @@ type DetailsTabParams = {
     refreshTick?: number;
     parentRetired?: boolean;
     onDetailUpdate?: () => void;
+    isAdmin?: boolean;
 };
 
 function DetailsTab(props: DetailsTabParams): React.ReactElement {
@@ -154,7 +156,8 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         publishedState,
         refreshTick,
         parentRetired = false,
-        onDetailUpdate
+        onDetailUpdate,
+        isAdmin = false
     } = props;
     const [tab, setTab] = useState(0);
     const classes = useStyles();
@@ -437,6 +440,22 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         default:
             tabs = ['Unknown'];
             break;
+    }
+
+    // Append the per-object audit lifeline as the trailing tab for admin users.
+    // Server-side the endpoint is admin/tools-gated as well, so a non-admin
+    // navigating directly would still get a 403 — this just hides the surface.
+    if (isAdmin && objectType !== undefined) {
+        const auditTabIndex = tabs.length;
+        tabs = [...tabs, 'Lifeline'];
+        tabPanels = (
+            <React.Fragment>
+                {tabPanels}
+                <TabPanel value={tab} index={auditTabIndex} id={`tab-${auditTabIndex}`}>
+                    <AuditLifelineTable idSystemObject={idSystemObject} />
+                </TabPanel>
+            </React.Fragment>
+        );
     }
 
     return (

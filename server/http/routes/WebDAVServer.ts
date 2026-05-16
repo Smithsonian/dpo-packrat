@@ -530,8 +530,17 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 }
             }
 
-            // Audit upload
-            const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
+            // Audit upload. WebDAV writes are essentially Voyager Story saves:
+            // it's the surface Voyager uses to round-trip scene edits back to
+            // Packrat. Tag with that intent so the lifeline UI doesn't render
+            // a bare URL.
+            const auditData = {
+                url: `${WebDAVServer.httpRoute}${DP.requestURLV}`,
+                fileName: path.basename(pathS),
+                reason: 'Voyager Story edit',
+                source: 'WebDAV',
+                auth: true,
+            };
             const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
             AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPUpload);
 

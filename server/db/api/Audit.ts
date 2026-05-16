@@ -3,7 +3,7 @@ import { Audit as AuditBase, User as UserBase, Prisma } from '@prisma/client';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
-import { eDBObjectType, eAuditType /*, eSystemObjectType */ } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
+import { eDBObjectType, eAuditType, DBObjectTypeToName } from './ObjectType'; // importing eSystemObjectType causes as circular dependency
 import { User } from './User';
 
 export type AuditDenialRow = {
@@ -32,6 +32,7 @@ export type AuditLifelineRow = {
     AuditType: number;
     AuditTypeName: string;
     DBObjectType: number | null;
+    DBObjectTypeName: string | null;
     idDBObject: number | null;
     idSystemObject: number | null;
     Data: string | null;
@@ -301,6 +302,7 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             const rows: AuditLifelineRow[] = rawRows.map(r => ({
                 ...r,
                 AuditTypeName: eAuditType[r.AuditType] ?? `eAuditType(${r.AuditType})`,
+                DBObjectTypeName: r.DBObjectType !== null ? DBObjectTypeToName(r.DBObjectType as eDBObjectType) : null,
             }));
             return { rows, total };
         } catch (error) /* istanbul ignore next */ {

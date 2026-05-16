@@ -1124,6 +1124,7 @@ function DetailsView(): React.ReactElement {
                         refreshTick={refreshTick}
                         parentRetired={data?.getSystemObjectDetails?.retired ?? false}
                         onDetailUpdate={onDetailUpdate}
+                        isAdmin={isAdmin}
                     />
                 </Box>
                 {(uploadReferences && uploadReferences.idAsset) && (
