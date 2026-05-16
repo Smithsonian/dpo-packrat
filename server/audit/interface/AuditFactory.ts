@@ -58,12 +58,15 @@ export class AuditFactory {
      */
     static async emit(args: EmitArgs): Promise<boolean> {
         const action: eAuditType = args.action;
-        const actor: Actor = args.actor;
+        let actor: Actor = args.actor;
 
         if (!Actor.isValid(actor)) {
-            RK.logError(RK.LogSection.eAUDIT, 'emit refused invalid actor',
-                'both idUser and SystemActor would be null', { actor, action }, 'Audit.Factory');
-            return false;
+            // Fall back to a system Unknown actor so the audit row still lands
+            // rather than vanishing — log a warning so the gap is searchable.
+            RK.logWarning(RK.LogSection.eAUDIT, 'emit fallback actor used',
+                'caller passed invalid Actor; substituting system:Unknown so the row still writes',
+                { action }, 'Audit.Factory');
+            actor = Actor.system('Unknown');
         }
 
         const LS = ASL.getStore();
@@ -97,16 +100,25 @@ export class AuditFactory {
         }
 
         // Resolve idSystemObject synchronously from the cache if the caller
-        // didn't supply it and we have a typed target.
+        // didn't supply it and we have a typed target. Two corner cases:
+        //  - target.eObjectType === eSystemObject: idObject IS the
+        //    idSystemObject, skip the cache lookup entirely.
+        //  - non-SystemObject entities (User/Vocabulary/Metadata/...): cache
+        //    returns idSystemObject=0 as a V8-Map-size sentinel; normalize
+        //    that to null so the FK on Audit.idSystemObject stays satisfied.
         let idSystemObject: number | null = args.idSystemObject ?? null;
         if (idSystemObject === null && args.target && args.target.eObjectType !== eNonSystemObjectType.eAudit) {
-            try {
-                const SOInfo = await CACHE.SystemObjectCache.getSystemFromObjectID(args.target);
-                if (SOInfo) idSystemObject = SOInfo.idSystemObject;
-            } catch (err) {
-                RK.logError(RK.LogSection.eAUDIT, 'idSystemObject resolve failed',
-                    err instanceof Error ? err.message : String(err),
-                    { target: args.target }, 'Audit.Factory');
+            if (args.target.eObjectType === eNonSystemObjectType.eSystemObject) {
+                idSystemObject = args.target.idObject || null;
+            } else {
+                try {
+                    const SOInfo = await CACHE.SystemObjectCache.getSystemFromObjectID(args.target);
+                    if (SOInfo && SOInfo.idSystemObject > 0) idSystemObject = SOInfo.idSystemObject;
+                } catch (err) {
+                    RK.logError(RK.LogSection.eAUDIT, 'idSystemObject resolve failed',
+                        err instanceof Error ? err.message : String(err),
+                        { target: args.target }, 'Audit.Factory');
+                }
             }
         }
 
@@ -171,12 +183,15 @@ export class AuditFactory {
      * Returns false if no Actor can be resolved.
      */
     static async emitSemantic(args: EmitSemanticArgs): Promise<boolean> {
-        const actor: Actor | undefined = args.actor ?? ASL.getStore()?.getActor();
+        // Fall back to system:Unknown when no Actor can be resolved from
+        // LocalStore — keeps the row intact and searchable rather than
+        // dropping the emit when the entry-point didn't establish an Actor.
+        let actor: Actor | undefined = args.actor ?? ASL.getStore()?.getActor();
         if (!actor) {
-            RK.logError(RK.LogSection.eAUDIT, 'emitSemantic missing actor',
-                'no Actor on LocalStore — caller must run inside an entry-point scope or pass actor explicitly',
+            RK.logWarning(RK.LogSection.eAUDIT, 'emitSemantic fallback actor used',
+                'no Actor on LocalStore; substituting system:Unknown — entry-point should establish an Actor',
                 { action: args.action, target: args.target }, 'Audit.Factory');
-            return false;
+            actor = Actor.system('Unknown');
         }
         return AuditFactory.emit({ ...args, actor });
     }
@@ -195,12 +210,13 @@ export class AuditFactory {
      */
     static async emitWithId(args: EmitArgs): Promise<number | null> {
         const action: eAuditType = args.action;
-        const actor: Actor = args.actor;
+        let actor: Actor = args.actor;
 
         if (!Actor.isValid(actor)) {
-            RK.logError(RK.LogSection.eAUDIT, 'emitWithId refused invalid actor',
-                'both idUser and SystemActor would be null', { actor, action }, 'Audit.Factory');
-            return null;
+            RK.logWarning(RK.LogSection.eAUDIT, 'emitWithId fallback actor used',
+                'caller passed invalid Actor; substituting system:Unknown so the row still writes',
+                { action }, 'Audit.Factory');
+            actor = Actor.system('Unknown');
         }
 
         const LS = ASL.getStore();
@@ -219,13 +235,17 @@ export class AuditFactory {
 
         let idSystemObject: number | null = args.idSystemObject ?? null;
         if (idSystemObject === null && args.target && args.target.eObjectType !== eNonSystemObjectType.eAudit) {
-            try {
-                const SOInfo = await CACHE.SystemObjectCache.getSystemFromObjectID(args.target);
-                if (SOInfo) idSystemObject = SOInfo.idSystemObject;
-            } catch (err) {
-                RK.logError(RK.LogSection.eAUDIT, 'idSystemObject resolve failed',
-                    err instanceof Error ? err.message : String(err),
-                    { target: args.target }, 'Audit.Factory');
+            if (args.target.eObjectType === eNonSystemObjectType.eSystemObject) {
+                idSystemObject = args.target.idObject || null;
+            } else {
+                try {
+                    const SOInfo = await CACHE.SystemObjectCache.getSystemFromObjectID(args.target);
+                    if (SOInfo && SOInfo.idSystemObject > 0) idSystemObject = SOInfo.idSystemObject;
+                } catch (err) {
+                    RK.logError(RK.LogSection.eAUDIT, 'idSystemObject resolve failed',
+                        err instanceof Error ? err.message : String(err),
+                        { target: args.target }, 'Audit.Factory');
+                }
             }
         }
 
@@ -335,12 +355,17 @@ export class AuditFactory {
      */
     static async audit(obj: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
         const LS = ASL.getStore();
-        const actor: Actor | undefined = LS?.getActor();
+        // Fall back to system:Unknown when no Actor can be resolved — keeps the
+        // audit row intact rather than dropping it when LocalStore is missing
+        // (e.g. test scopes where ASL.enterWith() didn't propagate across an
+        // async boundary). Production HTTP middleware / withActor always set
+        // an Actor so this branch should never fire in production paths.
+        let actor: Actor | undefined = LS?.getActor();
         if (!actor) {
-            RK.logError(RK.LogSection.eAUDIT, 'audit write skipped',
-                'no Actor on LocalStore — caller must run inside an entry-point scope or use withActor',
+            RK.logWarning(RK.LogSection.eAUDIT, 'audit fallback actor used',
+                'no Actor on LocalStore; substituting system:Unknown — entry-point should establish an Actor',
                 { oID, key }, 'Audit.Factory');
-            return false;
+            actor = Actor.system('Unknown');
         }
 
         return AuditFactory.emit({

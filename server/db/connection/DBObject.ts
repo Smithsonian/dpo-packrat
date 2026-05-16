@@ -58,7 +58,12 @@ export abstract class DBObject<T> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
             if (await this.createWorker()) /* istanbul ignore else */ {
                 this.updateCachedValues();
-                this.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
+                // Await the audit emit. Inside a wrapped tx the audit emit
+                // can touch the same Prisma client (cache lookups etc.) as
+                // the next business call; Prisma forbids concurrent queries
+                // on one transaction client, so racing them yields an
+                // "Invalid invocation" error on whichever lands second.
+                await this.audit(eEventKey.eDBCreate);
                 return this.logSuccess('create', retry);
             } else if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
@@ -72,7 +77,7 @@ export abstract class DBObject<T> {
                 // pre-mutation snapshot for diff-payload shaping. After the
                 // audit emits, refresh *Orig so any subsequent update on the
                 // same instance compares against the now-persisted state.
-                this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
+                await this.audit(eEventKey.eDBUpdate);
                 this.updateCachedValues();
                 return this.logSuccess('update', retry);
             } else if (retry < DB_OPERATION_RETRIES)
@@ -83,7 +88,7 @@ export abstract class DBObject<T> {
     async delete(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
             if (await this.deleteWorker()) /* istanbul ignore else */ {
-                this.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+                await this.audit(eEventKey.eDBDelete);
                 return this.logSuccess('delete', retry);
             } else if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
@@ -95,7 +100,7 @@ export abstract class DBObject<T> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
             if (await this.createManyWorker<T>(data)) /* istanbul ignore else */ {
                 for (const dataItem of data)
-                    dataItem.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
+                    await dataItem.audit(eEventKey.eDBCreate);
                 return true;
             } else if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);

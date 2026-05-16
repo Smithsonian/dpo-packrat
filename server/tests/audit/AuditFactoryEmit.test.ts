@@ -8,6 +8,7 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import { SystemObjectInvalidation } from '../../cache/SystemObjectInvalidation';
 import { eEventKey } from '../../event/interface/EventEnums';
+import { ASL, LocalStore } from '../../utils/localStore';
 
 describe('AuditFactory.emit writes directly and skips event pipeline', () => {
     let createSpy: jest.SpyInstance;
@@ -95,12 +96,15 @@ describe('AuditFactory.emit writes directly and skips event pipeline', () => {
         expect(invalidateSpy).toHaveBeenCalledWith(999);
     });
 
-    test('rejects actor that would produce both-null columns', async () => {
+    test('falls back to system:Unknown actor for an invalid Actor', async () => {
         // Construct an invalid actor synthetically; the public constructors prevent this shape.
         const bogus = { kind: 'user', idUser: undefined } as unknown as Actor;
         const ok = await AuditFactory.emit({ action: eAuditType.eDBCreate, actor: bogus });
-        expect(ok).toBe(false);
-        expect(createSpy).not.toHaveBeenCalled();
+        expect(ok).toBe(true);
+        expect(createSpy).toHaveBeenCalledTimes(1);
+        const data = createSpy.mock.calls[0][0].data;
+        expect(data.SystemActor).toBe('Unknown');
+        expect(data.User).toBeUndefined();
     });
 });
 
@@ -128,9 +132,16 @@ describe('AuditFactory.audit legacy shim resolves actor from LocalStore', () => 
         expect(data.AuditType).toBe(eAuditType.eDBCreate);
     });
 
-    test('returns false when no actor is available on the LocalStore', async () => {
-        const ok = await AuditFactory.audit({}, { idObject: 1, eObjectType: COMMON.eSystemObjectType.eScene }, eEventKey.eDBUpdate);
-        expect(ok).toBe(false);
-        expect(createSpy).not.toHaveBeenCalled();
+    test('falls back to system:Unknown actor when no actor on the LocalStore', async () => {
+        // Run inside a fresh, actor-less LocalStore so the global jest.setup
+        // testLS doesn't satisfy the resolution path.
+        await ASL.run(new LocalStore(true, null), async () => {
+            const ok = await AuditFactory.audit({}, { idObject: 1, eObjectType: COMMON.eSystemObjectType.eScene }, eEventKey.eDBUpdate);
+            expect(ok).toBe(true);
+        });
+        expect(createSpy).toHaveBeenCalledTimes(1);
+        const data = createSpy.mock.calls[0][0].data;
+        expect(data.SystemActor).toBe('Unknown');
+        expect(data.User).toBeUndefined();
     });
 });

@@ -7,6 +7,8 @@
  */
 import schema, { schemaForTest } from '../schema';
 import { graphql, print, DocumentNode } from 'graphql';
+import { ASL, LocalStore } from '../../utils/localStore';
+import { Actor } from '../../audit/Actor';
 import {
     GetUserInput,
     GetUserResult,
@@ -775,7 +777,19 @@ class GraphQLApi {
         const source: string = query || queryNodeString;
 
         const contextValue = { ...context };
-        const { data, errors } = await graphql({ schema: (!this.test) ? schema : schemaForTest, source, variableValues: variables, contextValue });
+        // GraphQLApi is a test-only entry point that bypasses Apollo Server and
+        // the HTTP middleware that normally establishes the ASL scope. Test
+        // setup calls ASL.enterWith() which doesn't propagate reliably across
+        // Jest's async boundaries; wrap the graphql() call in ASL.run() so the
+        // LocalStore (and its Actor) reach every resolver. When no LS is set
+        // up at all, fall back to a system-actor scope so audit emits don't
+        // fail closed on missing Actor.
+        const existing: LocalStore | undefined = ASL.getStore();
+        const LS: LocalStore = existing ?? this.buildFallbackTestStore();
+        const result = await ASL.run(LS, async () => {
+            return graphql({ schema: (!this.test) ? schema : schemaForTest, source, variableValues: variables, contextValue });
+        });
+        const { data, errors } = result;
 
         if (errors && errors.length) {
             throw errors[0];
@@ -786,6 +800,13 @@ class GraphQLApi {
         }
 
         return data[operationName];
+    }
+
+    private buildFallbackTestStore(): LocalStore {
+        const LS = new LocalStore(true, null);
+        LS.actor = Actor.system('GraphQLApiTest');
+        LS.correlationId = 'graphql-api-test-fallback';
+        return LS;
     }
 }
 

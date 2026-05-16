@@ -78,14 +78,17 @@ describe('Retirement semantic audit (emitWithId)', () => {
         expect(data.SystemActor).toBe('Cook');
     });
 
-    test('invalid actor fails fast without hitting the DB', async () => {
+    test('invalid actor falls back to system:Unknown and still writes', async () => {
         const bogus = { kind: 'user', idUser: undefined } as unknown as Actor;
         const idAudit = await AuditFactory.emitWithId({
             action: eAuditType.eActionRetire,
             actor: bogus,
             target: { idObject: 1, eObjectType: eNonSystemObjectType.eSystemObject },
         });
-        expect(idAudit).toBeNull();
-        expect(createSpy).not.toHaveBeenCalled();
+        expect(idAudit).not.toBeNull();
+        expect(createSpy).toHaveBeenCalledTimes(1);
+        const data = createSpy.mock.calls[0][0].data;
+        expect(data.SystemActor).toBe('Unknown');
+        expect(data.User).toBeUndefined();
     });
 });

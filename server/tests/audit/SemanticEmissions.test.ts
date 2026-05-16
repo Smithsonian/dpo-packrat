@@ -7,6 +7,7 @@ import * as DBC from '../../db/connection';
 import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import { SystemObjectInvalidation } from '../../cache/SystemObjectInvalidation';
+import { ASL, LocalStore } from '../../utils/localStore';
 
 /**
  * Coverage for the 13 semantic AuditType emissions wired into the codebase.
@@ -47,10 +48,16 @@ describe('AuditFactory.emitSemantic', () => {
         expect(args.actor).toEqual(Actor.system('Migration'));
     });
 
-    test('returns false and skips emit when no Actor available', async () => {
-        const ok = await AuditFactory.emitSemantic({ action: eAuditType.eActionPublish });
-        expect(ok).toBe(false);
-        expect(emitSpy).not.toHaveBeenCalled();
+    test('falls back to system:Unknown actor when none on LocalStore', async () => {
+        // Run inside a fresh, actor-less LocalStore so the global jest.setup
+        // testLS doesn't satisfy the resolution path.
+        await ASL.run(new LocalStore(true, null), async () => {
+            const ok = await AuditFactory.emitSemantic({ action: eAuditType.eActionPublish });
+            expect(ok).toBe(true);
+        });
+        expect(emitSpy).toHaveBeenCalledTimes(1);
+        const args = emitSpy.mock.calls[0][0];
+        expect(args.actor).toEqual(Actor.system('Unknown'));
     });
 });
 

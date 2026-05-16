@@ -102,10 +102,22 @@ export class Metadata extends DBC.DBObject<MetadataBase> implements MetadataBase
 
     protected static async createManyWorker(data: Metadata[]): Promise<boolean> {
         try {
-            const retValue: Prisma.BatchPayload = await DBC.DBConnection.prisma.metadata.createMany({ data });
+            const rows = data.map(m => ({
+                Name:                 m.Name,
+                ValueShort:           m.ValueShort,
+                ValueExtended:        m.ValueExtended,
+                idAssetVersionValue:  m.idAssetVersionValue,
+                idUser:               m.idUser,
+                idVMetadataSource:    m.idVMetadataSource,
+                idSystemObject:       m.idSystemObject,
+                idSystemObjectParent: m.idSystemObjectParent,
+            }));
+            const retValue: Prisma.BatchPayload = await DBC.DBConnection.prisma.metadata.createMany({ data: rows });
             return retValue.count === data.length;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create many failed',H.Helpers.getErrorString(error),{ count: data.length },'DB.Metadata');
+            RK.logError(RK.LogSection.eDB,'create many failed',H.Helpers.getErrorString(error),
+                { count: data.length, errorMessage: error instanceof Error ? error.message : String(error) },
+                'DB.Metadata');
             return false;
         }
     }

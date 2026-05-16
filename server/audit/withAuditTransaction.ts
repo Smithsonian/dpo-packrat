@@ -71,20 +71,28 @@ async function runTransactionOnce<T>(fn: () => Promise<T>, timeoutMs: number): P
 
     const invalidations = new Set<number>();
     return prismaClient.$transaction(async (tx) => {
-        const txNumber = await DBC.DBConnection.setPrismaTransaction(tx);
-        const priorBuffer = LS.auditBuffer;
-        const priorQueue = LS.invalidationQueue;
-        LS.auditBuffer = [];
-        LS.invalidationQueue = invalidations;
-        try {
-            const result = await fn();
-            await flushAuditBuffer(tx, LS.auditBuffer);
-            return result;
-        } finally {
-            LS.auditBuffer = priorBuffer;
-            LS.invalidationQueue = priorQueue;
-            DBC.DBConnection.clearPrismaTransaction(txNumber);
-        }
+        // Pin the captured LS inside the tx callback. Prisma's $transaction
+        // body runs through internal async hops where ASL.getStore() can lose
+        // its connection to the caller's scope. Re-entering the same LS via
+        // ASL.run keeps LS.transactionNumber visible to every DB API call
+        // inside the tx, so DBC.DBConnection.prisma routes consistently to
+        // the tx client rather than alternating to the regular client.
+        return ASL.run(LS, async () => {
+            const txNumber = await DBC.DBConnection.setPrismaTransaction(tx);
+            const priorBuffer = LS.auditBuffer;
+            const priorQueue = LS.invalidationQueue;
+            LS.auditBuffer = [];
+            LS.invalidationQueue = invalidations;
+            try {
+                const result = await fn();
+                await flushAuditBuffer(tx, LS.auditBuffer);
+                return result;
+            } finally {
+                LS.auditBuffer = priorBuffer;
+                LS.invalidationQueue = priorQueue;
+                DBC.DBConnection.clearPrismaTransaction(txNumber);
+            }
+        });
     }, {
         timeout: timeoutMs,
         maxWait: Math.min(timeoutMs, 10000),
