@@ -299,6 +299,7 @@ export enum eAuditType {
     eActionAccessRevoke = 114,
     eActionSystemMaintenance = 115,
     eActionUpload = 116,
+    eActionIngestFailed = 117,
 }
 
 export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): COMMON.ePublishedState {

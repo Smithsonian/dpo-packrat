@@ -213,6 +213,7 @@ export const Config: ConfigType = {
             [eAuditType.eActionAccessGrant]:        AuditTier.PROTECT,
             [eAuditType.eActionAccessRevoke]:       AuditTier.PROTECT,
             [eAuditType.eActionUpload]:             AuditTier.PROTECT,
+            [eAuditType.eActionIngestFailed]:       AuditTier.PROTECT,
             // TIER_STANDARD - CRUD on meaningful business entities (routed at the entity level via logOnlyObjectTypes)
             [eAuditType.eDBCreate]:                 AuditTier.STANDARD,
             [eAuditType.eDBUpdate]:                 AuditTier.STANDARD,

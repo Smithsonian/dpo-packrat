@@ -27,6 +27,7 @@ import { eSystemObjectType } from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 import { eAuditType } from '../../../../../db/api/ObjectType';
 import { ASL } from '../../../../../utils/localStore';
 import * as fs from 'fs';
@@ -170,11 +171,15 @@ class IngestDataWorker extends ResolverBase {
     }
 
     /**
-     * Emit a single logCritical with the structured cleanup payload. Called
-     * from the soft-failure return paths and the catch block in ingest().
-     * Never called on successful ingest.
+     * Emit a single logCritical AND a semantic eActionIngestFailed audit row
+     * with the structured cleanup payload. Called from the soft-failure return
+     * paths and the catch block in ingest(). Never called on successful ingest.
+     *
+     * The audit row gives operators a queryable failure record alongside the
+     * scattered eDBCreate rows produced before the failure. The shared
+     * correlationId on every row ties them together in the audit lifeline.
      */
-    private recordPartialStateFailure(reason: string, error: unknown | null): void {
+    private async recordPartialStateFailure(reason: string, error: unknown | null): Promise<void> {
         const phase = this.partialState.phase;
         const payload = {
             sentinel: PARTIAL_STATE_SENTINEL,
@@ -209,6 +214,27 @@ class IngestDataWorker extends ResolverBase {
             },
         };
         RK.logCritical(RK.LogSection.eHTTP, PARTIAL_STATE_SENTINEL, reason, payload, 'GraphQL.Ingestion.Data');
+
+        // Persist the same payload as an audit row so the failure is queryable
+        // alongside the eDBCreate rows produced before the failure. Wrap so the
+        // emit gets deadlock retry; the ingest body itself is not in a tx, so
+        // this wrap is the only tx active at this point.
+        try {
+            await withAuditTransaction(async () => {
+                await AuditFactory.emitSemantic({
+                    action: eAuditType.eActionIngestFailed,
+                    payload,
+                });
+            });
+        } catch (auditErr) {
+            // Audit-row emit is best-effort: the logCritical above already
+            // captured the same payload, so failure here is recoverable from
+            // logs. Log the audit failure and continue with the caller's
+            // original failure return.
+            RK.logError(RK.LogSection.eAUDIT, 'ingest-failure audit row failed to emit',
+                auditErr instanceof Error ? auditErr.message : String(auditErr),
+                { phase, reason }, 'GraphQL.Ingestion.Data');
+        }
     }
 
     async ingest(): Promise<IngestDataResult> {
@@ -224,7 +250,7 @@ class IngestDataWorker extends ResolverBase {
             // Hard failure: ingestWorker threw. Emit the cleanup payload and
             // surface a generic failure to the caller. Behaviour preserved
             // (resolver returns success:false, same as a soft failure).
-            this.recordPartialStateFailure('ingestWorker threw', err);
+            await this.recordPartialStateFailure('ingestWorker threw', err);
             IDR = { success: false, message: err instanceof Error ? err.message : 'ingest threw an exception' };
         }
 
@@ -232,7 +258,7 @@ class IngestDataWorker extends ResolverBase {
         // already populated partialState.phase by the time it returns, so
         // the cleanup payload reflects the right phase.
         if (!IDR.success)
-            this.recordPartialStateFailure(IDR.message ?? 'ingestWorker returned failure', null);
+            await this.recordPartialStateFailure(IDR.message ?? 'ingestWorker returned failure', null);
 
         if (this.workflowHelper?.workflow)
             await this.workflowHelper.workflow.updateStatus(IDR.success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
