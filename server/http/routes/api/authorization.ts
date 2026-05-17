@@ -22,11 +22,12 @@ async function auditAuthChange(
 ): Promise<void> {
     // idAdminUser is the operator performing the grant/revoke. When the REST
     // caller isn't authenticated we attribute the change to a system actor so
-    // the row still satisfies the "never both-null" invariant.
+    // the row still satisfies the "never both-null" invariant. Routed through
+    // emitSemantic for a uniform contract with every other semantic emitter.
     const actor: Actor = idAdminUser != null
         ? Actor.user(idAdminUser)
         : Actor.system('AuthorizationAPI');
-    const ok = await AuditFactory.emit({
+    const ok = await AuditFactory.emitSemantic({
         action: type,
         actor,
         payload: data,

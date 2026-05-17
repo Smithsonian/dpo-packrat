@@ -60,11 +60,13 @@ export abstract class DBObject<T> {
             // Each attempt is its own tx so the business write + buffered
             // audit row commit atomically. withAuditTransaction is idempotent:
             // when an outer wrapper is active, this short-circuits and the
-            // outer commit flushes the audit row.
+            // outer commit flushes the audit row. A false from this.audit
+            // fails the wrap so the business write rolls back rather than
+            // committing with a missing audit row.
             const ok = await withAuditTransaction(async () => {
                 if (!await this.createWorker()) return false;
                 this.updateCachedValues();
-                await this.audit(eEventKey.eDBCreate);
+                if (!await this.audit(eEventKey.eDBCreate)) return false;
                 return true;
             });
             if (ok) return this.logSuccess('create', retry);
@@ -81,7 +83,7 @@ export abstract class DBObject<T> {
                 // pre-mutation snapshot for diff-payload shaping. After the
                 // audit emits, refresh *Orig so any subsequent update on the
                 // same instance compares against the now-persisted state.
-                await this.audit(eEventKey.eDBUpdate);
+                if (!await this.audit(eEventKey.eDBUpdate)) return false;
                 this.updateCachedValues();
                 return true;
             });
@@ -95,7 +97,7 @@ export abstract class DBObject<T> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
             const ok = await withAuditTransaction(async () => {
                 if (!await this.deleteWorker()) return false;
-                await this.audit(eEventKey.eDBDelete);
+                if (!await this.audit(eEventKey.eDBDelete)) return false;
                 return true;
             });
             if (ok) return this.logSuccess('delete', retry);
@@ -110,7 +112,7 @@ export abstract class DBObject<T> {
             const ok = await withAuditTransaction(async () => {
                 if (!await this.createManyWorker<T>(data)) return false;
                 for (const dataItem of data)
-                    await dataItem.audit(eEventKey.eDBCreate);
+                    if (!await dataItem.audit(eEventKey.eDBCreate)) return false;
                 return true;
             });
             if (ok) return true;

@@ -5,6 +5,7 @@ import * as DBAPI from '../../../../../db';
 import * as COMMON from '@dpo-packrat/common';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 import { eAuditType } from '../../../../../db/api/ObjectType';
 
 export default async function publish(_: Parent, args: MutationPublishArgs): Promise<PublishResult> {
@@ -31,13 +32,20 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     const success: boolean = await ICol.publish(idSystemObject, eState);
     if (success) {
         const isUnpublish: boolean = eState === COMMON.ePublishedState.eNotPublished;
-        await AuditFactory.emitSemantic({
-            action: isUnpublish ? eAuditType.eActionUnpublish : eAuditType.eActionPublish,
-            idSystemObject,
-            payload: {
-                before: { eState: prevState, eStateName: prevState !== null ? COMMON.ePublishedState[prevState] : null },
-                after:  { eState, eStateName: COMMON.ePublishedState[eState] },
-            },
+        // Wrap only the semantic emit so the audit row inherits deadlock retry
+        // and atomic commit. The EDAN call above stays outside any tx — it does
+        // external HTTP and stages files into the hot folder and must not hold
+        // a Prisma transaction. The SystemObjectVersion update ICol.publish
+        // performs writes its own audit row through the standard DBObject path.
+        await withAuditTransaction(async () => {
+            await AuditFactory.emitSemantic({
+                action: isUnpublish ? eAuditType.eActionUnpublish : eAuditType.eActionPublish,
+                idSystemObject,
+                payload: {
+                    before: { eState: prevState, eStateName: prevState !== null ? COMMON.ePublishedState[prevState] : null },
+                    after:  { eState, eStateName: COMMON.ePublishedState[eState] },
+                },
+            });
         });
         return { success, eState };
     }
