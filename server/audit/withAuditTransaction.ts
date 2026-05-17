@@ -53,12 +53,20 @@ export async function withAuditTransaction<T>(
     fn: () => Promise<T>,
     options: TransactionOptions = {},
 ): Promise<T> {
-    // Short-circuit when already inside a wrapping tx. The outer wrapper's
-    // auditBuffer accumulates emits and the outer commit flushes them; nesting
-    // a fresh Prisma $transaction inside one is not supported and would split
-    // the audit rows away from the business writes anyway.
+    // Short-circuit when an outer transaction is already active on this scope.
+    // Two flavors both qualify:
+    //   - auditBuffer set: an outer withAuditTransaction is wrapping us; its
+    //     buffer accumulates emits and the outer commit flushes them.
+    //   - transactionNumber set without auditBuffer: a legacy caller opened
+    //     its own prismaClient.$transaction and registered the tx client via
+    //     DBConnection.setPrismaTransaction (e.g. SystemObjectVersion.cloneObjectAndXrefs).
+    //     AuditFactory.emit falls through to a direct insert via DBConnection.prisma,
+    //     which resolves to that tx client, so the audit row still commits with
+    //     the business write.
+    // Either way, nesting a fresh Prisma $transaction inside an existing one
+    // is unsupported and would split audit rows away from business writes.
     const existingLS: LocalStore | undefined = ASL.getStore();
-    if (existingLS?.auditBuffer !== undefined)
+    if (existingLS?.auditBuffer !== undefined || existingLS?.transactionNumber !== undefined)
         return fn();
 
     const timeout = options.timeoutMs ?? Config.audit.txStatementTimeoutMs;
