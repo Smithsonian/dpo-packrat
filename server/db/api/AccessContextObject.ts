@@ -29,7 +29,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Context.Object');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Context.Object');
             return false;
         }
     }
@@ -45,7 +45,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Context.Object');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Context.Object');
             return false;
         }
     }
@@ -57,7 +57,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return DBC.CopyObject<AccessContextObjectBase, AccessContextObject>(
                 await DBC.DBConnection.prisma.accessContextObject.findUnique({ where: { idAccessContextObject, }, }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessContextObject, ...this },'DB.Access.Context.Object');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessContextObject },'DB.Access.Context.Object');
             return null;
         }
     }
@@ -69,7 +69,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBC.DBConnection.prisma.accessContextObject.findMany({ where: { idAccessContext } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from AccessContext failed',H.Helpers.getErrorString(error),{ idAccessContext, ...this },'DB.Access.Context.Object');
+            RK.logError(RK.LogSection.eDB,'fetch from AccessContext failed',H.Helpers.getErrorString(error),{ idAccessContext },'DB.Access.Context.Object');
             return null;
         }
     }
@@ -81,7 +81,7 @@ export class AccessContextObject extends DBC.DBObject<AccessContextObjectBase> i
             return DBC.CopyArray<AccessContextObjectBase, AccessContextObject>(
                 await DBC.DBConnection.prisma.accessContextObject.findMany({ where: { idSystemObject } }), AccessContextObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject, ...this },'DB.Access.Context.Object');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Access.Context.Object');
             return null;
         }
     }

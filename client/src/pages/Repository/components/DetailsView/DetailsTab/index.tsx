@@ -46,6 +46,7 @@ import StakeholderDetails from './StakeholderDetails';
 import SubjectDetails from './SubjectDetails';
 import UnitDetails from './UnitDetails';
 import ObjectVersionTable from './ObjectVersionTable';
+import AuditLifelineTable from './AuditLifelineTable';
 import { deleteObjectConnection } from '../../../hooks/useDetailsView';
 import { sharedButtonProps } from '../../../../../utils/shared';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
@@ -437,6 +438,22 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
         default:
             tabs = ['Unknown'];
             break;
+    }
+
+    // Append the per-object audit lifeline as the trailing tab for any
+    // authenticated viewer of the object's detail page. The server endpoint
+    // requires auth but otherwise has parity with detail visibility.
+    if (objectType !== undefined) {
+        const auditTabIndex = tabs.length;
+        tabs = [...tabs, 'Lifeline'];
+        tabPanels = (
+            <React.Fragment>
+                {tabPanels}
+                <TabPanel value={tab} index={auditTabIndex} id={`tab-${auditTabIndex}`}>
+                    <AuditLifelineTable idSystemObject={idSystemObject} />
+                </TabPanel>
+            </React.Fragment>
+        );
     }
 
     return (

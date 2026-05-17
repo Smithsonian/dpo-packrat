@@ -788,3 +788,14 @@ UPDATE Vocabulary SET Term = 'Flash, Cross'    WHERE idVocabularySet = 5 AND Ter
 UPDATE Vocabulary SET Term = 'Patterned'       WHERE idVocabularySet = 5 AND Term = 'Patterned/Structured';
 UPDATE Vocabulary SET SortOrder = SortOrder + 1 WHERE idVocabularySet = 5 AND SortOrder >= 3;
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 3, 'Flash, Parallel');
+
+-- Audit composite index on (AuditType, AuditDate) (Eric)
+CREATE INDEX `Audit_AuditType_AuditDate` ON `Audit` (`AuditType`, `AuditDate`);
+
+-- Audit actor + correlation id columns on Audit (Eric)
+ALTER TABLE `Audit` ADD COLUMN `SystemActor` varchar(32) NULL;
+ALTER TABLE `Audit` ADD COLUMN `CorrelationId` varchar(40) NULL;
+CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
+
+-- Workflow Type vocab term for audit retention runs (Eric)
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit Retention');

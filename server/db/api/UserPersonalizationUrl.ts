@@ -31,7 +31,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.User.Personalize.URL');
             return false;
         }
     }
@@ -48,7 +48,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.User.Personalize.URL');
             return  false;
         }
     }
@@ -60,7 +60,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return DBC.CopyObject<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBC.DBConnection.prisma.userPersonalizationUrl.findUnique({ where: { idUserPersonalizationUrl, }, }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idUserPersonalizationUrl },'DB.User.Personalize.URL');
             return null;
         }
     }
@@ -72,7 +72,7 @@ export class UserPersonalizationUrl extends DBC.DBObject<UserPersonalizationUrlB
             return DBC.CopyArray<UserPersonalizationUrlBase, UserPersonalizationUrl>(
                 await DBC.DBConnection.prisma.userPersonalizationUrl.findMany({ where: { idUser } }), UserPersonalizationUrl);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.URL');
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUser },'DB.User.Personalize.URL');
             return null;
         }
     }

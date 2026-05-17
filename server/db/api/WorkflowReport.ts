@@ -33,7 +33,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Report');
             return false;
         }
     }
@@ -51,7 +51,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Report');
             return  false;
         }
     }
@@ -63,7 +63,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
             return DBC.CopyObject<WorkflowReportBase, WorkflowReport>(
                 await DBC.DBConnection.prisma.workflowReport.findUnique({ where: { idWorkflowReport, }, }), WorkflowReport);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idWorkflowReport },'DB.Workflow.Report');
             return null;
         }
     }
@@ -75,7 +75,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
             return DBC.CopyArray<WorkflowReportBase, WorkflowReport>(
                 await DBC.DBConnection.prisma.workflowReport.findMany({ where: { idWorkflow } }), WorkflowReport);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Workflow failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'fetch from Workflow failed',H.Helpers.getErrorString(error),{ idWorkflow },'DB.Workflow.Report');
             return null;
         }
     }
@@ -92,7 +92,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                     JOIN WorkflowSet AS WS ON (W.idWorkflowSet = WS.idWorkflowSet)
                     WHERE WS.idWorkflowSet = ${idWorkflowSet}`, WorkflowReport);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from WorkflowSet failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'fetch from WorkflowSet failed',H.Helpers.getErrorString(error),{ idWorkflowSet },'DB.Workflow.Report');
             return null;
         }
     }
@@ -106,7 +106,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                 JOIN WorkflowReport AS wReport ON wReport.idWorkflow = wStep.idWorkflow
                 WHERE jRun.idJobRun = ${idJobRun};`,WorkflowReport);
         } catch (error) {
-            RK.logError(RK.LogSection.eDB,'fetch from JobRun failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'fetch from JobRun failed',H.Helpers.getErrorString(error),{ idJobRun },'DB.Workflow.Report');
             return null;
         }
     }
@@ -124,7 +124,7 @@ export class WorkflowReport extends DBC.DBObject<WorkflowReportBase> implements 
                 JOIN Workflow AS w ON wStep.idWorkflow = w.idWorkflow
                 WHERE (wStep.State = 5 ${(includeCancelled?'OR wStep.State = 6 ':'')}${includeUninitialized?'OR wStep.State = 0':''});`,WorkflowReport);
         } catch (error) {
-            RK.logError(RK.LogSection.eDB,'fetch all with error failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Report');
+            RK.logError(RK.LogSection.eDB,'fetch all with error failed',H.Helpers.getErrorString(error),{ includeCancelled, includeUninitialized },'DB.Workflow.Report');
             return null;
         }
     }

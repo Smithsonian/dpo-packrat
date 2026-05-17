@@ -155,12 +155,16 @@ model Audit {
   idDBObject     Int?
   idSystemObject Int?
   Data           String?       @mariasql.LongText
+  SystemActor    String?       @mariasql.VarChar(32)
+  CorrelationId  String?       @mariasql.VarChar(40)
   SystemObject   SystemObject? @relation(fields: [idSystemObject], references: [idSystemObject], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_systemobject1")
   User           User?         @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_audit_user1")
 
   @@index([DBObjectType, idDBObject, AuditDate], map: "Audit_idAsset_DBObjectType_idDBObject_AuditDate")
   @@index([idSystemObject, AuditDate], map: "Audit_idAsset_idSystemObject_AuditDate")
   @@index([idUser, AuditDate], map: "Audit_idAsset_idUser_AuditDate")
+  @@index([AuditType, AuditDate], map: "Audit_AuditType_AuditDate")
+  @@index([CorrelationId], map: "Audit_CorrelationId")
 }
 
 model CaptureData {

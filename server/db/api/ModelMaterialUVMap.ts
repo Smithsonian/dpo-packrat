@@ -31,7 +31,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial.UVMap');
             return false;
         }
     }
@@ -49,7 +49,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial.UVMap');
             return false;
         }
     }
@@ -61,7 +61,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 where: { idModelMaterialUVMap, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial.UVMap');
             return false;
         }
     }
@@ -73,7 +73,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyObject<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findUnique({ where: { idModelMaterialUVMap, }, }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelMaterialUVMap },'DB.ModelMaterial.UVMap');
             return null;
         }
     }
@@ -85,7 +85,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idAsset } }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Asset failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'fetch from Asset failed',H.Helpers.getErrorString(error),{ idAsset },'DB.ModelMaterial.UVMap');
             return null;
         }
     }
@@ -97,7 +97,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
             return DBC.CopyArray<ModelMaterialUVMapBase, ModelMaterialUVMap>(
                 await DBC.DBConnection.prisma.modelMaterialUVMap.findMany({ where: { idModel } }), ModelMaterialUVMap);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ idModel },'DB.ModelMaterial.UVMap');
             return null;
         }
     }
@@ -118,7 +118,7 @@ export class ModelMaterialUVMap extends DBC.DBObject<ModelMaterialUVMapBase> imp
                 ModelMaterialUVMap
             );
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Models failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.UVMap');
+            RK.logError(RK.LogSection.eDB,'fetch from Models failed',H.Helpers.getErrorString(error),{ models },'DB.ModelMaterial.UVMap');
             return null;
         }
     }

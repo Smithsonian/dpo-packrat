@@ -43,7 +43,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Step');
             return false;
         }
     }
@@ -65,7 +65,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Step');
             return  false;
         }
     }
@@ -84,7 +84,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyObject<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findUnique({ where: { idWorkflowStep, }, }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idWorkflowStep },'DB.Workflow.Step');
             return null;
         }
     }
@@ -101,7 +101,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                     },
                 }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject from xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject from xref failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Workflow.Step');
             return null;
         }
     }
@@ -113,7 +113,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idUserOwner } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUserOwner },'DB.Workflow.Step');
             return null;
         }
     }
@@ -125,7 +125,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idWorkflow } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Workflow failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch from Workflow failed',H.Helpers.getErrorString(error),{ idWorkflow },'DB.Workflow.Step');
             return null;
         }
     }
@@ -137,7 +137,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
             return DBC.CopyArray<WorkflowStepBase, WorkflowStep>(
                 await DBC.DBConnection.prisma.workflowStep.findMany({ where: { idJobRun } }), WorkflowStep);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from JobRun failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch from JobRun failed',H.Helpers.getErrorString(error),{ idJobRun },'DB.Workflow.Step');
             return null;
         }
     }
@@ -158,7 +158,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
                 return steps;
             return null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from WorkflowSet failed',H.Helpers.getErrorString(error),{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch from WorkflowSet failed',H.Helpers.getErrorString(error),{ idWorkflowSet },'DB.Workflow.Step');
             return null;
         }
     }
@@ -168,7 +168,7 @@ export class WorkflowStep extends DBC.DBObject<WorkflowStepBase> implements Work
         // rationale: DB is source of truth, maintains Parent 'knows' child philosophy
         const workflowStep: WorkflowStep | null = await this.fetch(idWorkflowStep);
         if(!workflowStep) {
-            RK.logError(RK.LogSection.eDB,'fetch status failed',`failed to find WorkflowStep: ${idWorkflowStep}`,{ ...this },'DB.Workflow.Step');
+            RK.logError(RK.LogSection.eDB,'fetch status failed',`failed to find WorkflowStep: ${idWorkflowStep}`,{ idWorkflowStep },'DB.Workflow.Step');
             return { state: COMMON.eWorkflowJobRunStatus.eError, message: `cannot fetch WorkflowStep (${idWorkflowStep})` };
         }
 

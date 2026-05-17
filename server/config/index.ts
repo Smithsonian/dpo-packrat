@@ -3,9 +3,25 @@
  *
  * Organize and export server config here by extending from .env
  */
+import { eAuditType, eNonSystemObjectType, eDBObjectType } from '../db/api/ObjectType';
+
 export enum AUDIT_TYPE {
     LOCAL = 'local',
 }
+
+export enum AuditTier {
+    PROTECT = 'TIER_PROTECT',
+    STANDARD = 'TIER_STANDARD',
+    TRANSIENT = 'TIER_TRANSIENT',
+    FILLER = 'TIER_FILLER',
+}
+
+export type AuditRetention = {
+    /** Full row + Data payload retained for this many days; 'forever' = never skeletoned. */
+    retainFullDataDays: number | 'forever';
+    /** Skeleton row (Data nulled) retained for this many days; 'forever' = never deleted. */
+    retainSkeletonDays: number | 'forever';
+};
 
 export enum AUTH_TYPE {
     LOCAL = 'local',
@@ -55,6 +71,30 @@ export interface LDAPConfig {
 export type ConfigType = {
     audit: {
         type: AUDIT_TYPE;
+        /** Per-tier retention windows. TIER_FILLER is log-only and has no DB retention. */
+        tiers: {
+            [AuditTier.PROTECT]: AuditRetention;
+            [AuditTier.STANDARD]: AuditRetention;
+            [AuditTier.TRANSIENT]: AuditRetention;
+        };
+        /** Code-defined mapping from eAuditType -> AuditTier. Unassigned types fall back to defaultUnmappedTier (STANDARD by default). */
+        actionTiers: Partial<Record<eAuditType, AuditTier>>;
+        /**
+         * Tier applied when an emitted eAuditType has no entry in actionTiers. Defaults to STANDARD so a forgotten
+         * map entry produces an audit row at default retention rather than silently disappearing. Startup self-check
+         * logs a warning for any eAuditType missing from actionTiers.
+         */
+        defaultUnmappedTier: AuditTier;
+        /** DB object types routed to log-only (OpenObserve), never to the Audit table. */
+        logOnlyObjectTypes: eDBObjectType[];
+        /** Batch size for retention job's skeleton / delete passes. */
+        retentionBatchSize: number;
+        /** node-schedule cron expression for the retention job. */
+        retentionJobCron: string;
+        /** Per-statement timeout (ms) on mutation transactions containing audit writes. */
+        txStatementTimeoutMs: number;
+        /** Retry count on Prisma P2034 (transaction deadlock / write conflict). */
+        txDeadlockRetries: number;
     },
     auth: {
         type: AUTH_TYPE;
@@ -135,6 +175,78 @@ const debugSessionTimeout = false;
 export const Config: ConfigType = {
     audit: {
         type: AUDIT_TYPE.LOCAL,
+        tiers: {
+            [AuditTier.PROTECT]: {
+                retainFullDataDays: 'forever',
+                retainSkeletonDays: 'forever',
+            },
+            [AuditTier.STANDARD]: {
+                retainFullDataDays: parseEnvDaysOrForever(process.env.PACKRAT_AUDIT_TIER_STANDARD_FULL_DAYS, 30),
+                retainSkeletonDays: parseEnvDaysOrForever(process.env.PACKRAT_AUDIT_TIER_STANDARD_SKELETON_DAYS, 'forever'),
+            },
+            [AuditTier.TRANSIENT]: {
+                retainFullDataDays: parseEnvDays(process.env.PACKRAT_AUDIT_TIER_TRANSIENT_FULL_DAYS, 30),
+                retainSkeletonDays: parseEnvDays(process.env.PACKRAT_AUDIT_TIER_TRANSIENT_SKELETON_DAYS, 90),
+            },
+        },
+        actionTiers: {
+            // TIER_PROTECT - auth + business semantic actions
+            [eAuditType.eAuthLogin]:                AuditTier.PROTECT,
+            [eAuditType.eAuthFailed]:               AuditTier.PROTECT,
+            [eAuditType.eAuthDenied]:               AuditTier.PROTECT,
+            [eAuditType.eAuthGranted]:              AuditTier.PROTECT,
+            [eAuditType.eAuthRevoked]:              AuditTier.PROTECT,
+            [eAuditType.eSceneQCd]:                 AuditTier.PROTECT,
+            [eAuditType.eActionPublish]:            AuditTier.PROTECT,
+            [eAuditType.eActionUnpublish]:          AuditTier.PROTECT,
+            [eAuditType.eActionAssignLicense]:      AuditTier.PROTECT,
+            [eAuditType.eActionClearLicense]:       AuditTier.PROTECT,
+            [eAuditType.eActionLicenseUpdate]:      AuditTier.PROTECT,
+            [eAuditType.eActionEDANIDChange]:       AuditTier.PROTECT,
+            [eAuditType.eActionRollbackSOV]:        AuditTier.PROTECT,
+            [eAuditType.eActionRollbackAssetVersion]: AuditTier.PROTECT,
+            [eAuditType.eActionRetire]:             AuditTier.PROTECT,
+            [eAuditType.eActionReinstate]:          AuditTier.PROTECT,
+            [eAuditType.eActionApproveForPublication]: AuditTier.PROTECT,
+            [eAuditType.eActionPoseAndQC]:          AuditTier.PROTECT,
+            [eAuditType.eActionIngest]:             AuditTier.PROTECT,
+            [eAuditType.eActionAccessGrant]:        AuditTier.PROTECT,
+            [eAuditType.eActionAccessRevoke]:       AuditTier.PROTECT,
+            // TIER_STANDARD - CRUD on meaningful business entities (routed at the entity level via logOnlyObjectTypes)
+            [eAuditType.eDBCreate]:                 AuditTier.STANDARD,
+            [eAuditType.eDBUpdate]:                 AuditTier.STANDARD,
+            [eAuditType.eDBDelete]:                 AuditTier.STANDARD,
+            // TIER_TRANSIENT - ownership-relevant but not forensic
+            [eAuditType.eSolrRebuild]:              AuditTier.TRANSIENT,
+            [eAuditType.eGenDownloads]:             AuditTier.TRANSIENT,
+            [eAuditType.eHTTPDownload]:             AuditTier.TRANSIENT,
+            [eAuditType.eHTTPUpload]:               AuditTier.TRANSIENT,
+            // Maintenance (retention job emits one row per run)
+            [eAuditType.eActionSystemMaintenance]:  AuditTier.STANDARD,
+        },
+        defaultUnmappedTier: AuditTier.STANDARD,
+        logOnlyObjectTypes: [
+            eNonSystemObjectType.eSystemObjectXref,
+            eNonSystemObjectType.eModelObject,
+            eNonSystemObjectType.eModelMaterial,
+            eNonSystemObjectType.eModelMaterialChannel,
+            eNonSystemObjectType.eModelMaterialUVMap,
+            eNonSystemObjectType.eModelObjectModelMaterialXref,
+            eNonSystemObjectType.eWorkflowStep,
+            eNonSystemObjectType.eWorkflowStepSystemObjectXref,
+            eNonSystemObjectType.eMetadata,         // individual rows log-only; batch marker writes to DB at STANDARD
+            eNonSystemObjectType.eModelSceneXref,
+            eNonSystemObjectType.eSystemObjectVersionAssetVersionXref,
+            eNonSystemObjectType.eCaptureDataGroupCaptureDataXref,
+        ],
+        retentionBatchSize: process.env.PACKRAT_AUDIT_RETENTION_BATCH_SIZE
+            ? parseInt(process.env.PACKRAT_AUDIT_RETENTION_BATCH_SIZE) : 5000,
+        retentionJobCron: process.env.PACKRAT_AUDIT_RETENTION_CRON
+            ? process.env.PACKRAT_AUDIT_RETENTION_CRON : '0 3 * * *',
+        txStatementTimeoutMs: process.env.PACKRAT_AUDIT_TX_STATEMENT_TIMEOUT_MS
+            ? parseInt(process.env.PACKRAT_AUDIT_TX_STATEMENT_TIMEOUT_MS) : 60000,
+        txDeadlockRetries: process.env.PACKRAT_AUDIT_TX_DEADLOCK_RETRIES
+            ? parseInt(process.env.PACKRAT_AUDIT_TX_DEADLOCK_RETRIES) : 3,
     },
     auth: {
         type: process.env.PACKRAT_AUTH_TYPE == 'LDAP' ? AUTH_TYPE.LDAP : AUTH_TYPE.LOCAL,
@@ -223,6 +335,19 @@ export const Config: ConfigType = {
         type: WORKFLOW_TYPE.PACKRAT,
     }
 };
+
+function parseEnvDays(raw: string | undefined, fallback: number): number {
+    if (raw === undefined) return fallback;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
+function parseEnvDaysOrForever(raw: string | undefined, fallback: number | 'forever'): number | 'forever' {
+    if (raw === undefined) return fallback;
+    if (raw.toLowerCase() === 'forever') return 'forever';
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
 
 function convertStringSettingToBoolean(input: string): boolean {
     switch (input.toLowerCase()) {

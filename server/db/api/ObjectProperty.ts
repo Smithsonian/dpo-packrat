@@ -35,7 +35,7 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ObjectProperty');
             return false;
         }
     }
@@ -54,7 +54,7 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ObjectProperty');
             return  false;
         }
     }
@@ -66,7 +66,7 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
             return DBC.CopyObject<ObjectPropertyBase, ObjectProperty>(
                 await DBC.DBConnection.prisma.objectProperty.findUnique({ where: { idObjectProperty, }, }), ObjectProperty);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idObjectProperty },'DB.ObjectProperty');
             return null;
         }
     }
@@ -76,7 +76,7 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
             return DBC.CopyArray<ObjectPropertyBase, ObjectProperty>(
                 await DBC.DBConnection.prisma.objectProperty.findMany(), ObjectProperty);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.ObjectProperty');
             return null;
         }
     }
@@ -97,7 +97,7 @@ export class ObjectProperty extends DBC.DBObject<ObjectPropertyBase> implements 
                 JOIN SystemObject AS SOO ON (O.idSystemObject = SOO.idSystemObject)
                 WHERE O.idSystemObject IN (${Prisma.join(idSystemObjects)})`, ObjectProperty);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived from system object failed',H.Helpers.getErrorString(error),{ ...this },'DB.ObjectProperty');
+            RK.logError(RK.LogSection.eDB,'fetch derived from system object failed',H.Helpers.getErrorString(error),{ idSystemObjects },'DB.ObjectProperty');
             return null;
         }
     }

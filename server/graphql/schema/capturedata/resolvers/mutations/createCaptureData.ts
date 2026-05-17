@@ -2,6 +2,7 @@ import { CreateCaptureDataResult, MutationCreateCaptureDataArgs } from '../../..
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function CreateCaptureData(_: Parent, args: MutationCreateCaptureDataArgs): Promise<CreateCaptureDataResult> {
     const ctx = Authorization.getContext();
@@ -17,17 +18,19 @@ export default async function CreateCaptureData(_: Parent, args: MutationCreateC
         idAssetThumbnail
     } = input;
 
-    const captureDataArgs = {
-        idCaptureData: 0,
-        Name,
-        idVCaptureMethod,
-        DateCaptured,
-        Description,
-        idAssetThumbnail: idAssetThumbnail || null
-    };
+    return withAuditTransaction(async () => {
+        const captureDataArgs = {
+            idCaptureData: 0,
+            Name,
+            idVCaptureMethod,
+            DateCaptured,
+            Description,
+            idAssetThumbnail: idAssetThumbnail || null
+        };
 
-    const CaptureData = new DBAPI.CaptureData(captureDataArgs);
-    await CaptureData.create();
+        const CaptureData = new DBAPI.CaptureData(captureDataArgs);
+        await CaptureData.create();
 
-    return { CaptureData };
+        return { CaptureData };
+    });
 }

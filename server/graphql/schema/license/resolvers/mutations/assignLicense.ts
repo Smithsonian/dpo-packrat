@@ -6,6 +6,9 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function assignLicense(_: Parent, args: MutationAssignLicenseArgs, context: Context): Promise<AssignLicenseResult> {
     const { input: { idSystemObject, idLicense } } = args;
@@ -23,11 +26,30 @@ export default async function assignLicense(_: Parent, args: MutationAssignLicen
     if (!LicenseNew)
         return { success: false, message: 'There was an error fetching the license for assignment. Please try again.' };
 
-    const assignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, LicenseNew);
-    if (!assignmentSuccess)
-        return { success: false, message: 'Error assigning license' };
+    // Wrap the DB-mutating section so the LicenseAssignment writes and the
+    // semantic audit row commit atomically. PublishScene.handleSceneUpdates
+    // (Cook workflow trigger) runs AFTER commit so it never extends the lock
+    // window.
+    const dbResult = await withAuditTransaction(async () => {
+        const assignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, LicenseNew);
+        if (!assignmentSuccess)
+            return { ok: false, message: 'Error assigning license' };
 
-    // If this is a scene, handle license changes:
+        await AuditFactory.emitSemantic({
+            action: eAuditType.eActionAssignLicense,
+            idSystemObject,
+            payload: {
+                before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+                after:  { idLicense: LicenseNew.idLicense, Name: LicenseNew.Name, RestrictLevel: LicenseNew.RestrictLevel },
+            },
+        });
+        return { ok: true };
+    });
+
+    if (!dbResult.ok)
+        return { success: false, message: dbResult.message };
+
+    // If this is a scene, handle license changes (post-commit):
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
     if (!oID) {
         RK.logError(RK.LogSection.eGQL,'assign license failed',`unable to load object info for idSystemObject ${idSystemObject}`,{ ...args.input },'GraphQL.License');

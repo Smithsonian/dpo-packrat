@@ -60,7 +60,7 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
                 RK.LogSection.eDB,
                 'create failed',
                 H.Helpers.getErrorString(error),
-                { ...this },
+                undefined,
                 'DB.Contact'
             );
             return false;
@@ -81,7 +81,7 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Contact');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Contact');
             return  false;
         }
     }
@@ -93,7 +93,7 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
             return DBC.CopyObject<ContactBase, Contact>(
                 await DBC.DBConnection.prisma.contact.findUnique({ where: { idContact, }, }), Contact);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Contact');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idContact },'DB.Contact');
             return null;
         }
     }
@@ -103,7 +103,7 @@ export class Contact extends DBC.DBObject<ContactBase> implements ContactBase {
             return DBC.CopyArray<ContactBase, Contact>(
                 await DBC.DBConnection.prisma.contact.findMany(), Contact);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Contact');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Contact');
             return null;
         }
     }

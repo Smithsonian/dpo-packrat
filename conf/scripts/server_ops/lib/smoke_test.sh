@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# lib/smoke_test.sh - Phase 1 sanity check for the shared library
+# lib/smoke_test.sh - sanity check for the shared library
 #
 # Sources all three lib files and exercises the cheapest public API under
 # `set -euo pipefail` to catch unbound-variable bugs, missing quoting, and
@@ -42,7 +42,7 @@ pass() {
 # common.sh
 # ---------------------------------------------------------------------------
 
-banner "Phase 1 smoke test"
+banner "smoke test"
 
 # is_tty + colorize_level should not error regardless of tty state
 colorize_level info >/dev/null || fail "colorize_level info"

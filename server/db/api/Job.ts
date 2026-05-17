@@ -50,7 +50,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Job');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Job');
             return false;
         }
     }
@@ -68,7 +68,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Job');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Job');
             return false;
         }
     }
@@ -80,7 +80,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
             return DBC.CopyObject<JobBase, Job>(
                 await DBC.DBConnection.prisma.job.findUnique({ where: { idJob, }, }), Job);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idJob, ...this },'DB.Job');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idJob },'DB.Job');
             return null;
         }
     }
@@ -92,7 +92,7 @@ export class Job extends DBC.DBObject<JobBase> implements JobBase {
             return DBC.CopyArray<JobBase, Job>(
                 await DBC.DBConnection.prisma.job.findMany({ where: { idVJobType, }, }), Job);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by type failed',H.Helpers.getErrorString(error),{ idVJobType, ...this },'DB.Job');
+            RK.logError(RK.LogSection.eDB,'fetch by type failed',H.Helpers.getErrorString(error),{ idVJobType },'DB.Job');
             return null;
         }
     }

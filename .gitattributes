@@ -1,1 +1,14 @@
-**/server/tests/mock/utils/** text=auto eol=lf
+# Force LF line endings for all text files in the repository.
+# Prevents Windows checkouts from re-storing files with CRLF endings,
+# which causes spurious whole-file conflicts on merges.
+* text=auto eol=lf
+
+# Binary file types — no line-ending conversion, no text-style diffs.
+*.dng  binary
+*.glb  binary
+*.ico  binary
+*.jpg  binary
+*.mwb  binary
+*.pdf  binary
+*.png  binary
+*.zip  binary

@@ -28,7 +28,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary.Set');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Vocabulary.Set');
             return false;
         }
     }
@@ -44,7 +44,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary.Set');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Vocabulary.Set');
             return  false;
         }
     }
@@ -56,7 +56,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
             return DBC.CopyObject<VocabularySetBase, VocabularySet>(
                 await DBC.DBConnection.prisma.vocabularySet.findUnique({ where: { idVocabularySet, }, }), VocabularySet);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary.Set');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idVocabularySet },'DB.Vocabulary.Set');
             return null;
         }
     }
@@ -66,7 +66,7 @@ export class VocabularySet extends DBC.DBObject<VocabularySetBase> implements Vo
             return DBC.CopyArray<VocabularySetBase, VocabularySet>(
                 await DBC.DBConnection.prisma.vocabularySet.findMany(), VocabularySet);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Vocabulary.Set');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Vocabulary.Set');
             return null;
         }
     }

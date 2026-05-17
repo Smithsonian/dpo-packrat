@@ -46,7 +46,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.UserAuthorization');
             return false;
         }
     }
@@ -62,7 +62,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.UserAuthorization');
             return false;
         }
     }
@@ -74,7 +74,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
             return DBC.CopyObject<UserAuthorizationBase, UserAuthorization>(
                 await DBC.DBConnection.prisma.userAuthorization.findUnique({ where: { idUserAuthorization, }, }), UserAuthorization);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idUserAuthorization, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idUserAuthorization },'DB.UserAuthorization');
             return null;
         }
     }
@@ -86,7 +86,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
             return DBC.CopyArray<UserAuthorizationBase, UserAuthorization>(
                 await DBC.DBConnection.prisma.userAuthorization.findMany({ where: { idUser } }), UserAuthorization);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUser, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUser },'DB.UserAuthorization');
             return null;
         }
     }
@@ -98,7 +98,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
             return DBC.CopyArray<UserAuthorizationBase, UserAuthorization>(
                 await DBC.DBConnection.prisma.userAuthorization.findMany({ where: { idSystemObject } }), UserAuthorization);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.UserAuthorization');
             return null;
         }
     }
@@ -118,7 +118,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 WHERE UA.idUser = ${idUser} AND SO.idUnit IS NOT NULL`;
             return rows.map(r => r.idUnit);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchUnitsForUser failed',H.Helpers.getErrorString(error),{ idUser, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetchUnitsForUser failed',H.Helpers.getErrorString(error),{ idUser },'DB.UserAuthorization');
             return [];
         }
     }
@@ -140,7 +140,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 WHERE UA.idUser = ${idUser} AND SO.idProject IS NOT NULL`;
             return rows.map(r => r.idProject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchProjectsForUser failed',H.Helpers.getErrorString(error),{ idUser, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetchProjectsForUser failed',H.Helpers.getErrorString(error),{ idUser },'DB.UserAuthorization');
             return [];
         }
     }
@@ -153,7 +153,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
             });
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.UserAuthorization');
             return false;
         }
     }
@@ -174,7 +174,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 WHERE SO.idUnit = ${idUnit}
                 ORDER BY U.Name ASC`;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchUsersForUnit failed',H.Helpers.getErrorString(error),{ idUnit, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetchUsersForUnit failed',H.Helpers.getErrorString(error),{ idUnit },'DB.UserAuthorization');
             return [];
         }
     }
@@ -195,7 +195,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 WHERE SO.idProject = ${idProject}
                 ORDER BY U.Name ASC`;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchUsersForProject failed',H.Helpers.getErrorString(error),{ idProject, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetchUsersForProject failed',H.Helpers.getErrorString(error),{ idProject },'DB.UserAuthorization');
             return [];
         }
     }
@@ -245,7 +245,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                 )
                 ORDER BY PU.UnitName, P.Name, AuthUsers.UserName`;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchAuthSummary failed',H.Helpers.getErrorString(error),{ ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetchAuthSummary failed',H.Helpers.getErrorString(error),undefined,'DB.UserAuthorization');
             return [];
         }
     }
@@ -262,7 +262,7 @@ export class UserAuthorization extends DBC.DBObject<UserAuthorizationBase> imple
                     where: { idUser, idSystemObject }
                 }), UserAuthorization);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetchByUserAndSystemObject failed',H.Helpers.getErrorString(error),{ idUser, idSystemObject, ...this },'DB.UserAuthorization');
+            RK.logError(RK.LogSection.eDB,'fetchByUserAndSystemObject failed',H.Helpers.getErrorString(error),{ idUser, idSystemObject },'DB.UserAuthorization');
             return null;
         }
     }

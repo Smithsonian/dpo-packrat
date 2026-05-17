@@ -120,7 +120,19 @@ class UploadAssetWorker extends ResolverBase {
         if (filename !== rawFilename)
             RK.logWarning(RK.LogSection.eGQL,'filename sanitized','Unicode characters replaced with ASCII equivalents',{ original: rawFilename, sanitized: filename },'GraphQL.Upload.AssetWorker');
         const url: string = `/ingestion/uploads/${filename}`;
-        const auditResult: boolean = await AuditFactory.audit({ url, auth: (this.user !== undefined) }, { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 }, eEventKey.eHTTPUpload);
+        // Derive intent from the mode the worker is about to enter so the
+        // audit row reads as e.g. "Uploaded Asset — New version of asset"
+        // instead of just a URL. Same branching as the report messages below.
+        const reason: string = this.idAsset
+            ? 'New version of asset'
+            : this.idSOAttachment
+                ? 'Scene attachment'
+                : 'New asset';
+        const auditResult: boolean = await AuditFactory.audit(
+            { url, fileName: filename, reason, source: 'GraphQL upload', auth: (this.user !== undefined) },
+            { eObjectType: COMMON.eSystemObjectType.eAsset, idObject: this.idAsset ?? 0 },
+            eEventKey.eHTTPUpload,
+        );
         if(auditResult===false) {
             RK.logError(RK.LogSection.eGQL,'property check failed','unknown error',{ file: this.apolloFile.filename, url, idUser: this.user?.idUser ?? -1, idAsset: this.idAsset },'GraphQL.Upload.AssetWorker');
             return { status: UploadStatus.Failed, error: 'Failed property audit' };

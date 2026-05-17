@@ -58,7 +58,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Version');
             return false;
         }
     }
@@ -76,7 +76,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Version');
             return  false;
         }
     }
@@ -88,7 +88,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findUnique({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -100,7 +100,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject }, orderBy: { idSystemObjectVersion: 'asc' } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -123,7 +123,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             // Manually construct SystemObjectVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return SystemObjectVersion.constructFromPrisma(systemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch latest from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'fetch latest from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -163,7 +163,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 return retValue;
             },transactionOptions);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',H.Helpers.getErrorString(error),{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -183,7 +183,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
 
             /* istanbul ignore next */
             if (!assetVersionMap) {
-                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`,{ ...this },'DB.SystemObject.Version');
+                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`,{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
                 return null;
             }
 
@@ -197,7 +197,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             }); /* istanbul ignore next */
 
             if (!await SOV.create()) {
-                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create new SystemObjectVersion for ${idSystemObject}`,{ ...this },'DB.SystemObject.Version');
+                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create new SystemObjectVersion for ${idSystemObject}`,{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
                 return null;
             }
 
@@ -223,12 +223,12 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             } /* istanbul ignore next */
 
             if (!success) {
-                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`,{ ...this },'DB.SystemObject.Version');
+                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`,{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
                 return null;
             }
             return SOV;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',H.Helpers.getErrorString(error),{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
             return null;
         }
     }

@@ -34,7 +34,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.GeoLocation');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.GeoLocation');
             return false;
         }
     }
@@ -47,7 +47,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
                 data: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.GeoLocation');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.GeoLocation');
             return false;
         }
     }
@@ -59,7 +59,7 @@ export class GeoLocation extends DBC.DBObject<GeoLocationBase> implements GeoLoc
             return DBC.CopyObject<GeoLocationBase, GeoLocation>(
                 await DBC.DBConnection.prisma.geoLocation.findUnique({ where: { idGeoLocation, }, }), GeoLocation);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.GeoLocation');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idGeoLocation },'DB.GeoLocation');
             return null;
         }
     }

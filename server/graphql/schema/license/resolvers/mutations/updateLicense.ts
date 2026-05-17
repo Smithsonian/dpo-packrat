@@ -2,6 +2,7 @@ import { CreateLicenseResult, MutationUpdateLicenseArgs } from '../../../../../t
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function updateLicense(_: Parent, args: MutationUpdateLicenseArgs): Promise<CreateLicenseResult> {
     const ctx = Authorization.getContext();
@@ -11,21 +12,19 @@ export default async function updateLicense(_: Parent, args: MutationUpdateLicen
     const { input } = args;
     const { idLicense, Name, Description, RestrictLevel } = input;
 
-    const License = await DBAPI.License.fetch(idLicense);
+    return withAuditTransaction(async () => {
+        const License = await DBAPI.License.fetch(idLicense);
 
-    if (License === null) {
-        // LOG.info('Error when fetching license in updateLicense.ts', LOG.LS.eGQL);
-        throw new Error('License not found');
-    }
+        if (License === null)
+            throw new Error('License not found');
 
-    License.Name = Name;
-    License.Description = Description;
-    License.RestrictLevel = RestrictLevel;
-    const success = await License.update();
-    if (!success) {
-        // LOG.info('Error when updating license in updateLicense.ts', LOG.LS.eGQL);
-        throw new Error('Error when updating license in updateLicense.ts');
-    }
+        License.Name = Name;
+        License.Description = Description;
+        License.RestrictLevel = RestrictLevel;
+        const success = await License.update();
+        if (!success)
+            throw new Error('Error when updating license in updateLicense.ts');
 
-    return { License };
+        return { License };
+    });
 }

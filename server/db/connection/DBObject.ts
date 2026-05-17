@@ -3,6 +3,7 @@ import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 import * as H from '../../utils/helpers';
+import { withAuditTransaction } from '../../audit/withAuditTransaction';
 
 const DB_OPERATION_RETRIES: number = 3;
 const DB_OPERATION_RETRY_DELAY: number = 1500;
@@ -16,6 +17,25 @@ export abstract class DBObject<T> {
     protected async deleteWorker(): Promise<boolean> { return false; }
     protected static async createManyWorker<T>(_data: DBObject<T>[]): Promise<boolean> { return false; }
     protected updateCachedValues(): void { }
+
+    /**
+     * Snapshot tracked scalar fields onto sibling `<Field>Orig` properties.
+     * Subclasses override `updateCachedValues` and call this with the list of
+     * mutable scalar columns whose pre-mutation value should be available for
+     * diff-based audit payloads. The audit pipeline reads `*Orig` siblings via
+     * AuditPayload.extractTrackedFields after the DB write to emit a compact
+     * { changed: { field: { before, after } } } row instead of the full entity.
+     *
+     * Snapshot only scalars — never relations, arrays, or sub-records. The
+     * audit payload shaper coerces non-scalars to omission markers anyway, so
+     * tracking them produces no useful diff and inflates the snapshot.
+     */
+    protected snapshotTrackedFields(fields: readonly string[]): void {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const self = this as any;
+        for (const field of fields)
+            self[`${field}Orig`] = self[field];
+    }
 
     constructor(input: T) {
         Object.assign(this, input);
@@ -37,32 +57,49 @@ export abstract class DBObject<T> {
 
     async create(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.createWorker()) /* istanbul ignore else */ {
+            // Each attempt is its own tx so the business write + buffered
+            // audit row commit atomically. withAuditTransaction is idempotent:
+            // when an outer wrapper is active, this short-circuits and the
+            // outer commit flushes the audit row.
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.createWorker()) return false;
                 this.updateCachedValues();
-                this.audit(eEventKey.eDBCreate); // don't await, allow this to continue asynchronously
-                return this.logSuccess('create', retry);
-            } else if (retry < DB_OPERATION_RETRIES)
+                await this.audit(eEventKey.eDBCreate);
+                return true;
+            });
+            if (ok) return this.logSuccess('create', retry);
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;
     }
     async update(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.updateWorker()) /* istanbul ignore else */ {
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.updateWorker()) return false;
+                // Audit BEFORE updateCachedValues so *Orig still reflects the
+                // pre-mutation snapshot for diff-payload shaping. After the
+                // audit emits, refresh *Orig so any subsequent update on the
+                // same instance compares against the now-persisted state.
+                await this.audit(eEventKey.eDBUpdate);
                 this.updateCachedValues();
-                this.audit(eEventKey.eDBUpdate); // don't await, allow this to continue asynchronously
-                return this.logSuccess('update', retry);
-            } else if (retry < DB_OPERATION_RETRIES)
+                return true;
+            });
+            if (ok) return this.logSuccess('update', retry);
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;
     }
     async delete(): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.deleteWorker()) /* istanbul ignore else */ {
-                this.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
-                return this.logSuccess('delete', retry);
-            } else if (retry < DB_OPERATION_RETRIES)
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.deleteWorker()) return false;
+                await this.audit(eEventKey.eDBDelete);
+                return true;
+            });
+            if (ok) return this.logSuccess('delete', retry);
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;
@@ -70,11 +107,14 @@ export abstract class DBObject<T> {
 
     static async createMany<T>(data: DBObject<T>[]): Promise<boolean> {
         for (let retry = 1; retry <= DB_OPERATION_RETRIES; retry++) {
-            if (await this.createManyWorker<T>(data)) /* istanbul ignore else */ {
+            const ok = await withAuditTransaction(async () => {
+                if (!await this.createManyWorker<T>(data)) return false;
                 for (const dataItem of data)
-                    dataItem.audit(eEventKey.eDBDelete); // don't await, allow this to continue asynchronously
+                    await dataItem.audit(eEventKey.eDBCreate);
                 return true;
-            } else if (retry < DB_OPERATION_RETRIES)
+            });
+            if (ok) return true;
+            if (retry < DB_OPERATION_RETRIES)
                 await H.Helpers.sleep(DB_OPERATION_RETRY_DELAY);
         }
         return false;

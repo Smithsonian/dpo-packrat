@@ -20,8 +20,31 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
     CameraSettingsUniform!: boolean | null;
     CaptureDatasetUse!: string;             // JSON field, stored as a string
 
+    idVCaptureDatasetTypeOrig!: number;
+    CaptureDatasetFieldIDOrig!: number | null;
+    idVItemPositionTypeOrig!: number | null;
+    ItemPositionFieldIDOrig!: number | null;
+    ItemArrangementFieldIDOrig!: number | null;
+    idVFocusTypeOrig!: number | null;
+    idVLightSourceTypeOrig!: number | null;
+    idVBackgroundRemovalMethodOrig!: number | null;
+    idVClusterTypeOrig!: number | null;
+    ClusterGeometryFieldIDOrig!: number | null;
+    CameraSettingsUniformOrig!: boolean | null;
+    CaptureDatasetUseOrig!: string;
+
     constructor(input: CaptureDataPhotoBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.snapshotTrackedFields([
+            'idVCaptureDatasetType', 'CaptureDatasetFieldID',
+            'idVItemPositionType', 'ItemPositionFieldID', 'ItemArrangementFieldID',
+            'idVFocusType', 'idVLightSourceType', 'idVBackgroundRemovalMethod',
+            'idVClusterType', 'ClusterGeometryFieldID', 'CameraSettingsUniform',
+            'CaptureDatasetUse',
+        ]);
     }
 
     public fetchTableName(): string { return 'CaptureDataPhoto'; }
@@ -57,7 +80,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Photo');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.CaptureData.Photo');
             return false;
         }
     }
@@ -87,7 +110,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Photo');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.CaptureData.Photo');
             return false;
         }
     }
@@ -99,7 +122,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             return DBC.CopyObject<CaptureDataPhotoBase, CaptureDataPhoto>(
                 await DBC.DBConnection.prisma.captureDataPhoto.findUnique({ where: { idCaptureDataPhoto, }, }), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Photo');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idCaptureDataPhoto },'DB.CaptureData.Photo');
             return null;
         }
     }
@@ -109,7 +132,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
             return DBC.CopyArray<CaptureDataPhotoBase, CaptureDataPhoto>(
                 await DBC.DBConnection.prisma.captureDataPhoto.findMany(), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Photo');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.CaptureData.Photo');
             return null;
         }
     }
@@ -120,7 +143,7 @@ export class CaptureDataPhoto extends DBC.DBObject<CaptureDataPhotoBase> impleme
         try {
             return DBC.CopyArray<CaptureDataPhotoBase, CaptureDataPhoto>(await DBC.DBConnection.prisma.captureDataPhoto.findMany({ where: { idCaptureData, }, }), CaptureDataPhoto);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from CaptureData failed',H.Helpers.getErrorString(error),{ ...this },'DB.CaptureData.Photo');
+            RK.logError(RK.LogSection.eDB,'fetch from CaptureData failed',H.Helpers.getErrorString(error),{ idCaptureData },'DB.CaptureData.Photo');
             return null;
         }
     }

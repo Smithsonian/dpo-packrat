@@ -31,7 +31,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Model.Processing.Action.Step');
             return false;
         }
     }
@@ -48,7 +48,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Model.Processing.Action.Step');
             return false;
         }
     }
@@ -60,7 +60,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return DBC.CopyObject<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBC.DBConnection.prisma.modelProcessingActionStep.findUnique({ where: { idModelProcessingActionStep, }, }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelProcessingActionStep },'DB.Model.Processing.Action.Step');
             return null;
         }
     }
@@ -72,7 +72,7 @@ export class ModelProcessingActionStep extends DBC.DBObject<ModelProcessingActio
             return DBC.CopyArray<ModelProcessingActionStepBase, ModelProcessingActionStep>(
                 await DBC.DBConnection.prisma.modelProcessingActionStep.findMany({ where: { idModelProcessingAction } }), ModelProcessingActionStep);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Model.Processing.Action.Step');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelProcessingAction },'DB.Model.Processing.Action.Step');
             return null;
         }
     }

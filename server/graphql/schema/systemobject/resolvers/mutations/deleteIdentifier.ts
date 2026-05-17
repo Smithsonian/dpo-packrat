@@ -3,6 +3,7 @@ import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function deleteIdentifier(_: Parent, args: MutationDeleteIdentifierArgs): Promise<DeleteIdentifierResult> {
     const { input: { idIdentifier } } = args;
@@ -19,11 +20,12 @@ export default async function deleteIdentifier(_: Parent, args: MutationDeleteId
             return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
     }
 
-    if (await identifier?.delete()) {
-        RK.logError(RK.LogSection.eGQL,'delete identifier failed',`Identifier deleted ${idIdentifier}`,{},'GraphQL.SystemObject.Identifier');
-        return { success: true };
-    } else {
+    return withAuditTransaction(async () => {
+        if (await identifier.delete()) {
+            RK.logInfo(RK.LogSection.eGQL,'delete identifier',`Identifier deleted ${idIdentifier}`,{},'GraphQL.SystemObject.Identifier');
+            return { success: true };
+        }
         RK.logError(RK.LogSection.eGQL,'delete identifier failed',`Error deleting identifier ${idIdentifier}`,{},'GraphQL.SystemObject.Identifier');
         return { success: false };
-    }
+    });
 }

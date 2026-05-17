@@ -61,5 +61,23 @@ module.exports = {
         'react/jsx-no-bind': ['error', { allowArrowFunctions: true }],
         'react/jsx-no-literals': 'off',
         'react/jsx-tag-spacing': ['error', { beforeSelfClosing: 'always' }],
-    }
+    },
+    overrides: [
+        {
+            // All audit writes must go through AuditFactory.emit(). Direct
+            // prisma.audit.create / createMany calls bypass actor resolution,
+            // tier policy, and idSystemObject population.
+            files: ['server/**/*.ts'],
+            excludedFiles: ['server/audit/**', 'server/db/api/Audit.ts', 'server/tests/**'],
+            rules: {
+                'no-restricted-syntax': [
+                    'error',
+                    {
+                        selector: "MemberExpression[object.property.name='audit'][property.name=/^create(Many)?$/]",
+                        message: 'Direct prisma.audit.create is banned outside server/audit/**. Use AuditFactory.emit() instead.',
+                    },
+                ],
+            },
+        },
+    ],
 };

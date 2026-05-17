@@ -80,7 +80,7 @@ export class SubjectUnitIdentifier {
             ORDER BY S.Name
             LIMIT ${maxResults};`;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ query, ...this },'DB.Composite.SubjectUnitIdentifier');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ query },'DB.Composite.SubjectUnitIdentifier');
             return null;
         }
     }
@@ -144,7 +144,7 @@ export class SubjectUnitIdentifier {
             // LOG.info(`DBAPI.SubjectUnitIdentifier.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
             return await DBC.DBConnection.prisma.$queryRawUnsafe<SubjectUnitIdentifier[] | null>(sql, ...queryRawParams);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'search failed',H.Helpers.getErrorString(error),{ query, ...this },'DB.Composite.SubjectUnitIdentifier');
+            RK.logError(RK.LogSection.eDB,'search failed',H.Helpers.getErrorString(error),{ query },'DB.Composite.SubjectUnitIdentifier');
             return null;
         }
     }

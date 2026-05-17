@@ -9,6 +9,7 @@ export enum LogLevel {
 }
 
 export enum LogSection { // logger section
+    eAUDIT  = 'AUDIT', // audit pipeline
     eAUTH   = 'AUTH',  // authentication
     eCACHE  = 'CACHE', // cache
     eCOLL   = 'COL',   // collections

@@ -29,7 +29,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Role.Xref');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Role.Xref');
             return false;
         }
     }
@@ -45,7 +45,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Role.Xref');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Role.Xref');
             return false;
         }
     }
@@ -57,7 +57,7 @@ export class AccessRoleAccessActionXref extends DBC.DBObject<AccessRoleAccessAct
             return DBC.CopyObject<AccessRoleAccessActionXrefBase, AccessRoleAccessActionXref>(
                 await DBC.DBConnection.prisma.accessRoleAccessActionXref.findUnique({ where: { idAccessRoleAccessActionXref, }, }), AccessRoleAccessActionXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessRoleAccessActionXref, ...this },'DB.Access.Role.Xref');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessRoleAccessActionXref },'DB.Access.Role.Xref');
             return null;
         }
     }

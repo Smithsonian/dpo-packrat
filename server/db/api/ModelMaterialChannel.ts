@@ -71,7 +71,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial.Channel');
             return false;
         }
     }
@@ -99,7 +99,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial.Channel');
             return false;
         }
     }
@@ -111,7 +111,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 where: { idModelMaterialChannel, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelMaterial.Channel');
             return false;
         }
     }
@@ -123,7 +123,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyObject<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findUnique({ where: { idModelMaterialChannel, }, }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelMaterialChannel },'DB.ModelMaterial.Channel');
             return null;
         }
     }
@@ -135,7 +135,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterial } }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterial failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterial failed',H.Helpers.getErrorString(error),{ idModelMaterial },'DB.ModelMaterial.Channel');
             return null;
         }
     }
@@ -160,7 +160,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
                 modelMaterialChannelList.push(ModelMaterialChannel.constructFromPrisma(modelMaterialChannelBase));
             return modelMaterialChannelList;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterials failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterials failed',H.Helpers.getErrorString(error),{ modelMaterials },'DB.ModelMaterial.Channel');
             return null;
         }
     }
@@ -172,7 +172,7 @@ export class ModelMaterialChannel extends DBC.DBObject<ModelMaterialChannelBase>
             return DBC.CopyArray<ModelMaterialChannelBase, ModelMaterialChannel>(
                 await DBC.DBConnection.prisma.modelMaterialChannel.findMany({ where: { idModelMaterialUVMap } }), ModelMaterialChannel);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterialUVMap failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelMaterial.Channel');
+            RK.logError(RK.LogSection.eDB,'fetch from ModelMaterialUVMap failed',H.Helpers.getErrorString(error),{ idModelMaterialUVMap },'DB.ModelMaterial.Channel');
             return null;
         }
     }
