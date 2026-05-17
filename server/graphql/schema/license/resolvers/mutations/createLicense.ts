@@ -2,6 +2,7 @@ import { CreateLicenseResult, MutationCreateLicenseArgs } from '../../../../../t
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function createLicense(_: Parent, args: MutationCreateLicenseArgs): Promise<CreateLicenseResult> {
     const ctx = Authorization.getContext();
@@ -11,14 +12,16 @@ export default async function createLicense(_: Parent, args: MutationCreateLicen
     const { input } = args;
     const { Name, Description, RestrictLevel } = input;
 
-    const licenseArgs = {
-        idLicense: 0,
-        Name,
-        Description,
-        RestrictLevel,
-    };
+    return withAuditTransaction(async () => {
+        const licenseArgs = {
+            idLicense: 0,
+            Name,
+            Description,
+            RestrictLevel,
+        };
 
-    const License = new DBAPI.License(licenseArgs);
-    await License.create();
-    return { License };
+        const License = new DBAPI.License(licenseArgs);
+        await License.create();
+        return { License };
+    });
 }

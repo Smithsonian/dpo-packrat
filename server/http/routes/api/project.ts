@@ -110,7 +110,7 @@ export async function getProjectScenes(req: Request, res: Response): Promise<voi
 
     // Authorization: check project access for specific project requests
     const ctx = Authorization.getContext();
-    if (ctx && !ctx.isAdmin && idProject > 0 && !Authorization.canAccessProject(ctx, idProject, 'getProjectScenes')) {
+    if (ctx && !ctx.isAdmin && idProject > 0 && !await Authorization.canAccessProject(ctx, idProject, 'getProjectScenes')) {
         res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.PROJECT_DENIED)));
         return;
     }

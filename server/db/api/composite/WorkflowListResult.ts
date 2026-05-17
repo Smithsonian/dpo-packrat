@@ -155,7 +155,7 @@ export class WorkflowListResult {
             // LOG.info(`DBAPI.WorkflowListResult.search, sql=${sql}; params=${JSON.stringify(queryRawParams)}`, LOG.LS.eDB);
             return await DBC.DBConnection.prisma.$queryRawUnsafe<WorkflowListResult[] | null>(sql, ...queryRawParams);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,' failed',H.Helpers.getErrorString(error),{ ...this },'DB.Composite.WorkflowListResult');
+            RK.logError(RK.LogSection.eDB,' failed',H.Helpers.getErrorString(error),undefined,'DB.Composite.WorkflowListResult');
             return null;
         }
     }

@@ -6,13 +6,27 @@ import * as STORE from '../../../../../storage/interface';
 import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
+import * as COMMON from '@dpo-packrat/common';
 
+// Not wrapped in withAuditTransaction: the body streams file content from
+// storage into a new asset version (potentially many MB), then calls
+// AssetStorageAdapter.ingestAsset which performs storage promotion + multiple
+// DB writes. Holding a Prisma transaction open across that streaming would
+// blow past the statement timeout and hold table locks for orders of magnitude
+// longer than necessary. CRUD audit rows for the new AssetVersion and
+// SystemObjectVersion are still emitted via the standard DBObject path; the
+// supplementary semantic eActionRollbackAssetVersion row is appended after.
 export default async function rollbackAssetVersion(_: Parent, args: MutationRollbackAssetVersionArgs, context: Context): Promise<RollbackAssetVersionResult> {
     const { input } = args;
     const { idAssetVersion, rollbackNotes } = input;
     const { user } = context;
     if (!user)
         return sendResponse(false,'rollback asset version failed','unable to detemine user from context');
+
+    if (!rollbackNotes || rollbackNotes.trim().length === 0)
+        return sendResponse(false, 'rollback asset version failed', 'rollbackNotes is required');
 
     const assetVersionOrig: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
     if (!assetVersionOrig)
@@ -100,6 +114,18 @@ export default async function rollbackAssetVersion(_: Parent, args: MutationRoll
     const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestAsset(ingestAssetInput);
     if (!IAR.success)
         return sendResponse(false,'rollback asset version failed',`failed to ingest rolled back asset ${IAR.error}`);
+
+    const newAssetVersion: DBAPI.AssetVersion | undefined = IAR.assetVersions && IAR.assetVersions.length > 0 ? IAR.assetVersions[0] : undefined;
+    await AuditFactory.emitSemantic({
+        action: eAuditType.eActionRollbackAssetVersion,
+        target: { idObject: asset.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset },
+        idSystemObject: asset.idSystemObject ?? null,
+        payload: {
+            rollbackNotes,
+            from: { idAssetVersion: assetVersionOrig.idAssetVersion, Version: assetVersionOrig.Version, FileName: assetVersionOrig.FileName },
+            to:   newAssetVersion ? { idAssetVersion: newAssetVersion.idAssetVersion, Version: newAssetVersion.Version, FileName: newAssetVersion.FileName } : null,
+        },
+    });
 
     return sendResponse(true,'rollback asset version success',undefined,{ ...args.input });
 }

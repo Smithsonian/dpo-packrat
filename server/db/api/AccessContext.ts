@@ -30,7 +30,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Context');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Context');
             return false;
         }
     }
@@ -43,7 +43,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
                 data: { Authoritative, CaptureData, Global, IntermediaryFile, Model, Scene }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Access.Context');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Access.Context');
             return false;
         }
     }
@@ -55,7 +55,7 @@ export class AccessContext extends DBC.DBObject<AccessContextBase> implements Ac
             return DBC.CopyObject<AccessContextBase, AccessContext>(
                 await DBC.DBConnection.prisma.accessContext.findUnique({ where: { idAccessContext, }, }), AccessContext);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessContext, ...this },'DB.Access.Context');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idAccessContext },'DB.Access.Context');
             return null;
         }
     }

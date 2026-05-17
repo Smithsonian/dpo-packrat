@@ -31,7 +31,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.User.Personalize.SystemObject');
             return false;
         }
     }
@@ -48,7 +48,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.User.Personalize.SystemObject');
             return  false;
         }
     }
@@ -60,7 +60,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return DBC.CopyObject<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBC.DBConnection.prisma.userPersonalizationSystemObject.findUnique({ where: { idUserPersonalizationSystemObject, }, }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idUserPersonalizationSystemObject },'DB.User.Personalize.SystemObject');
             return null;
         }
     }
@@ -72,7 +72,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return DBC.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBC.DBConnection.prisma.userPersonalizationSystemObject.findMany({ where: { idUser } }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            RK.logError(RK.LogSection.eDB,'fetch from User failed',H.Helpers.getErrorString(error),{ idUser },'DB.User.Personalize.SystemObject');
             return null;
         }
     }
@@ -84,7 +84,7 @@ export class UserPersonalizationSystemObject extends DBC.DBObject<UserPersonaliz
             return DBC.CopyArray<UserPersonalizationSystemObjectBase, UserPersonalizationSystemObject>(
                 await DBC.DBConnection.prisma.userPersonalizationSystemObject.findMany({ where: { idSystemObject } }), UserPersonalizationSystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.User.Personalize.SystemObject');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.User.Personalize.SystemObject');
             return null;
         }
     }

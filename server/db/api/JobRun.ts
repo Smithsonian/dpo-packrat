@@ -60,7 +60,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
             return false;
         } catch(error) {
-            RK.logError(RK.LogSection.eDB,'uses Scene failed',H.Helpers.getErrorString(error),{ ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'uses Scene failed',H.Helpers.getErrorString(error),{ idScene },'DB.JobRun');
             return false;
         }
     }
@@ -81,7 +81,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
 
             return false;
         } catch(error) {
-            RK.logError(RK.LogSection.eDB,'uses Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'uses Model failed',H.Helpers.getErrorString(error),{ idModel },'DB.JobRun');
             return false;
         }
     }
@@ -106,7 +106,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.JobRun');
             return false;
         }
     }
@@ -129,7 +129,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.JobRun');
             return false;
         }
     }
@@ -141,7 +141,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             return DBC.CopyObject<JobRunBase, JobRun>(
                 await DBC.DBConnection.prisma.jobRun.findUnique({ where: { idJobRun, }, }), JobRun);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idJobRun, ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idJobRun },'DB.JobRun');
             return null;
         }
     }
@@ -218,7 +218,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
             }
             return jobRunList;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch matching failed',H.Helpers.getErrorString(error),{ idVJobType, eStatus, assetVersionIDs, parameterMatch, ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'fetch matching failed',H.Helpers.getErrorString(error),{ idVJobType, eStatus, assetVersionIDs, parameterMatch },'DB.JobRun');
             return null;
         }
     }
@@ -243,7 +243,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                         WHERE (jr.idJob = ${idJob}) AND (jr.Status IN (${4},${5},${6}));`,JobRun);
             }
         } catch (error) {
-            RK.logError(RK.LogSection.eDB,'fetch by Job failed',H.Helpers.getErrorString(error),{ idJob, active, ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'fetch by Job failed',H.Helpers.getErrorString(error),{ idJob, active },'DB.JobRun');
             return null;
         }
     }
@@ -252,7 +252,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         const jobs: JobRun[] = [];
         const activeJobs: JobRun[] | null = await JobRun.fetchByJobFiltered(idJob,true);
         if(!activeJobs) {
-            RK.logError(RK.LogSection.eDB,'fetch active by Scene failed','failed to get filtered jobs',{ idJob, idScene, ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'fetch active by Scene failed','failed to get filtered jobs',{ idJob, idScene },'DB.JobRun');
             return null;
         }
 
@@ -270,7 +270,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
         const jobs: JobRun[] = [];
         const activeJobs: JobRun[] | null = await JobRun.fetchByJobFiltered(idJob,true);
         if(!activeJobs) {
-            RK.logError(RK.LogSection.eDB,'fetch active by Model failed','failed to get filtered jobs',{ idJob, idModel, ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'fetch active by Model failed','failed to get filtered jobs',{ idJob, idModel },'DB.JobRun');
             return null;
         }
 
@@ -294,7 +294,7 @@ export class JobRun extends DBC.DBObject<JobRunBase> implements JobRunBase {
                 JOIN JobRun AS jRun ON jRun.idJobRun = wStep.idJobRun
                 WHERE w.idWorkflow = ${idWorkflow};`,JobRun);
         } catch (error) {
-            RK.logError(RK.LogSection.eDB,'fetch from Workflow failed',H.Helpers.getErrorString(error),{ idWorkflow, ...this },'DB.JobRun');
+            RK.logError(RK.LogSection.eDB,'fetch from Workflow failed',H.Helpers.getErrorString(error),{ idWorkflow },'DB.JobRun');
             return null;
         }
     }

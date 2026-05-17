@@ -29,7 +29,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Version.AssetVersionXref');
             return false;
         }
     }
@@ -45,7 +45,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Version.AssetVersionXref');
             return  false;
         }
     }
@@ -57,7 +57,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             return DBC.CopyObject<SystemObjectVersionAssetVersionXrefBase, SystemObjectVersionAssetVersionXref>(
                 await DBC.DBConnection.prisma.systemObjectVersionAssetVersionXref.findUnique({ where: { idSystemObjectVersionAssetVersionXref, }, }), SystemObjectVersionAssetVersionXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSystemObjectVersionAssetVersionXref },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }
@@ -69,7 +69,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             return DBC.CopyArray<SystemObjectVersionAssetVersionXrefBase, SystemObjectVersionAssetVersionXref>(
                 await DBC.DBConnection.prisma.systemObjectVersionAssetVersionXref.findMany({ where: { idSystemObjectVersion } }), SystemObjectVersionAssetVersionXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObjectVersion failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObjectVersion failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }
@@ -81,7 +81,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             return DBC.CopyArray<SystemObjectVersionAssetVersionXrefBase, SystemObjectVersionAssetVersionXref>(
                 await DBC.DBConnection.prisma.systemObjectVersionAssetVersionXref.findMany({ where: { idAssetVersion } }), SystemObjectVersionAssetVersionXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'fetch from AssetVersion failed',H.Helpers.getErrorString(error),{ idAssetVersion },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }
@@ -104,14 +104,14 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
 
             return (xrefs && xrefs.length > 0) ? xrefs[0] : null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from laest SystemObjectVersion and Asset failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'fetch from laest SystemObjectVersion and Asset failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion, idAsset },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }
 
     /** Computes the map of idAsset -> idAssetVersion for the specified idSystemObjectVersion */
     static async fetchAssetVersionMap(idSystemObjectVersion: number): Promise<Map<number, number> | null> {
-        RK.logInfo(RK.LogSection.eDB,'fetch AssetVersion map',undefined,{ idSystemObjectVersion, ...this },'DB.SystemObject.Version.AssetVersionXref');
+        RK.logInfo(RK.LogSection.eDB,'fetch AssetVersion map',undefined,{ idSystemObjectVersion },'DB.SystemObject.Version.AssetVersionXref');
 
         if (!idSystemObjectVersion)
             return null;
@@ -133,7 +133,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(${idSystemObjectVersion}) = ${JSON.stringify(versions)} -> ${JSON.stringify(assetVersionMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eDB);
             return assetVersionMap;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch AssetVersion map failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'fetch AssetVersion map failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }
@@ -163,7 +163,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             // LOG.info(`DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(${idSystemObject}) = ${JSON.stringify(versions)} -> ${JSON.stringify(assetVersionMap, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eDB);
             return assetVersionMap;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch latest AssetVersion map failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'fetch latest AssetVersion map failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }
@@ -178,7 +178,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
             if (await xref.update())
                 return xref;
             else {
-                RK.logError(RK.LogSection.eDB,'add or update failed',`failed to update ${JSON.stringify(xref)}`,{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+                RK.logError(RK.LogSection.eDB,'add or update failed',`failed to update ${JSON.stringify(xref)}`,{ xref },'DB.SystemObject.Version.AssetVersionXref');
                 return null;
             }
         }
@@ -191,7 +191,7 @@ export class SystemObjectVersionAssetVersionXref extends DBC.DBObject<SystemObje
         if (await xref.create())
             return xref;
         else {
-            RK.logError(RK.LogSection.eDB,'add or update failed',`failed to create ${JSON.stringify(xref)}`,{ ...this },'DB.SystemObject.Version.AssetVersionXref');
+            RK.logError(RK.LogSection.eDB,'add or update failed',`failed to create ${JSON.stringify(xref)}`,{ idSystemObjectVersion, idAsset, idAssetVersion },'DB.SystemObject.Version.AssetVersionXref');
             return null;
         }
     }

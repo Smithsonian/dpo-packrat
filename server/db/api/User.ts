@@ -78,7 +78,7 @@ export class User extends DBObject<UserBase> implements UserBase {
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.User');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.User');
             return false;
         }
     }
@@ -113,7 +113,7 @@ export class User extends DBObject<UserBase> implements UserBase {
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.User');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.User');
             return  false;
         }
     }
@@ -125,7 +125,7 @@ export class User extends DBObject<UserBase> implements UserBase {
             return CopyObject<UserBase, User>(
                 await DBConnection.prisma.user.findUnique({ where: { idUser, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.User');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idUser },'DB.User');
             return null;
         }
     }
@@ -134,7 +134,7 @@ export class User extends DBObject<UserBase> implements UserBase {
         try {
             return CopyArray<UserBase, User>(await DBConnection.prisma.user.findMany({ where: { EmailAddress, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by email failed',H.Helpers.getErrorString(error),{ ...this },'DB.User');
+            RK.logError(RK.LogSection.eDB,'fetch by email failed',H.Helpers.getErrorString(error),{ EmailAddress },'DB.User');
             return null;
         }
     }
@@ -146,7 +146,7 @@ export class User extends DBObject<UserBase> implements UserBase {
         try {
             return CopyArray<UserBase, User>(await DBConnection.prisma.user.findMany({ where: { idUser: { in: idUsers, }, }, }), User);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by id failed',H.Helpers.getErrorString(error),{ ...this },'DB.User');
+            RK.logError(RK.LogSection.eDB,'fetch by id failed',H.Helpers.getErrorString(error),{ idUsers },'DB.User');
             return null;
         }
     }
@@ -184,7 +184,7 @@ export class User extends DBObject<UserBase> implements UserBase {
                     }), User);
             }
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch user list failed',H.Helpers.getErrorString(error),{ ...this },'DB.User');
+            RK.logError(RK.LogSection.eDB,'fetch user list failed',H.Helpers.getErrorString(error),{ search, eStatus },'DB.User');
             return null;
         }
     }

@@ -2,6 +2,7 @@ import { CreateSubjectResult, MutationCreateSubjectArgs } from '../../../../../t
 import { Parent } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 
 export default async function createSubject(_: Parent, args: MutationCreateSubjectArgs): Promise<CreateSubjectResult> {
     const { input } = args;
@@ -11,21 +12,23 @@ export default async function createSubject(_: Parent, args: MutationCreateSubje
     const ctx = Authorization.getContext();
     if (!ctx || (!ctx.isAdmin && !ctx.authorizedUnitIds.includes(idUnit))) {
         if (ctx)
-            Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubject');
+            await Authorization.logUnitDenial(ctx.idUser, idUnit, 'createSubject');
         throw new Error(AUTH_ERROR.UNIT_DENIED);
     }
 
-    const subjectArgs = {
-        idSubject: 0,
-        idUnit,
-        idAssetThumbnail: idAssetThumbnail || null,
-        idGeoLocation: idGeoLocation || null,
-        idIdentifierPreferred: idIdentifierPreferred || null,
-        Name
-    };
+    return withAuditTransaction(async () => {
+        const subjectArgs = {
+            idSubject: 0,
+            idUnit,
+            idAssetThumbnail: idAssetThumbnail || null,
+            idGeoLocation: idGeoLocation || null,
+            idIdentifierPreferred: idIdentifierPreferred || null,
+            Name
+        };
 
-    const Subject = new DBAPI.Subject(subjectArgs);
-    await Subject.create();
+        const Subject = new DBAPI.Subject(subjectArgs);
+        await Subject.create();
 
-    return { Subject };
+        return { Subject };
+    });
 }

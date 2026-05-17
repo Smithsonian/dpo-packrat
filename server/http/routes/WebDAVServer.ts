@@ -6,6 +6,8 @@ import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../utils/helpers';
 import { BufferStream } from '../../utils/bufferStream';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { Actor } from '../../audit/Actor';
+import { eAuditType } from '../../db/api/ObjectType';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { ASL, ASR, LocalStore } from '../../utils/localStore';
 import { isAuthenticated } from '../auth';
@@ -125,10 +127,19 @@ class WebDAVAuthentication implements webdav.HTTPAuthentication {
                     const idUser: number = entry.idUser;
                     const user: DBAPI.User | undefined = await CACHE.UserCache.getUser(idUser);
                     if (user) {
-                        // Update the existing LocalStore with the authenticated user
+                        // Token-based auth resolves only after the WebDAV library
+                        // invokes this callback, which is past the HTTP-middleware
+                        // ASL.run scope-entry. Patch idUser AND actor onto the
+                        // existing LocalStore so downstream audit emits attribute
+                        // to the real user rather than the WebDAV system actor.
+                        // Safe under concurrency: each request has its own LS via
+                        // ASL.run; we only fill an idUser slot the middleware left
+                        // empty for an initially-unauthenticated request.
                         const LS: LocalStore | undefined = ASL.getStore();
-                        if (LS && !LS.idUser)
+                        if (LS && !LS.idUser) {
                             LS.idUser = idUser;
+                            LS.actor = Actor.user(idUser);
+                        }
 
                         RK.logInfo(RK.LogSection.eHTTP,'get user','authenticated via token',{ idUser: user.idUser, name: user.Name },'HTTP.Route.WebDAV');
                         // @ts-ignore: ts(2345)
@@ -530,10 +541,21 @@ class WebDAVFileSystem extends webdav.FileSystem {
                 }
             }
 
-            // Audit upload
-            const auditData = { url: `${WebDAVServer.httpRoute}${DP.requestURLV}`, auth: true };
-            const auditOID: DBAPI.ObjectIDAndType = { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV };
-            AuditFactory.audit(auditData, auditOID, eEventKey.eHTTPUpload);
+            // Audit upload. WebDAV writes are essentially Voyager Story saves:
+            // it's the surface Voyager uses to round-trip scene edits back to
+            // Packrat. Tag with that intent so the lifeline UI doesn't render
+            // a bare URL.
+            await AuditFactory.emitSemantic({
+                action: eAuditType.eActionUpload,
+                target: { eObjectType: DP.eObjectTypeV, idObject: DP.idObjectV },
+                payload: {
+                    url: `${WebDAVServer.httpRoute}${DP.requestURLV}`,
+                    fileName: path.basename(pathS),
+                    reason: 'Voyager Story edit',
+                    source: 'WebDAV',
+                    auth: true,
+                },
+            });
 
             const SOP: DBAPI.SystemObjectPairs | null = (DP.idSystemObjectV) ? await DBAPI.SystemObjectPairs.fetch(DP.idSystemObjectV) : null;
             const SOBased: DBAPI.SystemObjectBased | null = SOP ? SOP.SystemObjectBased : null;

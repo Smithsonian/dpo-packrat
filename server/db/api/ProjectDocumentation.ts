@@ -33,7 +33,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Project.Documentation');
             return false;
         }
     }
@@ -50,7 +50,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Project.Documentation');
             return false;
         }
     }
@@ -61,7 +61,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return DBC.CopyObject<SystemObjectBase, SystemObject>(
                 await DBC.DBConnection.prisma.systemObject.findUnique({ where: { idProjectDocumentation, }, }), SystemObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'fetch SystemObject failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Project.Documentation');
             return null;
         }
     }
@@ -73,7 +73,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return DBC.CopyObject<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBC.DBConnection.prisma.projectDocumentation.findUnique({ where: { idProjectDocumentation, }, }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idProjectDocumentation },'DB.Project.Documentation');
             return null;
         }
     }
@@ -83,7 +83,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBC.DBConnection.prisma.projectDocumentation.findMany(), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'fetch all failed',H.Helpers.getErrorString(error),undefined,'DB.Project.Documentation');
             return null;
         }
     }
@@ -95,7 +95,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
             return DBC.CopyArray<ProjectDocumentationBase, ProjectDocumentation>(
                 await DBC.DBConnection.prisma.projectDocumentation.findMany({ where: { idProject } }), ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Project failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'fetch from Project failed',H.Helpers.getErrorString(error),{ idProject },'DB.Project.Documentation');
             return null;
         }
     }
@@ -114,7 +114,7 @@ export class ProjectDocumentation extends DBC.DBObject<ProjectDocumentationBase>
                 FROM ProjectDocumentation AS PD
                 WHERE PD.idProject IN (${Prisma.join(idProjects)})`, ProjectDocumentation);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived from Projects failed',H.Helpers.getErrorString(error),{ ...this },'DB.Project.Documentation');
+            RK.logError(RK.LogSection.eDB,'fetch derived from Projects failed',H.Helpers.getErrorString(error),{ idProjects },'DB.Project.Documentation');
             return null;
         }
     }

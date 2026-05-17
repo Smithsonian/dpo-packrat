@@ -816,6 +816,7 @@ export class Logger {
     private static randomLogEntry(index: number): LogEntry {
         const levels = ['crit', 'error', 'warn', 'info', 'debug'];
         const sectionMessages: Record<LogSection, string[]> = {
+            [LogSection.eAUDIT]: ['Audit row written', 'Audit write failed', 'Audit retention run'],
             [LogSection.eAUTH]: ['User login successful', 'Token expired', 'Password change requested'],
             [LogSection.eCACHE]: ['Cache miss for key', 'Cache invalidated', 'Cache hit'],
             [LogSection.eCOLL]: ['Collection loaded', 'Item added to collection', 'Collection view updated'],
@@ -838,6 +839,7 @@ export class Logger {
             [LogSection.eNONE]: ['No section assigned']
         };
         const sectionCallers: Record<LogSection, string[]> = {
+            [LogSection.eAUDIT]: ['Audit.Factory', 'Audit.Retention'],
             [LogSection.eAUTH]: ['AuthService', 'LoginHandler', 'TokenValidator'],
             [LogSection.eCACHE]: ['CacheManager', 'RedisClient', 'MemoryStore'],
             [LogSection.eCOLL]: ['CollectionController', 'CollectionView', 'ItemHandler'],
@@ -860,6 +862,7 @@ export class Logger {
             [LogSection.eNONE]: ['UnknownCaller']
         };
         const sectionData: Record<LogSection, any> = {
+            [LogSection.eAUDIT]: { action: 'eDBUpdate', actor: 'user(5)', idSystemObject: 1234 },
             [LogSection.eAUTH]: { user: 'john_doe', token: 'abc123', status: 'expired' },
             [LogSection.eCACHE]: { key: 'cacheKey123', action: 'invalidate', status: 'success' },
             [LogSection.eCOLL]: { collectionId: 42, itemCount: 100, status: 'loaded' },

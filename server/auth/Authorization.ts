@@ -3,6 +3,8 @@ import { Config } from '../config';
 import * as DBAPI from '../db';
 import { ASL, LocalStore } from '../utils/localStore';
 import { RecordKeeper as RK } from '../records/recordKeeper';
+import { AuditFactory } from '../audit/interface/AuditFactory';
+import { Actor } from '../audit/Actor';
 
 // #region Error Constants
 export const AUTH_ERROR = {
@@ -124,12 +126,12 @@ export class Authorization {
      * Check if user can access a specific Project by idProject.
      * When `surface` is provided, a denial is logged with that label.
      */
-    static canAccessProject(ctx: AuthorizationContext, idProject: number, surface?: string): boolean {
+    static async canAccessProject(ctx: AuthorizationContext, idProject: number, surface?: string): Promise<boolean> {
         if (ctx.isAdmin) return true;
         if (ctx.effectiveProjectIds == null) return true;
         const allowed = ctx.effectiveProjectIds.includes(idProject);
         if (!allowed && surface)
-            Authorization.logProjectDenial(ctx.idUser, idProject, surface);
+            await Authorization.logProjectDenial(ctx.idUser, idProject, surface);
         return allowed;
     }
 
@@ -149,19 +151,19 @@ export class Authorization {
         if (projectIds.length > 0) {
             const allowed = projectIds.some(pid => (ctx.effectiveProjectIds as number[]).includes(pid));
             if (!allowed)
-                Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject');
+                await Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject');
             return allowed;
         }
 
         // No project ancestor — fall back to Unit check
         const unitId = OG.unit?.[0]?.idUnit ?? null;
         if (unitId === null) {
-            Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject (orphan)');
+            await Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject (orphan)');
             return false; // orphan object — deny
         }
         const allowed = ctx.authorizedUnitIds.includes(unitId);
         if (!allowed)
-            Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject (unit)');
+            await Authorization.logDenial(ctx.idUser, idSystemObject, 'canAccessSystemObject (unit)');
         return allowed;
     }
 
@@ -267,22 +269,22 @@ export class Authorization {
 
     // #region Logging
 
-    static logDenial(idUser: number, idSystemObject: number, surface: string): void {
+    static async logDenial(idUser: number, idSystemObject: number, surface: string): Promise<void> {
         RK.logWarning(RK.LogSection.eSEC, 'access denied',
             undefined, { idUser, idSystemObject, surface }, 'Authorization');
-        Authorization.auditDenial(idUser, idSystemObject, { surface, idSystemObject });
+        await Authorization.auditDenial(idUser, idSystemObject, { surface, idSystemObject });
     }
 
-    static logProjectDenial(idUser: number, idProject: number, surface: string): void {
+    static async logProjectDenial(idUser: number, idProject: number, surface: string): Promise<void> {
         RK.logWarning(RK.LogSection.eSEC, 'project access denied',
             undefined, { idUser, idProject, surface }, 'Authorization');
-        Authorization.auditDenial(idUser, null, { surface, idProject });
+        await Authorization.auditDenial(idUser, null, { surface, idProject });
     }
 
-    static logUnitDenial(idUser: number, idUnit: number, surface: string): void {
+    static async logUnitDenial(idUser: number, idUnit: number, surface: string): Promise<void> {
         RK.logWarning(RK.LogSection.eSEC, 'unit access denied',
             undefined, { idUser, idUnit, surface }, 'Authorization');
-        Authorization.auditDenial(idUser, null, { surface, idUnit });
+        await Authorization.auditDenial(idUser, null, { surface, idUnit });
     }
 
     static logFilteredResults(surface: string, totalCount: number, filteredCount: number): void {
@@ -292,19 +294,18 @@ export class Authorization {
     }
 
     private static async auditDenial(idUser: number, idSystemObject: number | null, data: Record<string, unknown>): Promise<void> {
-        try {
-            const audit = new DBAPI.Audit({
-                idAudit: 0,
-                idUser,
-                AuditDate: new Date(),
-                AuditType: DBAPI.eAuditType.eAuthDenied,
-                DBObjectType: null,
-                idDBObject: null,
-                idSystemObject,
-                Data: JSON.stringify(data),
-            });
-            await audit.create();
-        } catch (error) { /* best-effort; log failure already handled by Audit.createWorker */ }
+        // Denial rows always carry the authenticated user whose action was refused;
+        // emit records them via the unified path so they participate in tier policy
+        // and invariant checks. Failures are logged critical inside AuditFactory.
+        const ok = await AuditFactory.emit({
+            action: DBAPI.eAuditType.eAuthDenied,
+            actor: Actor.user(idUser),
+            idSystemObject,
+            payload: data,
+        });
+        if (!ok)
+            RK.logCritical(RK.LogSection.eAUDIT, 'denial audit write failed',
+                undefined, { idUser, idSystemObject, data }, 'Authorization');
     }
 
     // #endregion

@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
-import { PrismaClient, SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
+import { SystemObjectVersion as SystemObjectVersionBase } from '@prisma/client';
 import { SystemObjectVersionAssetVersionXref } from '..';
 import * as COMMON from '@dpo-packrat/common';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { withAuditTransaction } from '../../audit/withAuditTransaction';
 
 export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> implements SystemObjectVersionBase {
     idSystemObjectVersion!: number;
@@ -58,7 +59,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Version');
             return false;
         }
     }
@@ -76,7 +77,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Version');
             return  false;
         }
     }
@@ -88,7 +89,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyObject<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findUnique({ where: { idSystemObjectVersion, }, }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSystemObjectVersion },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -100,7 +101,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             return DBC.CopyArray<SystemObjectVersionBase, SystemObjectVersion>(
                 await DBC.DBConnection.prisma.systemObjectVersion.findMany({ where: { idSystemObject }, orderBy: { idSystemObjectVersion: 'asc' } }), SystemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -123,7 +124,7 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
             // Manually construct SystemObjectVersion in order to convert queryRaw output of date strings and 1/0's for bits to Date() and boolean
             return SystemObjectVersion.constructFromPrisma(systemObjectVersion);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch latest from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'fetch latest from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.SystemObject.Version');
             return null;
         }
     }
@@ -140,95 +141,65 @@ export class SystemObjectVersion extends DBC.DBObject<SystemObjectVersionBase> i
         if (!idSystemObject)
             return null;
         try {
-            const prismaClient: PrismaClient | DBC.PrismaClientTrans = DBC.DBConnection.prisma;
-            // if our current prisma client does not have the $transaction method, then we're in a transaction already, so just do the work
-            /* istanbul ignore next */
-            if (!DBC.DBConnection.isFullPrismaClient(prismaClient))
-                return SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap, assetsUnzipped);
+            return await withAuditTransaction(async () => {
+                try {
+                    let assetVersionMap: Map<number, number> | null = null;
+                    if (idSystemObjectVersion)
+                        assetVersionMap = await SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(idSystemObjectVersion);
+                    else if (!assetsUnzipped)
+                        assetVersionMap = await SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(idSystemObject); /* istanbul ignore next */
+                    else // unzipped assets -- don't use old asset versions; the unzipped assets will be our full set of assets
+                        assetVersionMap = new Map<number, number>();
 
-            // set our options for all transactions. these timeout values help with situations
-            // where concurrent requests to the DB take longer than expected. (in ms)
-            const transactionOptions = {
-                maxWait: 10000, // how long Prisma will wait to get a connection (default: 2000)
-                timeout: 20000  // how long an interactive transaction can take (default: 5000)
-                // isolationLevel: Prisma.TransactionIsolationLevel.Serializable, // how much concurrency is allowed 'serializable' is most strict (default: RepeatableRead)
-            };
+                    /* istanbul ignore next */
+                    if (!assetVersionMap) {
+                        RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',`unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`,{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
+                        return null;
+                    }
 
-            // otherwise, start a new transaction:
-            // LOG.info('DBAPI.SystemObjectVersion.cloneObjectAndXrefs starting a new DB transaction', LOG.LS.eDB);
-            return await prismaClient.$transaction(async (prisma) => {
-                const transactionNumber: number = await DBC.DBConnection.setPrismaTransaction(prisma);
-                const retValue: SystemObjectVersion | null = await SystemObjectVersion.cloneObjectAndXrefsTrans(idSystemObject, idSystemObjectVersion, Comment, assetVersionOverrideMap, assetsUnzipped);
-                DBC.DBConnection.clearPrismaTransaction(transactionNumber);
-                return retValue;
-            },transactionOptions);
-        } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
-            return null;
-        }
-    }
+                    const SOV: SystemObjectVersion = new SystemObjectVersion({
+                        idSystemObjectVersion: 0,
+                        idSystemObject,
+                        PublishedState: COMMON.ePublishedState.eNotPublished,
+                        DateCreated: new Date(),
+                        Comment
+                    }); /* istanbul ignore next */
 
-    private static async cloneObjectAndXrefsTrans(idSystemObject: number, idSystemObjectVersion: number | null,
-        Comment: string | null, assetVersionOverrideMap?: Map<number, number> | undefined, assetsUnzipped?: boolean | undefined): Promise<SystemObjectVersion | null> {
-        try {
-            // LOG.info(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans(${idSystemObject}, ${idSystemObjectVersion}, ${JSON.stringify(assetVersionOverrideMap, H.Helpers.saferStringify)})`, LOG.LS.eDB);
-            // fetch latest SystemObjectVerion's mapping of idAsset -> idAssetVersion
-            let assetVersionMap: Map<number, number> | null = null;
-            if (idSystemObjectVersion)
-                assetVersionMap = await SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(idSystemObjectVersion);
-            else if (!assetsUnzipped)
-                assetVersionMap = await SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(idSystemObject); /* istanbul ignore next */
-            else // unzipped assets -- don't use old asset versions; the unzipped assets will be our full set of assets
-                assetVersionMap = new Map<number, number>();
+                    if (!await SOV.create()) {
+                        RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',`failed to create new SystemObjectVersion for ${idSystemObject}`,{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
+                        return null;
+                    }
 
-            /* istanbul ignore next */
-            if (!assetVersionMap) {
-                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`unable to fetch assetVersionMap from idSystemObject ${idSystemObject}, idSystemObjectVersion ${idSystemObjectVersion}`,{ ...this },'DB.SystemObject.Version');
-                return null;
-            }
+                    if (assetVersionOverrideMap) {
+                        for (const [idAsset, idAssetVersion] of assetVersionOverrideMap)
+                            assetVersionMap.set(idAsset, idAssetVersion);
+                    }
 
-            // create new SystemObjectVersion
-            const SOV: SystemObjectVersion = new SystemObjectVersion({
-                idSystemObjectVersion: 0,
-                idSystemObject,
-                PublishedState: COMMON.ePublishedState.eNotPublished,
-                DateCreated: new Date(),
-                Comment
-            }); /* istanbul ignore next */
+                    let success: boolean = true;
+                    for (const idAssetVersion of assetVersionMap.values()) {
+                        /* istanbul ignore else */
+                        if (idAssetVersion) {
+                            const SOVAVX: SystemObjectVersionAssetVersionXref = new SystemObjectVersionAssetVersionXref({
+                                idSystemObjectVersionAssetVersionXref: 0,
+                                idSystemObjectVersion: SOV.idSystemObjectVersion,
+                                idAssetVersion
+                            });
+                            success = await SOVAVX.create() && success;
+                        }
+                    } /* istanbul ignore next */
 
-            if (!await SOV.create()) {
-                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create new SystemObjectVersion for ${idSystemObject}`,{ ...this },'DB.SystemObject.Version');
-                return null;
-            }
-
-            // apply overrides, specifying asset versions for specific assets
-            if (assetVersionOverrideMap) {
-                for (const [idAsset, idAssetVersion] of assetVersionOverrideMap)
-                    assetVersionMap.set(idAsset, idAssetVersion);
-            }
-
-            // Create new xref records for these asset versions:
-            let success: boolean = true;
-            for (const idAssetVersion of assetVersionMap.values()) {
-                /* istanbul ignore else */
-                if (idAssetVersion) {
-                    const SOVAVX: SystemObjectVersionAssetVersionXref = new SystemObjectVersionAssetVersionXref({
-                        idSystemObjectVersionAssetVersionXref: 0,
-                        idSystemObjectVersion: SOV.idSystemObjectVersion,
-                        idAssetVersion
-                    });
-                    success = await SOVAVX.create() && success;
+                    if (!success) {
+                        RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',`failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`,{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
+                        return null;
+                    }
+                    return SOV;
+                } catch (error) /* istanbul ignore next */ {
+                    RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',H.Helpers.getErrorString(error),{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
+                    return null;
                 }
-                // LOG.info(`DBAPI.SystemObjectVersion.cloneObjectAndXrefsTrans(${idSystemObject}, ${idSystemObjectVersion}) created ${JSON.stringify(SOVAVX, H.Helpers.saferStringify)})`, LOG.LS.eDB);
-            } /* istanbul ignore next */
-
-            if (!success) {
-                RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',`failed to create all SystemObjectVersionAssetVersionXref's for ${JSON.stringify(SOV)}`,{ ...this },'DB.SystemObject.Version');
-                return null;
-            }
-            return SOV;
+            }, { timeoutMs: 20000 });
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'clone object and xrefs trans failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Version');
+            RK.logError(RK.LogSection.eDB,'clone object and xrefs failed',H.Helpers.getErrorString(error),{ idSystemObject, idSystemObjectVersion },'DB.SystemObject.Version');
             return null;
         }
     }

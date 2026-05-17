@@ -716,6 +716,8 @@ describe('DB Creation Test Suite', () => {
                 idDBObject: subject.idSubject,
                 idSystemObject: systemObjectSubject.idSystemObject,
                 Data: JSON.stringify(subject, H.Helpers.stringifyDatabaseRow),
+                SystemActor: null,
+                CorrelationId: null,
                 idAudit: 0
             });
         expect(audit).toBeTruthy();
@@ -731,6 +733,8 @@ describe('DB Creation Test Suite', () => {
                 idDBObject: null,
                 idSystemObject: null,
                 Data: '',
+                SystemActor: null,
+                CorrelationId: null,
                 idAudit: 0
             });
         expect(auditNulls).toBeTruthy();

@@ -30,7 +30,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Sentinel');
             return false;
         }
     }
@@ -47,7 +47,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
                 },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Sentinel');
             return  false;
         }
     }
@@ -59,7 +59,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
             return DBC.CopyObject<SentinelBase, Sentinel>(
                 await DBC.DBConnection.prisma.sentinel.findUnique({ where: { idSentinel, }, }), Sentinel);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSentinel },'DB.Sentinel');
             return null;
         }
     }
@@ -69,7 +69,7 @@ export class Sentinel extends DBC.DBObject<SentinelBase> implements SentinelBase
             return DBC.CopyArray<SentinelBase, Sentinel>(
                 await DBC.DBConnection.prisma.sentinel.findMany({ where: { URLBase, }, }), Sentinel);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch by URL base failed',H.Helpers.getErrorString(error),{ ...this },'DB.Sentinel');
+            RK.logError(RK.LogSection.eDB,'fetch by URL base failed',H.Helpers.getErrorString(error),{ URLBase },'DB.Sentinel');
             return null;
         }
     }

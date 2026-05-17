@@ -30,7 +30,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Xref');
             return false;
         }
     }
@@ -46,7 +46,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 }
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Xref');
             return  false;
         }
     }
@@ -59,7 +59,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 where: { idSystemObjectXref, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Xref');
             return false;
         }
     }
@@ -90,13 +90,13 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                     return { success: false, error: `Unable to remove final subject from Item ${this.idSystemObjectDerived}` };
             }
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete if allowed failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'delete if allowed failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.SystemObject.Xref');
             return { success: false, error: JSON.stringify(error) };
         }
 
         const result = await this.delete();
         if(!result) {
-            RK.logError(RK.LogSection.eDB,'delete if allowed failed','error deleting xref',{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'delete if allowed failed','error deleting xref',{ id: this.fetchID() },'DB.SystemObject.Xref');
             /* istanbul ignore next */
             return { success: false, error: `Database error deleting xref ${JSON.stringify(this)}` };
         } else {
@@ -110,7 +110,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         if(sox)
             return sox.deleteIfAllowed();
         else {
-            RK.logError(RK.LogSection.eDB,'delete if allowed id failed',`Unable to load SystemObjectXref with id ${idSystemObjectXref}`,{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'delete if allowed id failed',`Unable to load SystemObjectXref with id ${idSystemObjectXref}`,{ idSystemObjectXref },'DB.SystemObject.Xref');
             return { success: false, error: `Unable to load SystemObjectXref with id ${idSystemObjectXref}` };
         }
     }
@@ -122,7 +122,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             return DBC.CopyObject<SystemObjectXrefBase, SystemObjectXref>(
                 await DBC.DBConnection.prisma.systemObjectXref.findUnique({ where: { idSystemObjectXref, }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idSystemObjectXref },'DB.SystemObject.Xref');
             return null;
         }
     }
@@ -135,7 +135,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 await DBC.DBConnection.prisma.systemObjectXref.findMany({
                     where: { AND: [ { idSystemObjectMaster }, { idSystemObjectDerived }, ] }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch xref failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'fetch xref failed',H.Helpers.getErrorString(error),{ idSystemObjectMaster, idSystemObjectDerived },'DB.SystemObject.Xref');
             return null;
         }
     }
@@ -148,7 +148,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 await DBC.DBConnection.prisma.systemObjectXref.findMany({
                     where: { idSystemObjectDerived }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch masters failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'fetch masters failed',H.Helpers.getErrorString(error),{ idSystemObjectDerived },'DB.SystemObject.Xref');
             return null;
         }
     }
@@ -161,7 +161,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
                 await DBC.DBConnection.prisma.systemObjectXref.findMany({
                     where: { idSystemObjectMaster }, }), SystemObjectXref);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch derived failed',H.Helpers.getErrorString(error),{ ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'fetch derived failed',H.Helpers.getErrorString(error),{ idSystemObjectMaster },'DB.SystemObject.Xref');
             return null;
         }
     }
@@ -186,7 +186,7 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
         const SODerived: SystemObject | null = derivedSOBased ? await derivedSOBased.fetchSystemObject():
             await SystemObject.fetch(derivedID!) ; /* istanbul ignore next */ // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!SODerived) {
-            RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject derived: ${derivedID}`,{ derived, ...this },'DB.SystemObject.Xref');
+            RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject derived: ${derivedID}`,{ derived },'DB.SystemObject.Xref');
             return null;
         }
 

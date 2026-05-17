@@ -109,10 +109,14 @@ CREATE TABLE IF NOT EXISTS `Audit` (
   `idDBObject` int(11) NULL,
   `idSystemObject` int(11) NULL,
   `Data` longtext NULL,
+  `SystemActor` varchar(32) NULL,
+  `CorrelationId` varchar(40) NULL,
   PRIMARY KEY (`idAudit`),
   KEY `Audit_idAsset_idUser_AuditDate` (`idUser`,`AuditDate`),
   KEY `Audit_idAsset_idSystemObject_AuditDate` (`idSystemObject`,`AuditDate`),
-  KEY `Audit_idAsset_DBObjectType_idDBObject_AuditDate` (`DBObjectType`,`idDBObject`,`AuditDate`)
+  KEY `Audit_idAsset_DBObjectType_idDBObject_AuditDate` (`DBObjectType`,`idDBObject`,`AuditDate`),
+  KEY `Audit_AuditType_AuditDate` (`AuditType`,`AuditDate`),
+  KEY `Audit_CorrelationId` (`CorrelationId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `CaptureData` (

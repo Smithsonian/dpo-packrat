@@ -4,6 +4,10 @@ import { Subject } from './Subject';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import * as COMMON from '@dpo-packrat/common';
+import * as CACHE from '../../cache';
+import { AuditFactory } from '../../audit/interface/AuditFactory';
+import { eAuditType, eNonSystemObjectType } from './ObjectType';
 
 export class Identifier extends DBC.DBObject<IdentifierBase> implements IdentifierBase {
     idIdentifier!: number;
@@ -11,8 +15,16 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
     idVIdentifierType!: number;
     idSystemObject!: number | null;
 
+    IdentifierValueOrig!: string;
+    idVIdentifierTypeOrig!: number;
+
     constructor(input: IdentifierBase) {
         super(input);
+    }
+
+    protected updateCachedValues(): void {
+        this.IdentifierValueOrig = this.IdentifierValue;
+        this.idVIdentifierTypeOrig = this.idVIdentifierType;
     }
 
     public fetchTableName(): string { return 'Identifier'; }
@@ -32,14 +44,14 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Identifier');
             return false;
         }
     }
 
     protected async updateWorker(): Promise<boolean> {
         try {
-            const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject } = this;
+            const { idIdentifier, IdentifierValue, idVIdentifierType, idSystemObject, IdentifierValueOrig, idVIdentifierTypeOrig } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.identifier.update({
                 where: { idIdentifier, },
                 data: {
@@ -48,9 +60,26 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                     SystemObject: idSystemObject ? { connect: { idSystemObject }, } : { disconnect: true, },
                 },
             }) ? true : /* istanbul ignore next */ false;
+
+            if (retValue && (IdentifierValue !== IdentifierValueOrig || idVIdentifierType !== idVIdentifierTypeOrig)) {
+                const vocabEdan = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+                const isEdanBefore: boolean = vocabEdan ? idVIdentifierTypeOrig === vocabEdan.idVocabulary : false;
+                const isEdanAfter:  boolean = vocabEdan ? idVIdentifierType     === vocabEdan.idVocabulary : false;
+                if (isEdanBefore || isEdanAfter) {
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionEDANIDChange,
+                        target: { idObject: idIdentifier, eObjectType: eNonSystemObjectType.eIdentifier },
+                        idSystemObject: idSystemObject ?? null,
+                        payload: {
+                            before: { IdentifierValue: IdentifierValueOrig, idVIdentifierType: idVIdentifierTypeOrig, isEDAN: isEdanBefore },
+                            after:  { IdentifierValue, idVIdentifierType, isEDAN: isEdanAfter },
+                        },
+                    });
+                }
+            }
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Identifier');
             return false;
         }
     }
@@ -69,7 +98,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                 where: { idIdentifier, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.Identifier');
             return false;
         }
     }
@@ -81,7 +110,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyObject<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findUnique({ where: { idIdentifier, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idIdentifier },'DB.Identifier');
             return null;
         }
     }
@@ -92,7 +121,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyArray<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findMany({ where: { IdentifierValue, }, }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Identifier failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch from Identifier failed',H.Helpers.getErrorString(error),{ IdentifierValue },'DB.Identifier');
             return null;
         }
     }
@@ -111,7 +140,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
                     WHERE S.idSubject = ${idSubject}`, Identifier);
             return (IDArray && IDArray.length > 0) ? IDArray[0] : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Subject preferred failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch from Subject preferred failed',H.Helpers.getErrorString(error),{ idSubject },'DB.Identifier');
             return null;
         }
     }
@@ -123,7 +152,7 @@ export class Identifier extends DBC.DBObject<IdentifierBase> implements Identifi
             return DBC.CopyArray<IdentifierBase, Identifier>(
                 await DBC.DBConnection.prisma.identifier.findMany({ where: { idSystemObject } }), Identifier);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ ...this },'DB.Identifier');
+            RK.logError(RK.LogSection.eDB,'fetch from SystemObject failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Identifier');
             return null;
         }
     }

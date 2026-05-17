@@ -7,7 +7,7 @@ module.exports = {
     // collectCoverage: true,
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out
-        '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/metadata/*.test.ts', '**/tests/job/**/*.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
+        '**/tests/audit/**/*.test.ts', '**/tests/auth/**', '**/tests/cache/cache.test.ts', '**/tests/collections/*.test.ts', '**/tests/db/**/*.test.ts', '**/tests/graphql/graphql.test.ts', '**/tests/metadata/*.test.ts', '**/tests/job/**/*.test.ts', '**/tests/navigation/**/*.test.ts', '**/tests/storage/**/*.test.ts', '**/tests/utils/**/*.test.ts',
         // '**/tests/db/dbcreation.test.ts',
 
         // Larger test collections, left here to aid in quick, focused testing; these are the elements on the line above:
@@ -24,6 +24,15 @@ module.exports = {
 
         // Needs test cases written:
         // '**/tests/utils/parser/bulkIngestReader.test.ts',
+
+        // Audit pipeline integration suite. Runs against mocked Prisma
+        // boundaries — does not need a live DB. Kept out of the main run
+        // until CI compatibility is verified; invoke manually with:
+        //   yarn test --testPathPattern="tests/integration/audit.test.ts"
+        // '**/tests/integration/**/*.test.ts',
+        //
+        // The "tests/e2e/**" path is reserved for the future real-DB
+        // harness. Nothing under tests/e2e/** today — leave the slot open.
 
         // Individual tests, left here to aid in quick, focused testing:
         // '**/tests/auth/local/login.test.ts',

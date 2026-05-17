@@ -34,17 +34,17 @@ class LDAPAuth implements IAuth {
                 return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
             }
 
-            // Step 2: Bind Packrat Service Account
+            // Bind Packrat Service Account
             res = await this.bindService();
             if (!res.success)
                 return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
 
-            // Step 3: Search for passed user by email
+            // Search for passed user by email
             const resUserSearch: UserSearchResult = await this.searchForUser(this._ldapConfig, email);
             if (!resUserSearch.success|| !resUserSearch.DN)
                 return { ...resUserSearch, data: { auth: 'ldaps', server: this._ldapConfig.server, } };
 
-            //Step 4: If user is found, bind on their credentials
+            // If user is found, bind on their credentials
             res = await this.bindUser(resUserSearch.DN, password);
             return { ...res, data: { auth: 'ldaps', server: this._ldapConfig.server } };
         } catch (error) {
@@ -85,7 +85,7 @@ class LDAPAuth implements IAuth {
         // else
         //     LOG.info(`LDAPAuth.fetchClient skipping explicit SSL certificate (env:${Config.environment.type} | os:${os.type()} | ca:${this._ldapConfig.CA} = ${fs.existsSync(this._ldapConfig.CA)} )`, LOG.LS.eAUTH);
 
-        // Step 1: Create a ldap client using our config
+        // Create the ldap client using our config
         // LOG.info(`>>> LDAPAuth.fetchClient creating client: ${H.Helpers.JSONStringify(clientConfig)}`,LOG.LS.eDEBUG);
         this._client = LDAP.createClient(clientConfig);
 

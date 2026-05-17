@@ -11,7 +11,7 @@ export default async function getSubjectsForUnit(_: Parent, args: QueryGetSubjec
     const ctx = Authorization.getContext();
     if (ctx && !ctx.isAdmin) {
         if (!ctx.effectiveUnitIds.includes(idUnit)) {
-            Authorization.logUnitDenial(ctx.idUser, idUnit, 'getSubjectsForUnit');
+            await Authorization.logUnitDenial(ctx.idUser, idUnit, 'getSubjectsForUnit');
             return { Subject: [] };
         }
     }

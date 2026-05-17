@@ -60,7 +60,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                 }));
             return true;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject');
+            RK.logError(RK.LogSection.eDB,'create failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelObject');
             return false;
         }
     }
@@ -83,7 +83,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             }) ? true : /* istanbul ignore next */ false;
             return retValue;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject');
+            RK.logError(RK.LogSection.eDB,'update failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelObject');
             return false;
         }
     }
@@ -95,7 +95,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
                 where: { idModelObject, },
             }) ? true : /* istanbul ignore next */ false;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject');
+            RK.logError(RK.LogSection.eDB,'delete failed',H.Helpers.getErrorString(error),{ id: this.fetchID() },'DB.ModelObject');
             return false;
         }
     }
@@ -107,7 +107,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             return DBC.CopyObject<ModelObjectBase, ModelObject>(
                 await DBC.DBConnection.prisma.modelObject.findUnique({ where: { idModelObject, }, }), ModelObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject');
+            RK.logError(RK.LogSection.eDB,'fetch failed',H.Helpers.getErrorString(error),{ idModelObject },'DB.ModelObject');
             return null;
         }
     }
@@ -119,7 +119,7 @@ export class ModelObject extends DBC.DBObject<ModelObjectBase> implements ModelO
             return DBC.CopyArray<ModelObjectBase, ModelObject>(
                 await DBC.DBConnection.prisma.modelObject.findMany({ where: { idModel } }), ModelObject);
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ ...this },'DB.ModelObject');
+            RK.logError(RK.LogSection.eDB,'fetch from Model failed',H.Helpers.getErrorString(error),{ idModel },'DB.ModelObject');
             return null;
         }
     }

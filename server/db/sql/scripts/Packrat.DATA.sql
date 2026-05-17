@@ -47,9 +47,10 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (3, 2, 'Relativ
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (4, 1, 'Fixed');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (4, 2, 'Variable');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 1, 'Ambient');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 2, 'Strobe Standard');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 3, 'Strobe Cross');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 4, 'Patterned/Structured');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 2, 'Flash, Standard');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 3, 'Flash, Parallel');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 4, 'Flash, Cross');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (5, 5, 'Patterned');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 1, 'None');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 2, 'Clip Black');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (6, 3, 'Clip White');
@@ -192,6 +193,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 1, 'Ingest
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (23, 2, 'Ingestion: Ingest Object');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingestion');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit Retention');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 1, 'mm');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 2, 'cm');
