@@ -4,7 +4,6 @@ import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
-import { eEventKey } from '../../event/interface/EventEnums';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eAuditType } from './ObjectType';
 import * as COMMON from '@dpo-packrat/common';
@@ -82,16 +81,14 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
             // Audit if someone marks this scene as QC'd
             if (ApprovedForPublication) {
-                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
-                AuditFactory.emitSemantic({
+                await AuditFactory.emitSemantic({
                     action: eAuditType.eActionApproveForPublication,
                     target: { idObject: this.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
                     payload: { before: { ApprovedForPublication: false }, after: { ApprovedForPublication: true } },
                 });
             }
             if (PosedAndQCd) {
-                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
-                AuditFactory.emitSemantic({
+                await AuditFactory.emitSemantic({
                     action: eAuditType.eActionPoseAndQC,
                     target: { idObject: this.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
                     payload: { before: { PosedAndQCd: false }, after: { PosedAndQCd: true } },
@@ -122,8 +119,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
 
             // Audit if someone marks this scene as QC'd
             if (ApprovedForPublication && !ApprovedForPublicationOrig) {
-                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
-                AuditFactory.emitSemantic({
+                await AuditFactory.emitSemantic({
                     action: eAuditType.eActionApproveForPublication,
                     target: { idObject: idScene, eObjectType: COMMON.eSystemObjectType.eScene },
                     payload: {
@@ -133,8 +129,7 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
                 });
             }
             if (PosedAndQCd && !PosedAndQCdOrig) {
-                this.audit(eEventKey.eSceneQCd); // don't await, allow this to continue asynchronously
-                AuditFactory.emitSemantic({
+                await AuditFactory.emitSemantic({
                     action: eAuditType.eActionPoseAndQC,
                     target: { idObject: idScene, eObjectType: COMMON.eSystemObjectType.eScene },
                     payload: {
