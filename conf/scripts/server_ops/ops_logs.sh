@@ -388,7 +388,10 @@ op_copy() {
 
     local archive_name tmp_archive
     archive_name="PackratLogs_${ENV_DIR_NAME,,}_${start_date}_to_${end_date}.zip"
-    tmp_archive="/tmp/$archive_name"
+    # Staged under $TMPDIR (set by lib/common.sh to $OPS_TRANSIENT_ROOT/tmp
+    # when /staging is available) so a multi-GB archive does not land on /
+    # on hosts where /tmp is small. Falls back to /tmp for dev workstations.
+    tmp_archive="${TMPDIR:-/tmp}/$archive_name"
     register_tmp_file "$tmp_archive"
 
     # Build file list as an array for `zip -j` (junk paths -> flat archive).
