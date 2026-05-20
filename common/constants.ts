@@ -41,6 +41,11 @@ export enum eVocabularySetID {
     eEdanMDMFields,
     eCaptureDataDatasetUse,
     eModelVariant,
+    eCaptureDataVolumeModality,
+    eCaptureDataVolumeScanType,
+    eCaptureDataVolumeContentType,
+    eCaptureDataVolumeFilterLocation,
+    eCaptureDataVolumeVoxelSizeUnit,
     eNone = -1
 }
 
@@ -108,7 +113,7 @@ export enum eVocabularyID {
     eMetadataMetadataSourceBulkIngestion,
     eMetadataMetadataSourceImage,
     eCaptureDataCaptureMethodPhotogrammetry,
-    eCaptureDataCaptureMethodCT,
+    eCaptureDataCaptureMethodVolumetric,
     eCaptureDataCaptureMethodStructuredLight,
     eCaptureDataCaptureMethodLaserLine,
     eCaptureDataCaptureMethodSphericalLaser,
@@ -233,6 +238,25 @@ export enum eVocabularyID {
     eCaptureDataDatasetUseTextureGeneration,
     eModelVariantRawClean,
     eModelVariantPresentation,
+    eAssetAssetTypeCaptureDataSetVolumetric,
+    eJobJobTypeVolumeInspect,
+    eWorkflowTypeJob,
+    eCaptureDataVolumeModalityMedicalCT,
+    eCaptureDataVolumeModalityMicroCT,
+    eCaptureDataVolumeModalityNanoCT,
+    eCaptureDataVolumeModalitySynchrotron,
+    eCaptureDataVolumeModalityMRI,
+    eCaptureDataVolumeScanTypeRaw,
+    eCaptureDataVolumeScanTypeReconstructed,
+    eCaptureDataVolumeContentTypeTIFFStack,
+    eCaptureDataVolumeContentTypeDICOM,
+    eCaptureDataVolumeContentTypeOther,
+    eCaptureDataVolumeFilterLocationNone,
+    eCaptureDataVolumeFilterLocationSourceSide,
+    eCaptureDataVolumeFilterLocationDetectorSide,
+    eCaptureDataVolumeFilterLocationBoth,
+    eCaptureDataVolumeVoxelSizeUnitMicrometer,
+    eCaptureDataVolumeVoxelSizeUnitMillimeter,
     eNone = -1
 }
 

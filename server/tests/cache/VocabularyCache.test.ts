@@ -155,7 +155,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
 
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
-                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodCT: testVocabulary(vocabulary, 'CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric: testVocabulary(vocabulary, 'Volumetric'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodStructuredLight: testVocabulary(vocabulary, 'Structured Light'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
@@ -453,7 +453,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
         test('Cache: VocabularyCache.vocabularyBySetAndTerm ' + description, async () => {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Photogrammetry');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'CT');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Volumetric');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Structured Light');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Laser Line');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Spherical Laser');

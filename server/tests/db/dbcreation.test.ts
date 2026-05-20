@@ -51,6 +51,8 @@ let captureDataGroupCaptureDataXref: DBAPI.CaptureDataGroupCaptureDataXref | nul
 let captureDataGroupCaptureDataXref2: DBAPI.CaptureDataGroupCaptureDataXref | null;
 let captureDataPhoto: DBAPI.CaptureDataPhoto | null;
 let captureDataPhotoNulls: DBAPI.CaptureDataPhoto | null;
+let captureDataVolume: DBAPI.CaptureDataVolume | null;
+let captureDataVolumeNulls: DBAPI.CaptureDataVolume | null;
 let geoLocation: DBAPI.GeoLocation | null;
 const identifierValue: string = 'Test Identifier ' + UTIL.randomStorageKey('');
 let identifier: DBAPI.Identifier | null;
@@ -882,6 +884,69 @@ describe('DB Creation Test Suite', () => {
         if (captureDataPhotoNulls) {
             expect(await captureDataPhotoNulls.create()).toBeTruthy();
             expect(captureDataPhotoNulls.idCaptureDataPhoto).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: CaptureDataVolume', async () => {
+        if (captureData && vocabulary)
+            captureDataVolume = new DBAPI.CaptureDataVolume({
+                idCaptureDataVolume: 0,
+                idCaptureData: captureData.idCaptureData,
+                idVModality: vocabulary.idVocabulary,
+                idVScanType: vocabulary.idVocabulary,
+                idVContentType: vocabulary.idVocabulary,
+                ScannerMakeModel: 'Nikon XTH 225',
+                VoltageKV: 180,
+                AmperageUA: 200,
+                SpecimenPreparation: 'Dusted with talc',
+                VoxelSizeX: 0.025,
+                VoxelSizeY: 0.025,
+                VoxelSizeZ: 0.025,
+                idVVoxelSizeUnit: vocabulary.idVocabulary,
+                DimensionsX: 2048,
+                DimensionsY: 2048,
+                DimensionsZ: 1600,
+                BitDepth: 16,
+                FileCount: 1600,
+                SliceCount: 1600,
+                idVFilterLocation: vocabulary.idVocabulary,
+            });
+        expect(captureDataVolume).toBeTruthy();
+        if (captureDataVolume) {
+            expect(await captureDataVolume.create()).toBeTruthy();
+            expect(captureDataVolume.idCaptureDataVolume).toBeGreaterThan(0);
+        }
+    });
+
+    test('DB Creation: CaptureDataVolume Nulls', async () => {
+        // Distinct CaptureData required — UNIQUE(idCaptureData) enforces 1:1.
+        if (captureDataNulls && vocabulary)
+            captureDataVolumeNulls = new DBAPI.CaptureDataVolume({
+                idCaptureDataVolume: 0,
+                idCaptureData: captureDataNulls.idCaptureData,
+                idVModality: vocabulary.idVocabulary,
+                idVScanType: vocabulary.idVocabulary,
+                idVContentType: vocabulary.idVocabulary,
+                ScannerMakeModel: null,
+                VoltageKV: null,
+                AmperageUA: null,
+                SpecimenPreparation: null,
+                VoxelSizeX: 0.1,
+                VoxelSizeY: 0.1,
+                VoxelSizeZ: 0.1,
+                idVVoxelSizeUnit: vocabulary.idVocabulary,
+                DimensionsX: null,
+                DimensionsY: null,
+                DimensionsZ: null,
+                BitDepth: null,
+                FileCount: 1,
+                SliceCount: null,
+                idVFilterLocation: null,
+            });
+        expect(captureDataVolumeNulls).toBeTruthy();
+        if (captureDataVolumeNulls) {
+            expect(await captureDataVolumeNulls.create()).toBeTruthy();
+            expect(captureDataVolumeNulls.idCaptureDataVolume).toBeGreaterThan(0);
         }
     });
 
@@ -4908,6 +4973,26 @@ describe('DB Fetch Special Test Suite', () => {
         expect(captureDataPhotoFetch).toBeTruthy();
     });
 
+    test('DB Fetch Special: CaptureDataVolume.fetchAll', async () => {
+        let fetched: DBAPI.CaptureDataVolume[] | null = null;
+        if (captureDataVolume && captureDataVolumeNulls) {
+            fetched = await DBAPI.CaptureDataVolume.fetchAll();
+            if (fetched)
+                expect(fetched).toEqual(expect.arrayContaining([captureDataVolume, captureDataVolumeNulls]));
+        }
+        expect(fetched).toBeTruthy();
+    });
+
+    test('DB Fetch Special: CaptureDataVolume.fetchFromCaptureData', async () => {
+        // 1:1 via UNIQUE(idCaptureData) — returns single record, not array.
+        if (captureData && captureDataVolume) {
+            const fetched: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(captureData.idCaptureData);
+            expect(fetched).toBeTruthy();
+            if (fetched)
+                expect(fetched.idCaptureDataVolume).toEqual(captureDataVolume.idCaptureDataVolume);
+        }
+    });
+
     test('DB Fetch Special: Identifier.fetchFromIdentifierValue', async () => {
         const identifierFetch: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromIdentifierValue(identifierValue);
         expect(identifierFetch).toBeTruthy();
@@ -6531,6 +6616,37 @@ describe('DB Update Test Suite', () => {
         expect(bUpdated).toBeTruthy();
     });
 
+    test('DB Update: CaptureDataVolume.update', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataVolume) {
+            captureDataVolume.VoltageKV = 220;
+            captureDataVolume.SpecimenPreparation = 'Injected with contrast';
+            bUpdated = await captureDataVolume.update();
+
+            const fetched: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetch(captureDataVolume.idCaptureDataVolume);
+            expect(fetched).toBeTruthy();
+            if (fetched) {
+                expect(fetched.VoltageKV).toEqual(220);
+                expect(fetched.SpecimenPreparation).toEqual('Injected with contrast');
+            }
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
+    test('DB Update: CaptureDataVolume.update disconnect optional vocabulary', async () => {
+        let bUpdated: boolean = false;
+        if (captureDataVolume) {
+            captureDataVolume.idVFilterLocation = null;
+            bUpdated = await captureDataVolume.update();
+
+            const fetched: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetch(captureDataVolume.idCaptureDataVolume);
+            expect(fetched).toBeTruthy();
+            if (fetched)
+                expect(fetched.idVFilterLocation).toBeNull();
+        }
+        expect(bUpdated).toBeTruthy();
+    });
+
     test('DB Update: GeoLocation.update', async () => {
         let bUpdated: boolean = false;
         if (geoLocation) {
@@ -8011,6 +8127,8 @@ describe('DB Null/Zero ID Test', () => {
         expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataPhoto.fetch(0)).toBeNull();
         expect(await DBAPI.CaptureDataPhoto.fetchFromCaptureData(0)).toBeNull();
+        expect(await DBAPI.CaptureDataVolume.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataVolume.fetchFromCaptureData(0)).toBeNull();
         expect(await DBC.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBC.CopyObject<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
         expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();

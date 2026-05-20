@@ -33,7 +33,7 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (31, 
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 2, 'CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 2, 'Volumetric');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 3, 'Structured Light');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 4, 'Laser Line');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 5, 'Spherical Laser');
@@ -246,6 +246,38 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Recons
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 1, 'Raw Clean');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 2, 'Presentation');
+
+-- Volumetric Capture Data support
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (32, 'CaptureDataVolume.Modality', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (33, 'CaptureDataVolume.ScanType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (34, 'CaptureDataVolume.ContentType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (35, 'CaptureDataVolume.FilterLocation', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (36, 'CaptureDataVolume.VoxelSizeUnit', 1);
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 18, 'Capture Data Set: Volumetric');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 1, 'Medical CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 2, 'Micro CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 3, 'Nano CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 4, 'Synchrotron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 5, 'MRI');
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 1, 'Raw');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 2, 'Reconstructed');
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 1, 'TIFF Stack');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 2, 'DICOM');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 3, 'Other');
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 1, 'None');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 2, 'Source Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 3, 'Detector Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 4, 'Both');
+
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 1, 'Micrometer');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 2, 'Millimeter');
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 SELECT idVocabulary INTO @idVocabEdanRecordID FROM Vocabulary WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');

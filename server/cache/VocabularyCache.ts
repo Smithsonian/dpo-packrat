@@ -89,6 +89,11 @@ export class VocabularyCache {
                 case 'Edan.3DResourceType':                     eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceType; break;
                 case 'Edan.3DResourceCategory':                 eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceCategory; break;
                 case 'Edan.MDMFields':                          eVocabSetEnum = COMMON.eVocabularySetID.eEdanMDMFields; break;
+                case 'CaptureDataVolume.Modality':              eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeModality; break;
+                case 'CaptureDataVolume.ScanType':              eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeScanType; break;
+                case 'CaptureDataVolume.ContentType':           eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeContentType; break;
+                case 'CaptureDataVolume.FilterLocation':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation; break;
+                case 'CaptureDataVolume.VoxelSizeUnit':         eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit; break;
             }
 
             /* istanbul ignore else */
@@ -178,13 +183,14 @@ export class VocabularyCache {
                         case 'Intermediary File':                   eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeIntermediaryFile; break;
                         case 'Attachment':                          eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeAttachment; break;
                         case 'Other':                               eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeOther; break;
+                        case 'Capture Data Set: Volumetric':        eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric; break;
                     }
                 } break;
 
                 case COMMON.eVocabularySetID.eCaptureDataCaptureMethod: {
                     switch (vocabulary.Term) {
                         case 'Photogrammetry':      eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry; break;
-                        case 'CT':                  eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodCT; break;
+                        case 'Volumetric':          eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric; break;
                         case 'Structured Light':    eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodStructuredLight; break;
                         case 'Laser Line':          eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodLaserLine; break;
                         case 'Spherical Laser':     eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodSphericalLaser; break;
@@ -315,6 +321,7 @@ export class VocabularyCache {
                         case 'Cook: si-voyager-asset':          eVocabEnum = COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerAsset; break;
                         case 'Cook: si-voyager-scene':          eVocabEnum = COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene; break;
                         case 'Cook: unwrap':                    eVocabEnum = COMMON.eVocabularyID.eJobJobTypeCookUnwrap; break;
+                        case 'Volume Inspect':                  eVocabEnum = COMMON.eVocabularyID.eJobJobTypeVolumeInspect; break;
                     }
                 } break;
 
@@ -324,6 +331,48 @@ export class VocabularyCache {
                         case 'Ingestion':                       eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeIngestion; break;
                         case 'Upload':                          eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeUpload; break;
                         case 'Audit Retention':                 eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeAuditRetention; break;
+                        case 'Job':                             eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeJob; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeModality: {
+                    switch (vocabulary.Term) {
+                        case 'Medical CT':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityMedicalCT; break;
+                        case 'Micro CT':                        eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityMicroCT; break;
+                        case 'Nano CT':                         eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityNanoCT; break;
+                        case 'Synchrotron':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalitySynchrotron; break;
+                        case 'MRI':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityMRI; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeScanType: {
+                    switch (vocabulary.Term) {
+                        case 'Raw':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeScanTypeRaw; break;
+                        case 'Reconstructed':                   eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeScanTypeReconstructed; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeContentType: {
+                    switch (vocabulary.Term) {
+                        case 'TIFF Stack':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeTIFFStack; break;
+                        case 'DICOM':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM; break;
+                        case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeOther; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation: {
+                    switch (vocabulary.Term) {
+                        case 'None':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationNone; break;
+                        case 'Source Side':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide; break;
+                        case 'Detector Side':                   eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide; break;
+                        case 'Both':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit: {
+                    switch (vocabulary.Term) {
+                        case 'Micrometer':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer; break;
+                        case 'Millimeter':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter; break;
                     }
                 } break;
 

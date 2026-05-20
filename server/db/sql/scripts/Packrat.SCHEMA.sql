@@ -172,6 +172,36 @@ CREATE TABLE IF NOT EXISTS `CaptureDataPhoto` (
   PRIMARY KEY (`idCaptureDataPhoto`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
+CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
+  `idCaptureDataVolume` int(11) NOT NULL AUTO_INCREMENT,
+  `idCaptureData` int(11) NOT NULL,
+  `idVModality` int(11) NOT NULL,
+  `idVScanType` int(11) NOT NULL,
+  `idVContentType` int(11) NOT NULL,
+  `ScannerMakeModel` varchar(255) DEFAULT NULL,
+  `VoltageKV` double DEFAULT NULL,
+  `AmperageUA` double DEFAULT NULL,
+  `SpecimenPreparation` varchar(2000) DEFAULT NULL,
+  `VoxelSizeX` double NOT NULL,
+  `VoxelSizeY` double NOT NULL,
+  `VoxelSizeZ` double NOT NULL,
+  `idVVoxelSizeUnit` int(11) NOT NULL,
+  `DimensionsX` int(11) DEFAULT NULL,
+  `DimensionsY` int(11) DEFAULT NULL,
+  `DimensionsZ` int(11) DEFAULT NULL,
+  `BitDepth` int(11) DEFAULT NULL,
+  `FileCount` int(11) NOT NULL,
+  `SliceCount` int(11) DEFAULT NULL,
+  `idVFilterLocation` int(11) DEFAULT NULL,
+  PRIMARY KEY (`idCaptureDataVolume`),
+  UNIQUE KEY `uq_capturedatavolume_cd` (`idCaptureData`),
+  KEY `fk_capturedatavolume_v1` (`idVModality`),
+  KEY `fk_capturedatavolume_v2` (`idVScanType`),
+  KEY `fk_capturedatavolume_v3` (`idVContentType`),
+  KEY `fk_capturedatavolume_v4` (`idVFilterLocation`),
+  KEY `fk_capturedatavolume_v5` (`idVVoxelSizeUnit`)
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
 CREATE TABLE IF NOT EXISTS `Contact` (
   `idContact` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) NOT NULL,
@@ -906,6 +936,38 @@ ADD CONSTRAINT `fk_capturedataphoto_vocabulary5`
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedataphoto_vocabulary6`
   FOREIGN KEY (`idVClusterType`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION;
+
+ALTER TABLE `CaptureDataVolume`
+ADD CONSTRAINT `fk_capturedatavolume_cd`
+  FOREIGN KEY (`idCaptureData`)
+  REFERENCES `CaptureData` (`idCaptureData`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedatavolume_v1`
+  FOREIGN KEY (`idVModality`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedatavolume_v2`
+  FOREIGN KEY (`idVScanType`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedatavolume_v3`
+  FOREIGN KEY (`idVContentType`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedatavolume_v4`
+  FOREIGN KEY (`idVFilterLocation`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedatavolume_v5`
+  FOREIGN KEY (`idVVoxelSizeUnit`)
   REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

@@ -799,3 +799,92 @@ CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
 
 -- Workflow Type vocab term for audit retention runs (Eric)
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit Retention');
+
+-- ============================================================
+-- Volumetric Capture Data Support (Eric)
+-- Non-destructive: additive rows + new table only. The CT→Volumetric UPDATE preserves
+-- idVocabulary so existing FK references continue to resolve.
+--
+-- Inline -- NNN comments below predict idVocabulary auto-increment values assuming
+-- MAX(idVocabulary)=213 at apply time. The system does NOT require these specific IDs:
+-- VocabularyCache resolves rows by Term string at runtime. The pre-check matters only
+-- for keeping IDs consistent across environments (so any future hardcoded references
+-- — like CaptureDataPhoto.CaptureDatasetUse default '[207,208,209]' — stay valid).
+-- If MAX shifts, rows still bind correctly; the inline numeric comments just lie.
+-- ============================================================
+
+-- Rename CT → Volumetric in CaptureData.CaptureMethod (idVocabulary unchanged)
+UPDATE Vocabulary SET Term = 'Volumetric' WHERE idVocabularySet = 1 AND Term = 'CT';
+
+-- New entries in existing sets
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 18, 'Capture Data Set: Volumetric'); -- 214
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');               -- 215
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');                          -- 216
+
+-- New VocabularySet: CaptureDataVolume.Modality
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (32, 'CaptureDataVolume.Modality', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 1, 'Medical CT');                    -- 217
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 2, 'Micro CT');                      -- 218
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 3, 'Nano CT');                      -- 219
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 4, 'Synchrotron');                   -- 220
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 5, 'MRI');                          -- 221
+
+-- New VocabularySet: CaptureDataVolume.ScanType
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (33, 'CaptureDataVolume.ScanType', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 1, 'Raw');                           -- 222
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 2, 'Reconstructed');                 -- 223
+
+-- New VocabularySet: CaptureDataVolume.ContentType
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (34, 'CaptureDataVolume.ContentType', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 1, 'TIFF Stack');                    -- 224
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 2, 'DICOM');                         -- 225
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 3, 'Other');                         -- 226
+
+-- New VocabularySet: CaptureDataVolume.FilterLocation
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (35, 'CaptureDataVolume.FilterLocation', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 1, 'None');                          -- 227
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 2, 'Source Side');                   -- 228
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 3, 'Detector Side');                 -- 229
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 4, 'Both');                          -- 230
+
+-- New VocabularySet: CaptureDataVolume.VoxelSizeUnit (scoped to volumetric; intentionally not reusing Model.Units)
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (36, 'CaptureDataVolume.VoxelSizeUnit', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 1, 'Micrometer');                    -- 231
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 2, 'Millimeter');                    -- 232
+
+-- CaptureDataVolume table: 1:1 with CaptureData via UNIQUE on idCaptureData.
+CREATE TABLE `CaptureDataVolume` (
+    `idCaptureDataVolume` INT NOT NULL AUTO_INCREMENT,
+    `idCaptureData`       INT NOT NULL,
+    `idVModality`         INT NOT NULL,
+    `idVScanType`         INT NOT NULL,
+    `idVContentType`      INT NOT NULL,
+    `ScannerMakeModel`    VARCHAR(255) NULL,
+    `VoltageKV`           DOUBLE NULL,
+    `AmperageUA`          DOUBLE NULL,
+    `SpecimenPreparation` VARCHAR(2000) NULL,
+    `VoxelSizeX`          DOUBLE NOT NULL,
+    `VoxelSizeY`          DOUBLE NOT NULL,
+    `VoxelSizeZ`          DOUBLE NOT NULL,
+    `idVVoxelSizeUnit`    INT NOT NULL,
+    `DimensionsX`         INT NULL,
+    `DimensionsY`         INT NULL,
+    `DimensionsZ`         INT NULL,
+    `BitDepth`            INT NULL,
+    `FileCount`           INT NOT NULL,
+    `SliceCount`          INT NULL,
+    `idVFilterLocation`   INT NULL,
+    PRIMARY KEY (`idCaptureDataVolume`),
+    UNIQUE INDEX `uq_capturedatavolume_cd` (`idCaptureData`),
+    INDEX `fk_capturedatavolume_v1` (`idVModality`),
+    INDEX `fk_capturedatavolume_v2` (`idVScanType`),
+    INDEX `fk_capturedatavolume_v3` (`idVContentType`),
+    INDEX `fk_capturedatavolume_v4` (`idVFilterLocation`),
+    INDEX `fk_capturedatavolume_v5` (`idVVoxelSizeUnit`),
+    CONSTRAINT `fk_capturedatavolume_cd` FOREIGN KEY (`idCaptureData`)      REFERENCES `CaptureData`(`idCaptureData`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v1` FOREIGN KEY (`idVModality`)        REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v2` FOREIGN KEY (`idVScanType`)        REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v3` FOREIGN KEY (`idVContentType`)     REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v4` FOREIGN KEY (`idVFilterLocation`)  REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v5` FOREIGN KEY (`idVVoxelSizeUnit`)   REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
