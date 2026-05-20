@@ -447,10 +447,13 @@ op_format() {
         ordered+=( "${remaining[@]}" )
     fi
 
-    # Backup + rewrite LEAF + INTERMEDIATES (root omitted)
+    # Backup + rewrite LEAF + INTERMEDIATES (root omitted).
+    # Backup mirrors the cert's absolute path under $OPS_TRANSIENT_ROOT/cert/
+    # so reformatting a cert in /etc does not leave .bak.* siblings on /.
     local ts backup
     ts=$(date +%Y%m%d%H%M%S)
-    backup="${cert_file}.bak.${ts}"
+    backup="$OPS_TRANSIENT_ROOT/cert${cert_file}.bak.${ts}"
+    mkdir -p -- "$(dirname -- "$backup")"
     cp -p -- "$cert_file" "$backup"
     note "backup: $backup"
 
@@ -602,7 +605,7 @@ main_menu() {
     menu_clear
     banner "PACKRAT CERT OPS"
     echo "[1] Inspect - per-block details (read-only)"
-    echo "[2] Format  - !! rewrite cert bundle in place (.bak.* saved first)"
+    echo "[2] Format  - !! rewrite cert bundle in place (.bak.* saved to staging)"
     echo "[3] Expiry  - check days remaining (exit 1 if within warn-days)"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"

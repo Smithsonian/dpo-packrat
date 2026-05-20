@@ -51,6 +51,7 @@ cd "$PKI"
 RUN_ENV=(
     OPS_AUDIT_LOG="$AUDIT"
     OPS_LOCK_DIR="$LOCKS"
+    OPS_TRANSIENT_ROOT="$TMP_ROOT"
 )
 run_c() { env "${RUN_ENV[@]}" bash "$SCRIPT" "$@"; }
 
@@ -258,7 +259,7 @@ banner_line "format 3-block bundle (relaxed)"
 orig_size=$(wc -c < bundle3.pem)
 out=$(run_c format bundle3.pem 2>&1)
 echo "$out" | grep -q "Rewrote" || fail "expected rewrite message"
-ls bundle3.pem.bak.* >/dev/null 2>&1 || fail "no backup file created"
+ls "$TMP_ROOT/cert$PKI"/bundle3.pem.bak.* >/dev/null 2>&1 || fail "no backup file created"
 # Mutated file should NOT contain the ROOT anymore
 if openssl x509 -in <(awk '/BEGIN/{n++}n==3' bundle3.pem | head) -noout -subject 2>/dev/null \
     | grep -q "Root"; then
@@ -278,7 +279,7 @@ pass "format --strict rejects non-4-block"
 banner_line "format 4-block --strict passes"
 out=$(run_c format bundle4.pem --strict 2>&1)
 echo "$out" | grep -q "Rewrote" || fail "--strict on 4 blocks should rewrite"
-ls bundle4.pem.bak.* >/dev/null 2>&1 || fail "no backup for 4-block"
+ls "$TMP_ROOT/cert$PKI"/bundle4.pem.bak.* >/dev/null 2>&1 || fail "no backup for 4-block"
 pass "format --strict 4-block"
 
 banner_line "audit log populated"
