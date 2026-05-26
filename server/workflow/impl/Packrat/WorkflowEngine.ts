@@ -1028,6 +1028,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     private async fetchWorkflowImpl(workflowParams: WF.WorkflowParameters, WFC: DBAPI.WorkflowConstellation): Promise<WF.IWorkflow | null> {
         switch (workflowParams.eWorkflowType) {
             case COMMON.eVocabularyID.eWorkflowTypeCookJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
+            case COMMON.eVocabularyID.eWorkflowTypeJob: return await WorkflowJob.constructWorkflow(workflowParams, WFC);
             case COMMON.eVocabularyID.eWorkflowTypeIngestion: return await WorkflowIngestion.constructWorkflow(workflowParams, WFC);
             case COMMON.eVocabularyID.eWorkflowTypeUpload: return await WorkflowUpload.constructWorkflow(workflowParams, WFC);
         }

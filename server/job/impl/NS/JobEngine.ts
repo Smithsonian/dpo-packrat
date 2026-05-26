@@ -2,6 +2,7 @@
 import * as JOB from '../../interface';
 import { JobPackrat } from './JobPackrat';
 import * as COOK from '../Cook';
+import * as VOL from '../Volume';
 import * as H from '../../../utils/helpers';
 import * as CACHE from '../../../cache';
 import * as DBAPI from '../../../db';
@@ -199,6 +200,11 @@ export class JobEngine implements JOB.IJobEngine {
                 expectedJob = 'Cook si-generate-downloads';
                 if (parameters instanceof COOK.JobCookSIGenerateDownloadsParameters) // confirm that parameters is of type JobCookSIGenerateDownloadsParameters
                     job = new COOK.JobCookSIGenerateDownloads(this, idAssetVersions, report, parameters, dbJobRun);
+                break;
+            case COMMON.eVocabularyID.eJobJobTypeVolumeInspect:
+                expectedJob = 'Volume Inspect';
+                if (parameters instanceof VOL.JobVolumeInspectParameters) // confirm that parameters is of type JobVolumeInspectParameters
+                    job = new VOL.JobVolumeInspect(this, idAssetVersions, report, parameters, dbJobRun);
                 break;
             default:
                 RK.logError(RK.LogSection.eJOB,'create job worker failed','unknow job type',{ idJobRun: dbJobRun.idJobRun, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', parameters },'Job.Engine');

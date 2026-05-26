@@ -298,6 +298,26 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eEdanMDMFieldsNotesFT:                       testVocabulary(vocabulary, 'Notes (FT)'); break;
                     case COMMON.eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT:         testVocabulary(vocabulary, 'Physical Description (FT)'); break;
 
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric:     testVocabulary(vocabulary, 'Capture Data Set: Volumetric'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeVolumeInspect:                    testVocabulary(vocabulary, 'Volume Inspect'); break;
+                    case COMMON.eVocabularyID.eWorkflowTypeJob:                            testVocabulary(vocabulary, 'Job'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityMedicalCT:         testVocabulary(vocabulary, 'Medical CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityMicroCT:           testVocabulary(vocabulary, 'Micro CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityNanoCT:            testVocabulary(vocabulary, 'Nano CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalitySynchrotron:       testVocabulary(vocabulary, 'Synchrotron'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityMRI:               testVocabulary(vocabulary, 'MRI'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeScanTypeRaw:               testVocabulary(vocabulary, 'Raw'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeScanTypeReconstructed:     testVocabulary(vocabulary, 'Reconstructed'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeTIFFStack:      testVocabulary(vocabulary, 'TIFF Stack'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM:          testVocabulary(vocabulary, 'DICOM'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeOther:          testVocabulary(vocabulary, 'Other'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationNone:        testVocabulary(vocabulary, 'None'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide:  testVocabulary(vocabulary, 'Source Side'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide: testVocabulary(vocabulary, 'Detector Side'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth:        testVocabulary(vocabulary, 'Both'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer:   testVocabulary(vocabulary, 'Micrometer'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter:   testVocabulary(vocabulary, 'Millimeter'); break;
+
                     case COMMON.eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested COMMON.eVocabularyID enum ${COMMON.eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -362,6 +382,11 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eEdan3DResourceType:
                     case COMMON.eVocabularySetID.eEdan3DResourceCategory:
                     case COMMON.eVocabularySetID.eEdanMDMFields:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeModality:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeScanType:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeContentType:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet) {

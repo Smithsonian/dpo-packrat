@@ -2,6 +2,7 @@
 import * as WF from '../../interface';
 import { WorkflowJobParameters } from './WorkflowJob';
 import * as COOK from '../../../job/impl/Cook';
+import * as VOL from '../../../job/impl/Volume';
 import * as DBAPI from '../../../db';
 import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
@@ -158,6 +159,54 @@ export class WorkflowUtil {
                 }
             }
         }
+        return { success: true };
+    }
+
+    /**
+     * Volumetric inspection workflow. Mirrors `computeModelMetrics` but dispatches
+     * the local `eJobJobTypeVolumeInspect` job via `eWorkflowTypeJob`. The 10-minute
+     * timeout is a safety net — sync local inspection typically completes in seconds.
+     *
+     * Populating `idSystemObject` with the AssetVersion's idSystemObject is what
+     * lets `WorkflowEngine.createDBObjects` create the `WorkflowStepSystemObjectXref`
+     * row that downstream `JobRun.fetchMatching` queries need.
+     */
+    static async computeVolumeMetrics(fileName: string,
+        idSystemObjectAssetVersion: number,
+        idProject: number | undefined,
+        idUserInitiator: number | undefined): Promise<H.IOResults> {
+        RK.logInfo(RK.LogSection.eWF,'compute volume metrics',undefined, { fileName, idSystemObjectAssetVersion },'Workflow.Util');
+
+        const parameters: WorkflowJobParameters =
+            new WorkflowJobParameters(COMMON.eVocabularyID.eJobJobTypeVolumeInspect,
+                new VOL.JobVolumeInspectParameters(fileName));
+
+        const wfParams: WF.WorkflowParameters = {
+            eWorkflowType: COMMON.eVocabularyID.eWorkflowTypeJob,
+            idSystemObject: [idSystemObjectAssetVersion],
+            idProject,
+            idUserInitiator,
+            parameters,
+        };
+
+        const workflowEngine: WF.IWorkflowEngine | null = await WF.WorkflowFactory.getInstance();
+        if (!workflowEngine) {
+            RK.logError(RK.LogSection.eWF,'compute volume metrics failed','unable to get WorkflowEngine', { fileName },'Workflow.Util');
+            return { success: false, error: `${fileName} unable to get WorkflowEngine` };
+        }
+
+        const workflow: WF.IWorkflow | null = await workflowEngine.create(wfParams);
+        if (!workflow) {
+            RK.logError(RK.LogSection.eWF,'compute volume metrics failed','unable to create Volume Inspect workflow', { fileName, ...wfParams },'Workflow.Util');
+            return { success: false, error: `${fileName} unable to create Volume Inspect workflow` };
+        }
+
+        const results: H.IOResults = await workflow.waitForCompletion(10 * 60 * 1000); // 10 minutes
+        if (!results.success) {
+            RK.logError(RK.LogSection.eWF,'compute volume metrics failed',`post-upload error: ${results.error}`, { fileName },'Workflow.Util');
+            return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };
+        }
+
         return { success: true };
     }
 
