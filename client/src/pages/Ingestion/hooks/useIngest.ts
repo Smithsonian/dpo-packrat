@@ -313,7 +313,8 @@ function useIngest(): UseIngest {
                 model: ingestModel,
                 scene: ingestScene,
                 other: ingestOther,
-                sceneAttachment: ingestSceneAttachment
+                sceneAttachment: ingestSceneAttachment,
+                volume: []
             };
 
             //This responsible for initiating sending data to the server.

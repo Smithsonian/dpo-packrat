@@ -1,6 +1,7 @@
 type Query {
     getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
     getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
+    getCaptureDataVolume(input: GetCaptureDataVolumeInput!): GetCaptureDataVolumeResult!
 }
 
 input GetCaptureDataInput {
@@ -17,4 +18,12 @@ input GetCaptureDataPhotoInput {
 
 type GetCaptureDataPhotoResult {
     CaptureDataPhoto: CaptureDataPhoto
+}
+
+input GetCaptureDataVolumeInput {
+    idCaptureDataVolume: Int!
+}
+
+type GetCaptureDataVolumeResult {
+    CaptureDataVolume: CaptureDataVolume
 }

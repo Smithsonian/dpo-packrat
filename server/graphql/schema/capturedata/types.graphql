@@ -11,6 +11,7 @@ type CaptureData {
     CaptureDataFile: [CaptureDataFile]
     CaptureDataGroup: [CaptureDataGroup]
     CaptureDataPhoto: [CaptureDataPhoto]
+    CaptureDataVolume: CaptureDataVolume
     SystemObject: SystemObject
 }
 
@@ -52,4 +53,33 @@ type CaptureDataPhoto {
     VItemPositionType: Vocabulary
     VLightSourceType: Vocabulary
     CaptureDatasetUse: String!
+}
+
+type CaptureDataVolume {
+    idCaptureDataVolume: Int!
+    idCaptureData: Int!
+    idVModality: Int!
+    idVScanType: Int!
+    idVContentType: Int!
+    ScannerMakeModel: String
+    VoltageKV: Float
+    AmperageUA: Float
+    SpecimenPreparation: String
+    VoxelSizeX: Float!
+    VoxelSizeY: Float!
+    VoxelSizeZ: Float!
+    idVVoxelSizeUnit: Int!
+    DimensionsX: Int
+    DimensionsY: Int
+    DimensionsZ: Int
+    BitDepth: Int
+    FileCount: Int!
+    SliceCount: Int
+    idVFilterLocation: Int
+    CaptureData: CaptureData
+    VModality: Vocabulary
+    VScanType: Vocabulary
+    VContentType: Vocabulary
+    VVoxelSizeUnit: Vocabulary
+    VFilterLocation: Vocabulary
 }

@@ -2,8 +2,8 @@
 /**
  * JobVolumeInspect unit tests — exercise the standalone inspection pipeline
  * against pre-generated synthesized fixtures. The DB / workflow lifecycle is
- * NOT exercised here; those layers are covered by integration testing when
- * Phase 4 ingestion lands.
+ * NOT exercised here; it's covered by integration tests against the ingest
+ * mutation that wires this into the upload pipeline.
  */
 import * as fs from 'fs/promises';
 import * as os from 'os';
@@ -157,6 +157,40 @@ describe('JobVolumeInspect — sidecar in ZIP', () => {
         expect(md.voxelSizeUnit).toBe('Micrometer');
         expect(md.voltageKV).toBe(100);
         expect(md.scannerMakeModel).toContain('PackratTest');
+    });
+});
+
+describe('ZipFile.getEntryMetadata', () => {
+    test('returns { size, compressedSize } for a known entry', async () => {
+        const { ZipFile } = await import('../../../../utils/zipFile');
+        const zip = new ZipFile(path.join(FIXTURE_DIR, 'volume-test-tiff.zip'));
+        const load = await zip.load();
+        expect(load.success).toBe(true);
+        try {
+            const files = await zip.getJustFiles(null);
+            expect(files.length).toBeGreaterThan(0);
+            const md = await zip.getEntryMetadata(files[0]);
+            expect(md).toBeTruthy();
+            if (md) {
+                expect(md.size).toBeGreaterThan(0);
+                expect(md.compressedSize).toBeGreaterThanOrEqual(0);
+            }
+        } finally {
+            await zip.close();
+        }
+    });
+
+    test('returns null for an unknown entry', async () => {
+        const { ZipFile } = await import('../../../../utils/zipFile');
+        const zip = new ZipFile(path.join(FIXTURE_DIR, 'volume-test-tiff.zip'));
+        const load = await zip.load();
+        expect(load.success).toBe(true);
+        try {
+            const md = await zip.getEntryMetadata('does-not-exist.tif');
+            expect(md).toBeNull();
+        } finally {
+            await zip.close();
+        }
     });
 });
 

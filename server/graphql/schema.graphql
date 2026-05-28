@@ -162,6 +162,7 @@ type CaptureData {
   CaptureDataFile: [CaptureDataFile]
   CaptureDataGroup: [CaptureDataGroup]
   CaptureDataPhoto: [CaptureDataPhoto]
+  CaptureDataVolume: CaptureDataVolume
   DateCaptured: DateTime!
   Description: String!
   SystemObject: SystemObject
@@ -251,6 +252,35 @@ type CaptureDataPhoto {
   idVFocusType: Int
   idVItemPositionType: Int
   idVLightSourceType: Int
+}
+
+type CaptureDataVolume {
+  AmperageUA: Float
+  BitDepth: Int
+  CaptureData: CaptureData
+  DimensionsX: Int
+  DimensionsY: Int
+  DimensionsZ: Int
+  FileCount: Int!
+  ScannerMakeModel: String
+  SliceCount: Int
+  SpecimenPreparation: String
+  VContentType: Vocabulary
+  VFilterLocation: Vocabulary
+  VModality: Vocabulary
+  VScanType: Vocabulary
+  VVoxelSizeUnit: Vocabulary
+  VoltageKV: Float
+  VoxelSizeX: Float!
+  VoxelSizeY: Float!
+  VoxelSizeZ: Float!
+  idCaptureData: Int!
+  idCaptureDataVolume: Int!
+  idVContentType: Int!
+  idVFilterLocation: Int
+  idVModality: Int!
+  idVScanType: Int!
+  idVVoxelSizeUnit: Int!
 }
 
 input ClearLicenseAssignmentInput {
@@ -553,6 +583,14 @@ type GetCaptureDataPhotoResult {
 
 type GetCaptureDataResult {
   CaptureData: CaptureData
+}
+
+input GetCaptureDataVolumeInput {
+  idCaptureDataVolume: Int!
+}
+
+type GetCaptureDataVolumeResult {
+  CaptureDataVolume: CaptureDataVolume
 }
 
 input GetContentsForAssetVersionsInput {
@@ -954,6 +992,7 @@ input IngestDataInput {
   scene: [IngestSceneInput!]!
   sceneAttachment: [IngestSceneAttachmentInput!]!
   subjects: [IngestSubjectInput!]!
+  volume: [IngestVolumeInput!]!
 }
 
 type IngestDataResult {
@@ -1147,6 +1186,38 @@ type IngestTitle {
   forced: Boolean!
   subtitle: [String]
   title: String!
+}
+
+input IngestVolumeInput {
+  amperageUA: Float
+  bitDepth: Int
+  contentType: Int!
+  dateCaptured: String!
+  derivedObjects: [RelatedObjectInput!]!
+  description: String!
+  dimensionsX: Int
+  dimensionsY: Int
+  dimensionsZ: Int
+  directory: String!
+  fileCount: Int!
+  filterLocation: Int
+  idAsset: Int
+  idAssetVersion: Int!
+  identifiers: [IngestIdentifierInput!]!
+  modality: Int!
+  name: String!
+  scanType: Int!
+  scannerMakeModel: String
+  sliceCount: Int
+  sourceObjects: [RelatedObjectInput!]!
+  specimenPreparation: String
+  systemCreated: Boolean!
+  updateNotes: String
+  voltageKV: Float
+  voxelSizeUnit: Int!
+  voxelSizeX: Float!
+  voxelSizeY: Float!
+  voxelSizeZ: Float!
 }
 
 type IngestionItem {
@@ -1551,6 +1622,7 @@ type Query {
   getAssetVersionsDetails(input: GetAssetVersionsDetailsInput!): GetAssetVersionsDetailsResult!
   getCaptureData(input: GetCaptureDataInput!): GetCaptureDataResult!
   getCaptureDataPhoto(input: GetCaptureDataPhotoInput!): GetCaptureDataPhotoResult!
+  getCaptureDataVolume(input: GetCaptureDataVolumeInput!): GetCaptureDataVolumeResult!
   getContentsForAssetVersions(input: GetContentsForAssetVersionsInput!): GetContentsForAssetVersionsResult!
   getCurrentUser: GetCurrentUserResult!
   getDetailsTabDataForObject(input: GetDetailsTabDataForObjectInput!): GetDetailsTabDataForObjectResult!

@@ -11,10 +11,10 @@
  * could (in theory) race and miss the signal — though `WorkflowJob` also
  * guards via a `complete` flag for belt-and-suspenders safety.
  *
- * Stages (see PLAN_CT_DATATYPE.md for the full contract):
+ * Stages:
  *   1. Archive pre-flight — ZIP opens, non-empty, content type detection.
  *   2. File inventory — count files/slices, detect duplicates.
- *   3. Sidecar parse — single dispatcher; .pca only in Phase 2.
+ *   3. Sidecar parse — single dispatcher; currently handles .pca only.
  *   4. Header sampling — first slice TIFF or DICOM, parsed from disk.
  *   5. Cross-check + companion file tagging.
  */

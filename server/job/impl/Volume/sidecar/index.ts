@@ -7,7 +7,7 @@
  * registering in `SIDECAR_PARSERS` below. The single entry point
  * `parseSidecar(filePath)` picks the right parser by extension.
  *
- * Phase 2 ships `.pca` only. xtekct and vgi follow in later PRs.
+ * Currently handles `.pca` only.
  */
 import * as path from 'path';
 import { PcaSidecarParser } from './pca';

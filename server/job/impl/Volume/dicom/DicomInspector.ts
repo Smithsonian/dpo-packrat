@@ -4,7 +4,7 @@
  * Reads a small fixed set of tags from a single DICOM instance file on disk
  * via `dicom-parser`. Used to pre-fill the volumetric ingestion form.
  *
- * Limitations (Phase 2):
+ * Current limitations:
  *   - First instance only; no DICOMDIR traversal beyond detecting existence.
  *   - No multi-series handling.
  *   - Compressed transfer syntaxes work only to the extent that dicom-parser

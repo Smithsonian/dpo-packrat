@@ -2,8 +2,8 @@
  * Output contract for JobVolumeInspect.
  *
  * `VolumeExtractedMetadata` is the JSON shape written to `JobRun.Output` by a
- * successful inspection. Phase 3's GraphQL/REST layer reads this to pre-fill
- * the ingestion form so the user mostly confirms rather than types.
+ * successful inspection. Read by the ingestion form so the user mostly
+ * confirms rather than types.
  *
  * Fields are organized into three groups:
  *   - Hard inventory facts (always present after a successful inspection)

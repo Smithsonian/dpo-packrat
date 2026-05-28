@@ -194,6 +194,7 @@ export type CaptureData = {
   CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
   CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
   CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
+  CaptureDataVolume?: Maybe<CaptureDataVolume>;
   DateCaptured: Scalars['DateTime'];
   Description: Scalars['String'];
   SystemObject?: Maybe<SystemObject>;
@@ -287,6 +288,36 @@ export type CaptureDataPhoto = {
   idVFocusType?: Maybe<Scalars['Int']>;
   idVItemPositionType?: Maybe<Scalars['Int']>;
   idVLightSourceType?: Maybe<Scalars['Int']>;
+};
+
+export type CaptureDataVolume = {
+  __typename?: 'CaptureDataVolume';
+  AmperageUA?: Maybe<Scalars['Float']>;
+  BitDepth?: Maybe<Scalars['Int']>;
+  CaptureData?: Maybe<CaptureData>;
+  DimensionsX?: Maybe<Scalars['Int']>;
+  DimensionsY?: Maybe<Scalars['Int']>;
+  DimensionsZ?: Maybe<Scalars['Int']>;
+  FileCount: Scalars['Int'];
+  ScannerMakeModel?: Maybe<Scalars['String']>;
+  SliceCount?: Maybe<Scalars['Int']>;
+  SpecimenPreparation?: Maybe<Scalars['String']>;
+  VContentType?: Maybe<Vocabulary>;
+  VFilterLocation?: Maybe<Vocabulary>;
+  VModality?: Maybe<Vocabulary>;
+  VScanType?: Maybe<Vocabulary>;
+  VVoxelSizeUnit?: Maybe<Vocabulary>;
+  VoltageKV?: Maybe<Scalars['Float']>;
+  VoxelSizeX: Scalars['Float'];
+  VoxelSizeY: Scalars['Float'];
+  VoxelSizeZ: Scalars['Float'];
+  idCaptureData: Scalars['Int'];
+  idCaptureDataVolume: Scalars['Int'];
+  idVContentType: Scalars['Int'];
+  idVFilterLocation?: Maybe<Scalars['Int']>;
+  idVModality: Scalars['Int'];
+  idVScanType: Scalars['Int'];
+  idVVoxelSizeUnit: Scalars['Int'];
 };
 
 export type ClearLicenseAssignmentInput = {
@@ -614,6 +645,15 @@ export type GetCaptureDataPhotoResult = {
 export type GetCaptureDataResult = {
   __typename?: 'GetCaptureDataResult';
   CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataVolumeInput = {
+  idCaptureDataVolume: Scalars['Int'];
+};
+
+export type GetCaptureDataVolumeResult = {
+  __typename?: 'GetCaptureDataVolumeResult';
+  CaptureDataVolume?: Maybe<CaptureDataVolume>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -1054,6 +1094,7 @@ export type IngestDataInput = {
   scene: Array<IngestSceneInput>;
   sceneAttachment: Array<IngestSceneAttachmentInput>;
   subjects: Array<IngestSubjectInput>;
+  volume: Array<IngestVolumeInput>;
 };
 
 export type IngestDataResult = {
@@ -1254,6 +1295,38 @@ export type IngestTitle = {
   forced: Scalars['Boolean'];
   subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
   title: Scalars['String'];
+};
+
+export type IngestVolumeInput = {
+  amperageUA?: InputMaybe<Scalars['Float']>;
+  bitDepth?: InputMaybe<Scalars['Int']>;
+  contentType: Scalars['Int'];
+  dateCaptured: Scalars['String'];
+  derivedObjects: Array<RelatedObjectInput>;
+  description: Scalars['String'];
+  dimensionsX?: InputMaybe<Scalars['Int']>;
+  dimensionsY?: InputMaybe<Scalars['Int']>;
+  dimensionsZ?: InputMaybe<Scalars['Int']>;
+  directory: Scalars['String'];
+  fileCount: Scalars['Int'];
+  filterLocation?: InputMaybe<Scalars['Int']>;
+  idAsset?: InputMaybe<Scalars['Int']>;
+  idAssetVersion: Scalars['Int'];
+  identifiers: Array<IngestIdentifierInput>;
+  modality: Scalars['Int'];
+  name: Scalars['String'];
+  scanType: Scalars['Int'];
+  scannerMakeModel?: InputMaybe<Scalars['String']>;
+  sliceCount?: InputMaybe<Scalars['Int']>;
+  sourceObjects: Array<RelatedObjectInput>;
+  specimenPreparation?: InputMaybe<Scalars['String']>;
+  systemCreated: Scalars['Boolean'];
+  updateNotes?: InputMaybe<Scalars['String']>;
+  voltageKV?: InputMaybe<Scalars['Float']>;
+  voxelSizeUnit: Scalars['Int'];
+  voxelSizeX: Scalars['Float'];
+  voxelSizeY: Scalars['Float'];
+  voxelSizeZ: Scalars['Float'];
 };
 
 export type IngestionItem = {
@@ -1824,6 +1897,7 @@ export type Query = {
   getAssetVersionsDetails: GetAssetVersionsDetailsResult;
   getCaptureData: GetCaptureDataResult;
   getCaptureDataPhoto: GetCaptureDataPhotoResult;
+  getCaptureDataVolume: GetCaptureDataVolumeResult;
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
@@ -1903,6 +1977,11 @@ export type QueryGetCaptureDataArgs = {
 
 export type QueryGetCaptureDataPhotoArgs = {
   input: GetCaptureDataPhotoInput;
+};
+
+
+export type QueryGetCaptureDataVolumeArgs = {
+  input: GetCaptureDataVolumeInput;
 };
 
 
