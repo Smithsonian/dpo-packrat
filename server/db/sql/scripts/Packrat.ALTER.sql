@@ -817,9 +817,29 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit 
 UPDATE Vocabulary SET Term = 'Volumetric' WHERE idVocabularySet = 1 AND Term = 'CT';
 
 -- New entries in existing sets
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 18, 'Capture Data Set: Volumetric'); -- 214
+-- Note: 'Capture Data Set: Volumetric' (set 20) is added below in the
+-- AssetType reorder block so the insert and reorder land in one operation.
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');               -- 215
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');                          -- 216
+
+-- Seed the Job entity row for 'Volume Inspect' (matches the Cook job pattern
+-- at DATA.sql lines 728-741). Without this seed the row is created lazily by
+-- the JobEngine on first dispatch with Name = NULL, which breaks any query
+-- that filters Job by Name. The INSERT handles fresh staging / production
+-- where the row does not yet exist; the UPDATE backfills the Name on local
+-- DBs where the JobEngine already lazy-created the row.
+INSERT INTO Job (idVJobType, Name, Status, Frequency)
+SELECT v.idVocabulary, v.Term, 1, NULL
+FROM Vocabulary v
+WHERE v.Term = 'Volume Inspect'
+  AND NOT EXISTS (
+      SELECT 1 FROM Job j WHERE j.idVJobType = v.idVocabulary
+  );
+
+UPDATE Job j
+JOIN Vocabulary v ON j.idVJobType = v.idVocabulary
+SET j.Name = v.Term
+WHERE v.Term = 'Volume Inspect' AND j.Name IS NULL;
 
 -- New VocabularySet: CaptureDataVolume.Modality
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (32, 'CaptureDataVolume.Modality', 1);
@@ -888,3 +908,49 @@ CREATE TABLE `CaptureDataVolume` (
     CONSTRAINT `fk_capturedatavolume_v4` FOREIGN KEY (`idVFilterLocation`)  REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
     CONSTRAINT `fk_capturedatavolume_v5` FOREIGN KEY (`idVVoxelSizeUnit`)   REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
+
+-- Metadata.MetadataSource — add "Volumetric" alongside existing "Bulk Ingestion" and "Image".
+-- Parallels "Image" (EXIF-style extraction from photo files) for metadata extracted from
+-- volumetric capture data (DICOM headers, TIFF stack IFDs, vendor sidecars). Idempotent
+-- via NOT EXISTS guard for safe re-apply.
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
+SELECT 18, 3, 'Volumetric'
+WHERE NOT EXISTS (
+    SELECT 1 FROM Vocabulary WHERE idVocabularySet = 18 AND Term = 'Volumetric'
+);
+
+-- ============================================================
+-- AssetType (set 20) — add "Capture Data Set: Volumetric" adjacent to the
+-- other Capture Data Set entries (SortOrder 8) and shift "Capture Data Set:
+-- Other" / "Capture Data File" / Model / Scene / etc. down by 1.
+--
+-- Single combined block for both:
+--   * fresh DBs (staging / production) where the term does not yet exist
+--   * local DB where the term was previously inserted at SortOrder 18
+--
+-- SortOrder has no UNIQUE constraint (only a non-unique index), so transient
+-- collisions during execution are harmless. Absolute SETs + NOT EXISTS guard
+-- make the whole block idempotent.
+-- ============================================================
+
+-- Shift existing entries down by 1 to free SortOrder 8.
+UPDATE Vocabulary SET SortOrder = 18 WHERE idVocabularySet = 20 AND Term = 'Other';
+UPDATE Vocabulary SET SortOrder = 17 WHERE idVocabularySet = 20 AND Term = 'Attachment';
+UPDATE Vocabulary SET SortOrder = 16 WHERE idVocabularySet = 20 AND Term = 'Intermediary File';
+UPDATE Vocabulary SET SortOrder = 15 WHERE idVocabularySet = 20 AND Term = 'Project Documentation';
+UPDATE Vocabulary SET SortOrder = 14 WHERE idVocabularySet = 20 AND Term = 'Scene';
+UPDATE Vocabulary SET SortOrder = 13 WHERE idVocabularySet = 20 AND Term = 'Model UV Map File';
+UPDATE Vocabulary SET SortOrder = 12 WHERE idVocabularySet = 20 AND Term = 'Model Geometry File';
+UPDATE Vocabulary SET SortOrder = 11 WHERE idVocabularySet = 20 AND Term = 'Model';
+UPDATE Vocabulary SET SortOrder = 10 WHERE idVocabularySet = 20 AND Term = 'Capture Data File';
+UPDATE Vocabulary SET SortOrder = 9  WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Other';
+
+-- Seat Volumetric at SortOrder 8. UPDATE handles the local DB case (row
+-- exists from earlier migration at SortOrder 18); INSERT-with-NOT-EXISTS
+-- handles staging / production (row absent).
+UPDATE Vocabulary SET SortOrder = 8 WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric';
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
+SELECT 20, 8, 'Capture Data Set: Volumetric'
+WHERE NOT EXISTS (
+    SELECT 1 FROM Vocabulary WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric'
+);

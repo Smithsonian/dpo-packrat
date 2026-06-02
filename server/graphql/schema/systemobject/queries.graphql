@@ -102,6 +102,7 @@ type AssetDetailFields {
 
 type AssetVersionDetailFields {
     FilePath: String
+    FileName: String
     Creator: String
     DateCreated: DateTime
     Ingested: Boolean

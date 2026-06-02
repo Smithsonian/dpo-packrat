@@ -10,7 +10,7 @@ import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableCo
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
@@ -155,7 +155,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const classes = useStyles();
     const [CaptureDataDetails, updateDetailField] = useDetailTabStore(state => [state.CaptureDataDetails, state.updateDetailField]);
 
-    const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
+    const [getInitialEntry, getEntries, getVocabularyId] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries, state.getVocabularyId]);
 
     useEffect(() => {
         onUpdateDetail(objectType, CaptureDataDetails);
@@ -233,6 +233,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
+    const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
@@ -254,28 +255,42 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
 
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
-                                    <Typography className={classes.labelText}>Dataset Type</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        disabled={disabled}
-                                        value={CaptureDataDetails?.datasetType}
-                                        name='datasetType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetTypeSelect)}
-                                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetType')) }}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
+                            {!isVolumetric && (
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                                        <Typography className={classes.labelText}>Dataset Type</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            disabled={disabled}
+                                            value={CaptureDataDetails?.datasetType}
+                                            name='datasetType'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetTypeSelect)}
+                                            style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetType')) }}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {isVolumetric && (
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                                        <Typography className={classes.labelText}>Volumetric Details</Typography>
+                                    </TableCell>
+                                    <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                                        <span style={{ paddingLeft: '10px', fontStyle: 'italic', color: 'rgba(0, 0, 0, 0.6)' }}>
+                                            Modality, scan parameters, voxel sizes available on the associated asset version.
+                                        </span>
+                                    </TableCell>
+                                </TableRow>
+                            )}
 
-                            {   // TODO: explictly set to 6 (Photogrammetry Set). Check against enums/COMMON
-                                CaptureDataDetails?.datasetType === 6 &&
+                            {
+                                CaptureDataDetails?.datasetType === getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet) &&
                                 <TableRow className={classes.tableRow}>
                                     <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                         <Typography className={classes.labelText}>Dataset Use</Typography>
@@ -345,7 +360,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         onChange={onSetField}
                                         disabled={disabled}
                                         className={clsx(classes.input, classes.fieldSizing)}
-                                        updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'description')}
+                                        updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'description') || undefined}
                                         forceNotifyByEnter={false}
                                         debounceTimeout={400}
                                         style={{ width: '100%', minHeight: '4rem', textAlign: 'left', padding: '5px' }}

@@ -158,6 +158,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
+  FileName?: Maybe<Scalars['String']>;
   FilePath?: Maybe<Scalars['String']>;
   Ingested?: Maybe<Scalars['Boolean']>;
   StorageHash?: Maybe<Scalars['String']>;

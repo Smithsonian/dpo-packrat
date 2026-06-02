@@ -17,6 +17,7 @@ import { useDetailTabStore, UploadReferences } from '../../../../../store';
 import { DebounceInput } from 'react-debounce-input';
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 import { eIngestionMode } from '../../../../../constants';
+import { ZipContentsView } from './ZipContentsView';
 
 export const useAVDetailsStyles = makeStyles(() => ({
     value: {
@@ -36,7 +37,7 @@ interface AVDetailProps extends DetailComponentProps {
 function AssetVersionDetails(props: AVDetailProps): React.ReactElement {
     const AVclasses = useAVDetailsStyles();
     const tableClasses = useStyles();
-    const { data, loading, onUpdateDetail, objectType, onUploaderOpen } = props;
+    const { data, loading, onUpdateDetail, objectType, onUploaderOpen, idObject } = props;
     const [AssetVersionDetails, updateDetailField] = useDetailTabStore(state => [state.AssetVersionDetails, state.updateDetailField]);
 
     useEffect(() => {
@@ -144,6 +145,9 @@ function AssetVersionDetails(props: AVDetailProps): React.ReactElement {
             <Button className={AVclasses.button} variant='contained' disableElevation color='primary' style={{ width: 'fit-content', marginTop: '7px' }} onClick={onAddVersion}>
                 Add Version
             </Button>
+            {idObject && (/\.zip$/i.test(assetVersionData?.FilePath ?? '') || /\.zip$/i.test(assetVersionData?.FileName ?? '')) && (
+                <ZipContentsView idAssetVersion={idObject} />
+            )}
         </Box>
     );
 }

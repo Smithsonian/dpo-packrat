@@ -164,16 +164,17 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 4, 'Captur
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 5, 'Capture Data Set: Laser Line');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 6, 'Capture Data Set: Spherical Laser');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 7, 'Capture Data Set: Structured Light');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 8, 'Capture Data Set: Other');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 9, 'Capture Data File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 10, 'Model');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 11, 'Model Geometry File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 12, 'Model UV Map File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Scene');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Project Documentation');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Intermediary File');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Attachment');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 17, 'Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 8, 'Capture Data Set: Volumetric');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 9, 'Capture Data Set: Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 10, 'Capture Data File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 11, 'Model');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 12, 'Model Geometry File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 13, 'Model UV Map File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 14, 'Scene');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 15, 'Project Documentation');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 16, 'Intermediary File');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 17, 'Attachment');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 18, 'Other');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 1, 'Cook: bake');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 2, 'Cook: decimate-unwrap');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 3, 'Cook: decimate');
@@ -195,6 +196,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 2, 'Ingest
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 3, 'Upload');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit Retention');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 2, 'Image');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 3, 'Volumetric');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 1, 'mm');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 2, 'cm');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (24, 3, 'm');
@@ -254,7 +256,6 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (34, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (35, 'CaptureDataVolume.FilterLocation', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (36, 'CaptureDataVolume.VoxelSizeUnit', 1);
 
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 18, 'Capture Data Set: Volumetric');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');
 
@@ -737,6 +738,7 @@ INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term,
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-asset';
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Volume Inspect';
 
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('CC0, Publishable w/ Downloads', 'CC0, Publishable w/ Downloads', 10);
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('SI ToU, Publishable w/ Downloads', 'SI ToU, Publishable w/ Downloads', 20);

@@ -18,6 +18,7 @@ import * as NAV from '../../../../../navigation/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, StorageFactory, IStorage } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
+import * as VOL from '../../../../../job/impl/Volume';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
@@ -1028,6 +1029,19 @@ class IngestDataWorker extends ResolverBase {
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric);
         if (!vocabulary) {
             RK.logError(RK.LogSection.eGQL,'create volume objects failed','unable to retrieve volumetric capture method vocabulary from cache',{ volume },'GraphQL.Ingestion.Data');
+            return false;
+        }
+
+        // Cross-check the submitted fileCount against the inspection result. Inspection
+        // counts ZIP central-directory entries directly, so a divergence here means the
+        // form value was edited (by UI bug, admin tooling, or tampering). Refuse — the
+        // form is intended to be read-only for fileCount.
+        const inspection: VOL.JobVolumeInspectOutput | null = await VOL.JobVolumeInspectOutput.extractFromAssetVersion(volume.idAssetVersion);
+        if (inspection?.metadata && inspection.metadata.fileCount !== volume.fileCount) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed','submitted fileCount does not match inspection result',
+                { idAssetVersion: volume.idAssetVersion, submittedFileCount: volume.fileCount, inspectionFileCount: inspection.metadata.fileCount },
+                'GraphQL.Ingestion.Data');
+            await this.appendToWFReport(`Cannot ingest volumetric data: submitted fileCount (${volume.fileCount}) does not match inspection (${inspection.metadata.fileCount}).`, true);
             return false;
         }
 

@@ -197,6 +197,16 @@ export class VocabularyCache {
                     }
                 } break;
 
+                case COMMON.eVocabularySetID.eCaptureDataDatasetType: {
+                    switch (vocabulary.Term) {
+                        case 'Photogrammetry Image Set':        eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet; break;
+                        case 'Grey Card Image Set':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeGreyCardImageSet; break;
+                        case 'Color Card Image Set':            eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeColorCardImageSet; break;
+                        case 'Background Removal Image Set':    eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeBackgroundRemovalImageSet; break;
+                        case 'Calibration Dataset':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeCalibrationDataset; break;
+                    }
+                } break;
+
                 case COMMON.eVocabularySetID.eCaptureDataFileVariantType: {
                     switch (vocabulary.Term) {
                         case 'Raw':                 eVocabEnum = COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw; break;
@@ -218,6 +228,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':      eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
                         case 'Image':               eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceImage; break;
+                        case 'Volumetric':          eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceVolumetric; break;
                     }
                 } break;
 

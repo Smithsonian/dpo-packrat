@@ -36,6 +36,7 @@ import {
     IngestSceneAttachmentInput,
     IngestSceneInput,
     IngestSubjectInput,
+    IngestVolumeInput,
 } from '../../../types/graphql';
 import { nonNullValue } from '../../../utils/shared';
 
@@ -105,12 +106,13 @@ function useIngest(): UseIngest {
             const ingestScene: IngestSceneInput[] = [];
             const ingestOther: IngestOtherInput[] = [];
             const ingestSceneAttachment: IngestSceneAttachmentInput[] = [];
+            const ingestVolume: IngestVolumeInput[] = [];
 
             const metadatasList = metadatas.length === 0 ? getMetadatas() : metadatas;
             lodash.forEach(metadatasList, metadata => {
                 // console.log('ingestionStart metadata',metadata);
-                const { file, photogrammetry, model, scene, other, sceneAttachment } = metadata;
-                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther } = getAssetType(file.type);
+                const { file, photogrammetry, model, scene, other, sceneAttachment, volume } = metadata;
+                const { photogrammetry: isPhotogrammetry, model: isModel, scene: isScene, attachment: isAttachment, other: isOther, volume: isVolume } = getAssetType(file.type);
 
                 if (isPhotogrammetry) {
                     const {
@@ -303,6 +305,57 @@ function useIngest(): UseIngest {
                     // console.log(`useIngest ingestionStart pushing other ${JSON.stringify(otherData)}`);
                     ingestOther.push(otherData);
                 }
+
+                if (isVolume) {
+                    const {
+                        name, description, dateCaptured, systemCreated,
+                        modality, scanType, contentType,
+                        scannerMakeModel, voltageKV, amperageUA, specimenPreparation,
+                        voxelSizeX, voxelSizeY, voxelSizeZ, voxelSizeUnit,
+                        dimensionsX, dimensionsY, dimensionsZ, bitDepth,
+                        fileCount, sliceCount, filterLocation,
+                        directory, identifiers, sourceObjects, derivedObjects, updateNotes
+                    } = volume;
+
+                    const ingestIdentifiers: IngestIdentifierInput[] = getIngestIdentifiers(identifiers);
+                    const volumeData: IngestVolumeInput = {
+                        idAssetVersion: parseFileId(file.id),
+                        name,
+                        description,
+                        dateCaptured: dateCaptured.toISOString(),
+                        systemCreated,
+                        modality: nonNullValue<number>('modality', modality),
+                        scanType: nonNullValue<number>('scanType', scanType),
+                        contentType: nonNullValue<number>('contentType', contentType),
+                        scannerMakeModel: scannerMakeModel || null,
+                        voltageKV,
+                        amperageUA,
+                        specimenPreparation: specimenPreparation || null,
+                        voxelSizeX: nonNullValue<number>('voxelSizeX', voxelSizeX),
+                        voxelSizeY: nonNullValue<number>('voxelSizeY', voxelSizeY),
+                        voxelSizeZ: nonNullValue<number>('voxelSizeZ', voxelSizeZ),
+                        voxelSizeUnit: nonNullValue<number>('voxelSizeUnit', voxelSizeUnit),
+                        dimensionsX,
+                        dimensionsY,
+                        dimensionsZ,
+                        bitDepth,
+                        fileCount: nonNullValue<number>('fileCount', fileCount),
+                        sliceCount,
+                        filterLocation,
+                        directory,
+                        identifiers: ingestIdentifiers,
+                        sourceObjects,
+                        derivedObjects,
+                    };
+
+                    const idAsset: number | undefined = idToIdAssetMap.get(file.id);
+                    if (idAsset) {
+                        volumeData.idAsset = idAsset;
+                        volumeData.updateNotes = updateNotes;
+                    }
+
+                    ingestVolume.push(volumeData);
+                }
             });
 
             const input: IngestDataInput = {
@@ -314,7 +367,7 @@ function useIngest(): UseIngest {
                 scene: ingestScene,
                 other: ingestOther,
                 sceneAttachment: ingestSceneAttachment,
-                volume: []
+                volume: ingestVolume
             };
 
             //This responsible for initiating sending data to the server.

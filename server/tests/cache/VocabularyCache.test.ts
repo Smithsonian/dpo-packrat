@@ -160,6 +160,12 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
 
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet:     testVocabulary(vocabulary, 'Photogrammetry Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeGreyCardImageSet:           testVocabulary(vocabulary, 'Grey Card Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeColorCardImageSet:          testVocabulary(vocabulary, 'Color Card Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeBackgroundRemovalImageSet:  testVocabulary(vocabulary, 'Background Removal Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeCalibrationDataset:         testVocabulary(vocabulary, 'Calibration Dataset'); break;
+
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeFromCamera: testVocabulary(vocabulary, 'From Camera'); break;
@@ -228,6 +234,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case COMMON.eVocabularyID.eMetadataMetadataSourceImage:            testVocabulary(vocabulary, 'Image'); break;
+                    case COMMON.eVocabularyID.eMetadataMetadataSourceVolumetric:       testVocabulary(vocabulary, 'Volumetric'); break;
 
                     case COMMON.eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
                     case COMMON.eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;

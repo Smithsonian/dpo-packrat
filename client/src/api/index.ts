@@ -111,6 +111,23 @@ export default class API {
         return this.request(uri, { method: 'PATCH', body });
     }
 
+    // volumetric inspection results — returns the JSON produced by JobVolumeInspect
+    // for the given asset version. data is null when no completed inspection exists.
+    static async getVolumetricInspectionResults(idAssetVersion: number): Promise<RequestResponse> {
+        return this.request(`api/asset-version/${idAssetVersion}/volume-inspection`, { method: 'GET' });
+    }
+
+    // zip central-directory listing for an asset version
+    static async getZipContents(idAssetVersion: number): Promise<RequestResponse> {
+        return this.request(`api/zip-contents/${idAssetVersion}`, { method: 'GET' });
+    }
+
+    // direct URL for streaming a single entry from a ZIP — used as anchor href
+    // for preview links rather than fetched here
+    static zipEntryUrl(idAssetVersion: number, entryPath: string): string {
+        return `${API.serverEndpoint()}/api/zip-entry/${idAssetVersion}?path=${encodeURIComponent(entryPath)}`;
+    }
+
     // validation reports
     static async getReport(type: 'asset-files', date: Date, format: 'csv' | 'json', inline: boolean = false): Promise<RequestResponse> {
 

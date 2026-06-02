@@ -126,6 +126,7 @@ type AssetVersionDetailFields {
   AssetVersion: AssetVersion
   Creator: String
   DateCreated: DateTime
+  FileName: String
   FilePath: String
   Ingested: Boolean
   StorageHash: String

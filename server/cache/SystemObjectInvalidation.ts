@@ -17,16 +17,28 @@ export class SystemObjectInvalidation {
      */
     static invalidate(idSystemObject: number | null | undefined): void {
         if (!idSystemObject) return;
-        try {
-            // flushObject is fire-and-forget by design
-            void SystemObjectCache.flushObject(idSystemObject);
-            NAV.NavigationFactory.scheduleObjectIndexing(idSystemObject);
-        } catch (err) {
-            RK.logError(RK.LogSection.eCACHE,
-                'SystemObject invalidation failed',
-                err instanceof Error ? err.message : String(err),
-                { idSystemObject },
-                'Cache.SystemObjectInvalidation');
-        }
+        // Defer to the next event-loop tick so any Prisma transaction that
+        // triggered this invalidation has fully closed before we issue our own
+        // queries. The audit emit path commonly fires us during the parent
+        // transaction's commit window; without this defer the downstream
+        // flushObject's findUnique races the transaction shutdown and Prisma
+        // rejects with "Transaction already closed: Could not perform
+        // operation." setImmediate runs after the current macrotask completes,
+        // by which time the wrapping $transaction has resolved. Idempotent
+        // with the explicit .then() defer in withAuditTransaction — adding
+        // another tick is harmless. Re-throws are still caught and logged.
+        setImmediate(() => {
+            try {
+                // flushObject is fire-and-forget by design
+                void SystemObjectCache.flushObject(idSystemObject);
+                NAV.NavigationFactory.scheduleObjectIndexing(idSystemObject);
+            } catch (err) {
+                RK.logError(RK.LogSection.eCACHE,
+                    'SystemObject invalidation failed',
+                    err instanceof Error ? err.message : String(err),
+                    { idSystemObject },
+                    'Cache.SystemObjectInvalidation');
+            }
+        });
     }
 }

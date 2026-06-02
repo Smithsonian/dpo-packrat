@@ -10,7 +10,7 @@ import { DebounceInput } from 'react-debounce-input';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { withDefaultValueNumber, withDefaultValueBoolean } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
@@ -126,7 +126,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const [getFieldErrors, updateMetadataField] = useMetadataStore(state => [state.getFieldErrors, state.updateMetadataField]);
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry, state.getVocabularyId]);
+    const [getEntries, getInitialEntry, getVocabularyId] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry, state.getVocabularyId]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
@@ -347,8 +347,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
 
-                            {   // TODO: explictly set to 6 (Photogrammetry Set). Check against enums/COMMON
-                                photogrammetry.datasetType === 6 &&
+                            {photogrammetry.datasetType === getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet) &&
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
                                         <Typography className={tableClasses.labelText}>Dataset Use*</Typography>

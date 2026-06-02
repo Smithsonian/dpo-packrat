@@ -25,6 +25,8 @@ import {
     sceneFieldsSchemaUpdate,
     otherFieldsSchema,
     otherFieldsSchemaUpdate,
+    volumeFieldsSchema,
+    volumeFieldsSchemaUpdate,
     StateItem,
     StateMetadata,
     useItemStore,
@@ -40,6 +42,7 @@ import Other from './Other';
 import Photogrammetry from './Photogrammetry';
 import Scene from './Scene';
 import Attachment from './Attachment';
+import Volume from './Volume';
 import { Helmet } from 'react-helmet';
 import { apolloClient } from '../../../../graphql';
 import { GetSystemObjectDetailsDocument } from '../../../../types/graphql';
@@ -89,7 +92,7 @@ function Metadata(): React.ReactElement {
     const [loadingAssetType, setLoadingAssetType] = useState<boolean>(true);
     const [breadcrumbNames, setBreadcrumbNames] = useState<string[]>([]);
     const [fieldErrors, setFieldErrors] = useState<FieldErrors>();
-    const [assetType, setAssetType] = useState<AssetType>({ photogrammetry: false, model: false, scene: false, attachment: false, other: false });
+    const [assetType, setAssetType] = useState<AssetType>({ photogrammetry: false, model: false, scene: false, attachment: false, other: false, volume: false });
     const getSelectedItem = useItemStore(state => state.getSelectedItem);
     const [metadatas, getMetadataInfo, validateFields, getFieldErrors] = useMetadataStore(state => [state.metadatas, state.getMetadataInfo, state.validateFields, state.getFieldErrors]);
     const { ingestionStart, ingestionComplete } = useIngest();
@@ -204,6 +207,13 @@ function Metadata(): React.ReactElement {
             if (hasError) return;
         }
 
+        if (assetType.volume) {
+            const hasError: boolean = updateMode
+                ? validateFields(metadata.volume, volumeFieldsSchemaUpdate)
+                : validateFields(metadata.volume, volumeFieldsSchema);
+            if (hasError) return;
+        }
+
         //  This may be the code that initiates the completion of the Ingestion process.
         if (isLast) {
             setDisableNavigation(true);
@@ -244,6 +254,10 @@ function Metadata(): React.ReactElement {
 
         if (assetType.attachment) {
             return <Attachment metadataIndex={metadataIndex} />;
+        }
+
+        if (assetType.volume) {
+            return <Volume metadataIndex={metadataIndex} ingestionLoading={ingestionLoading} />;
         }
 
         return <Other metadataIndex={metadataIndex} />;
