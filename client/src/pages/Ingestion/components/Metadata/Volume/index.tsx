@@ -134,6 +134,21 @@ function Volume(props: VolumeProps): React.ReactElement {
                 const match = ctEntries.find(e => e.Term === targetTerm);
                 if (match) updateMetadataField(metadataIndex, 'contentType', match.idVocabulary, MetadataType.volume);
             }
+            if (m.modality && volume.modality === null) {
+                // DICOM Modality (0008,0060) is a coarse 2–4 char code. Map to the
+                // closest Packrat vocabulary term. "CT" defaults to "Micro CT"
+                // because that's the most common use case at SI; user can change.
+                const modalityEntries = getEntries(eVocabularySetID.eCaptureDataVolumeModality);
+                const code: string = m.modality.toUpperCase();
+                const targetTerm: string | null =
+                    code === 'CT' ? 'Micro CT' :
+                    code === 'MR' ? 'MRI' :
+                    null;
+                if (targetTerm) {
+                    const match = modalityEntries.find(e => e.Term === targetTerm);
+                    if (match) updateMetadataField(metadataIndex, 'modality', match.idVocabulary, MetadataType.volume);
+                }
+            }
         }
 
         loadAutofill();

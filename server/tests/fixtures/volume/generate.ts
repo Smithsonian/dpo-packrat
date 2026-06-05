@@ -31,6 +31,7 @@ const DICOM_PIXEL_SPACING_MM = 0.025;
 const DICOM_SLICE_THICKNESS_MM = 0.025;
 const DICOM_MANUFACTURER = 'PackratTest';
 const DICOM_MODEL = 'SyntheticCT-1';
+const DICOM_MODALITY = 'CT';
 
 async function main(): Promise<void> {
     await fs.mkdir(OUT_DIR, { recursive: true });
@@ -96,6 +97,7 @@ async function writeTiffWithPcaZip(outPath: string, declaredSliceCount: number, 
         '[Scan]',
         `Image Pixel Size (um) = ${DICOM_PIXEL_SPACING_MM * 1000}`,
         `Source Voltage (kV)   = ${DICOM_VOLTAGE_KV}`,
+        `Source Current (uA)   = ${DICOM_TUBE_CURRENT_MA * 1000}`,
         `Scanner = ${DICOM_MANUFACTURER} ${DICOM_MODEL}`,
         `Number of Files = ${declaredSliceCount}`,
         '',
@@ -127,6 +129,7 @@ function pad(n: number, width: number): string {
 function makeDicomInstance(): Buffer {
     // Build dataset (Explicit VR LE)
     const datasetParts: Buffer[] = [
+        encodeShortVR(0x0008, 0x0060, 'CS', strBytes(DICOM_MODALITY)),
         encodeShortVR(0x0008, 0x0070, 'LO', strBytes(DICOM_MANUFACTURER)),
         encodeShortVR(0x0008, 0x1090, 'LO', strBytes(DICOM_MODEL)),
         encodeShortVR(0x0018, 0x0050, 'DS', strBytes(formatNumber(DICOM_SLICE_THICKNESS_MM))),

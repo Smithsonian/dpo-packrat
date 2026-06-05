@@ -236,7 +236,7 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
             voxelSizeY: sidecarResult.voxelSizeY ?? headerData.voxelSizeY,
             voxelSizeZ: sidecarResult.voxelSizeZ ?? headerData.voxelSizeZ,
             voxelSizeUnit: sidecarResult.voxelSizeUnit ?? headerData.voxelSizeUnit,
-            modality: undefined,                // requires user selection; sidecars don't reliably name it
+            modality: headerData.modality,      // DICOM (0008,0060); sidecars don't carry it
             voltageKV: sidecarResult.voltageKV ?? headerData.voltageKV,
             amperageUA: sidecarResult.amperageUA ?? headerData.amperageUA,
             scannerMakeModel: sidecarResult.scannerMakeModel ?? headerData.scannerMakeModel,
@@ -323,6 +323,7 @@ interface HeaderSampleData {
     voltageKV?: number;
     amperageUA?: number;
     scannerMakeModel?: string;
+    modality?: string;
 }
 
 async function sampleTiff(filePath: string, warnings: string[]): Promise<HeaderSampleData> {
@@ -363,6 +364,7 @@ async function sampleDicom(filePath: string, warnings: string[]): Promise<Header
     const model: string = (dicom.manufacturerModelName ?? '').trim();
     const combined: string = [make, model].filter(s => s.length > 0).join(' ');
     if (combined.length > 0) data.scannerMakeModel = combined;
+    if (dicom.modality !== undefined) data.modality = dicom.modality;
     return data;
 }
 

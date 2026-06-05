@@ -64,6 +64,24 @@ type CaptureDataDetailFields {
     folders: [IngestFolder!]!
     isValidData: Boolean
     datasetUse: String!
+    modality: Int
+    scanType: Int
+    contentType: Int
+    scannerMakeModel: String
+    voltageKV: Float
+    amperageUA: Float
+    specimenPreparation: String
+    voxelSizeX: Float
+    voxelSizeY: Float
+    voxelSizeZ: Float
+    voxelSizeUnit: Int
+    dimensionsX: Int
+    dimensionsY: Int
+    dimensionsZ: Int
+    bitDepth: Int
+    fileCount: Int
+    sliceCount: Int
+    filterLocation: Int
 }
 
 type SceneDetailFields {

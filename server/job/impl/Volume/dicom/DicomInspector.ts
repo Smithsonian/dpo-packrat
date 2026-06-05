@@ -27,6 +27,7 @@ export interface DicomInspectResult {
     tubeCurrentMA?: number;           // (0018,1151) — milliamps
     manufacturer?: string;            // (0008,0070)
     manufacturerModelName?: string;   // (0008,1090)
+    modality?: string;                // (0008,0060) — CS code, e.g. "CT", "MR"
     warnings: string[];
 }
 
@@ -73,6 +74,8 @@ export class DicomInspector {
         if (mfg) result.manufacturer = mfg.trim();
         const model: string | undefined = dataSet.string('x00081090');
         if (model) result.manufacturerModelName = model.trim();
+        const modality: string | undefined = dataSet.string('x00080060');
+        if (modality) result.modality = modality.trim();
 
         // Structured warning when expected tags are missing. Indexed fields (manufacturer,
         // model, transferSyntaxUID) let OpenObserve aggregate by scanner variant so we
@@ -87,11 +90,12 @@ export class DicomInspector {
         if (result.tubeCurrentMA === undefined) missing.push('XRayTubeCurrent');
         if (result.manufacturer === undefined) missing.push('Manufacturer');
         if (result.manufacturerModelName === undefined) missing.push('ManufacturerModelName');
+        if (result.modality === undefined) missing.push('Modality');
 
         if (missing.length > 0) {
             const transferSyntaxUID: string | undefined = dataSet.string('x00020010');
             RK.logWarning(RK.LogSection.eJOB, 'dicom parse incomplete',
-                `missing ${missing.length}/9 expected tags: ${missing.join(',')}`,
+                `missing ${missing.length}/10 expected tags: ${missing.join(',')}`,
                 {
                     fileName: path.basename(filePath),
                     manufacturer: result.manufacturer ?? null,

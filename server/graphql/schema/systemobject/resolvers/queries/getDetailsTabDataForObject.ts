@@ -242,10 +242,36 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
             datasetUse: CD.CaptureDatasetUse
         };
     } else {
-        fields = {
-            ...fields,
-            isValidData: false
-        };
+        const CaptureDataVolume = await DBAPI.CaptureDataVolume.fetchFromCaptureData(idCaptureData);
+        if (CaptureDataVolume) {
+            fields = {
+                ...fields,
+                isValidData: true,
+                modality: CaptureDataVolume.idVModality,
+                scanType: CaptureDataVolume.idVScanType,
+                contentType: CaptureDataVolume.idVContentType,
+                scannerMakeModel: CaptureDataVolume.ScannerMakeModel,
+                voltageKV: CaptureDataVolume.VoltageKV,
+                amperageUA: CaptureDataVolume.AmperageUA,
+                specimenPreparation: CaptureDataVolume.SpecimenPreparation,
+                voxelSizeX: CaptureDataVolume.VoxelSizeX,
+                voxelSizeY: CaptureDataVolume.VoxelSizeY,
+                voxelSizeZ: CaptureDataVolume.VoxelSizeZ,
+                voxelSizeUnit: CaptureDataVolume.idVVoxelSizeUnit,
+                dimensionsX: CaptureDataVolume.DimensionsX,
+                dimensionsY: CaptureDataVolume.DimensionsY,
+                dimensionsZ: CaptureDataVolume.DimensionsZ,
+                bitDepth: CaptureDataVolume.BitDepth,
+                fileCount: CaptureDataVolume.FileCount,
+                sliceCount: CaptureDataVolume.SliceCount,
+                filterLocation: CaptureDataVolume.idVFilterLocation,
+            };
+        } else {
+            fields = {
+                ...fields,
+                isValidData: false
+            };
+        }
     }
 
 

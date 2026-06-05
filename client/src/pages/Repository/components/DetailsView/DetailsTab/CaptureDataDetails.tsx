@@ -200,6 +200,13 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
     };
 
+    const setFloatField = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
+        const { name, value } = target;
+        const parsed: number | null = value === '' ? null : Number(value);
+        if (parsed !== null && Number.isNaN(parsed)) return;
+        updateDetailField(eSystemObjectType.eCaptureData, name, parsed);
+    };
+
     const setDatasetUseField = (event) => {
         const  { value, name } = event.target;
         // make sure we got an array as value
@@ -232,6 +239,24 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
+
+    const VOLUME_FIELD_NAMES: string[] = [
+        'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
+        'specimenPreparation', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
+        'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
+        'filterLocation',
+    ];
+    const PHOTO_FIELD_NAMES: string[] = [
+        'itemPositionType', 'itemPositionFieldId', 'itemArrangementFieldId',
+        'focusType', 'lightsourceType', 'backgroundRemovalMethod',
+        'clusterType', 'clusterGeometryFieldId', 'cameraSettingUniform',
+    ];
+    const SHARED_FIRST_BOX_FIELD_NAMES: string[] = [
+        'datasetType', 'datasetUse', 'description', 'dateCaptured',
+    ];
+    const anyVolumeFieldChanged: boolean = VOLUME_FIELD_NAMES.some(f => isFieldUpdated(CaptureDataDetails, captureDataData, f));
+    const anyPhotoFieldChanged: boolean = PHOTO_FIELD_NAMES.some(f => isFieldUpdated(CaptureDataDetails, captureDataData, f));
+    const anyFirstBoxFieldChanged: boolean = SHARED_FIRST_BOX_FIELD_NAMES.some(f => isFieldUpdated(CaptureDataDetails, captureDataData, f));
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
     const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
 
@@ -240,7 +265,12 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box>
-            <Box className={classes.ingestContainer}>
+            <Box className={classes.ingestContainer} style={{ position: 'relative' }}>
+                {anyFirstBoxFieldChanged && (
+                    <Box style={{ position: 'absolute', top: '10px', right: '15px', padding: '4px 10px', backgroundColor: '#ffe0b2', border: '1px solid #ff9800', borderRadius: '4px', fontStyle: 'italic', fontSize: '0.85rem', color: '#e65100', zIndex: 1 }}>
+                        Unsaved changes — press <strong>Update</strong> to apply.
+                    </Box>
+                )}
                 <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                     <Table className={classes.table}>
                         <TableBody>
@@ -276,19 +306,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                     </TableCell>
                                 </TableRow>
                             )}
-                            {isVolumetric && (
-                                <TableRow className={classes.tableRow}>
-                                    <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
-                                        <Typography className={classes.labelText}>Volumetric Details</Typography>
-                                    </TableCell>
-                                    <TableCell className={clsx(classes.tableCell, classes.valueText)}>
-                                        <span style={{ paddingLeft: '10px', fontStyle: 'italic', color: 'rgba(0, 0, 0, 0.6)' }}>
-                                            Modality, scan parameters, voxel sizes available on the associated asset version.
-                                        </span>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-
                             {
                                 CaptureDataDetails?.datasetType === getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet) &&
                                 <TableRow className={classes.tableRow}>
@@ -387,8 +404,47 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 </TableContainer>
             </Box>
 
-            <Box className={classes.ingestContainer}>
-                <TableContainer className={classes.captureMethodTableContainer} style={{ paddingTop: '10px', width: '100%' }}>
+            {isVolumetric && (
+                <Box className={classes.ingestContainer} style={{ position: 'relative' }}>
+                    {anyVolumeFieldChanged && (
+                        <Box style={{ position: 'absolute', top: '10px', right: '15px', padding: '4px 10px', backgroundColor: '#ffe0b2', border: '1px solid #ff9800', borderRadius: '4px', fontStyle: 'italic', fontSize: '0.85rem', color: '#e65100', zIndex: 1 }}>
+                            Unsaved changes — press <strong>Update</strong> to apply.
+                        </Box>
+                    )}
+                    <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
+                        <Table className={classes.table}>
+                            <TableBody>
+                                {renderVolumeSelectRow('Modality', 'modality', eVocabularySetID.eCaptureDataVolumeModality, false)}
+                                {renderVolumeSelectRow('Scan Type', 'scanType', eVocabularySetID.eCaptureDataVolumeScanType, false)}
+                                {renderVolumeSelectRow('Content Type', 'contentType', eVocabularySetID.eCaptureDataVolumeContentType, false)}
+                                {renderVolumeTextRow('Scanner Make/Model', 'scannerMakeModel')}
+                                {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any')}
+                                {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any')}
+                                {renderVolumeSelectRow('Filter Location', 'filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, true)}
+                                {renderVolumeSelectRow('Voxel Size Unit', 'voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, false)}
+                                {renderVolumeNumberRow('Voxel Size X', 'voxelSizeX', 'any')}
+                                {renderVolumeNumberRow('Voxel Size Y', 'voxelSizeY', 'any')}
+                                {renderVolumeNumberRow('Voxel Size Z', 'voxelSizeZ', 'any')}
+                                {renderVolumeNumberRow('Dimensions X', 'dimensionsX')}
+                                {renderVolumeNumberRow('Dimensions Y', 'dimensionsY')}
+                                {renderVolumeNumberRow('Dimensions Z', 'dimensionsZ')}
+                                {renderVolumeNumberRow('Bit Depth', 'bitDepth')}
+                                {renderVolumeNumberRow('File Count', 'fileCount')}
+                                {renderVolumeNumberRow('Slice Count', 'sliceCount')}
+                                {renderVolumeTextRow('Specimen Preparation', 'specimenPreparation')}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
+            )}
+
+            {!isVolumetric && <Box className={classes.ingestContainer} style={{ position: 'relative' }}>
+                {anyPhotoFieldChanged && (
+                    <Box style={{ position: 'absolute', top: '10px', right: '15px', padding: '4px 10px', backgroundColor: '#ffe0b2', border: '1px solid #ff9800', borderRadius: '4px', fontStyle: 'italic', fontSize: '0.85rem', color: '#e65100', zIndex: 1 }}>
+                        Unsaved changes — press <strong>Update</strong> to apply.
+                    </Box>
+                )}
+                <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                     <Table className={classes.table}>
                         <TableBody>
                             <TableRow className={classes.tableRow}>
@@ -576,9 +632,9 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                         </TableBody>
                     </Table>
                 </TableContainer>
-            </Box>
+            </Box>}
 
-            <Box className={classes.ingestContainer}>
+            {!isVolumetric && <Box className={classes.ingestContainer}>
                 <AssetContents
                     viewMode
                     disabled={disabled}
@@ -587,9 +643,86 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     onUpdate={updateFolderVariant}
                     originalFolders={data?.getDetailsTabDataForObject?.CaptureData?.folders as StateFolder[]}
                 />
-            </Box>
+            </Box>}
         </Box>
     );
+
+    function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean): JSX.Element {
+        const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
+        const entries = optional
+            ? getNullableSelectEntries(getEntries(vocabSet), 'idVocabulary', 'Term')
+            : getEntries(vocabSet).map(e => ({ value: e.idVocabulary, label: e.Term }));
+        return (
+            <TableRow className={classes.tableRow} key={fieldName}>
+                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                    <Typography className={classes.labelText}>{label}</Typography>
+                </TableCell>
+                <TableCell className={classes.tableCell}>
+                    <Select
+                        disabled={disabled}
+                        value={value ?? (optional ? -1 : '')}
+                        name={fieldName}
+                        onChange={setIdField}
+                        disableUnderline
+                        className={clsx(classes.select, classes.datasetFieldSelect)}
+                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}
+                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                    >
+                        {entries.map(({ value, label }, index) => <MenuItem key={index} value={value as number}>{label}</MenuItem>)}
+                    </Select>
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    function renderVolumeNumberRow(label: string, fieldName: string, step?: string): JSX.Element {
+        const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
+        return (
+            <TableRow className={classes.tableRow} key={fieldName}>
+                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                    <Typography className={classes.labelText}>{label}</Typography>
+                </TableCell>
+                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                    <DebounceInput
+                        element='input'
+                        type='number'
+                        name={fieldName}
+                        value={value === null || value === undefined ? '' : value}
+                        onChange={setFloatField}
+                        disabled={disabled}
+                        debounceTimeout={400}
+                        className={clsx(classes.input, classes.datasetFieldInput)}
+                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}
+                        {...(step ? { step } : {})}
+                    />
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    function renderVolumeTextRow(label: string, fieldName: string): JSX.Element {
+        const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as string | null | undefined;
+        return (
+            <TableRow className={classes.tableRow} key={fieldName}>
+                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                    <Typography className={classes.labelText}>{label}</Typography>
+                </TableCell>
+                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                    <DebounceInput
+                        element='input'
+                        type='string'
+                        name={fieldName}
+                        value={value ?? ''}
+                        onChange={onSetField}
+                        disabled={disabled}
+                        debounceTimeout={400}
+                        className={clsx(classes.input, classes.datasetFieldInput)}
+                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}
+                    />
+                </TableCell>
+            </TableRow>
+        );
+    }
 }
 
 export default CaptureDataDetails;

@@ -174,16 +174,24 @@ type CaptureData {
 }
 
 type CaptureDataDetailFields {
+  amperageUA: Float
   backgroundRemovalMethod: Int
+  bitDepth: Int
   cameraSettingUniform: Boolean
   captureMethod: Int
   clusterGeometryFieldId: Int
   clusterType: Int
+  contentType: Int
   datasetFieldId: Int
   datasetType: Int
   datasetUse: String!
   dateCaptured: String
   description: String
+  dimensionsX: Int
+  dimensionsY: Int
+  dimensionsZ: Int
+  fileCount: Int
+  filterLocation: Int
   focusType: Int
   folders: [IngestFolder!]!
   isValidData: Boolean
@@ -191,20 +199,38 @@ type CaptureDataDetailFields {
   itemPositionFieldId: Int
   itemPositionType: Int
   lightsourceType: Int
+  modality: Int
+  scanType: Int
+  scannerMakeModel: String
+  sliceCount: Int
+  specimenPreparation: String
   systemCreated: Boolean
+  voltageKV: Float
+  voxelSizeUnit: Int
+  voxelSizeX: Float
+  voxelSizeY: Float
+  voxelSizeZ: Float
 }
 
 input CaptureDataDetailFieldsInput {
+  amperageUA: Float
   backgroundRemovalMethod: Int
+  bitDepth: Int
   cameraSettingUniform: Boolean
   captureMethod: Int
   clusterGeometryFieldId: Int
   clusterType: Int
+  contentType: Int
   datasetFieldId: Int
   datasetType: Int
   datasetUse: String!
   dateCaptured: DateTime
   description: String
+  dimensionsX: Int
+  dimensionsY: Int
+  dimensionsZ: Int
+  fileCount: Int
+  filterLocation: Int
   focusType: Int
   folders: [IngestFolderInput!]!
   isValidData: Boolean
@@ -212,7 +238,17 @@ input CaptureDataDetailFieldsInput {
   itemPositionFieldId: Int
   itemPositionType: Int
   lightsourceType: Int
+  modality: Int
+  scanType: Int
+  scannerMakeModel: String
+  sliceCount: Int
+  specimenPreparation: String
   systemCreated: Boolean
+  voltageKV: Float
+  voxelSizeUnit: Int
+  voxelSizeX: Float
+  voxelSizeY: Float
+  voxelSizeZ: Float
 }
 
 type CaptureDataFile {

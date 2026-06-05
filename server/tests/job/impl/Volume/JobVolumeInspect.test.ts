@@ -139,11 +139,12 @@ describe('JobVolumeInspect — DICOM series', () => {
         expect(md.voltageKV).toBe(100);
         expect(md.amperageUA).toBe(200000);                // 200 mA → 200000 µA
         expect(md.scannerMakeModel).toContain('PackratTest');
+        expect(md.modality).toBe('CT');                    // DICOM (0008,0060)
     });
 });
 
 describe('JobVolumeInspect — sidecar in ZIP', () => {
-    test('.pca sidecar inside ZIP populates voxel size, voltage, scanner', async () => {
+    test('.pca sidecar inside ZIP populates voxel size, voltage, amperage, scanner', async () => {
         const zipPath: string = await stageFixture('volume-test-with-pca.zip');
         const md: VolumeExtractedMetadata = await inspectVolumeZip(zipPath, tempStaging);
 
@@ -156,6 +157,7 @@ describe('JobVolumeInspect — sidecar in ZIP', () => {
         expect(md.voxelSizeX).toBe(25);                     // .pca says 25 µm
         expect(md.voxelSizeUnit).toBe('Micrometer');
         expect(md.voltageKV).toBe(100);
+        expect(md.amperageUA).toBe(200000);                 // .pca says 200 mA → 200000 µA
         expect(md.scannerMakeModel).toContain('PackratTest');
     });
 });

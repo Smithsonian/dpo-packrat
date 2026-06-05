@@ -160,6 +160,24 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         folders: [],
         isValidData: null,
         datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+        modality: null,
+        scanType: null,
+        contentType: null,
+        scannerMakeModel: null,
+        voltageKV: null,
+        amperageUA: null,
+        specimenPreparation: null,
+        voxelSizeX: null,
+        voxelSizeY: null,
+        voxelSizeZ: null,
+        voxelSizeUnit: null,
+        dimensionsX: null,
+        dimensionsY: null,
+        dimensionsZ: null,
+        bitDepth: null,
+        fileCount: null,
+        sliceCount: null,
+        filterLocation: null,
     },
     SceneDetails: {
         CountScene: 0,
@@ -504,7 +522,25 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                 itemPositionFieldId,
                 itemPositionType,
                 lightsourceType,
-                datasetUse
+                datasetUse,
+                modality,
+                scanType,
+                contentType,
+                scannerMakeModel,
+                voltageKV,
+                amperageUA,
+                specimenPreparation,
+                voxelSizeX,
+                voxelSizeY,
+                voxelSizeZ,
+                voxelSizeUnit,
+                dimensionsX,
+                dimensionsY,
+                dimensionsZ,
+                bitDepth,
+                fileCount,
+                sliceCount,
+                filterLocation,
             } = getDetailsTabDataForObject.CaptureData;
             updateDetailField(eSystemObjectType.eCaptureData, 'backgroundRemovalMethod', backgroundRemovalMethod);
             updateDetailField(eSystemObjectType.eCaptureData, 'cameraSettingUniform', cameraSettingUniform);
@@ -529,6 +565,24 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'itemPositionType', itemPositionType);
             updateDetailField(eSystemObjectType.eCaptureData, 'lightsourceType', lightsourceType);
             updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', datasetUse);
+            updateDetailField(eSystemObjectType.eCaptureData, 'modality', modality);
+            updateDetailField(eSystemObjectType.eCaptureData, 'scanType', scanType);
+            updateDetailField(eSystemObjectType.eCaptureData, 'contentType', contentType);
+            updateDetailField(eSystemObjectType.eCaptureData, 'scannerMakeModel', scannerMakeModel);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voltageKV', voltageKV);
+            updateDetailField(eSystemObjectType.eCaptureData, 'amperageUA', amperageUA);
+            updateDetailField(eSystemObjectType.eCaptureData, 'specimenPreparation', specimenPreparation);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeX', voxelSizeX);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeY', voxelSizeY);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeZ', voxelSizeZ);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeUnit', voxelSizeUnit);
+            updateDetailField(eSystemObjectType.eCaptureData, 'dimensionsX', dimensionsX);
+            updateDetailField(eSystemObjectType.eCaptureData, 'dimensionsY', dimensionsY);
+            updateDetailField(eSystemObjectType.eCaptureData, 'dimensionsZ', dimensionsZ);
+            updateDetailField(eSystemObjectType.eCaptureData, 'bitDepth', bitDepth);
+            updateDetailField(eSystemObjectType.eCaptureData, 'fileCount', fileCount);
+            updateDetailField(eSystemObjectType.eCaptureData, 'sliceCount', sliceCount);
+            updateDetailField(eSystemObjectType.eCaptureData, 'filterLocation', filterLocation);
         }
 
         if (objectType === eSystemObjectType.eScene) {

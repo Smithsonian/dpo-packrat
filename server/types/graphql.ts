@@ -207,16 +207,24 @@ export type CaptureData = {
 
 export type CaptureDataDetailFields = {
   __typename?: 'CaptureDataDetailFields';
+  amperageUA?: Maybe<Scalars['Float']>;
   backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+  bitDepth?: Maybe<Scalars['Int']>;
   cameraSettingUniform?: Maybe<Scalars['Boolean']>;
   captureMethod?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   clusterType?: Maybe<Scalars['Int']>;
+  contentType?: Maybe<Scalars['Int']>;
   datasetFieldId?: Maybe<Scalars['Int']>;
   datasetType?: Maybe<Scalars['Int']>;
   datasetUse: Scalars['String'];
   dateCaptured?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
+  dimensionsX?: Maybe<Scalars['Int']>;
+  dimensionsY?: Maybe<Scalars['Int']>;
+  dimensionsZ?: Maybe<Scalars['Int']>;
+  fileCount?: Maybe<Scalars['Int']>;
+  filterLocation?: Maybe<Scalars['Int']>;
   focusType?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
   isValidData?: Maybe<Scalars['Boolean']>;
@@ -224,20 +232,38 @@ export type CaptureDataDetailFields = {
   itemPositionFieldId?: Maybe<Scalars['Int']>;
   itemPositionType?: Maybe<Scalars['Int']>;
   lightsourceType?: Maybe<Scalars['Int']>;
+  modality?: Maybe<Scalars['Int']>;
+  scanType?: Maybe<Scalars['Int']>;
+  scannerMakeModel?: Maybe<Scalars['String']>;
+  sliceCount?: Maybe<Scalars['Int']>;
+  specimenPreparation?: Maybe<Scalars['String']>;
   systemCreated?: Maybe<Scalars['Boolean']>;
+  voltageKV?: Maybe<Scalars['Float']>;
+  voxelSizeUnit?: Maybe<Scalars['Int']>;
+  voxelSizeX?: Maybe<Scalars['Float']>;
+  voxelSizeY?: Maybe<Scalars['Float']>;
+  voxelSizeZ?: Maybe<Scalars['Float']>;
 };
 
 export type CaptureDataDetailFieldsInput = {
+  amperageUA?: InputMaybe<Scalars['Float']>;
   backgroundRemovalMethod?: InputMaybe<Scalars['Int']>;
+  bitDepth?: InputMaybe<Scalars['Int']>;
   cameraSettingUniform?: InputMaybe<Scalars['Boolean']>;
   captureMethod?: InputMaybe<Scalars['Int']>;
   clusterGeometryFieldId?: InputMaybe<Scalars['Int']>;
   clusterType?: InputMaybe<Scalars['Int']>;
+  contentType?: InputMaybe<Scalars['Int']>;
   datasetFieldId?: InputMaybe<Scalars['Int']>;
   datasetType?: InputMaybe<Scalars['Int']>;
   datasetUse: Scalars['String'];
   dateCaptured?: InputMaybe<Scalars['DateTime']>;
   description?: InputMaybe<Scalars['String']>;
+  dimensionsX?: InputMaybe<Scalars['Int']>;
+  dimensionsY?: InputMaybe<Scalars['Int']>;
+  dimensionsZ?: InputMaybe<Scalars['Int']>;
+  fileCount?: InputMaybe<Scalars['Int']>;
+  filterLocation?: InputMaybe<Scalars['Int']>;
   focusType?: InputMaybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
   isValidData?: InputMaybe<Scalars['Boolean']>;
@@ -245,7 +271,17 @@ export type CaptureDataDetailFieldsInput = {
   itemPositionFieldId?: InputMaybe<Scalars['Int']>;
   itemPositionType?: InputMaybe<Scalars['Int']>;
   lightsourceType?: InputMaybe<Scalars['Int']>;
+  modality?: InputMaybe<Scalars['Int']>;
+  scanType?: InputMaybe<Scalars['Int']>;
+  scannerMakeModel?: InputMaybe<Scalars['String']>;
+  sliceCount?: InputMaybe<Scalars['Int']>;
+  specimenPreparation?: InputMaybe<Scalars['String']>;
   systemCreated?: InputMaybe<Scalars['Boolean']>;
+  voltageKV?: InputMaybe<Scalars['Float']>;
+  voxelSizeUnit?: InputMaybe<Scalars['Int']>;
+  voxelSizeX?: InputMaybe<Scalars['Float']>;
+  voxelSizeY?: InputMaybe<Scalars['Float']>;
+  voxelSizeZ?: InputMaybe<Scalars['Float']>;
 };
 
 export type CaptureDataFile = {

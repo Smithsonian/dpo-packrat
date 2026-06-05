@@ -700,7 +700,25 @@ function DetailsView(): React.ReactElement {
                     clusterType,
                     clusterGeometryFieldId,
                     folders,
-                    datasetUse
+                    datasetUse,
+                    modality,
+                    scanType,
+                    contentType,
+                    scannerMakeModel,
+                    voltageKV,
+                    amperageUA,
+                    specimenPreparation,
+                    voxelSizeX,
+                    voxelSizeY,
+                    voxelSizeZ,
+                    voxelSizeUnit,
+                    dimensionsX,
+                    dimensionsY,
+                    dimensionsZ,
+                    bitDepth,
+                    fileCount,
+                    sliceCount,
+                    filterLocation,
                 } = CaptureDataDetails;
 
                 updatedData.CaptureData = {
@@ -720,7 +738,25 @@ function DetailsView(): React.ReactElement {
                     clusterType,
                     clusterGeometryFieldId,
                     folders,
-                    datasetUse
+                    datasetUse,
+                    modality,
+                    scanType,
+                    contentType,
+                    scannerMakeModel,
+                    voltageKV,
+                    amperageUA,
+                    specimenPreparation,
+                    voxelSizeX,
+                    voxelSizeY,
+                    voxelSizeZ,
+                    voxelSizeUnit,
+                    dimensionsX,
+                    dimensionsY,
+                    dimensionsZ,
+                    bitDepth,
+                    fileCount,
+                    sliceCount,
+                    filterLocation,
                 };
             }
 
