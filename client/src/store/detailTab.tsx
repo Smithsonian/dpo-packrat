@@ -106,6 +106,14 @@ type DetailTabStore = {
     getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType) => string[];
+
+    // Per-tab unsaved-changes signal. Each tab calls setHasUnsavedDetails(true|false)
+    // from a useEffect whenever its locally-computed anyFieldChanged boolean
+    // transitions. DetailsTab reads this and renders a single full-width bar
+    // between the tabs and the field content. Resets implicitly to false when
+    // the GraphQL refetch (after Update) syncs the store back to the response.
+    hasUnsavedDetails: boolean;
+    setHasUnsavedDetails: (value: boolean) => void;
 };
 
 export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTabStore>, get: GetState<DetailTabStore>) => ({
@@ -238,6 +246,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         PhoneNumberMobile: '',
         PhoneNumberOffice: ''
     },
+    hasUnsavedDetails: false,
+    setHasUnsavedDetails: (value: boolean) => set({ hasUnsavedDetails: value }),
     ObjectPropertiesBySO: {},
 
     //#region OBJECT_PROPERTY

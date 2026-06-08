@@ -4,7 +4,7 @@
  *
  * This component renders details tab for Stakeholder specific details used in DetailsTab component.
  */
-import { Box, Typography, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
+import { Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -18,11 +18,15 @@ import clsx from 'clsx';
 function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const classes = useStyles();
-    const [StakeholderDetails, updateDetailField] = useDetailTabStore(state => [state.StakeholderDetails, state.updateDetailField]);
+    const [StakeholderDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.StakeholderDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
     useEffect(() => {
         onUpdateDetail(objectType, StakeholderDetails);
     }, [StakeholderDetails]);
+
+    const FIELD_NAMES: string[] = ['OrganizationName', 'EmailAddress', 'PhoneNumberMobile', 'PhoneNumberOffice', 'MailingAddress'];
+    const anyFieldChanged: boolean = FIELD_NAMES.some(f => isFieldUpdated(StakeholderDetails, data?.getDetailsTabDataForObject?.Stakeholder, f));
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -37,7 +41,7 @@ function StakeholderDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box minWidth='fit-content' style={{ backgroundColor: 'rgb(236, 245, 253)', paddingTop: '5px', paddingBottom: '5px' }}>
-            <TableContainer>
+            <TableContainer component={Paper} elevation={0} style={{ backgroundColor: '#FFFCD1', border: '1px solid rgba(141, 171, 196, 0.4)', borderRadius: 5 }}>
                 <Table className={classes.table}>
                     <TableBody>
                         <TableRow>

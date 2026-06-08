@@ -5,7 +5,7 @@
  * This component renders details tab for Item-specific details used in DetailsTab component.
  */
 import React, { useEffect } from 'react';
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
 import clsx from 'clsx';
 import { DebounceInput } from 'react-debounce-input';
 
@@ -14,6 +14,7 @@ import { ItemDetailFields } from '../../../../../types/graphql';
 import { DetailComponentProps } from './index';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { useDetailTabStore } from '../../../../../store';
+import { isFieldUpdated } from '../../../../../utils/repository';
 
 import { useStyles, updatedFieldStyling } from './CaptureDataDetails';
 import LabelTooltipText from '../../../../../components/controls/LabelTooltipText';
@@ -21,11 +22,16 @@ import LabelTooltipText from '../../../../../components/controls/LabelTooltipTex
 function ItemDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
 
-    const [ItemDetailsState, updateDetailField] = useDetailTabStore(state => [state.ItemDetails, state.updateDetailField]);
+    const [ItemDetailsState, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.ItemDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
     useEffect(() => {
         onUpdateDetail(objectType, ItemDetailsState);
     }, [ItemDetailsState]);
+
+    const subtitleChanged: boolean = subtitle !== originalSubtitle;
+    const entireSubjectChanged: boolean = isFieldUpdated(ItemDetailsState, data?.getDetailsTabDataForObject?.Item, 'EntireSubject');
+    const anyFieldChanged: boolean = subtitleChanged || entireSubjectChanged;
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -84,7 +90,7 @@ function ItemFields(props: ItemFieldsProps): React.ReactElement {
     const classes = useStyles();
 
     return (
-        <TableContainer style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px' }}>
+        <TableContainer component={Paper} elevation={0} style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px', backgroundColor: '#FFFCD1', border: '1px solid rgba(141, 171, 196, 0.4)', borderRadius: 5 }}>
             <Table className={classes.table}>
                 <TableBody>
                     {/* Subtitle */}

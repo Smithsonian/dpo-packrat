@@ -25,10 +25,11 @@ export const useStyles = makeStyles(({ palette, typography }) => createStyles({
         flexDirection: 'column',
         borderRadius: 5,
         backgroundColor: palette.secondary.light,
+        color: 'black',
         width: 'fit-content',
         height: 'fit-content',
-        padding: '5px',
-        outline: '1px solid rgba(141, 171, 196, 0.4)'
+        padding: '10px',
+        border: '1px solid rgba(141, 171, 196, 0.4)'
     },
     dataEntry: {
         display: 'flex',
@@ -36,10 +37,10 @@ export const useStyles = makeStyles(({ palette, typography }) => createStyles({
         width: 'fit-content',
         height: 'fit-content',
         backgroundColor: palette.secondary.light,
-        paddingTop: '5px',
-        paddingBottom: '5px',
+        color: 'black',
+        padding: '10px',
         borderRadius: 5,
-        outline: '1px solid rgba(141, 171, 196, 0.4)'
+        border: '1px solid rgba(141, 171, 196, 0.4)'
     },
     modelDetailsContainer: {
         borderRadius: 5,
@@ -55,11 +56,17 @@ export const useStyles = makeStyles(({ palette, typography }) => createStyles({
     },
     caption: {
         flex: '1 1 0%',
-        width: '100%',
+        width: 'auto',
         display: 'flex',
-        marginBottom: '8px',
         flexDirection: 'row',
-        color: 'grey',
+        alignItems: 'center',
+        color: 'black',
+        fontWeight: 600,
+        backgroundColor: 'rgba(0, 0, 0, 0.06)',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.15)',
+        padding: '6px 10px',
+        margin: '-10px -10px 8px -10px',
+        borderRadius: '4px 4px 0 0',
     },
     detailsContainer: {
     },
@@ -80,7 +87,6 @@ export const useStyles = makeStyles(({ palette, typography }) => createStyles({
     readOnlyRowsContainer: {
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: palette.secondary.light,
         width: '200px'
     },
 }));
@@ -90,12 +96,16 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle } = props;
 
     const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
-    const [ModelDetails, updateDetailField] = useDetailTabStore(state => [state.ModelDetails, state.updateDetailField]);
+    const [ModelDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.ModelDetails, state.updateDetailField, state.setHasUnsavedDetails]);
     const [getEntries] = useVocabularyStore(state => [state.getEntries]);
 
     useEffect(() => {
         onUpdateDetail(objectType, ModelDetails);
     }, [ModelDetails]);
+
+    const MODEL_FIELD_NAMES: string[] = ['DateCreated', 'idVCreationMethod', 'idVModality', 'idVUnits', 'idVPurpose', 'idVFileType', 'Variant'];
+    const anyModelFieldChanged: boolean = MODEL_FIELD_NAMES.some(f => isFieldUpdated(ModelDetails, ingestionModel, f));
+    useEffect(() => { setHasUnsavedDetails(anyModelFieldChanged); }, [anyModelFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;

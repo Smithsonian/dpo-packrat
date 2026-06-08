@@ -141,9 +141,9 @@ function Volume(props: VolumeProps): React.ReactElement {
                 const modalityEntries = getEntries(eVocabularySetID.eCaptureDataVolumeModality);
                 const code: string = m.modality.toUpperCase();
                 const targetTerm: string | null =
-                    code === 'CT' ? 'Micro CT' :
-                    code === 'MR' ? 'MRI' :
-                    null;
+                        code === 'CT' ? 'Micro CT' :
+                            code === 'MR' ? 'MRI' :
+                                null;
                 if (targetTerm) {
                     const match = modalityEntries.find(e => e.Term === targetTerm);
                     if (match) updateMetadataField(metadataIndex, 'modality', match.idVocabulary, MetadataType.volume);

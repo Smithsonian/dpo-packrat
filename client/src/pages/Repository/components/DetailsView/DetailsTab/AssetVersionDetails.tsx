@@ -5,7 +5,7 @@
  *
  * This component renders details tab for AssetVersion specific details used in DetailsTab component.
  */
-import { Box, makeStyles, Typography, Button, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
+import { Box, makeStyles, Paper, Typography, Button, Table, TableBody, TableCell, TableContainer, TableRow, Checkbox } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -38,11 +38,14 @@ function AssetVersionDetails(props: AVDetailProps): React.ReactElement {
     const AVclasses = useAVDetailsStyles();
     const tableClasses = useStyles();
     const { data, loading, onUpdateDetail, objectType, onUploaderOpen, idObject } = props;
-    const [AssetVersionDetails, updateDetailField] = useDetailTabStore(state => [state.AssetVersionDetails, state.updateDetailField]);
+    const [AssetVersionDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.AssetVersionDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
     useEffect(() => {
         onUpdateDetail(objectType, AssetVersionDetails);
     }, [AssetVersionDetails]);
+
+    const anyFieldChanged: boolean = isFieldUpdated(AssetVersionDetails, data?.getDetailsTabDataForObject?.AssetVersion, 'FilePath');
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -61,7 +64,7 @@ function AssetVersionDetails(props: AVDetailProps): React.ReactElement {
 
     return (
         <Box>
-            <TableContainer className={tableClasses.captureMethodTableContainer}>
+            <TableContainer component={Paper} elevation={0} className={tableClasses.captureMethodTableContainer} style={{ backgroundColor: '#FFFCD1', border: '1px solid rgba(141, 171, 196, 0.4)', borderRadius: 5 }}>
                 <Table className={tableClasses.table}>
                     <TableBody>
                         <TableRow className={tableClasses.tableRow}>

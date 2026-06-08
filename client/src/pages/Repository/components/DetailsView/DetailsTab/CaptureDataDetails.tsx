@@ -26,16 +26,16 @@ import { getNullableSelectEntries } from '../../../../../utils/controls';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     captureMethodTableContainer: {
-        backgroundColor: palette.primary.light,
+        backgroundColor: 'transparent',
         padding: '4px 0px 10px 0px',
         width: 'fit-content',
         height: 'fit-content'
     },
     ingestContainer: {
-        borderRadius: '0.5rem',
-        border: `1px dashed ${palette.primary.main}`,
+        borderRadius: 5,
+        border: '1px solid rgba(141, 171, 196, 0.4)',
         overflow: 'hidden',
-        backgroundColor: palette.primary.light,
+        backgroundColor: palette.secondary.light,
         padding: 0,
         marginBottom: '1rem',
     },
@@ -153,7 +153,7 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const classes = useStyles();
-    const [CaptureDataDetails, updateDetailField] = useDetailTabStore(state => [state.CaptureDataDetails, state.updateDetailField]);
+    const [CaptureDataDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.CaptureDataDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
     const [getInitialEntry, getEntries, getVocabularyId] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries, state.getVocabularyId]);
 
@@ -165,6 +165,27 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         if (!data?.getDetailsTabDataForObject.CaptureData?.isValidData)
             toast.error('Invalid data detected', { autoClose: false });
     }, [data, loading]);
+
+    const CDD_VOLUME_FIELDS: string[] = [
+        'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
+        'specimenPreparation', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
+        'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
+        'filterLocation',
+    ];
+    const CDD_PHOTO_FIELDS: string[] = [
+        'itemPositionType', 'itemPositionFieldId', 'itemArrangementFieldId',
+        'focusType', 'lightsourceType', 'backgroundRemovalMethod',
+        'clusterType', 'clusterGeometryFieldId', 'cameraSettingUniform',
+    ];
+    const CDD_SHARED_FIELDS: string[] = [
+        'datasetType', 'datasetUse', 'description', 'dateCaptured',
+    ];
+    const _cdResponseData = data?.getDetailsTabDataForObject?.CaptureData;
+    const _cddAnyChanged: boolean =
+        CDD_VOLUME_FIELDS.some(f => isFieldUpdated(CaptureDataDetails, _cdResponseData, f)) ||
+        CDD_PHOTO_FIELDS.some(f => isFieldUpdated(CaptureDataDetails, _cdResponseData, f)) ||
+        CDD_SHARED_FIELDS.some(f => isFieldUpdated(CaptureDataDetails, _cdResponseData, f));
+    useEffect(() => { setHasUnsavedDetails(_cddAnyChanged); }, [_cddAnyChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -240,23 +261,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
 
-    const VOLUME_FIELD_NAMES: string[] = [
-        'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
-        'specimenPreparation', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
-        'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
-        'filterLocation',
-    ];
-    const PHOTO_FIELD_NAMES: string[] = [
-        'itemPositionType', 'itemPositionFieldId', 'itemArrangementFieldId',
-        'focusType', 'lightsourceType', 'backgroundRemovalMethod',
-        'clusterType', 'clusterGeometryFieldId', 'cameraSettingUniform',
-    ];
-    const SHARED_FIRST_BOX_FIELD_NAMES: string[] = [
-        'datasetType', 'datasetUse', 'description', 'dateCaptured',
-    ];
-    const anyVolumeFieldChanged: boolean = VOLUME_FIELD_NAMES.some(f => isFieldUpdated(CaptureDataDetails, captureDataData, f));
-    const anyPhotoFieldChanged: boolean = PHOTO_FIELD_NAMES.some(f => isFieldUpdated(CaptureDataDetails, captureDataData, f));
-    const anyFirstBoxFieldChanged: boolean = SHARED_FIRST_BOX_FIELD_NAMES.some(f => isFieldUpdated(CaptureDataDetails, captureDataData, f));
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
     const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
 
@@ -265,12 +269,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box>
-            <Box className={classes.ingestContainer} style={{ position: 'relative' }}>
-                {anyFirstBoxFieldChanged && (
-                    <Box style={{ position: 'absolute', top: '10px', right: '15px', padding: '4px 10px', backgroundColor: '#ffe0b2', border: '1px solid #ff9800', borderRadius: '4px', fontStyle: 'italic', fontSize: '0.85rem', color: '#e65100', zIndex: 1 }}>
-                        Unsaved changes — press <strong>Update</strong> to apply.
-                    </Box>
-                )}
+            <Box className={classes.ingestContainer}>
                 <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                     <Table className={classes.table}>
                         <TableBody>
@@ -405,12 +404,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
             </Box>
 
             {isVolumetric && (
-                <Box className={classes.ingestContainer} style={{ position: 'relative' }}>
-                    {anyVolumeFieldChanged && (
-                        <Box style={{ position: 'absolute', top: '10px', right: '15px', padding: '4px 10px', backgroundColor: '#ffe0b2', border: '1px solid #ff9800', borderRadius: '4px', fontStyle: 'italic', fontSize: '0.85rem', color: '#e65100', zIndex: 1 }}>
-                            Unsaved changes — press <strong>Update</strong> to apply.
-                        </Box>
-                    )}
+                <Box className={classes.ingestContainer}>
                     <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                         <Table className={classes.table}>
                             <TableBody>
@@ -438,12 +432,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 </Box>
             )}
 
-            {!isVolumetric && <Box className={classes.ingestContainer} style={{ position: 'relative' }}>
-                {anyPhotoFieldChanged && (
-                    <Box style={{ position: 'absolute', top: '10px', right: '15px', padding: '4px 10px', backgroundColor: '#ffe0b2', border: '1px solid #ff9800', borderRadius: '4px', fontStyle: 'italic', fontSize: '0.85rem', color: '#e65100', zIndex: 1 }}>
-                        Unsaved changes — press <strong>Update</strong> to apply.
-                    </Box>
-                )}
+            {!isVolumetric && <Box className={classes.ingestContainer}>
                 <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                     <Table className={classes.table}>
                         <TableBody>

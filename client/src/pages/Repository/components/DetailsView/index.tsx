@@ -220,6 +220,7 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
+    const hasUnsavedDetails = useDetailTabStore(s => s.hasUnsavedDetails);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
     const [resetSpecialPending] = useUploadStore(state => [state.resetSpecialPending]);
 
@@ -936,6 +937,24 @@ function DetailsView(): React.ReactElement {
         );
     }
 
+    // Aggregate all pending-Update signals so the top bar covers every control
+    // on the page that needs Update to persist. Includes:
+    //  - hasUnsavedDetails: any field on any detail tab (CaptureData, Model,
+    //    Scene, Subject, etc.) — set by the per-tab useEffect into the store
+    //  - updatedIdentifiers / updatedMetadata: pre-existing trackers for the
+    //    identifier panel and metadata grid
+    //  - DetailsHeader-level edits (name, retired, license, subtitle) — these
+    //    live in local `details` state but only persist on Update, so detect
+    //    by comparing against the GraphQL response shape
+    const detailsResponse = data.getSystemObjectDetails;
+    const nameChanged: boolean = (details.name ?? '') !== (detailsResponse.name ?? '');
+    const retiredChanged: boolean = !!details.retired !== !!detailsResponse.retired;
+    const licenseChanged: boolean = (details.idLicense ?? 0) !== (detailsResponse.license?.idLicense ?? 0);
+    const subtitleChanged: boolean = (details.subtitle ?? '') !== (detailsResponse.subTitle ?? '');
+    const hasAnyUnsaved: boolean =
+        hasUnsavedDetails || updatedIdentifiers || updatedMetadata
+        || nameChanged || retiredChanged || licenseChanged || subtitleChanged;
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -946,6 +965,11 @@ function DetailsView(): React.ReactElement {
                         messageHTML={notice.messageHTML}
                         messageText={notice.messageText}
                     />
+                )}
+                {hasAnyUnsaved && (
+                    <Box style={{ padding: '6px 12px', marginBottom: '8px', backgroundColor: '#fff3e0', border: '1px solid #ffb74d', borderRadius: '5px', color: '#e65100', fontSize: '0.85rem', fontStyle: 'italic', textAlign: 'center' }}>
+                        Unsaved changes — press <strong>Update</strong> to apply.
+                    </Box>
                 )}
 
                 <DetailsHeader
