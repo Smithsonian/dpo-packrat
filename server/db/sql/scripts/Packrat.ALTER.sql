@@ -954,3 +954,14 @@ SELECT 20, 8, 'Capture Data Set: Volumetric'
 WHERE NOT EXISTS (
     SELECT 1 FROM Vocabulary WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric'
 );
+
+-- ============================================================
+-- CaptureDataPhoto.CaptureDatasetUse: drop the DDL-level default. The legacy
+-- default '[207,208,209]' hardcoded specific idVocabulary values for the
+-- Alignment / Reconstruction / TextureGeneration terms, which is brittle to
+-- vocab ID drift across environments. All application creation paths now
+-- supply the value explicitly via VocabularyCache.defaultCaptureDatasetUseJSON()
+-- which resolves the IDs dynamically. Existing rows are unaffected — only the
+-- column-level DEFAULT clause is removed.
+-- ============================================================
+ALTER TABLE CaptureDataPhoto MODIFY COLUMN CaptureDatasetUse LONGTEXT NOT NULL;

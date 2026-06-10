@@ -399,7 +399,7 @@ export class BulkIngestReader {
             directory: bagitCDP.directory_path,
             sourceObjects: [],
             derivedObjects: [],
-            datasetUse: '[207,208,209]'  // indices into Vocabulary for: alignment, reconstruction, texture generation
+            datasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON()
         };
     }
 

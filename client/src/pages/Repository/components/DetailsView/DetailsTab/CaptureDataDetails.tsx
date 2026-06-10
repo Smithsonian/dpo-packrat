@@ -321,13 +321,15 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             className={clsx(classes.select, classes.fieldSizing, classes.chipSelect)}
                                             input={<Input id='select-multiple-chip' />}
                                             renderValue={(selected) => {
-                                                // get our entries and cycle through what's selected drawing as Chips,
-                                                // and pulling the name from the entries.
+                                                // Render each selected vocab ID as a Chip. IDs that no longer resolve
+                                                // against the current vocabulary cache are surfaced as "Unknown (ID N)"
+                                                // so stale data stays visible rather than masquerading as a valid term.
                                                 const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
                                                 return (<div className={classes.chips}>
                                                     {(selected as number[]).map((value) => {
                                                         const entry = entries.find(entry => entry.idVocabulary === value);
-                                                        return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                        const label = entry ? entry.Term : `Unknown (ID ${value})`;
+                                                        return (<Chip key={value} label={label} className={classes.chip} />);
                                                     })}
                                                 </div>);
                                             }}

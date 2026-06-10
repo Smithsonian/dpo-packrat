@@ -76,7 +76,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
-    datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+    datasetUse: '[]', // Seeded dynamically by the Photogrammetry form's useEffect when datasetType becomes Photogrammetry Image Set. Resolves Alignment / Reconstruction / TextureGeneration via getVocabularyId at runtime.
     datasetFieldId: null,
     itemPositionType: null,
     itemPositionFieldId: null,

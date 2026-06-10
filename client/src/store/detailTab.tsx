@@ -167,7 +167,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         clusterGeometryFieldId: null,
         folders: [],
         isValidData: null,
-        datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+        datasetUse: '[]', // Server populates this from CaptureDataPhoto.CaptureDatasetUse on load; default empty here means "no rendered chips" until data arrives.
         modality: null,
         scanType: null,
         contentType: null,

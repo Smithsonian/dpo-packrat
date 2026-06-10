@@ -1,4 +1,5 @@
 import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import {
     AssetVersionDetailFields,
@@ -201,7 +202,7 @@ export default async function getDetailsTabDataForObject(_: Parent, args: QueryG
 async function getCaptureDataDetailFields(idCaptureData: number): Promise<CaptureDataDetailFields> {
     let fields: CaptureDataDetailFields = {
         folders: [],
-        datasetUse: '[207,208,209]' // indices into Vocabulary for: alignment, reconstruction, texture generation
+        datasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON()
     };
 
     // creates a unique map of AssetVersion.filePath and file.idVVariantType

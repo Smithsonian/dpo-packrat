@@ -541,6 +541,18 @@ export class VocabularyCache {
         return this.vocabEnumIDMap.get(eVocabID);
     }
 
+    private defaultCaptureDatasetUseJSONInternal(): string {
+        const ids: number[] = [];
+        const alignment = this.vocabEnumIDMap.get(COMMON.eVocabularyID.eCaptureDataDatasetUseAlignment);
+        const reconstruction = this.vocabEnumIDMap.get(COMMON.eVocabularyID.eCaptureDataDatasetUseReconstruction);
+        const textureGeneration = this.vocabEnumIDMap.get(COMMON.eVocabularyID.eCaptureDataDatasetUseTextureGeneration);
+        if (alignment !== undefined) ids.push(alignment);
+        if (reconstruction !== undefined) ids.push(reconstruction);
+        if (textureGeneration !== undefined) ids.push(textureGeneration);
+        ids.sort((a, b) => a - b);
+        return JSON.stringify(ids);
+    }
+
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by COMMON.eVocabularyID entries. */
     private vocabularyIdToEnumInternal(idVocabulary: number): COMMON.eVocabularyID | undefined {
         return this.vocabIDEnumMap.get(idVocabulary);
@@ -636,6 +648,17 @@ export class VocabularyCache {
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. */
     static async vocabularyEnumToId(eVocabID: COMMON.eVocabularyID): Promise<number | undefined> {
         return (await this.getInstance()).vocabularyEnumToIdInternal(eVocabID);
+    }
+
+    /**
+     * Returns the JSON-stringified default CaptureDatasetUse value: a sorted
+     * array of the current idVocabulary values for Alignment, Reconstruction,
+     * and TextureGeneration. Single source of truth — replaces the legacy
+     * literal '[207,208,209]' which was brittle to vocab ID shifts across
+     * fresh-build vs. incrementally-migrated environments.
+     */
+    static async defaultCaptureDatasetUseJSON(): Promise<string> {
+        return (await this.getInstance()).defaultCaptureDatasetUseJSONInternal();
     }
 
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by COMMON.eVocabularyID entries. */
