@@ -6,6 +6,7 @@
 import GraphQLApi from '../../../graphql';
 
 import * as DBC from '../../../db/connection';
+import * as CACHE from '../../../cache';
 // import * as H from '../../../utils/helpers';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { Authorization } from '../../../auth/Authorization';
@@ -132,7 +133,7 @@ class TestSuiteUtils {
         };
     };
 
-    createCaptureDataPhotoInput = (idCaptureData: number, idVocabulary: number): CreateCaptureDataPhotoInput => {
+    createCaptureDataPhotoInput = async (idCaptureData: number, idVocabulary: number): Promise<CreateCaptureDataPhotoInput> => {
         return {
             idCaptureData,
             idVCaptureDatasetType: idVocabulary,
@@ -146,7 +147,7 @@ class TestSuiteUtils {
             idVFocusType: idVocabulary,
             idVLightSourceType: idVocabulary,
             idVClusterType: idVocabulary,
-            CaptureDatasetUse: '[207,208,209]',
+            CaptureDatasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON(),
         };
     };
 

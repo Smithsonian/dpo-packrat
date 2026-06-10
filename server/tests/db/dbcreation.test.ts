@@ -853,7 +853,7 @@ describe('DB Creation Test Suite', () => {
                 CameraSettingsUniform: false,
                 idCaptureData: captureData.idCaptureData,
                 idCaptureDataPhoto: 0,
-                CaptureDatasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+                CaptureDatasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON(),
             });
         expect(captureDataPhoto).toBeTruthy();
         if (captureDataPhoto) {
@@ -878,7 +878,7 @@ describe('DB Creation Test Suite', () => {
                 CameraSettingsUniform: false,
                 idCaptureData: captureData.idCaptureData,
                 idCaptureDataPhoto: 0,
-                CaptureDatasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+                CaptureDatasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON(),
             });
         expect(captureDataPhotoNulls).toBeTruthy();
         if (captureDataPhotoNulls) {
