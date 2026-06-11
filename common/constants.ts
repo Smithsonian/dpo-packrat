@@ -46,6 +46,7 @@ export enum eVocabularySetID {
     eCaptureDataVolumeContentType,
     eCaptureDataVolumeFilterLocation,
     eCaptureDataVolumeVoxelSizeUnit,
+    eCaptureDataVolumeSpecimenPreparation,
     eNone = -1
 }
 
@@ -263,6 +264,13 @@ export enum eVocabularyID {
     eCaptureDataVolumeFilterLocationBoth,
     eCaptureDataVolumeVoxelSizeUnitMicrometer,
     eCaptureDataVolumeVoxelSizeUnitMillimeter,
+    eCaptureDataVolumeSpecimenPreparationFluidPreserved,
+    eCaptureDataVolumeSpecimenPreparationDry,
+    eCaptureDataVolumeSpecimenPreparationStained,
+    eCaptureDataVolumeSpecimenPreparationFrozen,
+    eCaptureDataVolumeSpecimenPreparationEmbedded,
+    eCaptureDataVolumeSpecimenPreparationLive,
+    eCaptureDataVolumeSpecimenPreparationOther,
     eNone = -1
 }
 

@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
   `ScannerMakeModel` varchar(255) DEFAULT NULL,
   `VoltageKV` double DEFAULT NULL,
   `AmperageUA` double DEFAULT NULL,
-  `SpecimenPreparation` varchar(2000) DEFAULT NULL,
+  `idVSpecimenPreparation` int(11) DEFAULT NULL,
   `VoxelSizeX` double NOT NULL,
   `VoxelSizeY` double NOT NULL,
   `VoxelSizeZ` double NOT NULL,
@@ -199,7 +199,8 @@ CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
   KEY `fk_capturedatavolume_v2` (`idVScanType`),
   KEY `fk_capturedatavolume_v3` (`idVContentType`),
   KEY `fk_capturedatavolume_v4` (`idVFilterLocation`),
-  KEY `fk_capturedatavolume_v5` (`idVVoxelSizeUnit`)
+  KEY `fk_capturedatavolume_v5` (`idVVoxelSizeUnit`),
+  KEY `fk_capturedatavolume_v6` (`idVSpecimenPreparation`)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
 CREATE TABLE IF NOT EXISTS `Contact` (
@@ -968,6 +969,11 @@ ADD CONSTRAINT `fk_capturedatavolume_v4`
   ON UPDATE NO ACTION,
 ADD CONSTRAINT `fk_capturedatavolume_v5`
   FOREIGN KEY (`idVVoxelSizeUnit`)
+  REFERENCES `Vocabulary` (`idVocabulary`)
+  ON DELETE NO ACTION
+  ON UPDATE NO ACTION,
+ADD CONSTRAINT `fk_capturedatavolume_v6`
+  FOREIGN KEY (`idVSpecimenPreparation`)
   REFERENCES `Vocabulary` (`idVocabulary`)
   ON DELETE NO ACTION
   ON UPDATE NO ACTION;

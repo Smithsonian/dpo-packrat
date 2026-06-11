@@ -200,7 +200,7 @@ export type VolumeFields = {
     scannerMakeModel: string;
     voltageKV: number | null;
     amperageUA: number | null;
-    specimenPreparation: string;
+    specimenPreparation: number | null;
     voxelSizeX: number | null;
     voxelSizeY: number | null;
     voxelSizeZ: number | null;

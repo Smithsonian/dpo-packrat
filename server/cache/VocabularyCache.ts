@@ -94,6 +94,7 @@ export class VocabularyCache {
                 case 'CaptureDataVolume.ContentType':           eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeContentType; break;
                 case 'CaptureDataVolume.FilterLocation':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation; break;
                 case 'CaptureDataVolume.VoxelSizeUnit':         eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit; break;
+                case 'CaptureDataVolume.SpecimenPreparation':   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation; break;
             }
 
             /* istanbul ignore else */
@@ -384,6 +385,18 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Micrometer':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer; break;
                         case 'Millimeter':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation: {
+                    switch (vocabulary.Term) {
+                        case 'Fluid-preserved':                 eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFluidPreserved; break;
+                        case 'Dry':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationDry; break;
+                        case 'Stained':                         eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationStained; break;
+                        case 'Frozen':                          eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFrozen; break;
+                        case 'Embedded':                        eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded; break;
+                        case 'Live':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive; break;
+                        case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther; break;
                     }
                 } break;
 

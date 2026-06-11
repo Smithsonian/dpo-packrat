@@ -72,7 +72,7 @@ input CaptureDataDetailFieldsInput {
     scannerMakeModel: String
     voltageKV: Float
     amperageUA: Float
-    specimenPreparation: String
+    specimenPreparation: Int
     voxelSizeX: Float
     voxelSizeY: Float
     voxelSizeZ: Float

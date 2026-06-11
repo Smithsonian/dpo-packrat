@@ -64,7 +64,7 @@ type CaptureDataVolume {
     ScannerMakeModel: String
     VoltageKV: Float
     AmperageUA: Float
-    SpecimenPreparation: String
+    idVSpecimenPreparation: Int
     VoxelSizeX: Float!
     VoxelSizeY: Float!
     VoxelSizeZ: Float!

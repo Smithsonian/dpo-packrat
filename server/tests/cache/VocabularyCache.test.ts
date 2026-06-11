@@ -324,6 +324,13 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth:        testVocabulary(vocabulary, 'Both'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer:   testVocabulary(vocabulary, 'Micrometer'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter:   testVocabulary(vocabulary, 'Millimeter'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFluidPreserved: testVocabulary(vocabulary, 'Fluid-preserved'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationDry:    testVocabulary(vocabulary, 'Dry'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationStained: testVocabulary(vocabulary, 'Stained'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFrozen: testVocabulary(vocabulary, 'Frozen'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded: testVocabulary(vocabulary, 'Embedded'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive:   testVocabulary(vocabulary, 'Live'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther:  testVocabulary(vocabulary, 'Other'); break;
 
                     case COMMON.eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested COMMON.eVocabularyID enum ${COMMON.eVocabularyID[eVocabID]}`).toBeFalsy(); break;
@@ -394,6 +401,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eCaptureDataVolumeContentType:
                     case COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation:
                     case COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet) {

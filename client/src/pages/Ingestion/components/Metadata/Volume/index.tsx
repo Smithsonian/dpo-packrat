@@ -18,7 +18,7 @@
  * ObjectSelectModal browses the repository to pick CaptureData / Model / Scene
  * objects to wire as parents (sources) or children (derivatives) at ingest time.
  */
-import { Box, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@material-ui/core';
+import { Box, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableRow, Tooltip, Typography } from '@material-ui/core';
 import { DebounceInput } from 'react-debounce-input';
 import React, { useEffect, useState } from 'react';
 import { AssetIdentifiers, DateInputField } from '../../../../../components';
@@ -231,29 +231,34 @@ function Volume(props: VolumeProps): React.ReactElement {
         onModalClose();
     };
 
-    const renderSelectRow = (name: keyof typeof volume, vocabSet: eVocabularySetID, label: string, required: boolean): JSX.Element => (
-        <TableRow className={tableClasses.tableRow}>
-            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                <Typography className={tableClasses.labelText}>{label}{required && '*'}</Typography>
-            </TableCell>
-            <TableCell className={tableClasses.tableCell}>
-                <Select
-                    value={volume[name] ?? ''}
-                    name={name as string}
-                    onChange={setIdField as any /* eslint-disable-line @typescript-eslint/no-explicit-any */}
-                    disabled={ingestionLoading}
-                    disableUnderline
-                    className={clsx(tableClasses.select, classes.fieldSizing)}
-                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                >
-                    {!required && <MenuItem value=''><em>—</em></MenuItem>}
-                    {getEntries(vocabSet).map(({ idVocabulary, Term }, i) => (
-                        <MenuItem key={i} value={idVocabulary}>{Term}</MenuItem>
-                    ))}
-                </Select>
-            </TableCell>
-        </TableRow>
-    );
+    const renderSelectRow = (name: keyof typeof volume, vocabSet: eVocabularySetID, label: string, required: boolean, tooltip?: string): JSX.Element => {
+        const labelNode = (
+            <Typography className={tableClasses.labelText}>{label}{required && '*'}</Typography>
+        );
+        return (
+            <TableRow className={tableClasses.tableRow}>
+                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                    {tooltip ? <Tooltip title={tooltip} arrow placement='top-start'>{labelNode}</Tooltip> : labelNode}
+                </TableCell>
+                <TableCell className={tableClasses.tableCell}>
+                    <Select
+                        value={volume[name] ?? ''}
+                        name={name as string}
+                        onChange={setIdField as any /* eslint-disable-line @typescript-eslint/no-explicit-any */}
+                        disabled={ingestionLoading}
+                        disableUnderline
+                        className={clsx(tableClasses.select, classes.fieldSizing)}
+                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                    >
+                        {!required && <MenuItem value=''><em>—</em></MenuItem>}
+                        {getEntries(vocabSet).map(({ idVocabulary, Term }, i) => (
+                            <MenuItem key={i} value={idVocabulary}>{Term}</MenuItem>
+                        ))}
+                    </Select>
+                </TableCell>
+            </TableRow>
+        );
+    };
 
     const renderNumberRow = (name: keyof typeof volume, label: string, required: boolean, readOnly: boolean = false, step?: string): JSX.Element => (
         <TableRow className={tableClasses.tableRow}>
@@ -390,7 +395,7 @@ function Volume(props: VolumeProps): React.ReactElement {
                             {renderTextRow('scannerMakeModel', 'Scanner Make/Model')}
                             {renderNumberRow('voltageKV', 'Voltage (kV)', false, false, 'any')}
                             {renderNumberRow('amperageUA', 'Amperage (µA)', false, false, 'any')}
-                            {renderTextRow('specimenPreparation', 'Specimen Preparation')}
+                            {renderSelectRow('specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, 'Specimen Preparation', false, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
                             {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false)}
 
                             {renderNumberRow('voxelSizeX', 'Voxel Size X', true, false, 'any')}

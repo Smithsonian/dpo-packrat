@@ -330,7 +330,7 @@ function useIngest(): UseIngest {
                         scannerMakeModel: scannerMakeModel || null,
                         voltageKV,
                         amperageUA,
-                        specimenPreparation: specimenPreparation || null,
+                        specimenPreparation: specimenPreparation ?? null,
                         voxelSizeX: nonNullValue<number>('voxelSizeX', voxelSizeX),
                         voxelSizeY: nonNullValue<number>('voxelSizeY', voxelSizeY),
                         voxelSizeZ: nonNullValue<number>('voxelSizeZ', voxelSizeZ),

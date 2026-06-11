@@ -965,3 +965,28 @@ WHERE NOT EXISTS (
 -- column-level DEFAULT clause is removed.
 -- ============================================================
 ALTER TABLE CaptureDataPhoto MODIFY COLUMN CaptureDatasetUse LONGTEXT NOT NULL;
+
+-- ============================================================
+-- CaptureDataVolume.SpecimenPreparation: free-text column replaced with
+-- a Vocabulary-backed dropdown. The categorical list (Fluid-preserved,
+-- Dry, Stained, Frozen, Embedded, Live, Other) covers the common cases;
+-- additional detail belongs in CaptureData.Description.
+--
+-- WARNING: this drops any free-text already stored in
+-- CaptureDataVolume.SpecimenPreparation. The volumetric feature shipped
+-- recently; verify with operators before applying to staging/production
+-- if any specimen-preparation notes have been entered.
+-- ============================================================
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (37, 'CaptureDataVolume.SpecimenPreparation', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 1, 'Fluid-preserved');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 2, 'Dry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 3, 'Stained');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 4, 'Frozen');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 5, 'Embedded');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 6, 'Live');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 7, 'Other');
+
+ALTER TABLE CaptureDataVolume DROP COLUMN SpecimenPreparation;
+ALTER TABLE CaptureDataVolume ADD COLUMN idVSpecimenPreparation INT(11) DEFAULT NULL AFTER AmperageUA;
+ALTER TABLE CaptureDataVolume ADD KEY fk_capturedatavolume_v6 (idVSpecimenPreparation);
+ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v6 FOREIGN KEY (idVSpecimenPreparation) REFERENCES Vocabulary (idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;

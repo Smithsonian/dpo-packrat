@@ -236,7 +236,7 @@ export type CaptureDataDetailFields = {
   scanType?: Maybe<Scalars['Int']>;
   scannerMakeModel?: Maybe<Scalars['String']>;
   sliceCount?: Maybe<Scalars['Int']>;
-  specimenPreparation?: Maybe<Scalars['String']>;
+  specimenPreparation?: Maybe<Scalars['Int']>;
   systemCreated?: Maybe<Scalars['Boolean']>;
   voltageKV?: Maybe<Scalars['Float']>;
   voxelSizeUnit?: Maybe<Scalars['Int']>;
@@ -275,7 +275,7 @@ export type CaptureDataDetailFieldsInput = {
   scanType?: InputMaybe<Scalars['Int']>;
   scannerMakeModel?: InputMaybe<Scalars['String']>;
   sliceCount?: InputMaybe<Scalars['Int']>;
-  specimenPreparation?: InputMaybe<Scalars['String']>;
+  specimenPreparation?: InputMaybe<Scalars['Int']>;
   systemCreated?: InputMaybe<Scalars['Boolean']>;
   voltageKV?: InputMaybe<Scalars['Float']>;
   voxelSizeUnit?: InputMaybe<Scalars['Int']>;
@@ -338,7 +338,6 @@ export type CaptureDataVolume = {
   FileCount: Scalars['Int'];
   ScannerMakeModel?: Maybe<Scalars['String']>;
   SliceCount?: Maybe<Scalars['Int']>;
-  SpecimenPreparation?: Maybe<Scalars['String']>;
   VContentType?: Maybe<Vocabulary>;
   VFilterLocation?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
@@ -354,6 +353,7 @@ export type CaptureDataVolume = {
   idVFilterLocation?: Maybe<Scalars['Int']>;
   idVModality: Scalars['Int'];
   idVScanType: Scalars['Int'];
+  idVSpecimenPreparation?: Maybe<Scalars['Int']>;
   idVVoxelSizeUnit: Scalars['Int'];
 };
 
@@ -1356,7 +1356,7 @@ export type IngestVolumeInput = {
   scannerMakeModel?: InputMaybe<Scalars['String']>;
   sliceCount?: InputMaybe<Scalars['Int']>;
   sourceObjects: Array<RelatedObjectInput>;
-  specimenPreparation?: InputMaybe<Scalars['String']>;
+  specimenPreparation?: InputMaybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   updateNotes?: InputMaybe<Scalars['String']>;
   voltageKV?: InputMaybe<Scalars['Float']>;

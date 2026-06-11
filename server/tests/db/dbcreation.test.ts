@@ -898,7 +898,7 @@ describe('DB Creation Test Suite', () => {
                 ScannerMakeModel: 'Nikon XTH 225',
                 VoltageKV: 180,
                 AmperageUA: 200,
-                SpecimenPreparation: 'Dusted with talc',
+                idVSpecimenPreparation: vocabulary.idVocabulary,
                 VoxelSizeX: 0.025,
                 VoxelSizeY: 0.025,
                 VoxelSizeZ: 0.025,
@@ -930,7 +930,7 @@ describe('DB Creation Test Suite', () => {
                 ScannerMakeModel: null,
                 VoltageKV: null,
                 AmperageUA: null,
-                SpecimenPreparation: null,
+                idVSpecimenPreparation: null,
                 VoxelSizeX: 0.1,
                 VoxelSizeY: 0.1,
                 VoxelSizeZ: 0.1,
@@ -6620,14 +6620,14 @@ describe('DB Update Test Suite', () => {
         let bUpdated: boolean = false;
         if (captureDataVolume) {
             captureDataVolume.VoltageKV = 220;
-            captureDataVolume.SpecimenPreparation = 'Injected with contrast';
+            captureDataVolume.idVSpecimenPreparation = null;
             bUpdated = await captureDataVolume.update();
 
             const fetched: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetch(captureDataVolume.idCaptureDataVolume);
             expect(fetched).toBeTruthy();
             if (fetched) {
                 expect(fetched.VoltageKV).toEqual(220);
-                expect(fetched.SpecimenPreparation).toEqual('Injected with contrast');
+                expect(fetched.idVSpecimenPreparation).toBeNull();
             }
         }
         expect(bUpdated).toBeTruthy();

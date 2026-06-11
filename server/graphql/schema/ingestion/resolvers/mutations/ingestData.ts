@@ -1120,7 +1120,7 @@ class IngestDataWorker extends ResolverBase {
             volumeDB.ScannerMakeModel = volume.scannerMakeModel ?? null;
             volumeDB.VoltageKV = volume.voltageKV ?? null;
             volumeDB.AmperageUA = volume.amperageUA ?? null;
-            volumeDB.SpecimenPreparation = volume.specimenPreparation ?? null;
+            volumeDB.idVSpecimenPreparation = volume.specimenPreparation ?? null;
             volumeDB.VoxelSizeX = volume.voxelSizeX;
             volumeDB.VoxelSizeY = volume.voxelSizeY;
             volumeDB.VoxelSizeZ = volume.voxelSizeZ;
@@ -1142,7 +1142,7 @@ class IngestDataWorker extends ResolverBase {
                 ScannerMakeModel: volume.scannerMakeModel ?? null,
                 VoltageKV: volume.voltageKV ?? null,
                 AmperageUA: volume.amperageUA ?? null,
-                SpecimenPreparation: volume.specimenPreparation ?? null,
+                idVSpecimenPreparation: volume.specimenPreparation ?? null,
                 VoxelSizeX: volume.voxelSizeX,
                 VoxelSizeY: volume.voxelSizeY,
                 VoxelSizeZ: volume.voxelSizeZ,

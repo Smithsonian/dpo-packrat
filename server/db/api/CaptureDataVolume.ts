@@ -13,7 +13,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     ScannerMakeModel!: string | null;
     VoltageKV!: number | null;
     AmperageUA!: number | null;
-    SpecimenPreparation!: string | null;
+    idVSpecimenPreparation!: number | null;
     VoxelSizeX!: number;
     VoxelSizeY!: number;
     VoxelSizeZ!: number;
@@ -32,7 +32,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     ScannerMakeModelOrig!: string | null;
     VoltageKVOrig!: number | null;
     AmperageUAOrig!: number | null;
-    SpecimenPreparationOrig!: string | null;
+    idVSpecimenPreparationOrig!: number | null;
     VoxelSizeXOrig!: number;
     VoxelSizeYOrig!: number;
     VoxelSizeZOrig!: number;
@@ -52,7 +52,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     protected updateCachedValues(): void {
         this.snapshotTrackedFields([
             'idVModality', 'idVScanType', 'idVContentType',
-            'ScannerMakeModel', 'VoltageKV', 'AmperageUA', 'SpecimenPreparation',
+            'ScannerMakeModel', 'VoltageKV', 'AmperageUA', 'idVSpecimenPreparation',
             'VoxelSizeX', 'VoxelSizeY', 'VoxelSizeZ', 'idVVoxelSizeUnit',
             'DimensionsX', 'DimensionsY', 'DimensionsZ', 'BitDepth',
             'FileCount', 'SliceCount', 'idVFilterLocation',
@@ -65,14 +65,14 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idVModality, idVScanType, idVContentType,
-                ScannerMakeModel, VoltageKV, AmperageUA, SpecimenPreparation,
+                ScannerMakeModel, VoltageKV, AmperageUA, idVSpecimenPreparation,
                 VoxelSizeX, VoxelSizeY, VoxelSizeZ, idVVoxelSizeUnit,
                 DimensionsX, DimensionsY, DimensionsZ, BitDepth,
                 FileCount, SliceCount, idVFilterLocation } = this;
             ({ idCaptureDataVolume: this.idCaptureDataVolume, idCaptureData: this.idCaptureData,
                 idVModality: this.idVModality, idVScanType: this.idVScanType, idVContentType: this.idVContentType,
                 ScannerMakeModel: this.ScannerMakeModel, VoltageKV: this.VoltageKV,
-                AmperageUA: this.AmperageUA, SpecimenPreparation: this.SpecimenPreparation,
+                AmperageUA: this.AmperageUA, idVSpecimenPreparation: this.idVSpecimenPreparation,
                 VoxelSizeX: this.VoxelSizeX, VoxelSizeY: this.VoxelSizeY, VoxelSizeZ: this.VoxelSizeZ,
                 idVVoxelSizeUnit: this.idVVoxelSizeUnit,
                 DimensionsX: this.DimensionsX, DimensionsY: this.DimensionsY, DimensionsZ: this.DimensionsZ,
@@ -80,13 +80,14 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
                 idVFilterLocation: this.idVFilterLocation } =
                 await DBC.DBConnection.prisma.captureDataVolume.create({
                     data: {
-                        CaptureData:                                                 { connect: { idCaptureData }, },
-                        Vocabulary_CaptureDataVolume_idVModalityToVocabulary:        { connect: { idVocabulary: idVModality }, },
-                        Vocabulary_CaptureDataVolume_idVScanTypeToVocabulary:        { connect: { idVocabulary: idVScanType }, },
-                        Vocabulary_CaptureDataVolume_idVContentTypeToVocabulary:     { connect: { idVocabulary: idVContentType }, },
-                        Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary:   { connect: { idVocabulary: idVVoxelSizeUnit }, },
-                        Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary:  idVFilterLocation ? { connect: { idVocabulary: idVFilterLocation }, } : undefined,
-                        ScannerMakeModel, VoltageKV, AmperageUA, SpecimenPreparation,
+                        CaptureData:                                                        { connect: { idCaptureData }, },
+                        Vocabulary_CaptureDataVolume_idVModalityToVocabulary:               { connect: { idVocabulary: idVModality }, },
+                        Vocabulary_CaptureDataVolume_idVScanTypeToVocabulary:               { connect: { idVocabulary: idVScanType }, },
+                        Vocabulary_CaptureDataVolume_idVContentTypeToVocabulary:            { connect: { idVocabulary: idVContentType }, },
+                        Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary:          { connect: { idVocabulary: idVVoxelSizeUnit }, },
+                        Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary:         idVFilterLocation ? { connect: { idVocabulary: idVFilterLocation }, } : undefined,
+                        Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary:    idVSpecimenPreparation ? { connect: { idVocabulary: idVSpecimenPreparation }, } : undefined,
+                        ScannerMakeModel, VoltageKV, AmperageUA,
                         VoxelSizeX, VoxelSizeY, VoxelSizeZ,
                         DimensionsX, DimensionsY, DimensionsZ,
                         BitDepth, FileCount, SliceCount,
@@ -102,20 +103,21 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idCaptureDataVolume, idVModality, idVScanType, idVContentType,
-                ScannerMakeModel, VoltageKV, AmperageUA, SpecimenPreparation,
+                ScannerMakeModel, VoltageKV, AmperageUA, idVSpecimenPreparation,
                 VoxelSizeX, VoxelSizeY, VoxelSizeZ, idVVoxelSizeUnit,
                 DimensionsX, DimensionsY, DimensionsZ, BitDepth,
                 FileCount, SliceCount, idVFilterLocation } = this;
             const retValue: boolean = await DBC.DBConnection.prisma.captureDataVolume.update({
                 where: { idCaptureDataVolume, },
                 data: {
-                    CaptureData:                                                 { connect: { idCaptureData }, },
-                    Vocabulary_CaptureDataVolume_idVModalityToVocabulary:        { connect: { idVocabulary: idVModality }, },
-                    Vocabulary_CaptureDataVolume_idVScanTypeToVocabulary:        { connect: { idVocabulary: idVScanType }, },
-                    Vocabulary_CaptureDataVolume_idVContentTypeToVocabulary:     { connect: { idVocabulary: idVContentType }, },
-                    Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary:   { connect: { idVocabulary: idVVoxelSizeUnit }, },
-                    Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary:  idVFilterLocation ? { connect: { idVocabulary: idVFilterLocation }, } : { disconnect: true, },
-                    ScannerMakeModel, VoltageKV, AmperageUA, SpecimenPreparation,
+                    CaptureData:                                                        { connect: { idCaptureData }, },
+                    Vocabulary_CaptureDataVolume_idVModalityToVocabulary:               { connect: { idVocabulary: idVModality }, },
+                    Vocabulary_CaptureDataVolume_idVScanTypeToVocabulary:               { connect: { idVocabulary: idVScanType }, },
+                    Vocabulary_CaptureDataVolume_idVContentTypeToVocabulary:            { connect: { idVocabulary: idVContentType }, },
+                    Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary:          { connect: { idVocabulary: idVVoxelSizeUnit }, },
+                    Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary:         idVFilterLocation ? { connect: { idVocabulary: idVFilterLocation }, } : { disconnect: true, },
+                    Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary:    idVSpecimenPreparation ? { connect: { idVocabulary: idVSpecimenPreparation }, } : { disconnect: true, },
+                    ScannerMakeModel, VoltageKV, AmperageUA,
                     VoxelSizeX, VoxelSizeY, VoxelSizeZ,
                     DimensionsX, DimensionsY, DimensionsZ,
                     BitDepth, FileCount, SliceCount,

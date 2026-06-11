@@ -203,7 +203,7 @@ type CaptureDataDetailFields {
   scanType: Int
   scannerMakeModel: String
   sliceCount: Int
-  specimenPreparation: String
+  specimenPreparation: Int
   systemCreated: Boolean
   voltageKV: Float
   voxelSizeUnit: Int
@@ -242,7 +242,7 @@ input CaptureDataDetailFieldsInput {
   scanType: Int
   scannerMakeModel: String
   sliceCount: Int
-  specimenPreparation: String
+  specimenPreparation: Int
   systemCreated: Boolean
   voltageKV: Float
   voxelSizeUnit: Int
@@ -301,7 +301,6 @@ type CaptureDataVolume {
   FileCount: Int!
   ScannerMakeModel: String
   SliceCount: Int
-  SpecimenPreparation: String
   VContentType: Vocabulary
   VFilterLocation: Vocabulary
   VModality: Vocabulary
@@ -317,6 +316,7 @@ type CaptureDataVolume {
   idVFilterLocation: Int
   idVModality: Int!
   idVScanType: Int!
+  idVSpecimenPreparation: Int
   idVVoxelSizeUnit: Int!
 }
 
@@ -1247,7 +1247,7 @@ input IngestVolumeInput {
   scannerMakeModel: String
   sliceCount: Int
   sourceObjects: [RelatedObjectInput!]!
-  specimenPreparation: String
+  specimenPreparation: Int
   systemCreated: Boolean!
   updateNotes: String
   voltageKV: Float

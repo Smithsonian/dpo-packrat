@@ -6,7 +6,7 @@
  *
  * This component renders details tab for CaptureData specific details used in DetailsTab component.
  */
-import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Chip, Input } from '@material-ui/core';
+import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Chip, Input, Tooltip } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
@@ -427,7 +427,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeNumberRow('Bit Depth', 'bitDepth')}
                                 {renderVolumeNumberRow('File Count', 'fileCount')}
                                 {renderVolumeNumberRow('Slice Count', 'sliceCount')}
-                                {renderVolumeTextRow('Specimen Preparation', 'specimenPreparation')}
+                                {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
                             </TableBody>
                         </Table>
                     </TableContainer>
@@ -638,15 +638,16 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         </Box>
     );
 
-    function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean): JSX.Element {
+    function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean, tooltip?: string): JSX.Element {
         const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
         const entries = optional
             ? getNullableSelectEntries(getEntries(vocabSet), 'idVocabulary', 'Term')
             : getEntries(vocabSet).map(e => ({ value: e.idVocabulary, label: e.Term }));
+        const labelNode = <Typography className={classes.labelText}>{label}</Typography>;
         return (
             <TableRow className={classes.tableRow} key={fieldName}>
                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
-                    <Typography className={classes.labelText}>{label}</Typography>
+                    {tooltip ? <Tooltip title={tooltip} arrow placement='top-start'>{labelNode}</Tooltip> : labelNode}
                 </TableCell>
                 <TableCell className={classes.tableCell}>
                     <Select

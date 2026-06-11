@@ -360,7 +360,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             CDV.ScannerMakeModel = maybe<string>(scannerMakeModel);
                             CDV.VoltageKV = maybe<number>(voltageKV);
                             CDV.AmperageUA = maybe<number>(amperageUA);
-                            CDV.SpecimenPreparation = maybe<string>(specimenPreparation);
+                            CDV.idVSpecimenPreparation = maybe<number>(specimenPreparation);
                             CDV.DimensionsX = maybe<number>(dimensionsX);
                             CDV.DimensionsY = maybe<number>(dimensionsY);
                             CDV.DimensionsZ = maybe<number>(dimensionsZ);
