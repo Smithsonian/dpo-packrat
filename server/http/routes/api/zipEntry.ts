@@ -111,9 +111,14 @@ export async function getZipEntry(req: Request, res: Response): Promise<void> {
             return;
         }
 
+        // download=1 → attachment disposition forces a save dialog instead of
+        // inline rendering. The query value is treated as truthy for any non-
+        // empty string ('1', 'true', etc.) — undefined / absent → inline.
+        const download: boolean = typeof req.query.download === 'string' && req.query.download.length > 0;
         const contentType: string = mime.lookup(entryPath) || 'application/octet-stream';
+        const disposition: string = download ? 'attachment' : 'inline';
         res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', `inline; filename="${path.basename(entryPath)}"`);
+        res.setHeader('Content-Disposition', `${disposition}; filename="${path.basename(entryPath)}"`);
 
         await new Promise<void>((resolve, reject) => {
             stream.pipe(res);

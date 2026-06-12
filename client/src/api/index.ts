@@ -123,9 +123,12 @@ export default class API {
     }
 
     // direct URL for streaming a single entry from a ZIP — used as anchor href
-    // for preview links rather than fetched here
-    static zipEntryUrl(idAssetVersion: number, entryPath: string): string {
-        return `${API.serverEndpoint()}/api/zip-entry/${idAssetVersion}?path=${encodeURIComponent(entryPath)}`;
+    // for preview / download links rather than fetched here. When download=true,
+    // the server returns Content-Disposition: attachment so the browser saves
+    // the file instead of rendering it inline.
+    static zipEntryUrl(idAssetVersion: number, entryPath: string, download: boolean = false): string {
+        const base = `${API.serverEndpoint()}/api/zip-entry/${idAssetVersion}?path=${encodeURIComponent(entryPath)}`;
+        return download ? `${base}&download=1` : base;
     }
 
     // validation reports
