@@ -315,7 +315,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataVolumeModalityMRI:               testVocabulary(vocabulary, 'MRI'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeScanTypeRaw:               testVocabulary(vocabulary, 'Raw'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeScanTypeReconstructed:     testVocabulary(vocabulary, 'Reconstructed'); break;
-                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeTIFFStack:      testVocabulary(vocabulary, 'TIFF Stack'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack:     testVocabulary(vocabulary, 'Image Stack'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM:          testVocabulary(vocabulary, 'DICOM'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeOther:          testVocabulary(vocabulary, 'Other'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationNone:        testVocabulary(vocabulary, 'None'); break;

@@ -273,6 +273,27 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         const { sceneBaseName, modelBaseName } = await WorkflowEngine.computeSceneAndModelBaseNames(CSIR.idModel, CSIR.assetVersionGeometry.FileName);
         RK.logDebug(RK.LogSection.eWF,'generate downloads','compute names',{ sceneBaseName, modelBaseName },'Workflow.Engine');
 
+        // Basename safeguard. Cook names every generated download
+        // `{sceneBaseName}-{variant}.{ext}` across .glb, .usdz and .zip outputs
+        // (model tiers, AR variants, OBJ/glTF bundles). If the scene already
+        // has downloads from a previous run, those basenames must match the
+        // basename we're about to send. A mismatch means the master model or
+        // scene was renamed and re-running Cook would orphan the old set
+        // instead of replacing it. Fail loudly. Source assets (master model,
+        // SVX scene file, texture maps) are excluded so they don't false-trip.
+        const sourceAssetVersionIds: Set<number> = new Set<number>();
+        if (CSIR.assetVersionGeometry)  sourceAssetVersionIds.add(CSIR.assetVersionGeometry.idAssetVersion);
+        if (CSIR.assetSVX)              sourceAssetVersionIds.add(CSIR.assetSVX.idAssetVersion);
+        if (CSIR.assetVersionDiffuse)   sourceAssetVersionIds.add(CSIR.assetVersionDiffuse.idAssetVersion);
+        if (CSIR.assetVersionRoughMetal) sourceAssetVersionIds.add(CSIR.assetVersionRoughMetal.idAssetVersion);
+        if (CSIR.assetVersionMTL)       sourceAssetVersionIds.add(CSIR.assetVersionMTL.idAssetVersion);
+        const basenameCheck: H.IOResults = await WorkflowEngine.verifyDownloadBasenameConsistency(sceneSO.idSystemObject, sceneBaseName, sourceAssetVersionIds);
+        if (!basenameCheck.success) {
+            RK.logError(RK.LogSection.eWF,'generate downloads blocked','basename mismatch against existing downloads',
+                { idScene, sceneBaseName, error: basenameCheck.error }, 'Workflow.Engine');
+            return { success: false, message: basenameCheck.error ?? 'basename mismatch', data: { isValid: false, activeJobs } };
+        }
+
         // #region build our scene parameters
         const parameterHelper: COOK.JobCookSIVoyagerSceneParameterHelper | null = await COOK.JobCookSIVoyagerSceneParameterHelper.compute(CSIR.idModel);
         if(parameterHelper==null) {
@@ -899,6 +920,55 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         }
 
         return null;
+    }
+
+    /**
+     * Verify that every existing Cook-output download asset under the scene's
+     * SystemObject has a basename consistent with the supplied `sceneBaseName`.
+     * Cook names downloads `{sceneBaseName}-{variant}.{ext}` across .glb (tier
+     * geometry), .usdz (AR variants) and .zip (OBJ / glTF bundles). Any
+     * download whose filename does not begin with `${sceneBaseName}` indicates
+     * the scene/model was renamed since the last run.
+     *
+     * `excludeIds` lists AssetVersion ids that are *source* assets attached to
+     * the scene (master model, SVX scene file, diffuse / rough-metal / MTL
+     * maps) so they don't false-trip the prefix check when they happen to be
+     * .glb or .zip. Returns success when no Cook downloads exist or every one
+     * is consistent.
+     */
+    private static readonly COOK_OUTPUT_EXTENSIONS: readonly string[] = ['.glb', '.usdz', '.zip'];
+
+    private static async verifyDownloadBasenameConsistency(idSceneSystemObject: number, sceneBaseName: string, excludeIds: Set<number>): Promise<H.IOResults> {
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(idSceneSystemObject);
+        if (!assetVersions || assetVersions.length === 0)
+            return { success: true };
+
+        const offenders: string[] = [];
+        for (const av of assetVersions) {
+            if (excludeIds.has(av.idAssetVersion)) continue;
+
+            const ext: string = path.extname(av.FileName).toLowerCase();
+            if (!WorkflowEngine.COOK_OUTPUT_EXTENSIONS.includes(ext)) continue;
+
+            const stem: string = path.parse(av.FileName).name;
+            const prefix: string = `${sceneBaseName}-`;
+            const exactMatch: boolean = stem === sceneBaseName;
+            const variantMatch: boolean = stem.startsWith(prefix);
+            if (!exactMatch && !variantMatch)
+                offenders.push(av.FileName);
+        }
+
+        if (offenders.length === 0)
+            return { success: true };
+
+        const sample: string = offenders.slice(0, 3).join(', ');
+        return {
+            success: false,
+            error: 'Existing scene downloads have a different basename than the current model '
+                + `(expected prefix "${sceneBaseName}", got: ${sample}${offenders.length > 3 ? `, +${offenders.length - 3} more` : ''}). `
+                + 'Re-running Cook would orphan the existing downloads. Retire or rename the existing downloads, '
+                + 'or revert the model/scene name change before retrying.'
+        };
     }
 
     private static async computeSceneAndModelBaseNames(idModel: number | undefined, defaultFileName: string): Promise<{ sceneBaseName: string, modelBaseName: string}> {

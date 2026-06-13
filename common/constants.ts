@@ -255,7 +255,7 @@ export enum eVocabularyID {
     eCaptureDataVolumeModalityMRI,
     eCaptureDataVolumeScanTypeRaw,
     eCaptureDataVolumeScanTypeReconstructed,
-    eCaptureDataVolumeContentTypeTIFFStack,
+    eCaptureDataVolumeContentTypeImageStack,
     eCaptureDataVolumeContentTypeDICOM,
     eCaptureDataVolumeContentTypeOther,
     eCaptureDataVolumeFilterLocationNone,

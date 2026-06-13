@@ -122,6 +122,13 @@ export default class API {
         return this.request(`api/zip-contents/${idAssetVersion}`, { method: 'GET' });
     }
 
+    // resolves the idAssetVersion of the latest ZIP belonging to a CaptureData
+    // SystemObject — null when none is attached. used by the CaptureData details
+    // page to embed a ZipContentsView without the client touching the asset graph.
+    static async getCaptureDataLatestZip(idSystemObject: number): Promise<RequestResponse> {
+        return this.request(`api/capture-data/${idSystemObject}/latest-zip`, { method: 'GET' });
+    }
+
     // direct URL for streaming a single entry from a ZIP — used as anchor href
     // for preview / download links rather than fetched here. When download=true,
     // the server returns Content-Disposition: attachment so the browser saves

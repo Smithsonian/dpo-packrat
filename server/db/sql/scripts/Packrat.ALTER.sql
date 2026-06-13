@@ -990,3 +990,11 @@ ALTER TABLE CaptureDataVolume DROP COLUMN SpecimenPreparation;
 ALTER TABLE CaptureDataVolume ADD COLUMN idVSpecimenPreparation INT(11) DEFAULT NULL AFTER AmperageUA;
 ALTER TABLE CaptureDataVolume ADD KEY fk_capturedatavolume_v6 (idVSpecimenPreparation);
 ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v6 FOREIGN KEY (idVSpecimenPreparation) REFERENCES Vocabulary (idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ============================================================
+-- CaptureDataVolume.ContentType: rename "TIFF Stack" -> "Image Stack" so the
+-- single term covers TIFF, JPG and PNG slice archives. idVocabulary is left
+-- intact (the FK target stays the same row), so existing CaptureDataVolume
+-- rows referencing the old term continue to point at the renamed row.
+-- ============================================================
+UPDATE Vocabulary SET Term = 'Image Stack' WHERE idVocabularySet = 34 AND Term = 'TIFF Stack';

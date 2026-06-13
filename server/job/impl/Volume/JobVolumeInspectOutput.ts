@@ -16,7 +16,7 @@ import * as COMMON from '@dpo-packrat/common';
 import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
-export type VolumeContentType = 'TIFF_STACK' | 'DICOM' | 'OTHER';
+export type VolumeContentType = 'IMAGE_STACK' | 'DICOM' | 'OTHER';
 export type VolumeSizeUnit = 'Micrometer' | 'Millimeter';
 
 export interface VolumeExtractedMetadata {

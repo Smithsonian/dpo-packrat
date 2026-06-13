@@ -39,6 +39,7 @@ import { getAuditLifeline } from './routes/api/auditLifeline';
 import { getZipContents } from './routes/api/zipContents';
 import { getZipEntry } from './routes/api/zipEntry';
 import { getVolumeInspection } from './routes/api/volumeInspection';
+import { getCaptureDataLatestZip } from './routes/api/captureDataLatestZip';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -244,6 +245,7 @@ export class HttpServer {
         this.app.get('/api/zip-contents/:idAssetVersion', getZipContents);
         this.app.get('/api/zip-entry/:idAssetVersion', getZipEntry);
         this.app.get('/api/asset-version/:idAssetVersion/volume-inspection', getVolumeInspection);
+        this.app.get('/api/capture-data/:idSystemObject/latest-zip', getCaptureDataLatestZip);
 
         this.app.get('/api/contact',getContact);                        // get all contacts
         this.app.get('/api/contact/:id',getContact);                    // get a specific contact

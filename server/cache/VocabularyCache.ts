@@ -366,7 +366,7 @@ export class VocabularyCache {
 
                 case COMMON.eVocabularySetID.eCaptureDataVolumeContentType: {
                     switch (vocabulary.Term) {
-                        case 'TIFF Stack':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeTIFFStack; break;
+                        case 'Image Stack':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack; break;
                         case 'DICOM':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM; break;
                         case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeOther; break;
                     }

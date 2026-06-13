@@ -269,7 +269,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 1, 'Raw');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 2, 'Reconstructed');
 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (34, 'CaptureDataVolume.ContentType', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 1, 'TIFF Stack');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 1, 'Image Stack');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 2, 'DICOM');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 3, 'Other');
 

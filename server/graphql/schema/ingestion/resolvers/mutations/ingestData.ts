@@ -1045,6 +1045,32 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
 
+        // Content-type vs. ZIP contents cross-check. The user picks ContentType in
+        // the form, but the ZIP itself unambiguously tells us whether it holds DICOM
+        // instances or an image stack. Refuse the mismatch (DICOM zip + user picked
+        // "Image Stack", or vice versa) so we don't write a row whose metadata is a
+        // lie about its bytes. We trust the inspection result over re-opening the
+        // ZIP since inspection already opened it at upload time.
+        if (inspection?.metadata) {
+            const expectedContentTypeEnum: COMMON.eVocabularyID | null =
+                inspection.metadata.contentType === 'DICOM' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM :
+                    inspection.metadata.contentType === 'IMAGE_STACK' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack : null;
+            if (expectedContentTypeEnum !== null) {
+                const expectedIdV: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(expectedContentTypeEnum);
+                if (expectedIdV !== undefined && volume.contentType !== expectedIdV) {
+                    const submittedTerm = await termForVocabId(volume.contentType);
+                    const expectedTerm = await termForVocabId(expectedIdV);
+                    RK.logError(RK.LogSection.eGQL,'create volume objects failed','ContentType does not match ZIP contents',
+                        { idAssetVersion: volume.idAssetVersion, submittedContentType: submittedTerm, expectedContentType: expectedTerm,
+                            zipContentType: inspection.metadata.contentType },
+                        'GraphQL.Ingestion.Data');
+                    await this.appendToWFReport(
+                        `Cannot ingest volumetric data: selected Content Type "${submittedTerm}" does not match ZIP contents (expected "${expectedTerm}").`, true);
+                    return false;
+                }
+            }
+        }
+
         let idCaptureData: number = 0;
         if (volume.idAsset) {
             const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(volume.idAsset);
@@ -2425,3 +2451,8 @@ export function isValidParentChildRelationship(parent: COMMON.eSystemObjectType,
 }
 
 const maximumConnections = (relationships: ExistingRelationship[], objectType: COMMON.eSystemObjectType, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;
+
+async function termForVocabId(idVocabulary: number): Promise<string> {
+    const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
+    return vocab?.Term ?? `idV=${idVocabulary}`;
+}

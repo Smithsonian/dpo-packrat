@@ -22,6 +22,7 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import * as crypto from 'crypto';
 import { promisify } from 'util';
+import { imageSize } from 'image-size';
 
 import { JobPackrat, JobIOResults } from '../NS';
 import * as JOB from '../../interface';
@@ -41,7 +42,31 @@ import { DicomInspector } from './dicom/DicomInspector';
 const SCAN_SHEET_REGEX = /(scan|sheet|log|report).*\.(pdf|jpg|jpeg|png|docx?)$/i;
 const SCAN_LOG_REGEX = /\.(txt|log)$/i;
 const TIFF_EXT_REGEX = /\.(tif|tiff)$/i;
+const JPEG_EXT_REGEX = /\.(jpg|jpeg)$/i;
+const PNG_EXT_REGEX = /\.png$/i;
+// "Image Stack" is the single user-facing content type covering TIFF, JPEG
+// and PNG slice archives. Format is detected per-entry from the extension.
+const IMAGE_STACK_EXT_REGEX = /\.(tif|tiff|jpg|jpeg|png)$/i;
 const DICOM_EXT_REGEX = /\.dcm$/i;
+
+function imageSubtypeForEntry(entry: string): 'TIFF' | 'JPEG' | 'PNG' | null {
+    if (TIFF_EXT_REGEX.test(entry)) return 'TIFF';
+    if (JPEG_EXT_REGEX.test(entry)) return 'JPEG';
+    if (PNG_EXT_REGEX.test(entry)) return 'PNG';
+    return null;
+}
+
+/**
+ * Stage 4b per-slice validation gate. Defaults to enabled; deployments can
+ * disable it by setting PACKRAT_VOLUME_PER_SLICE_VALIDATION to "false" or "0".
+ * Anything else (unset, "true", "1", or any other value) leaves validation on.
+ */
+function isPerSliceValidationEnabled(): boolean {
+    const raw: string | undefined = process.env.PACKRAT_VOLUME_PER_SLICE_VALIDATION;
+    if (!raw) return true;
+    const normalized: string = raw.trim().toLowerCase();
+    return !(normalized === 'false' || normalized === '0');
+}
 
 const setImmediateAsync = promisify(setImmediate);
 
@@ -161,20 +186,22 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
         if (allEntries.length === 0 || fileEntries.length === 0)
             throw new Error('Stage 1 (archive pre-flight): ZIP is empty');
 
-        // Stage 1: content-type detection
-        const tiffEntries: string[] = fileEntries.filter(e => TIFF_EXT_REGEX.test(e)).sort();
+        // Stage 1: content-type detection. Image-stack covers TIFF, JPEG and
+        // PNG slice formats under a single contentType — the per-slice subtype
+        // is recovered from each entry's extension when we sample headers.
+        const imageStackEntries: string[] = fileEntries.filter(e => IMAGE_STACK_EXT_REGEX.test(e)).sort();
         const dicomEntries: string[] = fileEntries.filter(e => DICOM_EXT_REGEX.test(e) || /DICOMDIR$/i.test(e)).sort();
 
         let contentType: VolumeContentType;
-        if (tiffEntries.length > 0) contentType = 'TIFF_STACK';
+        if (imageStackEntries.length > 0) contentType = 'IMAGE_STACK';
         else if (dicomEntries.length > 0) contentType = 'DICOM';
         else contentType = 'OTHER';
 
         if (contentType === 'OTHER')
-            throw new Error('Stage 1 (archive pre-flight): no TIFF slices or DICOM instances found — user selected Volumetric but ZIP contains no recognizable scan data');
+            throw new Error('Stage 1 (archive pre-flight): no image slices or DICOM instances found — user selected Volumetric but ZIP contains no recognizable scan data');
 
         // Stage 2: file inventory
-        const sliceEntries: string[] = contentType === 'TIFF_STACK' ? tiffEntries : dicomEntries;
+        const sliceEntries: string[] = contentType === 'IMAGE_STACK' ? imageStackEntries : dicomEntries;
         const sliceCount: number = sliceEntries.length;
         const fileCount: number = fileEntries.length;
         const warnings: string[] = [];
@@ -210,6 +237,28 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
 
         // Stage 4: header sampling
         const headerData: HeaderSampleData = await sampleHeader(zip, sliceEntries, contentType, stagingDir, warnings);
+
+        // Stage 4b: per-slice header validation (image-stack only). DICOM
+        // instances are skipped — DICOM transfer-syntax variance is too broad
+        // to validate cheaply, and the cross-checks with sidecar + first-slice
+        // already cover the common failure modes there.
+        //
+        // For image stacks we run every slice through the same header sampler
+        // used in Stage 4. Goals:
+        //   - Catch corrupt / non-image entries (would have been a missing slice
+        //     at downstream Cook stages).
+        //   - Detect dimension drift across slices (warning, not fatal — some
+        //     vendor workflows pad edge slices differently).
+        // Cost: O(N) header parses per ZIP, but each parse only reads the
+        // header bytes via streamContent + image-size / exiftool. Same order
+        // of magnitude as the existing duplicate-filename scan.
+        //
+        // Always on by default. Set PACKRAT_VOLUME_PER_SLICE_VALIDATION=false
+        // (or 0) to skip — useful for very large ZIPs or when investigating
+        // unrelated inspection issues without paying the per-slice cost.
+        if (contentType === 'IMAGE_STACK' && isPerSliceValidationEnabled()) {
+            await validateImageStackSlices(zip, sliceEntries, headerData, stagingDir, warnings);
+        }
 
         // Stage 5: cross-check + companion file tagging
         if (sidecarResult.declaredSliceCount !== undefined && sidecarResult.declaredSliceCount !== sliceCount)
@@ -260,8 +309,8 @@ async function sampleHeader(zip: ZipFile, sliceEntries: string[], contentType: V
             continue;
         }
         try {
-            if (contentType === 'TIFF_STACK') {
-                const sample: HeaderSampleData = await sampleTiff(tempPath, warnings);
+            if (contentType === 'IMAGE_STACK') {
+                const sample: HeaderSampleData = await sampleImageSlice(tempPath, entry, warnings);
                 if (sample.dimensionsX !== undefined || sample.bitDepth !== undefined)
                     return sample;
             } else if (contentType === 'DICOM') {
@@ -326,20 +375,112 @@ interface HeaderSampleData {
     modality?: string;
 }
 
-async function sampleTiff(filePath: string, warnings: string[]): Promise<HeaderSampleData> {
-    const extractor: MetadataExtractor = new MetadataExtractor();
-    const result: H.IOResults = await extractor.extractMetadata(filePath);
-    if (!result.success) {
-        warnings.push(`TIFF header parse failed: ${result.error}`);
-        return {};
+/**
+ * Inspect a single image-stack slice (TIFF / JPEG / PNG) and return its
+ * dimensions and bit depth. Returns `{}` and pushes a warning on parse
+ * failure — the caller decides whether that's fatal.
+ *
+ * Format dispatch is by extension. TIFF goes through MetadataExtractor
+ * (exiftool); JPEG and PNG use the synchronous `image-size` library,
+ * matching the photogrammetry validation pipeline so a slice that wouldn't
+ * be accepted as a photogrammetry image isn't silently accepted here.
+ */
+async function inspectImageSlice(filePath: string, entryName: string): Promise<{ data: HeaderSampleData; error?: string }> {
+    const subtype: 'TIFF' | 'JPEG' | 'PNG' | null = imageSubtypeForEntry(entryName);
+    if (!subtype)
+        return { data: {}, error: `unrecognized image extension for ${entryName}` };
+
+    if (subtype === 'TIFF') {
+        const extractor: MetadataExtractor = new MetadataExtractor();
+        const result: H.IOResults = await extractor.extractMetadata(filePath);
+        if (!result.success)
+            return { data: {}, error: `TIFF header parse failed: ${result.error}` };
+
+        const md: Map<string, string> = extractor.metadata;
+        const data: HeaderSampleData = {};
+        data.dimensionsX = readPositiveInt(md, ['ImageWidth', 'imagewidth']);
+        data.dimensionsY = readPositiveInt(md, ['ImageHeight', 'ImageLength', 'imageheight', 'imagelength']);
+        data.bitDepth = readPositiveInt(md, ['BitsPerSample', 'bitspersample']);
+        return { data };
     }
 
-    const md: Map<string, string> = extractor.metadata;
-    const data: HeaderSampleData = {};
-    data.dimensionsX = readPositiveInt(md, ['ImageWidth', 'imagewidth']);
-    data.dimensionsY = readPositiveInt(md, ['ImageHeight', 'ImageLength', 'imageheight', 'imagelength']);
-    data.bitDepth = readPositiveInt(md, ['BitsPerSample', 'bitspersample']);
-    return data;
+    // JPEG / PNG: image-size reads the header bytes only — fast and synchronous.
+    try {
+        const dims = imageSize(filePath);
+        if (!dims || !dims.width || !dims.height)
+            return { data: {}, error: `${subtype} header parse returned no dimensions` };
+        const data: HeaderSampleData = {
+            dimensionsX: dims.width,
+            dimensionsY: dims.height,
+        };
+        // JPEG has no header bit-depth field; PNG always reports bit-depth.
+        if (subtype === 'PNG' && typeof (dims as any).bitDepth === 'number')
+            data.bitDepth = (dims as any).bitDepth;
+        return { data };
+    } catch (err) {
+        return { data: {}, error: `${subtype} header parse threw: ${H.Helpers.getErrorString(err)}` };
+    }
+}
+
+/** Header-sampling shim used by Stage 4. Pushes warnings on parse failure rather than throwing. */
+async function sampleImageSlice(filePath: string, entryName: string, warnings: string[]): Promise<HeaderSampleData> {
+    const result = await inspectImageSlice(filePath, entryName);
+    if (result.error) warnings.push(result.error);
+    return result.data;
+}
+
+/**
+ * Stage 4b: validate every entry in an image-stack slice list. Reports:
+ *   - per-slice header parse failures as warnings (with the entry name)
+ *   - dimension drift across slices as a single aggregated warning
+ *
+ * The dimension baseline is `headerData` when available; otherwise the first
+ * successfully-parsed slice in this loop. Slices that fail to parse are
+ * logged once each rather than aborting the whole inspection — Cook will
+ * surface a hard failure later if the corrupt slice actually blocks downstream
+ * processing.
+ */
+async function validateImageStackSlices(zip: ZipFile, sliceEntries: string[], headerData: HeaderSampleData,
+    stagingDir: string, warnings: string[]): Promise<void> {
+
+    let baselineX: number | undefined = headerData.dimensionsX;
+    let baselineY: number | undefined = headerData.dimensionsY;
+    let failures: number = 0;
+    let mismatches: number = 0;
+    const sampleMismatch: string[] = [];
+
+    for (const entry of sliceEntries) {
+        const tempPath: string | null = await extractEntryToStaging(zip, entry, stagingDir);
+        if (!tempPath) {
+            failures++;
+            warnings.push(`Slice ${entry}: failed to extract for validation`);
+            continue;
+        }
+        try {
+            const result = await inspectImageSlice(tempPath, entry);
+            if (result.error) {
+                failures++;
+                warnings.push(`Slice ${entry}: ${result.error}`);
+                continue;
+            }
+            if (baselineX === undefined && result.data.dimensionsX !== undefined) baselineX = result.data.dimensionsX;
+            if (baselineY === undefined && result.data.dimensionsY !== undefined) baselineY = result.data.dimensionsY;
+            if (baselineX !== undefined && result.data.dimensionsX !== undefined && result.data.dimensionsX !== baselineX) {
+                mismatches++;
+                if (sampleMismatch.length < 3) sampleMismatch.push(`${entry} (${result.data.dimensionsX}x${result.data.dimensionsY ?? '?'})`);
+            } else if (baselineY !== undefined && result.data.dimensionsY !== undefined && result.data.dimensionsY !== baselineY) {
+                mismatches++;
+                if (sampleMismatch.length < 3) sampleMismatch.push(`${entry} (${result.data.dimensionsX ?? '?'}x${result.data.dimensionsY})`);
+            }
+        } finally {
+            await unlinkSafe(tempPath);
+        }
+    }
+
+    if (failures > 0)
+        warnings.push(`Stage 4b (per-slice validation): ${failures}/${sliceEntries.length} slice(s) failed header parse`);
+    if (mismatches > 0)
+        warnings.push(`Stage 4b (per-slice validation): ${mismatches} slice(s) differ from baseline ${baselineX ?? '?'}x${baselineY ?? '?'}; samples: ${sampleMismatch.join(', ')}`);
 }
 
 async function sampleDicom(filePath: string, warnings: string[]): Promise<HeaderSampleData> {

@@ -36,6 +36,7 @@ import AssetDetails from './AssetDetails';
 import AssetVersionDetails from './AssetVersionDetails';
 import AssetVersionsTable from './AssetVersionsTable';
 import CaptureDataDetails from './CaptureDataDetails';
+import { CaptureDataZipContents } from './CaptureDataZipContents';
 import IntermediaryFileDetails from './IntermediaryFileDetails';
 import ItemDetails from './ItemDetails';
 import ModelDetails from './ModelDetails';
@@ -315,7 +316,10 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Assets', 'Details', 'Related', 'Versions', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eCaptureData)}
+                    <TabPanel value={tab} index={0} id='tab-0'>
+                        <AssetGrid idSystemObject={idSystemObject} systemObjectType={eSystemObjectType.eCaptureData} onUploaderOpen={onUploaderOpen} parentRetired={parentRetired} refreshTick={refreshTick} />
+                        <CaptureDataZipContents idSystemObject={idSystemObject} />
+                    </TabPanel>
                     <TabPanel value={tab} index={1} id='tab-0'>
                         <CaptureDataDetails {...detailsProps} />
                     </TabPanel>
