@@ -311,6 +311,10 @@ export class NavigationSolr implements NAV.INavigation {
                 case COMMON.eMetadata.eCDClusterGeometryFieldID:                    metadata.push(this.computeMetadataFromNumber(doc.CDClusterGeometryFieldID)); break;
                 case COMMON.eMetadata.eCDCameraSettingsUniform:                     metadata.push(this.computeMetadataFromBoolean(doc.CDCameraSettingsUniform)); break;
                 case COMMON.eMetadata.eCDVariantType:                               metadata.push(this.computeMetadataFromStringArray(doc.CDVariantType)); break;
+                case COMMON.eMetadata.eCDVolumeModality:                            metadata.push(this.computeMetadataFromString(doc.CDVolumeModality)); break;
+                case COMMON.eMetadata.eCDVolumeContentType:                         metadata.push(this.computeMetadataFromString(doc.CDVolumeContentType)); break;
+                case COMMON.eMetadata.eCDVolumeScanType:                            metadata.push(this.computeMetadataFromString(doc.CDVolumeScanType)); break;
+                case COMMON.eMetadata.eCDVolumeSpecimenPreparation:                 metadata.push(this.computeMetadataFromString(doc.CDVolumeSpecimenPreparation)); break;
                 case COMMON.eMetadata.eModelCreationMethod:                         metadata.push(this.computeMetadataFromString(doc.ModelCreationMethod)); break;
                 case COMMON.eMetadata.eModelModality:                               metadata.push(this.computeMetadataFromString(doc.ModelModality)); break;
                 case COMMON.eMetadata.eModelUnits:                                  metadata.push(this.computeMetadataFromString(doc.ModelUnits)); break;

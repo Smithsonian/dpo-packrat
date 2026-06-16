@@ -107,7 +107,7 @@ describe('JobVolumeInspect — TIFF stack', () => {
         const zipPath: string = await stageFixture('volume-test-tiff.zip');
         const md: VolumeExtractedMetadata = await inspectVolumeZip(zipPath, tempStaging);
 
-        expect(md.contentType).toBe('TIFF_STACK');
+        expect(md.contentType).toBe('IMAGE_STACK');
         expect(md.fileCount).toBe(4);
         expect(md.sliceCount).toBe(4);
         expect(md.dimensionsX).toBe(16);
@@ -148,7 +148,7 @@ describe('JobVolumeInspect — sidecar in ZIP', () => {
         const zipPath: string = await stageFixture('volume-test-with-pca.zip');
         const md: VolumeExtractedMetadata = await inspectVolumeZip(zipPath, tempStaging);
 
-        expect(md.contentType).toBe('TIFF_STACK');
+        expect(md.contentType).toBe('IMAGE_STACK');
         expect(md.fileCount).toBe(5);                       // 4 slices + 1 .pca
         expect(md.sliceCount).toBe(4);
         expect(md.vendorSidecarPaths.length).toBe(1);

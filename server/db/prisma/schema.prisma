@@ -249,43 +249,6 @@ model CaptureDataPhoto {
   @@index([idVClusterType], map: "fk_capturedataphoto_vocabulary6")
 }
 
-model CaptureDataVolume {
-  idCaptureDataVolume                                             Int         @id @default(autoincrement())
-  idCaptureData                                                   Int         @unique(map: "uq_capturedatavolume_cd")
-  idVModality                                                     Int
-  idVScanType                                                     Int
-  idVContentType                                                  Int
-  ScannerMakeModel                                                String?     @mariasql.VarChar(255)
-  VoltageKV                                                       Float?
-  AmperageUA                                                      Float?
-  idVSpecimenPreparation                                          Int?
-  VoxelSizeX                                                      Float
-  VoxelSizeY                                                      Float
-  VoxelSizeZ                                                      Float
-  idVVoxelSizeUnit                                                Int
-  DimensionsX                                                     Int?
-  DimensionsY                                                     Int?
-  DimensionsZ                                                     Int?
-  BitDepth                                                        Int?
-  FileCount                                                       Int
-  SliceCount                                                      Int?
-  idVFilterLocation                                               Int?
-  CaptureData                                                     CaptureData @relation(fields: [idCaptureData], references: [idCaptureData], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_cd")
-  Vocabulary_CaptureDataVolume_idVModalityToVocabulary            Vocabulary  @relation("CaptureDataVolume_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v1")
-  Vocabulary_CaptureDataVolume_idVScanTypeToVocabulary            Vocabulary  @relation("CaptureDataVolume_idVScanTypeToVocabulary", fields: [idVScanType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v2")
-  Vocabulary_CaptureDataVolume_idVContentTypeToVocabulary         Vocabulary  @relation("CaptureDataVolume_idVContentTypeToVocabulary", fields: [idVContentType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v3")
-  Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary      Vocabulary? @relation("CaptureDataVolume_idVFilterLocationToVocabulary", fields: [idVFilterLocation], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v4")
-  Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary       Vocabulary  @relation("CaptureDataVolume_idVVoxelSizeUnitToVocabulary", fields: [idVVoxelSizeUnit], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v5")
-  Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary Vocabulary? @relation("CaptureDataVolume_idVSpecimenPreparationToVocabulary", fields: [idVSpecimenPreparation], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v6")
-
-  @@index([idVModality], map: "fk_capturedatavolume_v1")
-  @@index([idVScanType], map: "fk_capturedatavolume_v2")
-  @@index([idVContentType], map: "fk_capturedatavolume_v3")
-  @@index([idVFilterLocation], map: "fk_capturedatavolume_v4")
-  @@index([idVVoxelSizeUnit], map: "fk_capturedatavolume_v5")
-  @@index([idVSpecimenPreparation], map: "fk_capturedatavolume_v6")
-}
-
 model GeoLocation {
   idGeoLocation Int       @id @default(autoincrement())
   Latitude      Float?
@@ -1047,6 +1010,43 @@ model ExternalSource {
   User             User?    @relation(fields: [idContact], references: [idUser], onUpdate: Restrict, map: "fk_aes_contact")
 
   @@index([idContact], map: "fk_aes_contact")
+}
+
+model CaptureDataVolume {
+  idCaptureDataVolume                                             Int         @id @default(autoincrement())
+  idCaptureData                                                   Int         @unique(map: "uq_capturedatavolume_cd")
+  idVModality                                                     Int
+  idVScanType                                                     Int
+  idVContentType                                                  Int
+  ScannerMakeModel                                                String?     @mariasql.VarChar(255)
+  VoltageKV                                                       Float?
+  AmperageUA                                                      Float?
+  idVSpecimenPreparation                                          Int?
+  VoxelSizeX                                                      Float
+  VoxelSizeY                                                      Float
+  VoxelSizeZ                                                      Float
+  idVVoxelSizeUnit                                                Int
+  DimensionsX                                                     Int?
+  DimensionsY                                                     Int?
+  DimensionsZ                                                     Int?
+  BitDepth                                                        Int?
+  FileCount                                                       Int
+  SliceCount                                                      Int?
+  idVFilterLocation                                               Int?
+  CaptureData                                                     CaptureData @relation(fields: [idCaptureData], references: [idCaptureData], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_cd")
+  Vocabulary_CaptureDataVolume_idVModalityToVocabulary            Vocabulary  @relation("CaptureDataVolume_idVModalityToVocabulary", fields: [idVModality], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v1")
+  Vocabulary_CaptureDataVolume_idVScanTypeToVocabulary            Vocabulary  @relation("CaptureDataVolume_idVScanTypeToVocabulary", fields: [idVScanType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v2")
+  Vocabulary_CaptureDataVolume_idVContentTypeToVocabulary         Vocabulary  @relation("CaptureDataVolume_idVContentTypeToVocabulary", fields: [idVContentType], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v3")
+  Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary      Vocabulary? @relation("CaptureDataVolume_idVFilterLocationToVocabulary", fields: [idVFilterLocation], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v4")
+  Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary       Vocabulary  @relation("CaptureDataVolume_idVVoxelSizeUnitToVocabulary", fields: [idVVoxelSizeUnit], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v5")
+  Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary Vocabulary? @relation("CaptureDataVolume_idVSpecimenPreparationToVocabulary", fields: [idVSpecimenPreparation], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v6")
+
+  @@index([idVModality], map: "fk_capturedatavolume_v1")
+  @@index([idVScanType], map: "fk_capturedatavolume_v2")
+  @@index([idVContentType], map: "fk_capturedatavolume_v3")
+  @@index([idVFilterLocation], map: "fk_capturedatavolume_v4")
+  @@index([idVVoxelSizeUnit], map: "fk_capturedatavolume_v5")
+  @@index([idVSpecimenPreparation], map: "fk_capturedatavolume_v6")
 }
 
 enum ObjectProperty_PropertyType {

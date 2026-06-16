@@ -370,6 +370,10 @@ export enum eMetadata {
     eStakeholderPhoneNumberMobile,
     eStakeholderPhoneNumberOffice,
     eStakeholderMailingAddress,
+    eCDVolumeModality,
+    eCDVolumeContentType,
+    eCDVolumeScanType,
+    eCDVolumeSpecimenPreparation,
 }
 
 export enum eSystemObjectType {
