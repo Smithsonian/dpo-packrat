@@ -250,7 +250,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 2, 'Presen
 -- ============================================================
 -- Volumetric Capture Data support — INSERT order matches Packrat.ALTER.sql
 -- exactly so a fresh DB build produces identical idVocabulary values to a
--- production DB that has had the Phase 1 ALTER applied. Do not insert new
+-- production DB that has had the volumetric ALTER applied. Do not insert new
 -- vocab rows above this block — that would shift these IDs and break parity
 -- with downstream environments.
 -- ============================================================

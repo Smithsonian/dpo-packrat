@@ -64,7 +64,8 @@ const useStyles = makeStyles(({ palette }) => ({
         backgroundColor: fade(palette.primary.main, 0.25),
     },
     tabpanel: {
-        backgroundColor: fade(palette.primary.main, 0.25),
+        backgroundColor: '#fff',
+        backgroundImage: 'linear-gradient(rgba(0, 121, 196, 0.15), rgba(0, 121, 196, 0.15))',
     },
     assetOwner: {
         display: 'flex',
@@ -462,7 +463,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='column' mt={2} style={{ width: '41rem' }}>
-            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange} aria-label='detailsTab'>
+            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='inherit' onChange={handleTabChange} aria-label='detailsTab'>
                 {tabs.map((tab: string, index: number) => (
                     <StyledTab key={index} label={tab} aria-label={tab} />
                 ))}
@@ -489,9 +490,13 @@ function TabPanel(props: any): React.ReactElement {
 
 const StyledTab = withStyles(({ palette }) => ({
     root: {
-        color: palette.background.paper,
+        color: '#608fd3',
         '&:focus': {
             opacity: 1
+        },
+        '&.Mui-selected': {
+            color: palette.primary.main,
+            fontWeight: 'bold'
         }
     }
 }))((props: TabProps) => <Tab disableRipple {...props} />);

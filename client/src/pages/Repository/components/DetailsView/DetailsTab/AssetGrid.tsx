@@ -40,6 +40,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         paddingBottom: '5px',
         // need to specify top radius in table container AND MuiToolbar override
         borderRadius: '5px',
+        border: '1px solid #e0e0e0',
         width: '100%',
         minWidth: '400px'
     },
@@ -49,6 +50,16 @@ export const useStyles = makeStyles(({ palette }) => ({
     centeredTableHead: {
         '& > span': {
             justifyContent: 'center'
+        }
+    },
+    leftTableHead: {
+        '& > span': {
+            justifyContent: 'flex-start'
+        }
+    },
+    rightTableHead: {
+        '& > span': {
+            justifyContent: 'flex-end'
         }
     },
     container: {
@@ -168,6 +179,21 @@ const getMuiTheme = () =>
                     borderTopLeftRadius: '5px'
                 }
             },
+            MuiTableFooter: {
+                root: {
+                    backgroundColor: 'rgb(255, 255, 224)'
+                }
+            },
+            MuiTablePagination: {
+                root: {
+                    backgroundColor: 'rgb(255, 255, 224)',
+                    borderBottomLeftRadius: '5px',
+                    borderBottomRightRadius: '5px'
+                },
+                toolbar: {
+                    backgroundColor: 'rgb(255, 255, 224)'
+                }
+            },
             MuiIconButton: {
                 root: {
                     border: '0px',
@@ -283,7 +309,9 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                     display: displayHash[colName] as boolean,
                     setCellHeaderProps: () => ({
                         className: clsx({
-                            [classes.centeredTableHead]: true
+                            [classes.centeredTableHead]: colAlign === 'center',
+                            [classes.rightTableHead]: colAlign === 'right',
+                            [classes.leftTableHead]: colAlign !== 'center' && colAlign !== 'right'
                         })
                     }),
                     setCellProps:
@@ -338,6 +366,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             };
                         },
                         customBodyRender(value) {
+                            const iconJustify = colAlign === 'center' ? 'center' : colAlign === 'right' ? 'flex-end' : 'flex-start';
                             if (value.label) {
                                 if (value.origin === eLinkOrigin.eClient) {
                                     return (
@@ -360,7 +389,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                             if (value.icon !== null) {
                                 if (value.origin === eLinkOrigin.eClient) {
                                     return (
-                                        <NewTabLink to={value.path} style={{ color: 'black', display: 'flex' }}>
+                                        <NewTabLink to={value.path} style={{ color: 'black', display: 'flex', justifyContent: iconJustify }}>
                                             {renderIcon(value.icon)}
                                         </NewTabLink>
                                     );
@@ -368,7 +397,7 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                                     return (
                                         <a
                                             href={serverEndpoint + value.path}
-                                            style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex' }}
+                                            style={{ textDecoration: 'underline', color: '#2C405A', display: 'flex', justifyContent: iconJustify }}
                                         >
                                             <span style={{ display: 'none' }}>Download Icon</span>
                                             {renderIcon(value.icon)}
@@ -442,7 +471,9 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
         download: false,
         print: false,
         fixedHeader: false,
-        pagination: false,
+        pagination: true,
+        rowsPerPage: 25,
+        rowsPerPageOptions: [25, 50, 100, 250],
         elevation: 0,
         onViewColumnsChange: toggleColumn,
         setRowProps: (_row, dataIndex, _rowIndex) => {

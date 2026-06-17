@@ -43,6 +43,12 @@ export const useStyles = makeStyles(({ palette }) => ({
             }
         },
         color: palette.primary.dark
+    },
+    statusContainer: {
+        marginBottom: 10,
+        width: '20%',
+        minWidth: 'fit-content',
+        color: palette.primary.dark
     }
 }));
 
@@ -258,7 +264,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px', ...readOnlyContainerProps }}
                 />
             </Box>
-            <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
+            <Box display='flex' flexDirection='column' className={classes.statusContainer} style={{ marginLeft: '5rem' }}>
                 <SceneDetailsStatus
                     idSceneSO={idSystemObject}
                     refreshTick={refreshTick}

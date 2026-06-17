@@ -823,7 +823,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volum
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');                          -- 216
 
 -- Seed the Job entity row for 'Volume Inspect' (matches the Cook job pattern
--- at DATA.sql lines 728-741). Without this seed the row is created lazily by
+-- in DATA.sql). Without this seed the row is created lazily by
 -- the JobEngine on first dispatch with Name = NULL, which breaks any query
 -- that filters Job by Name. The INSERT handles fresh staging / production
 -- where the row does not yet exist; the UPDATE backfills the Name on local

@@ -162,8 +162,7 @@ async function processFile(inputPath) {
         }
 
         // Prepare Output Header
-        // Original: Name, Project, UUID
-        // New: Name, Project, UUID, Error, Model Name, Model URI
+        // Columns: Name, Project, UUID, Model Name, Model URI, Error
         const outputRows = [];
         outputRows.push(['Name', 'Project', 'UUID', 'Model Name', 'Model URI', 'Error'].join(','));
 
