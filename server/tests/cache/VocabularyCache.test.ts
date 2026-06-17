@@ -16,6 +16,19 @@ enum eCacheTestMode {
     eFlush
 }
 
+// These seven sets carry a CaptureDataPhoto.* DB name while their eVocabularySetID
+// enum keeps the CaptureData* spelling, so the generic enum-from-name derivation
+// used elsewhere in this test does not hold for them.
+const renamedPhotoVocabSets: Set<COMMON.eVocabularySetID> = new Set<COMMON.eVocabularySetID>([
+    COMMON.eVocabularySetID.eCaptureDataDatasetType,
+    COMMON.eVocabularySetID.eCaptureDataDatasetUse,
+    COMMON.eVocabularySetID.eCaptureDataItemPositionType,
+    COMMON.eVocabularySetID.eCaptureDataFocusType,
+    COMMON.eVocabularySetID.eCaptureDataLightSourceType,
+    COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
+    COMMON.eVocabularySetID.eCaptureDataClusterType,
+]);
+
 const vocabularyCacheTest = (): void => {
     vocabularyCacheTestWorker(eCacheTestMode.eInitial);
     vocabularyCacheTestWorker(eCacheTestMode.eClear);
@@ -365,7 +378,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 const vocabularySet: DBAPI.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
 
                 switch (eVocabSetID) {
-                    case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
                     case COMMON.eVocabularySetID.eCaptureDataDatasetType:
                     case COMMON.eVocabularySetID.eCaptureDataDatasetUse:
                     case COMMON.eVocabularySetID.eCaptureDataItemPositionType:
@@ -373,6 +385,13 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eCaptureDataLightSourceType:
                     case COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod:
                     case COMMON.eVocabularySetID.eCaptureDataClusterType:
+                        expect(vocabularySet).toBeTruthy();
+                        /* istanbul ignore else */
+                        if (vocabularySet)
+                            expect(vocabularySet.Name).toEqual(sVocabSetID.replace('eCaptureData', 'CaptureDataPhoto.'));
+                        break;
+
+                    case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
                     case COMMON.eVocabularySetID.eCaptureDataFileVariantType:
                     case COMMON.eVocabularySetID.eModelCreationMethod:
                     case COMMON.eVocabularySetID.eModelModality:
@@ -470,7 +489,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 expect(vocabularySetEntriesInCacheByEnum).toBeTruthy();
 
                 // compute the vocabulary set name and ID from the enum name
-                const sVocabSetNameNorm: string = sVocabSetID.substring(1).toUpperCase();
+                const sVocabSetNameBase: string = renamedPhotoVocabSets.has(eVocabSetID)
+                    ? sVocabSetID.substring(1).replace('CaptureData', 'CaptureDataPhoto')
+                    : sVocabSetID.substring(1);
+                const sVocabSetNameNorm: string = sVocabSetNameBase.toUpperCase();
                 const nVocabSetID: number | undefined = vocabNameMap.get(sVocabSetNameNorm);
                 expect(nVocabSetID).toBeTruthy();
                 /* istanbul ignore if */

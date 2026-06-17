@@ -1,11 +1,11 @@
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (1, 'CaptureData.CaptureMethod', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (2, 'CaptureData.DatasetType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (3, 'CaptureData.ItemPositionType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (4, 'CaptureData.FocusType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (5, 'CaptureData.LightSourceType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (6, 'CaptureData.BackgroundRemovalMethod', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (7, 'CaptureData.ClusterType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (2, 'CaptureDataPhoto.DatasetType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (3, 'CaptureDataPhoto.ItemPositionType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (4, 'CaptureDataPhoto.FocusType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (5, 'CaptureDataPhoto.LightSourceType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (6, 'CaptureDataPhoto.BackgroundRemovalMethod', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (7, 'CaptureDataPhoto.ClusterType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (8, 'CaptureDataFile.VariantType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (9, 'Model.CreationMethod', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (10, 'Model.Modality', 1);
@@ -28,7 +28,7 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (26, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (27, 'Edan.3DResourceType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (28, 'Edan.3DResourceCategory', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (29, 'Edan.MDMFields', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureData.DatasetUse', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureDataPhoto.DatasetUse', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (31, 'Model.Variant', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet

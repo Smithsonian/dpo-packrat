@@ -998,3 +998,19 @@ ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v6 FOREIGN KEY
 -- rows referencing the old term continue to point at the renamed row.
 -- ============================================================
 UPDATE Vocabulary SET Term = 'Image Stack' WHERE idVocabularySet = 34 AND Term = 'TIFF Stack';
+
+-- ============================================================
+-- 2026-06-15 Rename photo-specific CaptureData.* VocabularySets to
+-- CaptureDataPhoto.* so VocabularySet.Name reflects the owning entity: all
+-- seven sets have FK columns only on CaptureDataPhoto. CaptureData.CaptureMethod
+-- (the discriminator shared by every capture type) and CaptureDataFile.VariantType
+-- are intentionally left unchanged. idVocabularySet values are untouched, so
+-- every FK reference continues to resolve. Idempotent: no rows match on re-run.
+-- ============================================================
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetType'             WHERE Name = 'CaptureData.DatasetType';
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.ItemPositionType'        WHERE Name = 'CaptureData.ItemPositionType';
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.FocusType'               WHERE Name = 'CaptureData.FocusType';
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.LightSourceType'         WHERE Name = 'CaptureData.LightSourceType';
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.BackgroundRemovalMethod' WHERE Name = 'CaptureData.BackgroundRemovalMethod';
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.ClusterType'             WHERE Name = 'CaptureData.ClusterType';
+UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetUse'              WHERE Name = 'CaptureData.DatasetUse';

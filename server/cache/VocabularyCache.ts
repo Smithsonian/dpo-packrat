@@ -59,13 +59,13 @@ export class VocabularyCache {
             let eVocabSetEnum: COMMON.eVocabularySetID = COMMON.eVocabularySetID.eNone;
             switch (vocabularySet.Name) {
                 case 'CaptureData.CaptureMethod':               eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataCaptureMethod; break;
-                case 'CaptureData.DatasetType':                 eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetType; break;
-                case 'CaptureData.DatasetUse':                  eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetUse; break;
-                case 'CaptureData.ItemPositionType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataItemPositionType; break;
-                case 'CaptureData.FocusType':                   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFocusType; break;
-                case 'CaptureData.LightSourceType':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataLightSourceType; break;
-                case 'CaptureData.BackgroundRemovalMethod':     eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod; break;
-                case 'CaptureData.ClusterType':                 eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataClusterType; break;
+                case 'CaptureDataPhoto.DatasetType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetType; break;
+                case 'CaptureDataPhoto.DatasetUse':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetUse; break;
+                case 'CaptureDataPhoto.ItemPositionType':       eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataItemPositionType; break;
+                case 'CaptureDataPhoto.FocusType':              eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFocusType; break;
+                case 'CaptureDataPhoto.LightSourceType':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataLightSourceType; break;
+                case 'CaptureDataPhoto.BackgroundRemovalMethod': eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod; break;
+                case 'CaptureDataPhoto.ClusterType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataClusterType; break;
                 case 'CaptureDataFile.VariantType':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFileVariantType; break;
                 case 'Model.CreationMethod':                    eVocabSetEnum = COMMON.eVocabularySetID.eModelCreationMethod; break;
                 case 'Model.Modality':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelModality; break;
