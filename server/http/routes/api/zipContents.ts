@@ -74,7 +74,7 @@ export async function getZipContents(req: Request, res: Response): Promise<void>
 
     // Authorize against the SystemObject that owns the AssetVersion.
     const ctx = Authorization.getContext();
-    if (ctx && resolved.idSystemObject && !await Authorization.canAccessSystemObject(ctx, resolved.idSystemObject)) {
+    if (!ctx || !resolved.idSystemObject || !await Authorization.canAccessSystemObject(ctx, resolved.idSystemObject)) {
         res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
         return;
     }

@@ -1025,6 +1025,30 @@ class IngestDataWorker extends ResolverBase {
      *     row alongside actual photogrammetry data. A CaptureData with no
      *     child records yet (just a stale type) is safe to convert.
      */
+    // Validate the user-supplied volumetric fields against sane ranges. The
+    // inventory facts (fileCount, sliceCount, contentType, dimensionsZ) are NOT
+    // checked here — they are system-derived from inspection, not user input.
+    // This defends direct GraphQL calls that bypass the client's Yup validation.
+    private validateVolumeUserFields(volume: IngestVolumeInput): string | null {
+        const isPos = (n: number | null | undefined): boolean => typeof n === 'number' && n > 0;
+        const isNonNegOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (typeof n === 'number' && n >= 0);
+        const isPosIntOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (Number.isInteger(n) && (n as number) > 0);
+        const isNonNegIntOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (Number.isInteger(n) && (n as number) >= 0);
+
+        if (!isPos(volume.modality)) return 'Modality is required';
+        if (!isPos(volume.scanType)) return 'Scan Type is required';
+        if (!isPos(volume.voxelSizeUnit)) return 'Voxel Size Unit is required';
+        if (!(volume.voxelSizeX > 0 && volume.voxelSizeY > 0 && volume.voxelSizeZ > 0)) return 'Voxel sizes must be greater than zero';
+        if (!isNonNegOrEmpty(volume.voltageKV)) return 'Voltage (kV) must not be negative';
+        if (!isNonNegOrEmpty(volume.amperageUA)) return 'Amperage (µA) must not be negative';
+        if (!isNonNegIntOrEmpty(volume.dimensionsX)) return 'Dimensions X must be a non-negative integer';
+        if (!isNonNegIntOrEmpty(volume.dimensionsY)) return 'Dimensions Y must be a non-negative integer';
+        if (!isPosIntOrEmpty(volume.bitDepth)) return 'Bit Depth must be a positive integer';
+        if (volume.filterLocation !== null && volume.filterLocation !== undefined && !isPos(volume.filterLocation)) return 'Filter Location is invalid';
+        if (volume.specimenPreparation !== null && volume.specimenPreparation !== undefined && !isPos(volume.specimenPreparation)) return 'Specimen Preparation is invalid';
+        return null;
+    }
+
     private async createVolumeObjects(volume: IngestVolumeInput): Promise<boolean> {
         const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric);
         if (!vocabulary) {
@@ -1032,44 +1056,43 @@ class IngestDataWorker extends ResolverBase {
             return false;
         }
 
-        // Cross-check the submitted fileCount against the inspection result. Inspection
-        // counts ZIP central-directory entries directly, so a divergence here means the
-        // form value was edited (by UI bug, admin tooling, or tampering). Refuse — the
-        // form is intended to be read-only for fileCount.
+        // Volumetric ingest requires a completed inspection: the inventory facts
+        // (fileCount, sliceCount, contentType, dimensionsZ) are read from the ZIP
+        // bytes at upload time and are authoritative — the user never supplies them.
+        // Mirrors the model path, which requires its Cook inspection output.
         const inspection: VOL.JobVolumeInspectOutput | null = await VOL.JobVolumeInspectOutput.extractFromAssetVersion(volume.idAssetVersion);
-        if (inspection?.metadata && inspection.metadata.fileCount !== volume.fileCount) {
-            RK.logError(RK.LogSection.eGQL,'create volume objects failed','submitted fileCount does not match inspection result',
-                { idAssetVersion: volume.idAssetVersion, submittedFileCount: volume.fileCount, inspectionFileCount: inspection.metadata.fileCount },
-                'GraphQL.Ingestion.Data');
-            await this.appendToWFReport(`Cannot ingest volumetric data: submitted fileCount (${volume.fileCount}) does not match inspection (${inspection.metadata.fileCount}).`, true);
+        if (!inspection || !inspection.success || !inspection.metadata) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed','no completed volume inspection for asset version',{ idAssetVersion: volume.idAssetVersion, volume },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport('Cannot ingest volumetric data: a completed inspection is required (none found for this upload).', true);
+            return false;
+        }
+        const meta: VOL.VolumeExtractedMetadata = inspection.metadata;
+
+        // Content type is determined by the ZIP bytes, not the user. Map the
+        // inspected content type to its vocabulary id; a successful inspection is
+        // always IMAGE_STACK or DICOM (OTHER fails inspection upstream).
+        const contentTypeEnum: COMMON.eVocabularyID | null =
+            meta.contentType === 'DICOM' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM :
+                meta.contentType === 'IMAGE_STACK' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack : null;
+        const idVContentType: number | undefined = contentTypeEnum !== null ? await CACHE.VocabularyCache.vocabularyEnumToId(contentTypeEnum) : undefined;
+        if (!idVContentType) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed','inspected content type is not ingestable',{ contentType: meta.contentType, idAssetVersion: volume.idAssetVersion },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport(`Cannot ingest volumetric data: inspected content type "${meta.contentType}" is not a supported volumetric type.`, true);
             return false;
         }
 
-        // Content-type vs. ZIP contents cross-check. The user picks ContentType in
-        // the form, but the ZIP itself unambiguously tells us whether it holds DICOM
-        // instances or an image stack. Refuse the mismatch (DICOM zip + user picked
-        // "Image Stack", or vice versa) so we don't write a row whose metadata is a
-        // lie about its bytes. We trust the inspection result over re-opening the
-        // ZIP since inspection already opened it at upload time.
-        if (inspection?.metadata) {
-            const expectedContentTypeEnum: COMMON.eVocabularyID | null =
-                inspection.metadata.contentType === 'DICOM' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM :
-                    inspection.metadata.contentType === 'IMAGE_STACK' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack : null;
-            if (expectedContentTypeEnum !== null) {
-                const expectedIdV: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(expectedContentTypeEnum);
-                if (expectedIdV !== undefined && volume.contentType !== expectedIdV) {
-                    const submittedTerm = await termForVocabId(volume.contentType);
-                    const expectedTerm = await termForVocabId(expectedIdV);
-                    RK.logError(RK.LogSection.eGQL,'create volume objects failed','ContentType does not match ZIP contents',
-                        { idAssetVersion: volume.idAssetVersion, submittedContentType: submittedTerm, expectedContentType: expectedTerm,
-                            zipContentType: inspection.metadata.contentType },
-                        'GraphQL.Ingestion.Data');
-                    await this.appendToWFReport(
-                        `Cannot ingest volumetric data: selected Content Type "${submittedTerm}" does not match ZIP contents (expected "${expectedTerm}").`, true);
-                    return false;
-                }
-            }
+        // Validate user-supplied fields against sane ranges.
+        const volumeFieldError: string | null = this.validateVolumeUserFields(volume);
+        if (volumeFieldError) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed',volumeFieldError,{ volume },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport(`Cannot ingest volumetric data: ${volumeFieldError}`, true);
+            return false;
         }
+
+        // Authoritative, system-derived inventory fields (never trusted from the form).
+        const authFileCount: number = meta.fileCount;
+        const authSliceCount: number = meta.sliceCount;
+        const authDimensionsZ: number = meta.dimensionsZ ?? meta.sliceCount;
 
         let idCaptureData: number = 0;
         if (volume.idAsset) {
@@ -1142,7 +1165,7 @@ class IngestDataWorker extends ResolverBase {
             volumeDB = existingVolume;
             volumeDB.idVModality = volume.modality;
             volumeDB.idVScanType = volume.scanType;
-            volumeDB.idVContentType = volume.contentType;
+            volumeDB.idVContentType = idVContentType;                            // authoritative (from inspection)
             volumeDB.ScannerMakeModel = volume.scannerMakeModel ?? null;
             volumeDB.VoltageKV = volume.voltageKV ?? null;
             volumeDB.AmperageUA = volume.amperageUA ?? null;
@@ -1151,12 +1174,12 @@ class IngestDataWorker extends ResolverBase {
             volumeDB.VoxelSizeY = volume.voxelSizeY;
             volumeDB.VoxelSizeZ = volume.voxelSizeZ;
             volumeDB.idVVoxelSizeUnit = volume.voxelSizeUnit;
-            volumeDB.DimensionsX = volume.dimensionsX ?? null;
-            volumeDB.DimensionsY = volume.dimensionsY ?? null;
-            volumeDB.DimensionsZ = volume.dimensionsZ ?? null;
-            volumeDB.BitDepth = volume.bitDepth ?? null;
-            volumeDB.FileCount = volume.fileCount;
-            volumeDB.SliceCount = volume.sliceCount ?? null;
+            volumeDB.DimensionsX = volume.dimensionsX ?? null;                   // system-derived, user-editable
+            volumeDB.DimensionsY = volume.dimensionsY ?? null;                   // system-derived, user-editable
+            volumeDB.DimensionsZ = authDimensionsZ;                              // authoritative (from inspection)
+            volumeDB.BitDepth = volume.bitDepth ?? null;                        // system-derived, user-editable
+            volumeDB.FileCount = authFileCount;                                 // authoritative (from inspection)
+            volumeDB.SliceCount = authSliceCount;                               // authoritative (from inspection)
             volumeDB.idVFilterLocation = volume.filterLocation ?? null;
         } else {
             volumeDB = new DBAPI.CaptureDataVolume({
@@ -1164,7 +1187,7 @@ class IngestDataWorker extends ResolverBase {
                 idCaptureData: CDDB.idCaptureData,
                 idVModality: volume.modality,
                 idVScanType: volume.scanType,
-                idVContentType: volume.contentType,
+                idVContentType,                                                  // authoritative (from inspection)
                 ScannerMakeModel: volume.scannerMakeModel ?? null,
                 VoltageKV: volume.voltageKV ?? null,
                 AmperageUA: volume.amperageUA ?? null,
@@ -1173,23 +1196,37 @@ class IngestDataWorker extends ResolverBase {
                 VoxelSizeY: volume.voxelSizeY,
                 VoxelSizeZ: volume.voxelSizeZ,
                 idVVoxelSizeUnit: volume.voxelSizeUnit,
-                DimensionsX: volume.dimensionsX ?? null,
-                DimensionsY: volume.dimensionsY ?? null,
-                DimensionsZ: volume.dimensionsZ ?? null,
-                BitDepth: volume.bitDepth ?? null,
-                FileCount: volume.fileCount,
-                SliceCount: volume.sliceCount ?? null,
+                DimensionsX: volume.dimensionsX ?? null,                         // system-derived, user-editable
+                DimensionsY: volume.dimensionsY ?? null,                         // system-derived, user-editable
+                DimensionsZ: authDimensionsZ,                                    // authoritative (from inspection)
+                BitDepth: volume.bitDepth ?? null,                              // system-derived, user-editable
+                FileCount: authFileCount,                                       // authoritative (from inspection)
+                SliceCount: authSliceCount,                                     // authoritative (from inspection)
                 idVFilterLocation: volume.filterLocation ?? null,
             });
         }
-        const volumeRes: boolean = existingVolume ? await volumeDB.update() : await volumeDB.create();
+        let volumeRes: boolean = existingVolume ? await volumeDB.update() : await volumeDB.create();
+        if (!volumeRes && !existingVolume) {
+            // Concurrent ingest may have created the row first (UNIQUE on idCaptureData).
+            // Re-fetch; if present, switch to updating that row instead of failing.
+            const racedVolume: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(CDDB.idCaptureData);
+            if (racedVolume) {
+                volumeDB.idCaptureDataVolume = racedVolume.idCaptureDataVolume;
+                volumeRes = await volumeDB.update();
+            }
+        }
         if (!volumeRes) {
             RK.logError(RK.LogSection.eGQL,'create volume objects failed',`unable to ${existingVolume ? 'update' : 'create'} CaptureDataVolume`,{ volume },'GraphQL.Ingestion.Data');
+            // Compensating cleanup: if we created a new CaptureData above, retire it so a
+            // failed ingest does not leave an active orphan with no child volume row.
+            if (!updateCD) await DBAPI.SystemObject.retireSystemObject(CDDB);
             return false;
         }
 
-        if (!await this.handleIdentifiers(CDDB, volume.systemCreated, volume.identifiers))
+        if (!await this.handleIdentifiers(CDDB, volume.systemCreated, volume.identifiers)) {
+            if (!updateCD) await DBAPI.SystemObject.retireSystemObject(CDDB);
             return false;
+        }
 
         if (volume.sourceObjects && volume.sourceObjects.length > 0) {
             for (const sourceObject of volume.sourceObjects) {
@@ -1342,7 +1379,18 @@ class IngestDataWorker extends ResolverBase {
                 continue;
             }
 
-            for (const asset of ingestAssetRes.assets || []) {
+            // A volumetric ZIP must promote to exactly one asset — the unzip whitelist
+            // intentionally excludes the volumetric asset type. More than one asset here
+            // means the ZIP was cracked open (e.g. mis-stamped asset type upstream),
+            // which would contradict CompressedMultipleFiles:true. Fail loudly.
+            const promotedAssets = ingestAssetRes.assets || [];
+            if (promotedAssets.length !== 1) {
+                RK.logError(RK.LogSection.eGQL,'create volume derived objects failed',`expected exactly one promoted asset for a volumetric ZIP, found ${promotedAssets.length} — ZIP must not be cracked`,{ idAssetVersion, assetCount: promotedAssets.length },'GraphQL.Ingestion.Data');
+                res = false;
+                continue;
+            }
+
+            for (const asset of promotedAssets) {
                 const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
                     idCaptureData: SOOwner.idCaptureData,
                     idAsset: asset.idAsset,
@@ -2451,8 +2499,3 @@ export function isValidParentChildRelationship(parent: COMMON.eSystemObjectType,
 }
 
 const maximumConnections = (relationships: ExistingRelationship[], objectType: COMMON.eSystemObjectType, limit: number) => relationships.filter(relationship => relationship.objectType === objectType).length < limit;
-
-async function termForVocabId(idVocabulary: number): Promise<string> {
-    const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabulary(idVocabulary);
-    return vocab?.Term ?? `idV=${idVocabulary}`;
-}

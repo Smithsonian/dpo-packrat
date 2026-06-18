@@ -130,7 +130,7 @@ function Volume(props: VolumeProps): React.ReactElement {
             }
             if (m.contentType && volume.contentType === null) {
                 const ctEntries = getEntries(eVocabularySetID.eCaptureDataVolumeContentType);
-                const targetTerm = m.contentType === 'TIFF_STACK' ? 'TIFF Stack' : m.contentType === 'DICOM' ? 'DICOM' : 'Other';
+                const targetTerm = m.contentType === 'IMAGE_STACK' ? 'Image Stack' : m.contentType === 'DICOM' ? 'DICOM' : 'Other';
                 const match = ctEntries.find(e => e.Term === targetTerm);
                 if (match) updateMetadataField(metadataIndex, 'contentType', match.idVocabulary, MetadataType.volume);
             }

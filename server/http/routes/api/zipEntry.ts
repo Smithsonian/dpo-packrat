@@ -10,6 +10,13 @@
  * central directory, must not contain `..` or backslash, and must not start
  * with `/`. Any failure of these checks → 400 with a generic message
  * (no internal-path disclosure).
+ *
+ * Response convention: unlike the sibling JSON endpoints (zip-contents,
+ * volume-inspection, capture-data/latest-zip), which return 200 + { success:false }
+ * for app-level failures, this route is consumed directly as a browser <a href>
+ * (download / preview) and is never parsed by client JS. It therefore uses real
+ * HTTP status codes (400/401/403/404/500) so the browser surfaces a failure as an
+ * error rather than "downloading" a JSON error blob. The success path streams bytes.
  */
 import * as H from '../../../utils/helpers';
 import * as path from 'path';
@@ -77,7 +84,7 @@ export async function getZipEntry(req: Request, res: Response): Promise<void> {
     }
 
     const ctx = Authorization.getContext();
-    if (ctx && resolved.idSystemObject && !await Authorization.canAccessSystemObject(ctx, resolved.idSystemObject)) {
+    if (!ctx || !resolved.idSystemObject || !await Authorization.canAccessSystemObject(ctx, resolved.idSystemObject)) {
         res.status(403).send(AUTH_ERROR.ACCESS_DENIED);
         return;
     }

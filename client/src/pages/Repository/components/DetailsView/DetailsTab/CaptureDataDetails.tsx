@@ -412,7 +412,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                             <TableBody>
                                 {renderVolumeSelectRow('Modality', 'modality', eVocabularySetID.eCaptureDataVolumeModality, false)}
                                 {renderVolumeSelectRow('Scan Type', 'scanType', eVocabularySetID.eCaptureDataVolumeScanType, false)}
-                                {renderVolumeSelectRow('Content Type', 'contentType', eVocabularySetID.eCaptureDataVolumeContentType, false)}
+                                {renderVolumeSelectRow('Content Type', 'contentType', eVocabularySetID.eCaptureDataVolumeContentType, false, undefined, true)}
                                 {renderVolumeTextRow('Scanner Make/Model', 'scannerMakeModel')}
                                 {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any')}
                                 {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any')}
@@ -423,10 +423,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeNumberRow('Voxel Size Z', 'voxelSizeZ', 'any')}
                                 {renderVolumeNumberRow('Dimensions X', 'dimensionsX')}
                                 {renderVolumeNumberRow('Dimensions Y', 'dimensionsY')}
-                                {renderVolumeNumberRow('Dimensions Z', 'dimensionsZ')}
+                                {renderVolumeNumberRow('Dimensions Z', 'dimensionsZ', undefined, true)}
                                 {renderVolumeNumberRow('Bit Depth', 'bitDepth')}
-                                {renderVolumeNumberRow('File Count', 'fileCount')}
-                                {renderVolumeNumberRow('Slice Count', 'sliceCount')}
+                                {renderVolumeNumberRow('File Count', 'fileCount', undefined, true)}
+                                {renderVolumeNumberRow('Slice Count', 'sliceCount', undefined, true)}
                                 {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
                             </TableBody>
                         </Table>
@@ -638,7 +638,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         </Box>
     );
 
-    function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean, tooltip?: string): JSX.Element {
+    function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean, tooltip?: string, readOnly: boolean = false): JSX.Element {
         const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
         const entries = optional
             ? getNullableSelectEntries(getEntries(vocabSet), 'idVocabulary', 'Term')
@@ -651,7 +651,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 </TableCell>
                 <TableCell className={classes.tableCell}>
                     <Select
-                        disabled={disabled}
+                        disabled={disabled || readOnly}
                         value={value ?? (optional ? -1 : '')}
                         name={fieldName}
                         onChange={setIdField}
@@ -667,7 +667,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         );
     }
 
-    function renderVolumeNumberRow(label: string, fieldName: string, step?: string): JSX.Element {
+    function renderVolumeNumberRow(label: string, fieldName: string, step?: string, readOnly: boolean = false): JSX.Element {
         const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
         return (
             <TableRow className={classes.tableRow} key={fieldName}>
@@ -681,7 +681,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                         name={fieldName}
                         value={value === null || value === undefined ? '' : value}
                         onChange={setFloatField}
-                        disabled={disabled}
+                        disabled={disabled || readOnly}
                         debounceTimeout={400}
                         className={clsx(classes.input, classes.datasetFieldInput)}
                         style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}

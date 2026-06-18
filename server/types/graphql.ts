@@ -342,6 +342,7 @@ export type CaptureDataVolume = {
   VFilterLocation?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
   VScanType?: Maybe<Vocabulary>;
+  VSpecimenPreparation?: Maybe<Vocabulary>;
   VVoxelSizeUnit?: Maybe<Vocabulary>;
   VoltageKV?: Maybe<Scalars['Float']>;
   VoxelSizeX: Scalars['Float'];

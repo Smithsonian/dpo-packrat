@@ -819,6 +819,10 @@ UPDATE Vocabulary SET Term = 'Volumetric' WHERE idVocabularySet = 1 AND Term = '
 -- New entries in existing sets
 -- Note: 'Capture Data Set: Volumetric' (set 20) is added below in the
 -- AssetType reorder block so the insert and reorder land in one operation.
+-- The trailing `-- NNN` values in this section are indicative only: idVocabulary
+-- is AUTO_INCREMENT and assigned at apply time from the current MAX, so actual
+-- values vary by environment. Code resolves these terms by Term + VocabularySet.Name
+-- (see VocabularyCache), never by hardcoded id, so the exact numbers are not relied upon.
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');               -- 215
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');                          -- 216
 

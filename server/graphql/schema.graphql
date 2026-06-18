@@ -305,6 +305,7 @@ type CaptureDataVolume {
   VFilterLocation: Vocabulary
   VModality: Vocabulary
   VScanType: Vocabulary
+  VSpecimenPreparation: Vocabulary
   VVoxelSizeUnit: Vocabulary
   VoltageKV: Float
   VoxelSizeX: Float!

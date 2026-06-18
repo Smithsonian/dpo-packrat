@@ -278,7 +278,6 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         datasetUse,
                         modality,
                         scanType,
-                        contentType,
                         scannerMakeModel,
                         voltageKV,
                         amperageUA,
@@ -289,10 +288,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         voxelSizeUnit,
                         dimensionsX,
                         dimensionsY,
-                        dimensionsZ,
                         bitDepth,
-                        fileCount,
-                        sliceCount,
                         filterLocation,
                     } = data.CaptureData;
 
@@ -349,23 +345,22 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     } else {
                         const CDV: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(CaptureData.idCaptureData);
                         if (CDV) {
+                            // System-derived inventory fields (idVContentType, FileCount,
+                            // SliceCount, DimensionsZ) are set from inspection at ingest and
+                            // change only when a new ZIP is re-ingested — not editable here.
                             if (modality !== null && modality !== undefined) CDV.idVModality = modality;
                             if (scanType !== null && scanType !== undefined) CDV.idVScanType = scanType;
-                            if (contentType !== null && contentType !== undefined) CDV.idVContentType = contentType;
                             if (voxelSizeUnit !== null && voxelSizeUnit !== undefined) CDV.idVVoxelSizeUnit = voxelSizeUnit;
                             if (voxelSizeX !== null && voxelSizeX !== undefined) CDV.VoxelSizeX = voxelSizeX;
                             if (voxelSizeY !== null && voxelSizeY !== undefined) CDV.VoxelSizeY = voxelSizeY;
                             if (voxelSizeZ !== null && voxelSizeZ !== undefined) CDV.VoxelSizeZ = voxelSizeZ;
-                            if (fileCount !== null && fileCount !== undefined) CDV.FileCount = fileCount;
                             CDV.ScannerMakeModel = maybe<string>(scannerMakeModel);
                             CDV.VoltageKV = maybe<number>(voltageKV);
                             CDV.AmperageUA = maybe<number>(amperageUA);
                             CDV.idVSpecimenPreparation = maybe<number>(specimenPreparation);
                             CDV.DimensionsX = maybe<number>(dimensionsX);
                             CDV.DimensionsY = maybe<number>(dimensionsY);
-                            CDV.DimensionsZ = maybe<number>(dimensionsZ);
                             CDV.BitDepth = maybe<number>(bitDepth);
-                            CDV.SliceCount = maybe<number>(sliceCount);
                             CDV.idVFilterLocation = maybe<number>(filterLocation);
                             if (!await CDV.update())
                                 return sendResult(false,'update object details failed',`Unable to update CaptureDataVolume with id ${CDV.idCaptureData}; update failed`);

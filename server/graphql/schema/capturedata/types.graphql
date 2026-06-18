@@ -82,4 +82,5 @@ type CaptureDataVolume {
     VContentType: Vocabulary
     VVoxelSizeUnit: Vocabulary
     VFilterLocation: Vocabulary
+    VSpecimenPreparation: Vocabulary
 }

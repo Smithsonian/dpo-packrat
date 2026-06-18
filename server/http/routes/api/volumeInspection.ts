@@ -70,7 +70,7 @@ export async function getVolumeInspection(req: Request, res: Response): Promise<
         return;
     }
     const ctx = Authorization.getContext();
-    if (ctx && asset.idSystemObject && !await Authorization.canAccessSystemObject(ctx, asset.idSystemObject)) {
+    if (!ctx || !asset.idSystemObject || !await Authorization.canAccessSystemObject(ctx, asset.idSystemObject)) {
         res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
         return;
     }

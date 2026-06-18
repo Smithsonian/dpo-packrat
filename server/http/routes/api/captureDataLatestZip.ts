@@ -53,7 +53,7 @@ export async function getCaptureDataLatestZip(req: Request, res: Response): Prom
     }
 
     const ctx = Authorization.getContext();
-    if (ctx && !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
+    if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject)) {
         res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
         return;
     }
