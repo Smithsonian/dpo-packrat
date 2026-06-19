@@ -202,8 +202,10 @@ describe('JobVolumeInspect — fatal failure paths', () => {
         await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/Stage 1/);
     });
 
-    test('Cross-check failure: .pca declares wrong slice count', async () => {
+    test('Cross-check mismatch: .pca wrong slice count is a warning, not fatal', async () => {
         const zipPath: string = await stageFixture('volume-test-pca-mismatch.zip');
-        await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/Stage 5|cross-check/i);
+        const md: VolumeExtractedMetadata = await inspectVolumeZip(zipPath, tempStaging);
+        // The ZIP contents are authoritative; a sidecar that disagrees warns but does not fail.
+        expect(md.warnings.some(w => /sidecar declares/i.test(w))).toBe(true);
     });
 });

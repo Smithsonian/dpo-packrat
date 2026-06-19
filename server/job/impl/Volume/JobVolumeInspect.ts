@@ -57,16 +57,20 @@ function imageSubtypeForEntry(entry: string): 'TIFF' | 'JPEG' | 'PNG' | null {
 }
 
 /**
- * Stage 4b per-slice validation gate. Defaults to enabled; deployments can
- * disable it by setting PACKRAT_VOLUME_PER_SLICE_VALIDATION to "false" or "0".
- * Anything else (unset, "true", "1", or any other value) leaves validation on.
+ * Stage 4b per-slice validation gate. Defaults to DISABLED — per-slice header
+ * parsing is O(N) and can be very slow on large stacks. Enable it by setting
+ * PACKRAT_VOLUME_PER_SLICE_VALIDATION to "true" or "1"; any other value (unset,
+ * "false", "0") leaves it off.
  */
 function isPerSliceValidationEnabled(): boolean {
     const raw: string | undefined = process.env.PACKRAT_VOLUME_PER_SLICE_VALIDATION;
-    if (!raw) return true;
+    if (!raw) return false;
     const normalized: string = raw.trim().toLowerCase();
-    return !(normalized === 'false' || normalized === '0');
+    return normalized === 'true' || normalized === '1';
 }
+
+const INSPECT_TEMP_PREFIX = '__inspect_';
+const STALE_TEMP_MS = 6 * 60 * 60 * 1000;   // 6h — comfortably longer than any inspection
 
 const setImmediateAsync = promisify(setImmediate);
 
@@ -186,37 +190,67 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
         if (allEntries.length === 0 || fileEntries.length === 0)
             throw new Error('Stage 1 (archive pre-flight): ZIP is empty');
 
+        // Best-effort: remove stale inspection temp files left in this staging dir by a
+        // previously-crashed inspection. Normal runs unlink their own temps in finally;
+        // this catches the crash case so __inspect_* files don't accumulate.
+        await sweepStaleInspectTemps(stagingDir);
+
         // Stage 1: content-type detection. Image-stack covers TIFF, JPEG and
         // PNG slice formats under a single contentType — the per-slice subtype
         // is recovered from each entry's extension when we sample headers.
-        const imageStackEntries: string[] = fileEntries.filter(e => IMAGE_STACK_EXT_REGEX.test(e)).sort();
-        const dicomEntries: string[] = fileEntries.filter(e => DICOM_EXT_REGEX.test(e) || /DICOMDIR$/i.test(e)).sort();
+        const warnings: string[] = [];
+
+        const imageEntries: string[] = fileEntries.filter(e => IMAGE_STACK_EXT_REGEX.test(e)).sort();
+        const dicomSliceEntries: string[] = fileEntries.filter(e => DICOM_EXT_REGEX.test(e)).sort();
+        const hasDicomDir: boolean = fileEntries.some(e => /(^|\/)DICOMDIR$/i.test(e));
 
         let contentType: VolumeContentType;
-        if (imageStackEntries.length > 0) contentType = 'IMAGE_STACK';
-        else if (dicomEntries.length > 0) contentType = 'DICOM';
+        if (imageEntries.length > 0) contentType = 'IMAGE_STACK';
+        else if (dicomSliceEntries.length > 0 || hasDicomDir) contentType = 'DICOM';
         else contentType = 'OTHER';
 
         if (contentType === 'OTHER')
             throw new Error('Stage 1 (archive pre-flight): no image slices or DICOM instances found — user selected Volumetric but ZIP contains no recognizable scan data');
 
-        // Stage 2: file inventory
-        const sliceEntries: string[] = contentType === 'IMAGE_STACK' ? imageStackEntries : dicomEntries;
+        // Stage 2: file inventory. Determine the slice set robustly so neither the
+        // slice count nor the Z dimension is inflated by non-slice files:
+        //   - DICOM: slices are the .dcm instances only; DICOMDIR is an index file.
+        //   - Image stack: slices are the dominant image subtype. Off-format images
+        //     (a thumbnail.png beside a TIFF stack, a scan-sheet photo) are companions.
+        let sliceEntries: string[];
+        if (contentType === 'IMAGE_STACK') {
+            const bySubtype = new Map<string, string[]>();
+            for (const e of imageEntries) {
+                const st: string = imageSubtypeForEntry(e) ?? 'OTHER';
+                const arr: string[] | undefined = bySubtype.get(st);
+                if (arr) arr.push(e); else bySubtype.set(st, [e]);
+            }
+            let dominant: string[] = [];
+            for (const group of bySubtype.values())
+                if (group.length > dominant.length) dominant = group;
+            sliceEntries = dominant.sort();
+            const excluded: number = imageEntries.length - sliceEntries.length;
+            if (excluded > 0)
+                warnings.push(`${excluded} off-format image file(s) treated as companions, not slices`);
+        } else {
+            sliceEntries = dicomSliceEntries;
+        }
         const sliceCount: number = sliceEntries.length;
         const fileCount: number = fileEntries.length;
-        const warnings: string[] = [];
 
-        // Duplicate-filename detection (different paths, same basename)
-        const seenNames = new Map<string, number>();
+        // Duplicate-entry detection keyed on the full relative path. The same basename
+        // in different directories (multi-series seriesA/0001.dcm vs seriesB/0001.dcm)
+        // is legitimate and must not be flagged.
+        const seenPaths = new Map<string, number>();
         for (const entry of fileEntries) {
-            const base: string = path.basename(entry).toLowerCase();
-            seenNames.set(base, (seenNames.get(base) ?? 0) + 1);
+            const key: string = entry.toLowerCase();
+            seenPaths.set(key, (seenPaths.get(key) ?? 0) + 1);
         }
-        for (const [name, count] of seenNames)
+        for (const [name, count] of seenPaths)
             if (count > 1)
-                warnings.push(`Duplicate filename appears ${count}x: ${name}`);
+                warnings.push(`Duplicate entry appears ${count}x: ${name}`);
 
-        // Sequence-numbering continuity (warn-only)
+        // Sequence-numbering continuity (warn-only, grouped per directory)
         checkSequenceContinuity(sliceEntries, warnings);
 
         // Stage 3: sidecar parse
@@ -253,22 +287,26 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
         // header bytes via streamContent + image-size / exiftool. Same order
         // of magnitude as the existing duplicate-filename scan.
         //
-        // Always on by default. Set PACKRAT_VOLUME_PER_SLICE_VALIDATION=false
-        // (or 0) to skip — useful for very large ZIPs or when investigating
-        // unrelated inspection issues without paying the per-slice cost.
+        // Off by default (O(N) header parses are costly on large stacks). Enable
+        // with PACKRAT_VOLUME_PER_SLICE_VALIDATION=true (or 1) to validate every
+        // slice's header.
         if (contentType === 'IMAGE_STACK' && isPerSliceValidationEnabled()) {
             await validateImageStackSlices(zip, sliceEntries, headerData, stagingDir, warnings);
         }
 
-        // Stage 5: cross-check + companion file tagging
+        // Stage 5: cross-check + companion file tagging. The slice count and
+        // dimensions found in the ZIP are authoritative; a vendor sidecar that
+        // disagrees is reported as a warning but does NOT fail ingest. Sidecars
+        // frequently count projections/darks or use a different convention, so a
+        // mismatch is informational — we always use the values found in the ZIP.
         if (sidecarResult.declaredSliceCount !== undefined && sidecarResult.declaredSliceCount !== sliceCount)
-            throw new Error(`Stage 5 (cross-check): sidecar declares ${sidecarResult.declaredSliceCount} slices but ZIP contains ${sliceCount}`);
+            warnings.push(`Sidecar declares ${sidecarResult.declaredSliceCount} slices but ZIP contains ${sliceCount} (using ${sliceCount})`);
         if (sidecarResult.declaredDimensionsX !== undefined && headerData.dimensionsX !== undefined
             && sidecarResult.declaredDimensionsX !== headerData.dimensionsX)
-            throw new Error(`Stage 5 (cross-check): sidecar declares dimensionsX=${sidecarResult.declaredDimensionsX} but header reports ${headerData.dimensionsX}`);
+            warnings.push(`Sidecar declares dimensionsX=${sidecarResult.declaredDimensionsX} but header reports ${headerData.dimensionsX} (using ${headerData.dimensionsX})`);
         if (sidecarResult.declaredDimensionsY !== undefined && headerData.dimensionsY !== undefined
             && sidecarResult.declaredDimensionsY !== headerData.dimensionsY)
-            throw new Error(`Stage 5 (cross-check): sidecar declares dimensionsY=${sidecarResult.declaredDimensionsY} but header reports ${headerData.dimensionsY}`);
+            warnings.push(`Sidecar declares dimensionsY=${sidecarResult.declaredDimensionsY} but header reports ${headerData.dimensionsY} (using ${headerData.dimensionsY})`);
 
         const scanSheetPaths: string[] = fileEntries.filter(e => SCAN_SHEET_REGEX.test(path.basename(e)));
         const scanLogPaths: string[] = fileEntries.filter(e => SCAN_LOG_REGEX.test(path.basename(e)));
@@ -342,19 +380,30 @@ async function extractEntryToStaging(zip: ZipFile, entry: string, stagingDir: st
     }
 }
 
-/** Warn-only check that slice filenames have a numeric component that increments without gaps. */
+/**
+ * Warn-only check that slice filenames have a numeric component that increments
+ * without gaps. Grouped per parent directory so interleaved multi-series stacks
+ * (seriesA/1,2 + seriesB/1,2) are each treated as their own clean sequence rather
+ * than producing false gaps.
+ */
 function checkSequenceContinuity(sliceEntries: string[], warnings: string[]): void {
-    const numbers: number[] = [];
+    const byDir = new Map<string, number[]>();
     for (const entry of sliceEntries) {
         const match: RegExpMatchArray | null = path.basename(entry).match(/(\d+)(?=\.[^.]+$)/);
-        if (match) numbers.push(parseInt(match[1], 10));
+        if (!match) continue;
+        const dir: string = path.dirname(entry);
+        const n: number = parseInt(match[1], 10);
+        const arr: number[] | undefined = byDir.get(dir);
+        if (arr) arr.push(n); else byDir.set(dir, [n]);
     }
-    if (numbers.length < 2) return;
-    numbers.sort((a, b) => a - b);
-    for (let i = 1; i < numbers.length; i++) {
-        if (numbers[i] !== numbers[i - 1] + 1) {
-            warnings.push(`Slice sequence has gap between ${numbers[i - 1]} and ${numbers[i]}`);
-            return;
+    for (const [dir, numbers] of byDir) {
+        if (numbers.length < 2) continue;
+        numbers.sort((a, b) => a - b);
+        for (let i = 1; i < numbers.length; i++) {
+            if (numbers[i] !== numbers[i - 1] + 1) {
+                warnings.push(`Slice sequence has a gap in ${dir || '.'} between ${numbers[i - 1]} and ${numbers[i]}`);
+                break;
+            }
         }
     }
 }
@@ -543,6 +592,30 @@ async function pipelineToFile(stream: NodeJS.ReadableStream, destPath: string): 
 
 async function unlinkSafe(filePath: string): Promise<void> {
     try { await fs.unlink(filePath); } catch { /* tolerate already-gone */ }
+}
+
+/**
+ * Remove inspection temp files (`__inspect_*`) older than STALE_TEMP_MS from a
+ * staging directory. Normal runs unlink their own temps; this reaps the ones a
+ * crashed inspection left behind so they don't accumulate. Best-effort: any
+ * read/stat/unlink error is tolerated.
+ */
+async function sweepStaleInspectTemps(dir: string): Promise<void> {
+    let names: string[];
+    try {
+        names = await fs.readdir(dir);
+    } catch {
+        return;     // staging dir missing/unreadable — nothing to sweep
+    }
+    const now: number = Date.now();
+    for (const name of names) {
+        if (!name.startsWith(INSPECT_TEMP_PREFIX)) continue;
+        const full: string = path.join(dir, name);
+        try {
+            const st = await fs.stat(full);
+            if (now - st.mtimeMs > STALE_TEMP_MS) await fs.unlink(full);
+        } catch { /* tolerate races / already-gone */ }
+    }
 }
 
 // #endregion

@@ -164,8 +164,11 @@ export class WorkflowUtil {
 
     /**
      * Volumetric inspection workflow. Mirrors `computeModelMetrics` but dispatches
-     * the local `eJobJobTypeVolumeInspect` job via `eWorkflowTypeJob`. The 10-minute
-     * timeout is a safety net — sync local inspection typically completes in seconds.
+     * the local `eJobJobTypeVolumeInspect` job via `eWorkflowTypeJob`. The timeout is
+     * a generous safety net (hours, like Cook jobs): most inspections finish quickly,
+     * but a large image stack with per-slice validation enabled can take a long time,
+     * and active work should not be killed. A proper idle/heartbeat timeout is tracked
+     * as future work in PLAN_FIXES_CAPTUREDATA.
      *
      * Populating `idSystemObject` with the AssetVersion's idSystemObject is what
      * lets `WorkflowEngine.createDBObjects` create the `WorkflowStepSystemObjectXref`
@@ -201,7 +204,7 @@ export class WorkflowUtil {
             return { success: false, error: `${fileName} unable to create Volume Inspect workflow` };
         }
 
-        const results: H.IOResults = await workflow.waitForCompletion(10 * 60 * 1000); // 10 minutes
+        const results: H.IOResults = await workflow.waitForCompletion(4 * 60 * 60 * 1000); // 4 hours
         if (!results.success) {
             RK.logError(RK.LogSection.eWF,'compute volume metrics failed',`post-upload error: ${results.error}`, { fileName },'Workflow.Util');
             return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };

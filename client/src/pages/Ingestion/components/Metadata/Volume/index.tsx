@@ -20,7 +20,7 @@
  */
 import { Box, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableRow, Tooltip, Typography } from '@material-ui/core';
 import { DebounceInput } from 'react-debounce-input';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AssetIdentifiers, DateInputField } from '../../../../../components';
 import { MetadataType, StateIdentifier, useMetadataStore, useRepositoryStore, useSubjectStore, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
@@ -86,55 +86,48 @@ function Volume(props: VolumeProps): React.ReactElement {
             updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.volume);
     }, [metadataIndex, idAsset, updateMetadataField]);
 
-    // Pre-fill from inspection on mount. Empty fields stay empty so the user
-    // can see what was extracted vs what was not; required-field validation
-    // enforces critical values before submit.
+    // Pre-fill from inspection, re-derived once per uploaded asset version. When
+    // the user uploads a corrected ZIP (a new version), the new inspection's
+    // values overwrite the previous ones — mirroring how a model/scene update
+    // re-derives metadata from the new bytes. The ref guards re-runs so user
+    // edits made within a single version are preserved. Fields the inspection
+    // could not derive are left as-is for the user to complete.
+    const lastAutofillVersion = useRef<number | null>(null);
     useEffect(() => {
         const idAssetVersion = parseFileId(metadata.file.id);
-        if (!idAssetVersion) return;
+        if (!idAssetVersion || lastAutofillVersion.current === idAssetVersion) return;
 
         async function loadAutofill(): Promise<void> {
             const result = await API.getVolumetricInspectionResults(idAssetVersion);
             if (!result.success || !result.data) return;
+            lastAutofillVersion.current = idAssetVersion;       // applied once per version
 
             const m = result.data;
-            if (m.fileCount !== undefined && volume.fileCount === null)
-                updateMetadataField(metadataIndex, 'fileCount', m.fileCount, MetadataType.volume);
-            if (m.sliceCount !== undefined && volume.sliceCount === null)
-                updateMetadataField(metadataIndex, 'sliceCount', m.sliceCount, MetadataType.volume);
-            if (m.dimensionsX !== undefined && volume.dimensionsX === null)
-                updateMetadataField(metadataIndex, 'dimensionsX', m.dimensionsX, MetadataType.volume);
-            if (m.dimensionsY !== undefined && volume.dimensionsY === null)
-                updateMetadataField(metadataIndex, 'dimensionsY', m.dimensionsY, MetadataType.volume);
-            if (m.dimensionsZ !== undefined && volume.dimensionsZ === null)
-                updateMetadataField(metadataIndex, 'dimensionsZ', m.dimensionsZ, MetadataType.volume);
-            if (m.bitDepth !== undefined && volume.bitDepth === null)
-                updateMetadataField(metadataIndex, 'bitDepth', m.bitDepth, MetadataType.volume);
-            if (m.voxelSizeX !== undefined && volume.voxelSizeX === null)
-                updateMetadataField(metadataIndex, 'voxelSizeX', m.voxelSizeX, MetadataType.volume);
-            if (m.voxelSizeY !== undefined && volume.voxelSizeY === null)
-                updateMetadataField(metadataIndex, 'voxelSizeY', m.voxelSizeY, MetadataType.volume);
-            if (m.voxelSizeZ !== undefined && volume.voxelSizeZ === null)
-                updateMetadataField(metadataIndex, 'voxelSizeZ', m.voxelSizeZ, MetadataType.volume);
-            if (m.voltageKV !== undefined && volume.voltageKV === null)
-                updateMetadataField(metadataIndex, 'voltageKV', m.voltageKV, MetadataType.volume);
-            if (m.amperageUA !== undefined && volume.amperageUA === null)
-                updateMetadataField(metadataIndex, 'amperageUA', m.amperageUA, MetadataType.volume);
-            if (m.scannerMakeModel !== undefined && volume.scannerMakeModel === '')
-                updateMetadataField(metadataIndex, 'scannerMakeModel', m.scannerMakeModel, MetadataType.volume);
+            if (m.fileCount !== undefined) updateMetadataField(metadataIndex, 'fileCount', m.fileCount, MetadataType.volume);
+            if (m.sliceCount !== undefined) updateMetadataField(metadataIndex, 'sliceCount', m.sliceCount, MetadataType.volume);
+            if (m.dimensionsX !== undefined) updateMetadataField(metadataIndex, 'dimensionsX', m.dimensionsX, MetadataType.volume);
+            if (m.dimensionsY !== undefined) updateMetadataField(metadataIndex, 'dimensionsY', m.dimensionsY, MetadataType.volume);
+            if (m.dimensionsZ !== undefined) updateMetadataField(metadataIndex, 'dimensionsZ', m.dimensionsZ, MetadataType.volume);
+            if (m.bitDepth !== undefined) updateMetadataField(metadataIndex, 'bitDepth', m.bitDepth, MetadataType.volume);
+            if (m.voxelSizeX !== undefined) updateMetadataField(metadataIndex, 'voxelSizeX', m.voxelSizeX, MetadataType.volume);
+            if (m.voxelSizeY !== undefined) updateMetadataField(metadataIndex, 'voxelSizeY', m.voxelSizeY, MetadataType.volume);
+            if (m.voxelSizeZ !== undefined) updateMetadataField(metadataIndex, 'voxelSizeZ', m.voxelSizeZ, MetadataType.volume);
+            if (m.voltageKV !== undefined) updateMetadataField(metadataIndex, 'voltageKV', m.voltageKV, MetadataType.volume);
+            if (m.amperageUA !== undefined) updateMetadataField(metadataIndex, 'amperageUA', m.amperageUA, MetadataType.volume);
+            if (m.scannerMakeModel !== undefined) updateMetadataField(metadataIndex, 'scannerMakeModel', m.scannerMakeModel, MetadataType.volume);
 
-            if (m.voxelSizeUnit && volume.voxelSizeUnit === null) {
+            if (m.voxelSizeUnit) {
                 const unitEntries = getEntries(eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit);
                 const match = unitEntries.find(e => e.Term === m.voxelSizeUnit);
                 if (match) updateMetadataField(metadataIndex, 'voxelSizeUnit', match.idVocabulary, MetadataType.volume);
             }
-            if (m.contentType && volume.contentType === null) {
+            if (m.contentType) {
                 const ctEntries = getEntries(eVocabularySetID.eCaptureDataVolumeContentType);
                 const targetTerm = m.contentType === 'IMAGE_STACK' ? 'Image Stack' : m.contentType === 'DICOM' ? 'DICOM' : 'Other';
                 const match = ctEntries.find(e => e.Term === targetTerm);
                 if (match) updateMetadataField(metadataIndex, 'contentType', match.idVocabulary, MetadataType.volume);
             }
-            if (m.modality && volume.modality === null) {
+            if (m.modality) {
                 // DICOM Modality (0008,0060) is a coarse 2–4 char code. Map to the
                 // closest Packrat vocabulary term. "CT" defaults to "Micro CT"
                 // because that's the most common use case at SI; user can change.
