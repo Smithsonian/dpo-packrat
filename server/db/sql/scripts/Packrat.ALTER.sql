@@ -814,12 +814,12 @@ UPDATE Vocabulary SET Term = 'Volumetric' WHERE idVocabularySet = 1 AND Term = '
 -- Job.JobType (set 21): Volume Inspect.
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
 SELECT 21, 14, 'Volume Inspect'
-WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 21 AND Term = 'Volume Inspect');
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 21 AND Term = 'Volume Inspect');
 
 -- Workflow.Type (set 22): Job.
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
 SELECT 22, 5, 'Job'
-WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 22 AND Term = 'Job');
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 22 AND Term = 'Job');
 
 -- Job entity row backing the Volume Inspect job type. The INSERT seeds
 -- fresh environments; the UPDATE backfills Name where the JobEngine
@@ -841,39 +841,39 @@ INSERT IGNORE INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUE
   (37, 'CaptureDataVolume.SpecimenPreparation', 1);
 
 -- Modality (set 32).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 1, 'Medical CT'  WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Medical CT');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 2, 'Micro CT'    WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Micro CT');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 3, 'Nano CT'     WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Nano CT');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 4, 'Synchrotron' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Synchrotron');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 5, 'MRI'         WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='MRI');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 1, 'Medical CT'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Medical CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 2, 'Micro CT'    FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Micro CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 3, 'Nano CT'     FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Nano CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 4, 'Synchrotron' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Synchrotron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 5, 'MRI'         FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='MRI');
 
 -- ScanType (set 33).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 33, 1, 'Raw'           WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=33 AND Term='Raw');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 33, 2, 'Reconstructed' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=33 AND Term='Reconstructed');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 33, 1, 'Raw'           FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=33 AND Term='Raw');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 33, 2, 'Reconstructed' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=33 AND Term='Reconstructed');
 
 -- ContentType (set 34).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 1, 'Image Stack' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='Image Stack');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 2, 'DICOM'       WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='DICOM');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 3, 'Other'       WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 1, 'Image Stack' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='Image Stack');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 2, 'DICOM'       FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='DICOM');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 3, 'Other'       FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='Other');
 
 -- FilterLocation (set 35).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 1, 'None'          WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='None');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 2, 'Source Side'   WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Source Side');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 3, 'Detector Side' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Detector Side');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 4, 'Both'          WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Both');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 1, 'None'          FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='None');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 2, 'Source Side'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Source Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 3, 'Detector Side' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Detector Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 4, 'Both'          FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Both');
 
 -- VoxelSizeUnit (set 36).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 1, 'Micrometer' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Micrometer');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 2, 'Millimeter' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Millimeter');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 1, 'Micrometer' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Micrometer');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 2, 'Millimeter' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Millimeter');
 
 -- SpecimenPreparation (set 37).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 1, 'Fluid-preserved' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Fluid-preserved');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 2, 'Dry'      WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Dry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 3, 'Stained'  WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Stained');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 4, 'Frozen'   WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Frozen');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 5, 'Embedded' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Embedded');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 6, 'Live'     WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Live');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 7, 'Other'    WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 1, 'Fluid-preserved' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Fluid-preserved');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 2, 'Dry'      FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Dry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 3, 'Stained'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Stained');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 4, 'Frozen'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Frozen');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 5, 'Embedded' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Embedded');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 6, 'Live'     FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Live');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 7, 'Other'    FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Other');
 
 -- CaptureDataVolume: 1:1 with CaptureData via UNIQUE on idCaptureData.
 CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
@@ -917,7 +917,7 @@ CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
 -- Metadata.MetadataSource (set 18): Volumetric, alongside Bulk Ingestion and Image.
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
 SELECT 18, 3, 'Volumetric'
-WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 18 AND Term = 'Volumetric');
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 18 AND Term = 'Volumetric');
 
 -- Asset.AssetType (set 20): Capture Data Set: Volumetric at SortOrder 8, with
 -- the trailing entries shifted down by one. SortOrder is non-unique, so
@@ -935,7 +935,7 @@ UPDATE Vocabulary SET SortOrder = 9  WHERE idVocabularySet = 20 AND Term = 'Capt
 UPDATE Vocabulary SET SortOrder = 8  WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric';
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
 SELECT 20, 8, 'Capture Data Set: Volumetric'
-WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric');
+FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric');
 
 -- ============================================================
 -- 2026-06-22 CaptureDataPhoto vocabulary refinements (Eric)
