@@ -1,11 +1,11 @@
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (1, 'CaptureData.CaptureMethod', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (2, 'CaptureData.DatasetType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (3, 'CaptureData.ItemPositionType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (4, 'CaptureData.FocusType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (5, 'CaptureData.LightSourceType', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (6, 'CaptureData.BackgroundRemovalMethod', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (7, 'CaptureData.ClusterType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (2, 'CaptureDataPhoto.DatasetType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (3, 'CaptureDataPhoto.ItemPositionType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (4, 'CaptureDataPhoto.FocusType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (5, 'CaptureDataPhoto.LightSourceType', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (6, 'CaptureDataPhoto.BackgroundRemovalMethod', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (7, 'CaptureDataPhoto.ClusterType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (8, 'CaptureDataFile.VariantType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (9, 'Model.CreationMethod', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (10, 'Model.Modality', 1);
@@ -28,12 +28,12 @@ INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (26, 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (27, 'Edan.3DResourceType', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (28, 'Edan.3DResourceCategory', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (29, 'Edan.MDMFields', 1);
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureData.DatasetUse', 1);
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (30, 'CaptureDataPhoto.DatasetUse', 1);
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (31, 'Model.Variant', 1);
 
 -- Keep the order of VocabularySet items in sync with the order of Vocabulary items, which makes use of idVocabularySet
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 1, 'Photogrammetry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 2, 'CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 2, 'Volumetric');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 3, 'Structured Light');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 4, 'Laser Line');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (1, 5, 'Spherical Laser');
@@ -246,6 +246,70 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 2, 'Recons
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (30, 3, 'Texture Generation');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 1, 'Raw Clean');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (31, 2, 'Presentation');
+
+-- ============================================================
+-- Volumetric Capture Data support — INSERT order matches Packrat.ALTER.sql
+-- exactly so a fresh DB build produces identical idVocabulary values to a
+-- production DB that has had the volumetric ALTER applied. Do not insert new
+-- vocab rows above this block — that would shift these IDs and break parity
+-- with downstream environments.
+-- ============================================================
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (32, 'CaptureDataVolume.Modality', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 1, 'Medical CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 2, 'Micro CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 3, 'Nano CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 4, 'Synchrotron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 5, 'MRI');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (33, 'CaptureDataVolume.ScanType', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 1, 'Raw');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 2, 'Reconstructed');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (34, 'CaptureDataVolume.ContentType', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 1, 'Image Stack');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 2, 'DICOM');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 3, 'Other');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (35, 'CaptureDataVolume.FilterLocation', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 1, 'None');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 2, 'Source Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 3, 'Detector Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 4, 'Both');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (36, 'CaptureDataVolume.VoxelSizeUnit', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 1, 'Micrometer');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 2, 'Millimeter');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (37, 'CaptureDataVolume.SpecimenPreparation', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 1, 'Fluid-preserved');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 2, 'Dry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 3, 'Stained');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 4, 'Frozen');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 5, 'Embedded');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 6, 'Live');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 7, 'Other');
+
+-- MetadataSource: Volumetric — moved out of inline position (set 18 SortOrder 3)
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 3, 'Volumetric');
+
+-- AssetType: Capture Data Set: Volumetric inserted with high SortOrder, then
+-- UPDATEs place it at SortOrder 8 next to the other Capture Data Set entries.
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (20, 18, 'Capture Data Set: Volumetric');
+
+UPDATE Vocabulary SET SortOrder = 18 WHERE idVocabularySet = 20 AND Term = 'Other';
+UPDATE Vocabulary SET SortOrder = 17 WHERE idVocabularySet = 20 AND Term = 'Attachment';
+UPDATE Vocabulary SET SortOrder = 16 WHERE idVocabularySet = 20 AND Term = 'Intermediary File';
+UPDATE Vocabulary SET SortOrder = 15 WHERE idVocabularySet = 20 AND Term = 'Project Documentation';
+UPDATE Vocabulary SET SortOrder = 14 WHERE idVocabularySet = 20 AND Term = 'Scene';
+UPDATE Vocabulary SET SortOrder = 13 WHERE idVocabularySet = 20 AND Term = 'Model UV Map File';
+UPDATE Vocabulary SET SortOrder = 12 WHERE idVocabularySet = 20 AND Term = 'Model Geometry File';
+UPDATE Vocabulary SET SortOrder = 11 WHERE idVocabularySet = 20 AND Term = 'Model';
+UPDATE Vocabulary SET SortOrder = 10 WHERE idVocabularySet = 20 AND Term = 'Capture Data File';
+UPDATE Vocabulary SET SortOrder = 9 WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Other';
+UPDATE Vocabulary SET SortOrder = 8 WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric';
 
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 SELECT idVocabulary INTO @idVocabEdanRecordID FROM Vocabulary WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
@@ -705,6 +769,7 @@ INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term,
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-asset';
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: si-voyager-scene';
 INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Cook: unwrap';
+INSERT INTO Job (idVJobType, Name, Status, Frequency) SELECT idVocabulary, Term, 1, NULL FROM Vocabulary WHERE Term = 'Volume Inspect';
 
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('CC0, Publishable w/ Downloads', 'CC0, Publishable w/ Downloads', 10);
 INSERT INTO License (Name, Description, RestrictLevel) VALUES ('SI ToU, Publishable w/ Downloads', 'SI ToU, Publishable w/ Downloads', 20);

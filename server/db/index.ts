@@ -19,6 +19,7 @@ export * from './api/CaptureDataGroup';
 export * from './api/CaptureDataFile';
 export * from './api/CaptureDataGroupCaptureDataXref';
 export * from './api/CaptureDataPhoto';
+export * from './api/CaptureDataVolume';
 export * from './api/Contact';
 export * from './api/CookResource';
 export * from './api/ExternalSource';

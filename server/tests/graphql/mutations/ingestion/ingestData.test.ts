@@ -16,6 +16,7 @@ import {
     IngestProjectInput
 } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
+import * as CACHE from '../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { Asset, AssetVersion } from '@prisma/client';
 import * as DBAPI from '../../../../db';
@@ -181,7 +182,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             folders: [folder],
                             sourceObjects: [],
                             derivedObjects: [],
-                            datasetUse: '[207,208,209]', // indices into Vocabulary for: alignment, reconstruction, and texture generation
+                            datasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON(),
                         };
 
                         const ingestDataInput = {
@@ -192,7 +193,8 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             model: [],
                             scene: [],
                             other: [],
-                            sceneAttachment: []
+                            sceneAttachment: [],
+                            volume: []
                         };
 
                         const result = await graphQLApi.ingestData(ingestDataInput, context);

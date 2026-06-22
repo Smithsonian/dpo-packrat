@@ -1,0 +1,36 @@
+[General]
+Version=2.4.0.1843
+Comment=
+SystemName=Packrat Test GE Phoenix v|tome|x m CT
+
+[Geometry]
+FDD=807.13534640
+FOD=402.58093750
+Magnification=2.00490205
+VoxelSizeX=0.09975550
+VoxelSizeY=0.09975550
+
+[CT]
+Type=0
+NumberImages=2876
+
+[Image]
+DimX=2014
+DimY=2024
+
+[Detector]
+Name=dxr-250
+NrPixelsX=2024
+NrPixelsY=2024
+BitPP=16
+
+[Warmup]
+Enable=1
+kV=215
+Time=60
+
+[Xray]
+Name=xs|240 d
+Voltage=210
+Current=200
+Filter=0.1 mm Cu

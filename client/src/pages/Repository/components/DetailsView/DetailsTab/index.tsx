@@ -36,6 +36,7 @@ import AssetDetails from './AssetDetails';
 import AssetVersionDetails from './AssetVersionDetails';
 import AssetVersionsTable from './AssetVersionsTable';
 import CaptureDataDetails from './CaptureDataDetails';
+import { CaptureDataZipContents } from './CaptureDataZipContents';
 import IntermediaryFileDetails from './IntermediaryFileDetails';
 import ItemDetails from './ItemDetails';
 import ModelDetails from './ModelDetails';
@@ -63,7 +64,8 @@ const useStyles = makeStyles(({ palette }) => ({
         backgroundColor: fade(palette.primary.main, 0.25),
     },
     tabpanel: {
-        backgroundColor: fade(palette.primary.main, 0.25),
+        backgroundColor: '#fff',
+        backgroundImage: 'linear-gradient(rgba(0, 121, 196, 0.15), rgba(0, 121, 196, 0.15))',
     },
     assetOwner: {
         display: 'flex',
@@ -315,7 +317,10 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
             tabs = ['Assets', 'Details', 'Related', 'Versions', 'Metadata'];
             tabPanels = (
                 <React.Fragment>
-                    {AssetDetailsTableTab(0, idSystemObject, eSystemObjectType.eCaptureData)}
+                    <TabPanel value={tab} index={0} id='tab-0'>
+                        <AssetGrid idSystemObject={idSystemObject} systemObjectType={eSystemObjectType.eCaptureData} onUploaderOpen={onUploaderOpen} parentRetired={parentRetired} refreshTick={refreshTick} />
+                        <CaptureDataZipContents idSystemObject={idSystemObject} />
+                    </TabPanel>
                     <TabPanel value={tab} index={1} id='tab-0'>
                         <CaptureDataDetails {...detailsProps} />
                     </TabPanel>
@@ -458,7 +463,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
 
     return (
         <Box display='flex' flex={1} flexDirection='column' mt={2} style={{ width: '41rem' }}>
-            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='primary' onChange={handleTabChange} aria-label='detailsTab'>
+            <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='inherit' onChange={handleTabChange} aria-label='detailsTab'>
                 {tabs.map((tab: string, index: number) => (
                     <StyledTab key={index} label={tab} aria-label={tab} />
                 ))}
@@ -485,9 +490,13 @@ function TabPanel(props: any): React.ReactElement {
 
 const StyledTab = withStyles(({ palette }) => ({
     root: {
-        color: palette.background.paper,
+        color: '#608fd3',
         '&:focus': {
             opacity: 1
+        },
+        '&.Mui-selected': {
+            color: palette.primary.main,
+            fontWeight: 'bold'
         }
     }
 }))((props: TabProps) => <Tab disableRipple {...props} />);

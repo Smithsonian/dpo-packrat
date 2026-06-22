@@ -746,6 +746,14 @@ export class IndexSolr implements NAV.IIndexer {
             if (variantTypeSet.size > 0)
                 doc.CDVariantType = [...variantTypeSet];
         }
+
+        const captureDataVolume: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(captureData.idCaptureData);
+        if (captureDataVolume) {
+            doc.CDVolumeModality = await this.lookupVocabulary(captureDataVolume.idVModality);
+            doc.CDVolumeContentType = await this.lookupVocabulary(captureDataVolume.idVContentType);
+            doc.CDVolumeScanType = await this.lookupVocabulary(captureDataVolume.idVScanType);
+            doc.CDVolumeSpecimenPreparation = await this.lookupVocabulary(captureDataVolume.idVSpecimenPreparation);
+        }
         this.countCaptureData++;
         return true;
     }

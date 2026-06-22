@@ -182,6 +182,7 @@ export class WorkflowUpload implements WF.IWorkflow {
 
             // see if the passed in file is a model
             const isModel: boolean = await this.testIfModel(assetVersion.FileName, asset);
+            const isVolume: boolean = await this.testIfVolume(assetVersion.FileName, asset);
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
             if (!RSR.success || !RSR.readStream || !RSR.fileName)
@@ -192,6 +193,11 @@ export class WorkflowUpload implements WF.IWorkflow {
             if (isModel) {
                 // if we're a model, zipped or not, validate the entire file/collection as is:
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
+            } else if (isVolume) {
+                // Volumetric ZIP — inspect as a single archive. Must precede the
+                // generic ZIP-cracking branch below or the archive would be unzipped
+                // and validated entry-by-entry, defeating the point.
+                fileRes = await this.validateFileVolume(RSR.fileName, idSystemObject);
             } else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') { // not a zip
                 // we are not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
@@ -318,6 +324,25 @@ export class WorkflowUpload implements WF.IWorkflow {
                 return true;
         }
         return false;
+    }
+
+    private async testIfVolume(_fileName: string, asset: DBAPI.Asset): Promise<boolean> {
+        const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        return eAssetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric;
+    }
+
+    private async validateFileVolume(fileName: string, idSystemObject: number): Promise<H.IOResults> {
+        // Volumetric assets must be ZIP archives. Reject early with a clear message
+        // rather than failing inside ZipFile.load on a non-ZIP byte 0.
+        if (path.extname(fileName).toLowerCase() !== '.zip')
+            return this.handleError(`Volumetric assets must be ZIP archives; got ${fileName}`);
+
+        const results: H.IOResults = await WorkflowUtil.computeVolumeMetrics(fileName, idSystemObject,
+            this.workflowParams.idProject, this.workflowParams.idUserInitiator);
+        if (!results.success)
+            return this.handleError(results.error ?? '');
+        this.appendToWFReport(`Upload validated ${fileName}${results.error ? ': ' + results.error : ''}`);
+        return results;
     }
 
     private async appendToWFReport(message: string, isError?: boolean | undefined): Promise<H.IOResults> {

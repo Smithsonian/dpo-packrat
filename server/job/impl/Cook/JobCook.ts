@@ -12,7 +12,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { Actor } from '../../../audit/Actor';
 import { withActor } from '../../../audit/resolveActor';
 import { v4 as uuidv4 } from 'uuid';
-import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions } from 'webdav';
+import { AuthType, createClient, WebDAVClient, CreateWriteStreamOptions, CreateReadStreamOptions, FileStat } from 'webdav';
 import { Writable, Readable } from 'stream';
 import axios, { AxiosResponse, AxiosError } from 'axios';
 import { Semaphore, Mutex, MutexInterface, withTimeout, E_TIMEOUT, E_CANCELED } from 'async-mutex';
@@ -568,13 +568,13 @@ export abstract class JobCook<T> extends JobPackrat {
                     withCredentials: false
                 });
 
-                // DEBUG: make sure we have a file to get and its size
-                // TODO: more robust support with alt type
-                // const stat = await webdavClient.stat(destination);
-                // const fileSize = (stat as FileStat).size;
-                // LOG.info(`fetchFile file size: ${fileSize} | ${destination}`,LOG.LS.eDEBUG);
-                // if(fileSize <= 0)
-                //     throw new Error(`destination file doesn't exist or is empty. (${fileSize} bytes | ${destination})`);
+                // verify the file exists and is non-empty before opening a read stream, so a
+                // missing or empty Cook output fails fast here instead of mid-pipe downstream
+                const stat: FileStat = await webdavClient.stat(destination) as FileStat;
+                const fileSize: number = stat.size;
+                RK.logInfo(RK.LogSection.eJOB,'fetch file','fetch file size',{ fileSize, destination, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                if (fileSize <= 0)
+                    throw new Error(`destination file doesn't exist or is empty. (${fileSize} bytes | ${destination})`);
 
                 const webdavWSOpts: CreateReadStreamOptions = {
                     headers: { 'Content-Type': 'application/octet-stream' }

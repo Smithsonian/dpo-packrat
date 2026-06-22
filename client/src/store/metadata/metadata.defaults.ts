@@ -4,7 +4,7 @@
  * Default field definitions for the metadata store.
  */
 import * as yup from 'yup';
-import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields, eSubtitleOption } from './metadata.types';
+import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields, VolumeFields, eSubtitleOption } from './metadata.types';
 import { eSystemObjectType } from '@dpo-packrat/common';
 
 const MAX_INTEGER = 2147483647;
@@ -76,7 +76,7 @@ export const defaultPhotogrammetryFields: PhotogrammetryFields = {
     description: '',
     dateCaptured: new Date(),
     datasetType: null,
-    datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+    datasetUse: '[]', // Seeded dynamically by the Photogrammetry form's useEffect when datasetType becomes Photogrammetry Image Set. Resolves Alignment / Reconstruction / TextureGeneration via getVocabularyId at runtime.
     datasetFieldId: null,
     itemPositionType: null,
     itemPositionFieldId: null,
@@ -330,6 +330,67 @@ export const sceneAttachmentFieldsSchema = yup.object().shape({
     identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation)
 });
 
+export const defaultVolumeFields: VolumeFields = {
+    systemCreated: true,
+    identifiers: [],
+    sourceObjects: [],
+    derivedObjects: [],
+    name: '',
+    description: '',
+    dateCaptured: new Date(),
+    modality: null,
+    scanType: null,
+    contentType: null,
+    scannerMakeModel: '',
+    voltageKV: null,
+    amperageUA: null,
+    specimenPreparation: null,
+    voxelSizeX: null,
+    voxelSizeY: null,
+    voxelSizeZ: null,
+    voxelSizeUnit: null,
+    dimensionsX: null,
+    dimensionsY: null,
+    dimensionsZ: null,
+    bitDepth: null,
+    fileCount: null,
+    sliceCount: null,
+    filterLocation: null,
+    directory: '',
+    updateNotes: '',
+    idAsset: 0
+};
+
+export const volumeFieldsSchemaUpdate = yup.object().shape({
+    systemCreated: yup.boolean().required(),
+    name: yup.string().required('Name cannot be empty'),
+    dateCaptured: yup.date().required(),
+    modality: yup.number().typeError('Please select a modality').required('Please select a modality'),
+    scanType: yup.number().typeError('Please select a scan type').required('Please select a scan type'),
+    contentType: yup.number().typeError('Please select a content type').required('Please select a content type'),
+    scannerMakeModel: yup.string(),
+    voltageKV: yup.number().nullable(true).typeError('Voltage must be a number').positive('Voltage must be positive'),
+    amperageUA: yup.number().nullable(true).typeError('Amperage must be a number').positive('Amperage must be positive'),
+    specimenPreparation: yup.number().nullable(true),
+    voxelSizeX: yup.number().typeError('Voxel size X is required').required('Voxel size X is required').positive('Voxel size must be positive'),
+    voxelSizeY: yup.number().typeError('Voxel size Y is required').required('Voxel size Y is required').positive('Voxel size must be positive'),
+    voxelSizeZ: yup.number().typeError('Voxel size Z is required').required('Voxel size Z is required').positive('Voxel size must be positive'),
+    voxelSizeUnit: yup.number().typeError('Please select a voxel size unit').required('Please select a voxel size unit'),
+    dimensionsX: yup.number().nullable(true).integer().positive(),
+    dimensionsY: yup.number().nullable(true).integer().positive(),
+    dimensionsZ: yup.number().nullable(true).integer().positive(),
+    bitDepth: yup.number().nullable(true).integer().positive(),
+    fileCount: yup.number().typeError('File count is required').required('File count is required').integer().positive(),
+    sliceCount: yup.number().nullable(true).integer().positive(),
+    filterLocation: yup.number().nullable(true),
+    directory: yup.string(),
+    updateNotes: yup.string().when('idAsset', notesWhenUpdate),
+});
+
+export const volumeFieldsSchema = volumeFieldsSchemaUpdate.shape({
+    identifiers: yup.array().of(identifierSchema).when('systemCreated', identifiersWhenValidation),
+});
+
 export type PhotogrammetrySchemaType = typeof photogrammetryFieldsSchema;
 export type PhotogrammetrySchemaUpdateType = typeof photogrammetryFieldsSchemaUpdate;
 export type ModelSchemaType = typeof modelFieldsSchema;
@@ -338,5 +399,7 @@ export type SceneSchemaType = typeof sceneFieldsSchema;
 export type SceneSchemaUpdateType = typeof sceneFieldsSchemaUpdate;
 export type OtherSchemaType = typeof otherFieldsSchema;
 export type OtherSchemaUpdateType = typeof otherFieldsSchemaUpdate;
+export type VolumeSchemaType = typeof volumeFieldsSchema;
+export type VolumeSchemaUpdateType = typeof volumeFieldsSchemaUpdate;
 
-export type ValidateFieldsSchema = PhotogrammetrySchemaType | PhotogrammetrySchemaUpdateType | ModelSchemaType | ModelSchemaUpdateType | SceneSchemaType | SceneSchemaUpdateType | OtherSchemaType | OtherSchemaUpdateType;
+export type ValidateFieldsSchema = PhotogrammetrySchemaType | PhotogrammetrySchemaUpdateType | ModelSchemaType | ModelSchemaUpdateType | SceneSchemaType | SceneSchemaUpdateType | OtherSchemaType | OtherSchemaUpdateType | VolumeSchemaType | VolumeSchemaUpdateType;

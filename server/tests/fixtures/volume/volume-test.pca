@@ -1,0 +1,8 @@
+[Scan]
+Image Pixel Size (um) = 25
+Source Voltage (kV)   = 100
+Source Current (uA)   = 200000
+Scanner = PackratTest SyntheticCT-1
+Number of Files = 4
+Number of Rows = 16
+Number of Columns = 16

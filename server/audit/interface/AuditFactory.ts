@@ -102,7 +102,18 @@ export class AuditFactory {
                 undefined, payload, 'Audit.Factory', /* audit */ true);
 
             if (DBObjectType === eNonSystemObjectType.eSystemObjectXref && idDBObject) {
-                void AuditFactory.invalidateDerivedFromXref(idDBObject);
+                // The snapshot payload carries idSystemObjectDerived inline,
+                // so invalidate directly rather than re-fetching the xref.
+                // The fetch path runs after DBObject.create() commits, which
+                // can leave the parent Prisma transaction in a closing state
+                // and reject the findUnique with "Transaction already closed".
+                // Reading from the payload sidesteps that race and removes a
+                // redundant DB round-trip on every xref mutation.
+                const derivedID = (args.payload as { row?: { idSystemObjectDerived?: number } } | undefined)?.row?.idSystemObjectDerived;
+                if (typeof derivedID === 'number' && derivedID > 0)
+                    SystemObjectInvalidation.invalidate(derivedID);
+                else
+                    void AuditFactory.invalidateDerivedFromXref(idDBObject);
             } else if (args.idSystemObject) {
                 SystemObjectInvalidation.invalidate(args.idSystemObject);
             }
@@ -343,19 +354,28 @@ export class AuditFactory {
      * Invalidate the derived SystemObject for an xref row. Preserves the
      * cascading-refresh behavior that the retired event consumer used to
      * provide when an xref was created/updated/deleted.
+     *
+     * Fallback path used only when the audit payload does not surface
+     * idSystemObjectDerived directly (the common create-snapshot case is
+     * handled by the inline payload-extraction branch in emit()). The body
+     * is wrapped in setImmediate so the SystemObjectXref.fetch DB call
+     * cannot race the parent Prisma transaction's commit window — same
+     * structural guarantee as SystemObjectInvalidation.invalidate().
      */
-    private static async invalidateDerivedFromXref(idSystemObjectXref: number): Promise<void> {
-        try {
-            // Lazy import to avoid a static cycle through db/api -> connection.
-            const { SystemObjectXref } = await import('../../db/api/SystemObjectXref');
-            const xref = await SystemObjectXref.fetch(idSystemObjectXref);
-            if (xref)
-                SystemObjectInvalidation.invalidate(xref.idSystemObjectDerived);
-        } catch (err) {
-            RK.logError(RK.LogSection.eAUDIT, 'xref invalidation failed',
-                err instanceof Error ? err.message : String(err),
-                { idSystemObjectXref }, 'Audit.Factory');
-        }
+    private static invalidateDerivedFromXref(idSystemObjectXref: number): void {
+        setImmediate(async () => {
+            try {
+                // Lazy import to avoid a static cycle through db/api -> connection.
+                const { SystemObjectXref } = await import('../../db/api/SystemObjectXref');
+                const xref = await SystemObjectXref.fetch(idSystemObjectXref);
+                if (xref)
+                    SystemObjectInvalidation.invalidate(xref.idSystemObjectDerived);
+            } catch (err) {
+                RK.logError(RK.LogSection.eAUDIT, 'xref invalidation failed',
+                    err instanceof Error ? err.message : String(err),
+                    { idSystemObjectXref }, 'Audit.Factory');
+            }
+        });
     }
 
     /**

@@ -48,6 +48,24 @@ const getDetailsTabDataForObject = gql`
                 }
                 isValidData
                 datasetUse
+                modality
+                scanType
+                contentType
+                scannerMakeModel
+                voltageKV
+                amperageUA
+                specimenPreparation
+                voxelSizeX
+                voxelSizeY
+                voxelSizeZ
+                voxelSizeUnit
+                dimensionsX
+                dimensionsY
+                dimensionsZ
+                bitDepth
+                fileCount
+                sliceCount
+                filterLocation
             }
             Model {
                 Model {
@@ -151,6 +169,7 @@ const getDetailsTabDataForObject = gql`
                 idAsset
                 idAssetVersion
                 FilePath
+                FileName
                 StorageHash
             }
             Actor {

@@ -37,6 +37,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderTopRightRadius: '5px',
         borderTopLeftRadius: '5px',
+        border: '1px solid #e0e0e0',
         width: '100%',
         overflowX: 'auto'
     },
@@ -112,6 +113,21 @@ const getMuiTheme = () =>
                     backgroundColor: '#FFFCD1',
                     borderTopRightRadius: '5px',
                     borderTopLeftRadius: '5px'
+                }
+            },
+            MuiTableFooter: {
+                root: {
+                    backgroundColor: '#FFFCD1'
+                }
+            },
+            MuiTablePagination: {
+                root: {
+                    backgroundColor: '#FFFCD1',
+                    borderBottomLeftRadius: '5px',
+                    borderBottomRightRadius: '5px'
+                },
+                toolbar: {
+                    backgroundColor: '#FFFCD1'
                 }
             },
             MuiIconButton: {

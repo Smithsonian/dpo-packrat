@@ -106,8 +106,10 @@ async function runTransactionOnce<T>(fn: () => Promise<T>, timeoutMs: number): P
     // audit rows look identical; everything tx-scoped lives on the child.
     const parent: LocalStore = await ASL.getOrCreateStore();
     const child: LocalStore = parent.forkChildScope();
-    child.auditBuffer = [];
-    child.invalidationQueue = new Set<number>();
+    const auditBuffer: AuditBufferEntry[] = [];
+    const invalidationQueue: Set<number> = new Set<number>();
+    child.auditBuffer = auditBuffer;
+    child.invalidationQueue = invalidationQueue;
 
     return prismaClient.$transaction(async (tx) => {
         // Pin the child LS inside the tx callback. Prisma's $transaction body
@@ -120,7 +122,7 @@ async function runTransactionOnce<T>(fn: () => Promise<T>, timeoutMs: number): P
             const txNumber = await DBConnection.setPrismaTransaction(tx);
             try {
                 const result = await fn();
-                await flushAuditBuffer(tx, child.auditBuffer!);
+                await flushAuditBuffer(tx, auditBuffer);
                 return result;
             } finally {
                 DBConnection.clearPrismaTransaction(txNumber);
@@ -132,7 +134,7 @@ async function runTransactionOnce<T>(fn: () => Promise<T>, timeoutMs: number): P
         maxWait: Math.min(timeoutMs, 10000),
     }).then(async result => {
         // Post-commit invalidation. Runs outside the tx lock window.
-        for (const id of child.invalidationQueue!)
+        for (const id of invalidationQueue)
             SystemObjectInvalidation.invalidate(id);
         return result;
     });

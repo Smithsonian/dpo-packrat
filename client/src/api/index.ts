@@ -111,6 +111,33 @@ export default class API {
         return this.request(uri, { method: 'PATCH', body });
     }
 
+    // volumetric inspection results — returns the JSON produced by JobVolumeInspect
+    // for the given asset version. data is null when no completed inspection exists.
+    static async getVolumetricInspectionResults(idAssetVersion: number): Promise<RequestResponse> {
+        return this.request(`api/asset-version/${idAssetVersion}/volume-inspection`, { method: 'GET' });
+    }
+
+    // zip central-directory listing for an asset version
+    static async getZipContents(idAssetVersion: number): Promise<RequestResponse> {
+        return this.request(`api/zip-contents/${idAssetVersion}`, { method: 'GET' });
+    }
+
+    // resolves the idAssetVersion of the latest ZIP belonging to a CaptureData
+    // SystemObject — null when none is attached. used by the CaptureData details
+    // page to embed a ZipContentsView without the client touching the asset graph.
+    static async getCaptureDataLatestZip(idSystemObject: number): Promise<RequestResponse> {
+        return this.request(`api/capture-data/${idSystemObject}/latest-zip`, { method: 'GET' });
+    }
+
+    // direct URL for streaming a single entry from a ZIP — used as anchor href
+    // for preview / download links rather than fetched here. When download=true,
+    // the server returns Content-Disposition: attachment so the browser saves
+    // the file instead of rendering it inline.
+    static zipEntryUrl(idAssetVersion: number, entryPath: string, download: boolean = false): string {
+        const base = `${API.serverEndpoint()}/api/zip-entry/${idAssetVersion}?path=${encodeURIComponent(entryPath)}`;
+        return download ? `${base}&download=1` : base;
+    }
+
     // validation reports
     static async getReport(type: 'asset-files', date: Date, format: 'csv' | 'json', inline: boolean = false): Promise<RequestResponse> {
 

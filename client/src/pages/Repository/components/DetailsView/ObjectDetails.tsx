@@ -24,14 +24,14 @@ import { getUnitsList } from '../../../Admin/hooks/useAdminView';
 const useStyles = makeStyles(({ palette }) => createStyles({
     detail: {
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         minHeight: 20,
         width: '100%',
         marginBottom: 8
     },
     label: {
         fontWeight: 500,
-        alignSelf: 'center',
+        alignSelf: 'flex-start',
         color: palette.primary.dark
     },
     value: {
@@ -417,13 +417,14 @@ function Detail(props: DetailProps): React.ReactElement {
         if (clickable && idSystemObject)
             content = <NewTabLink to={getDetailsUrlForObject(idSystemObject)}>{content}</NewTabLink>;
     } else if (paths) {
-        content = <React.Fragment>{paths.map((path, index) => {
-            const ciInnner: React.ReactNode = <Typography className={classes.value} key={index}>{path.name || '-'}</Typography>;
-            const ciOuter: React.ReactNode = (clickable && path.idSystemObject)
-                ? <NewTabLink to={getDetailsUrlForObject(path.idSystemObject)} key={index}>{ciInnner}</NewTabLink>
-                : ciInnner;
-            return [(index) ? (<Typography className={classes.value} key={`comma${path.idSystemObject}`}>,&nbsp;</Typography>) : null, ciOuter];
-        })}</React.Fragment>;
+        content = <Box display='flex' flexDirection='column' alignItems='flex-start' style={{ width: '100%' }}>
+            {paths.map((path, index) => {
+                const ciInnner: React.ReactNode = <Typography className={classes.value}>{path.name || '-'}</Typography>;
+                return (clickable && path.idSystemObject)
+                    ? <NewTabLink to={getDetailsUrlForObject(path.idSystemObject)} key={index}>{ciInnner}</NewTabLink>
+                    : <span key={index}>{ciInnner}</span>;
+            })}
+        </Box>;
     }
 
     return (

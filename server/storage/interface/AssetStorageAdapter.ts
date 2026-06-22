@@ -535,6 +535,10 @@ export class AssetStorageAdapter {
         let IAR: IngestAssetResult;
         const isZipFilename: boolean = (path.extname(assetVersion.FileName).toLowerCase() === '.zip');
         const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        // NOTE: eAssetAssetTypeCaptureDataSetVolumetric is intentionally absent from this
+        // whitelist — a volumetric ZIP is stored as a single asset and must never be
+        // cracked open. createVolumeDerivedObjects asserts exactly one promoted asset as a
+        // backstop against accidental cracking. Do not add the volumetric type here.
         const unzipAssets: boolean = allowZipCracking && isZipFilename &&
             (eAssetType == COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry ||
              eAssetType == COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile ||

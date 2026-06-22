@@ -134,8 +134,8 @@ export class AssetVersion extends DBC.DBObject<AssetVersionBase> implements Asse
             let { Version } = this; // may be updated!
 
             // If the asset is now Ingested, and it effectively has no version (0 or null),
-            // we MUST compute the next version number.
-            // Removed '!IngestedOrig' check to prevent state desync issues.
+            // we MUST compute the next version number. We deliberately do not also gate on
+            // '!IngestedOrig' here, which would cause state desync.
             if (Ingested && !Version) {
                 const nextVersion: number | null = await AssetVersion.computeNextVersionNumber(idAsset); /* istanbul ignore next*/
                 if (!nextVersion) {

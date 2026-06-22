@@ -133,6 +133,31 @@ export class ZipFile implements IZip {
         });
     }
 
+    /**
+     * Return both uncompressed and compressed sizes for a single entry. Used by
+     * the ZIP contents listing endpoint so the UI can show actual on-disk size.
+     * Returns null if the entry is not found or the zip is closed.
+     */
+    async getEntryMetadata(entry: string): Promise<{ size: number; compressedSize: number } | null> {
+        return new Promise<{ size: number; compressedSize: number } | null>((resolve) => {
+            if (!this._zip)
+                resolve(null);
+            else {
+                try {
+                    const zipEntry = this._zip.entry(entry);
+                    if (!zipEntry) {
+                        resolve(null);
+                        return;
+                    }
+                    resolve({ size: zipEntry.size, compressedSize: zipEntry.compressedSize });
+                } catch (error) /* istanbul ignore next */ {
+                    RK.logDebug(RK.LogSection.eSYS,'entry metadata',H.Helpers.getErrorString(error),{ fileName: this._fileName, entry },'Utils.ZipFile');
+                    resolve(null);
+                }
+            }
+        });
+    }
+
     private clearState() {
         this._entries = [];
         this._files = [];

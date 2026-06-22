@@ -32,6 +32,21 @@ const getMuiTheme = () =>
                     borderTopLeftRadius: '5px'
                 }
             },
+            MuiTableFooter: {
+                root: {
+                    backgroundColor: 'rgb(255, 255, 224)'
+                }
+            },
+            MuiTablePagination: {
+                root: {
+                    backgroundColor: 'rgb(255, 255, 224)',
+                    borderBottomLeftRadius: '5px',
+                    borderBottomRightRadius: '5px'
+                },
+                toolbar: {
+                    backgroundColor: 'rgb(255, 255, 224)'
+                }
+            },
             MuiIconButton: {
                 root: {
                     border: '0px',
@@ -120,7 +135,7 @@ export const useStyles = makeStyles(({ palette }) => ({
         borderTopLeftRadius: '5px',
         width: 'fit-content',
         minWidth: '400px',
-        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        border: '1px solid #e0e0e0',
         borderRadius: 5
     },
 }));

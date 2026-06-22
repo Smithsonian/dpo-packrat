@@ -16,6 +16,19 @@ enum eCacheTestMode {
     eFlush
 }
 
+// These seven sets carry a CaptureDataPhoto.* DB name while their eVocabularySetID
+// enum keeps the CaptureData* spelling, so the generic enum-from-name derivation
+// used elsewhere in this test does not hold for them.
+const renamedPhotoVocabSets: Set<COMMON.eVocabularySetID> = new Set<COMMON.eVocabularySetID>([
+    COMMON.eVocabularySetID.eCaptureDataDatasetType,
+    COMMON.eVocabularySetID.eCaptureDataDatasetUse,
+    COMMON.eVocabularySetID.eCaptureDataItemPositionType,
+    COMMON.eVocabularySetID.eCaptureDataFocusType,
+    COMMON.eVocabularySetID.eCaptureDataLightSourceType,
+    COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod,
+    COMMON.eVocabularySetID.eCaptureDataClusterType,
+]);
+
 const vocabularyCacheTest = (): void => {
     vocabularyCacheTestWorker(eCacheTestMode.eInitial);
     vocabularyCacheTestWorker(eCacheTestMode.eClear);
@@ -155,10 +168,16 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eAssetAssetTypeOther: testVocabulary(vocabulary, 'Other'); break;
 
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry: testVocabulary(vocabulary, 'Photogrammetry'); break;
-                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodCT: testVocabulary(vocabulary, 'CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric: testVocabulary(vocabulary, 'Volumetric'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodStructuredLight: testVocabulary(vocabulary, 'Structured Light'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodLaserLine: testVocabulary(vocabulary, 'Laser Line'); break;
                     case COMMON.eVocabularyID.eCaptureDataCaptureMethodSphericalLaser: testVocabulary(vocabulary, 'Spherical Laser'); break;
+
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet:     testVocabulary(vocabulary, 'Photogrammetry Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeGreyCardImageSet:           testVocabulary(vocabulary, 'Grey Card Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeColorCardImageSet:          testVocabulary(vocabulary, 'Color Card Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeBackgroundRemovalImageSet:  testVocabulary(vocabulary, 'Background Removal Image Set'); break;
+                    case COMMON.eVocabularyID.eCaptureDataDatasetTypeCalibrationDataset:         testVocabulary(vocabulary, 'Calibration Dataset'); break;
 
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeRaw: testVocabulary(vocabulary, 'Raw'); break;
                     case COMMON.eVocabularyID.eCaptureDataFileVariantTypeProcessed: testVocabulary(vocabulary, 'Processed'); break;
@@ -228,6 +247,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
                     case COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion:    testVocabulary(vocabulary, 'Bulk Ingestion'); break;
                     case COMMON.eVocabularyID.eMetadataMetadataSourceImage:            testVocabulary(vocabulary, 'Image'); break;
+                    case COMMON.eVocabularyID.eMetadataMetadataSourceVolumetric:       testVocabulary(vocabulary, 'Volumetric'); break;
 
                     case COMMON.eVocabularyID.eJobJobTypeCookBake:                     testVocabulary(vocabulary, 'Cook: bake'); break;
                     case COMMON.eVocabularyID.eJobJobTypeCookDecimateUnwrap:           testVocabulary(vocabulary, 'Cook: decimate-unwrap'); break;
@@ -298,6 +318,33 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eEdanMDMFieldsNotesFT:                       testVocabulary(vocabulary, 'Notes (FT)'); break;
                     case COMMON.eVocabularyID.eEdanMDMFieldsPhysicalDescriptionFT:         testVocabulary(vocabulary, 'Physical Description (FT)'); break;
 
+                    case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric:     testVocabulary(vocabulary, 'Capture Data Set: Volumetric'); break;
+                    case COMMON.eVocabularyID.eJobJobTypeVolumeInspect:                    testVocabulary(vocabulary, 'Volume Inspect'); break;
+                    case COMMON.eVocabularyID.eWorkflowTypeJob:                            testVocabulary(vocabulary, 'Job'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityMedicalCT:         testVocabulary(vocabulary, 'Medical CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityMicroCT:           testVocabulary(vocabulary, 'Micro CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityNanoCT:            testVocabulary(vocabulary, 'Nano CT'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalitySynchrotron:       testVocabulary(vocabulary, 'Synchrotron'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeModalityMRI:               testVocabulary(vocabulary, 'MRI'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeScanTypeRaw:               testVocabulary(vocabulary, 'Raw'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeScanTypeReconstructed:     testVocabulary(vocabulary, 'Reconstructed'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack:     testVocabulary(vocabulary, 'Image Stack'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM:          testVocabulary(vocabulary, 'DICOM'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeContentTypeOther:          testVocabulary(vocabulary, 'Other'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationNone:        testVocabulary(vocabulary, 'None'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide:  testVocabulary(vocabulary, 'Source Side'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide: testVocabulary(vocabulary, 'Detector Side'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth:        testVocabulary(vocabulary, 'Both'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer:   testVocabulary(vocabulary, 'Micrometer'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter:   testVocabulary(vocabulary, 'Millimeter'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFluidPreserved: testVocabulary(vocabulary, 'Fluid-preserved'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationDry:    testVocabulary(vocabulary, 'Dry'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationStained: testVocabulary(vocabulary, 'Stained'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFrozen: testVocabulary(vocabulary, 'Frozen'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded: testVocabulary(vocabulary, 'Embedded'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive:   testVocabulary(vocabulary, 'Live'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther:  testVocabulary(vocabulary, 'Other'); break;
+
                     case COMMON.eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested COMMON.eVocabularyID enum ${COMMON.eVocabularyID[eVocabID]}`).toBeFalsy(); break;
                 }
@@ -331,7 +378,6 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 const vocabularySet: DBAPI.VocabularySet | undefined = await VocabularyCache.vocabularySetByEnum(eVocabSetID);
 
                 switch (eVocabSetID) {
-                    case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
                     case COMMON.eVocabularySetID.eCaptureDataDatasetType:
                     case COMMON.eVocabularySetID.eCaptureDataDatasetUse:
                     case COMMON.eVocabularySetID.eCaptureDataItemPositionType:
@@ -339,6 +385,13 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eCaptureDataLightSourceType:
                     case COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod:
                     case COMMON.eVocabularySetID.eCaptureDataClusterType:
+                        expect(vocabularySet).toBeTruthy();
+                        /* istanbul ignore else */
+                        if (vocabularySet)
+                            expect(vocabularySet.Name).toEqual(sVocabSetID.replace('eCaptureData', 'CaptureDataPhoto.'));
+                        break;
+
+                    case COMMON.eVocabularySetID.eCaptureDataCaptureMethod:
                     case COMMON.eVocabularySetID.eCaptureDataFileVariantType:
                     case COMMON.eVocabularySetID.eModelCreationMethod:
                     case COMMON.eVocabularySetID.eModelModality:
@@ -362,6 +415,12 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eEdan3DResourceType:
                     case COMMON.eVocabularySetID.eEdan3DResourceCategory:
                     case COMMON.eVocabularySetID.eEdanMDMFields:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeModality:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeScanType:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeContentType:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet) {
@@ -430,7 +489,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                 expect(vocabularySetEntriesInCacheByEnum).toBeTruthy();
 
                 // compute the vocabulary set name and ID from the enum name
-                const sVocabSetNameNorm: string = sVocabSetID.substring(1).toUpperCase();
+                const sVocabSetNameBase: string = renamedPhotoVocabSets.has(eVocabSetID)
+                    ? sVocabSetID.substring(1).replace('CaptureData', 'CaptureDataPhoto')
+                    : sVocabSetID.substring(1);
+                const sVocabSetNameNorm: string = sVocabSetNameBase.toUpperCase();
                 const nVocabSetID: number | undefined = vocabNameMap.get(sVocabSetNameNorm);
                 expect(nVocabSetID).toBeTruthy();
                 /* istanbul ignore if */
@@ -453,7 +515,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
 
         test('Cache: VocabularyCache.vocabularyBySetAndTerm ' + description, async () => {
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Photogrammetry');
-            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'CT');
+            await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Volumetric');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Structured Light');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Laser Line');
             await testVocabularyBySetAndTerm(COMMON.eVocabularySetID.eCaptureDataCaptureMethod, 'Spherical Laser');

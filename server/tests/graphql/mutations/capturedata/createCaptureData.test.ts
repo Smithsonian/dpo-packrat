@@ -7,7 +7,7 @@ const createCaptureDataTest = (utils: TestSuiteUtils): void => {
     let createVocabularyInput: (idVocabularySet: number) => CreateVocabularyInput;
     let createVocabularySetInput: () => CreateVocabularySetInput;
     let createCaptureDataInput: (idVocabulary: number) => CreateCaptureDataInput;
-    let createCaptureDataPhotoInput: (idCaptureData: number, idVocabulary: number) => CreateCaptureDataPhotoInput;
+    let createCaptureDataPhotoInput: (idCaptureData: number, idVocabulary: number) => Promise<CreateCaptureDataPhotoInput>;
 
     beforeAll(() => {
         graphQLApi = utils.graphQLApi;
@@ -34,7 +34,7 @@ const createCaptureDataTest = (utils: TestSuiteUtils): void => {
                     expect(CaptureData).toBeTruthy();
 
                     if (CaptureData) {
-                        const captureDataPhoto: CreateCaptureDataPhotoInput = createCaptureDataPhotoInput(CaptureData.idCaptureData, Vocabulary.idVocabulary);
+                        const captureDataPhoto: CreateCaptureDataPhotoInput = await createCaptureDataPhotoInput(CaptureData.idCaptureData, Vocabulary.idVocabulary);
                         const { CaptureDataPhoto } = await graphQLApi.createCaptureDataPhoto(captureDataPhoto);
                         expect(CaptureDataPhoto).toBeTruthy();
                     }

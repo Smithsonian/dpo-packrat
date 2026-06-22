@@ -2,7 +2,7 @@ import {
     IngestDataInput, IngestDataResult, MutationIngestDataArgs,
     IngestSubjectInput, IngestItemInput, IngestIdentifierInput, User,
     IngestPhotogrammetryInput, IngestModelInput, IngestSceneInput, IngestOtherInput, ExistingRelationship, RelatedObjectType,
-    IngestSceneAttachmentInput
+    IngestSceneAttachmentInput, IngestVolumeInput
 } from '../../../../../types/graphql';
 import { ResolverBase, IWorkflowHelper } from '../../../ResolverBase';
 import { Parent, Context } from '../../../../../types/resolvers';
@@ -18,6 +18,7 @@ import * as NAV from '../../../../../navigation/interface';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, StorageFactory, IStorage } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
+import * as VOL from '../../../../../job/impl/Volume';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
 import { PublishScene } from '../../../../../collections/impl/PublishScene';
@@ -132,6 +133,7 @@ class IngestDataWorker extends ResolverBase {
     private ingestScene: boolean = false;
     private ingestOther: boolean = false;
     private ingestAttachmentScene: boolean = false;
+    private ingestVolume: boolean = false;
 
     private ingestNew: boolean = false;
     private ingestUpdate: boolean = false;
@@ -142,6 +144,7 @@ class IngestDataWorker extends ResolverBase {
     private assetVersionMap: Map<number, AssetVersionInfo> = new Map<number, AssetVersionInfo>();                   // map from idAssetVersion -> system object that "owns" the asset, plus details for ingestion -- populated during creation of asset-owning objects below
     private ingestPhotoMap: Map<number, IngestPhotogrammetryInput> = new Map<number, IngestPhotogrammetryInput>();  // map from idAssetVersion -> photogrammetry input
     private ingestModelMap: Map<number, ModelInfo> = new Map<number, ModelInfo>();                                  // map from idAssetVersion -> model input, JCOutput, idModel
+    private ingestVolumeMap: Map<number, IngestVolumeInput> = new Map<number, IngestVolumeInput>();                  // map from idAssetVersion -> volumetric input
 
     private sceneSOI: DBAPI.SystemObjectInfo | undefined = undefined;
 
@@ -359,6 +362,13 @@ class IngestDataWorker extends ResolverBase {
             }
         }
 
+        if (this.ingestVolume) {
+            for (const volume of this.input.volume) {
+                if (!await this.createVolumeObjects(volume))
+                    return { success: false, message: 'failure to create volumetric object' };
+            }
+        }
+
         if (this.ingestModel) {
             for (const model of this.input.model) {
                 if (!await this.createModelObjects(model, itemDB, subjectsDB))
@@ -407,6 +417,9 @@ class IngestDataWorker extends ResolverBase {
         if (this.ingestPhotogrammetry)
             await this.createPhotogrammetryDerivedObjects(ingestResMap);
 
+        if (this.ingestVolume)
+            await this.createVolumeDerivedObjects(ingestResMap);
+
         if (this.ingestModel)
             await this.createModelDerivedObjects(ingestResMap);
 
@@ -442,7 +455,7 @@ class IngestDataWorker extends ResolverBase {
             idSystemObject: idSystemObjectAnchor,
             payload: {
                 mode: { ingestNew: this.ingestNew, ingestUpdate: this.ingestUpdate, ingestAttachment: this.ingestAttachment },
-                kinds: { photogrammetry: this.ingestPhotogrammetry, model: this.ingestModel, scene: this.ingestScene, other: this.ingestOther, attachmentScene: this.ingestAttachmentScene },
+                kinds: { photogrammetry: this.ingestPhotogrammetry, model: this.ingestModel, scene: this.ingestScene, other: this.ingestOther, attachmentScene: this.ingestAttachmentScene, volume: this.ingestVolume },
                 counts: { assetVersions: this.assetVersionSet.size, subjects: subjectsDB.length, idItem },
                 idProject: this.input.project.id ?? null,
             },
@@ -1001,6 +1014,246 @@ class IngestDataWorker extends ResolverBase {
         return true;
     }
 
+    /**
+     * Build CaptureData + CaptureDataVolume rows for a volumetric ingest input.
+     * Mirrors createPhotogrammetryObjects with these key differences:
+     *   - Capture method is Volumetric.
+     *   - Child record is CaptureDataVolume (1:1 via UNIQUE on idCaptureData).
+     *   - No folder/variant mapping — the staged ZIP is one asset.
+     *   - Cross-type guard: if the CaptureData identified by idAsset already
+     *     carries CaptureDataPhoto rows, refuse rather than create a Volume
+     *     row alongside actual photogrammetry data. A CaptureData with no
+     *     child records yet (just a stale type) is safe to convert.
+     */
+    // Validate the user-supplied volumetric fields against sane ranges. The
+    // inventory facts (fileCount, sliceCount, contentType, dimensionsZ) are NOT
+    // checked here — they are system-derived from inspection, not user input.
+    // This defends direct GraphQL calls that bypass the client's Yup validation.
+    private validateVolumeUserFields(volume: IngestVolumeInput): string | null {
+        const isPos = (n: number | null | undefined): boolean => typeof n === 'number' && n > 0;
+        const isNonNegOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (typeof n === 'number' && n >= 0);
+        const isPosIntOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (Number.isInteger(n) && (n as number) > 0);
+        const isNonNegIntOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (Number.isInteger(n) && (n as number) >= 0);
+
+        if (!isPos(volume.modality)) return 'Modality is required';
+        if (!isPos(volume.scanType)) return 'Scan Type is required';
+        if (!isPos(volume.voxelSizeUnit)) return 'Voxel Size Unit is required';
+        if (!(volume.voxelSizeX > 0 && volume.voxelSizeY > 0 && volume.voxelSizeZ > 0)) return 'Voxel sizes must be greater than zero';
+        if (!isNonNegOrEmpty(volume.voltageKV)) return 'Voltage (kV) must not be negative';
+        if (!isNonNegOrEmpty(volume.amperageUA)) return 'Amperage (µA) must not be negative';
+        if (!isNonNegIntOrEmpty(volume.dimensionsX)) return 'Dimensions X must be a non-negative integer';
+        if (!isNonNegIntOrEmpty(volume.dimensionsY)) return 'Dimensions Y must be a non-negative integer';
+        if (!isPosIntOrEmpty(volume.bitDepth)) return 'Bit Depth must be a positive integer';
+        if (volume.filterLocation !== null && volume.filterLocation !== undefined && !isPos(volume.filterLocation)) return 'Filter Location is invalid';
+        if (volume.specimenPreparation !== null && volume.specimenPreparation !== undefined && !isPos(volume.specimenPreparation)) return 'Specimen Preparation is invalid';
+        return null;
+    }
+
+    private async createVolumeObjects(volume: IngestVolumeInput): Promise<boolean> {
+        const vocabulary: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric);
+        if (!vocabulary) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed','unable to retrieve volumetric capture method vocabulary from cache',{ volume },'GraphQL.Ingestion.Data');
+            return false;
+        }
+
+        // Volumetric ingest requires a completed inspection: the inventory facts
+        // (fileCount, sliceCount, contentType, dimensionsZ) are read from the ZIP
+        // bytes at upload time and are authoritative — the user never supplies them.
+        // Mirrors the model path, which requires its Cook inspection output.
+        const inspection: VOL.JobVolumeInspectOutput | null = await VOL.JobVolumeInspectOutput.extractFromAssetVersion(volume.idAssetVersion);
+        if (!inspection || !inspection.success || !inspection.metadata) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed','no completed volume inspection for asset version',{ idAssetVersion: volume.idAssetVersion, volume },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport('Cannot ingest volumetric data: a completed inspection is required (none found for this upload).', true);
+            return false;
+        }
+        const meta: VOL.VolumeExtractedMetadata = inspection.metadata;
+
+        // Content type is determined by the ZIP bytes, not the user. Map the
+        // inspected content type to its vocabulary id; a successful inspection is
+        // always IMAGE_STACK or DICOM (OTHER fails inspection upstream).
+        const contentTypeEnum: COMMON.eVocabularyID | null =
+            meta.contentType === 'DICOM' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM :
+                meta.contentType === 'IMAGE_STACK' ? COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack : null;
+        const idVContentType: number | undefined = contentTypeEnum !== null ? await CACHE.VocabularyCache.vocabularyEnumToId(contentTypeEnum) : undefined;
+        if (!idVContentType) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed','inspected content type is not ingestable',{ contentType: meta.contentType, idAssetVersion: volume.idAssetVersion },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport(`Cannot ingest volumetric data: inspected content type "${meta.contentType}" is not a supported volumetric type.`, true);
+            return false;
+        }
+
+        // Validate user-supplied fields against sane ranges.
+        const volumeFieldError: string | null = this.validateVolumeUserFields(volume);
+        if (volumeFieldError) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed',volumeFieldError,{ volume },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport(`Cannot ingest volumetric data: ${volumeFieldError}`, true);
+            return false;
+        }
+
+        // Authoritative, system-derived inventory fields (never trusted from the form).
+        const authFileCount: number = meta.fileCount;
+        const authSliceCount: number = meta.sliceCount;
+        const authDimensionsZ: number = meta.dimensionsZ ?? meta.sliceCount;
+
+        let idCaptureData: number = 0;
+        if (volume.idAsset) {
+            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(volume.idAsset);
+            if (!asset) {
+                RK.logError(RK.LogSection.eGQL,'create volume objects failed','unable to fetch asset from volume input',{ volume },'GraphQL.Ingestion.Data');
+                return false;
+            }
+
+            const assetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+            if (assetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile ||
+                assetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric ||
+                assetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry) {
+                const SO: DBAPI.SystemObject | null = asset.idSystemObject ? await DBAPI.SystemObject.fetch(asset.idSystemObject) : null;
+                if (!SO) {
+                    RK.logError(RK.LogSection.eGQL,'create volume objects failed','unable to fetch system object from volume asset',{ asset },'GraphQL.Ingestion.Data');
+                    return false;
+                }
+                if (SO.idCaptureData)
+                    idCaptureData = SO.idCaptureData;
+            }
+        }
+
+        // Cross-type guard: existing photogrammetry data on the same CaptureData
+        // is a conflict. Refuse rather than silently coexisting.
+        if (idCaptureData) {
+            const existingPhotos: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(idCaptureData);
+            if (existingPhotos && existingPhotos.length > 0) {
+                RK.logError(RK.LogSection.eGQL,'create volume objects failed','existing photogrammetry data on CaptureData; refusing to convert to volumetric',{ idCaptureData, existingPhotoCount: existingPhotos.length, volume },'GraphQL.Ingestion.Data');
+                await this.appendToWFReport(`Cannot ingest volumetric data: CaptureData ${idCaptureData} already has photogrammetry records. Retire or delete the photogrammetry data first.`, true);
+                return false;
+            }
+        }
+
+        let updateCD: boolean = true;
+        let CDDB: DBAPI.CaptureData | null = idCaptureData ? await DBAPI.CaptureData.fetch(idCaptureData) : null;
+        if (CDDB) {
+            CDDB.Name = volume.name;
+            if (H.Helpers.convertStringToDate(volume.dateCaptured) instanceof Date)
+                CDDB.DateCaptured = H.Helpers.convertStringToDate(volume.dateCaptured) as Date;
+            CDDB.Description = volume.description;
+            // Convert the capture method if the existing record was tagged something else
+            // (only reachable when no CaptureDataPhoto records exist — guard above).
+            CDDB.idVCaptureMethod = vocabulary.idVocabulary;
+        } else {
+            CDDB = new DBAPI.CaptureData({
+                Name: volume.name,
+                idVCaptureMethod: vocabulary.idVocabulary,
+                DateCaptured: H.Helpers.convertStringToDate(volume.dateCaptured) || new Date(),
+                Description: volume.description,
+                idAssetThumbnail: null,
+                idCaptureData: 0
+            });
+            updateCD = false;
+        }
+        const CDDBRes: boolean = updateCD ? await CDDB.update() : await CDDB.create();
+        if (!CDDBRes) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed',`unable to ${updateCD ? 'update' : 'create'} CaptureData for volumetric data`,{ volume },'GraphQL.Ingestion.Data');
+            return false;
+        }
+        const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromCaptureData(CDDB);
+        const path: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
+        const href: string = H.Helpers.computeHref(path, CDDB.Name);
+        await this.appendToWFReport(`CaptureData Volumetric: ${href}`);
+
+        // CaptureDataVolume — UNIQUE(idCaptureData) means at most one per parent.
+        let volumeDB: DBAPI.CaptureDataVolume;
+        const existingVolume: DBAPI.CaptureDataVolume | null = idCaptureData ? await DBAPI.CaptureDataVolume.fetchFromCaptureData(idCaptureData) : null;
+        if (existingVolume) {
+            volumeDB = existingVolume;
+            volumeDB.idVModality = volume.modality;
+            volumeDB.idVScanType = volume.scanType;
+            volumeDB.idVContentType = idVContentType;                            // authoritative (from inspection)
+            volumeDB.ScannerMakeModel = volume.scannerMakeModel ?? null;
+            volumeDB.VoltageKV = volume.voltageKV ?? null;
+            volumeDB.AmperageUA = volume.amperageUA ?? null;
+            volumeDB.idVSpecimenPreparation = volume.specimenPreparation ?? null;
+            volumeDB.VoxelSizeX = volume.voxelSizeX;
+            volumeDB.VoxelSizeY = volume.voxelSizeY;
+            volumeDB.VoxelSizeZ = volume.voxelSizeZ;
+            volumeDB.idVVoxelSizeUnit = volume.voxelSizeUnit;
+            volumeDB.DimensionsX = volume.dimensionsX ?? null;                   // system-derived, user-editable
+            volumeDB.DimensionsY = volume.dimensionsY ?? null;                   // system-derived, user-editable
+            volumeDB.DimensionsZ = authDimensionsZ;                              // authoritative (from inspection)
+            volumeDB.BitDepth = volume.bitDepth ?? null;                        // system-derived, user-editable
+            volumeDB.FileCount = authFileCount;                                 // authoritative (from inspection)
+            volumeDB.SliceCount = authSliceCount;                               // authoritative (from inspection)
+            volumeDB.idVFilterLocation = volume.filterLocation ?? null;
+        } else {
+            volumeDB = new DBAPI.CaptureDataVolume({
+                idCaptureDataVolume: 0,
+                idCaptureData: CDDB.idCaptureData,
+                idVModality: volume.modality,
+                idVScanType: volume.scanType,
+                idVContentType,                                                  // authoritative (from inspection)
+                ScannerMakeModel: volume.scannerMakeModel ?? null,
+                VoltageKV: volume.voltageKV ?? null,
+                AmperageUA: volume.amperageUA ?? null,
+                idVSpecimenPreparation: volume.specimenPreparation ?? null,
+                VoxelSizeX: volume.voxelSizeX,
+                VoxelSizeY: volume.voxelSizeY,
+                VoxelSizeZ: volume.voxelSizeZ,
+                idVVoxelSizeUnit: volume.voxelSizeUnit,
+                DimensionsX: volume.dimensionsX ?? null,                         // system-derived, user-editable
+                DimensionsY: volume.dimensionsY ?? null,                         // system-derived, user-editable
+                DimensionsZ: authDimensionsZ,                                    // authoritative (from inspection)
+                BitDepth: volume.bitDepth ?? null,                              // system-derived, user-editable
+                FileCount: authFileCount,                                       // authoritative (from inspection)
+                SliceCount: authSliceCount,                                     // authoritative (from inspection)
+                idVFilterLocation: volume.filterLocation ?? null,
+            });
+        }
+        let volumeRes: boolean = existingVolume ? await volumeDB.update() : await volumeDB.create();
+        if (!volumeRes && !existingVolume) {
+            // Concurrent ingest may have created the row first (UNIQUE on idCaptureData).
+            // Re-fetch; if present, switch to updating that row instead of failing.
+            const racedVolume: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(CDDB.idCaptureData);
+            if (racedVolume) {
+                volumeDB.idCaptureDataVolume = racedVolume.idCaptureDataVolume;
+                volumeRes = await volumeDB.update();
+            }
+        }
+        if (!volumeRes) {
+            RK.logError(RK.LogSection.eGQL,'create volume objects failed',`unable to ${existingVolume ? 'update' : 'create'} CaptureDataVolume`,{ volume },'GraphQL.Ingestion.Data');
+            // Compensating cleanup: if we created a new CaptureData above, retire it so a
+            // failed ingest does not leave an active orphan with no child volume row.
+            if (!updateCD) await DBAPI.SystemObject.retireSystemObject(CDDB);
+            return false;
+        }
+
+        if (!await this.handleIdentifiers(CDDB, volume.systemCreated, volume.identifiers)) {
+            if (!updateCD) await DBAPI.SystemObject.retireSystemObject(CDDB);
+            return false;
+        }
+
+        if (volume.sourceObjects && volume.sourceObjects.length > 0) {
+            for (const sourceObject of volume.sourceObjects) {
+                if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, CDDB)) {
+                    RK.logError(RK.LogSection.eGQL,'create volume objects failed','failed to create SystemObjectXref',{ sourceObject, volume },'GraphQL.Ingestion.Data');
+                    continue;
+                }
+            }
+        }
+
+        if (volume.derivedObjects && volume.derivedObjects.length > 0) {
+            for (const derivedObject of volume.derivedObjects) {
+                if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(CDDB, derivedObject.idSystemObject)) {
+                    RK.logError(RK.LogSection.eGQL,'create volume objects failed','failed to create SystemObjectXref',{ derivedObject, volume },'GraphQL.Ingestion.Data');
+                    continue;
+                }
+            }
+        }
+
+        if (volume.idAssetVersion) {
+            this.assetVersionMap.set(volume.idAssetVersion, { SOOwner: CDDB, isAttachment: false, Comment: volume.updateNotes ?? null });
+            this.ingestVolumeMap.set(volume.idAssetVersion, volume);
+        }
+
+        return true;
+    }
+
     private async createPhotogrammetryDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
         // create CaptureDataFile
         let res: boolean = true;
@@ -1089,6 +1342,66 @@ class IngestDataWorker extends ResolverBase {
                                 RK.logError(RK.LogSection.eGQL,'create photogrammetry objects failed',`unable to persist capture data variant type metadata: ${results.error}`,{ SOAssetVersion },'GraphQL.Ingestion.Data');
                         }
                     }
+                }
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Create a single CaptureDataFile per volumetric asset version. Unlike the
+     * photogrammetry path there is no folder/variant mapping — the volumetric
+     * ZIP is stored as a single asset (unzip whitelist intentionally excludes
+     * the volumetric asset type), so each assetVersion yields exactly one
+     * CaptureDataFile with CompressedMultipleFiles:true and a null variant.
+     */
+    private async createVolumeDerivedObjects(ingestResMap: Map<number, IngestAssetResult | null>): Promise<boolean> {
+        let res: boolean = true;
+        for (const [idAssetVersion, AVInfo] of this.assetVersionMap) {
+            const SOOwner: DBAPI.SystemObjectBased = AVInfo.SOOwner;
+            if (!(SOOwner instanceof DBAPI.CaptureData))
+                continue;
+            // Skip CaptureData rows owned by the photogrammetry path. Distinguishing
+            // by idAssetVersion presence in ingestVolumeMap is the cleanest filter
+            // because a single ingest call could mix both kinds.
+            if (!this.ingestVolumeMap.has(idAssetVersion))
+                continue;
+
+            const ingestAssetRes: IngestAssetResult | null | undefined = ingestResMap.get(idAssetVersion);
+            if (!ingestAssetRes) {
+                RK.logError(RK.LogSection.eGQL,'create volume derived objects failed','unable to locate ingest results for idAssetVersion',{ idAssetVersion },'GraphQL.Ingestion.Data');
+                res = false;
+                continue;
+            }
+            if (!ingestAssetRes.success) {
+                RK.logError(RK.LogSection.eGQL,'create volume derived objects failed',`failed for idAssetVersion: ${ingestAssetRes.error}`,{ idAssetVersion },'GraphQL.Ingestion.Data');
+                res = false;
+                continue;
+            }
+
+            // A volumetric ZIP must promote to exactly one asset — the unzip whitelist
+            // intentionally excludes the volumetric asset type. More than one asset here
+            // means the ZIP was cracked open (e.g. mis-stamped asset type upstream),
+            // which would contradict CompressedMultipleFiles:true. Fail loudly.
+            const promotedAssets = ingestAssetRes.assets || [];
+            if (promotedAssets.length !== 1) {
+                RK.logError(RK.LogSection.eGQL,'create volume derived objects failed',`expected exactly one promoted asset for a volumetric ZIP, found ${promotedAssets.length} — ZIP must not be cracked`,{ idAssetVersion, assetCount: promotedAssets.length },'GraphQL.Ingestion.Data');
+                res = false;
+                continue;
+            }
+
+            for (const asset of promotedAssets) {
+                const CDF: DBAPI.CaptureDataFile = new DBAPI.CaptureDataFile({
+                    idCaptureData: SOOwner.idCaptureData,
+                    idAsset: asset.idAsset,
+                    idVVariantType: null,
+                    CompressedMultipleFiles: true,
+                    idCaptureDataFile: 0
+                });
+                if (!await CDF.create()) {
+                    RK.logError(RK.LogSection.eGQL,'create volume derived objects failed','unable to create CaptureDataFile',{ idAssetVersion, asset },'GraphQL.Ingestion.Data');
+                    res = false;
+                    continue;
                 }
             }
         }
@@ -1654,7 +1967,10 @@ class IngestDataWorker extends ResolverBase {
                                 const svxBuffer: Buffer = fs.readFileSync(stagingPath);
                                 const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { idScene: SOBased.idScene });
                                 if (inject.modified) {
-                                    fs.writeFileSync(stagingPath, inject.buffer);
+                                    // Cast to Uint8Array satisfies stricter @types/node typings
+                                    // that otherwise flag Buffer.buffer as ArrayBufferLike (could
+                                    // be SharedArrayBuffer). Buffer extends Uint8Array at runtime.
+                                    fs.writeFileSync(stagingPath, inject.buffer as Uint8Array);
                                     assetVersionDB.StorageSize = BigInt(inject.buffer.length);
                                     await assetVersionDB.update();
                                     await this.appendToWFReport(`Injected EDAN Record ID (${inject.edanRecordId}) into SVX`);
@@ -1813,6 +2129,7 @@ class IngestDataWorker extends ResolverBase {
         this.ingestScene            = this.input.scene && this.input.scene.length > 0;
         this.ingestOther            = this.input.other && this.input.other.length > 0;
         this.ingestAttachmentScene  = this.input.sceneAttachment && this.input.sceneAttachment.length > 0;
+        this.ingestVolume           = this.input.volume && this.input.volume.length > 0;
         this.ingestNew              = false;
         this.ingestUpdate           = false;
 
@@ -1849,6 +2166,43 @@ class IngestDataWorker extends ResolverBase {
                 if (photogrammetry.idAsset) {
                     this.ingestUpdate = true;
                     this.updateAssetSet.add(photogrammetry.idAsset);
+                } else
+                    this.ingestNew = true;
+            }
+        }
+
+        if (this.ingestVolume) {
+            for (const volume of this.input.volume) {
+                if (volume.sourceObjects && volume.sourceObjects.length) {
+                    for (const sourceObject of volume.sourceObjects) {
+                        if (!isValidParentChildRelationship(sourceObject.objectType, COMMON.eSystemObjectType.eCaptureData, volume.sourceObjects, [], true)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between ${COMMON.eSystemObjectType[sourceObject.objectType]} and capture data`;
+                            RK.logError(RK.LogSection.eGQL,'validate input failed','will not create the inappropriate parent-child relationship between object and capture data',{ type: COMMON.eSystemObjectType[sourceObject.objectType] },'GraphQL.Ingestion.Data');
+                            return { success: false, error };
+                        }
+                    }
+                }
+
+                if (volume.derivedObjects && volume.derivedObjects.length) {
+                    for (const derivedObject of volume.derivedObjects) {
+                        const sourceObjectsOfChild = await getRelatedObjects(derivedObject.idSystemObject, RelatedObjectType.Source);
+                        if (!isValidParentChildRelationship(COMMON.eSystemObjectType.eCaptureData, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
+                            const error: string = `ingestData will not create the inappropriate parent-child relationship between capture data and ${COMMON.eSystemObjectType[derivedObject.objectType]}`;
+                            RK.logError(RK.LogSection.eGQL,'validate input failed','will not create the inappropriate parent-child relationship between capture data and object',{ type: COMMON.eSystemObjectType[derivedObject.objectType] },'GraphQL.Ingestion.Data');
+                            return { success: false, error };
+                        }
+                    }
+                }
+
+                const identifierResults: H.IOResults = await this.validateIdentifiers(volume.identifiers);
+                if (!identifierResults.success)
+                    return identifierResults;
+
+                if (volume.idAssetVersion)
+                    this.assetVersionSet.add(volume.idAssetVersion);
+                if (volume.idAsset) {
+                    this.ingestUpdate = true;
+                    this.updateAssetSet.add(volume.idAsset);
                 } else
                     this.ingestNew = true;
             }

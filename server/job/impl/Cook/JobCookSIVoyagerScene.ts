@@ -373,6 +373,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         // How do we create the Model objects here? We can ingest the assets, as above, but we need to connect them to the right objects
         if (svx.SvxExtraction.modelDetails) {
             for (const MSX of svx.SvxExtraction.modelDetails) {
+                // si-voyager-scene only stages Web3D assets; download/AR derivatives
+                // inherited from a prior si-generate-downloads run are never staged by Cook
+                if (MSX.Usage && (MSX.Usage.startsWith('Download:') || MSX.Usage.startsWith('App3D') || MSX.Usage.startsWith('iOSApp3D')))
+                    continue;
                 if (MSX.Name) {
                     // look for existing models, children of our scene, that match this model's purpose
                     let model: DBAPI.Model | null = await this.findMatchingModel(scene, MSX.computeModelAutomationTag());

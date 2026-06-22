@@ -17,6 +17,9 @@ const CaptureData = {
     CaptureDataGroup: async (parent: Parent): Promise<DBAPI.CaptureDataGroup[] | null> => {
         return await DBAPI.CaptureDataGroup.fetchFromXref(parent.idCaptureData);
     },
+    CaptureDataVolume: async (parent: Parent): Promise<DBAPI.CaptureDataVolume | null> => {
+        return await DBAPI.CaptureDataVolume.fetchFromCaptureData(parent.idCaptureData);
+    },
     SystemObject: async (parent: Parent): Promise<DBAPI.SystemObject | null> => {
         return await DBAPI.SystemObject.fetchFromCaptureDataID(parent.idCaptureData);
     }

@@ -161,6 +161,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
+  FileName?: Maybe<Scalars['String']>;
   FilePath?: Maybe<Scalars['String']>;
   Ingested?: Maybe<Scalars['Boolean']>;
   StorageHash?: Maybe<Scalars['String']>;
@@ -197,6 +198,7 @@ export type CaptureData = {
   CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
   CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
   CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
+  CaptureDataVolume?: Maybe<CaptureDataVolume>;
   DateCaptured: Scalars['DateTime'];
   Description: Scalars['String'];
   SystemObject?: Maybe<SystemObject>;
@@ -208,16 +210,24 @@ export type CaptureData = {
 
 export type CaptureDataDetailFields = {
   __typename?: 'CaptureDataDetailFields';
+  amperageUA?: Maybe<Scalars['Float']>;
   backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+  bitDepth?: Maybe<Scalars['Int']>;
   cameraSettingUniform?: Maybe<Scalars['Boolean']>;
   captureMethod?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   clusterType?: Maybe<Scalars['Int']>;
+  contentType?: Maybe<Scalars['Int']>;
   datasetFieldId?: Maybe<Scalars['Int']>;
   datasetType?: Maybe<Scalars['Int']>;
   datasetUse: Scalars['String'];
   dateCaptured?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
+  dimensionsX?: Maybe<Scalars['Int']>;
+  dimensionsY?: Maybe<Scalars['Int']>;
+  dimensionsZ?: Maybe<Scalars['Int']>;
+  fileCount?: Maybe<Scalars['Int']>;
+  filterLocation?: Maybe<Scalars['Int']>;
   focusType?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
   isValidData?: Maybe<Scalars['Boolean']>;
@@ -225,20 +235,38 @@ export type CaptureDataDetailFields = {
   itemPositionFieldId?: Maybe<Scalars['Int']>;
   itemPositionType?: Maybe<Scalars['Int']>;
   lightsourceType?: Maybe<Scalars['Int']>;
+  modality?: Maybe<Scalars['Int']>;
+  scanType?: Maybe<Scalars['Int']>;
+  scannerMakeModel?: Maybe<Scalars['String']>;
+  sliceCount?: Maybe<Scalars['Int']>;
+  specimenPreparation?: Maybe<Scalars['Int']>;
   systemCreated?: Maybe<Scalars['Boolean']>;
+  voltageKV?: Maybe<Scalars['Float']>;
+  voxelSizeUnit?: Maybe<Scalars['Int']>;
+  voxelSizeX?: Maybe<Scalars['Float']>;
+  voxelSizeY?: Maybe<Scalars['Float']>;
+  voxelSizeZ?: Maybe<Scalars['Float']>;
 };
 
 export type CaptureDataDetailFieldsInput = {
+  amperageUA?: InputMaybe<Scalars['Float']>;
   backgroundRemovalMethod?: InputMaybe<Scalars['Int']>;
+  bitDepth?: InputMaybe<Scalars['Int']>;
   cameraSettingUniform?: InputMaybe<Scalars['Boolean']>;
   captureMethod?: InputMaybe<Scalars['Int']>;
   clusterGeometryFieldId?: InputMaybe<Scalars['Int']>;
   clusterType?: InputMaybe<Scalars['Int']>;
+  contentType?: InputMaybe<Scalars['Int']>;
   datasetFieldId?: InputMaybe<Scalars['Int']>;
   datasetType?: InputMaybe<Scalars['Int']>;
   datasetUse: Scalars['String'];
   dateCaptured?: InputMaybe<Scalars['DateTime']>;
   description?: InputMaybe<Scalars['String']>;
+  dimensionsX?: InputMaybe<Scalars['Int']>;
+  dimensionsY?: InputMaybe<Scalars['Int']>;
+  dimensionsZ?: InputMaybe<Scalars['Int']>;
+  fileCount?: InputMaybe<Scalars['Int']>;
+  filterLocation?: InputMaybe<Scalars['Int']>;
   focusType?: InputMaybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
   isValidData?: InputMaybe<Scalars['Boolean']>;
@@ -246,7 +274,17 @@ export type CaptureDataDetailFieldsInput = {
   itemPositionFieldId?: InputMaybe<Scalars['Int']>;
   itemPositionType?: InputMaybe<Scalars['Int']>;
   lightsourceType?: InputMaybe<Scalars['Int']>;
+  modality?: InputMaybe<Scalars['Int']>;
+  scanType?: InputMaybe<Scalars['Int']>;
+  scannerMakeModel?: InputMaybe<Scalars['String']>;
+  sliceCount?: InputMaybe<Scalars['Int']>;
+  specimenPreparation?: InputMaybe<Scalars['Int']>;
   systemCreated?: InputMaybe<Scalars['Boolean']>;
+  voltageKV?: InputMaybe<Scalars['Float']>;
+  voxelSizeUnit?: InputMaybe<Scalars['Int']>;
+  voxelSizeX?: InputMaybe<Scalars['Float']>;
+  voxelSizeY?: InputMaybe<Scalars['Float']>;
+  voxelSizeZ?: InputMaybe<Scalars['Float']>;
 };
 
 export type CaptureDataFile = {
@@ -290,6 +328,37 @@ export type CaptureDataPhoto = {
   idVFocusType?: Maybe<Scalars['Int']>;
   idVItemPositionType?: Maybe<Scalars['Int']>;
   idVLightSourceType?: Maybe<Scalars['Int']>;
+};
+
+export type CaptureDataVolume = {
+  __typename?: 'CaptureDataVolume';
+  AmperageUA?: Maybe<Scalars['Float']>;
+  BitDepth?: Maybe<Scalars['Int']>;
+  CaptureData?: Maybe<CaptureData>;
+  DimensionsX?: Maybe<Scalars['Int']>;
+  DimensionsY?: Maybe<Scalars['Int']>;
+  DimensionsZ?: Maybe<Scalars['Int']>;
+  FileCount: Scalars['Int'];
+  ScannerMakeModel?: Maybe<Scalars['String']>;
+  SliceCount?: Maybe<Scalars['Int']>;
+  VContentType?: Maybe<Vocabulary>;
+  VFilterLocation?: Maybe<Vocabulary>;
+  VModality?: Maybe<Vocabulary>;
+  VScanType?: Maybe<Vocabulary>;
+  VSpecimenPreparation?: Maybe<Vocabulary>;
+  VVoxelSizeUnit?: Maybe<Vocabulary>;
+  VoltageKV?: Maybe<Scalars['Float']>;
+  VoxelSizeX: Scalars['Float'];
+  VoxelSizeY: Scalars['Float'];
+  VoxelSizeZ: Scalars['Float'];
+  idCaptureData: Scalars['Int'];
+  idCaptureDataVolume: Scalars['Int'];
+  idVContentType: Scalars['Int'];
+  idVFilterLocation?: Maybe<Scalars['Int']>;
+  idVModality: Scalars['Int'];
+  idVScanType: Scalars['Int'];
+  idVSpecimenPreparation?: Maybe<Scalars['Int']>;
+  idVVoxelSizeUnit: Scalars['Int'];
 };
 
 export type ClearLicenseAssignmentInput = {
@@ -617,6 +686,15 @@ export type GetCaptureDataPhotoResult = {
 export type GetCaptureDataResult = {
   __typename?: 'GetCaptureDataResult';
   CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataVolumeInput = {
+  idCaptureDataVolume: Scalars['Int'];
+};
+
+export type GetCaptureDataVolumeResult = {
+  __typename?: 'GetCaptureDataVolumeResult';
+  CaptureDataVolume?: Maybe<CaptureDataVolume>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -1057,6 +1135,7 @@ export type IngestDataInput = {
   scene: Array<IngestSceneInput>;
   sceneAttachment: Array<IngestSceneAttachmentInput>;
   subjects: Array<IngestSubjectInput>;
+  volume: Array<IngestVolumeInput>;
 };
 
 export type IngestDataResult = {
@@ -1257,6 +1336,38 @@ export type IngestTitle = {
   forced: Scalars['Boolean'];
   subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
   title: Scalars['String'];
+};
+
+export type IngestVolumeInput = {
+  amperageUA?: InputMaybe<Scalars['Float']>;
+  bitDepth?: InputMaybe<Scalars['Int']>;
+  contentType: Scalars['Int'];
+  dateCaptured: Scalars['String'];
+  derivedObjects: Array<RelatedObjectInput>;
+  description: Scalars['String'];
+  dimensionsX?: InputMaybe<Scalars['Int']>;
+  dimensionsY?: InputMaybe<Scalars['Int']>;
+  dimensionsZ?: InputMaybe<Scalars['Int']>;
+  directory: Scalars['String'];
+  fileCount: Scalars['Int'];
+  filterLocation?: InputMaybe<Scalars['Int']>;
+  idAsset?: InputMaybe<Scalars['Int']>;
+  idAssetVersion: Scalars['Int'];
+  identifiers: Array<IngestIdentifierInput>;
+  modality: Scalars['Int'];
+  name: Scalars['String'];
+  scanType: Scalars['Int'];
+  scannerMakeModel?: InputMaybe<Scalars['String']>;
+  sliceCount?: InputMaybe<Scalars['Int']>;
+  sourceObjects: Array<RelatedObjectInput>;
+  specimenPreparation?: InputMaybe<Scalars['Int']>;
+  systemCreated: Scalars['Boolean'];
+  updateNotes?: InputMaybe<Scalars['String']>;
+  voltageKV?: InputMaybe<Scalars['Float']>;
+  voxelSizeUnit: Scalars['Int'];
+  voxelSizeX: Scalars['Float'];
+  voxelSizeY: Scalars['Float'];
+  voxelSizeZ: Scalars['Float'];
 };
 
 export type IngestionItem = {
@@ -1827,6 +1938,7 @@ export type Query = {
   getAssetVersionsDetails: GetAssetVersionsDetailsResult;
   getCaptureData: GetCaptureDataResult;
   getCaptureDataPhoto: GetCaptureDataPhotoResult;
+  getCaptureDataVolume: GetCaptureDataVolumeResult;
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
@@ -1906,6 +2018,11 @@ export type QueryGetCaptureDataArgs = {
 
 export type QueryGetCaptureDataPhotoArgs = {
   input: GetCaptureDataPhotoInput;
+};
+
+
+export type QueryGetCaptureDataVolumeArgs = {
+  input: GetCaptureDataVolumeInput;
 };
 
 
@@ -3066,7 +3183,7 @@ export type GetDetailsTabDataForObjectQueryVariables = Exact<{
 }>;
 
 
-export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query', getDetailsTabDataForObject: { __typename?: 'GetDetailsTabDataForObjectResult', Unit?: { __typename?: 'UnitDetailFields', Abbreviation?: string | null, ARKPrefix?: string | null } | null, Project?: { __typename?: 'ProjectDetailFields', Description?: string | null, idUnit?: number | null } | null, Subject?: { __typename?: 'SubjectDetailFields', Altitude?: number | null, Latitude?: number | null, Longitude?: number | null, R0?: number | null, R1?: number | null, R2?: number | null, R3?: number | null, TS0?: number | null, TS1?: number | null, TS2?: number | null, idIdentifierPreferred?: number | null } | null, Item?: { __typename?: 'ItemDetailFields', EntireSubject?: boolean | null } | null, CaptureData?: { __typename?: 'CaptureDataDetailFields', captureMethod?: number | null, dateCaptured?: string | null, datasetType?: number | null, description?: string | null, cameraSettingUniform?: boolean | null, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, isValidData?: boolean | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'ModelConstellation', Model: { __typename?: 'Model', idModel: number, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountAnimations?: number | null, CountCameras?: number | null, CountLights?: number | null, CountMaterials?: number | null, CountMeshes?: number | null, CountEmbeddedTextures?: number | null, CountLinkedTextures?: number | null, FileEncoding?: string | null, IsDracoCompressed?: boolean | null, Name: string, DateCreated: any, idVCreationMethod?: number | null, idVModality?: number | null, idVUnits?: number | null, idVPurpose?: number | null, idVFileType?: number | null, Variant: string }, ModelObjects?: Array<{ __typename?: 'ModelObject', idModelObject: number, BoundingBoxP1X?: number | null, BoundingBoxP1Y?: number | null, BoundingBoxP1Z?: number | null, BoundingBoxP2X?: number | null, BoundingBoxP2Y?: number | null, BoundingBoxP2Z?: number | null, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountColorChannels?: number | null, CountTextureCoordinateChannels?: number | null, HasBones?: boolean | null, HasFaceNormals?: boolean | null, HasTangents?: boolean | null, HasTextureCoordinates?: boolean | null, HasVertexNormals?: boolean | null, HasVertexColor?: boolean | null, IsTwoManifoldUnbounded?: boolean | null, IsTwoManifoldBounded?: boolean | null, IsWatertight?: boolean | null, SelfIntersecting?: boolean | null }> | null, ModelMaterials?: Array<{ __typename?: 'ModelMaterial', idModelMaterial: number, Name?: string | null }> | null, ModelMaterialChannels?: Array<{ __typename?: 'ModelMaterialChannel', Type?: string | null, Source?: string | null, Value?: string | null, AdditionalAttributes?: string | null, idModelMaterial: number, idModelMaterialChannel: number }> | null, ModelObjectModelMaterialXref?: Array<{ __typename?: 'ModelObjectModelMaterialXref', idModelObjectModelMaterialXref: number, idModelObject: number, idModelMaterial: number }> | null, ModelAssets?: Array<{ __typename?: 'ModelAsset', AssetName: string, AssetType: string }> | null } | null, Scene?: { __typename?: 'SceneDetailFields', Links: Array<string>, AssetType?: number | null, Tours?: number | null, Annotation?: number | null, EdanUUID?: string | null, ApprovedForPublication?: boolean | null, PublicationApprover?: string | null, PosedAndQCd?: boolean | null, CanBeQCd?: boolean | null, idScene?: number | null } | null, IntermediaryFile?: { __typename?: 'IntermediaryFileDetailFields', idIntermediaryFile: number } | null, ProjectDocumentation?: { __typename?: 'ProjectDocumentationDetailFields', Description?: string | null } | null, Asset?: { __typename?: 'AssetDetailFields', AssetType?: number | null, idAsset?: number | null } | null, AssetVersion?: { __typename?: 'AssetVersionDetailFields', Creator?: string | null, DateCreated?: any | null, StorageSize?: any | null, Ingested?: boolean | null, Version?: number | null, idAsset?: number | null, idAssetVersion?: number | null, FilePath?: string | null, StorageHash?: string | null } | null, Actor?: { __typename?: 'ActorDetailFields', OrganizationName?: string | null } | null, Stakeholder?: { __typename?: 'StakeholderDetailFields', OrganizationName?: string | null, EmailAddress?: string | null, PhoneNumberMobile?: string | null, PhoneNumberOffice?: string | null, MailingAddress?: string | null } | null } };
+export type GetDetailsTabDataForObjectQuery = { __typename?: 'Query', getDetailsTabDataForObject: { __typename?: 'GetDetailsTabDataForObjectResult', Unit?: { __typename?: 'UnitDetailFields', Abbreviation?: string | null, ARKPrefix?: string | null } | null, Project?: { __typename?: 'ProjectDetailFields', Description?: string | null, idUnit?: number | null } | null, Subject?: { __typename?: 'SubjectDetailFields', Altitude?: number | null, Latitude?: number | null, Longitude?: number | null, R0?: number | null, R1?: number | null, R2?: number | null, R3?: number | null, TS0?: number | null, TS1?: number | null, TS2?: number | null, idIdentifierPreferred?: number | null } | null, Item?: { __typename?: 'ItemDetailFields', EntireSubject?: boolean | null } | null, CaptureData?: { __typename?: 'CaptureDataDetailFields', captureMethod?: number | null, dateCaptured?: string | null, datasetType?: number | null, description?: string | null, cameraSettingUniform?: boolean | null, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, isValidData?: boolean | null, datasetUse: string, modality?: number | null, scanType?: number | null, contentType?: number | null, scannerMakeModel?: string | null, voltageKV?: number | null, amperageUA?: number | null, specimenPreparation?: number | null, voxelSizeX?: number | null, voxelSizeY?: number | null, voxelSizeZ?: number | null, voxelSizeUnit?: number | null, dimensionsX?: number | null, dimensionsY?: number | null, dimensionsZ?: number | null, bitDepth?: number | null, fileCount?: number | null, sliceCount?: number | null, filterLocation?: number | null, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'ModelConstellation', Model: { __typename?: 'Model', idModel: number, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountAnimations?: number | null, CountCameras?: number | null, CountLights?: number | null, CountMaterials?: number | null, CountMeshes?: number | null, CountEmbeddedTextures?: number | null, CountLinkedTextures?: number | null, FileEncoding?: string | null, IsDracoCompressed?: boolean | null, Name: string, DateCreated: any, idVCreationMethod?: number | null, idVModality?: number | null, idVUnits?: number | null, idVPurpose?: number | null, idVFileType?: number | null, Variant: string }, ModelObjects?: Array<{ __typename?: 'ModelObject', idModelObject: number, BoundingBoxP1X?: number | null, BoundingBoxP1Y?: number | null, BoundingBoxP1Z?: number | null, BoundingBoxP2X?: number | null, BoundingBoxP2Y?: number | null, BoundingBoxP2Z?: number | null, CountVertices?: number | null, CountFaces?: number | null, CountTriangles?: number | null, CountColorChannels?: number | null, CountTextureCoordinateChannels?: number | null, HasBones?: boolean | null, HasFaceNormals?: boolean | null, HasTangents?: boolean | null, HasTextureCoordinates?: boolean | null, HasVertexNormals?: boolean | null, HasVertexColor?: boolean | null, IsTwoManifoldUnbounded?: boolean | null, IsTwoManifoldBounded?: boolean | null, IsWatertight?: boolean | null, SelfIntersecting?: boolean | null }> | null, ModelMaterials?: Array<{ __typename?: 'ModelMaterial', idModelMaterial: number, Name?: string | null }> | null, ModelMaterialChannels?: Array<{ __typename?: 'ModelMaterialChannel', Type?: string | null, Source?: string | null, Value?: string | null, AdditionalAttributes?: string | null, idModelMaterial: number, idModelMaterialChannel: number }> | null, ModelObjectModelMaterialXref?: Array<{ __typename?: 'ModelObjectModelMaterialXref', idModelObjectModelMaterialXref: number, idModelObject: number, idModelMaterial: number }> | null, ModelAssets?: Array<{ __typename?: 'ModelAsset', AssetName: string, AssetType: string }> | null } | null, Scene?: { __typename?: 'SceneDetailFields', Links: Array<string>, AssetType?: number | null, Tours?: number | null, Annotation?: number | null, EdanUUID?: string | null, ApprovedForPublication?: boolean | null, PublicationApprover?: string | null, PosedAndQCd?: boolean | null, CanBeQCd?: boolean | null, idScene?: number | null } | null, IntermediaryFile?: { __typename?: 'IntermediaryFileDetailFields', idIntermediaryFile: number } | null, ProjectDocumentation?: { __typename?: 'ProjectDocumentationDetailFields', Description?: string | null } | null, Asset?: { __typename?: 'AssetDetailFields', AssetType?: number | null, idAsset?: number | null } | null, AssetVersion?: { __typename?: 'AssetVersionDetailFields', Creator?: string | null, DateCreated?: any | null, StorageSize?: any | null, Ingested?: boolean | null, Version?: number | null, idAsset?: number | null, idAssetVersion?: number | null, FilePath?: string | null, FileName?: string | null, StorageHash?: string | null } | null, Actor?: { __typename?: 'ActorDetailFields', OrganizationName?: string | null } | null, Stakeholder?: { __typename?: 'StakeholderDetailFields', OrganizationName?: string | null, EmailAddress?: string | null, PhoneNumberMobile?: string | null, PhoneNumberOffice?: string | null, MailingAddress?: string | null } | null } };
 
 export type GetProjectListQueryVariables = Exact<{
   input: GetProjectListInput;
@@ -5424,6 +5541,24 @@ export const GetDetailsTabDataForObjectDocument = gql`
       }
       isValidData
       datasetUse
+      modality
+      scanType
+      contentType
+      scannerMakeModel
+      voltageKV
+      amperageUA
+      specimenPreparation
+      voxelSizeX
+      voxelSizeY
+      voxelSizeZ
+      voxelSizeUnit
+      dimensionsX
+      dimensionsY
+      dimensionsZ
+      bitDepth
+      fileCount
+      sliceCount
+      filterLocation
     }
     Model {
       Model {
@@ -5527,6 +5662,7 @@ export const GetDetailsTabDataForObjectDocument = gql`
       idAsset
       idAssetVersion
       FilePath
+      FileName
       StorageHash
     }
     Actor {

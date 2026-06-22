@@ -216,6 +216,13 @@ export class LocalStorage implements STORE.IStorage {
     }
 
     async removeStagedFolder(fileDir: string, storageKey: string, maxTries: number): Promise<H.IOResults> {
+        // Retry on the error codes that indicate "transient lock" rather than
+        // "permanent failure." ENOTEMPTY: a child file is still being released
+        // by another async hand. EPERM/EBUSY/EACCES: Windows file-system lock
+        // held by an antivirus scan, the search indexer, or the OS itself
+        // briefly holding metadata. All four resolve within a few seconds.
+        const RETRYABLE_CODES: string[] = ['ENOTEMPTY', 'EPERM', 'EBUSY', 'EACCES'];
+
         let resDirRemove: H.IOResults = { success: true };
         for (let tryCount: number = 1; tryCount <= maxTries; tryCount++) {
             resDirRemove = await H.Helpers.removeDirectory(fileDir, true, false);
@@ -224,11 +231,12 @@ export class LocalStorage implements STORE.IStorage {
                 return resDirRemove;
             }
 
-            const dirNotEmpty: boolean = (resDirRemove.error ?? '').includes('ENOTEMPTY');
-            if (tryCount >= maxTries || !dirNotEmpty) // final try or not a dir not empty error? log result
+            const errStr: string = resDirRemove.error ?? '';
+            const isRetryable: boolean = RETRYABLE_CODES.some(code => errStr.includes(code));
+            if (tryCount >= maxTries || !isRetryable) // final try or non-retryable error? log result
                 RK.logError(RK.LogSection.eSTR,'staged folder remove failed',H.Helpers.getErrorString(resDirRemove.error),{ fileDir, storageKey, tryCount, maxTries },'LocalStorage');
 
-            if (dirNotEmpty) // not empty? sleep && try again
+            if (isRetryable) // transient lock? sleep && try again
                 await H.Helpers.sleep(5000);
             else
                 break;

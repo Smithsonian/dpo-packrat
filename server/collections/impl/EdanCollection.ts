@@ -384,30 +384,52 @@ export class EdanCollection implements COL.ICollection {
         }
 
         const url: string = `${server}${path}${params ? '?' + params : ''}`;
-        try {
-            RK.logDebug(RK.LogSection.eCOLL,'send request',undefined,{ url, eType, eMethod, path, params },'Collection.EDAN');
-            const init: RequestInit = { method, body: body ?? undefined, headers: this.encodeHeader(params, contentType) };
-            const res = await fetch(url, init);
 
-            // debug statement for response
-            // const headers: string[] = [];
-            // res.headers.forEach((value, name) => { headers.push(`${name}: ${value}`); });
-            // LOG.info(`EdanCollection.sendRequest [${res.status}:${res.statusText}] response from ${url} (params: ${params})\n${headers.join('\n\t')}`,LOG.LS.eDEBUG);
+        // Explicit 60s request timeout — covers slow but eventually-responsive
+        // EDAN endpoints (precise record lookups can take longer than common
+        // text searches). Independent of the kernel TCP connect timeout, which
+        // is what dominates real failures and is addressed by the retry below.
+        const REQUEST_TIMEOUT_MS = 60000;
+        const MAX_ATTEMPTS = 2;
 
-            return {
-                output: await res.text(),
-                statusText: res.statusText,
-                success: res.ok
-            };
-        } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eCOLL,'send request',H.Helpers.getErrorString(error),{ url, eType, eMethod, path, params },'Collection.EDAN');
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            try {
+                if (attempt === 1)
+                    RK.logDebug(RK.LogSection.eCOLL,'send request',undefined,{ url, eType, eMethod, path, params },'Collection.EDAN');
+                else
+                    RK.logWarning(RK.LogSection.eCOLL,'send request retry',`attempt ${attempt}/${MAX_ATTEMPTS}`,{ url, eType, eMethod, path, params },'Collection.EDAN');
 
-            return {
-                output: JSON.stringify(error),
-                statusText: 'node-fetch error',
-                success: false
-            };
+                const init: RequestInit = {
+                    method,
+                    body: body ?? undefined,
+                    headers: this.encodeHeader(params, contentType),
+                    timeout: REQUEST_TIMEOUT_MS,
+                };
+                const res = await fetch(url, init);
+
+                return {
+                    output: await res.text(),
+                    statusText: res.statusText,
+                    success: res.ok
+                };
+            } catch (error) /* istanbul ignore next */ {
+                const isLastAttempt: boolean = attempt === MAX_ATTEMPTS;
+                if (isLastAttempt) {
+                    RK.logError(RK.LogSection.eCOLL,'send request',H.Helpers.getErrorString(error),{ url, eType, eMethod, path, params, attempt },'Collection.EDAN');
+                    return {
+                        output: JSON.stringify(error),
+                        statusText: 'node-fetch error',
+                        success: false
+                    };
+                }
+                // Brief backoff before retry — gives intermittent network or load-balancer
+                // hiccups a chance to clear. Errors logged at warn level only.
+                RK.logWarning(RK.LogSection.eCOLL,'send request transient failure',`${H.Helpers.getErrorString(error)} — will retry`,{ url, attempt },'Collection.EDAN');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
+        /* istanbul ignore next */
+        return { output: '', statusText: 'node-fetch error', success: false };
     }
 
     static computeLicenseInfo(licenseText?: string | undefined, licenseCodes?: string | undefined, usageText?: string | undefined): EdanLicenseInfo {

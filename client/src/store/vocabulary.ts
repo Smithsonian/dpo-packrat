@@ -18,6 +18,7 @@ export type AssetType = {
     model: boolean;
     other: boolean;
     attachment: boolean;
+    volume: boolean;
 };
 
 type VocabularyStore = {
@@ -71,6 +72,12 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eMetadataMetadataSource,
                     eVocabularySetID.eCaptureDataDatasetUse,
                     eVocabularySetID.eModelVariant,
+                    eVocabularySetID.eCaptureDataVolumeModality,
+                    eVocabularySetID.eCaptureDataVolumeScanType,
+                    eVocabularySetID.eCaptureDataVolumeContentType,
+                    eVocabularySetID.eCaptureDataVolumeFilterLocation,
+                    eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit,
+                    eVocabularySetID.eCaptureDataVolumeSpecimenPreparation,
                 ]
             }
         };
@@ -150,7 +157,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             scene: false,
             model: false,
             other: false,
-            attachment: false
+            attachment: false,
+            volume: false
         };
 
         if (vocabularyEntry) {
@@ -163,7 +171,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                 assetType.scene = (Term === 'Scene');
                 assetType.model = (Term === 'Model' || Term === 'Model Geometry File');
                 assetType.attachment = (Term === 'Attachment');
-                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model && !assetType.attachment;
+                assetType.volume = (Term === 'Capture Data Set: Volumetric');
+                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model && !assetType.attachment && !assetType.volume;
             }
         }
 
@@ -174,7 +183,10 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
         let eVocabEnum: eVocabularyID | null = null;
 
         switch (extension.toLowerCase()) {
-            case '.zip': eVocabEnum = eVocabularyID.eAssetAssetTypeBulkIngestion; break;
+            // .zip is intentionally NOT auto-mapped — the contents could be a volumetric
+            // ZIP, a photogrammetry bulk ingest, a scene archive, or other. Returning
+            // null forces the user to pick from the inline asset-type dropdown.
+            case '.zip': return null;
 
             case '.dcm': eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDicom; break;
 

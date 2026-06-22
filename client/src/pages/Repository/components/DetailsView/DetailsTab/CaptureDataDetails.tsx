@@ -6,11 +6,11 @@
  *
  * This component renders details tab for CaptureData specific details used in DetailsTab component.
  */
-import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Chip, Input } from '@material-ui/core';
+import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Chip, Input, Tooltip } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { isFieldUpdated } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
@@ -26,16 +26,16 @@ import { getNullableSelectEntries } from '../../../../../utils/controls';
 
 export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
     captureMethodTableContainer: {
-        backgroundColor: palette.primary.light,
+        backgroundColor: 'transparent',
         padding: '4px 0px 10px 0px',
         width: 'fit-content',
         height: 'fit-content'
     },
     ingestContainer: {
-        borderRadius: '0.5rem',
-        border: `1px dashed ${palette.primary.main}`,
+        borderRadius: 5,
+        border: '1px solid rgba(141, 171, 196, 0.4)',
         overflow: 'hidden',
-        backgroundColor: palette.primary.light,
+        backgroundColor: palette.secondary.light,
         padding: 0,
         marginBottom: '1rem',
     },
@@ -153,9 +153,9 @@ export const useStyles = makeStyles(({ palette, typography, breakpoints }) => ({
 function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const classes = useStyles();
-    const [CaptureDataDetails, updateDetailField] = useDetailTabStore(state => [state.CaptureDataDetails, state.updateDetailField]);
+    const [CaptureDataDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.CaptureDataDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
-    const [getInitialEntry, getEntries] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries]);
+    const [getInitialEntry, getEntries, getVocabularyId] = useVocabularyStore(state => [state.getInitialEntry, state.getEntries, state.getVocabularyId]);
 
     useEffect(() => {
         onUpdateDetail(objectType, CaptureDataDetails);
@@ -165,6 +165,27 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         if (!data?.getDetailsTabDataForObject.CaptureData?.isValidData)
             toast.error('Invalid data detected', { autoClose: false });
     }, [data, loading]);
+
+    const CDD_VOLUME_FIELDS: string[] = [
+        'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
+        'specimenPreparation', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
+        'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
+        'filterLocation',
+    ];
+    const CDD_PHOTO_FIELDS: string[] = [
+        'itemPositionType', 'itemPositionFieldId', 'itemArrangementFieldId',
+        'focusType', 'lightsourceType', 'backgroundRemovalMethod',
+        'clusterType', 'clusterGeometryFieldId', 'cameraSettingUniform',
+    ];
+    const CDD_SHARED_FIELDS: string[] = [
+        'datasetType', 'datasetUse', 'description', 'dateCaptured',
+    ];
+    const _cdResponseData = data?.getDetailsTabDataForObject?.CaptureData;
+    const _cddAnyChanged: boolean =
+        CDD_VOLUME_FIELDS.some(f => isFieldUpdated(CaptureDataDetails, _cdResponseData, f)) ||
+        CDD_PHOTO_FIELDS.some(f => isFieldUpdated(CaptureDataDetails, _cdResponseData, f)) ||
+        CDD_SHARED_FIELDS.some(f => isFieldUpdated(CaptureDataDetails, _cdResponseData, f));
+    useEffect(() => { setHasUnsavedDetails(_cddAnyChanged); }, [_cddAnyChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -200,6 +221,13 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
     };
 
+    const setFloatField = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
+        const { name, value } = target;
+        const parsed: number | null = value === '' ? null : Number(value);
+        if (parsed !== null && Number.isNaN(parsed)) return;
+        updateDetailField(eSystemObjectType.eCaptureData, name, parsed);
+    };
+
     const setDatasetUseField = (event) => {
         const  { value, name } = event.target;
         // make sure we got an array as value
@@ -232,7 +260,9 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
+
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
+    const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
@@ -254,28 +284,30 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
 
-                            <TableRow className={classes.tableRow}>
-                                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
-                                    <Typography className={classes.labelText}>Dataset Type</Typography>
-                                </TableCell>
-                                <TableCell className={classes.tableCell}>
-                                    <Select
-                                        disabled={disabled}
-                                        value={CaptureDataDetails?.datasetType}
-                                        name='datasetType'
-                                        onChange={setIdField}
-                                        disableUnderline
-                                        className={clsx(classes.select, classes.datasetTypeSelect)}
-                                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetType')) }}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-
-                            {   // TODO: explictly set to 6 (Photogrammetry Set). Check against enums/COMMON
-                                CaptureDataDetails?.datasetType === 6 &&
+                            {!isVolumetric && (
+                                <TableRow className={classes.tableRow}>
+                                    <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                                        <Typography className={classes.labelText}>Dataset Type</Typography>
+                                    </TableCell>
+                                    <TableCell className={classes.tableCell}>
+                                        <Select
+                                            disabled={disabled}
+                                            value={CaptureDataDetails?.datasetType}
+                                            name='datasetType'
+                                            onChange={setIdField}
+                                            disableUnderline
+                                            className={clsx(classes.select, classes.datasetTypeSelect)}
+                                            style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetType')) }}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {getEntries(eVocabularySetID.eCaptureDataDatasetType).map(({ idVocabulary, Term }, index) => <MenuItem key={index} value={idVocabulary}>{Term}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {
+                                !isVolumetric &&
+                                CaptureDataDetails?.datasetType === getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet) &&
                                 <TableRow className={classes.tableRow}>
                                     <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
                                         <Typography className={classes.labelText}>Dataset Use</Typography>
@@ -290,13 +322,15 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                             className={clsx(classes.select, classes.fieldSizing, classes.chipSelect)}
                                             input={<Input id='select-multiple-chip' />}
                                             renderValue={(selected) => {
-                                                // get our entries and cycle through what's selected drawing as Chips,
-                                                // and pulling the name from the entries.
+                                                // Render each selected vocab ID as a Chip. IDs that no longer resolve
+                                                // against the current vocabulary cache are surfaced as "Unknown (ID N)"
+                                                // so stale data stays visible rather than masquerading as a valid term.
                                                 const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
                                                 return (<div className={classes.chips}>
                                                     {(selected as number[]).map((value) => {
                                                         const entry = entries.find(entry => entry.idVocabulary === value);
-                                                        return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                        const label = entry ? entry.Term : `Unknown (ID ${value})`;
+                                                        return (<Chip key={value} label={label} className={classes.chip} />);
                                                     })}
                                                 </div>);
                                             }}
@@ -345,7 +379,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         onChange={onSetField}
                                         disabled={disabled}
                                         className={clsx(classes.input, classes.fieldSizing)}
-                                        updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'description')}
+                                        updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'description') || undefined}
                                         forceNotifyByEnter={false}
                                         debounceTimeout={400}
                                         style={{ width: '100%', minHeight: '4rem', textAlign: 'left', padding: '5px' }}
@@ -372,8 +406,37 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 </TableContainer>
             </Box>
 
-            <Box className={classes.ingestContainer}>
-                <TableContainer className={classes.captureMethodTableContainer} style={{ paddingTop: '10px', width: '100%' }}>
+            {isVolumetric && (
+                <Box className={classes.ingestContainer}>
+                    <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
+                        <Table className={classes.table}>
+                            <TableBody>
+                                {renderVolumeSelectRow('Modality', 'modality', eVocabularySetID.eCaptureDataVolumeModality, false)}
+                                {renderVolumeSelectRow('Scan Type', 'scanType', eVocabularySetID.eCaptureDataVolumeScanType, false)}
+                                {renderVolumeSelectRow('Content Type', 'contentType', eVocabularySetID.eCaptureDataVolumeContentType, false, undefined, true)}
+                                {renderVolumeTextRow('Scanner Make/Model', 'scannerMakeModel')}
+                                {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any')}
+                                {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any')}
+                                {renderVolumeSelectRow('Filter Location', 'filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, true)}
+                                {renderVolumeSelectRow('Voxel Size Unit', 'voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, false)}
+                                {renderVolumeNumberRow('Voxel Size X', 'voxelSizeX', 'any')}
+                                {renderVolumeNumberRow('Voxel Size Y', 'voxelSizeY', 'any')}
+                                {renderVolumeNumberRow('Voxel Size Z', 'voxelSizeZ', 'any')}
+                                {renderVolumeNumberRow('Dimensions X', 'dimensionsX')}
+                                {renderVolumeNumberRow('Dimensions Y', 'dimensionsY')}
+                                {renderVolumeNumberRow('Dimensions Z', 'dimensionsZ', undefined, true)}
+                                {renderVolumeNumberRow('Bit Depth', 'bitDepth')}
+                                {renderVolumeNumberRow('File Count', 'fileCount', undefined, true)}
+                                {renderVolumeNumberRow('Slice Count', 'sliceCount', undefined, true)}
+                                {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
+            )}
+
+            {!isVolumetric && <Box className={classes.ingestContainer}>
+                <TableContainer component={Paper} className={classes.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                     <Table className={classes.table}>
                         <TableBody>
                             <TableRow className={classes.tableRow}>
@@ -561,9 +624,9 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                         </TableBody>
                     </Table>
                 </TableContainer>
-            </Box>
+            </Box>}
 
-            <Box className={classes.ingestContainer}>
+            {!isVolumetric && <Box className={classes.ingestContainer}>
                 <AssetContents
                     viewMode
                     disabled={disabled}
@@ -572,9 +635,87 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                     onUpdate={updateFolderVariant}
                     originalFolders={data?.getDetailsTabDataForObject?.CaptureData?.folders as StateFolder[]}
                 />
-            </Box>
+            </Box>}
         </Box>
     );
+
+    function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean, tooltip?: string, readOnly: boolean = false): JSX.Element {
+        const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
+        const entries = optional
+            ? getNullableSelectEntries(getEntries(vocabSet), 'idVocabulary', 'Term')
+            : getEntries(vocabSet).map(e => ({ value: e.idVocabulary, label: e.Term }));
+        const labelNode = <Typography className={classes.labelText}>{label}</Typography>;
+        return (
+            <TableRow className={classes.tableRow} key={fieldName}>
+                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                    {tooltip ? <Tooltip title={tooltip} arrow placement='top-start'>{labelNode}</Tooltip> : labelNode}
+                </TableCell>
+                <TableCell className={classes.tableCell}>
+                    <Select
+                        disabled={disabled || readOnly}
+                        value={value ?? (optional ? -1 : '')}
+                        name={fieldName}
+                        onChange={setIdField}
+                        disableUnderline
+                        className={clsx(classes.select, classes.datasetFieldSelect)}
+                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}
+                        SelectDisplayProps={{ style: { paddingLeft: '10px', paddingRight: '10px', borderRadius: '5px' } }}
+                    >
+                        {entries.map(({ value, label }, index) => <MenuItem key={index} value={value as number}>{label}</MenuItem>)}
+                    </Select>
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    function renderVolumeNumberRow(label: string, fieldName: string, step?: string, readOnly: boolean = false): JSX.Element {
+        const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
+        return (
+            <TableRow className={classes.tableRow} key={fieldName}>
+                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                    <Typography className={classes.labelText}>{label}</Typography>
+                </TableCell>
+                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                    <DebounceInput
+                        element='input'
+                        type='number'
+                        name={fieldName}
+                        value={value === null || value === undefined ? '' : value}
+                        onChange={setFloatField}
+                        disabled={disabled || readOnly}
+                        debounceTimeout={400}
+                        className={clsx(classes.input, classes.datasetFieldInput)}
+                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}
+                        {...(step ? { step } : {})}
+                    />
+                </TableCell>
+            </TableRow>
+        );
+    }
+
+    function renderVolumeTextRow(label: string, fieldName: string): JSX.Element {
+        const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as string | null | undefined;
+        return (
+            <TableRow className={classes.tableRow} key={fieldName}>
+                <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
+                    <Typography className={classes.labelText}>{label}</Typography>
+                </TableCell>
+                <TableCell className={clsx(classes.tableCell, classes.valueText)}>
+                    <DebounceInput
+                        element='input'
+                        type='string'
+                        name={fieldName}
+                        value={value ?? ''}
+                        onChange={onSetField}
+                        disabled={disabled}
+                        debounceTimeout={400}
+                        className={clsx(classes.input, classes.datasetFieldInput)}
+                        style={{ ...updatedFieldStyling(isFieldUpdated(CaptureDataDetails, captureDataData, fieldName)) }}
+                    />
+                </TableCell>
+            </TableRow>
+        );
+    }
 }
 
 export default CaptureDataDetails;

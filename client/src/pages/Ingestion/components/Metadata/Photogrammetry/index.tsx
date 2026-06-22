@@ -10,7 +10,7 @@ import { DebounceInput } from 'react-debounce-input';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, TextArea } from '../../../../../components';
 import { MetadataType, StateIdentifier, StateMetadata, useMetadataStore, useVocabularyStore, useRepositoryStore, useSubjectStore, StateRelatedObject } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { withDefaultValueNumber, withDefaultValueBoolean } from '../../../../../utils/shared';
 import AssetContents from './AssetContents';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
@@ -126,7 +126,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
 
     const [getFieldErrors, updateMetadataField] = useMetadataStore(state => [state.getFieldErrors, state.updateMetadataField]);
     const metadata: StateMetadata = useMetadataStore(state => state.metadatas[metadataIndex]);
-    const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry, state.getVocabularyId]);
+    const [getEntries, getInitialEntry, getVocabularyId] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry, state.getVocabularyId]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
@@ -139,6 +139,23 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         if (idAsset)
             updateMetadataField(metadataIndex, 'idAsset', idAsset, MetadataType.photogrammetry);
     }, [metadataIndex, idAsset, updateMetadataField]);
+
+    // Seed the default datasetUse when the user picks Photogrammetry Image Set and
+    // the field is still empty. Resolves Alignment / Reconstruction / TextureGeneration
+    // to their current idVocabulary via the vocabulary store, so the value tracks the
+    // running DB's vocab IDs rather than relying on stale hardcoded literals.
+    useEffect(() => {
+        const photoImageSetId = getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet);
+        if (photogrammetry.datasetType !== photoImageSetId) return;
+        if (photogrammetry.datasetUse && photogrammetry.datasetUse !== '[]') return;
+        const alignment = getVocabularyId(eVocabularyID.eCaptureDataDatasetUseAlignment);
+        const reconstruction = getVocabularyId(eVocabularyID.eCaptureDataDatasetUseReconstruction);
+        const textureGeneration = getVocabularyId(eVocabularyID.eCaptureDataDatasetUseTextureGeneration);
+        const ids: number[] = [alignment, reconstruction, textureGeneration].filter((n): n is number => n !== null);
+        if (ids.length === 0) return;
+        ids.sort((a, b) => a - b);
+        updateMetadataField(metadataIndex, 'datasetUse', JSON.stringify(ids), MetadataType.photogrammetry);
+    }, [metadataIndex, photogrammetry.datasetType, photogrammetry.datasetUse, getVocabularyId, updateMetadataField]);
 
     const getSubjectIdSystemObjects = async (): Promise<number[]> => {
         const validSubjects = subjects.filter((subject) => subject.id > 0);
@@ -347,8 +364,7 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
 
-                            {   // TODO: explictly set to 6 (Photogrammetry Set). Check against enums/COMMON
-                                photogrammetry.datasetType === 6 &&
+                            {photogrammetry.datasetType === getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet) &&
                                 <TableRow className={tableClasses.tableRow}>
                                     <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
                                         <Typography className={tableClasses.labelText}>Dataset Use*</Typography>
@@ -363,13 +379,15 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                             className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
                                             input={<Input id='select-multiple-chip' />}
                                             renderValue={(selected) => {
-                                                // get our entries and cycle through what's selected drawing as Chips,
-                                                // and pulling the name from the entries.
+                                                // Render each selected vocab ID as a Chip. IDs that no longer resolve
+                                                // against the current vocabulary cache are surfaced as "Unknown (ID N)"
+                                                // so stale data stays visible rather than masquerading as a valid term.
                                                 const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
                                                 return (<div className={classes.chips}>
                                                     {(selected as number[]).map((value) => {
                                                         const entry = entries.find(entry => entry.idVocabulary === value);
-                                                        return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
+                                                        const label = entry ? entry.Term : `Unknown (ID ${value})`;
+                                                        return (<Chip key={value} label={label} className={classes.chip} />);
                                                     })}
                                                 </div>);
                                             }}

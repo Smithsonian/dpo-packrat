@@ -116,7 +116,7 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
                 clusterType: CDP.idVClusterType,
                 clusterGeometryFieldId: CDP.ClusterGeometryFieldID,
                 folders,
-                datasetUse: CDP.CaptureDatasetUse ?? '[207,208,209]' // indices into Vocabulary: alignment, reconstruction, texture generation
+                datasetUse: CDP.CaptureDatasetUse ?? await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON()
             };
         } else {
             RK.logError(RK.LogSection.eGQL,'compute updated version metadata failed','failed to retrieve CaptureDataPhoto from system object pair',{ idAssetVersion, captureData: SOP.CaptureData },'GraphQL.Asset');
