@@ -801,103 +801,102 @@ CREATE INDEX `Audit_CorrelationId` ON `Audit` (`CorrelationId`);
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 4, 'Audit Retention');
 
 -- ============================================================
--- Volumetric Capture Data Support (Eric)
--- Non-destructive: additive rows + new table only. The CT→Volumetric UPDATE preserves
--- idVocabulary so existing FK references continue to resolve.
---
--- Inline -- NNN comments below predict idVocabulary auto-increment values assuming
--- MAX(idVocabulary)=213 at apply time. The system does NOT require these specific IDs:
--- VocabularyCache resolves rows by Term string at runtime. The pre-check matters only
--- for keeping IDs consistent across environments (so any future hardcoded references
--- — like CaptureDataPhoto.CaptureDatasetUse default '[207,208,209]' — stay valid).
--- If MAX shifts, rows still bind correctly; the inline numeric comments just lie.
+-- 2026-06-22 Volumetric Capture Data Support (Eric)
+-- Additive vocabulary plus the CaptureDataVolume table for the
+-- volumetric capture data type. idVocabularySet 32-37 are fixed so IDs
+-- stay aligned across environments; VocabularyCache resolves terms by
+-- name at runtime. Re-runnable: every write skips rows that exist.
 -- ============================================================
 
--- Rename CT → Volumetric in CaptureData.CaptureMethod (idVocabulary unchanged)
+-- CaptureData.CaptureMethod (set 1): CT is named Volumetric.
 UPDATE Vocabulary SET Term = 'Volumetric' WHERE idVocabularySet = 1 AND Term = 'CT';
 
--- New entries in existing sets
--- Note: 'Capture Data Set: Volumetric' (set 20) is added below in the
--- AssetType reorder block so the insert and reorder land in one operation.
--- The trailing `-- NNN` values in this section are indicative only: idVocabulary
--- is AUTO_INCREMENT and assigned at apply time from the current MAX, so actual
--- values vary by environment. Code resolves these terms by Term + VocabularySet.Name
--- (see VocabularyCache), never by hardcoded id, so the exact numbers are not relied upon.
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (21, 14, 'Volume Inspect');               -- 215
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (22, 5,  'Job');                          -- 216
+-- Job.JobType (set 21): Volume Inspect.
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
+SELECT 21, 14, 'Volume Inspect'
+WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 21 AND Term = 'Volume Inspect');
 
--- Seed the Job entity row for 'Volume Inspect' (matches the Cook job pattern
--- in DATA.sql). Without this seed the row is created lazily by
--- the JobEngine on first dispatch with Name = NULL, which breaks any query
--- that filters Job by Name. The INSERT handles fresh staging / production
--- where the row does not yet exist; the UPDATE backfills the Name on local
--- DBs where the JobEngine already lazy-created the row.
+-- Workflow.Type (set 22): Job.
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
+SELECT 22, 5, 'Job'
+WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 22 AND Term = 'Job');
+
+-- Job entity row backing the Volume Inspect job type. The INSERT seeds
+-- fresh environments; the UPDATE backfills Name where the JobEngine
+-- lazy-created the row with a NULL Name.
 INSERT INTO Job (idVJobType, Name, Status, Frequency)
-SELECT v.idVocabulary, v.Term, 1, NULL
-FROM Vocabulary v
+SELECT v.idVocabulary, v.Term, 1, NULL FROM Vocabulary v
 WHERE v.Term = 'Volume Inspect'
-  AND NOT EXISTS (
-      SELECT 1 FROM Job j WHERE j.idVJobType = v.idVocabulary
-  );
+  AND NOT EXISTS (SELECT 1 FROM Job j WHERE j.idVJobType = v.idVocabulary);
+UPDATE Job j JOIN Vocabulary v ON j.idVJobType = v.idVocabulary
+SET j.Name = v.Term WHERE v.Term = 'Volume Inspect' AND j.Name IS NULL;
 
-UPDATE Job j
-JOIN Vocabulary v ON j.idVJobType = v.idVocabulary
-SET j.Name = v.Term
-WHERE v.Term = 'Volume Inspect' AND j.Name IS NULL;
+-- VocabularySets backing the CaptureDataVolume FK columns.
+INSERT IGNORE INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES
+  (32, 'CaptureDataVolume.Modality', 1),
+  (33, 'CaptureDataVolume.ScanType', 1),
+  (34, 'CaptureDataVolume.ContentType', 1),
+  (35, 'CaptureDataVolume.FilterLocation', 1),
+  (36, 'CaptureDataVolume.VoxelSizeUnit', 1),
+  (37, 'CaptureDataVolume.SpecimenPreparation', 1);
 
--- New VocabularySet: CaptureDataVolume.Modality
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (32, 'CaptureDataVolume.Modality', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 1, 'Medical CT');                    -- 217
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 2, 'Micro CT');                      -- 218
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 3, 'Nano CT');                      -- 219
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 4, 'Synchrotron');                   -- 220
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (32, 5, 'MRI');                          -- 221
+-- Modality (set 32).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 1, 'Medical CT'  WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Medical CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 2, 'Micro CT'    WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Micro CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 3, 'Nano CT'     WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Nano CT');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 4, 'Synchrotron' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='Synchrotron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 32, 5, 'MRI'         WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=32 AND Term='MRI');
 
--- New VocabularySet: CaptureDataVolume.ScanType
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (33, 'CaptureDataVolume.ScanType', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 1, 'Raw');                           -- 222
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (33, 2, 'Reconstructed');                 -- 223
+-- ScanType (set 33).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 33, 1, 'Raw'           WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=33 AND Term='Raw');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 33, 2, 'Reconstructed' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=33 AND Term='Reconstructed');
 
--- New VocabularySet: CaptureDataVolume.ContentType
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (34, 'CaptureDataVolume.ContentType', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 1, 'TIFF Stack');                    -- 224
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 2, 'DICOM');                         -- 225
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (34, 3, 'Other');                         -- 226
+-- ContentType (set 34).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 1, 'Image Stack' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='Image Stack');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 2, 'DICOM'       WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='DICOM');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 34, 3, 'Other'       WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=34 AND Term='Other');
 
--- New VocabularySet: CaptureDataVolume.FilterLocation
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (35, 'CaptureDataVolume.FilterLocation', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 1, 'None');                          -- 227
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 2, 'Source Side');                   -- 228
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 3, 'Detector Side');                 -- 229
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 4, 'Both');                          -- 230
+-- FilterLocation (set 35).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 1, 'None'          WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='None');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 2, 'Source Side'   WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Source Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 3, 'Detector Side' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Detector Side');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 4, 'Both'          WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Both');
 
--- New VocabularySet: CaptureDataVolume.VoxelSizeUnit (scoped to volumetric; intentionally not reusing Model.Units)
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (36, 'CaptureDataVolume.VoxelSizeUnit', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 1, 'Micrometer');                    -- 231
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 2, 'Millimeter');                    -- 232
+-- VoxelSizeUnit (set 36).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 1, 'Micrometer' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Micrometer');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 2, 'Millimeter' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Millimeter');
 
--- CaptureDataVolume table: 1:1 with CaptureData via UNIQUE on idCaptureData.
-CREATE TABLE `CaptureDataVolume` (
-    `idCaptureDataVolume` INT NOT NULL AUTO_INCREMENT,
-    `idCaptureData`       INT NOT NULL,
-    `idVModality`         INT NOT NULL,
-    `idVScanType`         INT NOT NULL,
-    `idVContentType`      INT NOT NULL,
-    `ScannerMakeModel`    VARCHAR(255) NULL,
-    `VoltageKV`           DOUBLE NULL,
-    `AmperageUA`          DOUBLE NULL,
-    `SpecimenPreparation` VARCHAR(2000) NULL,
-    `VoxelSizeX`          DOUBLE NOT NULL,
-    `VoxelSizeY`          DOUBLE NOT NULL,
-    `VoxelSizeZ`          DOUBLE NOT NULL,
-    `idVVoxelSizeUnit`    INT NOT NULL,
-    `DimensionsX`         INT NULL,
-    `DimensionsY`         INT NULL,
-    `DimensionsZ`         INT NULL,
-    `BitDepth`            INT NULL,
-    `FileCount`           INT NOT NULL,
-    `SliceCount`          INT NULL,
-    `idVFilterLocation`   INT NULL,
+-- SpecimenPreparation (set 37).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 1, 'Fluid-preserved' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Fluid-preserved');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 2, 'Dry'      WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Dry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 3, 'Stained'  WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Stained');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 4, 'Frozen'   WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Frozen');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 5, 'Embedded' WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Embedded');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 6, 'Live'     WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Live');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 7, 'Other'    WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Other');
+
+-- CaptureDataVolume: 1:1 with CaptureData via UNIQUE on idCaptureData.
+CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
+    `idCaptureDataVolume`    INT NOT NULL AUTO_INCREMENT,
+    `idCaptureData`          INT NOT NULL,
+    `idVModality`            INT NOT NULL,
+    `idVScanType`            INT NOT NULL,
+    `idVContentType`         INT NOT NULL,
+    `ScannerMakeModel`       VARCHAR(255) NULL,
+    `VoltageKV`              DOUBLE NULL,
+    `AmperageUA`             DOUBLE NULL,
+    `idVSpecimenPreparation` INT(11) DEFAULT NULL,
+    `VoxelSizeX`             DOUBLE NOT NULL,
+    `VoxelSizeY`             DOUBLE NOT NULL,
+    `VoxelSizeZ`             DOUBLE NOT NULL,
+    `idVVoxelSizeUnit`       INT NOT NULL,
+    `DimensionsX`            INT NULL,
+    `DimensionsY`            INT NULL,
+    `DimensionsZ`            INT NULL,
+    `BitDepth`               INT NULL,
+    `FileCount`              INT NOT NULL,
+    `SliceCount`             INT NULL,
+    `idVFilterLocation`      INT NULL,
     PRIMARY KEY (`idCaptureDataVolume`),
     UNIQUE INDEX `uq_capturedatavolume_cd` (`idCaptureData`),
     INDEX `fk_capturedatavolume_v1` (`idVModality`),
@@ -905,39 +904,24 @@ CREATE TABLE `CaptureDataVolume` (
     INDEX `fk_capturedatavolume_v3` (`idVContentType`),
     INDEX `fk_capturedatavolume_v4` (`idVFilterLocation`),
     INDEX `fk_capturedatavolume_v5` (`idVVoxelSizeUnit`),
-    CONSTRAINT `fk_capturedatavolume_cd` FOREIGN KEY (`idCaptureData`)      REFERENCES `CaptureData`(`idCaptureData`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `fk_capturedatavolume_v1` FOREIGN KEY (`idVModality`)        REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `fk_capturedatavolume_v2` FOREIGN KEY (`idVScanType`)        REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `fk_capturedatavolume_v3` FOREIGN KEY (`idVContentType`)     REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `fk_capturedatavolume_v4` FOREIGN KEY (`idVFilterLocation`)  REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION,
-    CONSTRAINT `fk_capturedatavolume_v5` FOREIGN KEY (`idVVoxelSizeUnit`)   REFERENCES `Vocabulary`(`idVocabulary`)     ON DELETE NO ACTION ON UPDATE NO ACTION
+    INDEX `fk_capturedatavolume_v6` (`idVSpecimenPreparation`),
+    CONSTRAINT `fk_capturedatavolume_cd` FOREIGN KEY (`idCaptureData`)          REFERENCES `CaptureData`(`idCaptureData`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v1` FOREIGN KEY (`idVModality`)            REFERENCES `Vocabulary`(`idVocabulary`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v2` FOREIGN KEY (`idVScanType`)            REFERENCES `Vocabulary`(`idVocabulary`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v3` FOREIGN KEY (`idVContentType`)         REFERENCES `Vocabulary`(`idVocabulary`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v4` FOREIGN KEY (`idVFilterLocation`)      REFERENCES `Vocabulary`(`idVocabulary`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v5` FOREIGN KEY (`idVVoxelSizeUnit`)       REFERENCES `Vocabulary`(`idVocabulary`)   ON DELETE NO ACTION ON UPDATE NO ACTION,
+    CONSTRAINT `fk_capturedatavolume_v6` FOREIGN KEY (`idVSpecimenPreparation`) REFERENCES `Vocabulary`(`idVocabulary`)   ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4;
 
--- Metadata.MetadataSource — add "Volumetric" alongside existing "Bulk Ingestion" and "Image".
--- Parallels "Image" (EXIF-style extraction from photo files) for metadata extracted from
--- volumetric capture data (DICOM headers, TIFF stack IFDs, vendor sidecars). Idempotent
--- via NOT EXISTS guard for safe re-apply.
+-- Metadata.MetadataSource (set 18): Volumetric, alongside Bulk Ingestion and Image.
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
 SELECT 18, 3, 'Volumetric'
-WHERE NOT EXISTS (
-    SELECT 1 FROM Vocabulary WHERE idVocabularySet = 18 AND Term = 'Volumetric'
-);
+WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 18 AND Term = 'Volumetric');
 
--- ============================================================
--- AssetType (set 20) — add "Capture Data Set: Volumetric" adjacent to the
--- other Capture Data Set entries (SortOrder 8) and shift "Capture Data Set:
--- Other" / "Capture Data File" / Model / Scene / etc. down by 1.
---
--- Single combined block for both:
---   * fresh DBs (staging / production) where the term does not yet exist
---   * local DB where the term was previously inserted at SortOrder 18
---
--- SortOrder has no UNIQUE constraint (only a non-unique index), so transient
--- collisions during execution are harmless. Absolute SETs + NOT EXISTS guard
--- make the whole block idempotent.
--- ============================================================
-
--- Shift existing entries down by 1 to free SortOrder 8.
+-- Asset.AssetType (set 20): Capture Data Set: Volumetric at SortOrder 8, with
+-- the trailing entries shifted down by one. SortOrder is non-unique, so
+-- transient overlaps during the shift are harmless.
 UPDATE Vocabulary SET SortOrder = 18 WHERE idVocabularySet = 20 AND Term = 'Other';
 UPDATE Vocabulary SET SortOrder = 17 WHERE idVocabularySet = 20 AND Term = 'Attachment';
 UPDATE Vocabulary SET SortOrder = 16 WHERE idVocabularySet = 20 AND Term = 'Intermediary File';
@@ -948,69 +932,23 @@ UPDATE Vocabulary SET SortOrder = 12 WHERE idVocabularySet = 20 AND Term = 'Mode
 UPDATE Vocabulary SET SortOrder = 11 WHERE idVocabularySet = 20 AND Term = 'Model';
 UPDATE Vocabulary SET SortOrder = 10 WHERE idVocabularySet = 20 AND Term = 'Capture Data File';
 UPDATE Vocabulary SET SortOrder = 9  WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Other';
-
--- Seat Volumetric at SortOrder 8. UPDATE handles the local DB case (row
--- exists from earlier migration at SortOrder 18); INSERT-with-NOT-EXISTS
--- handles staging / production (row absent).
-UPDATE Vocabulary SET SortOrder = 8 WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric';
+UPDATE Vocabulary SET SortOrder = 8  WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric';
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term)
 SELECT 20, 8, 'Capture Data Set: Volumetric'
-WHERE NOT EXISTS (
-    SELECT 1 FROM Vocabulary WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric'
-);
+WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric');
 
 -- ============================================================
--- CaptureDataPhoto.CaptureDatasetUse: drop the DDL-level default. The legacy
--- default '[207,208,209]' hardcoded specific idVocabulary values for the
--- Alignment / Reconstruction / TextureGeneration terms, which is brittle to
--- vocab ID drift across environments. All application creation paths now
--- supply the value explicitly via VocabularyCache.defaultCaptureDatasetUseJSON()
--- which resolves the IDs dynamically. Existing rows are unaffected — only the
--- column-level DEFAULT clause is removed.
+-- 2026-06-22 CaptureDataPhoto vocabulary refinements (Eric)
 -- ============================================================
+
+-- CaptureDataPhoto.CaptureDatasetUse carries no column-level default; creation
+-- paths supply the value via VocabularyCache.defaultCaptureDatasetUseJSON().
 ALTER TABLE CaptureDataPhoto MODIFY COLUMN CaptureDatasetUse LONGTEXT NOT NULL;
 
--- ============================================================
--- CaptureDataVolume.SpecimenPreparation: free-text column replaced with
--- a Vocabulary-backed dropdown. The categorical list (Fluid-preserved,
--- Dry, Stained, Frozen, Embedded, Live, Other) covers the common cases;
--- additional detail belongs in CaptureData.Description.
---
--- WARNING: this drops any free-text already stored in
--- CaptureDataVolume.SpecimenPreparation. The volumetric feature shipped
--- recently; verify with operators before applying to staging/production
--- if any specimen-preparation notes have been entered.
--- ============================================================
-INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (37, 'CaptureDataVolume.SpecimenPreparation', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 1, 'Fluid-preserved');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 2, 'Dry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 3, 'Stained');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 4, 'Frozen');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 5, 'Embedded');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 6, 'Live');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 7, 'Other');
-
-ALTER TABLE CaptureDataVolume DROP COLUMN SpecimenPreparation;
-ALTER TABLE CaptureDataVolume ADD COLUMN idVSpecimenPreparation INT(11) DEFAULT NULL AFTER AmperageUA;
-ALTER TABLE CaptureDataVolume ADD KEY fk_capturedatavolume_v6 (idVSpecimenPreparation);
-ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v6 FOREIGN KEY (idVSpecimenPreparation) REFERENCES Vocabulary (idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- ============================================================
--- CaptureDataVolume.ContentType: rename "TIFF Stack" -> "Image Stack" so the
--- single term covers TIFF, JPG and PNG slice archives. idVocabulary is left
--- intact (the FK target stays the same row), so existing CaptureDataVolume
--- rows referencing the old term continue to point at the renamed row.
--- ============================================================
-UPDATE Vocabulary SET Term = 'Image Stack' WHERE idVocabularySet = 34 AND Term = 'TIFF Stack';
-
--- ============================================================
--- 2026-06-15 Rename photo-specific CaptureData.* VocabularySets to
--- CaptureDataPhoto.* so VocabularySet.Name reflects the owning entity: all
--- seven sets have FK columns only on CaptureDataPhoto. CaptureData.CaptureMethod
--- (the discriminator shared by every capture type) and CaptureDataFile.VariantType
--- are intentionally left unchanged. idVocabularySet values are untouched, so
--- every FK reference continues to resolve. Idempotent: no rows match on re-run.
--- ============================================================
+-- Photo-specific VocabularySet names carry the CaptureDataPhoto prefix so the
+-- name reflects the owning entity. idVocabularySet values are unchanged, so FK
+-- references continue to resolve. CaptureData.CaptureMethod and
+-- CaptureDataFile.VariantType keep their names.
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetType'             WHERE Name = 'CaptureData.DatasetType';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.ItemPositionType'        WHERE Name = 'CaptureData.ItemPositionType';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.FocusType'               WHERE Name = 'CaptureData.FocusType';
