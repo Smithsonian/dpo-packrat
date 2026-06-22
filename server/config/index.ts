@@ -152,6 +152,7 @@ export type ConfigType = {
     },
     navigation: {
         type: NAVIGATION_TYPE;
+        reindexSchedule: string;
     },
     slack: {
         apiKey: string;
@@ -323,6 +324,7 @@ export const Config: ConfigType = {
     },
     navigation: {
         type: process.env.PACKRAT_NAVIGATION_TYPE === 'db' ? NAVIGATION_TYPE.DB : NAVIGATION_TYPE.SOLR,
+        reindexSchedule: process.env.PACKRAT_SOLR_REINDEX_SCHEDULE ? process.env.PACKRAT_SOLR_REINDEX_SCHEDULE : '0 0 * * *',
     },
     slack: {
         apiKey: process.env.PACKRAT_SLACK_KEY ? process.env.PACKRAT_SLACK_KEY: 'undefined',

@@ -7,6 +7,7 @@ import { ObjectGraphDataEntry } from '../../../db';
 import { SolrClient, eSolrCore } from './SolrClient';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import { Config } from '../../../config';
 
 import * as NS from 'node-schedule';
 
@@ -58,8 +59,9 @@ export class IndexSolr implements NAV.IIndexer {
 
     constructor() {
         if (IndexSolr.reindexJob === null) {
-            IndexSolr.reindexJob = NS.scheduleJob('Packrat Solr Full Reindex', '0 */4 * * *', IndexSolr.fullIndexScheduled);
-            RK.logInfo(RK.LogSection.eNAV,'reindex job scheduled',undefined,{},'Navigation.Solr.Index');
+            const schedule: string = Config.navigation.reindexSchedule;
+            IndexSolr.reindexJob = NS.scheduleJob('Packrat Solr Full Reindex', schedule, IndexSolr.fullIndexScheduled);
+            RK.logInfo(RK.LogSection.eNAV,'reindex job scheduled',undefined,{ schedule },'Navigation.Solr.Index');
         }
     }
 
