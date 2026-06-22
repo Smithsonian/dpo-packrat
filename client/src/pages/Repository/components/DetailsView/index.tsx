@@ -95,6 +95,20 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             padding: 10
         }
     },
+    unsavedNotice: {
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '8px 16px',
+        backgroundColor: palette.secondary.main,
+        color: palette.secondary.contrastText,
+        borderTop: `1px solid ${palette.secondary.dark}`,
+        boxShadow: '0 -2px 6px rgba(0, 0, 0, 0.08)',
+        fontSize: '0.9rem',
+        textAlign: 'center',
+        zIndex: 1200,
+    },
     updateButton: {
         height: 35,
         width: 100,
@@ -967,23 +981,7 @@ function DetailsView(): React.ReactElement {
                     />
                 )}
                 {hasAnyUnsaved && (
-                    <Box
-                        style={{
-                            position: 'fixed',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            padding: '8px 16px',
-                            backgroundColor: '#fff3e0',
-                            borderTop: '1px solid #ffb74d',
-                            boxShadow: '0 -2px 6px rgba(0, 0, 0, 0.08)',
-                            color: '#e65100',
-                            fontSize: '0.9rem',
-                            fontStyle: 'italic',
-                            textAlign: 'center',
-                            zIndex: 1200,
-                        }}
-                    >
+                    <Box className={classes.unsavedNotice}>
                         Unsaved changes — press <strong>Update</strong> to apply.
                     </Box>
                 )}

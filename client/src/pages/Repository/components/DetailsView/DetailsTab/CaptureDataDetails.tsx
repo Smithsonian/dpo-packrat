@@ -306,6 +306,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 </TableRow>
                             )}
                             {
+                                !isVolumetric &&
                                 CaptureDataDetails?.datasetType === getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet) &&
                                 <TableRow className={classes.tableRow}>
                                     <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
