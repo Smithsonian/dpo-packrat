@@ -12,6 +12,10 @@
  *
  * These files are committed to the repo. Regenerate only if a fixture must change.
  * Not part of CI.
+ *
+ * volume-test-phoenix.pca / volume-test-phoenix.pcr are committed alongside these but are
+ * hand-authored, not produced here: they are scrubbed reductions of real GE Phoenix v|tome|x
+ * (datos|x) exports (internal paths and names removed) used to test the vendor sidecar profiles.
  */
 import * as fs from 'fs/promises';
 import * as path from 'path';

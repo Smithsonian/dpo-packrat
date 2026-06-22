@@ -1,0 +1,21 @@
+[Versions]
+Version-PCR=2
+Version-datos|x=2.4.0.1199 - RTM
+[General]
+ParameterSetOnly=0
+[ImageData]
+PCA_File=volume-test-phoenix.pca
+[ROI]
+ROI_SizeX=1820
+ROI_SizeY=1318
+ROI_SizeZ=2023
+[Reconstruction Settings]
+StartImage=1
+LastImage=2876
+[VolumeData]
+Volume_SizeX=1820
+Volume_SizeY=1318
+Volume_SizeZ=2023
+VoxelSizeRec=0.09975548833608627
+Resolution=1
+Format=5

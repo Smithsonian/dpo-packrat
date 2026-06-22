@@ -140,7 +140,13 @@ export async function resolveAssetVersionLocalPath(idAssetVersion: number): Prom
     if (!storage)
         return { filePath: null, error: 'Storage unavailable' };
 
-    const idSystemObject: number | undefined = asset.idSystemObject ?? undefined;
+    // Asset.idSystemObject is the asset's owner pointer, null until the asset is ingested
+    // and attached to its parent object. For a staged (not-yet-ingested) asset version,
+    // fall back to the AssetVersion's own SystemObject so authorization has a valid object.
+    const idSystemObject: number | undefined =
+        asset.idSystemObject
+        ?? (await DBAPI.SystemObject.fetchFromAssetVersionID(idAssetVersion))?.idSystemObject
+        ?? undefined;
 
     if (!assetVersion.Ingested) {
         const stagingPath = await storage.stagingFileName(assetVersion.StorageKeyStaging);

@@ -36,7 +36,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 import { JobVolumeInspectParameters } from './JobVolumeInspectParameters';
 import { VolumeContentType, VolumeExtractedMetadata } from './JobVolumeInspectOutput';
-import { parseSidecar, isSidecarFile, SidecarParseResult } from './sidecar';
+import { parseSidecars, isSidecarFile, SidecarFile, SidecarParseResult } from './sidecar';
 import { DicomInspector } from './dicom/DicomInspector';
 
 const SCAN_SHEET_REGEX = /(scan|sheet|log|report).*\.(pdf|jpg|jpeg|png|docx?)$/i;
@@ -199,6 +199,9 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
         // PNG slice formats under a single contentType — the per-slice subtype
         // is recovered from each entry's extension when we sample headers.
         const warnings: string[] = [];
+        // Data-integrity conflicts (missing slices, declared-vs-actual slice-count mismatch).
+        // Collected across stages and, if any are present, fail the inspection before returning.
+        const integrityErrors: string[] = [];
 
         const imageEntries: string[] = fileEntries.filter(e => IMAGE_STACK_EXT_REGEX.test(e)).sort();
         const dicomSliceEntries: string[] = fileEntries.filter(e => DICOM_EXT_REGEX.test(e)).sort();
@@ -250,22 +253,33 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
             if (count > 1)
                 warnings.push(`Duplicate entry appears ${count}x: ${name}`);
 
-        // Sequence-numbering continuity (warn-only, grouped per directory)
-        checkSequenceContinuity(sliceEntries, warnings);
+        // Sequence-numbering continuity, grouped per directory. A gap means slices are missing,
+        // which is a data-integrity error (collected, fails the inspection below).
+        checkSequenceContinuity(sliceEntries, integrityErrors);
 
-        // Stage 3: sidecar parse
+        // Stage 3: sidecar parse — extract every sidecar entry, then run the ordered PCA→PCR
+        // pipeline once over all of them so a .pcr's reconstructed values take precedence over a
+        // .pca's acquisition values regardless of the order they appear in the archive.
         const sidecarEntries: string[] = fileEntries.filter(e => isSidecarFile(path.basename(e)));
         const vendorSidecarPaths: string[] = [...sidecarEntries];
-        let sidecarResult: SidecarParseResult = { warnings: [] };
+        const sidecarFiles: SidecarFile[] = [];
         for (const sidecarEntry of sidecarEntries) {
             const tempPath: string | null = await extractEntryToStaging(zip, sidecarEntry, stagingDir);
-            if (!tempPath) continue;
-            try {
-                const result: SidecarParseResult | null = await parseSidecar(tempPath);
-                if (result) sidecarResult = mergeSidecarResults(sidecarResult, result);
-            } finally {
-                await unlinkSafe(tempPath);
-            }
+            if (tempPath) sidecarFiles.push({ path: tempPath, name: path.basename(sidecarEntry) });
+        }
+        let sidecarResult: SidecarParseResult = { warnings: [] };
+        try {
+            sidecarResult = await parseSidecars(sidecarFiles);
+        } catch (err) {
+            // Sidecar parsing is best-effort: an unexpected parser error degrades the form
+            // pre-fill but must not fail the whole inspection. Surface it as a warning (and an
+            // error log for visibility) and continue with whatever the headers provide.
+            const msg: string = H.Helpers.getErrorString(err);
+            sidecarResult = { warnings: [`Sidecar parsing error (continuing without sidecar metadata): ${msg}`] };
+            RK.logError(RK.LogSection.eJOB, 'sidecar parse error', msg,
+                { sidecarFiles: sidecarFiles.map(f => f.name) }, 'Job.VolumeInspect');
+        } finally {
+            for (const file of sidecarFiles) await unlinkSafe(file.path);
         }
         warnings.push(...sidecarResult.warnings);
 
@@ -294,13 +308,14 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
             await validateImageStackSlices(zip, sliceEntries, headerData, stagingDir, warnings);
         }
 
-        // Stage 5: cross-check + companion file tagging. The slice count and
-        // dimensions found in the ZIP are authoritative; a vendor sidecar that
-        // disagrees is reported as a warning but does NOT fail ingest. Sidecars
-        // frequently count projections/darks or use a different convention, so a
-        // mismatch is informational — we always use the values found in the ZIP.
+        // Stage 5: cross-check + companion file tagging.
+        //   - Slice count: a sidecar's declared count (the .pcr's reconstructed Volume_SizeZ) is
+        //     a reliable integrity signal — a mismatch means slices are missing or extra, so it
+        //     fails the inspection rather than being silently tolerated.
+        //   - Dimensions: ROI crops and detector binning legitimately change these, so a
+        //     sidecar-vs-header dimension difference stays a warning and the header value is used.
         if (sidecarResult.declaredSliceCount !== undefined && sidecarResult.declaredSliceCount !== sliceCount)
-            warnings.push(`Sidecar declares ${sidecarResult.declaredSliceCount} slices but ZIP contains ${sliceCount} (using ${sliceCount})`);
+            integrityErrors.push(`Sidecar declares ${sidecarResult.declaredSliceCount} slices but the archive contains ${sliceCount}`);
         if (sidecarResult.declaredDimensionsX !== undefined && headerData.dimensionsX !== undefined
             && sidecarResult.declaredDimensionsX !== headerData.dimensionsX)
             warnings.push(`Sidecar declares dimensionsX=${sidecarResult.declaredDimensionsX} but header reports ${headerData.dimensionsX} (using ${headerData.dimensionsX})`);
@@ -308,25 +323,33 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
             && sidecarResult.declaredDimensionsY !== headerData.dimensionsY)
             warnings.push(`Sidecar declares dimensionsY=${sidecarResult.declaredDimensionsY} but header reports ${headerData.dimensionsY} (using ${headerData.dimensionsY})`);
 
+        // Fail the inspection if any data-integrity conflict was found (missing slices or a
+        // declared-vs-actual slice-count mismatch). Aggregated so the report lists every problem.
+        if (integrityErrors.length > 0)
+            throw new Error(`Volume inspection integrity check failed: ${integrityErrors.join('; ')}`);
+
         const scanSheetPaths: string[] = fileEntries.filter(e => SCAN_SHEET_REGEX.test(path.basename(e)));
         const scanLogPaths: string[] = fileEntries.filter(e => SCAN_LOG_REGEX.test(path.basename(e)));
 
+        // The embedded slice header is authoritative for geometry (dimensions, voxel/pixel
+        // spacing, bit depth) since it travels inside the actual scan data; the sidecar fills
+        // gaps the header lacks and supplies acquisition-only fields (voltage, current, scanner).
         return {
             fileCount,
             sliceCount,
             contentType,
-            dimensionsX: headerData.dimensionsX,
-            dimensionsY: headerData.dimensionsY,
+            dimensionsX: headerData.dimensionsX ?? sidecarResult.declaredDimensionsX,
+            dimensionsY: headerData.dimensionsY ?? sidecarResult.declaredDimensionsY,
             dimensionsZ: sliceCount,           // Z is the slice axis for any volumetric stack
             bitDepth: headerData.bitDepth,
-            voxelSizeX: sidecarResult.voxelSizeX ?? headerData.voxelSizeX,
-            voxelSizeY: sidecarResult.voxelSizeY ?? headerData.voxelSizeY,
-            voxelSizeZ: sidecarResult.voxelSizeZ ?? headerData.voxelSizeZ,
-            voxelSizeUnit: sidecarResult.voxelSizeUnit ?? headerData.voxelSizeUnit,
+            voxelSizeX: headerData.voxelSizeX ?? sidecarResult.voxelSizeX,
+            voxelSizeY: headerData.voxelSizeY ?? sidecarResult.voxelSizeY,
+            voxelSizeZ: headerData.voxelSizeZ ?? sidecarResult.voxelSizeZ,
+            voxelSizeUnit: headerData.voxelSizeUnit ?? sidecarResult.voxelSizeUnit,
             modality: headerData.modality,      // DICOM (0008,0060); sidecars don't carry it
-            voltageKV: sidecarResult.voltageKV ?? headerData.voltageKV,
-            amperageUA: sidecarResult.amperageUA ?? headerData.amperageUA,
-            scannerMakeModel: sidecarResult.scannerMakeModel ?? headerData.scannerMakeModel,
+            voltageKV: headerData.voltageKV ?? sidecarResult.voltageKV,
+            amperageUA: headerData.amperageUA ?? sidecarResult.amperageUA,
+            scannerMakeModel: headerData.scannerMakeModel ?? sidecarResult.scannerMakeModel,
             scanSheetPaths,
             scanLogPaths,
             vendorSidecarPaths,
@@ -381,12 +404,13 @@ async function extractEntryToStaging(zip: ZipFile, entry: string, stagingDir: st
 }
 
 /**
- * Warn-only check that slice filenames have a numeric component that increments
- * without gaps. Grouped per parent directory so interleaved multi-series stacks
- * (seriesA/1,2 + seriesB/1,2) are each treated as their own clean sequence rather
- * than producing false gaps.
+ * Check that slice filenames have a numeric component that increments without gaps. A gap
+ * indicates missing slices, so each one is appended to `integrityErrors` (which fails the
+ * inspection). Grouped per parent directory so interleaved multi-series stacks (seriesA/1,2 +
+ * seriesB/1,2) are each treated as their own clean sequence rather than producing false gaps.
+ * Numbering is assumed to be unit-step; a deliberately stepped sequence (0,10,20) reads as a gap.
  */
-function checkSequenceContinuity(sliceEntries: string[], warnings: string[]): void {
+function checkSequenceContinuity(sliceEntries: string[], integrityErrors: string[]): void {
     const byDir = new Map<string, number[]>();
     for (const entry of sliceEntries) {
         const match: RegExpMatchArray | null = path.basename(entry).match(/(\d+)(?=\.[^.]+$)/);
@@ -401,7 +425,7 @@ function checkSequenceContinuity(sliceEntries: string[], warnings: string[]): vo
         numbers.sort((a, b) => a - b);
         for (let i = 1; i < numbers.length; i++) {
             if (numbers[i] !== numbers[i - 1] + 1) {
-                warnings.push(`Slice sequence has a gap in ${dir || '.'} between ${numbers[i - 1]} and ${numbers[i]}`);
+                integrityErrors.push(`Slice sequence has a gap in ${dir || '.'} between ${numbers[i - 1]} and ${numbers[i]}`);
                 break;
             }
         }
@@ -566,22 +590,6 @@ function readPositiveInt(md: Map<string, string>, keys: string[]): number | unde
         if (!Number.isNaN(n) && n > 0) return n;
     }
     return undefined;
-}
-
-function mergeSidecarResults(a: SidecarParseResult, b: SidecarParseResult): SidecarParseResult {
-    return {
-        voxelSizeX: b.voxelSizeX ?? a.voxelSizeX,
-        voxelSizeY: b.voxelSizeY ?? a.voxelSizeY,
-        voxelSizeZ: b.voxelSizeZ ?? a.voxelSizeZ,
-        voxelSizeUnit: b.voxelSizeUnit ?? a.voxelSizeUnit,
-        voltageKV: b.voltageKV ?? a.voltageKV,
-        amperageUA: b.amperageUA ?? a.amperageUA,
-        scannerMakeModel: b.scannerMakeModel ?? a.scannerMakeModel,
-        declaredSliceCount: b.declaredSliceCount ?? a.declaredSliceCount,
-        declaredDimensionsX: b.declaredDimensionsX ?? a.declaredDimensionsX,
-        declaredDimensionsY: b.declaredDimensionsY ?? a.declaredDimensionsY,
-        warnings: [...a.warnings, ...b.warnings],
-    };
 }
 
 async function pipelineToFile(stream: NodeJS.ReadableStream, destPath: string): Promise<void> {

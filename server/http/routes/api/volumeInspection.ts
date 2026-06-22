@@ -58,19 +58,19 @@ export async function getVolumeInspection(req: Request, res: Response): Promise<
         return;
     }
 
-    // Authorize against the SystemObject that owns the AssetVersion's Asset.
     const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
     if (!assetVersion) {
         res.status(200).send(JSON.stringify(generateResponse(false, 'AssetVersion not found')));
         return;
     }
-    const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(assetVersion.idAsset);
-    if (!asset) {
-        res.status(200).send(JSON.stringify(generateResponse(false, 'Asset not found')));
-        return;
-    }
+
+    // Authorize against the AssetVersion's own SystemObject. Asset.idSystemObject is the
+    // asset's owner pointer, which stays null until the asset is ingested and attached to
+    // its parent object — a mid-ingest upload is only staged, so the owner pointer cannot
+    // authorize it. The AssetVersion always has its own SystemObject.
+    const sysObj: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetVersionID(idAssetVersion);
     const ctx = Authorization.getContext();
-    if (!ctx || !asset.idSystemObject || !await Authorization.canAccessSystemObject(ctx, asset.idSystemObject)) {
+    if (!ctx || !sysObj || !await Authorization.canAccessSystemObject(ctx, sysObj.idSystemObject)) {
         res.status(200).send(JSON.stringify(generateResponse(false, AUTH_ERROR.ACCESS_DENIED)));
         return;
     }

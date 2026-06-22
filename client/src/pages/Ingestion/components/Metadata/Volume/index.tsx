@@ -20,6 +20,7 @@
  */
 import { Box, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableRow, Tooltip, Typography } from '@material-ui/core';
 import { DebounceInput } from 'react-debounce-input';
+import { toast } from 'react-toastify';
 import React, { useEffect, useRef, useState } from 'react';
 import { AssetIdentifiers, DateInputField } from '../../../../../components';
 import { MetadataType, StateIdentifier, useMetadataStore, useRepositoryStore, useSubjectStore, useVocabularyStore } from '../../../../../store';
@@ -103,6 +104,13 @@ function Volume(props: VolumeProps): React.ReactElement {
             lastAutofillVersion.current = idAssetVersion;       // applied once per version
 
             const m = result.data;
+
+            // The inspection records this warning when a sidecar (.pca/.pcr) was present but could
+            // not be parsed; the form is then pre-filled from the scan headers alone. Surface that
+            // so the user knows the sidecar's voxel/voltage/scanner values are not contributing.
+            if (Array.isArray(m.warnings) && m.warnings.some((w: string) => /^sidecar parsing error/i.test(w)))
+                toast.warn('Sidecar metadata could not be read — fields are pre-filled from the scan headers only. Please review.');
+
             if (m.fileCount !== undefined) updateMetadataField(metadataIndex, 'fileCount', m.fileCount, MetadataType.volume);
             if (m.sliceCount !== undefined) updateMetadataField(metadataIndex, 'sliceCount', m.sliceCount, MetadataType.volume);
             if (m.dimensionsX !== undefined) updateMetadataField(metadataIndex, 'dimensionsX', m.dimensionsX, MetadataType.volume);

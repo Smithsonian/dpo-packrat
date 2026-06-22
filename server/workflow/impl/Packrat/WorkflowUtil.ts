@@ -142,7 +142,8 @@ export class WorkflowUtil {
         const results = await workflow.waitForCompletion(10 * 60 * 60 * 1000); // 10 hours
         if (!results.success) {
             RK.logError(RK.LogSection.eWF,'compute model metrics failed',`post-upload error: ${results.error}`, { fileName },'Workflow.Util');
-            return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };
+            // Unwrapped reason → concise toast; full context lives in the workflow report and logs.
+            return { success: false, error: results.error ?? `${fileName} post-upload validation failed` };
         }
 
         // persist extracted metrics, if we have a source model
@@ -154,7 +155,8 @@ export class WorkflowUtil {
                     const results: H.IOResults = await JCOutput.persist(idModel, assetMap);
                     if (!results.success) {
                         RK.logError(RK.LogSection.eWF,'compute model metrics failed',`peristing metrics error: ${results.error}`, { fileName, idModel, assetMap },'Workflow.Util');
-                        return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };
+                        // Unwrapped reason → concise toast; full context lives in the report and logs.
+                        return { success: false, error: results.error ?? `${fileName} failed to persist model metrics` };
                     }
                 }
             }
@@ -207,7 +209,9 @@ export class WorkflowUtil {
         const results: H.IOResults = await workflow.waitForCompletion(4 * 60 * 60 * 1000); // 4 hours
         if (!results.success) {
             RK.logError(RK.LogSection.eWF,'compute volume metrics failed',`post-upload error: ${results.error}`, { fileName },'Workflow.Util');
-            return { success: false, error: `${fileName} post-upload workflow error: ${results.error}` };
+            // Return the underlying reason unwrapped so the user-facing toast stays concise; the
+            // full context (file, stage) is already in the workflow report and the logs.
+            return { success: false, error: results.error ?? `${fileName} post-upload validation failed` };
         }
 
         return { success: true };
