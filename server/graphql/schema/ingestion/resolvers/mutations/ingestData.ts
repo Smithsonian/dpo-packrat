@@ -15,6 +15,7 @@ import { SceneHelpers } from '../../../../../utils';
 import * as WF from '../../../../../workflow/interface';
 import * as REP from '../../../../../report/interface';
 import * as NAV from '../../../../../navigation/interface';
+import { Config } from '../../../../../config';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, StorageFactory, IStorage } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
 import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
@@ -2132,6 +2133,12 @@ class IngestDataWorker extends ResolverBase {
         this.ingestVolume           = this.input.volume && this.input.volume.length > 0;
         this.ingestNew              = false;
         this.ingestUpdate           = false;
+
+        if (this.ingestVolume && !Config.features.volumetricIngest) {
+            const error: string = 'Volumetric ingest is currently disabled';
+            RK.logError(RK.LogSection.eGQL,'validate input failed',error,{},'GraphQL.Ingestion.Data');
+            return { success: false, error };
+        }
 
         if (this.ingestPhotogrammetry) {
             for (const photogrammetry of this.input.photogrammetry) {

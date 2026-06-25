@@ -285,6 +285,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                         case 'capture data set: spherical laser':
                         case 'capture data set: structured light':
                         case 'capture data set: other':
+                        case 'capture data set: volumetric':
                         case 'capture data file':
                         case 'model geometry file':
                         case 'model uv map file':

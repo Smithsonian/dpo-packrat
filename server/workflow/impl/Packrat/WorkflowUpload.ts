@@ -194,6 +194,8 @@ export class WorkflowUpload implements WF.IWorkflow {
                 // if we're a model, zipped or not, validate the entire file/collection as is:
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
             } else if (isVolume) {
+                if (!Config.features.volumetricIngest)
+                    return this.handleError('Volumetric ingest is currently disabled');
                 // Volumetric ZIP — inspect as a single archive. Must precede the
                 // generic ZIP-cracking branch below or the archive would be unzipped
                 // and validated entry-by-entry, defeating the point.
@@ -226,7 +228,11 @@ export class WorkflowUpload implements WF.IWorkflow {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
                     if (!readStream)
                         return this.handleError(`WorkflowUpload.validateFiles unable to fetch read stream for ${fileName} in zip of asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`);
-                    await this.validateFile(fileName, readStream, true, idSystemObject, asset);
+                    const entryRes: H.IOResults = await this.validateFile(fileName, readStream, true, idSystemObject, asset);
+                    if (!entryRes.success) {
+                        fileRes = entryRes;
+                        break;
+                    }
                 }
             }
 
@@ -246,30 +252,45 @@ export class WorkflowUpload implements WF.IWorkflow {
         return this.results;
     }
 
+    // Image formats validated via Sharp. Used to tie image validation to the chosen asset type.
+    private static readonly imageFileExtensions: ReadonlySet<string> =
+        new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.tif', '.tiff', '.webp']);
+
     private async validateFile(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean, idSystemObject: number,
         asset: DBAPI.Asset): Promise<H.IOResults> {
 
-        // validate scene file by loading it:
+        const ext: string = path.extname(fileName).toLowerCase();
+
+        // Volumetric dataset files (.dcm/.pca/.pcr) may only enter via the Volumetric asset type, which
+        // is inspected as a whole archive and never reaches validateFile. Reaching here with one means
+        // it was placed under a non-volumetric type — reject and hard-fail the upload.
+        if (COMMON.isVolumetricFileExtension(ext))
+            return this.handleError(`${fileName} is a volumetric dataset file (${ext}) and can only be ingested using the Volumetric asset type`);
+
+        // Scene descriptor is self-describing by name, independent of the asset type.
         if (fileName.toLowerCase().endsWith('.svx.json'))
             return this.validateFileScene(fileName, readStream);
-        else if (await this.testIfModel(fileName, asset))
-            return this.validateFileModel(fileName, readStream, fromZip, idSystemObject);
-        else {
-            // validate formats handled by Sharp
-            switch (path.extname(fileName).toLowerCase()) {
-                case '.avif':
-                case '.gif':
-                case '.jpg':
-                case '.jpeg':
-                case '.png':
-                case '.svg':
-                case '.tif':
-                case '.tiff':
-                case '.webp':
-                    return this.validateFileImage(fileName, readStream);
 
-                default: break;
-            }
+        // Tie remaining validation to the chosen asset type rather than inferring it from content.
+        // Files that do not match the type's expected formats are skipped (capture-data sets routinely
+        // carry sidecar/metadata files), but the volumetric guard above is never lenient.
+        const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        switch (eAssetType) {
+            case COMMON.eVocabularyID.eAssetAssetTypeModel:
+            case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+            case COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile:
+                if (await this.testIfModel(fileName, asset))
+                    return this.validateFileModel(fileName, readStream, fromZip, idSystemObject);
+                break;
+
+            case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
+            case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile:
+                if (WorkflowUpload.imageFileExtensions.has(ext))
+                    return this.validateFileImage(fileName, readStream);
+                break;
+
+            default:
+                break;
         }
 
         this.appendToWFReport(`Upload validation skipped for ${fileName}`);

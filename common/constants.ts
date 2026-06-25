@@ -482,3 +482,15 @@ export enum eWorkflowListSortColumns {
 export const authenticationFailureMessage: string = 'GraphQL user is not authenticated';
 
 export const repositoryRowCount = 300;
+
+// File extensions that unambiguously signal a volumetric dataset and may only be ingested via the
+// Volumetric asset type: DICOM slices (.dcm, .dicom, and Siemens .ima) and Phoenix scan sidecars
+// (.pca acquisition, .pcr reconstruction). TIFF/PNG slice stacks are also volumetric but share
+// extensions with ordinary images, so they are intentionally excluded — extension alone cannot
+// disambiguate them.
+export const VolumetricFileExtensions: string[] = ['.dcm', '.dicom', '.ima', '.pca', '.pcr'];
+
+export const isVolumetricFileExtension = (extOrName: string): boolean => {
+    const lower: string = extOrName.toLowerCase();
+    return VolumetricFileExtensions.some(ext => lower === ext || lower.endsWith(ext));
+};
