@@ -189,8 +189,12 @@ export class WorkflowUpload implements WF.IWorkflow {
                 return this.handleError(`WorkflowUpload.validateFiles unable to read asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}: ${RSR.error}`);
             this.appendToWFReport(`Upload validation of ${RSR.fileName}`);
 
-            let fileRes: H.IOResults = { success: true };
-            if (isModel) {
+            // Package/asset-type compatibility pre-flight (off|warn|enforce). In enforce mode a mismatch
+            // fails here, before model/volume/Cook processing; in warn mode it only logs.
+            let fileRes: H.IOResults = await this.validatePackageType(assetVersion, asset, RSR.fileName);
+            if (!fileRes.success) {
+                // fall through to the shared post-processing below, which discards the asset version.
+            } else if (isModel) {
                 // if we're a model, zipped or not, validate the entire file/collection as is:
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
             } else if (isVolume) {
@@ -254,7 +258,7 @@ export class WorkflowUpload implements WF.IWorkflow {
 
     // Image formats validated via Sharp. Used to tie image validation to the chosen asset type.
     private static readonly imageFileExtensions: ReadonlySet<string> =
-        new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.tif', '.tiff', '.webp']);
+    new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.tif', '.tiff', '.webp']);
 
     private async validateFile(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean, idSystemObject: number,
         asset: DBAPI.Asset): Promise<H.IOResults> {
@@ -364,6 +368,73 @@ export class WorkflowUpload implements WF.IWorkflow {
             return this.handleError(results.error ?? '');
         this.appendToWFReport(`Upload validated ${fileName}${results.error ? ': ' + results.error : ''}`);
         return results;
+    }
+
+    // Friendly labels for the asset types the package validator adjudicates (for user-facing messages).
+    private static readonly packageTypeLabels: ReadonlyMap<COMMON.eVocabularyID, string> = new Map([
+        [COMMON.eVocabularyID.eAssetAssetTypeModel, 'Model'],
+        [COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry, 'Photogrammetry'],
+        [COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric, 'Volumetric'],
+        [COMMON.eVocabularyID.eAssetAssetTypeScene, 'Scene'],
+        [COMMON.eVocabularyID.eAssetAssetTypeProjectDocumentation, 'Project Documentation'],
+    ]);
+
+    private packageTypeLabel(type: COMMON.eVocabularyID): string {
+        return WorkflowUpload.packageTypeLabels.get(type) ?? COMMON.eVocabularyID[type] ?? String(type);
+    }
+
+    // Pre-flight: does the uploaded package's file set match the selected asset type? Honors
+    // Config.features.packageValidationMode (off|warn|enforce). Returns failure only in enforce mode on
+    // a mismatch; off / warn / compatible all return success.
+    private async validatePackageType(assetVersion: DBAPI.AssetVersion, asset: DBAPI.Asset, fileName: string): Promise<H.IOResults> {
+        const mode: 'off' | 'warn' | 'enforce' = Config.features.packageValidationMode;
+        if (mode === 'off')
+            return { success: true };
+
+        const selectedType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        if (selectedType === undefined || !COMMON.isValidatableType(selectedType))
+            return { success: true };   // Other / Bulk Ingestion / legacy capture types are not gated
+
+        const files: string[] | null = await this.collectPackageFiles(assetVersion, fileName);
+        if (!files || files.length === 0)
+            return { success: true };   // unreadable / empty here — let normal validation surface it
+
+        const possibleTypes: Set<COMMON.eVocabularyID> = COMMON.assessPackage(files).possibleTypes;
+        if (COMMON.isCompatible(selectedType, possibleTypes))
+            return { success: true };
+
+        const selectedLabel: string = this.packageTypeLabel(selectedType);
+        const detected: string = [...possibleTypes].map(t => this.packageTypeLabel(t)).join(', ') || 'an unrecognized combination of files';
+        const message: string = `Upload contents do not match the selected asset type '${selectedLabel}'. Detected: ${detected}.`;
+
+        if (mode === 'enforce')
+            return this.handleError(message);
+
+        RK.logWarning(RK.LogSection.eWF, 'package validation mismatch', message, { fileName, selected: selectedLabel, detected }, 'Workflow.Upload');
+        await this.appendToWFReport(`[package-validation] would reject (warn mode): ${message}`);
+        return { success: true };
+    }
+
+    // Resolve the list of file names a package contains: the entries of a zip, or the single file name.
+    // Returns null on an unreadable / corrupt archive so the caller skips assessment and the normal
+    // upload path surfaces the real error.
+    private async collectPackageFiles(assetVersion: DBAPI.AssetVersion, fileName: string): Promise<string[] | null> {
+        if (path.extname(fileName).toLowerCase() !== '.zip')
+            return [fileName];
+
+        const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
+        if (!storage)
+            return null;
+        const filePath: string = await storage.stagingFileName(assetVersion.StorageKeyStaging);
+        const ZS: ZipFile = new ZipFile(filePath);
+        const zipRes: H.IOResults = await ZS.load();
+        if (!zipRes.success)
+            return null;
+        try {
+            return await ZS.getJustFiles(null);
+        } finally {
+            await ZS.close();
+        }
     }
 
     private async appendToWFReport(message: string, isError?: boolean | undefined): Promise<H.IOResults> {
