@@ -750,22 +750,12 @@ export class VocabularyCache {
     static mapModelFileByExtensionID(fileName: string): COMMON.eVocabularyID | undefined {
         const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
 
-        // early out if known type (image, mtl, etc)
+        // early out if a known non-model type (image, mtl, archive). Extension sets are centralized in
+        // @dpo-packrat/common so classification stays consistent across client and server.
         const nonModelTypes: string[] = [
-            // images (processed)
-            '.jpg','.jpeg','.png',
-            '.tif','.tiff',
-            '.tga','.bmp',
-
-            // images (raw capture)
-            '.cr2','.cr3','.nef','.arw',
-            '.dng','.raf','.rw2','.orf',
-
-            // model support files
-            '.mtl',
-
-            // other
-            '.zip'
+            ...COMMON.ImageFileExtensions,
+            ...COMMON.ModelMaterialFileExtensions,
+            '.zip',
         ];
         if(nonModelTypes.includes(extension)) {
             RK.logDebug(RK.LogSection.eCACHE,'map model extension','attempting to map known type, but not a model',{ extension },'Cache.Vocabulary');

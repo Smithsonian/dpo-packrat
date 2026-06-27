@@ -482,3 +482,73 @@ export enum eWorkflowListSortColumns {
 export const authenticationFailureMessage: string = 'GraphQL user is not authenticated';
 
 export const repositoryRowCount = 300;
+
+// Single source of truth mapping a file's extension to a coarse category, used to reason about which
+// asset type(s) an uploaded package is compatible with. This is intentionally separate from the
+// model-file-TYPE vocabulary map (VocabularyCache.mapModelFileByExtensionID), which resolves an
+// extension to a specific Model.FileType vocabulary row.
+export enum eFileCategory {
+    eMesh = 'mesh',
+    eModelMaterial = 'modelMaterial',
+    eImage = 'image',
+    eVolumetricSlice = 'volumetricSlice',
+    eVolumetricSidecar = 'volumetricSidecar',
+    eSceneDescriptor = 'sceneDescriptor',
+    eDocument = 'document',
+    eAudio = 'audio',
+    eUnknown = 'unknown',
+}
+
+// Mesh / geometry extensions. Mirrors VocabularyCache.mapModelFileByExtensionID's supported set.
+export const ModelFileExtensions: string[] = [
+    '.obj', '.ply', '.stl', '.glb', '.gltf', '.usda', '.usdc', '.usdz',
+    '.x3d', '.wrl', '.dae', '.fbx', '.ma', '.3ds', '.ptx', '.pts',
+];
+
+// Model support files (accompany a mesh).
+export const ModelMaterialFileExtensions: string[] = ['.mtl'];
+
+// Raster image extensions: processed formats plus raw camera formats.
+export const ImageFileExtensions: string[] = [
+    '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.tga', '.bmp', '.gif', '.webp', '.avif', '.svg',
+    '.cr2', '.cr3', '.nef', '.arw', '.dng', '.raf', '.rw2', '.orf', '.camdng',
+];
+
+// Volumetric slice data — the only hard volumetric signal (actual slices).
+export const VolumetricSliceFileExtensions: string[] = ['.dcm', '.dicom', '.ima'];
+
+// Volumetric scan sidecars (Phoenix acquisition/reconstruction logs). These are documents that also
+// veto a Photogrammetry reading when slice/stack data is present; they are not volumetric data alone.
+export const VolumetricSidecarFileExtensions: string[] = ['.pca', '.pcr'];
+
+// Document formats (sidecars also count as documents).
+export const DocumentFileExtensions: string[] = ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odf', '.html', '.htm'];
+
+export const AudioFileExtensions: string[] = ['.mp3', '.wav', '.aif', '.aiff', '.flac'];
+
+// Union of the two volumetric tiers. Consumed by the upload-time volumetric guard.
+export const VolumetricFileExtensions: string[] = [...VolumetricSliceFileExtensions, ...VolumetricSidecarFileExtensions];
+
+export const fileExtension = (fileName: string): string => {
+    const lower: string = fileName.toLowerCase();
+    const dot: number = lower.lastIndexOf('.');
+    return dot >= 0 ? lower.slice(dot) : '';
+};
+
+export function classifyFile(fileName: string): eFileCategory {
+    if (fileName.toLowerCase().endsWith('.svx.json'))   return eFileCategory.eSceneDescriptor;
+    const ext: string = fileExtension(fileName);
+    if (ModelFileExtensions.includes(ext))              return eFileCategory.eMesh;
+    if (ModelMaterialFileExtensions.includes(ext))      return eFileCategory.eModelMaterial;
+    if (VolumetricSliceFileExtensions.includes(ext))    return eFileCategory.eVolumetricSlice;
+    if (VolumetricSidecarFileExtensions.includes(ext))  return eFileCategory.eVolumetricSidecar;
+    if (ImageFileExtensions.includes(ext))              return eFileCategory.eImage;
+    if (DocumentFileExtensions.includes(ext))           return eFileCategory.eDocument;
+    if (AudioFileExtensions.includes(ext))              return eFileCategory.eAudio;
+    return eFileCategory.eUnknown;
+}
+
+export const isVolumetricFileExtension = (extOrName: string): boolean => {
+    const lower: string = extOrName.toLowerCase();
+    return VolumetricFileExtensions.some(ext => lower === ext || lower.endsWith(ext));
+};
