@@ -322,9 +322,26 @@ function Model(props: ModelProps): React.ReactElement {
         return masterId !== null && model.purpose === masterId;
     };
 
+    const isDownloadPurpose = (): boolean => {
+        const downloadId = getVocabularyId(eVocabularyID.eModelPurposeDownload);
+        return downloadId !== null && model.purpose === downloadId;
+    };
+
+    // dedicated Purpose handler so changing purpose clears a stale downloadType (the generic
+    // setIdField does not); wired to the Purpose <Select> below
+    const setPurposeField = ({ target }): void => {
+        const { name, value } = target;
+        const idFieldValue: number | null = value ? Number.parseInt(value, 10) : null;
+        updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.model);
+        if (idFieldValue !== getVocabularyId(eVocabularyID.eModelPurposeDownload))
+            updateMetadataField(metadataIndex, 'downloadType', null, MetadataType.model);
+    };
+
     const openSourceObjectModal = async () => {
         const idRoots = await getSubjectIdSystemObjects();
-        await setDefaultIngestionFilters(eSystemObjectType.eModel, idRoots);
+        // download models attach to a Scene parent; all other models attach to a Model parent
+        const objectType = isDownloadPurpose() ? eSystemObjectType.eScene : eSystemObjectType.eModel;
+        await setDefaultIngestionFilters(objectType, idRoots);
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };
@@ -565,7 +582,7 @@ function Model(props: ModelProps): React.ReactElement {
                                                 <Select
                                                     value={model.purpose ?? ''}
                                                     name='purpose'
-                                                    onChange={setIdField}
+                                                    onChange={setPurposeField}
                                                     disableUnderline
                                                     className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
                                                     SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
@@ -575,6 +592,29 @@ function Model(props: ModelProps): React.ReactElement {
                                                 </Select>
                                             </TableCell>
                                         </TableRow>
+                                        { isDownloadPurpose() &&
+                                            <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.downloadType || false)}>
+                                                <TableCell className={tableClasses.tableCell}>
+                                                    <Tooltip title={<span style={{ fontSize: '0.75rem', fontWeight: 300 }}>Classifies this download for publishing and sets the EDAN resource category.</span>}>
+                                                        <Typography className={tableClasses.labelText}>Download Type*</Typography>
+                                                    </Tooltip>
+                                                </TableCell>
+                                                <TableCell className={tableClasses.tableCell}>
+                                                    <Select
+                                                        value={model.downloadType ?? ''}
+                                                        name='downloadType'
+                                                        onChange={setNameField}
+                                                        disableUnderline
+                                                        className={clsx(tableClasses.select, tableClasses.datasetFieldSelect)}
+                                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                                        disabled={ingestionLoading}
+                                                    >
+                                                        <MenuItem value='watertight'>Watertight</MenuItem>
+                                                        <MenuItem value='other'>Other</MenuItem>
+                                                    </Select>
+                                                </TableCell>
+                                            </TableRow>
+                                        }
                                         { isMasterModel() &&
                                             <TableRow className={tableClasses.tableRow} style={errorFieldStyling(fieldErrors?.model?.Variant || false)}>
                                                 <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>

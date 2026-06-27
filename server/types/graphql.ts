@@ -1197,6 +1197,7 @@ export type IngestModelInput = {
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
   directory: Scalars['String'];
+  downloadType?: InputMaybe<Scalars['String']>;
   idAsset?: InputMaybe<Scalars['Int']>;
   idAssetVersion: Scalars['Int'];
   identifiers: Array<IngestIdentifierInput>;

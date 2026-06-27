@@ -1091,6 +1091,7 @@ input IngestModelInput {
   dateCreated: String!
   derivedObjects: [RelatedObjectInput!]!
   directory: String!
+  downloadType: String
   idAsset: Int
   idAssetVersion: Int!
   identifiers: [IngestIdentifierInput!]!

@@ -5,7 +5,13 @@
  */
 import * as yup from 'yup';
 import { ModelFields, OtherFields, PhotogrammetryFields, SceneFields, SceneAttachmentFields, VolumeFields, eSubtitleOption } from './metadata.types';
-import { eSystemObjectType } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
+import { useVocabularyStore } from '../vocabulary';
+
+// resolve a model purpose vocabulary id at validation time (the store is populated by then; no cycle:
+// vocabulary.ts never imports store/metadata/*)
+const isModelPurpose = (purpose: number, eVocab: eVocabularyID): boolean =>
+    purpose === useVocabularyStore.getState().getVocabularyId(eVocab);
 
 const MAX_INTEGER = 2147483647;
 
@@ -168,6 +174,7 @@ export const defaultModelFields: ModelFields = {
     units: null,
     purpose: null,
     modelFileType: null,
+    downloadType: null,
     directory: '',
     updateNotes: '',
     idAsset: 0,
@@ -224,12 +231,22 @@ export const modelFieldsSchemaUpdate = yup.object().shape({
     boundingBoxP2Z: yup.number().nullable(true),
     directory: yup.string(),
     updateNotes: yup.string().when('idAsset', notesWhenUpdate),
-    Variant: yup
-        .string()
-        .typeError('Must select at least one Use for Master models')
-        .test('not-empty-or-brackets', 'Must select at least one Use for Master models', value => {
-            return (value !== '') && (value !== '[]'); // indices into Vocabulary: raw_clean, presentation
-        }),
+    // Variant (Use) is required only for Master models; other purposes (e.g. Download) leave it '[]'
+    Variant: yup.string().when('purpose', {
+        is: (purpose: number) => isModelPurpose(purpose, eVocabularyID.eModelPurposeMaster),
+        then: yup
+            .string()
+            .typeError('Must select at least one Use for Master models')
+            .test('not-empty-or-brackets', 'Must select at least one Use for Master models', value => {
+                return (value !== '') && (value !== '[]'); // indices into Vocabulary: raw_clean, presentation
+            }),
+        otherwise: yup.string().nullable(),
+    }),
+    // Download Type is required only for Download-purpose models
+    downloadType: yup.string().nullable().when('purpose', {
+        is: (purpose: number) => isModelPurpose(purpose, eVocabularyID.eModelPurposeDownload),
+        then: yup.string().required('Download type is required for download models'),
+    }),
 });
 
 export const modelFieldsSchema = modelFieldsSchemaUpdate.shape({

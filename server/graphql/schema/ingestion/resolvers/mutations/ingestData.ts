@@ -1563,6 +1563,37 @@ class IngestDataWorker extends ResolverBase {
                 }
             }
 
+            // custom download: link the model to its parent scene via a Download:<type> ModelSceneXref.
+            // AutomationTag stays null (set by inspection) so Cook never matches it; Quality/UVResolution
+            // are null because publishing keys only on Usage + file extension.
+            const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+            if (vPurposeDownload && model.purpose === vPurposeDownload.idVocabulary && model.downloadType) {
+                const usage: string = COMMON.customDownloadUsage(model.downloadType);
+                const FileSize: bigint | null = ingestAssetRes.assetVersions?.[0]?.StorageSize ?? null;
+                const sceneSource = model.sourceObjects?.find(so => so.objectType === eSystemObjectType.eScene);
+                const sceneSO: DBAPI.SystemObject | null = sceneSource ? await DBAPI.SystemObject.fetch(sceneSource.idSystemObject) : null;
+                if (sceneSO?.idScene) {
+                    const idScene: number = sceneSO.idScene;
+                    const existing: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModelAndScene(idModel, idScene);
+                    if (existing && existing.length > 0) {
+                        const msx: DBAPI.ModelSceneXref = existing[0];
+                        msx.Usage = usage; msx.Quality = null; msx.UVResolution = null; msx.FileSize = FileSize;
+                        if (!await msx.update())
+                            RK.logError(RK.LogSection.eGQL,'create model objects failed','failed to update ModelSceneXref',{ idModel, idScene },'GraphQL.Ingestion.Data');
+                    } else {
+                        const msx: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
+                            idModelSceneXref: 0, idModel, idScene, Name: modelDB.Name,
+                            Usage: usage, Quality: null, UVResolution: null, FileSize,
+                            BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null,
+                            BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
+                            TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null, S0: null, S1: null, S2: null,
+                        });
+                        if (!await msx.create())
+                            RK.logError(RK.LogSection.eGQL,'create model objects failed','failed to create ModelSceneXref',{ idModel, idScene },'GraphQL.Ingestion.Data');
+                    }
+                }
+            }
+
             // wire model to derivedObjects
             if (model.derivedObjects && model.derivedObjects.length > 0) {
                 for (const derivedObject of model.derivedObjects) {
@@ -2236,6 +2267,28 @@ class IngestDataWorker extends ResolverBase {
                             RK.logError(RK.LogSection.eGQL,'validate input failed','will not create the inappropriate parent-child relationship between model and object',{ type: COMMON.eSystemObjectType[derivedObject.objectType] },'GraphQL.Ingestion.Data');
                             return { success: false, error };
                         }
+                    }
+                }
+
+                // custom download models must attach to exactly one Scene, declare a known download
+                // type, and carry the Units + Creation Method that EDAN publishing requires.
+                const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+                if (vPurposeDownload && model.purpose === vPurposeDownload.idVocabulary) {
+                    const sceneSources = (model.sourceObjects ?? []).filter(so => so.objectType === COMMON.eSystemObjectType.eScene);
+                    if (sceneSources.length !== 1) {
+                        const error: string = 'A download model must have exactly one parent Scene';
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ idAssetVersion: model.idAssetVersion },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
+                    if (!model.downloadType || !COMMON.CustomDownloadTypes.includes(model.downloadType)) {
+                        const error: string = `Download type must be one of: ${COMMON.CustomDownloadTypes.join(', ')}`;
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ downloadType: model.downloadType },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
+                    if (!model.units || !model.creationMethod) {
+                        const error: string = 'A download model requires Units and Creation Method (needed to publish to EDAN)';
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ units: model.units, creationMethod: model.creationMethod },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
                     }
                 }
 

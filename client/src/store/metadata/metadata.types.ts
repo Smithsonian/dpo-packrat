@@ -61,6 +61,7 @@ export type FieldErrors = {
         modelFileType: boolean;
         subtitles: boolean;
         Variant: boolean;
+        downloadType: boolean;
     };
     scene: {
         subtitles: boolean;
@@ -140,6 +141,7 @@ export type ModelFields = {
     purpose: number | null;
     Variant: string;
     modelFileType: number | null;
+    downloadType: string | null;
     directory: string;
     idAsset?: number;
     updateNotes?: string;

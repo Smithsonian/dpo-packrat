@@ -552,3 +552,37 @@ export const isVolumetricFileExtension = (extOrName: string): boolean => {
     const lower: string = extOrName.toLowerCase();
     return VolumetricFileExtensions.some(ext => lower === ext || lower.endsWith(ext));
 };
+
+// User-selectable custom (non-Cook) download types. Drives the ingestion dropdown and the
+// server-side whitelist. These are fixed protocol values, not deployment settings.
+export const CustomDownloadTypes: string[] = ['watertight', 'other'];
+
+// The ModelSceneXref.Usage string for a custom download of the given type ('Download:watertight').
+export const customDownloadUsage = (type: string): string => `Download:${type}`;
+
+// True when a Usage string identifies a custom (non-Cook) download.
+export const isCustomDownloadUsage = (usage: string | null | undefined): boolean =>
+    !!usage && CustomDownloadTypes.includes(usage.replace('Download:', ''));
+
+// EDAN-accepted deliverable container types (the resource file_type / FILE_TYPE wire token).
+// USDZ is accepted by EDAN even though the published 3D API doc omits it.
+export const EdanFileTypes: string[] = ['glb', 'ply', 'zip', 'usdz'];
+
+// Single source of truth for translating a Packrat-internal resource category to the EDAN
+// file_quality wire token. Keeps internal vocabulary clean (e.g. 'Watertight') while emitting what
+// EDAN indexes ('Water_tight'). Every category is listed here for consistency.
+//
+// P1: only 'Watertight' is corrected (it has no space, so EDAN's space->underscore normalization
+// cannot derive 'Water_tight'); the others are left at their current wire output to preserve
+// existing behavior. P4: replace the identity values below with the normalized tokens
+// ('Full resolution' -> 'Full_resolution', ...) determined via EDAN's existing normalization logic,
+// once confirmed by the staging test publish.
+export const EdanFileQualityMap: { [internal: string]: string } = {
+    'Full resolution':   'Full resolution',    // P4: -> 'Full_resolution'
+    'Medium resolution': 'Medium resolution',  // P4: -> 'Medium_resolution'
+    'Low resolution':    'Low resolution',     // P4: -> 'Low_resolution'
+    'Watertight':        'Water_tight',
+    'iOS AR model':      'iOS AR model',
+};
+
+export const toEdanFileQuality = (internal: string): string => EdanFileQualityMap[internal] ?? internal;

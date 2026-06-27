@@ -668,7 +668,7 @@ export class PublishScene {
         return eVocabID ? await CACHE.VocabularyCache.vocabularyByEnum(eVocabID) : undefined;
     }
 
-    static computeDownloadType(category?: COL.Edan3DResourceCategory | undefined,
+    static computeDownloadType(category?: string | undefined,
         MODEL_FILE_TYPE?: COL.Edan3DResourceAttributeModelFileType | undefined, DRACO_COMPRESSED?: boolean | undefined): string {
 
         let tag: string = '';
@@ -818,6 +818,7 @@ export class PublishScene {
                 case '.zip':    FILE_TYPE = 'zip'; break;
                 case '.glb':    FILE_TYPE = 'glb'; break;
                 case '.usdz':   FILE_TYPE = 'usdz'; break;
+                case '.ply':    FILE_TYPE = 'ply'; break;
             }
 
             // handle download types
@@ -835,7 +836,17 @@ export class PublishScene {
                 case 'webassetglbarcompressed':
                 case 'app3d':                       category = 'Low resolution';    MODEL_FILE_TYPE = 'glb'; DRACO_COMPRESSED = true; break;
 
-                // Safety net for pre-existing Download:Generic records in the database
+                // custom auxiliary download: category is fixed; MODEL_FILE_TYPE is taken from the
+                // model's idVFileType derivation above (obj/ply/stl/glb/gltf), respecting the user's
+                // selected Model File Type. FILE_TYPE comes from the extension switch above.
+                case 'watertight': {
+                    category = 'Watertight';
+                    break;
+                }
+
+                // 'other' shares the generic extension-inference body; generic is the safety net for
+                // pre-existing Download:Generic records in the database.
+                case 'other':
                 case 'generic': {
                     const ext = path.extname(SAC.assetVersion.FileName).toLowerCase();
                     switch (ext) {
@@ -874,7 +885,9 @@ export class PublishScene {
         const url: string = `https://3d-api.si.edu/content/document/3d_package:${uuid}/resources/${SAC.assetVersion.FileName}`;
         const filename: string = SAC.assetVersion.FileName;
         const attributes: COL.Edan3DResourceAttribute[] = [{ UNITS, MODEL_FILE_TYPE, FILE_TYPE, GLTF_STANDARDIZED, DRACO_COMPRESSED }];
-        return { filename, url, type, title, name, attributes, category };
+        // translate the internal category to the EDAN file_quality wire token at the boundary
+        // (e.g. 'Watertight' -> 'Water_tight'); the human-readable title keeps the internal value
+        return { filename, url, type, title, name, attributes, category: COMMON.toEdanFileQuality(category) };
     }
 
     private async updatePublishedState(LR: DBAPI.LicenseResolver | undefined, ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {

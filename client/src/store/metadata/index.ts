@@ -20,7 +20,7 @@ import {
     GetIngestTitleDocument,
     GetIngestTitleQuery
 } from '../../types/graphql';
-import { eVocabularySetID } from '@dpo-packrat/common';
+import { eVocabularySetID, eVocabularyID } from '@dpo-packrat/common';
 import { StateItem, useItemStore, StateProject } from '../item';
 import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
@@ -88,6 +88,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 Variant: false,
                 modelFileType: false,
                 subtitles: false,
+                downloadType: false,
             },
             scene: {
                 subtitles: false
@@ -126,7 +127,10 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             errors.model.purpose = lodash.isNull(metadata.model.purpose);
             errors.model.modelFileType = lodash.isNull(metadata.model.modelFileType);
             errors.model.subtitles = getSubtitlesError(metadata.model.subtitles);
-            errors.model.Variant = lodash.isNull(metadata.model.Variant) || metadata.model.Variant.length <= ('[]').length;
+            const isMaster: boolean = metadata.model.purpose === useVocabularyStore.getState().getVocabularyId(eVocabularyID.eModelPurposeMaster);
+            errors.model.Variant = isMaster && (lodash.isNull(metadata.model.Variant) || metadata.model.Variant.length <= ('[]').length);
+            const isDownload: boolean = metadata.model.purpose === useVocabularyStore.getState().getVocabularyId(eVocabularyID.eModelPurposeDownload);
+            errors.model.downloadType = isDownload && (lodash.isNull(metadata.model.downloadType) || metadata.model.downloadType.length < 1);
         }
 
         if (assetType.scene) {
