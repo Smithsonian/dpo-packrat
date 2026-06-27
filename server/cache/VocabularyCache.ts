@@ -59,13 +59,13 @@ export class VocabularyCache {
             let eVocabSetEnum: COMMON.eVocabularySetID = COMMON.eVocabularySetID.eNone;
             switch (vocabularySet.Name) {
                 case 'CaptureData.CaptureMethod':               eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataCaptureMethod; break;
-                case 'CaptureData.DatasetType':                 eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetType; break;
-                case 'CaptureData.DatasetUse':                  eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetUse; break;
-                case 'CaptureData.ItemPositionType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataItemPositionType; break;
-                case 'CaptureData.FocusType':                   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFocusType; break;
-                case 'CaptureData.LightSourceType':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataLightSourceType; break;
-                case 'CaptureData.BackgroundRemovalMethod':     eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod; break;
-                case 'CaptureData.ClusterType':                 eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataClusterType; break;
+                case 'CaptureDataPhoto.DatasetType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetType; break;
+                case 'CaptureDataPhoto.DatasetUse':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataDatasetUse; break;
+                case 'CaptureDataPhoto.ItemPositionType':       eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataItemPositionType; break;
+                case 'CaptureDataPhoto.FocusType':              eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFocusType; break;
+                case 'CaptureDataPhoto.LightSourceType':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataLightSourceType; break;
+                case 'CaptureDataPhoto.BackgroundRemovalMethod': eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataBackgroundRemovalMethod; break;
+                case 'CaptureDataPhoto.ClusterType':            eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataClusterType; break;
                 case 'CaptureDataFile.VariantType':             eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataFileVariantType; break;
                 case 'Model.CreationMethod':                    eVocabSetEnum = COMMON.eVocabularySetID.eModelCreationMethod; break;
                 case 'Model.Modality':                          eVocabSetEnum = COMMON.eVocabularySetID.eModelModality; break;
@@ -89,6 +89,12 @@ export class VocabularyCache {
                 case 'Edan.3DResourceType':                     eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceType; break;
                 case 'Edan.3DResourceCategory':                 eVocabSetEnum = COMMON.eVocabularySetID.eEdan3DResourceCategory; break;
                 case 'Edan.MDMFields':                          eVocabSetEnum = COMMON.eVocabularySetID.eEdanMDMFields; break;
+                case 'CaptureDataVolume.Modality':              eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeModality; break;
+                case 'CaptureDataVolume.ScanType':              eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeScanType; break;
+                case 'CaptureDataVolume.ContentType':           eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeContentType; break;
+                case 'CaptureDataVolume.FilterLocation':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation; break;
+                case 'CaptureDataVolume.VoxelSizeUnit':         eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit; break;
+                case 'CaptureDataVolume.SpecimenPreparation':   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation; break;
             }
 
             /* istanbul ignore else */
@@ -178,16 +184,27 @@ export class VocabularyCache {
                         case 'Intermediary File':                   eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeIntermediaryFile; break;
                         case 'Attachment':                          eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeAttachment; break;
                         case 'Other':                               eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeOther; break;
+                        case 'Capture Data Set: Volumetric':        eVocabEnum = COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric; break;
                     }
                 } break;
 
                 case COMMON.eVocabularySetID.eCaptureDataCaptureMethod: {
                     switch (vocabulary.Term) {
                         case 'Photogrammetry':      eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodPhotogrammetry; break;
-                        case 'CT':                  eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodCT; break;
+                        case 'Volumetric':          eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodVolumetric; break;
                         case 'Structured Light':    eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodStructuredLight; break;
                         case 'Laser Line':          eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodLaserLine; break;
                         case 'Spherical Laser':     eVocabEnum = COMMON.eVocabularyID.eCaptureDataCaptureMethodSphericalLaser; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataDatasetType: {
+                    switch (vocabulary.Term) {
+                        case 'Photogrammetry Image Set':        eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet; break;
+                        case 'Grey Card Image Set':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeGreyCardImageSet; break;
+                        case 'Color Card Image Set':            eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeColorCardImageSet; break;
+                        case 'Background Removal Image Set':    eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeBackgroundRemovalImageSet; break;
+                        case 'Calibration Dataset':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataDatasetTypeCalibrationDataset; break;
                     }
                 } break;
 
@@ -212,6 +229,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Bulk Ingestion':      eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceBulkIngestion; break;
                         case 'Image':               eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceImage; break;
+                        case 'Volumetric':          eVocabEnum = COMMON.eVocabularyID.eMetadataMetadataSourceVolumetric; break;
                     }
                 } break;
 
@@ -315,6 +333,7 @@ export class VocabularyCache {
                         case 'Cook: si-voyager-asset':          eVocabEnum = COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerAsset; break;
                         case 'Cook: si-voyager-scene':          eVocabEnum = COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene; break;
                         case 'Cook: unwrap':                    eVocabEnum = COMMON.eVocabularyID.eJobJobTypeCookUnwrap; break;
+                        case 'Volume Inspect':                  eVocabEnum = COMMON.eVocabularyID.eJobJobTypeVolumeInspect; break;
                     }
                 } break;
 
@@ -324,6 +343,60 @@ export class VocabularyCache {
                         case 'Ingestion':                       eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeIngestion; break;
                         case 'Upload':                          eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeUpload; break;
                         case 'Audit Retention':                 eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeAuditRetention; break;
+                        case 'Job':                             eVocabEnum = COMMON.eVocabularyID.eWorkflowTypeJob; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeModality: {
+                    switch (vocabulary.Term) {
+                        case 'Medical CT':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityMedicalCT; break;
+                        case 'Micro CT':                        eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityMicroCT; break;
+                        case 'Nano CT':                         eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityNanoCT; break;
+                        case 'Synchrotron':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalitySynchrotron; break;
+                        case 'MRI':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeModalityMRI; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeScanType: {
+                    switch (vocabulary.Term) {
+                        case 'Raw':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeScanTypeRaw; break;
+                        case 'Reconstructed':                   eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeScanTypeReconstructed; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeContentType: {
+                    switch (vocabulary.Term) {
+                        case 'Image Stack':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeImageStack; break;
+                        case 'DICOM':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeDICOM; break;
+                        case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeContentTypeOther; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation: {
+                    switch (vocabulary.Term) {
+                        case 'None':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationNone; break;
+                        case 'Source Side':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide; break;
+                        case 'Detector Side':                   eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide; break;
+                        case 'Both':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit: {
+                    switch (vocabulary.Term) {
+                        case 'Micrometer':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer; break;
+                        case 'Millimeter':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation: {
+                    switch (vocabulary.Term) {
+                        case 'Fluid-preserved':                 eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFluidPreserved; break;
+                        case 'Dry':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationDry; break;
+                        case 'Stained':                         eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationStained; break;
+                        case 'Frozen':                          eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFrozen; break;
+                        case 'Embedded':                        eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded; break;
+                        case 'Live':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive; break;
+                        case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther; break;
                     }
                 } break;
 
@@ -481,6 +554,18 @@ export class VocabularyCache {
         return this.vocabEnumIDMap.get(eVocabID);
     }
 
+    private defaultCaptureDatasetUseJSONInternal(): string {
+        const ids: number[] = [];
+        const alignment = this.vocabEnumIDMap.get(COMMON.eVocabularyID.eCaptureDataDatasetUseAlignment);
+        const reconstruction = this.vocabEnumIDMap.get(COMMON.eVocabularyID.eCaptureDataDatasetUseReconstruction);
+        const textureGeneration = this.vocabEnumIDMap.get(COMMON.eVocabularyID.eCaptureDataDatasetUseTextureGeneration);
+        if (alignment !== undefined) ids.push(alignment);
+        if (reconstruction !== undefined) ids.push(reconstruction);
+        if (textureGeneration !== undefined) ids.push(textureGeneration);
+        ids.sort((a, b) => a - b);
+        return JSON.stringify(ids);
+    }
+
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by COMMON.eVocabularyID entries. */
     private vocabularyIdToEnumInternal(idVocabulary: number): COMMON.eVocabularyID | undefined {
         return this.vocabIDEnumMap.get(idVocabulary);
@@ -578,6 +663,17 @@ export class VocabularyCache {
         return (await this.getInstance()).vocabularyEnumToIdInternal(eVocabID);
     }
 
+    /**
+     * Returns the JSON-stringified default CaptureDatasetUse value: a sorted
+     * array of the current idVocabulary values for Alignment, Reconstruction,
+     * and TextureGeneration. Single source of truth — replaces the legacy
+     * literal '[207,208,209]' which was brittle to vocab ID shifts across
+     * fresh-build vs. incrementally-migrated environments.
+     */
+    static async defaultCaptureDatasetUseJSON(): Promise<string> {
+        return (await this.getInstance()).defaultCaptureDatasetUseJSONInternal();
+    }
+
     /** fetches the Vocabulary.idVocabulary for a given vocabulary enum. Note that not all vocabulary are represented by COMMON.eVocabularyID entries. */
     static async vocabularyIdToEnum(idVocabulary: number): Promise<COMMON.eVocabularyID | undefined> {
         return (await this.getInstance()).vocabularyIdToEnumInternal(idVocabulary);
@@ -654,22 +750,12 @@ export class VocabularyCache {
     static mapModelFileByExtensionID(fileName: string): COMMON.eVocabularyID | undefined {
         const extension: string = path.extname(fileName).toLowerCase() || fileName.toLowerCase();
 
-        // early out if known type (image, mtl, etc)
+        // early out if a known non-model type (image, mtl, archive). Extension sets are centralized in
+        // @dpo-packrat/common so classification stays consistent across client and server.
         const nonModelTypes: string[] = [
-            // images (processed)
-            '.jpg','.jpeg','.png',
-            '.tif','.tiff',
-            '.tga','.bmp',
-
-            // images (raw capture)
-            '.cr2','.cr3','.nef','.arw',
-            '.dng','.raf','.rw2','.orf',
-
-            // model support files
-            '.mtl',
-
-            // other
-            '.zip'
+            ...COMMON.ImageFileExtensions,
+            ...COMMON.ModelMaterialFileExtensions,
+            '.zip',
         ];
         if(nonModelTypes.includes(extension)) {
             RK.logDebug(RK.LogSection.eCACHE,'map model extension','attempting to map known type, but not a model',{ extension },'Cache.Vocabulary');

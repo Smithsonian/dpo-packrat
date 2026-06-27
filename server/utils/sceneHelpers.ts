@@ -263,7 +263,7 @@ export class SceneHelpers {
             return unchanged(error);
         }
 
-        // 2. Check if edanRecordId already exists (reimplement extraction inline — svxReader.ts:270-281 is private)
+        // 2. Check if edanRecordId already exists (reimplement extraction inline — the SvxReader extraction is private)
         if (document.metas) {
             for (const meta of document.metas) {
                 if (meta.collection && meta.collection['edanRecordId']) {
@@ -702,7 +702,7 @@ export class SceneHelpers {
         // interactive transaction to prevent partial state on failure. Pattern:
         //   const txnOpts = { maxWait: 10000, timeout: 20000 };
         //   await prismaClient.$transaction(async (prisma) => { ... }, txnOpts);
-        // See SystemObjectVersion.cloneObjectAndXrefs (server/db/api/SystemObjectVersion.ts:138)
+        // See SystemObjectVersion.cloneObjectAndXrefs
         const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
 
         for (const [name, assetPair] of modelAssetMap) {
@@ -723,7 +723,7 @@ export class SceneHelpers {
             const downloadProps = SceneHelpers.inferDownloadProperties(Name);
 
             // Dedup: check for existing model with matching AutomationTag under this scene
-            // Pattern: JobCookSIGenerateDownloads.findMatchingModelFromModel (line 835)
+            // Pattern: JobCookSIGenerateDownloads.findMatchingModelFromModel
             const existingModels: DBAPI.Model[] | null = await DBAPI.Model.fetchChildrenModels(null, scene.idScene, downloadProps.automationTag);
             if (existingModels && existingModels.length > 0) {
                 if (existingModels.length > 1)
@@ -1011,8 +1011,8 @@ export class SceneHelpers {
         return { success: false, error };
     }
 
-    // Mirrors JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType (line 771)
-    // and computeModelAutomationTagFromDownloadType (line 796). Keep in sync with those methods.
+    // Mirrors JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType
+    // and computeModelAutomationTagFromDownloadType. Keep in sync with those methods.
     private static downloadTypeToProperties(downloadType: string): { usage: string, quality: string | null, uvResolution: number | null, automationTag: string } {
         switch (downloadType) {
             case 'objZipFull':
@@ -1038,8 +1038,8 @@ export class SceneHelpers {
         const lowerName = fileName.toLowerCase();
 
         // Priority 1: Cook-generated suffix patterns (highest confidence).
-        // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData suffixes (line 1124)
-        // and AssetStorageAdapter.isSceneDownloadZipFile (line 1620).
+        // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData suffixes
+        // and AssetStorageAdapter.isSceneDownloadZipFile.
         const suffixMap: [string, string][] = [
             ['-full_resolution-obj_std.zip', 'objZipFull'],
             ['-150k-4096-obj_std.zip', 'objZipLow'],

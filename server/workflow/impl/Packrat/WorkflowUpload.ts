@@ -182,16 +182,28 @@ export class WorkflowUpload implements WF.IWorkflow {
 
             // see if the passed in file is a model
             const isModel: boolean = await this.testIfModel(assetVersion.FileName, asset);
+            const isVolume: boolean = await this.testIfVolume(assetVersion.FileName, asset);
 
             const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(idAssetVersion);
             if (!RSR.success || !RSR.readStream || !RSR.fileName)
                 return this.handleError(`WorkflowUpload.validateFiles unable to read asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}: ${RSR.error}`);
             this.appendToWFReport(`Upload validation of ${RSR.fileName}`);
 
-            let fileRes: H.IOResults = { success: true };
-            if (isModel) {
+            // Package/asset-type compatibility pre-flight (off|warn|enforce). In enforce mode a mismatch
+            // fails here, before model/volume/Cook processing; in warn mode it only logs.
+            let fileRes: H.IOResults = await this.validatePackageType(assetVersion, asset, RSR.fileName);
+            if (!fileRes.success) {
+                // fall through to the shared post-processing below, which discards the asset version.
+            } else if (isModel) {
                 // if we're a model, zipped or not, validate the entire file/collection as is:
                 fileRes = await this.validateFileModel(RSR.fileName, RSR.readStream, false, idSystemObject);
+            } else if (isVolume) {
+                if (!Config.features.volumetricIngest)
+                    return this.handleError('Volumetric ingest is currently disabled');
+                // Volumetric ZIP — inspect as a single archive. Must precede the
+                // generic ZIP-cracking branch below or the archive would be unzipped
+                // and validated entry-by-entry, defeating the point.
+                fileRes = await this.validateFileVolume(RSR.fileName, idSystemObject);
             } else if (path.extname(RSR.fileName).toLowerCase() !== '.zip') { // not a zip
                 // we are not a zip
                 fileRes = await this.validateFile(RSR.fileName, RSR.readStream, false, idSystemObject, asset);
@@ -220,7 +232,11 @@ export class WorkflowUpload implements WF.IWorkflow {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
                     if (!readStream)
                         return this.handleError(`WorkflowUpload.validateFiles unable to fetch read stream for ${fileName} in zip of asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`);
-                    await this.validateFile(fileName, readStream, true, idSystemObject, asset);
+                    const entryRes: H.IOResults = await this.validateFile(fileName, readStream, true, idSystemObject, asset);
+                    if (!entryRes.success) {
+                        fileRes = entryRes;
+                        break;
+                    }
                 }
             }
 
@@ -240,30 +256,45 @@ export class WorkflowUpload implements WF.IWorkflow {
         return this.results;
     }
 
+    // Image formats validated via Sharp. Used to tie image validation to the chosen asset type.
+    private static readonly imageFileExtensions: ReadonlySet<string> =
+    new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.tif', '.tiff', '.webp']);
+
     private async validateFile(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean, idSystemObject: number,
         asset: DBAPI.Asset): Promise<H.IOResults> {
 
-        // validate scene file by loading it:
+        const ext: string = path.extname(fileName).toLowerCase();
+
+        // Volumetric dataset files (.dcm/.pca/.pcr) may only enter via the Volumetric asset type, which
+        // is inspected as a whole archive and never reaches validateFile. Reaching here with one means
+        // it was placed under a non-volumetric type — reject and hard-fail the upload.
+        if (COMMON.isVolumetricFileExtension(ext))
+            return this.handleError(`${fileName} is a volumetric dataset file (${ext}) and can only be ingested using the Volumetric asset type`);
+
+        // Scene descriptor is self-describing by name, independent of the asset type.
         if (fileName.toLowerCase().endsWith('.svx.json'))
             return this.validateFileScene(fileName, readStream);
-        else if (await this.testIfModel(fileName, asset))
-            return this.validateFileModel(fileName, readStream, fromZip, idSystemObject);
-        else {
-            // validate formats handled by Sharp
-            switch (path.extname(fileName).toLowerCase()) {
-                case '.avif':
-                case '.gif':
-                case '.jpg':
-                case '.jpeg':
-                case '.png':
-                case '.svg':
-                case '.tif':
-                case '.tiff':
-                case '.webp':
-                    return this.validateFileImage(fileName, readStream);
 
-                default: break;
-            }
+        // Tie remaining validation to the chosen asset type rather than inferring it from content.
+        // Files that do not match the type's expected formats are skipped (capture-data sets routinely
+        // carry sidecar/metadata files), but the volumetric guard above is never lenient.
+        const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        switch (eAssetType) {
+            case COMMON.eVocabularyID.eAssetAssetTypeModel:
+            case COMMON.eVocabularyID.eAssetAssetTypeModelGeometryFile:
+            case COMMON.eVocabularyID.eAssetAssetTypeModelUVMapFile:
+                if (await this.testIfModel(fileName, asset))
+                    return this.validateFileModel(fileName, readStream, fromZip, idSystemObject);
+                break;
+
+            case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry:
+            case COMMON.eVocabularyID.eAssetAssetTypeCaptureDataFile:
+                if (WorkflowUpload.imageFileExtensions.has(ext))
+                    return this.validateFileImage(fileName, readStream);
+                break;
+
+            default:
+                break;
         }
 
         this.appendToWFReport(`Upload validation skipped for ${fileName}`);
@@ -318,6 +349,92 @@ export class WorkflowUpload implements WF.IWorkflow {
                 return true;
         }
         return false;
+    }
+
+    private async testIfVolume(_fileName: string, asset: DBAPI.Asset): Promise<boolean> {
+        const eAssetType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        return eAssetType === COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric;
+    }
+
+    private async validateFileVolume(fileName: string, idSystemObject: number): Promise<H.IOResults> {
+        // Volumetric assets must be ZIP archives. Reject early with a clear message
+        // rather than failing inside ZipFile.load on a non-ZIP byte 0.
+        if (path.extname(fileName).toLowerCase() !== '.zip')
+            return this.handleError(`Volumetric assets must be ZIP archives; got ${fileName}`);
+
+        const results: H.IOResults = await WorkflowUtil.computeVolumeMetrics(fileName, idSystemObject,
+            this.workflowParams.idProject, this.workflowParams.idUserInitiator);
+        if (!results.success)
+            return this.handleError(results.error ?? '');
+        this.appendToWFReport(`Upload validated ${fileName}${results.error ? ': ' + results.error : ''}`);
+        return results;
+    }
+
+    // Friendly labels for the asset types the package validator adjudicates (for user-facing messages).
+    private static readonly packageTypeLabels: ReadonlyMap<COMMON.eVocabularyID, string> = new Map([
+        [COMMON.eVocabularyID.eAssetAssetTypeModel, 'Model'],
+        [COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetPhotogrammetry, 'Photogrammetry'],
+        [COMMON.eVocabularyID.eAssetAssetTypeCaptureDataSetVolumetric, 'Volumetric'],
+        [COMMON.eVocabularyID.eAssetAssetTypeScene, 'Scene'],
+        [COMMON.eVocabularyID.eAssetAssetTypeProjectDocumentation, 'Project Documentation'],
+    ]);
+
+    private packageTypeLabel(type: COMMON.eVocabularyID): string {
+        return WorkflowUpload.packageTypeLabels.get(type) ?? COMMON.eVocabularyID[type] ?? String(type);
+    }
+
+    // Pre-flight: does the uploaded package's file set match the selected asset type? Honors
+    // Config.features.packageValidationMode (off|warn|enforce). Returns failure only in enforce mode on
+    // a mismatch; off / warn / compatible all return success.
+    private async validatePackageType(assetVersion: DBAPI.AssetVersion, asset: DBAPI.Asset, fileName: string): Promise<H.IOResults> {
+        const mode: 'off' | 'warn' | 'enforce' = Config.features.packageValidationMode;
+        if (mode === 'off')
+            return { success: true };
+
+        const selectedType: COMMON.eVocabularyID | undefined = await asset.assetType();
+        if (selectedType === undefined || !COMMON.isValidatableType(selectedType))
+            return { success: true };   // Other / Bulk Ingestion / legacy capture types are not gated
+
+        const files: string[] | null = await this.collectPackageFiles(assetVersion, fileName);
+        if (!files || files.length === 0)
+            return { success: true };   // unreadable / empty here — let normal validation surface it
+
+        const possibleTypes: Set<COMMON.eVocabularyID> = COMMON.assessPackage(files).possibleTypes;
+        if (COMMON.isCompatible(selectedType, possibleTypes))
+            return { success: true };
+
+        const selectedLabel: string = this.packageTypeLabel(selectedType);
+        const detected: string = [...possibleTypes].map(t => this.packageTypeLabel(t)).join(', ') || 'an unrecognized combination of files';
+        const message: string = `Upload contents do not match the selected asset type '${selectedLabel}'. Detected: ${detected}.`;
+
+        if (mode === 'enforce')
+            return this.handleError(message);
+
+        RK.logWarning(RK.LogSection.eWF, 'package validation mismatch', message, { fileName, selected: selectedLabel, detected }, 'Workflow.Upload');
+        await this.appendToWFReport(`[package-validation] would reject (warn mode): ${message}`);
+        return { success: true };
+    }
+
+    // Resolve the list of file names a package contains: the entries of a zip, or the single file name.
+    // Returns null on an unreadable / corrupt archive so the caller skips assessment and the normal
+    // upload path surfaces the real error.
+    private async collectPackageFiles(assetVersion: DBAPI.AssetVersion, fileName: string): Promise<string[] | null> {
+        if (path.extname(fileName).toLowerCase() !== '.zip')
+            return [fileName];
+
+        const storage: STORE.IStorage | null = await STORE.StorageFactory.getInstance();
+        if (!storage)
+            return null;
+        const filePath: string = await storage.stagingFileName(assetVersion.StorageKeyStaging);
+        const ZS: ZipFile = new ZipFile(filePath);
+        const zipRes: H.IOResults = await ZS.load();
+        if (!zipRes.success)
+            return null;
+        try {
+            return await ZS.getJustFiles(null);
+        } finally {
+            await ZS.close();
+        }
     }
 
     private async appendToWFReport(message: string, isError?: boolean | undefined): Promise<H.IOResults> {

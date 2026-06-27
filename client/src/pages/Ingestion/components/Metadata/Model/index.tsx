@@ -13,7 +13,7 @@ import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../.
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularySetID, eVocabularyID } from '@dpo-packrat/common';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -137,7 +137,7 @@ function Model(props: ModelProps): React.ReactElement {
     const { model, file } = metadata;
     const { idAsset } = file;
     const [updateMetadataField] = useMetadataStore(state => [state.updateMetadataField]);
-    const [getEntries] = useVocabularyStore(state => [state.getEntries]);
+    const [getEntries, getVocabularyId] = useVocabularyStore(state => [state.getEntries, state.getVocabularyId]);
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [subjects] = useSubjectStore(state => [state.subjects]);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
@@ -318,10 +318,8 @@ function Model(props: ModelProps): React.ReactElement {
         return [];
     };
     const isMasterModel = (): boolean => {
-        // hard coding the value since common constants does not align with the DB values
-        // (constants) eVocabularyID.eModelPurposeMaster = 85
-        // (database) idVocabulary.Master = 45
-        return (model.purpose===45);
+        const masterId = getVocabularyId(eVocabularyID.eModelPurposeMaster);
+        return masterId !== null && model.purpose === masterId;
     };
 
     const openSourceObjectModal = async () => {

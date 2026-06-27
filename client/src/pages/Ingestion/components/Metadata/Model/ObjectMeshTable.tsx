@@ -14,19 +14,26 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         borderRadius: 5,
         backgroundColor: palette.secondary.light,
+        color: 'black',
         width: 'fit-content',
         height: 'fit-content',
-        padding: '5px',
-        outline: '1px solid rgba(141, 171, 196, 0.4)',
+        padding: '10px',
+        border: '1px solid rgba(141, 171, 196, 0.4)',
         marginRight: '1rem'
     },
     caption: {
         flex: '1 1 0%',
-        width: '100%',
+        width: 'auto',
         display: 'flex',
-        marginBottom: '8px',
         flexDirection: 'row',
-        color: 'grey',
+        alignItems: 'center',
+        color: 'black',
+        fontWeight: 600,
+        backgroundColor: 'rgba(0, 0, 0, 0.06)',
+        borderBottom: '1px solid rgba(0, 0, 0, 0.15)',
+        padding: '6px 10px',
+        margin: '-10px -10px 8px -10px',
+        borderRadius: '4px 4px 0 0',
     },
     boundingBox: {
         '& > *': {
@@ -53,10 +60,11 @@ const useStyles = makeStyles(({ palette }) => ({
         flexDirection: 'column',
         borderRadius: 5,
         backgroundColor: palette.secondary.light,
+        color: 'black',
         width: 'fit-content',
         height: 'fit-content',
-        padding: '5px',
-        outline: '1px solid rgba(141, 171, 196, 0.4)'
+        padding: '10px',
+        border: '1px solid rgba(141, 171, 196, 0.4)'
     },
 }));
 

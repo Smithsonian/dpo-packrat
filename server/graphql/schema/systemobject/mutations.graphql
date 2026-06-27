@@ -66,6 +66,24 @@ input CaptureDataDetailFieldsInput {
     folders: [IngestFolderInput!]!
     isValidData: Boolean
     datasetUse: String!
+    modality: Int
+    scanType: Int
+    contentType: Int
+    scannerMakeModel: String
+    voltageKV: Float
+    amperageUA: Float
+    specimenPreparation: Int
+    voxelSizeX: Float
+    voxelSizeY: Float
+    voxelSizeZ: Float
+    voxelSizeUnit: Int
+    dimensionsX: Int
+    dimensionsY: Int
+    dimensionsZ: Int
+    bitDepth: Int
+    fileCount: Int
+    sliceCount: Int
+    filterLocation: Int
 }
 
 input ModelDetailFieldsInput {

@@ -30,7 +30,7 @@ interface ReadOnlyRowProps extends ViewableProps {
 function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     const { label, value, padding, gridTemplate, width, labelProps, valueProps, valueLeftAligned, gridValue, gridLabel, paddingString, containerStyle, required = false, linkLabel } = props;
 
-    const rowFieldProps = { alignItems: 'baseline', justifyContent: 'space-between', style: { borderRadius: 0, ...containerStyle } };
+    const rowFieldProps = { alignItems: 'baseline', justifyContent: 'space-between', style: { borderRadius: 0, backgroundColor: 'transparent', ...containerStyle } };
     if (width) {
         rowFieldProps['style']['width'] = width;
     }
@@ -40,9 +40,9 @@ function ReadOnlyRow(props: ReadOnlyRowProps): React.ReactElement {
     }
 
     return (
-        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ style: { wordBreak: 'keep-all' }, ...labelProps  }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
+        <FieldType label={label} direction='row' containerProps={rowFieldProps} labelProps={{ style: { wordBreak: 'keep-all', color: 'black' }, ...labelProps  }} valueLeftAligned={valueLeftAligned} gridValue={gridValue} gridLabel={gridLabel} padding={paddingString} required={required}>
             <Box width='fit-content' textAlign='right' display='flex'>
-                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', overflowWrap: 'break-word', wordBreak: 'break-all', padding }} {...valueProps}>
+                <Typography variant='caption' style={{ fontFamily: 'Roboto, Helvetical, Arial, sans-serif', overflowWrap: 'break-word', wordBreak: 'break-all', padding, fontWeight: 600, color: 'black' }} {...valueProps}>
                     {linkLabel ? (
                         <Link
                             href={typeof value === 'string' ? value : ''}

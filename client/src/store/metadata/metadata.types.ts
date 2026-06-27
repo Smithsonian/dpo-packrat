@@ -13,6 +13,7 @@ export type StateMetadata = {
     other: OtherFields;
     file: IngestionFile;
     sceneAttachment: SceneAttachmentFields;
+    volume: VolumeFields;
 };
 
 export enum MetadataType {
@@ -20,7 +21,8 @@ export enum MetadataType {
     model = 'model',
     scene = 'scene',
     other = 'other',
-    sceneAttachment = 'sceneAttachment'
+    sceneAttachment = 'sceneAttachment',
+    volume = 'volume'
 }
 
 export enum eSubtitleOption {
@@ -62,7 +64,19 @@ export type FieldErrors = {
     };
     scene: {
         subtitles: boolean;
-    }
+    };
+    volume: {
+        name: boolean;
+        dateCaptured: boolean;
+        modality: boolean;
+        scanType: boolean;
+        contentType: boolean;
+        voxelSizeX: boolean;
+        voxelSizeY: boolean;
+        voxelSizeZ: boolean;
+        voxelSizeUnit: boolean;
+        fileCount: boolean;
+    };
 };
 
 export type MetadataFieldValue = string | number | boolean | null | Date | string[] | StateIdentifier[] | StateFolder[] | StateRelatedObject[] | SubtitleFields;
@@ -172,12 +186,43 @@ export type SceneAttachmentFields = {
     identifiers: StateIdentifier[];
 };
 
+export type VolumeFields = {
+    systemCreated: boolean;
+    identifiers: StateIdentifier[];
+    sourceObjects: StateRelatedObject[];
+    derivedObjects: StateRelatedObject[];
+    name: string;
+    description: string;
+    dateCaptured: Date;
+    modality: number | null;
+    scanType: number | null;
+    contentType: number | null;
+    scannerMakeModel: string;
+    voltageKV: number | null;
+    amperageUA: number | null;
+    specimenPreparation: number | null;
+    voxelSizeX: number | null;
+    voxelSizeY: number | null;
+    voxelSizeZ: number | null;
+    voxelSizeUnit: number | null;
+    dimensionsX: number | null;
+    dimensionsY: number | null;
+    dimensionsZ: number | null;
+    bitDepth: number | null;
+    fileCount: number | null;
+    sliceCount: number | null;
+    filterLocation: number | null;
+    directory: string;
+    idAsset?: number;
+    updateNotes?: string;
+};
+
 export type StateRelatedObject = RelatedObject;
 
 export type StateReferenceModel = ReferenceModel;
 
 export type StateDetailVersion = DetailVersion;
 
-export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields | SceneAttachmentFields;
+export type ValidateFields = PhotogrammetryFields | ModelFields | SceneFields | OtherFields | SceneAttachmentFields | VolumeFields;
 
 export { ReferenceModelAction };

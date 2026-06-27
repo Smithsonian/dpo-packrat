@@ -89,8 +89,8 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
 
     public computeModelAutomationTag(): string {
         // Download models use download-{type}-{quality}-{uvResolution} to match
-        // Cook's computeModelAutomationTagFromDownloadType (JobCookSIGenerateDownloads.ts:796)
-        // and SceneHelpers.downloadTypeToProperties (sceneHelpers.ts:949).
+        // Cook's JobCookSIGenerateDownloads.computeModelAutomationTagFromDownloadType
+        // and SceneHelpers.downloadTypeToProperties.
         // Non-download models (Web3D, App3D, iOSApp3D) keep scene-{usage}-{quality}-{uvResolution}.
         if (this.Usage && this.Usage.startsWith('Download:')) {
             const downloadType: string = this.Usage.replace('Download:', '');

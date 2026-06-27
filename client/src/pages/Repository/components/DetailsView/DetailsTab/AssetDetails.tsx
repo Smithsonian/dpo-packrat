@@ -17,11 +17,14 @@ import { useDetailTabStore } from '../../../../../store';
 function AssetDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const [getEntries, getInitialEntry] = useVocabularyStore(state => [state.getEntries, state.getInitialEntry]);
-    const [AssetDetails, updateDetailField] = useDetailTabStore(state => [state.AssetDetails, state.updateDetailField]);
+    const [AssetDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.AssetDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
     useEffect(() => {
         onUpdateDetail(objectType, AssetDetails);
     }, [AssetDetails]);
+
+    const anyFieldChanged: boolean = isFieldUpdated(AssetDetails, data?.getDetailsTabDataForObject?.Asset, 'AssetType');
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;

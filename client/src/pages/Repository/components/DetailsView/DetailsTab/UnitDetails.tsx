@@ -4,7 +4,7 @@
  *
  * This component renders details tab for Unit specific details used in DetailsTab component.
  */
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { /*InputField,*/ Loader } from '../../../../../components';
 import { isFieldUpdated } from '../../../../../utils/repository';
@@ -19,11 +19,15 @@ import LabelTooltipText from '../../../../../components/controls/LabelTooltipTex
 function UnitDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType } = props;
     const classes = useStyles();
-    const [UnitDetails, updateDetailField] = useDetailTabStore(state => [state.UnitDetails, state.updateDetailField]);
+    const [UnitDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.UnitDetails, state.updateDetailField, state.setHasUnsavedDetails]);
 
     useEffect(() => {
         onUpdateDetail(objectType, UnitDetails);
     }, [UnitDetails]);
+
+    const FIELD_NAMES: string[] = ['Abbreviation', 'ARKPrefix'];
+    const anyFieldChanged: boolean = FIELD_NAMES.some(f => isFieldUpdated(UnitDetails, data?.getDetailsTabDataForObject?.Unit, f));
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -38,7 +42,7 @@ function UnitDetails(props: DetailComponentProps): React.ReactElement {
 
     return (
         <Box style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
-            <TableContainer style={{ paddingTop: '5px', paddingBottom: '5px' }} >
+            <TableContainer component={Paper} elevation={0} style={{ paddingTop: '5px', paddingBottom: '5px', backgroundColor: '#FFFCD1', border: '1px solid rgba(141, 171, 196, 0.4)', borderRadius: 5 }} >
                 <Table className={classes.table}>
                     <TableBody>
                         <TableRow className={classes.tableRow}>

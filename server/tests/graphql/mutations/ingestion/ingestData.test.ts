@@ -16,6 +16,7 @@ import {
     IngestProjectInput
 } from '../../../../types/graphql';
 import { Context } from '../../../../types/resolvers';
+import * as CACHE from '../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { Asset, AssetVersion } from '@prisma/client';
 import * as DBAPI from '../../../../db';
@@ -181,7 +182,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             folders: [folder],
                             sourceObjects: [],
                             derivedObjects: [],
-                            datasetUse: '[207,208,209]', // indices into Vocabulary for: alignment, reconstruction, and texture generation
+                            datasetUse: await CACHE.VocabularyCache.defaultCaptureDatasetUseJSON(),
                         };
 
                         const ingestDataInput = {
@@ -192,7 +193,8 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                             model: [],
                             scene: [],
                             other: [],
-                            sceneAttachment: []
+                            sceneAttachment: [],
+                            volume: []
                         };
 
                         const result = await graphQLApi.ingestData(ingestDataInput, context);
@@ -200,6 +202,54 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         done();
                     }
                 }
+            }
+        });
+
+        test('rejects volumetric ingest while the feature flag is disabled', async done => {
+            // PACKRAT_INGEST_VOLUMETRIC is unset in CI, so Config.features.volumetricIngest is
+            // false. validateInput rejects any non-empty volume payload before touching its contents.
+            const userInput = createUserInput();
+            const { User } = await graphQLApi.createUser(userInput);
+            expect(User).toBeTruthy();
+
+            if (User) {
+                const context: Context = { user: User, isAuthenticated: true };
+
+                const volume = {
+                    idAssetVersion: 1,
+                    name: 'gated volume',
+                    dateCaptured: new Date().toISOString(),
+                    systemCreated: true,
+                    description: '',
+                    modality: 0,
+                    scanType: 0,
+                    contentType: 0,
+                    voxelSizeX: 1,
+                    voxelSizeY: 1,
+                    voxelSizeZ: 1,
+                    voxelSizeUnit: 0,
+                    fileCount: 1,
+                    directory: '',
+                    identifiers: [],
+                    sourceObjects: [],
+                    derivedObjects: []
+                };
+
+                const ingestDataInput = {
+                    subjects: [],
+                    project: { id: 0, name: '' },
+                    item: { id: null, subtitle: '', entireSubject: true },
+                    photogrammetry: [],
+                    model: [],
+                    scene: [],
+                    other: [],
+                    sceneAttachment: [],
+                    volume: [volume]
+                };
+
+                const result = await graphQLApi.ingestData(ingestDataInput, context);
+                expect(result.success).toBe(false);
+                done();
             }
         });
     });

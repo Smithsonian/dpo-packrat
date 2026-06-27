@@ -275,7 +275,21 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         clusterType,
                         clusterGeometryFieldId,
                         folders,
-                        datasetUse
+                        datasetUse,
+                        modality,
+                        scanType,
+                        scannerMakeModel,
+                        voltageKV,
+                        amperageUA,
+                        specimenPreparation,
+                        voxelSizeX,
+                        voxelSizeY,
+                        voxelSizeZ,
+                        voxelSizeUnit,
+                        dimensionsX,
+                        dimensionsY,
+                        bitDepth,
+                        filterLocation,
                     } = data.CaptureData;
 
                     if (datasetFieldId && !H.Helpers.validFieldId(datasetFieldId)) return sendResult(false,'update object details failed','Dataset Field ID is invalid; update failed');
@@ -307,27 +321,54 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     if (!await CaptureData.update())
                         return sendResult(false,'update object details failed',`Unable to update Capture Data with id ${CaptureData.idCaptureData}; update failed`);
 
-                    // Fetch and update photogrammetry capture data details
+                    // Update the child detail row: CaptureDataPhoto for photogrammetry,
+                    // CaptureDataVolume for volumetric. The two are mutually exclusive
+                    // via the cross-type guard enforced during ingest.
                     const CaptureDataPhoto: DBAPI.CaptureDataPhoto[] | null = await DBAPI.CaptureDataPhoto.fetchFromCaptureData(CaptureData.idCaptureData);
-                    if (!CaptureDataPhoto || CaptureDataPhoto.length < 1)
-                        return sendResult(false,'update object details failed',`Unable to fetch CaptureDataPhoto with id ${idObject}; update failed`);
+                    if (CaptureDataPhoto && CaptureDataPhoto.length > 0) {
+                        const [CD] = CaptureDataPhoto;
 
-                    const [CD] = CaptureDataPhoto;
-
-                    CD.CameraSettingsUniform = H.Helpers.safeBoolean(cameraSettingUniform);
-                    if (datasetType) CD.idVCaptureDatasetType = datasetType;
-                    CD.CaptureDatasetFieldID = maybe<number>(datasetFieldId);
-                    CD.idVItemPositionType = maybe<number>(itemPositionType);
-                    CD.ItemPositionFieldID = maybe<number>(itemPositionFieldId);
-                    CD.ItemArrangementFieldID = maybe<number>(itemArrangementFieldId);
-                    CD.idVFocusType = maybe<number>(focusType);
-                    CD.idVLightSourceType = maybe<number>(lightsourceType);
-                    CD.idVBackgroundRemovalMethod = maybe<number>(backgroundRemovalMethod);
-                    CD.idVClusterType = maybe<number>(clusterType);
-                    CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
-                    CD.CaptureDatasetUse = datasetUse;
-                    if (!await CD.update())
-                        return sendResult(false,'update object details failed',`Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`);
+                        CD.CameraSettingsUniform = H.Helpers.safeBoolean(cameraSettingUniform);
+                        if (datasetType) CD.idVCaptureDatasetType = datasetType;
+                        CD.CaptureDatasetFieldID = maybe<number>(datasetFieldId);
+                        CD.idVItemPositionType = maybe<number>(itemPositionType);
+                        CD.ItemPositionFieldID = maybe<number>(itemPositionFieldId);
+                        CD.ItemArrangementFieldID = maybe<number>(itemArrangementFieldId);
+                        CD.idVFocusType = maybe<number>(focusType);
+                        CD.idVLightSourceType = maybe<number>(lightsourceType);
+                        CD.idVBackgroundRemovalMethod = maybe<number>(backgroundRemovalMethod);
+                        CD.idVClusterType = maybe<number>(clusterType);
+                        CD.ClusterGeometryFieldID = maybe<number>(clusterGeometryFieldId);
+                        CD.CaptureDatasetUse = datasetUse;
+                        if (!await CD.update())
+                            return sendResult(false,'update object details failed',`Unable to update CaptureDataPhoto with id ${CD.idCaptureData}; update failed`);
+                    } else {
+                        const CDV: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(CaptureData.idCaptureData);
+                        if (CDV) {
+                            // System-derived inventory fields (idVContentType, FileCount,
+                            // SliceCount, DimensionsZ) are set from inspection at ingest and
+                            // change only when a new ZIP is re-ingested — not editable here.
+                            if (modality !== null && modality !== undefined) CDV.idVModality = modality;
+                            if (scanType !== null && scanType !== undefined) CDV.idVScanType = scanType;
+                            if (voxelSizeUnit !== null && voxelSizeUnit !== undefined) CDV.idVVoxelSizeUnit = voxelSizeUnit;
+                            if (voxelSizeX !== null && voxelSizeX !== undefined) CDV.VoxelSizeX = voxelSizeX;
+                            if (voxelSizeY !== null && voxelSizeY !== undefined) CDV.VoxelSizeY = voxelSizeY;
+                            if (voxelSizeZ !== null && voxelSizeZ !== undefined) CDV.VoxelSizeZ = voxelSizeZ;
+                            CDV.ScannerMakeModel = maybe<string>(scannerMakeModel);
+                            CDV.VoltageKV = maybe<number>(voltageKV);
+                            CDV.AmperageUA = maybe<number>(amperageUA);
+                            CDV.idVSpecimenPreparation = maybe<number>(specimenPreparation);
+                            CDV.DimensionsX = maybe<number>(dimensionsX);
+                            CDV.DimensionsY = maybe<number>(dimensionsY);
+                            CDV.BitDepth = maybe<number>(bitDepth);
+                            CDV.idVFilterLocation = maybe<number>(filterLocation);
+                            if (!await CDV.update())
+                                return sendResult(false,'update object details failed',`Unable to update CaptureDataVolume with id ${CDV.idCaptureData}; update failed`);
+                        }
+                        // If neither photo nor volume exists, the CaptureData has no detail
+                        // sub-row yet; the parent CaptureData update above is the only
+                        // mutation possible — fall through silently.
+                    }
                 }
                 break;
             }

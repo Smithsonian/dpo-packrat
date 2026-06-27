@@ -111,7 +111,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         initializeTree();
     },
     updateSearch: (value: string): void => {
-        //changed search to keyword
         set({ keyword: value });
     },
     toggleFilter: (): void => {

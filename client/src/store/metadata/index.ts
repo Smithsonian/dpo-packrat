@@ -26,7 +26,7 @@ import { StateSubject, useSubjectStore } from '../subject';
 import { FileId, IngestionFile, useUploadStore } from '../upload';
 import { parseFileId, parseFoldersToState, parseIdentifiersToState, parseItemToState, parseProjectToState, parseSubjectUnitIdentifierToState, parseSubtitlesToState } from '../utils';
 import { useVocabularyStore } from '../vocabulary';
-import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, ValidateFieldsSchema, defaultSceneAttachmentFields, subtitleFieldsSchema } from './metadata.defaults';
+import { defaultModelFields, defaultOtherFields, defaultPhotogrammetryFields, defaultSceneFields, defaultVolumeFields, ValidateFieldsSchema, defaultSceneAttachmentFields, subtitleFieldsSchema } from './metadata.defaults';
 import {
     FieldErrors,
     MetadataFieldValue,
@@ -42,7 +42,8 @@ import {
     StateIdentifier,
     StateMetadata,
     ValidateFields,
-    SubtitleFields
+    SubtitleFields,
+    VolumeFields
 } from './metadata.types';
 import { nullableSelectFields } from '../../utils/controls';
 
@@ -90,6 +91,18 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             },
             scene: {
                 subtitles: false
+            },
+            volume: {
+                name: false,
+                dateCaptured: false,
+                modality: false,
+                scanType: false,
+                contentType: false,
+                voxelSizeX: false,
+                voxelSizeY: false,
+                voxelSizeZ: false,
+                voxelSizeUnit: false,
+                fileCount: false,
             }
         };
 
@@ -118,6 +131,19 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
         if (assetType.scene) {
             errors.scene.subtitles = getSubtitlesError(metadata.scene.subtitles);
+        }
+
+        if (assetType.volume) {
+            errors.volume.name = lodash.isNull(metadata.volume.name) || metadata.volume.name.length < 1;
+            errors.volume.dateCaptured = metadata.volume.dateCaptured.toString() === 'Invalid Date';
+            errors.volume.modality = lodash.isNull(metadata.volume.modality);
+            errors.volume.scanType = lodash.isNull(metadata.volume.scanType);
+            errors.volume.contentType = lodash.isNull(metadata.volume.contentType);
+            errors.volume.voxelSizeX = lodash.isNull(metadata.volume.voxelSizeX);
+            errors.volume.voxelSizeY = lodash.isNull(metadata.volume.voxelSizeY);
+            errors.volume.voxelSizeZ = lodash.isNull(metadata.volume.voxelSizeZ);
+            errors.volume.voxelSizeUnit = lodash.isNull(metadata.volume.voxelSizeUnit);
+            errors.volume.fileCount = lodash.isNull(metadata.volume.fileCount);
         }
 
         return errors;
@@ -215,6 +241,11 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             identifiers: defaultIdentifierField
         };
 
+        const defaultVolume: VolumeFields = {
+            ...defaultVolumeFields,
+            identifiers: defaultIdentifierField
+        };
+
         try {
             const assetVersionDetailsQuery: ApolloQueryResult<GetAssetVersionsDetailsQuery> = await apolloClient.query({
                 query: GetAssetVersionsDetailsDocument,
@@ -279,7 +310,8 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                         model: defaultModel,
                         scene: defaultScene,
                         other: defaultOther,
-                        sceneAttachment: defaultSceneAttachment
+                        sceneAttachment: defaultSceneAttachment,
+                        volume: defaultVolume
                     };
 
                     if (CaptureDataPhoto) {

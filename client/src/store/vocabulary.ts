@@ -7,7 +7,7 @@ import lodash from 'lodash';
 import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../graphql';
 import { GetVocabularyEntriesDocument, Vocabulary } from '../types/graphql';
-import { eVocabularyID, eVocabularySetID } from '@dpo-packrat/common';
+import { eVocabularyID, eVocabularySetID, ModelFileExtensions } from '@dpo-packrat/common';
 
 export type VocabularyOption = Pick<Vocabulary, 'idVocabulary' | 'Term' | 'eVocabID'>;
 export type StateVocabulary = Map<eVocabularySetID, VocabularyOption[]>;
@@ -18,6 +18,7 @@ export type AssetType = {
     model: boolean;
     other: boolean;
     attachment: boolean;
+    volume: boolean;
 };
 
 type VocabularyStore = {
@@ -71,6 +72,12 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eMetadataMetadataSource,
                     eVocabularySetID.eCaptureDataDatasetUse,
                     eVocabularySetID.eModelVariant,
+                    eVocabularySetID.eCaptureDataVolumeModality,
+                    eVocabularySetID.eCaptureDataVolumeScanType,
+                    eVocabularySetID.eCaptureDataVolumeContentType,
+                    eVocabularySetID.eCaptureDataVolumeFilterLocation,
+                    eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit,
+                    eVocabularySetID.eCaptureDataVolumeSpecimenPreparation,
                 ]
             }
         };
@@ -150,7 +157,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             scene: false,
             model: false,
             other: false,
-            attachment: false
+            attachment: false,
+            volume: false
         };
 
         if (vocabularyEntry) {
@@ -163,7 +171,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                 assetType.scene = (Term === 'Scene');
                 assetType.model = (Term === 'Model' || Term === 'Model Geometry File');
                 assetType.attachment = (Term === 'Attachment');
-                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model && !assetType.attachment;
+                assetType.volume = (Term === 'Capture Data Set: Volumetric');
+                assetType.other = !assetType.photogrammetry && !assetType.scene && !assetType.model && !assetType.attachment && !assetType.volume;
             }
         }
 
@@ -172,9 +181,16 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
     getAssetTypeForExtension: (extension: string): number | null => {
         const { vocabularyMap } = get();
         let eVocabEnum: eVocabularyID | null = null;
+        const ext: string = extension.toLowerCase();
 
-        switch (extension.toLowerCase()) {
-            case '.zip': eVocabEnum = eVocabularyID.eAssetAssetTypeBulkIngestion; break;
+        // Mesh extensions are centralized in @dpo-packrat/common so client and server agree.
+        if (ModelFileExtensions.includes(ext)) {
+            eVocabEnum = eVocabularyID.eAssetAssetTypeModel;
+        } else switch (ext) {
+            // .zip is intentionally NOT auto-mapped — the contents could be a volumetric
+            // ZIP, a photogrammetry bulk ingest, a scene archive, or other. Returning
+            // null forces the user to pick from the inline asset-type dropdown.
+            case '.zip': return null;
 
             case '.dcm': eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDicom; break;
 
@@ -188,23 +204,6 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             case '.tiff':
             case '.jpg':
             case '.jpeg': eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataFile; break;
-
-            case '.obj':
-            case '.ply':
-            case '.stl':
-            case '.glb':
-            case '.gltf':
-            case '.usda':
-            case '.usdc':
-            case '.usdz':
-            case '.x3d':
-            case '.wrl':
-            case '.dae':
-            case '.fbx':
-            case '.ma':
-            case '.3ds':
-            case '.ptx':
-            case '.pts': eVocabEnum = eVocabularyID.eAssetAssetTypeModel; break;
 
             case '.svx.json':
             case '.json': eVocabEnum = eVocabularyID.eAssetAssetTypeScene; break;

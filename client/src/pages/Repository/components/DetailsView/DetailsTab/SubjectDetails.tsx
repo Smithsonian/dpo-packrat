@@ -6,7 +6,7 @@
  * This component renders details tab for Subject specific details used in DetailsTab component.
  */
 import React, { useEffect, useState } from 'react';
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Typography, Tooltip, MenuItem, TextField } from '@material-ui/core';
+import { Box, Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography, Tooltip, MenuItem, TextField } from '@material-ui/core';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import { AdminContactForm } from '../../../../Admin/components/Contact/AdminContactForm'; // adjust path if needed
@@ -26,10 +26,11 @@ import { useContactStore, Contact } from '../../../../../store/contact';
 
 function SubjectDetails(props: DetailComponentProps): React.ReactElement {
     const { data, loading, disabled, onUpdateDetail, objectType, idSystemObject } = props;
-    const [ SubjectDetails, updateDetailField, updateObjectProperty ] = useDetailTabStore(s => [
+    const [ SubjectDetails, updateDetailField, updateObjectProperty, setHasUnsavedDetails ] = useDetailTabStore(s => [
         s.SubjectDetails,
         s.updateDetailField,
-        s.updateObjectProperty
+        s.updateObjectProperty,
+        s.setHasUnsavedDetails
     ]);
     const ops = useDetailTabStore(s => s.ObjectPropertiesBySO[idSystemObject] ?? []);
     console.log('[SubjectDetails] render', { idSO: idSystemObject, ops: ops.map(p => p.propertyType) });
@@ -45,6 +46,10 @@ function SubjectDetails(props: DetailComponentProps): React.ReactElement {
     useEffect(() => {
         onUpdateDetail(objectType, SubjectDetails);
     }, [SubjectDetails]);
+
+    const FIELD_NAMES: string[] = ['Latitude', 'Longitude', 'Altitude', 'TS0', 'TS1', 'TS2', 'R0', 'R1', 'R2', 'R3'];
+    const anyFieldChanged: boolean = FIELD_NAMES.some(f => isFieldUpdated(SubjectDetails, data?.getDetailsTabDataForObject?.Subject, f));
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -129,7 +134,7 @@ export function SubjectFields(props: SubjectFieldsProps): React.ReactElement {
     return (
         <React.Fragment>
             <Box minWidth='fit-content' style={{ backgroundColor: 'rgb(236, 245, 253)' }}>
-                <TableContainer style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px' }}>
+                <TableContainer component={Paper} elevation={0} style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px', backgroundColor: '#FFFCD1', border: '1px solid rgba(141, 171, 196, 0.4)', borderRadius: 5 }}>
                     <Table className={classes.table}>
                         <TableBody>
                             <>
@@ -546,7 +551,7 @@ export function ObjectPropertyFields(props: ObjectPropertyProps): React.ReactEle
                 <Tooltip title='Is this subject sensitive and require additional approvals?'>
                     <Typography style={{ color: 'black', paddingLeft: '1rem' }}>Object Sensitivity</Typography>
                 </Tooltip>
-                <TableContainer style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px' }}>
+                <TableContainer component={Paper} elevation={0} style={{ width: 'fit-content', paddingTop: '5px', paddingBottom: '5px', backgroundColor: '#FFFCD1', border: '1px solid rgba(141, 171, 196, 0.4)', borderRadius: 5 }}>
                     <Table className={classes.table}>
                         <TableBody>
                             <>

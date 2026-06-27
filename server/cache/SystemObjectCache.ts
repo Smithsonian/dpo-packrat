@@ -70,6 +70,12 @@ export class SystemObjectCache {
             let SO: SystemObject | null = null;
             let isASystemObject: boolean = true;
             const { idObject, eObjectType } = oID;
+            // idObject = 0 is a sentinel for "no record yet" used by upstream
+            // callers (the audit emit path on new-asset upload, etc.). Skip the
+            // DB round-trip and return undefined rather than logging a lookup
+            // failure for a value that was never expected to resolve.
+            if (!idObject)
+                return undefined;
             switch (eObjectType) {
                 case COMMON.eSystemObjectType.eUnit: SO = await SystemObject.fetchFromUnitID(idObject); break;
                 case COMMON.eSystemObjectType.eProject: SO = await SystemObject.fetchFromProjectID(idObject); break;

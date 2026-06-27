@@ -269,7 +269,7 @@ export class PublishScene {
             }
         }
 
-        // Safety guard: EdanUUID is required for downstream non-null assertions (lines 560, 588)
+        // Safety guard: EdanUUID is required for downstream non-null assertions
         if (changingPubState && !this.scene.EdanUUID) {
             RK.logError(RK.LogSection.eCOLL, 'fetch scene failed',
                 'EdanUUID is required for publishing but is missing after generation',

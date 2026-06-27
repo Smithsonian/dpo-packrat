@@ -75,8 +75,26 @@ __load_ops_env_file
 # Constants
 # ---------------------------------------------------------------------------
 
-OPS_AUDIT_LOG="${OPS_AUDIT_LOG:-/var/log/packrat-ops.log}"
-OPS_LOCK_DIR="${OPS_LOCK_DIR:-/var/lock/packrat-ops}"
+# Transient/intermediate file root. Mirrors the original FS layout under a
+# single non-system mount so /tmp, /var, /home stay clean. Every ops script
+# that creates temp files, lock files, audit logs, or in-place backups
+# resolves its path under this root by default.
+OPS_TRANSIENT_ROOT="${OPS_TRANSIENT_ROOT:-/staging/tmp/system}"
+
+# Try to provision the transient tmpdir. On hosts where the root doesn't
+# exist (developer workstations without /staging mounted), this silently
+# fails and we leave $TMPDIR alone so the system default (/tmp) keeps
+# working. Production hosts have /staging, so the export takes effect.
+if mkdir -p "$OPS_TRANSIENT_ROOT/tmp" 2>/dev/null; then
+    # Route every consumer of $TMPDIR (mktemp, Docker BuildKit, openssl
+    # scratch, ...) into the transient root, so we don't have to touch
+    # each call site. Only override if the caller hasn't pinned one.
+    export TMPDIR="${TMPDIR:-$OPS_TRANSIENT_ROOT/tmp}"
+fi
+
+OPS_AUDIT_LOG="${OPS_AUDIT_LOG:-$OPS_TRANSIENT_ROOT/var/log/packrat-ops.log}"
+OPS_LOCK_DIR="${OPS_LOCK_DIR:-$OPS_TRANSIENT_ROOT/var/lock/packrat-ops}"
+OPS_AUDIT_MAX_BYTES="${OPS_AUDIT_MAX_BYTES:-52428800}"   # 50 MB
 
 # Containers that must NEVER be stopped/removed automatically in prod.
 # Used by ops_container.sh as a safety gate. Edit here, not in each caller.
@@ -281,7 +299,7 @@ init_traps() {
 # no-op instead of queueing or producing two concurrent writers.
 #
 # Lock file: $OPS_LOCK_DIR/<name>.lock
-# If $OPS_LOCK_DIR isn't writable, falls back to /tmp/packrat-ops-locks.
+# If $OPS_LOCK_DIR isn't writable, falls back to $OPS_TRANSIENT_ROOT/tmp/packrat-ops-locks.
 
 with_lock() {
     local name="$1"; shift
@@ -303,7 +321,7 @@ with_lock() {
 
     if [[ ! -d "$OPS_LOCK_DIR" ]]; then
         if ! mkdir -p "$OPS_LOCK_DIR" 2>/dev/null; then
-            OPS_LOCK_DIR="/tmp/packrat-ops-locks"
+            OPS_LOCK_DIR="$OPS_TRANSIENT_ROOT/tmp/packrat-ops-locks"
             mkdir -p "$OPS_LOCK_DIR"
         fi
     fi
@@ -349,6 +367,22 @@ audit_log() {
     env="${ENVIRONMENT:-n/a}"
     op="${OPS_CURRENT_OP:-n/a}"
     line="${ts} | ${host} | ${user} | ${script} | ${env} | ${op} | ${status} | ${elapsed}s"
+
+    # Ensure the audit log directory exists. The default path lives under
+    # $OPS_TRANSIENT_ROOT, which may not have been provisioned on a fresh host.
+    local audit_dir
+    audit_dir="$(dirname -- "$OPS_AUDIT_LOG")"
+    [[ -d "$audit_dir" ]] || mkdir -p "$audit_dir" 2>/dev/null || true
+
+    # Single-step size cap. When the audit log exceeds OPS_AUDIT_MAX_BYTES,
+    # rotate to .1 (overwriting any prior .1). Cheap, no logrotate dependency.
+    if [[ -f "$OPS_AUDIT_LOG" ]]; then
+        local cur_size
+        cur_size="$(stat -c %s -- "$OPS_AUDIT_LOG" 2>/dev/null || echo 0)"
+        if (( cur_size > OPS_AUDIT_MAX_BYTES )); then
+            mv -f -- "$OPS_AUDIT_LOG" "${OPS_AUDIT_LOG}.1" 2>/dev/null || true
+        fi
+    fi
 
     # Best-effort append. If unwritable (dev workstation, perms, etc.),
     # emit to stderr instead of failing the op.

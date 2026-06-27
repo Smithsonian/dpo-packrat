@@ -31,13 +31,23 @@ export const useStyles = makeStyles(({ palette }) => ({
         marginBottom: 10,
         width: '20%',
         minWidth: 'fit-content',
+        backgroundColor: '#FFFCD1',
+        border: '1px solid rgba(141, 171, 196, 0.4)',
+        borderRadius: 5,
+        padding: '8px',
         '& > *': {
             minHeight: '22px',
             height: 'fit-content',
             '&:not(:last-child)': {
-                borderBottom: '1px solid #D8E5EE'
+                borderBottom: '1px solid rgba(0, 0, 0, 0.12)'
             }
         },
+        color: palette.primary.dark
+    },
+    statusContainer: {
+        marginBottom: 10,
+        width: '20%',
+        minWidth: 'fit-content',
         color: palette.primary.dark
     }
 }));
@@ -48,7 +58,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
     const syncing = useRef(false);
     const lastSentSig = useRef<string>('');
     const { data, loading, onUpdateDetail, objectType, subtitle, onSubtitleUpdate, originalSubtitle, idSystemObject, refreshTick, onDetailUpdate } = props;
-    const [SceneDetails, updateDetailField] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField]);
+    const [SceneDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.SceneDetails, state.updateDetailField, state.setHasUnsavedDetails]);
     const sceneData = data?.getDetailsTabDataForObject.Scene;
     const lastTick = useRef<number|undefined>(undefined);
 
@@ -113,6 +123,10 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
             void retrieveSceneData();
         }
     }, [refreshTick, retrieveSceneData]);
+
+    const FIELD_NAMES: string[] = ['ApprovedForPublication', 'PosedAndQCd'];
+    const anyFieldChanged: boolean = FIELD_NAMES.some(f => isFieldUpdated(SceneDetails, data?.getDetailsTabDataForObject?.Scene, f));
+    useEffect(() => { setHasUnsavedDetails(anyFieldChanged); }, [anyFieldChanged, setHasUnsavedDetails]);
 
     if (!data || loading) {
         return <Loader minHeight='15vh' />;
@@ -250,7 +264,7 @@ function SceneDetails(props: DetailComponentProps): React.ReactElement {
                     containerStyle={{ borderBottomLeftRadius: '5px', borderBottomRightRadius: '5px', paddingBottom: '5px', ...readOnlyContainerProps }}
                 />
             </Box>
-            <Box display='flex' flexDirection='column' className={classes.container} style={{ marginLeft: '5rem' }}>
+            <Box display='flex' flexDirection='column' className={classes.statusContainer} style={{ marginLeft: '5rem' }}>
                 <SceneDetailsStatus
                     idSceneSO={idSystemObject}
                     refreshTick={refreshTick}

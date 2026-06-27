@@ -29,7 +29,7 @@ type Contact = DBReference & {
 type ContactFormProps = {
     mode?: 'create' | 'update'
     contact?: Contact;
-    onUpdate?: (contact: Contact | null, status: 'create' | 'update', message: string) => void;  // NEW preferred callback
+    onUpdate?: (contact: Contact | null, status: 'create' | 'update', message: string) => void;  // preferred callback
 };
 
 const EMPTY_BASELINE: Contact = {

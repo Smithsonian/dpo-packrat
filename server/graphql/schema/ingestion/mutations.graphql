@@ -124,6 +124,38 @@ input IngestSceneAttachmentInput {
     identifiers: [IngestIdentifierInput!]!
 }
 
+input IngestVolumeInput {
+    idAssetVersion: Int!
+    idAsset: Int
+    name: String!
+    dateCaptured: String!
+    systemCreated: Boolean!
+    description: String!
+    modality: Int!
+    scanType: Int!
+    contentType: Int!
+    scannerMakeModel: String
+    voltageKV: Float
+    amperageUA: Float
+    specimenPreparation: Int
+    voxelSizeX: Float!
+    voxelSizeY: Float!
+    voxelSizeZ: Float!
+    voxelSizeUnit: Int!
+    dimensionsX: Int
+    dimensionsY: Int
+    dimensionsZ: Int
+    bitDepth: Int
+    fileCount: Int!
+    sliceCount: Int
+    filterLocation: Int
+    directory: String!
+    identifiers: [IngestIdentifierInput!]!
+    sourceObjects: [RelatedObjectInput!]!
+    derivedObjects: [RelatedObjectInput!]!
+    updateNotes: String
+}
+
 input IngestDataInput {
     subjects: [IngestSubjectInput!]!
     project: IngestProjectInput!
@@ -133,6 +165,7 @@ input IngestDataInput {
     scene: [IngestSceneInput!]!
     other: [IngestOtherInput!]!
     sceneAttachment: [IngestSceneAttachmentInput!]!
+    volume: [IngestVolumeInput!]!
 }
 
 type IngestDataResult {

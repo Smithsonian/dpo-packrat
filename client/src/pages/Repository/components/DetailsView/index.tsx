@@ -95,6 +95,20 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
             padding: 10
         }
     },
+    unsavedNotice: {
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '8px 16px',
+        backgroundColor: palette.secondary.main,
+        color: palette.secondary.contrastText,
+        borderTop: `1px solid ${palette.secondary.dark}`,
+        boxShadow: '0 -2px 6px rgba(0, 0, 0, 0.08)',
+        fontSize: '0.9rem',
+        textAlign: 'center',
+        zIndex: 1200,
+    },
     updateButton: {
         height: 35,
         width: 100,
@@ -220,6 +234,7 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
+    const hasUnsavedDetails = useDetailTabStore(s => s.hasUnsavedDetails);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
     const [resetSpecialPending] = useUploadStore(state => [state.resetSpecialPending]);
 
@@ -700,7 +715,25 @@ function DetailsView(): React.ReactElement {
                     clusterType,
                     clusterGeometryFieldId,
                     folders,
-                    datasetUse
+                    datasetUse,
+                    modality,
+                    scanType,
+                    contentType,
+                    scannerMakeModel,
+                    voltageKV,
+                    amperageUA,
+                    specimenPreparation,
+                    voxelSizeX,
+                    voxelSizeY,
+                    voxelSizeZ,
+                    voxelSizeUnit,
+                    dimensionsX,
+                    dimensionsY,
+                    dimensionsZ,
+                    bitDepth,
+                    fileCount,
+                    sliceCount,
+                    filterLocation,
                 } = CaptureDataDetails;
 
                 updatedData.CaptureData = {
@@ -720,7 +753,25 @@ function DetailsView(): React.ReactElement {
                     clusterType,
                     clusterGeometryFieldId,
                     folders,
-                    datasetUse
+                    datasetUse,
+                    modality,
+                    scanType,
+                    contentType,
+                    scannerMakeModel,
+                    voltageKV,
+                    amperageUA,
+                    specimenPreparation,
+                    voxelSizeX,
+                    voxelSizeY,
+                    voxelSizeZ,
+                    voxelSizeUnit,
+                    dimensionsX,
+                    dimensionsY,
+                    dimensionsZ,
+                    bitDepth,
+                    fileCount,
+                    sliceCount,
+                    filterLocation,
                 };
             }
 
@@ -900,6 +951,24 @@ function DetailsView(): React.ReactElement {
         );
     }
 
+    // Aggregate all pending-Update signals so the top bar covers every control
+    // on the page that needs Update to persist. Includes:
+    //  - hasUnsavedDetails: any field on any detail tab (CaptureData, Model,
+    //    Scene, Subject, etc.) — set by the per-tab useEffect into the store
+    //  - updatedIdentifiers / updatedMetadata: pre-existing trackers for the
+    //    identifier panel and metadata grid
+    //  - DetailsHeader-level edits (name, retired, license, subtitle) — these
+    //    live in local `details` state but only persist on Update, so detect
+    //    by comparing against the GraphQL response shape
+    const detailsResponse = data.getSystemObjectDetails;
+    const nameChanged: boolean = (details.name ?? '') !== (detailsResponse.name ?? '');
+    const retiredChanged: boolean = !!details.retired !== !!detailsResponse.retired;
+    const licenseChanged: boolean = (details.idLicense ?? 0) !== (detailsResponse.license?.idLicense ?? 0);
+    const subtitleChanged: boolean = (details.subtitle ?? '') !== (detailsResponse.subTitle ?? '');
+    const hasAnyUnsaved: boolean =
+        hasUnsavedDetails || updatedIdentifiers || updatedMetadata
+        || nameChanged || retiredChanged || licenseChanged || subtitleChanged;
+
     return (
         <Box className={classes.container}>
             <Box className={classes.content}>
@@ -910,6 +979,11 @@ function DetailsView(): React.ReactElement {
                         messageHTML={notice.messageHTML}
                         messageText={notice.messageText}
                     />
+                )}
+                {hasAnyUnsaved && (
+                    <Box className={classes.unsavedNotice}>
+                        Unsaved changes — press <strong>Update</strong> to apply.
+                    </Box>
                 )}
 
                 <DetailsHeader

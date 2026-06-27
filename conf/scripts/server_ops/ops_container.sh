@@ -527,7 +527,9 @@ __predeploy_run() {
     # 8. Optional /tmp remount (only hosts with /tmp mounted noexec need this)
     if [[ "$remount_tmp" == "true" ]]; then
         note "remounting /tmp with exec (--remount-tmp)..."
-        local tmpdir="/home/${deploy_user}/tmp"
+        # BuildKit scratch lives under $OPS_TRANSIENT_ROOT so multi-GB image
+        # context unpacks do not push /home toward its quota during deploys.
+        local tmpdir="$OPS_TRANSIENT_ROOT/home/${deploy_user}/tmp"
         export TMPDIR="$tmpdir"
         if [[ ! -d "$tmpdir" ]]; then
             mkdir -p "$tmpdir"

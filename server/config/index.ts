@@ -123,6 +123,14 @@ export type ConfigType = {
     event: {
         type: EVENT_TYPE;
     },
+    features: {
+        /** Gate for user-facing volumetric capture-data ingest. Off in production until stakeholder
+         *  sign-off. When false, the upload inspector and the ingest path reject volumetric assets. */
+        volumetricIngest: boolean;
+        /** Upload-time package/asset-type compatibility check. 'off' disables it; 'warn' logs mismatches
+         *  without blocking (rollout/observation); 'enforce' rejects mismatched uploads. */
+        packageValidationMode: 'off' | 'warn' | 'enforce';
+    },
     environment: {
         type: ENVIRONMENT_TYPE;
         isJest: boolean;
@@ -152,6 +160,7 @@ export type ConfigType = {
     },
     navigation: {
         type: NAVIGATION_TYPE;
+        reindexSchedule: string;
     },
     slack: {
         apiKey: string;
@@ -294,6 +303,18 @@ export const Config: ConfigType = {
     event: {
         type: EVENT_TYPE.INPROCESS,
     },
+    features: {
+        volumetricIngest: ((): boolean => {
+            const raw: string | undefined = process.env.PACKRAT_INGEST_VOLUMETRIC;
+            if (!raw) return false;
+            const normalized: string = raw.trim().toLowerCase();
+            return normalized === 'true' || normalized === '1';
+        })(),
+        packageValidationMode: ((): 'off' | 'warn' | 'enforce' => {
+            const raw: string = (process.env.PACKRAT_INGEST_VALIDATION_MODE ?? '').trim().toLowerCase();
+            return (raw === 'warn' || raw === 'enforce') ? raw : 'off';
+        })(),
+    },
     environment: {
         type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,
         isJest: process.env.JEST_WORKER_ID !== undefined,
@@ -323,6 +344,7 @@ export const Config: ConfigType = {
     },
     navigation: {
         type: process.env.PACKRAT_NAVIGATION_TYPE === 'db' ? NAVIGATION_TYPE.DB : NAVIGATION_TYPE.SOLR,
+        reindexSchedule: process.env.PACKRAT_SOLR_REINDEX_SCHEDULE ? process.env.PACKRAT_SOLR_REINDEX_SCHEDULE : '0 0 * * *',
     },
     slack: {
         apiKey: process.env.PACKRAT_SLACK_KEY ? process.env.PACKRAT_SLACK_KEY: 'undefined',

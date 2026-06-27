@@ -158,6 +158,7 @@ export type AssetVersionDetailFields = {
   AssetVersion?: Maybe<AssetVersion>;
   Creator?: Maybe<Scalars['String']>;
   DateCreated?: Maybe<Scalars['DateTime']>;
+  FileName?: Maybe<Scalars['String']>;
   FilePath?: Maybe<Scalars['String']>;
   Ingested?: Maybe<Scalars['Boolean']>;
   StorageHash?: Maybe<Scalars['String']>;
@@ -194,6 +195,7 @@ export type CaptureData = {
   CaptureDataFile?: Maybe<Array<Maybe<CaptureDataFile>>>;
   CaptureDataGroup?: Maybe<Array<Maybe<CaptureDataGroup>>>;
   CaptureDataPhoto?: Maybe<Array<Maybe<CaptureDataPhoto>>>;
+  CaptureDataVolume?: Maybe<CaptureDataVolume>;
   DateCaptured: Scalars['DateTime'];
   Description: Scalars['String'];
   SystemObject?: Maybe<SystemObject>;
@@ -205,16 +207,24 @@ export type CaptureData = {
 
 export type CaptureDataDetailFields = {
   __typename?: 'CaptureDataDetailFields';
+  amperageUA?: Maybe<Scalars['Float']>;
   backgroundRemovalMethod?: Maybe<Scalars['Int']>;
+  bitDepth?: Maybe<Scalars['Int']>;
   cameraSettingUniform?: Maybe<Scalars['Boolean']>;
   captureMethod?: Maybe<Scalars['Int']>;
   clusterGeometryFieldId?: Maybe<Scalars['Int']>;
   clusterType?: Maybe<Scalars['Int']>;
+  contentType?: Maybe<Scalars['Int']>;
   datasetFieldId?: Maybe<Scalars['Int']>;
   datasetType?: Maybe<Scalars['Int']>;
   datasetUse: Scalars['String'];
   dateCaptured?: Maybe<Scalars['String']>;
   description?: Maybe<Scalars['String']>;
+  dimensionsX?: Maybe<Scalars['Int']>;
+  dimensionsY?: Maybe<Scalars['Int']>;
+  dimensionsZ?: Maybe<Scalars['Int']>;
+  fileCount?: Maybe<Scalars['Int']>;
+  filterLocation?: Maybe<Scalars['Int']>;
   focusType?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
   isValidData?: Maybe<Scalars['Boolean']>;
@@ -222,20 +232,38 @@ export type CaptureDataDetailFields = {
   itemPositionFieldId?: Maybe<Scalars['Int']>;
   itemPositionType?: Maybe<Scalars['Int']>;
   lightsourceType?: Maybe<Scalars['Int']>;
+  modality?: Maybe<Scalars['Int']>;
+  scanType?: Maybe<Scalars['Int']>;
+  scannerMakeModel?: Maybe<Scalars['String']>;
+  sliceCount?: Maybe<Scalars['Int']>;
+  specimenPreparation?: Maybe<Scalars['Int']>;
   systemCreated?: Maybe<Scalars['Boolean']>;
+  voltageKV?: Maybe<Scalars['Float']>;
+  voxelSizeUnit?: Maybe<Scalars['Int']>;
+  voxelSizeX?: Maybe<Scalars['Float']>;
+  voxelSizeY?: Maybe<Scalars['Float']>;
+  voxelSizeZ?: Maybe<Scalars['Float']>;
 };
 
 export type CaptureDataDetailFieldsInput = {
+  amperageUA?: InputMaybe<Scalars['Float']>;
   backgroundRemovalMethod?: InputMaybe<Scalars['Int']>;
+  bitDepth?: InputMaybe<Scalars['Int']>;
   cameraSettingUniform?: InputMaybe<Scalars['Boolean']>;
   captureMethod?: InputMaybe<Scalars['Int']>;
   clusterGeometryFieldId?: InputMaybe<Scalars['Int']>;
   clusterType?: InputMaybe<Scalars['Int']>;
+  contentType?: InputMaybe<Scalars['Int']>;
   datasetFieldId?: InputMaybe<Scalars['Int']>;
   datasetType?: InputMaybe<Scalars['Int']>;
   datasetUse: Scalars['String'];
   dateCaptured?: InputMaybe<Scalars['DateTime']>;
   description?: InputMaybe<Scalars['String']>;
+  dimensionsX?: InputMaybe<Scalars['Int']>;
+  dimensionsY?: InputMaybe<Scalars['Int']>;
+  dimensionsZ?: InputMaybe<Scalars['Int']>;
+  fileCount?: InputMaybe<Scalars['Int']>;
+  filterLocation?: InputMaybe<Scalars['Int']>;
   focusType?: InputMaybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
   isValidData?: InputMaybe<Scalars['Boolean']>;
@@ -243,7 +271,17 @@ export type CaptureDataDetailFieldsInput = {
   itemPositionFieldId?: InputMaybe<Scalars['Int']>;
   itemPositionType?: InputMaybe<Scalars['Int']>;
   lightsourceType?: InputMaybe<Scalars['Int']>;
+  modality?: InputMaybe<Scalars['Int']>;
+  scanType?: InputMaybe<Scalars['Int']>;
+  scannerMakeModel?: InputMaybe<Scalars['String']>;
+  sliceCount?: InputMaybe<Scalars['Int']>;
+  specimenPreparation?: InputMaybe<Scalars['Int']>;
   systemCreated?: InputMaybe<Scalars['Boolean']>;
+  voltageKV?: InputMaybe<Scalars['Float']>;
+  voxelSizeUnit?: InputMaybe<Scalars['Int']>;
+  voxelSizeX?: InputMaybe<Scalars['Float']>;
+  voxelSizeY?: InputMaybe<Scalars['Float']>;
+  voxelSizeZ?: InputMaybe<Scalars['Float']>;
 };
 
 export type CaptureDataFile = {
@@ -287,6 +325,37 @@ export type CaptureDataPhoto = {
   idVFocusType?: Maybe<Scalars['Int']>;
   idVItemPositionType?: Maybe<Scalars['Int']>;
   idVLightSourceType?: Maybe<Scalars['Int']>;
+};
+
+export type CaptureDataVolume = {
+  __typename?: 'CaptureDataVolume';
+  AmperageUA?: Maybe<Scalars['Float']>;
+  BitDepth?: Maybe<Scalars['Int']>;
+  CaptureData?: Maybe<CaptureData>;
+  DimensionsX?: Maybe<Scalars['Int']>;
+  DimensionsY?: Maybe<Scalars['Int']>;
+  DimensionsZ?: Maybe<Scalars['Int']>;
+  FileCount: Scalars['Int'];
+  ScannerMakeModel?: Maybe<Scalars['String']>;
+  SliceCount?: Maybe<Scalars['Int']>;
+  VContentType?: Maybe<Vocabulary>;
+  VFilterLocation?: Maybe<Vocabulary>;
+  VModality?: Maybe<Vocabulary>;
+  VScanType?: Maybe<Vocabulary>;
+  VSpecimenPreparation?: Maybe<Vocabulary>;
+  VVoxelSizeUnit?: Maybe<Vocabulary>;
+  VoltageKV?: Maybe<Scalars['Float']>;
+  VoxelSizeX: Scalars['Float'];
+  VoxelSizeY: Scalars['Float'];
+  VoxelSizeZ: Scalars['Float'];
+  idCaptureData: Scalars['Int'];
+  idCaptureDataVolume: Scalars['Int'];
+  idVContentType: Scalars['Int'];
+  idVFilterLocation?: Maybe<Scalars['Int']>;
+  idVModality: Scalars['Int'];
+  idVScanType: Scalars['Int'];
+  idVSpecimenPreparation?: Maybe<Scalars['Int']>;
+  idVVoxelSizeUnit: Scalars['Int'];
 };
 
 export type ClearLicenseAssignmentInput = {
@@ -614,6 +683,15 @@ export type GetCaptureDataPhotoResult = {
 export type GetCaptureDataResult = {
   __typename?: 'GetCaptureDataResult';
   CaptureData?: Maybe<CaptureData>;
+};
+
+export type GetCaptureDataVolumeInput = {
+  idCaptureDataVolume: Scalars['Int'];
+};
+
+export type GetCaptureDataVolumeResult = {
+  __typename?: 'GetCaptureDataVolumeResult';
+  CaptureDataVolume?: Maybe<CaptureDataVolume>;
 };
 
 export type GetContentsForAssetVersionsInput = {
@@ -1054,6 +1132,7 @@ export type IngestDataInput = {
   scene: Array<IngestSceneInput>;
   sceneAttachment: Array<IngestSceneAttachmentInput>;
   subjects: Array<IngestSubjectInput>;
+  volume: Array<IngestVolumeInput>;
 };
 
 export type IngestDataResult = {
@@ -1254,6 +1333,38 @@ export type IngestTitle = {
   forced: Scalars['Boolean'];
   subtitle?: Maybe<Array<Maybe<Scalars['String']>>>;
   title: Scalars['String'];
+};
+
+export type IngestVolumeInput = {
+  amperageUA?: InputMaybe<Scalars['Float']>;
+  bitDepth?: InputMaybe<Scalars['Int']>;
+  contentType: Scalars['Int'];
+  dateCaptured: Scalars['String'];
+  derivedObjects: Array<RelatedObjectInput>;
+  description: Scalars['String'];
+  dimensionsX?: InputMaybe<Scalars['Int']>;
+  dimensionsY?: InputMaybe<Scalars['Int']>;
+  dimensionsZ?: InputMaybe<Scalars['Int']>;
+  directory: Scalars['String'];
+  fileCount: Scalars['Int'];
+  filterLocation?: InputMaybe<Scalars['Int']>;
+  idAsset?: InputMaybe<Scalars['Int']>;
+  idAssetVersion: Scalars['Int'];
+  identifiers: Array<IngestIdentifierInput>;
+  modality: Scalars['Int'];
+  name: Scalars['String'];
+  scanType: Scalars['Int'];
+  scannerMakeModel?: InputMaybe<Scalars['String']>;
+  sliceCount?: InputMaybe<Scalars['Int']>;
+  sourceObjects: Array<RelatedObjectInput>;
+  specimenPreparation?: InputMaybe<Scalars['Int']>;
+  systemCreated: Scalars['Boolean'];
+  updateNotes?: InputMaybe<Scalars['String']>;
+  voltageKV?: InputMaybe<Scalars['Float']>;
+  voxelSizeUnit: Scalars['Int'];
+  voxelSizeX: Scalars['Float'];
+  voxelSizeY: Scalars['Float'];
+  voxelSizeZ: Scalars['Float'];
 };
 
 export type IngestionItem = {
@@ -1824,6 +1935,7 @@ export type Query = {
   getAssetVersionsDetails: GetAssetVersionsDetailsResult;
   getCaptureData: GetCaptureDataResult;
   getCaptureDataPhoto: GetCaptureDataPhotoResult;
+  getCaptureDataVolume: GetCaptureDataVolumeResult;
   getContentsForAssetVersions: GetContentsForAssetVersionsResult;
   getCurrentUser: GetCurrentUserResult;
   getDetailsTabDataForObject: GetDetailsTabDataForObjectResult;
@@ -1903,6 +2015,11 @@ export type QueryGetCaptureDataArgs = {
 
 export type QueryGetCaptureDataPhotoArgs = {
   input: GetCaptureDataPhotoInput;
+};
+
+
+export type QueryGetCaptureDataVolumeArgs = {
+  input: GetCaptureDataVolumeInput;
 };
 
 

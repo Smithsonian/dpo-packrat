@@ -106,6 +106,14 @@ type DetailTabStore = {
     getDetail: (type: eSystemObjectType) => DetailsTabType | void;
     initializeDetailFields: (data: any, type: eSystemObjectType) => void;
     getDetailsViewFieldErrors: (metadata: UpdateObjectDetailsDataInput, objectType: eSystemObjectType) => string[];
+
+    // Per-tab unsaved-changes signal. Each tab calls setHasUnsavedDetails(true|false)
+    // from a useEffect whenever its locally-computed anyFieldChanged boolean
+    // transitions. DetailsTab reads this and renders a single full-width bar
+    // between the tabs and the field content. Resets implicitly to false when
+    // the GraphQL refetch (after Update) syncs the store back to the response.
+    hasUnsavedDetails: boolean;
+    setHasUnsavedDetails: (value: boolean) => void;
 };
 
 export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTabStore>, get: GetState<DetailTabStore>) => ({
@@ -159,7 +167,25 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         clusterGeometryFieldId: null,
         folders: [],
         isValidData: null,
-        datasetUse: '[207,208,209]', // indices into Vocabulary: alignment, reconstruction, texture generation
+        datasetUse: '[]', // Server populates this from CaptureDataPhoto.CaptureDatasetUse on load; default empty here means "no rendered chips" until data arrives.
+        modality: null,
+        scanType: null,
+        contentType: null,
+        scannerMakeModel: null,
+        voltageKV: null,
+        amperageUA: null,
+        specimenPreparation: null,
+        voxelSizeX: null,
+        voxelSizeY: null,
+        voxelSizeZ: null,
+        voxelSizeUnit: null,
+        dimensionsX: null,
+        dimensionsY: null,
+        dimensionsZ: null,
+        bitDepth: null,
+        fileCount: null,
+        sliceCount: null,
+        filterLocation: null,
     },
     SceneDetails: {
         CountScene: 0,
@@ -220,6 +246,8 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         PhoneNumberMobile: '',
         PhoneNumberOffice: ''
     },
+    hasUnsavedDetails: false,
+    setHasUnsavedDetails: (value: boolean) => set({ hasUnsavedDetails: value }),
     ObjectPropertiesBySO: {},
 
     //#region OBJECT_PROPERTY
@@ -439,25 +467,22 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         if (!getDetailsTabDataForObject) return;
 
         if (objectType === eSystemObjectType.eUnit) {
-            const {
-                Unit: { Abbreviation, ARKPrefix }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Unit) return;
+            const { Abbreviation, ARKPrefix } = getDetailsTabDataForObject.Unit;
             updateDetailField(eSystemObjectType.eUnit, 'Abbreviation', Abbreviation);
             updateDetailField(eSystemObjectType.eUnit, 'ARKPrefix', ARKPrefix);
         }
 
         if (objectType === eSystemObjectType.eProject) {
-            const {
-                Project: { Description, idUnit }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Project) return;
+            const { Description, idUnit } = getDetailsTabDataForObject.Project;
             updateDetailField(eSystemObjectType.eProject, 'Description', Description);
             updateDetailField(eSystemObjectType.eProject, 'idUnit', idUnit);
         }
 
         if (objectType === eSystemObjectType.eSubject) {
-            const {
-                Subject: { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Subject) return;
+            const { Latitude, Longitude, Altitude, TS0, TS1, TS2, R0, R1, R2, R3 } = getDetailsTabDataForObject.Subject;
             updateDetailField(eSystemObjectType.eSubject, 'Latitude', Latitude);
             updateDetailField(eSystemObjectType.eSubject, 'Altitude', Altitude);
             updateDetailField(eSystemObjectType.eSubject, 'Longitude', Longitude);
@@ -471,18 +496,14 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (objectType === eSystemObjectType.eItem) {
-            const {
-                Item: { EntireSubject }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Item) return;
+            const { EntireSubject } = getDetailsTabDataForObject.Item;
             updateDetailField(eSystemObjectType.eItem, 'EntireSubject', EntireSubject);
         }
 
         if (objectType === eSystemObjectType.eModel) {
-            const {
-                Model: {
-                    Model: { DateCreated, idVModality, idVPurpose, idVUnits, idVFileType, idVCreationMethod, Variant }
-                }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Model?.Model) return;
+            const { DateCreated, idVModality, idVPurpose, idVUnits, idVFileType, idVCreationMethod, Variant } = getDetailsTabDataForObject.Model.Model;
             updateDetailField(eSystemObjectType.eModel, 'DateCreated', DateCreated);
             updateDetailField(eSystemObjectType.eModel, 'idVModality', idVModality);
             updateDetailField(eSystemObjectType.eModel, 'idVPurpose', idVPurpose);
@@ -493,27 +514,44 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (objectType === eSystemObjectType.eCaptureData) {
+            if (!getDetailsTabDataForObject.CaptureData) return;
             const {
-                CaptureData: {
-                    backgroundRemovalMethod,
-                    cameraSettingUniform,
-                    captureMethod,
-                    clusterGeometryFieldId,
-                    clusterType,
-                    datasetFieldId,
-                    datasetType,
-                    dateCaptured,
-                    description,
-                    focusType,
-                    folders,
-                    isValidData,
-                    itemArrangementFieldId,
-                    itemPositionFieldId,
-                    itemPositionType,
-                    lightsourceType,
-                    datasetUse
-                }
-            } = getDetailsTabDataForObject;
+                backgroundRemovalMethod,
+                cameraSettingUniform,
+                captureMethod,
+                clusterGeometryFieldId,
+                clusterType,
+                datasetFieldId,
+                datasetType,
+                dateCaptured,
+                description,
+                focusType,
+                folders,
+                isValidData,
+                itemArrangementFieldId,
+                itemPositionFieldId,
+                itemPositionType,
+                lightsourceType,
+                datasetUse,
+                modality,
+                scanType,
+                contentType,
+                scannerMakeModel,
+                voltageKV,
+                amperageUA,
+                specimenPreparation,
+                voxelSizeX,
+                voxelSizeY,
+                voxelSizeZ,
+                voxelSizeUnit,
+                dimensionsX,
+                dimensionsY,
+                dimensionsZ,
+                bitDepth,
+                fileCount,
+                sliceCount,
+                filterLocation,
+            } = getDetailsTabDataForObject.CaptureData;
             updateDetailField(eSystemObjectType.eCaptureData, 'backgroundRemovalMethod', backgroundRemovalMethod);
             updateDetailField(eSystemObjectType.eCaptureData, 'cameraSettingUniform', cameraSettingUniform);
             updateDetailField(eSystemObjectType.eCaptureData, 'captureMethod', captureMethod);
@@ -524,7 +562,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'dateCaptured', dateCaptured);
             updateDetailField(eSystemObjectType.eCaptureData, 'description', description);
             updateDetailField(eSystemObjectType.eCaptureData, 'focusType', focusType);
-            const sanitizedFolders = folders.map((folder) => {
+            const sanitizedFolders = (folders ?? []).map((folder) => {
                 return {
                     name: folder.name,
                     variantType: folder.variantType
@@ -537,12 +575,29 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'itemPositionType', itemPositionType);
             updateDetailField(eSystemObjectType.eCaptureData, 'lightsourceType', lightsourceType);
             updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', datasetUse);
+            updateDetailField(eSystemObjectType.eCaptureData, 'modality', modality);
+            updateDetailField(eSystemObjectType.eCaptureData, 'scanType', scanType);
+            updateDetailField(eSystemObjectType.eCaptureData, 'contentType', contentType);
+            updateDetailField(eSystemObjectType.eCaptureData, 'scannerMakeModel', scannerMakeModel);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voltageKV', voltageKV);
+            updateDetailField(eSystemObjectType.eCaptureData, 'amperageUA', amperageUA);
+            updateDetailField(eSystemObjectType.eCaptureData, 'specimenPreparation', specimenPreparation);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeX', voxelSizeX);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeY', voxelSizeY);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeZ', voxelSizeZ);
+            updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeUnit', voxelSizeUnit);
+            updateDetailField(eSystemObjectType.eCaptureData, 'dimensionsX', dimensionsX);
+            updateDetailField(eSystemObjectType.eCaptureData, 'dimensionsY', dimensionsY);
+            updateDetailField(eSystemObjectType.eCaptureData, 'dimensionsZ', dimensionsZ);
+            updateDetailField(eSystemObjectType.eCaptureData, 'bitDepth', bitDepth);
+            updateDetailField(eSystemObjectType.eCaptureData, 'fileCount', fileCount);
+            updateDetailField(eSystemObjectType.eCaptureData, 'sliceCount', sliceCount);
+            updateDetailField(eSystemObjectType.eCaptureData, 'filterLocation', filterLocation);
         }
 
         if (objectType === eSystemObjectType.eScene) {
-            const {
-                Scene: { ApprovedForPublication, PublicationApprover, PosedAndQCd, CanBeQCd, EdanUUID, Links }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Scene) return;
+            const { ApprovedForPublication, PublicationApprover, PosedAndQCd, CanBeQCd, EdanUUID, Links } = getDetailsTabDataForObject.Scene;
             updateDetailField(eSystemObjectType.eScene, 'ApprovedForPublication', ApprovedForPublication);
             updateDetailField(eSystemObjectType.eScene, 'PublicationApprover', PublicationApprover);
             updateDetailField(eSystemObjectType.eScene, 'PosedAndQCd', PosedAndQCd);
@@ -552,24 +607,21 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (objectType === eSystemObjectType.eProjectDocumentation) {
-            const {
-                ProjectDocumentation: { Description }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.ProjectDocumentation) return;
+            const { Description } = getDetailsTabDataForObject.ProjectDocumentation;
             updateDetailField(eSystemObjectType.eProjectDocumentation, 'Description', Description);
         }
 
         if (objectType === eSystemObjectType.eAsset) {
-            const {
-                Asset: { FilePath, AssetType }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Asset) return;
+            const { FilePath, AssetType } = getDetailsTabDataForObject.Asset;
             updateDetailField(eSystemObjectType.eAsset, 'AssetType', AssetType);
             updateDetailField(eSystemObjectType.eAsset, 'FilePath', FilePath);
         }
 
         if (objectType === eSystemObjectType.eAssetVersion) {
-            const {
-                AssetVersion: { Version, Creator, DateCreated, StorageHash, StorageSize, Ingested, FilePath }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.AssetVersion) return;
+            const { Version, Creator, DateCreated, StorageHash, StorageSize, Ingested, FilePath } = getDetailsTabDataForObject.AssetVersion;
             updateDetailField(eSystemObjectType.eAssetVersion, 'Version', Version);
             updateDetailField(eSystemObjectType.eAssetVersion, 'Creator', Creator);
             updateDetailField(eSystemObjectType.eAssetVersion, 'DateCreated', DateCreated);
@@ -580,16 +632,14 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         }
 
         if (objectType === eSystemObjectType.eActor) {
-            const {
-                Actor: { OrganizationName }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Actor) return;
+            const { OrganizationName } = getDetailsTabDataForObject.Actor;
             updateDetailField(eSystemObjectType.eActor, 'OrganizationName', OrganizationName);
         }
 
         if (objectType === eSystemObjectType.eStakeholder) {
-            const {
-                Stakeholder: { OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress }
-            } = getDetailsTabDataForObject;
+            if (!getDetailsTabDataForObject.Stakeholder) return;
+            const { OrganizationName, EmailAddress, PhoneNumberMobile, PhoneNumberOffice, MailingAddress } = getDetailsTabDataForObject.Stakeholder;
             updateDetailField(eSystemObjectType.eStakeholder, 'OrganizationName', OrganizationName);
             updateDetailField(eSystemObjectType.eStakeholder, 'EmailAddress', EmailAddress);
             updateDetailField(eSystemObjectType.eStakeholder, 'PhoneNumberMobile', PhoneNumberMobile);
