@@ -553,13 +553,34 @@ export const isVolumetricFileExtension = (extOrName: string): boolean => {
     return VolumetricFileExtensions.some(ext => lower === ext || lower.endsWith(ext));
 };
 
-// Cook-generated download filename suffixes (short form), used to reject custom downloads whose
-// filename would masquerade as a Cook output. Mirror of the local list in
-// ModelSceneXref.isDownloadable(); P4/A8 consolidates the codebase's four suffix lists here.
-export const CookDownloadFileSuffixes: string[] = [
-    '4096_std.glb', '4096-gltf_std.zip', '2048_std_draco.glb',
-    '2048_std.usdz', 'full_resolution-obj_std.zip', '4096-obj_std.zip',
+// Single source of truth for Cook-generated download filename conventions. Each Cook download type
+// has two filename forms used across the codebase:
+//   - suffixShort: a substring match (String.includes), used by ModelSceneXref.isDownloadable()
+//   - suffixFull:  a dashed/resolution-prefixed suffix match (String.endsWith), used by Cook
+//                  verification, scene-zip detection, and orphan-download inference
+// suffixShort is always a substring of suffixFull. Keep this the ONLY place these strings live.
+export interface CookDownloadDescriptor {
+    typeKey: string;       // Cook download type key, e.g. 'objZipLow'
+    suffixShort: string;   // includes-form, e.g. '4096-obj_std.zip'
+    suffixFull: string;    // endsWith-form, e.g. '-150k-4096-obj_std.zip'
+}
+export const CookDownloadDescriptors: CookDownloadDescriptor[] = [
+    { typeKey: 'webAssetGlbLowUncompressed', suffixShort: '4096_std.glb',                suffixFull: '-150k-4096_std.glb' },
+    { typeKey: 'webAssetGlbARCompressed',    suffixShort: '2048_std_draco.glb',          suffixFull: '-100k-2048_std_draco.glb' },
+    { typeKey: 'usdz',                       suffixShort: '2048_std.usdz',               suffixFull: '-100k-2048_std.usdz' },
+    { typeKey: 'objZipFull',                 suffixShort: 'full_resolution-obj_std.zip', suffixFull: '-full_resolution-obj_std.zip' },
+    { typeKey: 'gltfZipLow',                 suffixShort: '4096-gltf_std.zip',           suffixFull: '-150k-4096-gltf_std.zip' },
+    { typeKey: 'objZipLow',                  suffixShort: '4096-obj_std.zip',            suffixFull: '-150k-4096-obj_std.zip' },
 ];
+
+// Cook download suffixes in the requested form. Pass 'short' for the includes-form (isDownloadable),
+// 'full' for the endsWith-form (Cook verification / detection).
+export const cookDownloadSuffixes = (form: 'short' | 'full'): string[] =>
+    CookDownloadDescriptors.map(d => form === 'short' ? d.suffixShort : d.suffixFull);
+
+// Cook-generated download filename suffixes (short/includes form). Used to reject custom downloads
+// whose filename would masquerade as a Cook output, and by ModelSceneXref.isDownloadable().
+export const CookDownloadFileSuffixes: string[] = cookDownloadSuffixes('short');
 
 // User-selectable custom (non-Cook) download types. Drives the ingestion dropdown and the
 // server-side whitelist. These are fixed protocol values, not deployment settings.
@@ -583,18 +604,14 @@ export const isCustomDownloadUsage = (usage: string | null | undefined): boolean
 export const EdanFileTypes: string[] = ['glb', 'ply', 'zip', 'usdz'];
 
 // Single source of truth for translating a Packrat-internal resource category to the EDAN
-// file_quality wire token. Keeps internal vocabulary clean (e.g. 'Watertight') while emitting what
-// EDAN indexes ('Water_tight'). Every category is listed here for consistency.
-//
-// P1: only 'Watertight' is corrected (it has no space, so EDAN's space->underscore normalization
-// cannot derive 'Water_tight'); the others are left at their current wire output to preserve
-// existing behavior. P4: replace the identity values below with the normalized tokens
-// ('Full resolution' -> 'Full_resolution', ...) determined via EDAN's existing normalization logic,
-// once confirmed by the staging test publish.
+// file_quality wire token. Keeps internal vocabulary clean (e.g. 'Watertight') while emitting the
+// exact tokens EDAN indexes. The resolution categories use the underscore form (matching the SI 3D
+// API file_quality values); 'Watertight' -> 'Water_tight' (space->underscore can't derive this).
+// 'iOS AR model' is not a documented file_quality value and is stored as-is.
 export const EdanFileQualityMap: { [internal: string]: string } = {
-    'Full resolution':   'Full resolution',    // P4: -> 'Full_resolution'
-    'Medium resolution': 'Medium resolution',  // P4: -> 'Medium_resolution'
-    'Low resolution':    'Low resolution',     // P4: -> 'Low_resolution'
+    'Full resolution':   'Full_resolution',
+    'Medium resolution': 'Medium_resolution',
+    'Low resolution':    'Low_resolution',
     'Watertight':        'Water_tight',
     'iOS AR model':      'iOS AR model',
 };

@@ -2,6 +2,7 @@
 import { ModelSceneXref as ModelSceneXrefBase } from '@prisma/client';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
+import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements ModelSceneXrefBase {
@@ -239,14 +240,8 @@ export class ModelSceneXref extends DBC.DBObject<ModelSceneXrefBase> implements 
             return false;
         }
 
-        const downloadSuffixes: string[] = [
-            '4096_std.glb',                 // webAssetGlbLowUncompressed
-            '4096-gltf_std.zip',            // gltfZipLow
-            '2048_std_draco.glb',           // AR: App3D
-            '2048_std.usdz',                // AR: iOSApp3D
-            'full_resolution-obj_std.zip',  // objZipFull
-            '4096-obj_std.zip'              // objZipLow
-        ];
+        // Cook download suffixes (short/includes form) -- single source in @dpo-packrat/common
+        const downloadSuffixes: string[] = COMMON.CookDownloadFileSuffixes;
 
         for(let i=0; i<downloadSuffixes.length; i++) {
             if(this.Name.includes(downloadSuffixes[i])===true) {

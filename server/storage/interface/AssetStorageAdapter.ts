@@ -1655,12 +1655,9 @@ export class AssetStorageAdapter {
     private static isSceneDownloadZipFile(unzippedFileName: string): boolean {
         const lower: string = unzippedFileName.toLowerCase();
 
-        // Keep these in sync with JobCookSIGenerateDownloads.verifyIncomingCookData
-        const downloadZipSuffixes: string[] = [
-            '-full_resolution-obj_std.zip',
-            '-150k-4096-gltf_std.zip',
-            '-150k-4096-obj_std.zip',
-        ];
+        // Cook download zip suffixes (full/endsWith form) -- the .zip subset of the single source in
+        // @dpo-packrat/common (CookDownloadDescriptors)
+        const downloadZipSuffixes: string[] = COMMON.cookDownloadSuffixes('full').filter(s => s.endsWith('.zip'));
 
         return downloadZipSuffixes.some(suffix => lower.endsWith(suffix));
     }
