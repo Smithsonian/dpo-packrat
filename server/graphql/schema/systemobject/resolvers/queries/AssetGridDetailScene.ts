@@ -17,6 +17,8 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     hash: string;
 
     // usage: string | null;
+    role: string | null;
+    variant: string | null;
     quality: string | null;
     uvResolution: number | null;
     boundingBox: string | null;
@@ -42,6 +44,21 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
         this.hash = assetVersion.StorageHash;
         this.size = assetVersion.StorageSize.toString();
         // this.usage = H.Helpers.safeString(metadataMap.get('usage'));
+        this.role = H.Helpers.safeString(metadataMap.get('role'));
+        this.variant = H.Helpers.safeString(metadataMap.get('variant'));
+        // scene-owned assets (not linked via ModelSceneXref, so no role from MSX.Usage) get a role
+        // from their file nature: an article (html) or a scene thumbnail/preview image
+        if (!this.role) {
+            const ext: string = COMMON.fileExtension(assetVersion.FileName);
+            if (assetVersion.FileName.toLowerCase().endsWith('.svx.json'))
+                this.role = 'Voyager Scene';   // the Voyager scene descriptor; no variant
+            else if (ext === '.html' || ext === '.htm')
+                this.role = 'Article';
+            else if (COMMON.ImageFileExtensions.includes(ext)) {
+                this.role = 'Scene Thumbnail';
+                this.variant = 'Core';
+            }
+        }
         this.quality = H.Helpers.safeString(metadataMap.get('quality'));
         this.uvResolution = H.Helpers.safeNumber(metadataMap.get('uvresolution'));
         this.boundingBox = H.Helpers.safeString(metadataMap.get('boundingbox'));
@@ -64,6 +81,8 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
             { colName: 'name', colLabel: 'Name', colDisplay: true, colType: COMMON.eAssetGridColumnType.eHyperLink, colAlign: 'left' },
             { colName: 'filePath', colLabel: 'Path', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'left' },
             { colName: 'assetType', colLabel: 'Asset Type', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
+            { colName: 'role', colLabel: 'Role', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
+            { colName: 'variant', colLabel: 'Variant', colDisplay: true, colType: COMMON.eAssetGridColumnType.eString, colAlign: 'center' },
             { colName: 'version', colLabel: 'Version', colDisplay: true, colType: COMMON.eAssetGridColumnType.eNumber, colAlign: 'center' },
             { colName: 'dateCreated', colLabel: 'Date Created', colDisplay: true, colType: COMMON.eAssetGridColumnType.eDate, colAlign: 'center' },
             { colName: 'hash', colLabel: 'Hash', colDisplay: true, colType: COMMON.eAssetGridColumnType.eTruncate, colAlign: 'right' },
@@ -86,6 +105,8 @@ export class AssetGridDetailScene extends AssetGridDetailBase {
     }
 
     static getMetadataColumnNames(): string[] {
+        // NOTE: role/variant are NOT listed here -- this list drives the Solr metadata fetch, and
+        // role/variant are computed in extractSceneAttachmentMetadata (from MSX.Usage), not Solr.
         return [/* 'usage', */ 'quality', 'uvresolution', 'boundingbox', 'isattachment', 'type', 'category', 'units', 'modeltype', 'filetype', 'gltfstandardized', 'dracocompressed', 'title'];
     }
 }

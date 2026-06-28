@@ -633,6 +633,12 @@ export class PublishScene {
             const resource: COL.Edan3DResource | null = await this.extractResource(SAC, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (resource)
                 this.edan3DResourceList.push(resource);
+            else if (COMMON.isCustomDownloadUsage(SAC.modelSceneXref?.Usage)) {
+                // a custom download that fails resource extraction must not be silently dropped from
+                // the package; fail the publish so the misconfiguration is surfaced, not hidden
+                RK.logError(RK.LogSection.eCOLL,'stage downloads failed','custom download could not be published (missing required EDAN fields)',{ usage: SAC.modelSceneXref?.Usage, filename: SAC.assetVersion?.FileName },'Publish.Scene');
+                return false;
+            }
         }
 
         return true;

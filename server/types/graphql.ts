@@ -2227,6 +2227,8 @@ export type RelatedObject = {
   name: Scalars['String'];
   objectType: Scalars['Int'];
   retired: Scalars['Boolean'];
+  type?: Maybe<Scalars['String']>;
+  variant?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {

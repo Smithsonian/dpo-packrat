@@ -339,9 +339,14 @@ function Model(props: ModelProps): React.ReactElement {
 
     const openSourceObjectModal = async () => {
         const idRoots = await getSubjectIdSystemObjects();
-        // download models attach to a Scene parent; all other models attach to a Model parent
-        const objectType = isDownloadPurpose() ? eSystemObjectType.eScene : eSystemObjectType.eModel;
-        await setDefaultIngestionFilters(objectType, idRoots);
+        if (isDownloadPurpose()) {
+            // a download model's parent is a Scene -> browse/show Scenes only (the eScene filter
+            // preset means "ingesting a scene, show Model parents", so override the display set)
+            await setDefaultIngestionFilters(eSystemObjectType.eScene, idRoots,
+                { repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eScene] });
+        } else {
+            await setDefaultIngestionFilters(eSystemObjectType.eModel, idRoots);
+        }
         await setObjectRelationship(RelatedObjectType.Source);
         await setModalOpen(true);
     };

@@ -553,9 +553,23 @@ export const isVolumetricFileExtension = (extOrName: string): boolean => {
     return VolumetricFileExtensions.some(ext => lower === ext || lower.endsWith(ext));
 };
 
+// Cook-generated download filename suffixes (short form), used to reject custom downloads whose
+// filename would masquerade as a Cook output. Mirror of the local list in
+// ModelSceneXref.isDownloadable(); P4/A8 consolidates the codebase's four suffix lists here.
+export const CookDownloadFileSuffixes: string[] = [
+    '4096_std.glb', '4096-gltf_std.zip', '2048_std_draco.glb',
+    '2048_std.usdz', 'full_resolution-obj_std.zip', '4096-obj_std.zip',
+];
+
 // User-selectable custom (non-Cook) download types. Drives the ingestion dropdown and the
 // server-side whitelist. These are fixed protocol values, not deployment settings.
 export const CustomDownloadTypes: string[] = ['watertight', 'other'];
+
+// Upload file extensions a custom download may use as-is: each maps directly to an EDAN file_type.
+export const CustomDownloadAcceptedExtensions: string[] = ['.glb', '.ply', '.usdz', '.zip'];
+
+// Valid model formats that have no standalone EDAN file_type and must be delivered zipped.
+export const CustomDownloadMustZipExtensions: string[] = ['.obj', '.stl'];
 
 // The ModelSceneXref.Usage string for a custom download of the given type ('Download:watertight').
 export const customDownloadUsage = (type: string): string => `Download:${type}`;
