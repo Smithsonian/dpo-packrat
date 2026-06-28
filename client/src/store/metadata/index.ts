@@ -394,15 +394,16 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                             if (datasetUse) metadataStep.photogrammetry.datasetUse = datasetUse;
                         }
                         if (existingIdAssetVersion && updateModel) {
-                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated, Variant } = updateModel;
+                            const { creationMethod, modality, units, purpose, modelFileType, name, dateCreated, Variant, downloadType } = updateModel;
                             if (creationMethod) metadataStep.model.creationMethod = creationMethod;
                             if (modality) metadataStep.model.modality = modality;
                             if (units) metadataStep.model.units = units;
                             if (purpose) metadataStep.model.purpose = purpose;
-                            if (modelFileType) metadataStep.model.creationMethod = creationMethod;
+                            if (modelFileType) metadataStep.model.modelFileType = modelFileType;
                             if (name) metadataStep.model.name = name;
                             if (dateCreated) metadataStep.model.dateCreated = dateCreated;
                             if (Variant) metadataStep.model.Variant = Variant;
+                            if (downloadType) metadataStep.model.downloadType = downloadType;
                         }
                         if (existingIdAssetVersion && updateScene) {
                             const { name, posedAndQCd, referenceModels, approvedForPublication } = updateScene;

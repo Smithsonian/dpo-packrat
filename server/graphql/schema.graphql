@@ -2052,6 +2052,7 @@ type UpdateModelMetadata {
   Variant: String!
   creationMethod: Int!
   dateCreated: String!
+  downloadType: String
   modality: Int!
   modelFileType: Int!
   name: String!

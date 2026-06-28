@@ -166,6 +166,7 @@ type UpdateModelMetadata {
     dateCreated: String!
     modelFileType: Int!
     Variant: String!
+    downloadType: String
 }
 
 type UpdateSceneMetadata {

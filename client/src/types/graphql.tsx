@@ -2573,6 +2573,7 @@ export type UpdateModelMetadata = {
   Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
+  downloadType?: Maybe<Scalars['String']>;
   modality: Scalars['Int'];
   modelFileType: Scalars['Int'];
   name: Scalars['String'];
@@ -3083,7 +3084,7 @@ export type GetModelConstellationForAssetVersionQuery = { __typename?: 'Query', 
 export type GetUploadedAssetVersionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUploadedAssetVersionQuery = { __typename?: 'Query', getUploadedAssetVersion: { __typename?: 'GetUploadedAssetVersionResult', idAssetVersionsUpdated: Array<number>, AssetVersion: Array<{ __typename?: 'AssetVersion', idAssetVersion: number, StorageSize: any, FileName: string, DateCreated: any, idSOAttachment?: number | null, SOAttachmentObjectType?: number | null, Asset?: { __typename?: 'Asset', idAsset: number, VAssetType?: { __typename?: 'Vocabulary', idVocabulary: number, Term: string } | null } | null }>, UpdatedAssetVersionMetadata: Array<{ __typename?: 'UpdatedAssetVersionMetadata', idAssetVersion: number, UpdatedObjectName: string, Item?: { __typename?: 'Item', Name: string } | null, CaptureDataPhoto?: { __typename?: 'UpdatePhotogrammetryMetadata', name: string, dateCaptured: string, datasetType: number, description: string, cameraSettingUniform: boolean, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'UpdateModelMetadata', name: string, creationMethod: number, modality: number, purpose: number, units: number, dateCreated: string, modelFileType: number, Variant: string } | null, Scene?: { __typename?: 'UpdateSceneMetadata', name: string, approvedForPublication: boolean, posedAndQCd: boolean, referenceModels?: Array<{ __typename?: 'ReferenceModel', idSystemObject: number, name: string, usage: string, quality: string, fileSize: any, resolution?: number | null, boundingBoxP1X?: number | null, boundingBoxP1Y?: number | null, boundingBoxP1Z?: number | null, boundingBoxP2X?: number | null, boundingBoxP2Y?: number | null, boundingBoxP2Z?: number | null }> | null } | null }> } };
+export type GetUploadedAssetVersionQuery = { __typename?: 'Query', getUploadedAssetVersion: { __typename?: 'GetUploadedAssetVersionResult', idAssetVersionsUpdated: Array<number>, AssetVersion: Array<{ __typename?: 'AssetVersion', idAssetVersion: number, StorageSize: any, FileName: string, DateCreated: any, idSOAttachment?: number | null, SOAttachmentObjectType?: number | null, Asset?: { __typename?: 'Asset', idAsset: number, VAssetType?: { __typename?: 'Vocabulary', idVocabulary: number, Term: string } | null } | null }>, UpdatedAssetVersionMetadata: Array<{ __typename?: 'UpdatedAssetVersionMetadata', idAssetVersion: number, UpdatedObjectName: string, Item?: { __typename?: 'Item', Name: string } | null, CaptureDataPhoto?: { __typename?: 'UpdatePhotogrammetryMetadata', name: string, dateCaptured: string, datasetType: number, description: string, cameraSettingUniform: boolean, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'UpdateModelMetadata', name: string, creationMethod: number, modality: number, purpose: number, units: number, dateCreated: string, modelFileType: number, Variant: string, downloadType?: string | null } | null, Scene?: { __typename?: 'UpdateSceneMetadata', name: string, approvedForPublication: boolean, posedAndQCd: boolean, referenceModels?: Array<{ __typename?: 'ReferenceModel', idSystemObject: number, name: string, usage: string, quality: string, fileSize: any, resolution?: number | null, boundingBoxP1X?: number | null, boundingBoxP1Y?: number | null, boundingBoxP1Z?: number | null, boundingBoxP2X?: number | null, boundingBoxP2Y?: number | null, boundingBoxP2Z?: number | null }> | null } | null }> } };
 
 export type GetCaptureDataQueryVariables = Exact<{
   input: GetCaptureDataInput;
@@ -4717,6 +4718,7 @@ export const GetUploadedAssetVersionDocument = gql`
         dateCreated
         modelFileType
         Variant
+        downloadType
       }
       Scene {
         name

@@ -2570,6 +2570,7 @@ export type UpdateModelMetadata = {
   Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
+  downloadType?: Maybe<Scalars['String']>;
   modality: Scalars['Int'];
   modelFileType: Scalars['Int'];
   name: Scalars['String'];
