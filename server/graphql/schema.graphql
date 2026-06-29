@@ -1091,6 +1091,7 @@ input IngestModelInput {
   dateCreated: String!
   derivedObjects: [RelatedObjectInput!]!
   directory: String!
+  downloadType: String
   idAsset: Int
   idAssetVersion: Int!
   identifiers: [IngestIdentifierInput!]!
@@ -1729,6 +1730,8 @@ type RelatedObject {
   name: String!
   objectType: Int!
   retired: Boolean!
+  type: String
+  variant: String
 }
 
 input RelatedObjectInput {
@@ -2049,6 +2052,7 @@ type UpdateModelMetadata {
   Variant: String!
   creationMethod: Int!
   dateCreated: String!
+  downloadType: String
   modality: Int!
   modelFileType: Int!
   name: String!

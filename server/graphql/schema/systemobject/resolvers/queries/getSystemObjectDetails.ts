@@ -206,6 +206,44 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     return { publishedState, publishedEnum, publishable, publishBlocker, isDraft };
 }
 
+// Classifies a Model's display Type + Variant from the Model row alone. Purpose distinguishes
+// Master / Scene Model / Download / Intermediate; for Downloads a null AutomationTag marks a
+// custom (auxiliary) download, while a Cook-generated download carries a tag.
+async function computeModelRoleVariant(model: DBAPI.Model): Promise<{ type: string; variant: string }> {
+    const [vMaster, vDownload, vVoyager, vIntermediate] = await Promise.all([
+        CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster),
+        CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload),
+        CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeVoyagerSceneModel),
+        CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeIntermediateProcessingStep),
+    ]);
+    const p: number | null = model.idVPurpose;
+    if (vMaster && p === vMaster.idVocabulary)
+        return { type: 'Master', variant: await computeMasterVariant(model.Variant) };
+    if (vDownload && p === vDownload.idVocabulary)
+        return { type: 'Download', variant: (model.AutomationTag && model.AutomationTag.length > 0) ? 'Core' : 'Aux' };
+    if (vVoyager && p === vVoyager.idVocabulary)
+        return { type: 'Scene Model', variant: 'Core' };
+    if (vIntermediate && p === vIntermediate.idVocabulary)
+        return { type: 'Intermediate', variant: '' };
+    return { type: '', variant: '' };
+}
+
+// Resolves a master Model's Variant JSON (array of vocab ids) to display labels.
+async function computeMasterVariant(variantJSON: string): Promise<string> {
+    let ids: number[] = [];
+    try { ids = JSON.parse(variantJSON || '[]'); } catch { ids = []; }
+    if (!Array.isArray(ids) || ids.length === 0)
+        return '';
+    const [vRaw, vPres] = await Promise.all([
+        CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelVariantRawClean),
+        CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelVariantPresentation),
+    ]);
+    const labels: string[] = [];
+    if (vRaw && ids.includes(vRaw.idVocabulary)) labels.push('Raw Clean');
+    if (vPres && ids.includes(vPres.idVocabulary)) labels.push('Presentation');
+    return labels.join(', ');
+}
+
 export async function getRelatedObjects(idSystemObject: number, type: RelatedObjectType): Promise<RelatedObject[]> {
     let relatedSystemObjects: DBAPI.SystemObject[] | null = [];
 
@@ -229,12 +267,26 @@ export async function getRelatedObjects(idSystemObject: number, type: RelatedObj
             throw new Error(message);
         }
 
+        // classify Model role/variant for display (blank for non-model objects)
+        let roleType: string = '';
+        let roleVariant: string = '';
+        if (oID.eObjectType === COMMON.eSystemObjectType.eModel) {
+            const modelDB: DBAPI.Model | null = await DBAPI.Model.fetch(oID.idObject);
+            if (modelDB) {
+                const rv = await computeModelRoleVariant(modelDB);
+                roleType = rv.type;
+                roleVariant = rv.variant;
+            }
+        }
+
         const sourceObject: RelatedObject = {
             idSystemObject: relatedSystemObject.idSystemObject,
             name: await resolveNameForObject(relatedSystemObject.idSystemObject),
             identifier: identifier?.[0]?.IdentifierValue ?? null,
             objectType: oID.eObjectType,
-            retired: relatedSystemObject.Retired
+            retired: relatedSystemObject.Retired,
+            type: roleType,
+            variant: roleVariant
         };
 
         relatedObjects.push(sourceObject);

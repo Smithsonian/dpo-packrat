@@ -1197,6 +1197,7 @@ export type IngestModelInput = {
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
   directory: Scalars['String'];
+  downloadType?: InputMaybe<Scalars['String']>;
   idAsset?: InputMaybe<Scalars['Int']>;
   idAssetVersion: Scalars['Int'];
   identifiers: Array<IngestIdentifierInput>;
@@ -2226,6 +2227,8 @@ export type RelatedObject = {
   name: Scalars['String'];
   objectType: Scalars['Int'];
   retired: Scalars['Boolean'];
+  type?: Maybe<Scalars['String']>;
+  variant?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {
@@ -2567,6 +2570,7 @@ export type UpdateModelMetadata = {
   Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
+  downloadType?: Maybe<Scalars['String']>;
   modality: Scalars['Int'];
   modelFileType: Scalars['Int'];
   name: Scalars['String'];

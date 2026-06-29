@@ -67,7 +67,7 @@ type RepositoryStore = {
     getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter, isModal: boolean) => void;
     setCookieToState: () => void;
-    setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoots: number[]) => Promise<void>;
+    setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoots: number[], displayOverride?: { repositoryRootType: eSystemObjectType[]; objectsToDisplay: eSystemObjectType[] }) => Promise<void>;
     getChildrenForIngestion: (idRoots: number[]) => void;
     closeRepositoryBrowser: () => void;
     resetRepositoryBrowserRoot: () => void;
@@ -481,7 +481,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         // 20 years
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};path=/;max-age=630700000`;
     },
-    setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoots: number[]): Promise<void> => {
+    setDefaultIngestionFilters: async (systemObjectType: eSystemObjectType, idRoots: number[], displayOverride?: { repositoryRootType: eSystemObjectType[]; objectsToDisplay: eSystemObjectType[] }): Promise<void> => {
         const { resetKeywordSearch, resetRepositoryFilter, getChildrenForIngestion } = get();
         if (idRoots.length > 0 && systemObjectType) {
             const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
@@ -497,6 +497,15 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             set({ isExpanded: false, idRoots, repositoryBrowserRootName: rootName, repositoryBrowserRootObjectType: getTermForSystemObjectType(objectType) });
         }
         resetKeywordSearch();
+
+        // explicit override (e.g. a download model picks a Scene parent -- show Scenes only,
+        // which the systemObjectType branches below cannot express since eScene already means
+        // "ingesting a scene, show its Model parents")
+        if (displayOverride) {
+            set({ repositoryRootType: displayOverride.repositoryRootType, objectsToDisplay: displayOverride.objectsToDisplay });
+            getChildrenForIngestion(idRoots);
+            return;
+        }
 
         if (systemObjectType === eSystemObjectType.eModel) {
             set({ repositoryRootType: [eSystemObjectType.eModel, eSystemObjectType.eScene], objectsToDisplay: [eSystemObjectType.eCaptureData, eSystemObjectType.eModel] });

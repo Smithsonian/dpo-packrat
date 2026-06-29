@@ -89,6 +89,7 @@ type AssetVersionInfo = {
     isAttachment: boolean;
     Comment: string | null;
     skipSceneGenerate?: boolean | null;
+    noZipCrack?: boolean;   // custom downloads must stay a single deliverable (a zip is the file, not a package to unpack)
 };
 
 interface IngestAssetResultCook extends IngestAssetResult {
@@ -1483,7 +1484,7 @@ class IngestDataWorker extends ResolverBase {
 
         // LOG.info(`ingestData createModelObjects model=${H.Helpers.JSONStringify(model)} vs asset=${H.Helpers.JSONStringify(asset)} vs assetVersion=${H.Helpers.JSONStringify(assetVersion)}`, LOG.LS.eGQL);
         if (model.idAssetVersion) {
-            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null, skipSceneGenerate: model.skipSceneGenerate });
+            this.assetVersionMap.set(model.idAssetVersion, { SOOwner: modelDB, isAttachment: false, Comment: model.updateNotes ?? null, skipSceneGenerate: model.skipSceneGenerate, noZipCrack: !!model.downloadType });
             const MI: ModelInfo = { model, idModel: modelDB.idModel, JCOutput };
             this.ingestModelMap.set(model.idAssetVersion, MI);
             RK.logDebug(RK.LogSection.eGQL,'create model objects success',undefined,{ ModelInfo: MI },'GraphQL.Ingestion.Data');
@@ -1559,6 +1560,84 @@ class IngestDataWorker extends ResolverBase {
                     if (!await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sourceObject.idSystemObject, modelDB)) {
                         RK.logError(RK.LogSection.eGQL,'create model objects failed','failed to create SystemObjectXref',{ sourceObject },'GraphQL.Ingestion.Data');
                         continue;
+                    }
+                }
+            }
+
+            // custom download: link the model to its parent scene via a Download:<type> ModelSceneXref.
+            // AutomationTag stays null (set by inspection) so Cook never matches it; Quality/UVResolution
+            // are null because publishing keys only on Usage + file extension. Handles both a fresh ingest
+            // (downloadType present -> create MSX) and a re-upload/update (downloadType may be absent ->
+            // refresh the existing MSX, keeping its Usage).
+            const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+            if (vPurposeDownload && model.purpose === vPurposeDownload.idVocabulary) {
+                const FileSize: bigint | null = ingestAssetRes.assetVersions?.[0]?.StorageSize ?? null;
+
+                // determine the parent scene: from the form's scene source on a fresh ingest, else from
+                // the model's existing Download MSX on a re-upload (the form may not resend sourceObjects)
+                let idScene: number | null = null;
+                let sceneSOId: number | null = null;
+                const sceneSource = model.sourceObjects?.find(so => so.objectType === eSystemObjectType.eScene);
+                if (sceneSource) {
+                    const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(sceneSource.idSystemObject);
+                    if (sceneSO?.idScene) { idScene = sceneSO.idScene; sceneSOId = sceneSO.idSystemObject; }
+                }
+                let existing: DBAPI.ModelSceneXref[] | null = idScene ? await DBAPI.ModelSceneXref.fetchFromModelAndScene(idModel, idScene) : null;
+                if (!existing || existing.length === 0) {
+                    const allMSX: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModel(idModel);
+                    const priorMSX: DBAPI.ModelSceneXref | undefined = allMSX?.find(msx => COMMON.isCustomDownloadUsage(msx.Usage)) ?? (allMSX && allMSX.length > 0 ? allMSX[0] : undefined);
+                    if (priorMSX) {
+                        existing = [priorMSX];
+                        idScene = priorMSX.idScene;
+                        const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(priorMSX.idScene);
+                        sceneSOId = sceneSO?.idSystemObject ?? null;
+                    }
+                }
+
+                if (idScene) {
+                    // usage from the form's downloadType when present; on re-upload it may be absent, so
+                    // fall back to the existing MSX's Usage
+                    const usage: string | null = model.downloadType
+                        ? COMMON.customDownloadUsage(model.downloadType)
+                        : (existing && existing.length > 0 ? existing[0].Usage : null);
+                    let msxHandled: boolean = false;
+                    if (existing && existing.length > 0) {
+                        const msx: DBAPI.ModelSceneXref = existing[0];
+                        if (usage) msx.Usage = usage;
+                        msx.Quality = null; msx.UVResolution = null; msx.FileSize = FileSize;
+                        if (!await msx.update())
+                            RK.logError(RK.LogSection.eGQL,'create model objects failed','failed to update ModelSceneXref',{ idModel, idScene },'GraphQL.Ingestion.Data');
+                        msxHandled = true;
+                    } else if (usage) {
+                        const msx: DBAPI.ModelSceneXref = new DBAPI.ModelSceneXref({
+                            idModelSceneXref: 0, idModel, idScene, Name: modelDB.Name,
+                            Usage: usage, Quality: null, UVResolution: null, FileSize,
+                            BoundingBoxP1X: null, BoundingBoxP1Y: null, BoundingBoxP1Z: null,
+                            BoundingBoxP2X: null, BoundingBoxP2Y: null, BoundingBoxP2Z: null,
+                            TS0: null, TS1: null, TS2: null, R0: null, R1: null, R2: null, R3: null, S0: null, S1: null, S2: null,
+                        });
+                        if (!await msx.create())
+                            RK.logError(RK.LogSection.eGQL,'create model objects failed','failed to create ModelSceneXref',{ idModel, idScene },'GraphQL.Ingestion.Data');
+                        msxHandled = true;
+                    }
+
+                    // bind the download's asset version(s) into a new (eNotPublished) scene
+                    // SystemObjectVersion so the download appears in the scene's asset listing and the
+                    // scene reflects a new draft version -- mirrors JobCookSIGenerateDownloads. Runs for
+                    // both a fresh ingest and a re-upload (parity with other asset updates).
+                    if (msxHandled && sceneSOId) {
+                        const overrideMap: Map<number, number> = new Map<number, number>();
+                        for (const av of ingestAssetRes.assetVersions ?? [])
+                            overrideMap.set(av.idAsset, av.idAssetVersion);
+                        if (overrideMap.size > 0) {
+                            const sceneSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(
+                                sceneSOId, null, 'Created by custom download ingest', overrideMap);
+                            if (sceneSOV) {
+                                for (const [idAsset, idAssetVersion] of overrideMap)
+                                    await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(sceneSOV.idSystemObjectVersion, idAsset, idAssetVersion);
+                            } else
+                                RK.logError(RK.LogSection.eGQL,'create model objects failed','failed to clone scene SystemObjectVersion for custom download',{ idModel, idScene },'GraphQL.Ingestion.Data');
+                        }
                     }
                 }
             }
@@ -1998,7 +2077,7 @@ class IngestDataWorker extends ResolverBase {
             const ingestAssetInput: IngestAssetInput = {
                 asset: assetDB,
                 assetVersion: assetVersionDB,
-                allowZipCracking: !AVInfo.isAttachment, // don't unzip attachments
+                allowZipCracking: !AVInfo.isAttachment && !AVInfo.noZipCrack, // don't unzip attachments or custom downloads (a download zip is the deliverable)
                 SOBased,
                 idSystemObject: null,
                 opInfo,
@@ -2124,6 +2203,30 @@ class IngestDataWorker extends ResolverBase {
         return ret;
     }
 
+    // Returns true if a non-retired download model on the scene currently has this filename
+    // (case-insensitive). Uses the established two-call accessor pattern (Asset.fetchFromModel ->
+    // AssetVersion.fetchLatestFromAsset) to reach each download model's current AssetVersion.
+    private async sceneHasDownloadFilename(idScene: number, fileName: string): Promise<boolean> {
+        if (!fileName)
+            return false;
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
+        if (!MSXs)
+            return false;
+        const target: string = fileName.toLowerCase();
+        for (const MSX of MSXs) {
+            const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!SO || SO.Retired)
+                continue;
+            const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromModel(MSX.idModel);
+            if (!assets || assets.length === 0)
+                continue;
+            const av: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(assets[0].fetchID());
+            if (av?.FileName && av.FileName.toLowerCase() === target)
+                return true;
+        }
+        return false;
+    }
+
     async validateInput(): Promise<H.IOResults> {
         this.ingestPhotogrammetry   = this.input.photogrammetry && this.input.photogrammetry.length > 0;
         this.ingestModel            = this.input.model && this.input.model.length > 0;
@@ -2234,6 +2337,76 @@ class IngestDataWorker extends ResolverBase {
                         if (!isValidParentChildRelationship(COMMON.eSystemObjectType.eModel, derivedObject.objectType, [], sourceObjectsOfChild, false)) {
                             const error: string = `ingestData will not create the inappropriate parent-child relationship between model and ${COMMON.eSystemObjectType[derivedObject.objectType]}`;
                             RK.logError(RK.LogSection.eGQL,'validate input failed','will not create the inappropriate parent-child relationship between model and object',{ type: COMMON.eSystemObjectType[derivedObject.objectType] },'GraphQL.Ingestion.Data');
+                            return { success: false, error };
+                        }
+                    }
+                }
+
+                // custom download validation. Structural requirements (scene parent, known download
+                // type, Units + Creation Method for EDAN publishing) are enforced on a FRESH ingest;
+                // on a re-upload (update) the model already satisfies them and the form may not resend
+                // them, so only the new file is validated.
+                const vPurposeDownload: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
+                if (vPurposeDownload && model.purpose === vPurposeDownload.idVocabulary) {
+                    const isUpdate: boolean = (model.idAsset != null && model.idAsset > 0);
+                    const sceneSources = (model.sourceObjects ?? []).filter(so => so.objectType === COMMON.eSystemObjectType.eScene);
+
+                    if (!isUpdate) {
+                        if (sceneSources.length !== 1) {
+                            const error: string = 'A download model must have exactly one parent Scene';
+                            RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ idAssetVersion: model.idAssetVersion },'GraphQL.Ingestion.Data');
+                            return { success: false, error };
+                        }
+                        if (!model.downloadType || !COMMON.CustomDownloadTypes.includes(model.downloadType)) {
+                            const error: string = `Download type must be one of: ${COMMON.CustomDownloadTypes.join(', ')}`;
+                            RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ downloadType: model.downloadType },'GraphQL.Ingestion.Data');
+                            return { success: false, error };
+                        }
+                        if (!model.units || !model.creationMethod) {
+                            const error: string = 'A download model requires Units and Creation Method (needed to publish to EDAN)';
+                            RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ units: model.units, creationMethod: model.creationMethod },'GraphQL.Ingestion.Data');
+                            return { success: false, error };
+                        }
+                    } else if (model.downloadType && !COMMON.CustomDownloadTypes.includes(model.downloadType)) {
+                        // a re-upload may change the download type; if one is provided it must be valid
+                        const error: string = `Download type must be one of: ${COMMON.CustomDownloadTypes.join(', ')}`;
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ downloadType: model.downloadType },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
+
+                    // packaging safety: validate the (new) deliverable filename on both fresh and update.
+                    // Fetch the uploaded AssetVersion to obtain its FileName (single deliverable per model).
+                    const av: DBAPI.AssetVersion | null = model.idAssetVersion ? await DBAPI.AssetVersion.fetch(model.idAssetVersion) : null;
+                    const fileName: string = av?.FileName ?? '';
+                    const ext: string = COMMON.fileExtension(fileName);
+
+                    // explicit fail on unsupported file type (no silent drop at publish):
+                    // .obj/.stl are valid model formats but have no standalone EDAN file_type -> must be zipped.
+                    if (COMMON.CustomDownloadMustZipExtensions.includes(ext)) {
+                        const error: string = `A raw ${ext} download must be delivered as a .zip (it has no standalone EDAN file type)`;
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ fileName },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
+                    if (!COMMON.CustomDownloadAcceptedExtensions.includes(ext)) {
+                        const error: string = `Unsupported download file type '${ext || fileName}'. Accepted: ${COMMON.CustomDownloadAcceptedExtensions.join(', ')} (zip .obj/.stl)`;
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ fileName },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
+
+                    // a custom filename must not masquerade as a Cook download output
+                    if (COMMON.CookDownloadFileSuffixes.some(s => fileName.toLowerCase().includes(s.toLowerCase()))) {
+                        const error: string = `Download filename '${fileName}' collides with a reserved Cook download suffix`;
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ fileName },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
+
+                    // per-scene filename uniqueness on a fresh ingest (update mode replaces in place,
+                    // so it is exempt). Prevents a packaging hot-folder collision.
+                    if (!isUpdate && sceneSources.length === 1) {
+                        const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(sceneSources[0].idSystemObject);
+                        if (sceneSO?.idScene && await this.sceneHasDownloadFilename(sceneSO.idScene, fileName)) {
+                            const error: string = `Scene already has a download named '${fileName}'. Use update mode to replace it.`;
+                            RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ fileName, idScene: sceneSO.idScene },'GraphQL.Ingestion.Data');
                             return { success: false, error };
                         }
                     }

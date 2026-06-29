@@ -1200,6 +1200,7 @@ export type IngestModelInput = {
   dateCreated: Scalars['String'];
   derivedObjects: Array<RelatedObjectInput>;
   directory: Scalars['String'];
+  downloadType?: InputMaybe<Scalars['String']>;
   idAsset?: InputMaybe<Scalars['Int']>;
   idAssetVersion: Scalars['Int'];
   identifiers: Array<IngestIdentifierInput>;
@@ -2229,6 +2230,8 @@ export type RelatedObject = {
   name: Scalars['String'];
   objectType: Scalars['Int'];
   retired: Scalars['Boolean'];
+  type?: Maybe<Scalars['String']>;
+  variant?: Maybe<Scalars['String']>;
 };
 
 export type RelatedObjectInput = {
@@ -2570,6 +2573,7 @@ export type UpdateModelMetadata = {
   Variant: Scalars['String'];
   creationMethod: Scalars['Int'];
   dateCreated: Scalars['String'];
+  downloadType?: Maybe<Scalars['String']>;
   modality: Scalars['Int'];
   modelFileType: Scalars['Int'];
   name: Scalars['String'];
@@ -3080,7 +3084,7 @@ export type GetModelConstellationForAssetVersionQuery = { __typename?: 'Query', 
 export type GetUploadedAssetVersionQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetUploadedAssetVersionQuery = { __typename?: 'Query', getUploadedAssetVersion: { __typename?: 'GetUploadedAssetVersionResult', idAssetVersionsUpdated: Array<number>, AssetVersion: Array<{ __typename?: 'AssetVersion', idAssetVersion: number, StorageSize: any, FileName: string, DateCreated: any, idSOAttachment?: number | null, SOAttachmentObjectType?: number | null, Asset?: { __typename?: 'Asset', idAsset: number, VAssetType?: { __typename?: 'Vocabulary', idVocabulary: number, Term: string } | null } | null }>, UpdatedAssetVersionMetadata: Array<{ __typename?: 'UpdatedAssetVersionMetadata', idAssetVersion: number, UpdatedObjectName: string, Item?: { __typename?: 'Item', Name: string } | null, CaptureDataPhoto?: { __typename?: 'UpdatePhotogrammetryMetadata', name: string, dateCaptured: string, datasetType: number, description: string, cameraSettingUniform: boolean, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'UpdateModelMetadata', name: string, creationMethod: number, modality: number, purpose: number, units: number, dateCreated: string, modelFileType: number, Variant: string } | null, Scene?: { __typename?: 'UpdateSceneMetadata', name: string, approvedForPublication: boolean, posedAndQCd: boolean, referenceModels?: Array<{ __typename?: 'ReferenceModel', idSystemObject: number, name: string, usage: string, quality: string, fileSize: any, resolution?: number | null, boundingBoxP1X?: number | null, boundingBoxP1Y?: number | null, boundingBoxP1Z?: number | null, boundingBoxP2X?: number | null, boundingBoxP2Y?: number | null, boundingBoxP2Z?: number | null }> | null } | null }> } };
+export type GetUploadedAssetVersionQuery = { __typename?: 'Query', getUploadedAssetVersion: { __typename?: 'GetUploadedAssetVersionResult', idAssetVersionsUpdated: Array<number>, AssetVersion: Array<{ __typename?: 'AssetVersion', idAssetVersion: number, StorageSize: any, FileName: string, DateCreated: any, idSOAttachment?: number | null, SOAttachmentObjectType?: number | null, Asset?: { __typename?: 'Asset', idAsset: number, VAssetType?: { __typename?: 'Vocabulary', idVocabulary: number, Term: string } | null } | null }>, UpdatedAssetVersionMetadata: Array<{ __typename?: 'UpdatedAssetVersionMetadata', idAssetVersion: number, UpdatedObjectName: string, Item?: { __typename?: 'Item', Name: string } | null, CaptureDataPhoto?: { __typename?: 'UpdatePhotogrammetryMetadata', name: string, dateCaptured: string, datasetType: number, description: string, cameraSettingUniform: boolean, datasetFieldId?: number | null, itemPositionType?: number | null, itemPositionFieldId?: number | null, itemArrangementFieldId?: number | null, focusType?: number | null, lightsourceType?: number | null, backgroundRemovalMethod?: number | null, clusterType?: number | null, clusterGeometryFieldId?: number | null, datasetUse: string, folders: Array<{ __typename?: 'IngestFolder', name: string, variantType?: number | null }> } | null, Model?: { __typename?: 'UpdateModelMetadata', name: string, creationMethod: number, modality: number, purpose: number, units: number, dateCreated: string, modelFileType: number, Variant: string, downloadType?: string | null } | null, Scene?: { __typename?: 'UpdateSceneMetadata', name: string, approvedForPublication: boolean, posedAndQCd: boolean, referenceModels?: Array<{ __typename?: 'ReferenceModel', idSystemObject: number, name: string, usage: string, quality: string, fileSize: any, resolution?: number | null, boundingBoxP1X?: number | null, boundingBoxP1Y?: number | null, boundingBoxP1Z?: number | null, boundingBoxP2X?: number | null, boundingBoxP2Y?: number | null, boundingBoxP2Z?: number | null }> | null } | null }> } };
 
 export type GetCaptureDataQueryVariables = Exact<{
   input: GetCaptureDataInput;
@@ -3211,7 +3215,7 @@ export type GetSystemObjectDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, isDraft: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, isDraft: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
 
 export type GetVersionsForAssetQueryVariables = Exact<{
   input: GetVersionsForAssetInput;
@@ -4714,6 +4718,7 @@ export const GetUploadedAssetVersionDocument = gql`
         dateCreated
         modelFileType
         Variant
+        downloadType
       }
       Scene {
         name
@@ -5888,6 +5893,8 @@ export const GetSystemObjectDetailsDocument = gql`
       identifier
       objectType
       retired
+      type
+      variant
     }
     derivedObjects {
       idSystemObject
@@ -5895,6 +5902,8 @@ export const GetSystemObjectDetailsDocument = gql`
       identifier
       objectType
       retired
+      type
+      variant
     }
     objectVersions {
       idSystemObjectVersion

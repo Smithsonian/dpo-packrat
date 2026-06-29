@@ -272,6 +272,8 @@ function AssetGrid(props: AssetGridProps): React.ReactElement {
                 case 'link':
                 case 'name':
                 case 'assetType':
+                case 'role':
+                case 'variant':
                 case 'version':
                 case 'dateCreated':
                 case 'size':

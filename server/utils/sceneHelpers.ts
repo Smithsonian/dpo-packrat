@@ -1038,20 +1038,11 @@ export class SceneHelpers {
         const lowerName = fileName.toLowerCase();
 
         // Priority 1: Cook-generated suffix patterns (highest confidence).
-        // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData suffixes
-        // and AssetStorageAdapter.isSceneDownloadZipFile.
-        const suffixMap: [string, string][] = [
-            ['-full_resolution-obj_std.zip', 'objZipFull'],
-            ['-150k-4096-obj_std.zip', 'objZipLow'],
-            ['-150k-4096-gltf_std.zip', 'gltfZipLow'],
-            ['-150k-4096_std.glb', 'webAssetGlbLowUncompressed'],
-            ['-100k-2048_std_draco.glb', 'webAssetGlbARCompressed'],
-            ['-100k-2048_std.usdz', 'usdz'],
-        ];
-
-        for (const [suffix, downloadType] of suffixMap) {
-            if (lowerName.endsWith(suffix))
-                return SceneHelpers.downloadTypeToProperties(downloadType);
+        // Suffix (full/endsWith form) -> download type from the single source in @dpo-packrat/common
+        // (CookDownloadDescriptors).
+        for (const d of COMMON.CookDownloadDescriptors) {
+            if (lowerName.endsWith(d.suffixFull))
+                return SceneHelpers.downloadTypeToProperties(d.typeKey);
         }
 
         // Priority 2: Extension-based inference (reasonable defaults)

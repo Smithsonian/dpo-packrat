@@ -76,7 +76,7 @@ export type EdanMDMContent = {
 // c.f. https://confluence.si.edu/display/3W2/Voyager+publishing+workflow
 export type Edan3DResourceAttributeUnits = 'mm' | 'cm' | 'm' | 'km' | 'in' | 'ft' | 'yd' | 'mi';
 export type Edan3DResourceAttributeModelFileType = 'obj' | 'ply' | 'stl' | 'glb' | 'x3d' | 'gltf' | 'usdz';
-export type Edan3DResourceAttributeFileType = 'zip' | 'glb' | 'usdz';
+export type Edan3DResourceAttributeFileType = 'zip' | 'glb' | 'usdz' | 'ply';
 export type Edan3DResourceType = '3D mesh' | 'CAD model';
 export type Edan3DResourceCategory = 'Full resolution' | 'Medium resolution' | 'Low resolution' | 'Watertight' | 'iOS AR model';
 
@@ -92,7 +92,7 @@ export type Edan3DResource = {          // c.f. https://confluence.si.edu/displa
     filename?: string;                  // actual resource filename
     url?: string;                       // https://3d-api.si.edu/content/document/3d_package:$$SceneGUID$$/resources/$$filename$$
     type?: Edan3DResourceType;          // Possible values: '3D mesh', 'CAD model'
-    category?: Edan3DResourceCategory;  // Possible values: 'Full resolution', 'Medium resolution', 'Low resolution', 'Watertight', 'iOS AR model'
+    category?: string;                  // EDAN file_quality wire token (e.g. 'Full_resolution', 'Water_tight'); produced from the internal Edan3DResourceCategory via toEdanFileQuality at the package boundary
     title?: string;                     // name, below, plus ($$category$$ $$type$$, $$attributes.MODEL_FILE_TYPE$$, scale in $$attributes.UNITS$$)
     name?: string;                      // Full title of edanmdm record, plus a possible scene title
     attributes?: Edan3DResourceAttribute[];

@@ -1072,16 +1072,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if(result.success == false)
             return this.logError('verify Cook data','verifying base failed',{ sceneSource, fileMap });
 
-        // fileMap is the list of received downloads. make sure we have all of the expected files
-        const suffixes: string[] = [
-            '-150k-4096_std.glb',
-            '-100k-2048_std_draco.glb',
-            '.svx.json',
-            '-100k-2048_std.usdz',
-            '-full_resolution-obj_std.zip',
-            '-150k-4096-gltf_std.zip',
-            '-150k-4096-obj_std.zip'
-        ];
+        // fileMap is the list of received downloads. make sure we have all of the expected files.
+        // Cook download suffixes (full/endsWith form) come from the single source in @dpo-packrat/common;
+        // the scene descriptor (.svx.json) is expected alongside them but is not a download.
+        const suffixes: string[] = [...COMMON.cookDownloadSuffixes('full'), '.svx.json'];
         const missingIncomingFiles: string[] = [];
 
         // make sure we have all downloads accounted for

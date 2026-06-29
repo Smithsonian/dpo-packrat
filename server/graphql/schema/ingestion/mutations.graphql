@@ -86,6 +86,7 @@ input IngestModelInput {
     updateNotes: String
     skipSceneGenerate: Boolean
     Variant: String!
+    downloadType: String
 }
 
 input IngestSceneInput {
