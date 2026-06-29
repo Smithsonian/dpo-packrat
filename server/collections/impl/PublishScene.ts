@@ -885,7 +885,7 @@ export class PublishScene {
 
         const subjectName: string = this.subject ? this.subject.Name : '';
         const sceneName: string = this.scene ? this.scene.Name : '';
-        const name: string = subjectName + ((sceneName && sceneName != 'Scene') ? `: ${sceneName}` : '');   // Full title of edanmdm record, plus a possible scene title
+        const name: string = subjectName + ((sceneName && sceneName != 'Scene' && sceneName != subjectName) ? `: ${sceneName}` : '');   // Full title of edanmdm record, plus a possible scene title
         const title: string = `${name} (${category} ${type}, ${MODEL_FILE_TYPE}, scale in ${UNITS})`;       // name, below, plus ($$category$$ $$type$$, $$attributes.MODEL_FILE_TYPE$$, scale in $$attributes.UNITS$$)
 
         const url: string = `https://3d-api.si.edu/content/document/3d_package:${uuid}/resources/${SAC.assetVersion.FileName}`;
