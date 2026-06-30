@@ -8,12 +8,14 @@ import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
 import * as WF from '../../workflow/interface';
 import { SvxReader } from '../../utils/parser';
+import { SceneHelpers } from '../../utils/sceneHelpers';
 import { IDocument } from '../../types/voyager';
 import * as COMMON from '@dpo-packrat/common';
 import { EdanCollection } from './EdanCollection';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 import { v4 as uuidv4 } from 'uuid';
+import { Readable } from 'stream';
 import path from 'path';
 import lodash from 'lodash';
 
@@ -48,6 +50,7 @@ export class PublishScene {
     private sceneFile?: string | undefined = undefined;
     private extractedPath?: string | undefined = undefined;
     private svxDocument?: IDocument | null = null;
+    private svxDocumentHealed: boolean = false;            // true when publish filled missing title metadata into svxDocument
     private edan3DResourceList?: COL.Edan3DResource[] = [];
     private resourcesHotFolder?: string | undefined = undefined;
 
@@ -91,6 +94,15 @@ export class PublishScene {
             RK.logError(RK.LogSection.eCOLL,'publish failed','cannot publish. no scene/subject',{ scene: this.scene, subject: this.subject },'Publish.Scene');
             return false;
         }
+
+        // if the subject carries an EDAN Record ID, EDAN derives the published title from that record;
+        // a record EDAN cannot resolve yields a broken ": Subtitle" title, so refuse to publish
+        if (!await this.verifyEdanRecord(ICol))
+            return false;
+
+        // fill any missing title metadata into the scene document so it carries the title EDAN reads;
+        // must run before staging so the staged scene and the EDAN package share the healed document
+        await this.healSceneDocument();
 
         // stage scene
         if (!await this.stageSceneFiles() || !this.sharedName) {
@@ -149,6 +161,8 @@ export class PublishScene {
                 edanRecord, status, publicSearch, downloads, haveDownloads, resources: JSON.stringify(E3DPackage.resources, null, 2), mediaUsage: JSON.stringify(E3DPackage.media_usage, null, 2)
             },'Publish.Scene');
 
+            // the upsertContent payload carries a package title; echo the record's current title.
+            // EDAN also derives a display title from the document's metas (see the Scene Title Contract)
             RK.logDebug(RK.LogSection.eCOLL,'publish','updating package',{ edanRecord },'Publish.Scene');
             edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, edanRecord.title, E3DPackage, status, publicSearch);
             if (!edanRecord) {
@@ -501,22 +515,32 @@ export class PublishScene {
             if (SAC.model || SAC.metadataSet) // skip downloads
                 continue;
 
-            const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
-            if (!RSR.success || !RSR.readStream) {
-                RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`failed to extract stream for asset version: ${RSR.error}`,{ ...SAC.assetVersion },'Publish.Scene');
-                return false;
-            }
-
             const filePath: string = SAC.assetVersion.FilePath;
             let rebasedPath: string = this.extractedPath ? filePath.replace(this.extractedPath, '') : filePath;
             if (this.extractedPath && rebasedPath.startsWith('/'))
                 rebasedPath = rebasedPath.substring(1);
 
             const fileNameAndPath: string = path.posix.join(rebasedPath, SAC.assetVersion.FileName);
-            RK.logDebug(RK.LogSection.eCOLL,'stage scene files','adding to zip',{ fileNameAndPath },'Publish.Scene');
+
+            // stage the healed scene document when publish filled in missing title metadata, so the
+            // staged package carries it; all other assets stream straight from storage
+            const useHealedScene: boolean = this.svxDocumentHealed && !!this.svxDocument && !!this.sceneFile && SAC.assetVersion.FileName === this.sceneFile;
+            let inputStream: NodeJS.ReadableStream;
+            if (useHealedScene) {
+                inputStream = Readable.from(Buffer.from(JSON.stringify(this.svxDocument)));
+            } else {
+                const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAsset(SAC.asset, SAC.assetVersion);
+                if (!RSR.success || !RSR.readStream) {
+                    RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`failed to extract stream for asset version: ${RSR.error}`,{ ...SAC.assetVersion },'Publish.Scene');
+                    return false;
+                }
+                inputStream = RSR.readStream;
+            }
+
+            RK.logDebug(RK.LogSection.eCOLL,'stage scene files','adding to zip',{ fileNameAndPath, healed: useHealedScene },'Publish.Scene');
             zippedFiles.push(fileNameAndPath); // DEBUG: track file
 
-            const res: H.IOResults = await zip.add(fileNameAndPath, RSR.readStream);
+            const res: H.IOResults = await zip.add(fileNameAndPath, inputStream);
             if (!res.success) {
                 RK.logError(RK.LogSection.eCOLL,'stage scene files failed',`failed to add asset version to zip: ${res.error}`,{ ...SAC.assetVersion },'Publish.Scene');
                 return false;
@@ -694,6 +718,80 @@ export class PublishScene {
                 break;
         }
         return tag;
+    }
+
+    /** Splits the synthesized display name into its subject and subtitle parts. The subject comes
+     *  from the subject record; the subtitle from scene.Title. scene.Name already embeds the
+     *  subject, so scenes without a Title recover the subtitle from scene.Name. */
+    private computeEdanNameParts(): { subjectName: string, subtitle: string } {
+        const subjectName: string = this.subject ? this.subject.Name : '';
+        const sceneName: string = this.scene ? this.scene.Name : '';
+        let subtitle: string = this.scene?.Title ?? '';
+        if (!subtitle && subjectName && sceneName.startsWith(`${subjectName}: `))
+            subtitle = sceneName.substring(subjectName.length + 2);
+        return { subjectName, subtitle };
+    }
+
+    /** Synthesizes a display name as "Subject: Subtitle" for scenes that carry no title of their
+     *  own. Falls back to scene.Name when no subject is available. */
+    private computeEdanName(): string {
+        const { subjectName, subtitle } = this.computeEdanNameParts();
+        if (subjectName)
+            return subtitle ? `${subjectName}: ${subtitle}` : subjectName;
+        const sceneName: string = this.scene ? this.scene.Name : '';
+        return (sceneName && sceneName !== 'Scene') ? sceneName : '';
+    }
+
+    /** Fills missing title metadata into the outgoing scene document so legacy scenes publish with a
+     *  title, reusing the Cook-ingest logic. Per the Scene Title Contract it only fills absent fields,
+     *  so a user's authored or edited title is preserved. */
+    private async healSceneDocument(): Promise<void> {
+        if (!this.svxDocument || !this.scene)
+            return;
+        const { subtitle } = this.computeEdanNameParts();
+        const svxJson: Buffer = Buffer.from(JSON.stringify(this.svxDocument));
+        const healed = await SceneHelpers.ensureSceneTitle(svxJson, { subject: this.subject, sceneTitle: subtitle });
+        if (healed.modified) {
+            this.svxDocument = JSON.parse(healed.buffer.toString());
+            this.svxDocumentHealed = true;
+            RK.logInfo(RK.LogSection.eCOLL,'publish','healed missing title metadata in scene document',{ title: healed.title },'Publish.Scene');
+        }
+    }
+
+    /** Verifies the subject's EDAN Record ID (if any) resolves to a titled EDAN record. With no record
+     *  ID, EDAN derives the title from the document and there is nothing to verify. A record that EDAN
+     *  cannot find — or one with no title — produces a broken ": Subtitle" published title, so publish
+     *  is refused rather than pushing it. */
+    private async verifyEdanRecord(ICol: COL.ICollection): Promise<boolean> {
+        const edanRecordId: string | null = await this.getSubjectEdanRecordId();
+        if (!edanRecordId)
+            return true;
+
+        const record: COL.EdanRecord | null = await ICol.fetchContent(edanRecordId);
+        if (!record || !record.id || !(record.title ?? '').trim()) {
+            RK.logError(RK.LogSection.eCOLL,'publish failed','subject EDAN record not found or untitled; refusing to publish',{ edanRecordId, idSubject: this.subject?.idSubject },'Publish.Scene');
+            return false;
+        }
+        return true;
+    }
+
+    /** Returns the subject's EDAN Record ID identifier value, or null when the subject has none. */
+    private async getSubjectEdanRecordId(): Promise<string | null> {
+        if (!this.subject)
+            return null;
+        const subjectSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSubjectID(this.subject.idSubject);
+        if (!subjectSO)
+            return null;
+        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
+        if (!vocab)
+            return null;
+        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO.idSystemObject);
+        if (!identifiers)
+            return null;
+        for (const identifier of identifiers)
+            if (identifier.idVIdentifierType === vocab.idVocabulary && identifier.IdentifierValue.trim())
+                return identifier.IdentifierValue;
+        return null;
     }
 
     private async extractResource(SAC: SceneAssetCollector, uuid: string): Promise<COL.Edan3DResource | null> {
@@ -883,9 +981,7 @@ export class PublishScene {
             return null;
         }
 
-        const subjectName: string = this.subject ? this.subject.Name : '';
-        const sceneName: string = this.scene ? this.scene.Name : '';
-        const name: string = subjectName + ((sceneName && sceneName != 'Scene' && sceneName != subjectName) ? `: ${sceneName}` : '');   // Full title of edanmdm record, plus a possible scene title
+        const name: string = this.computeEdanName();                                                        // canonical "Subject: Subtitle" for the download resource label
         const title: string = `${name} (${category} ${type}, ${MODEL_FILE_TYPE}, scale in ${UNITS})`;       // name, below, plus ($$category$$ $$type$$, $$attributes.MODEL_FILE_TYPE$$, scale in $$attributes.UNITS$$)
 
         const url: string = `https://3d-api.si.edu/content/document/3d_package:${uuid}/resources/${SAC.assetVersion.FileName}`;
