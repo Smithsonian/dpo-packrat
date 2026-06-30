@@ -108,7 +108,9 @@ export class JobCookSIVoyagerSceneParameterHelper {
 
         const IngestTitle: IngestTitle = NameHelpers.sceneTitleOptions([MH]);
         const sceneTitle: string | undefined = IngestTitle.subtitle && IngestTitle.subtitle.length === 1 ? IngestTitle.subtitle[0] ?? undefined : undefined;
-        return { edanRecordId, title: IngestTitle.title, sceneTitle };
+        // the scene title's subject portion is the Subject's name (not the model's base name), keeping
+        // scene.Name and the seeded SVX title aligned on a single source for the subject
+        return { edanRecordId, title: subject.Name, sceneTitle };
     }
 
     private static logError(error: string, reason: string, data: any): null {
@@ -328,13 +330,37 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!RSR.success || !RSR.readStream)
             return this.logError('create system objects failed',`unable to fetch stream for scene file: ${RSR.error}`,{ svxFile });
 
-        // Inject EDAN record ID if missing from SVX
+        // Inject the EDAN record ID, then establish the scene title so the stored scene file is
+        // self-describing for downstream EDAN publishing. A brand-new scene gets a synthesized
+        // "Subject: Subtitle" title; a regenerated existing scene keeps the title from its current
+        // SVX rather than being overwritten with a default.
         const svxBuffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
         if (svxBuffer) {
-            const inject = await SceneHelpers.ensureEdanRecordId(svxBuffer, { OG: this.parameterHelper.OG });
-            RSR = { readStream: Readable.from(inject.buffer), fileName: svxFile, storageHash: null, success: true };
-            if (inject.modified)
-                await this.appendToReportAndLog(`${this.name()} injected EDAN Record ID (${inject.edanRecordId}) into scene SVX`);
+            const injectId = await SceneHelpers.ensureEdanRecordId(svxBuffer, { OG: this.parameterHelper.OG });
+            if (injectId.modified)
+                await this.appendToReportAndLog(`${this.name()} injected EDAN Record ID (${injectId.edanRecordId}) into scene SVX`);
+
+            let titleBuffer: Buffer = injectId.buffer;
+            if (createScene) {
+                const injectTitle = await SceneHelpers.ensureSceneTitle(titleBuffer, { OG: this.parameterHelper.OG, sceneTitle: this.parameterHelper.sceneTitle, combineExisting: true });
+                if (injectTitle.modified)
+                    await this.appendToReportAndLog(`${this.name()} injected title (${injectTitle.title}) into scene SVX`);
+                titleBuffer = injectTitle.buffer;
+            } else if (asset) {
+                const existingAV: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchLatestFromAsset(asset.idAsset);
+                const existingRSR: STORE.ReadStreamResult | null = existingAV ? await STORE.AssetStorageAdapter.readAsset(asset, existingAV) : null;
+                const existingBuffer: Buffer | null = existingRSR && existingRSR.success && existingRSR.readStream ? await H.Helpers.readFileFromStream(existingRSR.readStream) : null;
+                if (existingBuffer) {
+                    const preserved = await SceneHelpers.copySceneTitle(titleBuffer, existingBuffer);
+                    if (preserved.modified)
+                        await this.appendToReportAndLog(`${this.name()} preserved title (${preserved.title}) from existing scene SVX`);
+                    titleBuffer = preserved.buffer;
+                } else
+                    RK.logWarning(RK.LogSection.eJOB,'create system objects','could not read existing scene SVX to preserve its title; keeping generated title',{ jobName: this.name(), idAsset: asset.idAsset },'Job.VoyagerScene');
+            } else
+                RK.logWarning(RK.LogSection.eJOB,'create system objects','regenerated scene has no existing scene asset to preserve title from; keeping generated title',{ jobName: this.name(), idScene: scene.idScene },'Job.VoyagerScene');
+
+            RSR = { readStream: Readable.from(titleBuffer), fileName: svxFile, storageHash: null, success: true };
         }
 
         const LS: LocalStore = await ASL.getOrCreateStore();

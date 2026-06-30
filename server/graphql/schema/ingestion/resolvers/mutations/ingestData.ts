@@ -1462,7 +1462,14 @@ class IngestDataWorker extends ResolverBase {
             cloned = true;
         }
 
-        if (!updateMode) modelDB.Name = itemDB ? NameHelpers.modelDisplayName(model.subtitle, itemDB, subjectsDB) : model.subtitle;
+        if (!updateMode) {
+            let modelName: string = itemDB ? NameHelpers.modelDisplayName(model.subtitle, itemDB, subjectsDB) : model.subtitle;
+            if (model.downloadType) {
+                const downloadAV: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(model.idAssetVersion);
+                modelName = NameHelpers.modelDownloadDisplayName(modelName, downloadAV?.FileName);
+            }
+            modelDB.Name = modelName;
+        }
         if (!updateMode) modelDB.Title = model.subtitle.length > 0 ? model.subtitle : modelDB.Title;
         modelDB.DateCreated = H.Helpers.convertStringToDate(model.dateCreated) || new Date();
         modelDB.idVCreationMethod = model.creationMethod;
