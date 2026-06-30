@@ -95,11 +95,6 @@ export class PublishScene {
             return false;
         }
 
-        // if the subject carries an EDAN Record ID, EDAN derives the published title from that record;
-        // a record EDAN cannot resolve yields a broken ": Subtitle" title, so refuse to publish
-        if (!await this.verifyEdanRecord(ICol))
-            return false;
-
         // fill any missing title metadata into the scene document so it carries the title EDAN reads;
         // must run before staging so the staged scene and the EDAN package share the healed document
         await this.healSceneDocument();
@@ -171,7 +166,16 @@ export class PublishScene {
             }
         }
 
-        RK.logInfo(RK.LogSection.eCOLL,'publish EDAN package success',undefined,{ UUID: this.scene.EdanUUID, status: COMMON.ePublishedState[status], publicSearch, downloads, haveDownloads },'Publish.Scene');
+        // validate the title EDAN actually returned (its getTitleFromDocument output). A title with an
+        // empty subject (leading ":") or a blank title means EDAN could not resolve the subject's EDAN
+        // record. The scene stays published — the title can be corrected directly in EDAN, or by fixing
+        // the subject's EDAN record / EDAN Record ID and republishing — but it is flagged so it is not
+        // missed. This is the authoritative check: it reads EDAN's own output over the publishing API.
+        const publishedTitle: string = (edanRecord.title ?? '').trim();
+        if (!publishedTitle || publishedTitle.startsWith(':'))
+            RK.logError(RK.LogSection.eCOLL,'publish','EDAN returned a malformed title; the subject EDAN record was likely not resolved',{ publishedTitle, UUID: this.scene.EdanUUID, idSubject: this.subject.idSubject },'Publish.Scene');
+
+        RK.logInfo(RK.LogSection.eCOLL,'publish EDAN package success',undefined,{ UUID: this.scene.EdanUUID, status: COMMON.ePublishedState[status], publicSearch, downloads, haveDownloads, publishedTitle },'Publish.Scene');
         return true;
     }
 
@@ -756,42 +760,6 @@ export class PublishScene {
             this.svxDocumentHealed = true;
             RK.logInfo(RK.LogSection.eCOLL,'publish','healed missing title metadata in scene document',{ title: healed.title },'Publish.Scene');
         }
-    }
-
-    /** Verifies the subject's EDAN Record ID (if any) resolves to a titled EDAN record. With no record
-     *  ID, EDAN derives the title from the document and there is nothing to verify. A record that EDAN
-     *  cannot find — or one with no title — produces a broken ": Subtitle" published title, so publish
-     *  is refused rather than pushing it. */
-    private async verifyEdanRecord(ICol: COL.ICollection): Promise<boolean> {
-        const edanRecordId: string | null = await this.getSubjectEdanRecordId();
-        if (!edanRecordId)
-            return true;
-
-        const record: COL.EdanRecord | null = await ICol.fetchContent(edanRecordId);
-        if (!record || !record.id || !(record.title ?? '').trim()) {
-            RK.logError(RK.LogSection.eCOLL,'publish failed','subject EDAN record not found or untitled; refusing to publish',{ edanRecordId, idSubject: this.subject?.idSubject },'Publish.Scene');
-            return false;
-        }
-        return true;
-    }
-
-    /** Returns the subject's EDAN Record ID identifier value, or null when the subject has none. */
-    private async getSubjectEdanRecordId(): Promise<string | null> {
-        if (!this.subject)
-            return null;
-        const subjectSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSubjectID(this.subject.idSubject);
-        if (!subjectSO)
-            return null;
-        const vocab: DBAPI.Vocabulary | undefined = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeEdanRecordID);
-        if (!vocab)
-            return null;
-        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(subjectSO.idSystemObject);
-        if (!identifiers)
-            return null;
-        for (const identifier of identifiers)
-            if (identifier.idVIdentifierType === vocab.idVocabulary && identifier.IdentifierValue.trim())
-                return identifier.IdentifierValue;
-        return null;
     }
 
     private async extractResource(SAC: SceneAssetCollector, uuid: string): Promise<COL.Edan3DResource | null> {
