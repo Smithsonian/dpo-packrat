@@ -201,6 +201,19 @@ async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: 
                 metadataMetaMap.set(SOIAV.idSystemObject, metadataMap);
             }
 
+            // classify the download/derivative role + variant for display (these models are bound
+            // into the scene SOV). MSX.Usage is the reliable signal in scene context.
+            const usage: string | null = MSX.Usage;
+            if (COMMON.isCustomDownloadUsage(usage)) {
+                metadataMap.set('role', 'Download'); metadataMap.set('variant', 'Aux');
+            } else if (usage && usage.startsWith('Download:')) {
+                metadataMap.set('role', 'Download'); metadataMap.set('variant', 'Core');
+            } else if (usage === 'App3D' || usage === 'iOSApp3D') {
+                metadataMap.set('role', 'Download'); metadataMap.set('variant', 'Core');
+            } else if (usage) {
+                metadataMap.set('role', 'Scene Model'); metadataMap.set('variant', 'Core'); // generated web-display model
+            }
+
             // if (MSX.Usage)
             //     metadataMap.set('usage', MSX.Usage);
             if (MSX.Quality)

@@ -31,6 +31,13 @@ export class NameHelpers {
         return modelSubtitle ? `${itemBaseName}: ${modelSubtitle}` : itemBaseName;
     }
 
+    // An auxiliary download shares its master model's media group name and subtitle, so its base
+    // display name is identical to the master's. Appending the download's file name keeps each
+    // download distinguishable in object lists.
+    static modelDownloadDisplayName(baseDisplayName: string, downloadFileName: string | null | undefined): string {
+        return downloadFileName ? `${baseDisplayName} (${downloadFileName})` : baseDisplayName;
+    }
+
     static sceneDisplayName(sceneSubtitle: string, modelHierarchies: ModelHierarchy[]): string {
         const { title } = NameHelpers.computeModelHierarchyInfo(modelHierarchies);
         if (!title)
@@ -83,9 +90,13 @@ export class NameHelpers {
         let forced: boolean = false;
         let subtitle: (string | null)[] = [];
         if (modelHierarchies.length === 1) {        // if only one model parent
-            title = NameHelpers.computeBaseTitle(modelHierarchies[0].model.Name, modelHierarchies[0].model.Title); // scene must be named same as model
+            const MH: ModelHierarchy = modelHierarchies[0];
+            title = NameHelpers.computeBaseTitle(MH.model.Name, MH.model.Title); // scene must be named same as model
             forced = true;
-            subtitle.push(modelHierarchies[0].model.Title);
+            // prefer the model's subtitle; fall back to the media group (item) subtitle when the
+            // model carries none, so the scene inherits the media group's subtitle
+            const subtitleSource: string | null = (MH.model.Title && MH.model.Title.length > 0) ? MH.model.Title : (MH.item?.Title ?? null);
+            subtitle.push(subtitleSource);
         } else {
             ({ title, subtitle } = NameHelpers.computeModelHierarchyInfo(modelHierarchies));
         }

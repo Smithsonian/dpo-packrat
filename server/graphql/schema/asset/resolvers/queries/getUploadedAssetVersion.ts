@@ -2,6 +2,7 @@ import { GetUploadedAssetVersionResult, UpdatedAssetVersionMetadata, UpdatePhoto
 import { Parent, Context } from '../../../../../types/resolvers';
 import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
+import * as COMMON from '@dpo-packrat/common';
 // import * as H from '../../../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 
@@ -123,6 +124,13 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
             return null;
         }
     } else if (SOP.Model) {
+        // derive the custom download type (if any) from the model's Download:<type> ModelSceneXref so
+        // a re-upload pre-populates the Download Type field
+        let downloadType: string | null = null;
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromModel(SOP.Model.idModel);
+        const customMSX: DBAPI.ModelSceneXref | undefined = MSXs?.find(msx => COMMON.isCustomDownloadUsage(msx.Usage));
+        if (customMSX?.Usage)
+            downloadType = customMSX.Usage.replace('Download:', '');
         Model = {
             name: SOP.Model.Name,
             creationMethod: SOP.Model.idVCreationMethod ?? 0,
@@ -131,7 +139,8 @@ async function computeUpdatedVersionMetadata(idAssetVersion: number, idAsset: nu
             units: SOP.Model.idVUnits ?? 0,
             dateCreated: (SOP.Model.DateCreated ?? new Date()).toISOString(),
             modelFileType: SOP.Model.idVFileType ?? 0,
-            Variant: SOP.Model.Variant ?? '[]'
+            Variant: SOP.Model.Variant ?? '[]',
+            downloadType
         };
     } else if (SOP.Scene) {
         Scene = {

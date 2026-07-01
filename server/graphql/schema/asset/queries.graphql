@@ -58,6 +58,8 @@ type RelatedObject {
     identifier: String
     objectType: Int!
     retired: Boolean!
+    type: String
+    variant: String
 }
 
 type IngestModel {
@@ -164,6 +166,7 @@ type UpdateModelMetadata {
     dateCreated: String!
     modelFileType: Int!
     Variant: String!
+    downloadType: String
 }
 
 type UpdateSceneMetadata {

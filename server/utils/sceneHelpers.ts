@@ -2,7 +2,7 @@ import * as DBAPI from '../db';
 import * as CACHE from '../cache';
 import * as STORE from '../storage/interface';
 import * as META from '../metadata';
-import * as COL from '../collections/interface/';
+import type * as COL from '../collections/interface/';
 import * as H from './helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../records/recordKeeper';
@@ -346,6 +346,197 @@ export class SceneHelpers {
         RK.logInfo(RK.LogSection.eSYS, 'ensure EDAN Record ID',
             `ensured EDAN Record ID (${dbEdanRecordId}) injected into SVX`, {}, 'Utils.Scene');
         return { buffer: modifiedBuffer, modified: true, edanRecordId: dbEdanRecordId };
+    }
+
+    /**
+     * SCENE TITLE CONTRACT
+     * --------------------
+     * A scene carries two distinct titles with separate owners; they are allowed to differ by design:
+     *   - scene.Name / scene.Title (DB):   Packrat-owned canonical name (search, filenames, repository),
+     *                                      generated as "Subject: Subtitle". Never derived from a
+     *                                      free-form SVX edit.
+     *   - collection.title (SVX):          user-owned display title (Voyager viewer; EDAN's no-record
+     *                                      title). Packrat seeds it at scene creation, then never
+     *                                      overwrites it, so a user's Voyager edit is always preserved.
+     *   - collection.sceneTitle (SVX):     Packrat-owned subtitle. EDAN appends it to the subject's EDAN
+     *                                      record title for record-backed scenes; it is not the
+     *                                      free-form display title.
+     *   - collection.edanRecordId (SVX):   Packrat-owned link to the subject's EDAN record.
+     *
+     * INVARIANT: Packrat fills title / sceneTitle / edanRecordId only when missing (seeding a new
+     * scene, completing Cook's bare machine title, healing a legacy scene). Once present, they are
+     * never overwritten. The lone exception is the new-scene seed via combineExisting, which completes
+     * Cook's bare "Subject" into "Subject: Subtitle".
+     *
+     * SINGLE-COLLECTION ASSUMPTION: EDAN reads these fields from one collection meta — the one carrying
+     * edanRecordId — and reads sceneTitle only from there; a later collection holding a plain title
+     * would be returned verbatim instead. All writers here target a single collection; documents with
+     * multiple collection metas are unsupported.
+     */
+
+    /** Seeds or heals the SVX title fields per the Scene Title Contract above: collection.title (display)
+     *  and collection.sceneTitle (EDAN subtitle), each only when missing, co-located with edanRecordId.
+     *  combineExisting completes Cook's bare machine title at generation. The subject is taken from
+     *  resolver.subject, then resolver.OG, then resolver.idScene. Returns the resolved title. */
+    static async ensureSceneTitle(
+        svxBuffer: Buffer,
+        resolver: { subject?: DBAPI.Subject; sceneTitle?: string | null; idScene?: number; OG?: DBAPI.ObjectGraph; combineExisting?: boolean }
+    ): Promise<{ buffer: Buffer; modified: boolean; title: string | null; error?: string }> {
+        const unchanged = (error?: string): { buffer: Buffer; modified: boolean; title: string | null; error?: string } =>
+            ({ buffer: svxBuffer, modified: false, title: null, error });
+        const readStr = (v: any): string => // eslint-disable-line @typescript-eslint/no-explicit-any
+            (typeof v === 'string') ? v : (v && typeof v === 'object' && typeof v['EN'] === 'string') ? v['EN'] : '';
+        const readTitle = (col: any): string => readStr(col['title']) || readStr(col['titles']); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        // 1. Parse SVX JSON
+        let document: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            document = JSON.parse(svxBuffer.toString());
+        } catch (err) {
+            const error = `ensure scene title failed to parse SVX JSON: ${H.Helpers.getErrorString(err)}`;
+            RK.logError(RK.LogSection.eSYS, 'ensure scene title', error, {}, 'Utils.Scene');
+            return unchanged(error);
+        }
+
+        // 2. Operate on the collection EDAN reads from: the one carrying edanRecordId, falling back to
+        //    the first collection, then metas[0] (see SINGLE-COLLECTION ASSUMPTION above).
+        let collection: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (Array.isArray(document.metas)) {
+            for (const meta of document.metas)
+                if (meta.collection && meta.collection['edanRecordId']) { collection = meta.collection; break; }
+            if (!collection)
+                for (const meta of document.metas)
+                    if (meta.collection) { collection = meta.collection; break; }
+        }
+        if (!collection) {
+            if (!Array.isArray(document.metas) || document.metas.length === 0)
+                document.metas = [{ collection: {} }];
+            if (!document.metas[0].collection)
+                document.metas[0].collection = {};
+            collection = document.metas[0].collection;
+        }
+
+        const existingTitle: string = readTitle(collection).trim();
+        const existingSceneTitle: string = (typeof collection['sceneTitle'] === 'string' ? collection['sceneTitle'] : '').trim();
+        const subtitle: string = (resolver.sceneTitle ?? '').trim();
+
+        // 3. Decide the title to write. With no existing title, build "Subject: Subtitle" from the
+        //    single linked Subject. With an existing title, append the subtitle only when combineExisting
+        //    is set and the title does not already end with it (generation completes Cook's bare subject
+        //    title); otherwise the existing title is preserved.
+        let newTitle: string = '';
+        if (!existingTitle) {
+            let subjects: DBAPI.Subject[] | null = null;
+            if (resolver.subject)
+                subjects = [resolver.subject];
+            else if (resolver.OG)
+                subjects = resolver.OG.subject;
+            else if (resolver.idScene) {
+                const items: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([resolver.idScene]);
+                const allItemIds: number[] = items ? items.map(i => i.idItem) : [];
+                subjects = allItemIds.length > 0 ? await DBAPI.Subject.fetchMasterFromItems(allItemIds) : null;
+            }
+            if (subjects && subjects.length === 1 && subjects[0].Name.trim()) {
+                const subjectName: string = subjects[0].Name;
+                newTitle = subjectName + (subtitle && !subjectName.endsWith(`: ${subtitle}`) ? `: ${subtitle}` : '');
+            } else
+                RK.logWarning(RK.LogSection.eSYS, 'ensure scene title', `skipped title, scene resolves to ${subjects ? subjects.length : 0} subjects`, { resolver }, 'Utils.Scene');
+        } else if (resolver.combineExisting && subtitle && !existingTitle.endsWith(`: ${subtitle}`)) {
+            newTitle = `${existingTitle}: ${subtitle}`;
+        }
+
+        // 4. Set title (viewer) and sceneTitle (EDAN subtitle) independently
+        const setTitle: boolean = newTitle.length > 0 && newTitle !== existingTitle;
+        const setSceneTitle: boolean = !existingSceneTitle && subtitle.length > 0;
+        if (!setTitle && !setSceneTitle)
+            return { buffer: svxBuffer, modified: false, title: existingTitle || null };
+
+        if (setTitle)
+            collection['title'] = newTitle;
+        if (setSceneTitle)
+            collection['sceneTitle'] = subtitle;
+
+        const modifiedBuffer: Buffer = Buffer.from(JSON.stringify(document, null, 4));
+        RK.logInfo(RK.LogSection.eSYS, 'ensure scene title',
+            `set title=${setTitle ? newTitle : '(kept)'} sceneTitle=${setSceneTitle ? subtitle : '(kept)'} in SVX`, {}, 'Utils.Scene');
+        return { buffer: modifiedBuffer, modified: true, title: (setTitle ? newTitle : existingTitle) || null };
+    }
+
+    /** Carries the user-owned display title (collection.title) and the subtitle (collection.sceneTitle)
+     *  from a source SVX onto a target SVX. Used when an existing scene is regenerated: the original
+     *  scene's title is preserved per the Scene Title Contract so a freshly generated default does not
+     *  overwrite it. Written into the target's edanRecordId collection (falling back to the first
+     *  collection, then metas[0]) to stay co-located with the record ID. Unchanged when the source has none. */
+    static async copySceneTitle(
+        targetBuffer: Buffer,
+        sourceBuffer: Buffer
+    ): Promise<{ buffer: Buffer; modified: boolean; title: string | null; error?: string }> {
+        const unchanged = (error?: string): { buffer: Buffer; modified: boolean; title: string | null; error?: string } =>
+            ({ buffer: targetBuffer, modified: false, title: null, error });
+        const readStr = (v: any): string => // eslint-disable-line @typescript-eslint/no-explicit-any
+            (typeof v === 'string') ? v : (v && typeof v === 'object' && typeof v['EN'] === 'string') ? v['EN'] : '';
+        const readTitle = (col: any): string => readStr(col['title']) || readStr(col['titles']); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        let source: any, target: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            source = JSON.parse(sourceBuffer.toString());
+            target = JSON.parse(targetBuffer.toString());
+        } catch (err) {
+            const error = `copy scene title failed to parse SVX JSON: ${H.Helpers.getErrorString(err)}`;
+            RK.logError(RK.LogSection.eSYS, 'copy scene title', error, {}, 'Utils.Scene');
+            return unchanged(error);
+        }
+
+        // read the title and subtitle the source (original) scene carries
+        let srcTitle: string = '';
+        let srcSceneTitle: string = '';
+        if (Array.isArray(source.metas)) {
+            for (const meta of source.metas) {
+                if (!meta.collection)
+                    continue;
+                if (!srcTitle)
+                    srcTitle = readTitle(meta.collection);
+                if (!srcSceneTitle && typeof meta.collection['sceneTitle'] === 'string')
+                    srcSceneTitle = meta.collection['sceneTitle'];
+            }
+        }
+        if (!srcTitle.trim() && !srcSceneTitle.trim()) {
+            RK.logDebug(RK.LogSection.eSYS, 'copy scene title', 'source SVX has no title to preserve', {}, 'Utils.Scene');
+            return unchanged();
+        }
+
+        // locate the target collection to write into, preferring the one carrying edanRecordId
+        let collection: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+        if (Array.isArray(target.metas)) {
+            for (const meta of target.metas)
+                if (meta.collection && meta.collection['edanRecordId']) { collection = meta.collection; break; }
+            if (!collection)
+                for (const meta of target.metas)
+                    if (meta.collection) { collection = meta.collection; break; }
+        }
+        if (!collection) {
+            if (!Array.isArray(target.metas) || target.metas.length === 0)
+                target.metas = [{ collection: {} }];
+            if (!target.metas[0].collection)
+                target.metas[0].collection = {};
+            collection = target.metas[0].collection;
+        }
+
+        let modified: boolean = false;
+        if (srcTitle.trim() && readTitle(collection) !== srcTitle) {
+            collection['title'] = srcTitle;
+            modified = true;
+        }
+        if (srcSceneTitle.trim() && collection['sceneTitle'] !== srcSceneTitle) {
+            collection['sceneTitle'] = srcSceneTitle;
+            modified = true;
+        }
+        if (!modified)
+            return { buffer: targetBuffer, modified: false, title: srcTitle || null };
+
+        const modifiedBuffer: Buffer = Buffer.from(JSON.stringify(target, null, 4));
+        RK.logInfo(RK.LogSection.eSYS, 'copy scene title', `preserved title (${srcTitle}) from original SVX`, {}, 'Utils.Scene');
+        return { buffer: modifiedBuffer, modified: true, title: srcTitle || null };
     }
 
     /** Returns true if the scene exists, has a scene asset, that scene asset has one or more thumbnails in metas -> images,
@@ -1038,20 +1229,11 @@ export class SceneHelpers {
         const lowerName = fileName.toLowerCase();
 
         // Priority 1: Cook-generated suffix patterns (highest confidence).
-        // Keep in sync with JobCookSIGenerateDownloads.verifyIncomingCookData suffixes
-        // and AssetStorageAdapter.isSceneDownloadZipFile.
-        const suffixMap: [string, string][] = [
-            ['-full_resolution-obj_std.zip', 'objZipFull'],
-            ['-150k-4096-obj_std.zip', 'objZipLow'],
-            ['-150k-4096-gltf_std.zip', 'gltfZipLow'],
-            ['-150k-4096_std.glb', 'webAssetGlbLowUncompressed'],
-            ['-100k-2048_std_draco.glb', 'webAssetGlbARCompressed'],
-            ['-100k-2048_std.usdz', 'usdz'],
-        ];
-
-        for (const [suffix, downloadType] of suffixMap) {
-            if (lowerName.endsWith(suffix))
-                return SceneHelpers.downloadTypeToProperties(downloadType);
+        // Suffix (full/endsWith form) -> download type from the single source in @dpo-packrat/common
+        // (CookDownloadDescriptors).
+        for (const d of COMMON.CookDownloadDescriptors) {
+            if (lowerName.endsWith(d.suffixFull))
+                return SceneHelpers.downloadTypeToProperties(d.typeKey);
         }
 
         // Priority 2: Extension-based inference (reasonable defaults)

@@ -128,6 +128,12 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
                                 <Typography style={{ fontSize: '0.75rem' }}>Object Type</Typography>
                             </TableCell>
                             <TableCell style={{ padding: '2px 3px 4px 3px', textAlign: 'center' }}>
+                                <Typography style={{ fontSize: '0.75rem' }}>Type</Typography>
+                            </TableCell>
+                            <TableCell style={{ padding: '2px 3px 4px 3px', textAlign: 'center' }}>
+                                <Typography style={{ fontSize: '0.75rem' }}>Variant</Typography>
+                            </TableCell>
+                            <TableCell style={{ padding: '2px 3px 4px 3px', textAlign: 'center' }}>
                                 <Typography style={{ fontSize: '0.75rem' }}>Identifier</Typography>
                             </TableCell>
                             <TableCell style={{ width: '0px', padding: 0 }}>
@@ -156,7 +162,7 @@ function RelatedObjectsList(props: RelatedObjectsListProps): React.ReactElement 
                     {!hasRelatedObjects && hasAnyRelatedObjects && (
                         <TableBody>
                             <TableRow>
-                                <TableCell colSpan={4} style={{ textAlign: 'center', fontStyle: 'italic', color: '#888888' }}>
+                                <TableCell colSpan={6} style={{ textAlign: 'center', fontStyle: 'italic', color: '#888888' }}>
                                     No non-retired objects
                                 </TableCell>
                             </TableRow>
@@ -191,7 +197,7 @@ interface ItemProps {
 
 function Item(props: ItemProps): React.ReactElement {
     const { sourceObject, onRemove, viewMode = false, currentObject, onRemoveConnection, type, systemObjectType, index, finalIndex, retired = false } = props;
-    const { idSystemObject, name, identifier, objectType } = sourceObject;
+    const { idSystemObject, name, identifier, objectType, type: roleType, variant: roleVariant } = sourceObject;
     const classes = useStyles(viewMode);
     let remove;
     if (currentObject && onRemoveConnection && type && systemObjectType) {
@@ -227,6 +233,12 @@ function Item(props: ItemProps): React.ReactElement {
             </TableCell>
             <TableCell className={classes.objectTypeCell}>
                 <Typography className={classes.label} style={{ fontSize: '0.8rem' }}>{getTermForSystemObjectType(objectType)}</Typography>
+            </TableCell>
+            <TableCell className={classes.objectTypeCell}>
+                <Typography className={classes.label} style={{ fontSize: '0.8rem', textAlign: 'center' }}>{roleType ?? ''}</Typography>
+            </TableCell>
+            <TableCell className={classes.objectTypeCell}>
+                <Typography className={classes.label} style={{ fontSize: '0.8rem', textAlign: 'center' }}>{roleVariant ?? ''}</Typography>
             </TableCell>
             <TableCell className={classes.identifierCell}>
                 <Typography className={classes.label} style={{ fontSize: '0.8rem', wordBreak: 'break-all' }}>{identifier}</Typography>
