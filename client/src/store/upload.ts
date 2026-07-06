@@ -103,14 +103,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
                 const { name, size } = file;
                 const extension: string = (name.toLowerCase().endsWith('.svx.json')) ? '.svx.json' : path.extname(name);
-                const { getAssetTypeForExtension, getInitialEntry } = useVocabularyStore.getState();
-                let type = getAssetTypeForExtension(extension);
-                if (!type)
-                    type = getInitialEntry(eVocabularySetID.eAssetAssetType);
-                if (!type) {
-                    toast.error(`Asset type for file ${name} not found`);
-                    return;
-                }
+                const { getAssetTypeForExtension } = useVocabularyStore.getState();
+                // Best-guess the asset type from the extension. When no confident guess is
+                // possible, leave it unselected (0) so the user must choose before uploading.
+                const type = getAssetTypeForExtension(extension) ?? 0;
 
                 if (!alreadyContains) {
                     const ingestionFile = {
@@ -217,6 +213,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         console.log(`[PACKRAT] startUpload (${updateFile?.file?.name ?? 'na'}, ${updateFile?.file?.size ?? '-1'})`);
 
         if (file) {
+            if (!isUpdate && !isAttachment && !file.type) {
+                toast.warning(`Please select an asset type for ${file.name} before uploading.`);
+                return;
+            }
             if (isUpdate) {
                 file.progress = 0;
                 file.status = FileUploadStatus.UPLOADING;

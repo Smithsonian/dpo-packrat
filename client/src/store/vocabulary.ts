@@ -208,7 +208,9 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             case '.svx.json':
             case '.json': eVocabEnum = eVocabularyID.eAssetAssetTypeScene; break;
 
-            default: eVocabEnum = eVocabularyID.eAssetAssetTypeOther; break;
+            // Unrecognized extensions yield no confident best-guess. Return null so the
+            // asset type is left unselected and the user must pick from the dropdown.
+            default: return null;
         }
 
         const vocabulary = vocabularyMap.get(eVocabEnum);

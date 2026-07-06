@@ -279,6 +279,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 {typeOptions.map(function (option: VocabularyOption, index) {
                     // Silence unsupported types:
                     switch (option.Term.toLowerCase()) {
+                        case 'bulk ingestion':
                         case 'capture data set: diconde':
                         case 'capture data set: dicom':
                         case 'capture data set: laser line':
