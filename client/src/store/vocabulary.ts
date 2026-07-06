@@ -188,8 +188,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             eVocabEnum = eVocabularyID.eAssetAssetTypeModel;
         } else switch (ext) {
             // .zip is intentionally NOT auto-mapped — the contents could be a volumetric
-            // ZIP, a photogrammetry bulk ingest, a scene archive, or other. Returning
-            // null forces the user to pick from the inline asset-type dropdown.
+            // ZIP, a photogrammetry bulk ingest, a scene archive, or other. Return null
+            // to signal no confident guess; the caller decides the fallback type.
             case '.zip': return null;
 
             case '.dcm': eVocabEnum = eVocabularyID.eAssetAssetTypeCaptureDataSetDicom; break;
@@ -208,8 +208,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
             case '.svx.json':
             case '.json': eVocabEnum = eVocabularyID.eAssetAssetTypeScene; break;
 
-            // Unrecognized extensions yield no confident best-guess. Return null so the
-            // asset type is left unselected and the user must pick from the dropdown.
+            // Unrecognized extensions yield no confident best-guess. Return null; the
+            // caller decides the fallback type.
             default: return null;
         }
 

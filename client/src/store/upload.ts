@@ -103,10 +103,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
 
                 const { name, size } = file;
                 const extension: string = (name.toLowerCase().endsWith('.svx.json')) ? '.svx.json' : path.extname(name);
-                const { getAssetTypeForExtension } = useVocabularyStore.getState();
+                const { getAssetTypeForExtension, getVocabularyId } = useVocabularyStore.getState();
                 // Best-guess the asset type from the extension. When no confident guess is
-                // possible, leave it unselected (0) so the user must choose before uploading.
-                const type = getAssetTypeForExtension(extension) ?? 0;
+                // possible, default to Other; the user can still change it before uploading.
+                const type = getAssetTypeForExtension(extension) ?? getVocabularyId(eVocabularyID.eAssetAssetTypeOther) ?? 0;
 
                 if (!alreadyContains) {
                     const ingestionFile = {
