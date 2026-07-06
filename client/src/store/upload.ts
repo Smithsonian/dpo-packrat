@@ -10,6 +10,7 @@ import path from 'path';
 import { toast } from 'react-toastify';
 import { eVocabularySetID, eVocabularyID } from '@dpo-packrat/common';
 import { generateFileId } from '../utils/upload';
+import { readZipFileList, guessAssetTypeFromZipList } from '../utils/zipInspector';
 import { useVocabularyStore } from './vocabulary';
 import { apolloClient, apolloUploader } from '../graphql';
 import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutation, UploadAssetDocument, UploadAssetMutation, UploadStatus, UploadAssetInput } from '../types/graphql';
@@ -19,6 +20,11 @@ import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent
 import { eIngestionMode, ROUTES } from '../constants';
 
 export type FileId = string;
+
+// Sentinel for a pending file whose asset type has not been assigned yet. It
+// matches no vocabulary row, so the type dropdown renders unselected and the
+// upload guard blocks transfer until the user picks a real type.
+export const UNASSIGNED_ASSET_TYPE = 0;
 
 export enum FileUploadStatus {
     READY = 'READY',
@@ -92,48 +98,51 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
     pendingAttachments: new Map(),
     loading: true,
     getSelectedFiles: (files: IngestionFile[], selected: boolean): IngestionFile[] => lodash.filter(files, file => file.selected === selected),
-    loadPending: (acceptedFiles: File[]) => {
-        const { pending } = get();
+    loadPending: async (acceptedFiles: File[]) => {
+        if (!acceptedFiles.length)
+            return;
 
-        if (acceptedFiles.length) {
-            const ingestionFiles: IngestionFile[] = [];
-            acceptedFiles.forEach((file: File): void => {
-                const id = generateFileId();
-                const alreadyContains = !!lodash.find(pending, { id });
+        const { getAssetTypeForExtension, getVocabularyId } = useVocabularyStore.getState();
+        const otherType = getVocabularyId(eVocabularyID.eAssetAssetTypeOther) ?? 0;
+        const ingestionFiles: IngestionFile[] = [];
 
-                const { name, size } = file;
-                const extension: string = (name.toLowerCase().endsWith('.svx.json')) ? '.svx.json' : path.extname(name);
-                const { getAssetTypeForExtension, getInitialEntry } = useVocabularyStore.getState();
-                let type = getAssetTypeForExtension(extension);
-                if (!type)
-                    type = getInitialEntry(eVocabularySetID.eAssetAssetType);
-                if (!type) {
-                    toast.error(`Asset type for file ${name} not found`);
-                    return;
-                }
+        for (const file of acceptedFiles) {
+            const id = generateFileId();
+            const { name, size } = file;
+            const extension: string = (name.toLowerCase().endsWith('.svx.json')) ? '.svx.json' : path.extname(name);
 
-                if (!alreadyContains) {
-                    const ingestionFile = {
-                        id,
-                        file,
-                        name,
-                        size,
-                        status: FileUploadStatus.READY,
-                        progress: 0,
-                        type,
-                        selected: false,
-                        cancel: null
-                    };
+            // Determine the asset type. Recognized extensions map directly. A zip is
+            // cracked and classified from its contents; when those contents are
+            // ambiguous or unrecognizable the type is left unassigned (0) so the user
+            // must choose it — the upload stays blocked until they do — rather than
+            // silently defaulting a zip to Other. A non-zip with an unrecognized
+            // extension falls back to Other.
+            let type = getAssetTypeForExtension(extension);
+            if (extension.toLowerCase() === '.zip') {
+                const fileList = await readZipFileList(file);
+                const guess = guessAssetTypeFromZipList(fileList);
+                type = guess !== null ? getVocabularyId(guess) : UNASSIGNED_ASSET_TYPE;
+            } else if (type === null) {
+                type = otherType;
+            }
+            if (!type)
+                type = UNASSIGNED_ASSET_TYPE;
 
-                    ingestionFiles.push(ingestionFile);
-                } else {
-                    toast.info(`${file.name} was already loaded`);
-                }
-            });
-
-            const updatedPendingFiles = lodash.concat(pending, ingestionFiles);
-            set({ pending: updatedPendingFiles });
+            const ingestionFile: IngestionFile = {
+                id,
+                file,
+                name,
+                size,
+                status: FileUploadStatus.READY,
+                progress: 0,
+                type,
+                selected: false,
+                cancel: null
+            };
+            ingestionFiles.push(ingestionFile);
         }
+
+        set(state => ({ pending: lodash.concat(state.pending, ingestionFiles) }));
     },
     loadSpecialPending: (acceptedFiles: File[], references: UploadReferences, idSO: number) => {
         const { pendingUpdates, pendingAttachments } = get();
@@ -217,6 +226,10 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
         console.log(`[PACKRAT] startUpload (${updateFile?.file?.name ?? 'na'}, ${updateFile?.file?.size ?? '-1'})`);
 
         if (file) {
+            if (!isUpdate && !isAttachment && !file.type) {
+                toast.warning(`Please select an asset type for ${file.name} before uploading.`);
+                return;
+            }
             if (isUpdate) {
                 file.progress = 0;
                 file.status = FileUploadStatus.UPLOADING;

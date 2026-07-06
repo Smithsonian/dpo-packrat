@@ -15,7 +15,7 @@ import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { MdFileUpload } from 'react-icons/md';
 import { Progress } from '../../../../components';
-import { FileId, VocabularyOption } from '../../../../store';
+import { FileId, VocabularyOption, UNASSIGNED_ASSET_TYPE } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
@@ -274,11 +274,18 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 className={classes.typeSelect}
                 onChange={({ target: { value } }) => onChangeType(id, value as number)}
                 disableUnderline
+                displayEmpty
                 SelectDisplayProps={{ style: { paddingLeft: '5px', borderRadius: '5px' } }}
             >
+                {/* Placeholder shown when the asset type could not be inferred and the
+                    user must pick one; disabled so it can't be re-selected. */}
+                <MenuItem value={UNASSIGNED_ASSET_TYPE} disabled>
+                    Select type…
+                </MenuItem>
                 {typeOptions.map(function (option: VocabularyOption, index) {
                     // Silence unsupported types:
                     switch (option.Term.toLowerCase()) {
+                        case 'bulk ingestion':
                         case 'capture data set: diconde':
                         case 'capture data set: dicom':
                         case 'capture data set: laser line':
