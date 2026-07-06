@@ -109,6 +109,33 @@ export function SystemObjectNameToType(objectTypeName: string | null): COMMON.eS
     }
 }
 
+/** Structural view of a SystemObject row: exactly one id field is populated. Typed here rather than
+ *  importing the SystemObject class to avoid a circular dependency. */
+type SystemObjectIDFields = {
+    idUnit: number | null; idProject: number | null; idSubject: number | null; idItem: number | null;
+    idCaptureData: number | null; idModel: number | null; idScene: number | null; idIntermediaryFile: number | null;
+    idProjectDocumentation: number | null; idAsset: number | null; idAssetVersion: number | null;
+    idActor: number | null; idStakeholder: number | null;
+};
+
+/** Derives the eSystemObjectType of a SystemObject row from its populated foreign key. */
+export function SystemObjectTypeFromSystemObject(SO: SystemObjectIDFields): COMMON.eSystemObjectType {
+    if (SO.idUnit)                  return COMMON.eSystemObjectType.eUnit;
+    if (SO.idProject)               return COMMON.eSystemObjectType.eProject;
+    if (SO.idSubject)               return COMMON.eSystemObjectType.eSubject;
+    if (SO.idItem)                  return COMMON.eSystemObjectType.eItem;
+    if (SO.idCaptureData)           return COMMON.eSystemObjectType.eCaptureData;
+    if (SO.idModel)                 return COMMON.eSystemObjectType.eModel;
+    if (SO.idScene)                 return COMMON.eSystemObjectType.eScene;
+    if (SO.idIntermediaryFile)      return COMMON.eSystemObjectType.eIntermediaryFile;
+    if (SO.idProjectDocumentation)  return COMMON.eSystemObjectType.eProjectDocumentation;
+    if (SO.idAsset)                 return COMMON.eSystemObjectType.eAsset;
+    if (SO.idAssetVersion)          return COMMON.eSystemObjectType.eAssetVersion;
+    if (SO.idActor)                 return COMMON.eSystemObjectType.eActor;
+    if (SO.idStakeholder)           return COMMON.eSystemObjectType.eStakeholder;
+    return COMMON.eSystemObjectType.eUnknown;
+}
+
 export function DBObjectTypeToName(dbType: eDBObjectType | null): string {
     switch (dbType) {
         case COMMON.eSystemObjectType.eUnit:

@@ -3,6 +3,8 @@ import { SystemObjectXref as SystemObjectXrefBase } from '@prisma/client';
 import { SystemObjectBased, SystemObject } from '..';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
+import * as COMMON from '@dpo-packrat/common';
+import { SystemObjectTypeFromSystemObject } from './ObjectType';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> implements SystemObjectXrefBase {
@@ -187,6 +189,21 @@ export class SystemObjectXref extends DBC.DBObject<SystemObjectXrefBase> impleme
             await SystemObject.fetch(derivedID!) ; /* istanbul ignore next */ // eslint-disable-line @typescript-eslint/no-non-null-assertion
         if (!SODerived) {
             RK.logError(RK.LogSection.eDB,'wire objects if needed failed',`Unable to compute SystemObject derived: ${derivedID}`,{ derived },'DB.SystemObject.Xref');
+            return null;
+        }
+
+        // Reject an inverted containment edge: wiring a structural container (Unit/Project/Subject/
+        // Item) beneath a lower-tier object would let a retire cascade or graph traversal reach a
+        // container from below. This never occurs for valid relationships (downward container edges
+        // such as Unit->Project rank the derived below the master and are permitted); an inverted
+        // edge indicates bad data or a caller bug, so it is refused and logged.
+        const eMasterType: COMMON.eSystemObjectType = SystemObjectTypeFromSystemObject(SOMaster);
+        const eDerivedType: COMMON.eSystemObjectType = SystemObjectTypeFromSystemObject(SODerived);
+        if (COMMON.isInvertedContainmentEdge(eMasterType, eDerivedType)) {
+            RK.logError(RK.LogSection.eDB,'wire objects if needed failed','refusing inverted containment edge',
+                { master: { idSystemObject: SOMaster.idSystemObject, type: COMMON.eSystemObjectType[eMasterType] },
+                    derived: { idSystemObject: SODerived.idSystemObject, type: COMMON.eSystemObjectType[eDerivedType] } },
+                'DB.SystemObject.Xref');
             return null;
         }
 
