@@ -15,7 +15,7 @@ import { FaCheckCircle, FaRedo, FaRegCircle } from 'react-icons/fa';
 import { IoIosCloseCircle } from 'react-icons/io';
 import { MdFileUpload } from 'react-icons/md';
 import { Progress } from '../../../../components';
-import { FileId, VocabularyOption, UNASSIGNED_ASSET_TYPE } from '../../../../store';
+import { FileId, VocabularyOption, UNASSIGNED_ASSET_TYPE, useServiceStatusStore } from '../../../../store';
 import { palette } from '../../../../theme';
 import Colors from '../../../../theme/colors';
 import { formatBytes } from '../../../../utils/upload';
@@ -197,6 +197,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         onSelect
     } = props;
     const classes = useStyles(props);
+    const volumetricIngestEnabled = useServiceStatusStore(state => state.features.volumetricIngest);
     const upload = () => {
         onUpload(id);
     };
@@ -283,8 +284,13 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                     Select type…
                 </MenuItem>
                 {typeOptions.map(function (option: VocabularyOption, index) {
+                    const term: string = option.Term.toLowerCase();
+                    // Volumetric is a gated rollout: only selectable when the server enables
+                    // it, keeping the option in sync with what the upload/ingest paths accept.
+                    if (term === 'capture data set: volumetric' && !volumetricIngestEnabled)
+                        return null;
                     // Silence unsupported types:
-                    switch (option.Term.toLowerCase()) {
+                    switch (term) {
                         case 'bulk ingestion':
                         case 'capture data set: diconde':
                         case 'capture data set: dicom':
@@ -292,7 +298,6 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                         case 'capture data set: spherical laser':
                         case 'capture data set: structured light':
                         case 'capture data set: other':
-                        case 'capture data set: volumetric':
                         case 'capture data file':
                         case 'model geometry file':
                         case 'model uv map file':
