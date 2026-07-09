@@ -29,6 +29,7 @@ import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
 import { getObjectStatus, patchObject } from './routes/api/object';
 import { objectAction } from './routes/api/objectAction';
+import { getPublishedScenes } from './routes/api/publishedScenes';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
 import { getExternalSources, createExternalSource, updateExternalSource } from './routes/api/object';
@@ -231,6 +232,7 @@ export class HttpServer {
 
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
+        this.app.get('/api/scene/published', getPublishedScenes);   // scenes still in a published EDAN state (orphan reconciliation)
         this.app.post('/api/scene/:id/webdav-token', createWebDAVToken);
 
         // External deep-link endpoints

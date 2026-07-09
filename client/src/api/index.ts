@@ -117,6 +117,11 @@ export default class API {
         return this.request('api/object/action', { method: 'POST', body });
     }
 
+    // scenes still in a published EDAN state (retired-first); orphan reconciliation report
+    static async getPublishedScenes(): Promise<RequestResponse> {
+        return this.request('api/scene/published', { method: 'GET' });
+    }
+
     // volumetric inspection results — returns the JSON produced by JobVolumeInspect
     // for the given asset version. data is null when no completed inspection exists.
     static async getVolumetricInspectionResults(idAssetVersion: number): Promise<RequestResponse> {
