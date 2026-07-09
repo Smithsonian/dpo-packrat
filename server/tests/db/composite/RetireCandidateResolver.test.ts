@@ -101,6 +101,32 @@ describe('resolveRetireCandidates', () => {
         expect(ids(candidates)).toEqual([1, 2, 10]);
     });
 
+    test('attributes an asset to its owner object when idParent points to a crawled sibling', async () => {
+        const root = obj(1, eSystemObjectType.eScene);
+        const source = new MemSource(
+            new Map([[1, [obj(2, eSystemObjectType.eModel)]]]),
+            // the scene surfaces asset 10, but it is owned by model 2
+            new Map([[1, [{ ...asset(10), idParent: 2 }]]]),
+        );
+        const { candidates } = await resolveRetireCandidates(root, source);
+        const a10 = candidates.find(c => c.idSystemObject === 10);
+        expect(a10?.idParent).toBe(2);
+        // nested under model 2: appears immediately after it in depth-first order
+        const idx = candidates.findIndex(c => c.idSystemObject === 10);
+        expect(candidates[idx - 1].idSystemObject).toBe(2);
+    });
+
+    test('falls back to the surfacing object when the asset owner is not crawled', async () => {
+        const root = obj(1, eSystemObjectType.eScene);
+        const source = new MemSource(
+            new Map(),
+            // asset 10 claims owner 999 which is not in the graph → attributed to the scene
+            new Map([[1, [{ ...asset(10), idParent: 999 }]]]),
+        );
+        const { candidates } = await resolveRetireCandidates(root, source);
+        expect(candidates.find(c => c.idSystemObject === 10)?.idParent).toBe(1);
+    });
+
     test('records depth increasing down the graph', async () => {
         const root = obj(1, eSystemObjectType.eItem);
         const source = new MemSource(new Map([

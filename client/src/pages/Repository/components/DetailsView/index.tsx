@@ -1011,6 +1011,11 @@ function DetailsView(): React.ReactElement {
                         hideRetired={hideRetired}
                         objectType={objectType}
                         onRetiredUpdate={onRetiredUpdate}
+                        onRetireComplete={() => {
+                            refetch();
+                            fetchDetailTabDataAndSetState();
+                            setRefreshTick(t => t + 1);
+                        }}
                         onLicenseUpdate={onLicenseUpdate}
                         onPublishUpdate={onPublishUpdate}
                         onLicenseChange={onDetailUpdate}

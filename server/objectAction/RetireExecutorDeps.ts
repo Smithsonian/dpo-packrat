@@ -6,6 +6,7 @@ import { withAuditTransaction } from '../audit/withAuditTransaction';
 import { AuditFactory } from '../audit/interface/AuditFactory';
 import { eAuditType } from '../db/api/ObjectType';
 import { RecordKeeper as RK } from '../records/recordKeeper';
+import { ASL } from '../utils/localStore';
 import { executeRetire, RetireExecutorDeps, RetireExecutionResult, RetireItemResult, RetireItemStatus, UnpublishResult } from './RetireExecutor';
 
 function item(node: DBAPI.ResolvedNode, status: RetireItemStatus, error?: string): RetireItemResult {
@@ -64,6 +65,9 @@ async function unpublishScene(idSystemObject: number): Promise<UnpublishResult> 
  */
 async function applyRetireFlags(candidates: DBAPI.ResolvedNode[], retire: boolean): Promise<RetireItemResult[]> {
     const results: RetireItemResult[] = [];
+    // Pass the acting Actor so a semantic eActionRetire/eActionReinstate row is emitted (not just the
+    // base eDBUpdate); the root's idAudit then threads into descendants as parentRetirement.idAudit.
+    const actor = ASL.getStore()?.getActor();
     await withAuditTransaction(async () => {
         let rootAuditId: number | null = null;
         for (let i = 0; i < candidates.length; i++) {
@@ -81,7 +85,7 @@ async function applyRetireFlags(candidates: DBAPI.ResolvedNode[], retire: boolea
                 continue;
             }
 
-            const ctx = isRoot ? { reason: null } : { parentAuditId: rootAuditId };
+            const ctx = { actor, reason: null, parentAuditId: isRoot ? null : rootAuditId };
             const res = retire ? await SO.retireObjectWithContext(ctx) : await SO.reinstateObjectWithContext(ctx);
             if (res.success) {
                 if (isRoot)

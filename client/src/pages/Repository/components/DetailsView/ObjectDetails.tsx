@@ -4,13 +4,12 @@
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Checkbox, Typography, Select, MenuItem, Tooltip, Divider } from '@material-ui/core';
-import { withStyles, makeStyles, createStyles } from '@material-ui/core/styles';
-import React, { useEffect, useState } from 'react';
+import { Box, Button, Typography, Select, MenuItem, Tooltip, Divider } from '@material-ui/core';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
+import React, { useEffect, useRef, useState } from 'react';
 import { NewTabLink } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath, License, ObjectPropertyResult, Unit } from '../../../../types/graphql';
-import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
-import { withDefaultValueBoolean } from '../../../../utils/shared';
+import { getDetailsUrlForObject } from '../../../../utils/repository';
 import { useLicenseStore, useDetailTabStore } from '../../../../store';
 import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useDetailsView';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
@@ -20,6 +19,7 @@ import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 import { ToolTip } from '../../../../components';
 import { HelpOutline } from '@material-ui/icons';
 import { getUnitsList } from '../../../Admin/hooks/useAdminView';
+import RetireActionModal from './RetireActionModal';
 
 const useStyles = makeStyles(({ palette }) => createStyles({
     detail: {
@@ -93,16 +93,6 @@ const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
     }
 }));
 
-const CheckboxNoPadding = withStyles({
-    root: {
-        border: '0px',
-        padding: '0px',
-        height: 10,
-        width: 10,
-        paddingLeft: 3
-    }
-})(Checkbox);
-
 interface ObjectDetailsProps {
     unit?: RepositoryPath[] | null;
     project?: RepositoryPath[] | null;
@@ -119,6 +109,7 @@ interface ObjectDetailsProps {
     objectType?: number;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
+    onRetireComplete?: () => void;
     onLicenseUpdate?: (event) => void;
     onPublishUpdate?: () => void;
     onLicenseChange?: () => void;
@@ -145,8 +136,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         hideRetired,
         objectType,
         disabled,
-        originalFields,
-        onRetiredUpdate,
+        onRetireComplete,
         onLicenseUpdate,
         onPublishUpdate,
         idSystemObject,
@@ -158,8 +148,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const [loading, setLoading] = useState(false);
+    const [retireModalOpen, setRetireModalOpen] = useState(false);
+    const retireChangedRef = useRef(false);
     const [unitList, setUnitList] = useState<Unit[]>([]);
-    const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
     const getEntries = useLicenseStore(state => state.getEntries);
     const [ProjectDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDetails, state.updateDetailField]);
     const classes = useObjectDetailsStyles(props);
@@ -378,18 +369,35 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     <Divider className={classes.sectionDivider} />
                     <Detail
                         label='Retired'
-                        name='retired'
                         valueComponent={
-                            <CheckboxNoPadding
-                                id='retired'
-                                name='retired'
-                                disabled={disabled}
-                                checked={withDefaultValueBoolean(retired, false)}
-                                onChange={onRetiredUpdate}
-                                {...getUpdatedCheckboxProps(isRetiredUpdated)}
-                                color='primary'
-                            />
+                            <Box className={classes.buttonRow}>
+                                <Typography className={classes.value}>{retired ? 'Yes' : 'No'}</Typography>
+                                <Button
+                                    size='small'
+                                    variant='contained'
+                                    color='primary'
+                                    style={{ color: '#fff' }}
+                                    disabled={disabled}
+                                    onClick={() => setRetireModalOpen(true)}
+                                >
+                                    {retired ? 'Reinstate' : 'Retire'}
+                                </Button>
+                            </Box>
                         }
+                    />
+                    <Divider className={classes.sectionDivider} />
+                    <RetireActionModal
+                        open={retireModalOpen}
+                        idSystemObject={idSystemObject}
+                        retire={!retired}
+                        onComplete={() => { retireChangedRef.current = true; }}
+                        onClose={() => {
+                            setRetireModalOpen(false);
+                            if (retireChangedRef.current) {
+                                retireChangedRef.current = false;
+                                onRetireComplete?.();
+                            }
+                        }}
                     />
                 </>
             )}

@@ -111,6 +111,12 @@ export default class API {
         return this.request(uri, { method: 'PATCH', body });
     }
 
+    // object action — describe/retire/reinstate an object and its resolved dependents/assets
+    static async objectAction(idSystemObject: number, action: 'describe' | 'retire' | 'reinstate'): Promise<RequestResponse> {
+        const body = JSON.stringify({ idSystemObject, action });
+        return this.request('api/object/action', { method: 'POST', body });
+    }
+
     // volumetric inspection results — returns the JSON produced by JobVolumeInspect
     // for the given asset version. data is null when no completed inspection exists.
     static async getVolumetricInspectionResults(idAssetVersion: number): Promise<RequestResponse> {

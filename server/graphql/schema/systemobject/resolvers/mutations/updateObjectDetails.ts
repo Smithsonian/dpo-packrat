@@ -667,11 +667,16 @@ function computeNewName(oldName: string, oldTitle: string | null, newTitle: stri
  * 2. Retire direct Assets
  * For Scenes, uses fetchFromSceneByVersion to get all assets including model assets.
  */
-async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean, parentAuditId: number | null = null): Promise<H.IOResults> {
+async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean, parentAuditId: number | null = null, visited: Set<number> = new Set<number>()): Promise<H.IOResults> {
     const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
     if (!SO) {
         return { success: false, error: `Unable to fetch SystemObject ${idSystemObject}` };
     }
+
+    // Guard against cyclic/diamond xref edges: never process the same SystemObject twice in one
+    // cascade. In-memory tracking is authoritative here — the Retired flip is not visible to sibling
+    // re-fetches within the same transaction, so the Retired-flag check alone cannot dedupe.
+    visited.add(idSystemObject);
 
     // Cascade to derived/child objects (Scenes first, then Models)
     const derivedObjects: DBAPI.SystemObject[] | null = await DBAPI.SystemObject.fetchDerivedFromXref(idSystemObject);
@@ -694,12 +699,15 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
         // Process in order: Scenes, then Models, then others
         const orderedDerived = [...scenes, ...models, ...others];
         for (const derivedSO of orderedDerived) {
+            if (visited.has(derivedSO.idSystemObject))
+                continue;
+            visited.add(derivedSO.idSystemObject);
             if (retire) {
                 if (!derivedSO.Retired) {
                     const res = await derivedSO.retireObjectWithContext({ parentAuditId });
                     if (!res.success)
                         return { success: false, error: `Failed to retire derived object SO ${derivedSO.idSystemObject}` };
-                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId);
+                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId, visited);
                     if (!cascadeResult.success) {
                         return cascadeResult;
                     }
@@ -710,7 +718,7 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
                     const res = await derivedSO.reinstateObjectWithContext({ parentAuditId });
                     if (!res.success)
                         return { success: false, error: `Failed to reinstate derived object SO ${derivedSO.idSystemObject}` };
-                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId);
+                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId, visited);
                     if (!cascadeResult.success) {
                         return cascadeResult;
                     }
@@ -737,6 +745,9 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
                     RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
                     continue;
                 }
+                if (visited.has(assetSO.idSystemObject))
+                    continue;
+                visited.add(assetSO.idSystemObject);
 
                 const result = await retireOrReinstateObject(assetSO, retire, `Asset ${idAsset}`, idSystemObject, parentAuditId);
                 if (!result.success) {
@@ -754,6 +765,9 @@ async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean
                     RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${asset.idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
                     continue;
                 }
+                if (visited.has(assetSO.idSystemObject))
+                    continue;
+                visited.add(assetSO.idSystemObject);
 
                 const result = await retireOrReinstateObject(assetSO, retire, `Asset ${asset.idAsset}`, idSystemObject, parentAuditId);
                 if (!result.success) {
