@@ -19,6 +19,7 @@ import ToolsAssetValidation from './Tools/ToolsAssetValidation';
 import ToolsSystemOps from './Tools/ToolsSystemOps';
 import ToolsAuthorizationOverview from './Tools/ToolsAuthorizationOverview';
 import ToolsExternalSources from './Tools/ToolsExternalSources';
+import ToolsPublishedScenes from './Tools/ToolsPublishedScenes';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -83,6 +84,7 @@ function AdminToolsView(): React.ReactElement {
         batchOps: false,
         assetValidation: false,
         systemOps: false,
+        publishedScenes: false,
         authorization: false,
         externalSources: false,
     });
@@ -133,6 +135,17 @@ function AdminToolsView(): React.ReactElement {
                                 </IconButton>
                                 <Collapse in={openSections.systemOps} className={classes.collapseContainer}>
                                     <ToolsSystemOps />
+                                </Collapse>
+                            </Box>
+
+                            {/* Published Scenes (EDAN orphan reconciliation) */}
+                            <Box>
+                                <IconButton className={classes.collapseHeader} onClick={() => toggleSection('publishedScenes')}>
+                                    EDAN: Published Scenes
+                                    {openSections.publishedScenes ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                </IconButton>
+                                <Collapse in={openSections.publishedScenes} className={classes.collapseContainer}>
+                                    {openSections.publishedScenes && <ToolsPublishedScenes />}
                                 </Collapse>
                             </Box>
 

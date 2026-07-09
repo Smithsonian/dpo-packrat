@@ -14,8 +14,15 @@ interface ServiceStatusState {
     edan: boolean;
 }
 
+// Server-side feature gates mirrored into the client so the UI only offers what the
+// server will accept. Defaults are conservative (off) until the first status poll.
+interface ServiceFeatures {
+    volumetricIngest: boolean;
+}
+
 type ServiceStatusStore = {
     status: ServiceStatusState;
+    features: ServiceFeatures;
     initialized: boolean;
     checkStatus: () => Promise<void>;
     startPolling: () => void;
@@ -27,6 +34,7 @@ const POLL_INTERVAL = 60000; // 60 seconds
 
 export const useServiceStatusStore = create<ServiceStatusStore>((set: SetState<ServiceStatusStore>, get: GetState<ServiceStatusStore>) => ({
     status: { database: true, solr: true, edan: true },
+    features: { volumetricIngest: false },
     initialized: false,
     _intervalId: null,
     checkStatus: async (): Promise<void> => {
@@ -63,7 +71,11 @@ export const useServiceStatusStore = create<ServiceStatusStore>((set: SetState<S
                 toast.success('EDAN publishing service restored.', { toastId: 'edan-up' });
             }
 
-            set({ status: next, initialized: true });
+            const features: ServiceFeatures = {
+                volumetricIngest: result.features?.volumetricIngest ?? false,
+            };
+
+            set({ status: next, features, initialized: true });
         } catch {
             // If the status endpoint itself fails, assume everything is down
             const prev = get().status;

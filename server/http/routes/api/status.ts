@@ -9,6 +9,9 @@ interface ServiceStatus {
     database: boolean;
     solr: boolean;
     edan: boolean;
+    features: {
+        volumetricIngest: boolean;
+    };
 }
 
 export async function getServiceStatus(_: Request, response: Response): Promise<void> {
@@ -16,6 +19,10 @@ export async function getServiceStatus(_: Request, response: Response): Promise<
         database: false,
         solr: false,
         edan: false,
+        // Server-side feature gates the client needs to mirror in the UI.
+        features: {
+            volumetricIngest: Config.features.volumetricIngest,
+        },
     };
 
     // Check database

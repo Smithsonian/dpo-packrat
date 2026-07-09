@@ -393,6 +393,59 @@ export enum eSystemObjectType {
     eStakeholder = 13,
 }
 
+/**
+ * Containment tier per SystemObject type, ordered top-level container (low) to leaf (high). Used to
+ * detect an inverted edge — a structural container placed beneath a lower-tier object — which the
+ * xref wiring and the retire cascade must never follow. Ancillary types that attach at varying points
+ * (Actor, Stakeholder, ProjectDocumentation) are deliberately left unranked so the guard forms no
+ * opinion on them.
+ */
+const eSystemObjectContainmentRank: Map<eSystemObjectType, number> = new Map<eSystemObjectType, number>([
+    [eSystemObjectType.eUnit, 0],
+    [eSystemObjectType.eProject, 1],
+    [eSystemObjectType.eSubject, 2],
+    [eSystemObjectType.eItem, 3],
+    [eSystemObjectType.eCaptureData, 4],
+    [eSystemObjectType.eModel, 4],
+    [eSystemObjectType.eScene, 4],
+    [eSystemObjectType.eIntermediaryFile, 4],
+    [eSystemObjectType.eAsset, 5],
+    [eSystemObjectType.eAssetVersion, 6],
+]);
+
+/** Structural container types whose accidental retirement or inverted wiring is catastrophic. */
+const eSystemObjectContainerTypes: Set<eSystemObjectType> = new Set<eSystemObjectType>([
+    eSystemObjectType.eUnit,
+    eSystemObjectType.eProject,
+    eSystemObjectType.eSubject,
+    eSystemObjectType.eItem,
+]);
+
+/** Containment rank for a type, or undefined for unranked ancillary types. */
+export function containmentRank(eType: eSystemObjectType): number | undefined {
+    return eSystemObjectContainmentRank.get(eType);
+}
+
+/** True when the type is a structural container (Unit, Project, Subject, Item). */
+export function isContainerType(eType: eSystemObjectType): boolean {
+    return eSystemObjectContainerTypes.has(eType);
+}
+
+/**
+ * True when placing eDerivedType beneath eMasterType inverts the containment hierarchy — the derived
+ * is a structural container ranked above the master. Returns false when either rank is unknown, so the
+ * guard never blocks a relationship it has no opinion on (e.g. an ancillary master or derived).
+ */
+export function isInvertedContainmentEdge(eMasterType: eSystemObjectType, eDerivedType: eSystemObjectType): boolean {
+    if (!isContainerType(eDerivedType))
+        return false;
+    const masterRank: number | undefined = containmentRank(eMasterType);
+    const derivedRank: number | undefined = containmentRank(eDerivedType);
+    if (masterRank === undefined || derivedRank === undefined)
+        return false;
+    return derivedRank < masterRank;
+}
+
 export enum eLicense {
     eViewDownloadCC0 = 1,           // CC0, Publishable w/ Downloads
     eViewDownloadRestriction = 2,   // SI ToU, Publishable w/ Downloads
