@@ -25,8 +25,9 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        width: 'fit-content',
+        width: '100%',
         maxWidth: '100%',
+        boxSizing: 'border-box',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
@@ -34,8 +35,9 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         [breakpoints.down('lg')]: {
             paddingRight: 20
         },
-        height: 'calc(100vh - 80px - var(--status-banner-height, 0px))',
-        overflowY: 'auto'
+        height: '100%',
+        minHeight: 0,
+        overflow: 'auto'
     }
 }));
 

@@ -73,8 +73,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        width: 'fit-content',
+        minHeight: 0,
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
         flexDirection: 'column',
+        overflow: 'auto',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
@@ -84,12 +88,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     },
     content: {
         display: 'flex',
-        flex: 1,
+        flexShrink: 0,
+        boxSizing: 'border-box',
         flexDirection: 'column',
         padding: 20,
         marginBottom: 20,
         borderRadius: 10,
-        overflowY: 'auto',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
             padding: 10
@@ -1216,7 +1220,7 @@ function DetailsView(): React.ReactElement {
                 )}
                 {(uploadReferences && uploadReferences.idSOAttachment) && <SpecialUploadList uploadType={eIngestionMode.eAttach} onUploaderClose={onUploaderReset} idSOAttachment={uploadReferences?.idSOAttachment} idSO={idSystemObject} />}
 
-                <Box display='flex' flex={1} padding={2}>
+                <Box display='flex' padding={2}>
                     <DetailsThumbnail
                         thumbnail={thumbnail}
                         idSystemObject={idSystemObject}

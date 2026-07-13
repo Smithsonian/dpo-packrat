@@ -22,6 +22,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
     container: {
         display: 'flex',
         height: 60,
+        flexShrink: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0px 1.5rem',

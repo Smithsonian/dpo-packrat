@@ -2,12 +2,12 @@
  * ServiceStatusBanner
  *
  * Renders thin banners at the top of the screen when backend services
- * (Database, Solr, EDAN) are unavailable. Updates the --status-banner-height
- * CSS variable so that calc()-based layouts adjust automatically.
+ * (Database, Solr, EDAN) are unavailable. Pinned above the header as a
+ * non-scrolling flex child of the app shell.
  */
 import { Box, Typography } from '@material-ui/core';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { useServiceStatusStore } from '../../store';
 
 const useStyles = makeStyles(() => createStyles({
@@ -38,7 +38,6 @@ const useStyles = makeStyles(() => createStyles({
 function ServiceStatusBanner(): React.ReactElement | null {
     const classes = useStyles();
     const { status, initialized } = useServiceStatusStore();
-    const wrapperRef = useRef<HTMLDivElement>(null);
 
     const banners: { message: string; severity: 'error' | 'warning' }[] = [];
 
@@ -63,18 +62,10 @@ function ServiceStatusBanner(): React.ReactElement | null {
         });
     }
 
-    useEffect(() => {
-        const height = wrapperRef.current ? wrapperRef.current.offsetHeight : 0;
-        document.documentElement.style.setProperty('--status-banner-height', `${height}px`);
-        return () => {
-            document.documentElement.style.setProperty('--status-banner-height', '0px');
-        };
-    }, [banners.length]);
-
     if (banners.length === 0) return null;
 
     return (
-        <div ref={wrapperRef} className={classes.wrapper}>
+        <div className={classes.wrapper}>
             {banners.map((banner, index) => (
                 <Box
                     key={index}
