@@ -850,6 +850,7 @@ export type GetObjectChildrenInput = {
   projects: Array<Scalars['Int']>;
   rows: Scalars['Int'];
   search: Scalars['String'];
+  start?: InputMaybe<Scalars['Int']>;
   units: Array<Scalars['Int']>;
   variantType: Array<Scalars['Int']>;
 };
@@ -861,6 +862,7 @@ export type GetObjectChildrenResult = {
   error?: Maybe<Scalars['String']>;
   metadataColumns: Array<Scalars['Int']>;
   success: Scalars['Boolean'];
+  total?: Maybe<Scalars['Int']>;
 };
 
 export type GetObjectsForItemInput = {

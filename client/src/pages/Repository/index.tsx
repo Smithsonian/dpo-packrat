@@ -59,6 +59,8 @@ export type RepositoryFilter = {
     dateCreatedTo?: Date | string | null;
     cursorMark?: string | null;
     idRoots?: number[] | null;
+    rootPage?: number;
+    rootPageSize?: number;
 };
 
 function DetailsViewKeyed(): React.ReactElement {
@@ -105,6 +107,8 @@ function TreeViewPage(): React.ReactElement {
         dateCreatedFrom,
         dateCreatedTo,
         idRoots,
+        rootPage,
+        rootPageSize,
         updateRepositoryFilter
     } = useRepositoryStore();
     const queries: RepositoryFilter = parseRepositoryUrl(location.search);
@@ -126,7 +130,9 @@ function TreeViewPage(): React.ReactElement {
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null,
-            idRoots: null
+            idRoots: null,
+            rootPage: 1,
+            rootPageSize: 25
         })};path=/`;
     };
 
@@ -169,7 +175,9 @@ function TreeViewPage(): React.ReactElement {
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
-        idRoots
+        idRoots,
+        rootPage,
+        rootPageSize
     };
     const route = generateRepositoryUrl(newRepositoryFilterState) || generateRepositoryUrl(cookieFilterSelections);
     if (route !== location.search) {

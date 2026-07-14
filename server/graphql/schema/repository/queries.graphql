@@ -23,6 +23,7 @@ input GetObjectChildrenInput {
     dateCreatedTo: DateTime
     rows: Int!
     cursorMark: String!
+    start: Int
 }
 
 type NavigationResultEntry {
@@ -39,6 +40,7 @@ type GetObjectChildrenResult {
     entries: [NavigationResultEntry!]!
     metadataColumns: [Int!]!
     cursorMark: String
+    total: Int
 }
 
 type GetFilterViewDataResult {

@@ -11,7 +11,7 @@ import { makeStyles, createStyles } from '@material-ui/core/styles';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import { TreeView } from '@material-ui/lab';
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Loader } from '../../../../components';
 import { StateRelatedObject, treeRootKey, useControlStore, useRepositoryStore, useTreeColumnsStore, NavigationResultEntryState } from '../../../../store';
 import {
@@ -25,10 +25,11 @@ import {
 import RepositoryTreeHeader from './RepositoryTreeHeader';
 import StyledTreeItem from './StyledTreeItem';
 import TreeLabel, { TreeLabelEmpty, TreeLabelLoading } from './TreeLabel';
-import InViewTreeItem from './InViewTreeItem';
-import { repositoryRowCount } from '@dpo-packrat/common';
 
-const repositoryRowPrefetchThreshold = 75;
+// Root-level pagination: selectable page sizes, and the minimum number of root
+// objects at which the pager (with its size selector) is shown.
+const ROOT_PAGE_SIZE_OPTIONS = [10, 25, 100];
+const ROOT_PAGER_MIN_ITEMS = 10;
 
 const useStyles = makeStyles(({ breakpoints, palette }) => createStyles({
     container: {
@@ -56,7 +57,8 @@ const useStyles = makeStyles(({ breakpoints, palette }) => createStyles({
         width: '100%'
     },
     treeViewContainer: {
-        height: '100%',
+        flex: 1,
+        minHeight: 0,
         overflowY: 'auto',
         width: '100%',
         // Note: this is to help relocate the scrollbar to the left
@@ -137,6 +139,44 @@ const useStyles = makeStyles(({ breakpoints, palette }) => createStyles({
     link: {
         color: palette.primary.dark,
         textDecoration: 'none'
+    },
+    pager: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+        padding: '6px 8px',
+        flexShrink: 0
+    },
+    pagerButton: {
+        cursor: 'pointer',
+        fontSize: '0.8em',
+        padding: '2px 10px',
+        borderRadius: 4,
+        border: `1px solid ${palette.primary.main}`,
+        backgroundColor: palette.background.paper,
+        color: palette.primary.dark,
+        '&:disabled': { opacity: 0.4, cursor: 'default' }
+    },
+    pagerLabel: {
+        fontSize: '0.8em',
+        color: palette.primary.dark
+    },
+    pagerInput: {
+        width: 48,
+        fontSize: '0.8em',
+        padding: '2px 4px',
+        borderRadius: 4,
+        border: `1px solid ${palette.primary.main}`
+    },
+    pagerSelect: {
+        fontSize: '0.8em',
+        padding: '2px 4px',
+        borderRadius: 4,
+        border: `1px solid ${palette.primary.main}`,
+        backgroundColor: palette.background.paper,
+        color: palette.primary.dark,
+        cursor: 'pointer'
     }
 }));
 
@@ -149,20 +189,34 @@ interface RepositoryTreeViewProps {
 
 function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement {
     const { isModal = false, selectedItems = [], onSelect, onUnSelect } = props;
-    const [tree, getChildren, deleteChildren, getMoreRoot, getMoreChildren, setExpandedCount, cursors] = useRepositoryStore(state => [
+    const [tree, getChildren, deleteChildren, setExpandedCount] = useRepositoryStore(state => [
         state.tree,
         state.getChildren,
         state.deleteChildren,
-        state.getMoreRoot,
-        state.getMoreChildren,
-        state.setExpandedCount,
-        state.cursors
+        state.setExpandedCount
+    ]);
+    const [rootPage, rootPageSize, rootTotal, setRootPage, setRootPageSize] = useRepositoryStore(state => [
+        state.rootPage,
+        state.rootPageSize,
+        state.rootTotal,
+        state.setRootPage,
+        state.setRootPageSize
     ]);
     const metadataColumns = useRepositoryStore(state => state.metadataToDisplay);
     const [initializeWidths, initializeOrder, columnOrder] = useTreeColumnsStore((state) => [state.initializeWidth, state.initializeOrder, state.order]);
     const [loading, isExpanded] = useRepositoryStore(useCallback(state => [state.loading, state.isExpanded], []));
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const classes = useStyles({ isExpanded, sideBarExpanded, isModal });
+
+    const [jumpValue, setJumpValue] = useState('');
+    const totalRootPages = Math.max(1, Math.ceil(rootTotal / rootPageSize));
+    const showPager = !isModal && rootTotal > ROOT_PAGER_MIN_ITEMS;
+    const goToPage = (): void => {
+        const page = parseInt(jumpValue, 10);
+        if (!isNaN(page) && page >= 1 && page <= totalRootPages && page !== rootPage)
+            setRootPage(page);
+        setJumpValue('');
+    };
 
     useEffect(() => {
         initializeWidths();
@@ -185,10 +239,10 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
     );
 
     // recursive
-    const renderTree = (children: NavigationResultEntryState[] | undefined, isChild?: boolean, parentNodeId?: string) => {
+    const renderTree = (children: NavigationResultEntryState[] | undefined, _isChild?: boolean, parentNodeId?: string) => {
 
         if (!children) return null;
-        return children.map((child: NavigationResultEntryState, index: number) => {
+        const items = children.map((child: NavigationResultEntryState, index: number) => {
             const { idSystemObject, objectType, idObject, name, metadata, hierarchy } = child;
             let idSystemObjectParent: number = 0;
             if (parentNodeId) {
@@ -259,53 +313,6 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
             if (idSystemObject === -1)
                 return <TreeLabelLoading key={idSystemObject} />;
 
-            // non-root case for end of list
-            if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length && isChild) {
-                return (
-                    <InViewTreeItem
-                        id={nodeId}
-                        key={idSystemObject}
-                        nodeId={nodeId}
-                        icon={icon}
-                        color={color}
-                        label={label}
-                        childNodesContent={childNodesContent}
-                        triggerOnce
-                        onView={async () => {
-                            if (parentNodeId) {
-                                const parentCursor = cursors.get(parentNodeId);
-                                if (parentCursor && parentCursor.length) {
-                                    await getMoreChildren(parentNodeId, parentCursor);
-                                }
-                            }
-                        }}
-                    />
-                );
-            }
-
-            // root case for end of list
-            if ((index + 1 + repositoryRowPrefetchThreshold) % repositoryRowCount === 0 && index + 1 + repositoryRowPrefetchThreshold === children.length) {
-                return (
-                    <InViewTreeItem
-                        id={nodeId}
-                        key={idSystemObject}
-                        nodeId={nodeId}
-                        icon={icon}
-                        color={color}
-                        label={label}
-                        childNodesContent={childNodesContent}
-                        triggerOnce
-                        onView={async () => {
-                            const rootCursor = cursors.get('root');
-                            if (rootCursor && rootCursor.length) {
-                                await getMoreRoot();
-                            }
-                        }}
-                    />
-                );
-            }
-
-            // base case
             return (
                 <StyledTreeItem
                     id={nodeId}
@@ -319,6 +326,8 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                 </StyledTreeItem>
             );
         });
+
+        return items;
     };
 
     let content: React.ReactNode = <Loader maxWidth='85vw' minHeight='40vh' width='40vw' size={40} />;
@@ -339,6 +348,27 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                         {renderTree(children)}
                     </TreeView>
                 </div>
+                {showPager && (
+                    <div className={classes.pager}>
+                        <button className={classes.pagerButton} disabled={rootPage <= 1} onClick={() => setRootPage(rootPage - 1)}>Prev</button>
+                        <span className={classes.pagerLabel}>{`Page ${rootPage} of ${totalRootPages}`}</span>
+                        <button className={classes.pagerButton} disabled={rootPage >= totalRootPages} onClick={() => setRootPage(rootPage + 1)}>Next</button>
+                        <input
+                            className={classes.pagerInput}
+                            type='number'
+                            min={1}
+                            max={totalRootPages}
+                            placeholder='Go to'
+                            value={jumpValue}
+                            onChange={(e) => setJumpValue(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') goToPage(); }}
+                            onBlur={goToPage}
+                        />
+                        <select className={classes.pagerSelect} value={rootPageSize} onChange={(e) => setRootPageSize(Number(e.target.value))}>
+                            {ROOT_PAGE_SIZE_OPTIONS.map(size => <option key={size} value={size}>{`${size} / page`}</option>)}
+                        </select>
+                    </div>
+                )}
             </>
         );
     }

@@ -77,7 +77,13 @@ export class NavigationSolr implements NAV.INavigation {
             SQ = SQ.q('*:*');
             SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', id: 'asc' }); // sort by the object type enumeration, then by name, then by id (idSystemObject)
         }
-        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
+        // Root-level queries (no idRoots) use numbered offset pagination; drill-down queries
+        // keep cursor pagination for the child "Load more". Solr forbids start and cursorMark
+        // in the same request, so apply exactly one.
+        if (filter.idRoots.length === 0)
+            SQ = SQ.start(filter.start && filter.start > 0 ? filter.start : 0);
+        else
+            SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
 
         // idRoots: number[];                      // idSystemObject[] of items for which we should get children; empty means get everything
         if (filter.idRoots.length > 0) {          // objectsToDisplay: COMMON.eSystemObjectType[];  // objects to display
@@ -148,6 +154,8 @@ export class NavigationSolr implements NAV.INavigation {
 
         if (filter.rows > 0)
             SQ = SQ.rows(filter.rows);
+        else
+            SQ = SQ.rows(1000000); // rows <= 0 means "all" (per the NavigationFilter contract); Solr needs an explicit upper bound
 
         RK.logDebug(RK.LogSection.eNAV,'compute search query success',undefined,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
         return SQ;
@@ -279,7 +287,7 @@ export class NavigationSolr implements NAV.INavigation {
 
         // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.nextCursorMark },'Navigation.Solr');
-        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
+        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark, total: queryResult.result.numFound };
     }
 
     private computeNavMetadata(doc: any, metadataColumns: COMMON.eMetadata[]): string[] {

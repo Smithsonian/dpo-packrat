@@ -9,7 +9,7 @@ import { apolloClient } from '../../../graphql';
 import { GetObjectChildrenDocument, GetObjectChildrenQuery } from '../../../types/graphql';
 import { repositoryRowCount } from '@dpo-packrat/common';
 
-function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObjects: number[] = []): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
+function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObjects: number[] = [], start = 0, rows: number = repositoryRowCount): Promise<ApolloQueryResult<GetObjectChildrenQuery>> {
     return apolloClient.query({
         query: GetObjectChildrenDocument,
         fetchPolicy: 'network-only',
@@ -30,8 +30,9 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObjects: num
                 modelFileType: filter.modelFileType,
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
-                rows: repositoryRowCount,
-                cursorMark: filter.cursorMark ?? ''
+                rows,
+                cursorMark: filter.cursorMark ?? '',
+                start
             }
         }
     });
@@ -58,7 +59,7 @@ function getObjectChildren(idRoots: number[], filter: RepositoryFilter): Promise
                 modelFileType: filter.modelFileType,
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
-                rows: repositoryRowCount,
+                rows: 0, // load all children at once when a node is expanded (0 = all)
                 cursorMark: filter.cursorMark ?? ''
             }
         }
