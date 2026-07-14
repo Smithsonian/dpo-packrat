@@ -15,6 +15,7 @@ import SelectField from './controls/SelectField';
 import InputField from './controls/InputField';
 import DateInputField from './controls/DateInputField';
 import BreadcrumbsView from './shared/BreadcrumbsView';
+import NavTrailBreadcrumbs from './shared/NavTrailBreadcrumbs';
 import NewTabLink from './shared/NewTabLink';
 import EmptyTable from './shared/EmptyTable';
 import EnvBanner from './shared/EnvBanner';
@@ -41,6 +42,7 @@ export {
     InputField,
     DateInputField,
     BreadcrumbsView,
+    NavTrailBreadcrumbs,
     NewTabLink,
     EmptyTable,
     EnvBanner,

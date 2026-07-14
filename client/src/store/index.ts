@@ -16,6 +16,7 @@ export * from './identifier';
 export * from './license';
 export * from './detailTab';
 export * from './detailsEdit';
+export * from './navHistory';
 export * from './workflow';
 export * from './users';
 export * from './objectMetadata';

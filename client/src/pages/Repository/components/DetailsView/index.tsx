@@ -33,7 +33,8 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore, useDetailsEditStore } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore, useDetailsEditStore, useNavHistoryStore } from '../../../../store';
+import { getDetailsUrlForObject } from '../../../../utils/repository';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -198,6 +199,19 @@ function DetailsEditGuard({ dirty }: { dirty: boolean }): null {
             setDetailsDirty(false);
         };
     }, [setDetailsDirty]);
+
+    return null;
+}
+
+// Records the current object into the navigation-history trail (the "how you got
+// here" path shown as breadcrumbs). Keyed on the object id so each hop reconciles
+// the trail (append, or truncate-to-visited on Back/forward).
+function NavTrailRecorder({ idSystemObject, objectType, name }: { idSystemObject: number; objectType: number; name: string }): null {
+    const visit = useNavHistoryStore(state => state.visit);
+
+    useEffect(() => {
+        visit({ idSystemObject, objectType, name, url: getDetailsUrlForObject(idSystemObject) });
+    }, [idSystemObject, objectType, name, visit]);
 
     return null;
 }
@@ -1022,6 +1036,7 @@ function DetailsView(): React.ReactElement {
                     />
                 )}
                 <DetailsEditGuard dirty={hasAnyUnsaved} />
+                <NavTrailRecorder idSystemObject={idSystemObject} objectType={objectType} name={detailsResponse.name ?? ''} />
                 {hasAnyUnsaved && (
                     <Box className={classes.unsavedNotice}>
                         Unsaved changes — press <strong>Update</strong> to apply.
@@ -1033,7 +1048,6 @@ function DetailsView(): React.ReactElement {
                     name={details.name}
                     disabled={disabled || immutableNameTypes.has(objectType)}
                     objectType={objectType}
-                    path={objectAncestors}
                     onNameUpdate={onNameUpdate}
                 />
 

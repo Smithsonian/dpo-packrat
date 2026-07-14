@@ -81,8 +81,7 @@ function VoyagerStoryView(): React.ReactElement {
     }
 
     const {
-        objectType,
-        objectAncestors
+        objectType
     } = data.getSystemObjectDetails;
 
     // console.log(`VoyagerStoryView component (root: ${root} | document: ${document} | params: ${JSON.stringify(params)} | location: ${JSON.stringify(location)}})`);
@@ -95,7 +94,6 @@ function VoyagerStoryView(): React.ReactElement {
                     name={objectName}
                     disabled
                     objectType={objectType}
-                    path={objectAncestors}
                     onNameUpdate={() => {}}
                 />
 
