@@ -326,7 +326,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                                     <Typography className={classes.value}>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
                                 </Box>
                                 <Typography className={classes.value}>{' inherited from '}</Typography>
-                                <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
+                                <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`}>
                                     <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
                                 </NewTabLink>
                                 &nbsp;<Tooltip arrow title={ <ToolTip text={licenseNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>

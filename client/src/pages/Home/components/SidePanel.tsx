@@ -17,6 +17,8 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
+        flexShrink: 0,
+        overflowY: 'auto',
         backgroundColor: palette.primary.dark,
     },
     menuOptions: {

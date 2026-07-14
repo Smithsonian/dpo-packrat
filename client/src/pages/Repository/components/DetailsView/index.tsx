@@ -33,7 +33,8 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore, useDetailsEditStore, useNavHistoryStore } from '../../../../store';
+import { getDetailsUrlForObject } from '../../../../utils/repository';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -73,8 +74,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        width: 'fit-content',
+        minHeight: 0,
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
         flexDirection: 'column',
+        overflow: 'auto',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
@@ -84,12 +89,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     },
     content: {
         display: 'flex',
-        flex: 1,
+        flexShrink: 0,
+        boxSizing: 'border-box',
         flexDirection: 'column',
         padding: 20,
         marginBottom: 20,
         borderRadius: 10,
-        overflowY: 'auto',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
             padding: 10
@@ -171,6 +176,46 @@ type SceneGeneParameters = {
     decimationPasses: number
 };
 
+// Publishes the details view's unsaved state to the shared store so navigation
+// guards (Header, side nav, internal links) can prompt before edits are lost,
+// and warns on hard reload/close via beforeunload while edits are pending.
+function DetailsEditGuard({ dirty }: { dirty: boolean }): null {
+    const setDetailsDirty = useDetailsEditStore(state => state.setDetailsDirty);
+
+    useEffect(() => {
+        setDetailsDirty(dirty);
+    }, [dirty, setDetailsDirty]);
+
+    useEffect(() => {
+        const handler = (event: BeforeUnloadEvent): void => {
+            if (useDetailsEditStore.getState().isDetailsDirty) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => {
+            window.removeEventListener('beforeunload', handler);
+            setDetailsDirty(false);
+        };
+    }, [setDetailsDirty]);
+
+    return null;
+}
+
+// Records the current object into the navigation-history trail (the "how you got
+// here" path shown as breadcrumbs). Keyed on the object id so each hop reconciles
+// the trail (append, or truncate-to-visited on Back/forward).
+function NavTrailRecorder({ idSystemObject, objectType, name }: { idSystemObject: number; objectType: number; name: string }): null {
+    const visit = useNavHistoryStore(state => state.visit);
+
+    useEffect(() => {
+        visit({ idSystemObject, objectType, name, url: getDetailsUrlForObject(idSystemObject) });
+    }, [idSystemObject, objectType, name, visit]);
+
+    return null;
+}
+
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
@@ -234,9 +279,19 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
-    const hasUnsavedDetails = useDetailTabStore(s => s.hasUnsavedDetails);
+    const [hasUnsavedDetails, setHasUnsavedDetails] = useDetailTabStore(s => [s.hasUnsavedDetails, s.setHasUnsavedDetails]);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
     const [resetSpecialPending] = useUploadStore(state => [state.resetSpecialPending]);
+
+    // The shared unsaved-details flag lives in a single global store slot set by the
+    // active detail tab, so it can leak from one object to the next when a tab unmounts
+    // without clearing it (e.g. after browser Back, which the leave guard cannot
+    // intercept). Reset it whenever the viewed object changes so a freshly-loaded object
+    // starts clean; the mounted tab re-asserts it only on a real edit.
+    useEffect(() => {
+        setHasUnsavedDetails(false);
+        return () => setHasUnsavedDetails(false);
+    }, [idSystemObject, setHasUnsavedDetails]);
 
     const objectDetailsData = data;
     const fetchDetailTabDataAndSetState = async () => {
@@ -980,6 +1035,8 @@ function DetailsView(): React.ReactElement {
                         messageText={notice.messageText}
                     />
                 )}
+                <DetailsEditGuard dirty={hasAnyUnsaved} />
+                <NavTrailRecorder idSystemObject={idSystemObject} objectType={objectType} name={detailsResponse.name ?? ''} />
                 {hasAnyUnsaved && (
                     <Box className={classes.unsavedNotice}>
                         Unsaved changes — press <strong>Update</strong> to apply.
@@ -991,7 +1048,6 @@ function DetailsView(): React.ReactElement {
                     name={details.name}
                     disabled={disabled || immutableNameTypes.has(objectType)}
                     objectType={objectType}
-                    path={objectAncestors}
                     onNameUpdate={onNameUpdate}
                 />
 
@@ -1216,7 +1272,7 @@ function DetailsView(): React.ReactElement {
                 )}
                 {(uploadReferences && uploadReferences.idSOAttachment) && <SpecialUploadList uploadType={eIngestionMode.eAttach} onUploaderClose={onUploaderReset} idSOAttachment={uploadReferences?.idSOAttachment} idSO={idSystemObject} />}
 
-                <Box display='flex' flex={1} padding={2}>
+                <Box display='flex' padding={2}>
                     <DetailsThumbnail
                         thumbnail={thumbnail}
                         idSystemObject={idSystemObject}

@@ -34,13 +34,29 @@ const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 1,
-        width: 'fit-content',
+        height: '100%',
+        minHeight: 0,
         minWidth: '100%'
     },
     content: {
         display: 'flex',
-        flex: 1
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden'
+    },
+    scrollRegion: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'auto'
+    },
+    noticeSlot: {
+        // Mount point for page-level content notices; pinned to the top of the
+        // scroll region while the content beneath it scrolls.
+        position: 'sticky',
+        top: 0,
+        zIndex: 1
     }
 }));
 
@@ -89,7 +105,10 @@ function AppRouter(): React.ReactElement {
                     <Header />
                     <Box className={classes.content}>
                         <SidePanel isExpanded={sideBarExpanded} onToggle={onToggle} />
-                        <Home />
+                        <Box className={classes.scrollRegion}>
+                            <Box className={classes.noticeSlot} />
+                            <Home />
+                        </Box>
                     </Box>
                 </Box>
             </AliveScope>

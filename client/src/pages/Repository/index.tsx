@@ -11,8 +11,8 @@ import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect } from 'react';
 import { useLocation, useParams, Route, Routes } from 'react-router';
-import { REPOSITORY_ROUTE, resolveRoute } from '../../constants';
-import { useControlStore, useRepositoryStore } from '../../store';
+import { REPOSITORY_ROUTE, resolveRoute, HOME_ROUTES } from '../../constants';
+import { useControlStore, useRepositoryStore, useNavHistoryStore, NAV_ROOT_ID } from '../../store';
 import { eMetadata, eSystemObjectType } from '@dpo-packrat/common';
 import { generateRepositoryUrl, parseRepositoryUrl } from '../../utils/repository';
 import DetailsView from './components/DetailsView';
@@ -25,8 +25,9 @@ const useStyles = makeStyles(({ breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        width: 'fit-content',
+        width: '100%',
         maxWidth: '100%',
+        boxSizing: 'border-box',
         flexDirection: 'column',
         padding: 20,
         paddingBottom: 0,
@@ -34,8 +35,9 @@ const useStyles = makeStyles(({ breakpoints }) => ({
         [breakpoints.down('lg')]: {
             paddingRight: 20
         },
-        height: 'calc(100vh - 80px - var(--status-banner-height, 0px))',
-        overflowY: 'auto'
+        height: '100%',
+        minHeight: 0,
+        overflow: 'auto'
     }
 }));
 
@@ -78,6 +80,13 @@ function Repository(): React.ReactElement {
 function TreeViewPage(): React.ReactElement {
     const sideBarExpanded = useControlStore(state => state.sideBarExpanded);
     const classes = useStyles(sideBarExpanded);
+    const seedRoot = useNavHistoryStore(state => state.seedRoot);
+
+    // Entering the tree root starts a fresh navigation trail seeded with a
+    // "Repository" crumb, so drilling into objects reads as "Repository › … › here".
+    useEffect(() => {
+        seedRoot({ idSystemObject: NAV_ROOT_ID, objectType: 0, name: 'Repository', label: 'Repository', url: resolveRoute(HOME_ROUTES.REPOSITORY) });
+    }, [seedRoot]);
 
     const location = useLocation();
     const {

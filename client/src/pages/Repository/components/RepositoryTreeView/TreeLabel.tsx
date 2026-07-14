@@ -12,6 +12,7 @@ import lodash from 'lodash';
 import React, { useMemo, useState, useEffect } from 'react';
 import { FaCheckCircle, FaRegCircle } from 'react-icons/fa';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
+import { useNavigate } from 'react-router-dom';
 import { palette } from '../../../../theme';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import MetadataView, { TreeViewColumn } from './MetadataView';
@@ -35,19 +36,33 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
     const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color, nodeId } = props;
     const [waitTime, setWaitTime] = useState<NodeJS.Timeout[]>([]);
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
+    const navigate = useNavigate();
     const WAIT_INTERVAL_MS = 200;
     const onClick = async (e) => {
         e.stopPropagation();
-        // if there's already a click, that means we want to stop the timeout for that and just open a new tab
-        // otherwise just set a timer that'll expand the node in 200 ms
+        const url = getDetailsUrlForObject(idSystemObject);
+        // modifier-click opens the object in a new tab, like an anchor would
+        if (e.ctrlKey || e.metaKey) {
+            window.open(url, '_blank')?.focus();
+            return;
+        }
+        // second click within the interval opens the object in the same tab;
+        // a lone click starts a timer that expands the node in 200 ms
         if (waitTime.length) {
             clearTimeout(waitTime[0]);
             setWaitTime([]);
-            window.open(getDetailsUrlForObject(idSystemObject), '_blank')?.focus();
+            navigate(url);
             return;
         } else {
             const timer = setTimeout(() => { const target = document.getElementById(nodeId)?.firstChild as HTMLElement; target?.click(); }, WAIT_INTERVAL_MS);
             setWaitTime([timer]);
+        }
+    };
+    const onAuxClick = (e) => {
+        // middle-click opens the object in a new tab
+        if (e.button === 1) {
+            e.stopPropagation();
+            window.open(getDetailsUrlForObject(idSystemObject), '_blank')?.focus();
         }
     };
 
@@ -71,7 +86,7 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
                         </Box>
                     )}
                     <div className={makeStyles?.labelText} style={{ backgroundColor: color }}>
-                        <span title={objectTitle} onClick={onClick}>{label}</span>
+                        <span title={objectTitle} onClick={onClick} onAuxClick={onAuxClick}>{label}</span>
                     </div>
                 </div>
                 <MetadataView header={false} treeColumns={treeColumns} makeStyles={{ text: makeStyles?.text || '', column: makeStyles?.column || '' }} />

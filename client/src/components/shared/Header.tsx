@@ -14,7 +14,7 @@ import Logo from '../../assets/images/logo-packrat.square.png';
 import { generateRepositoryUrl } from '../../utils/repository';
 import { Selectors } from '../../config';
 import { HOME_ROUTES, resolveRoute, ROUTES } from '../../constants';
-import { useRepositoryStore, useUserStore } from '../../store';
+import { useRepositoryStore, useUserStore, confirmLeaveEdit } from '../../store';
 import { Colors } from '../../theme';
 import { confirmLeaveIngestion } from '../../pages/Ingestion';
 
@@ -22,6 +22,7 @@ const useStyles = makeStyles(({ palette, spacing, typography, breakpoints }) => 
     container: {
         display: 'flex',
         height: 60,
+        flexShrink: 0,
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0px 1.5rem',
@@ -135,8 +136,7 @@ function Header(): React.ReactElement {
     };
 
     const onClick = (e) => {
-        const leaveIngestion = confirmLeaveIngestion();
-        if (!leaveIngestion) e.preventDefault();
+        if (!confirmLeaveIngestion() || !confirmLeaveEdit()) e.preventDefault();
     };
 
     const isRepository = pathname.includes(HOME_ROUTES.REPOSITORY);
@@ -154,8 +154,7 @@ function Header(): React.ReactElement {
 
     // General search function when in different views
     const onSearch = (): void => {
-        const leaveIngestion = confirmLeaveIngestion();
-        if (!leaveIngestion) return;
+        if (!confirmLeaveIngestion() || !confirmLeaveEdit()) return;
 
         const route: string = resolveRoute(HOME_ROUTES.REPOSITORY);
         resetRepositoryFilter();

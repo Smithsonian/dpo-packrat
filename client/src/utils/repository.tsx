@@ -227,8 +227,7 @@ export function getObjectInterfaceDetails(objectType: eSystemObjectType, variant
         <a
             href={getDetailsUrlForObject(idSystemObject)}
             onClick={event => event.stopPropagation()}
-            target='_blank'
-            rel='noopener noreferrer'
+            target='_self'
             aria-label={`link to view system object of id ${idSystemObject}`}
             style={{ textDecoration: 'none', color: 'black' }}
         >

@@ -10,8 +10,8 @@ import { fade, makeStyles } from '@material-ui/core/styles';
 import React from 'react';
 import { DebounceInput } from 'react-debounce-input';
 import { Helmet } from 'react-helmet';
-import { BreadcrumbsView } from '../../../../components';
-import { GetSystemObjectDetailsResult, RepositoryPath } from '../../../../types/graphql';
+import { NavTrailBreadcrumbs } from '../../../../components';
+import { GetSystemObjectDetailsResult } from '../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { getTermForSystemObjectType, isFieldUpdated } from '../../../../utils/repository';
 
@@ -36,14 +36,13 @@ const useStyles = makeStyles(({ palette }) => ({
 interface DetailsHeaderProps {
     originalFields: GetSystemObjectDetailsResult;
     objectType: eSystemObjectType;
-    path: RepositoryPath[][];
     name?: string | null;
     disabled: boolean;
     onNameUpdate: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
-    const { objectType, path, name, onNameUpdate, disabled, originalFields } = props;
+    const { objectType, name, onNameUpdate, disabled, originalFields } = props;
     const updated: boolean = isFieldUpdated({ name }, originalFields, 'name');
 
     const classes = useStyles(updated);
@@ -63,7 +62,7 @@ function DetailsHeader(props: DetailsHeaderProps): React.ReactElement {
                 <DebounceInput title='object name' element='input' disabled={disabled} value={name || ''} className={classes.name} name='name' onChange={onNameUpdate} debounceTimeout={400} />
             </Box>
             <Box display='flex' flex={3} justifyContent='flex-end'>
-                {!!path.length && <BreadcrumbsView highlighted items={path} />}
+                <NavTrailBreadcrumbs />
             </Box>
         </Box>
     );
