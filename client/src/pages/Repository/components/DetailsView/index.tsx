@@ -33,7 +33,7 @@ import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore, useDetailsEditStore } from '../../../../store';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -175,6 +175,33 @@ type SceneGeneParameters = {
     decimationPasses: number
 };
 
+// Publishes the details view's unsaved state to the shared store so navigation
+// guards (Header, side nav, internal links) can prompt before edits are lost,
+// and warns on hard reload/close via beforeunload while edits are pending.
+function DetailsEditGuard({ dirty }: { dirty: boolean }): null {
+    const setDetailsDirty = useDetailsEditStore(state => state.setDetailsDirty);
+
+    useEffect(() => {
+        setDetailsDirty(dirty);
+    }, [dirty, setDetailsDirty]);
+
+    useEffect(() => {
+        const handler = (event: BeforeUnloadEvent): void => {
+            if (useDetailsEditStore.getState().isDetailsDirty) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => {
+            window.removeEventListener('beforeunload', handler);
+            setDetailsDirty(false);
+        };
+    }, [setDetailsDirty]);
+
+    return null;
+}
+
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
@@ -238,9 +265,19 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
-    const hasUnsavedDetails = useDetailTabStore(s => s.hasUnsavedDetails);
+    const [hasUnsavedDetails, setHasUnsavedDetails] = useDetailTabStore(s => [s.hasUnsavedDetails, s.setHasUnsavedDetails]);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
     const [resetSpecialPending] = useUploadStore(state => [state.resetSpecialPending]);
+
+    // The shared unsaved-details flag lives in a single global store slot set by the
+    // active detail tab, so it can leak from one object to the next when a tab unmounts
+    // without clearing it (e.g. after browser Back, which the leave guard cannot
+    // intercept). Reset it whenever the viewed object changes so a freshly-loaded object
+    // starts clean; the mounted tab re-asserts it only on a real edit.
+    useEffect(() => {
+        setHasUnsavedDetails(false);
+        return () => setHasUnsavedDetails(false);
+    }, [idSystemObject, setHasUnsavedDetails]);
 
     const objectDetailsData = data;
     const fetchDetailTabDataAndSetState = async () => {
@@ -984,6 +1021,7 @@ function DetailsView(): React.ReactElement {
                         messageText={notice.messageText}
                     />
                 )}
+                <DetailsEditGuard dirty={hasAnyUnsaved} />
                 {hasAnyUnsaved && (
                     <Box className={classes.unsavedNotice}>
                         Unsaved changes — press <strong>Update</strong> to apply.

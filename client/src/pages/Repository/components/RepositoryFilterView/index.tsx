@@ -13,6 +13,7 @@ import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { FiLink2 } from 'react-icons/fi';
 import { IoIosRemoveCircle } from 'react-icons/io';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 import { Loader } from '../../../../components';
 import { useRepositoryStore, useVocabularyStore } from '../../../../store';
 import { Colors, palette } from '../../../../theme';
@@ -119,6 +120,7 @@ function RepositoryFilterView(): React.ReactElement {
     const [units, projects, has, missing, captureMethod, variantType, modelPurpose, modelFileType, dateCreatedFrom, dateCreatedTo, isExpanded, repositoryBrowserRootObjectType, repositoryBrowserRootName, repositoryRootType] = useRepositoryStore(state => [state.units, state.projects, state.has, state.missing, state.captureMethod, state.variantType, state.modelPurpose, state.modelFileType, state.dateCreatedFrom, state.dateCreatedTo, state.isExpanded, state.repositoryBrowserRootObjectType, state.repositoryBrowserRootName, state.repositoryRootType]);
     const [toggleFilter, removeChipOption, initializeFilterPosition] = useRepositoryStore(state => [state.toggleFilter, state.removeChipOption, state.initializeFilterPosition]);
     const [getEntries, getVocabularyTerm] = useVocabularyStore(state => [state.getEntries, state.getVocabularyTerm]);
+    const navigate = useNavigate();
     const classes = useStyles(isExpanded);
     const { href: url } = window.location;
     let isModal: boolean = false;
@@ -213,8 +215,18 @@ function RepositoryFilterView(): React.ReactElement {
                     const { id, type, name } = chip;
                     const label: string = `${getTermForRepositoryFilterType(type)}: ${name}`;
 
-                    const onClick = () => {
-                        window.open(getDetailsUrlForObject(id), '_blank');
+                    const url = getDetailsUrlForObject(id);
+                    const onClick = (e: React.MouseEvent) => {
+                        // modifier-click opens the object in a new tab; a plain click navigates in the same tab
+                        if (e.ctrlKey || e.metaKey)
+                            window.open(url, '_blank');
+                        else
+                            navigate(url);
+                    };
+                    const onAuxClick = (e: React.MouseEvent) => {
+                        // middle-click opens the object in a new tab
+                        if (e.button === 1)
+                            window.open(url, '_blank');
                     };
 
                     // if it's not a project or unit (i.e. no idSystemObject), we don't want the link to work
@@ -226,6 +238,7 @@ function RepositoryFilterView(): React.ReactElement {
                             deleteIcon={<IoIosRemoveCircle color={palette.primary.contrastText} />}
                             className={classes.chip}
                             onClick={onClick}
+                            onAuxClick={onAuxClick}
                             onDelete={() => removeChipOption(id, type, isModal)}
                             variant='outlined'
                         />

@@ -177,7 +177,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             if(key==='published') {
                 publishedNotes = row.notes;
                 if(objectData.publishedUrl && objectData.publishedUrl.length>0)
-                    publishedNotes += ` (<a href='${objectData.publishedUrl}'><b>Link</b></a>)`;
+                    publishedNotes += ` (<a href='${objectData.publishedUrl}' target='_blank' rel='noopener noreferrer'><b>Link</b></a>)`;
             }
 
             return {

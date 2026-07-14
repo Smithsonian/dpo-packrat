@@ -12,6 +12,7 @@ import { HOME_ROUTES, resolveRoute } from '../../../constants';
 import { Colors } from '../../../theme';
 import { Link } from 'react-router-dom';
 import { confirmLeaveIngestion } from '../../Ingestion';
+import { confirmLeaveEdit } from '../../../store';
 
 const useStyles = makeStyles(({ palette, spacing, breakpoints }) => createStyles({
     container: {
@@ -79,8 +80,7 @@ function SidePanelOption(props: SidePanelOptionProps): React.ReactElement {
 
     const classes = useStyles(props);
     const onClick = (e) => {
-        const leaveIngestion = confirmLeaveIngestion();
-        if (!leaveIngestion) e.preventDefault();
+        if (!confirmLeaveIngestion() || !confirmLeaveEdit()) e.preventDefault();
     };
 
     return (
