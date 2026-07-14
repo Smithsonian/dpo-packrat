@@ -534,7 +534,7 @@ export enum eWorkflowListSortColumns {
 
 export const authenticationFailureMessage: string = 'GraphQL user is not authenticated';
 
-export const repositoryRowCount = 300;
+export const repositoryRowCount = 50;
 
 // Single source of truth mapping a file's extension to a coarse category, used to reason about which
 // asset type(s) an uploaded package is compatible with. This is intentionally separate from the

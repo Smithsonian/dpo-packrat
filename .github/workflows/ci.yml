@@ -26,12 +26,13 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.9.0
+          cache: 'yarn'
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --network-timeout 600000
 
       - name: Install E2E dependencies
-        run: cd e2e && yarn install --frozen-lockfile && cd ..
+        run: cd e2e && yarn install --frozen-lockfile --network-timeout 600000 && cd ..
 
       - name: Check for lint errors
         run: yarn lint
@@ -71,6 +72,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.9.0
+          cache: 'yarn'
 
       # Disabled: ubuntu-latest already ships a modern git, and apt-add-repository
       # reaches api.launchpad.net which has been timing out from GitHub-hosted runners
@@ -80,11 +82,11 @@ jobs:
 
       # Install dependencies in CI mode
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --network-timeout 600000
 
       # Install E2E dependencies in CI mode
       - name: Install E2E dependencies
-        run: cd e2e && yarn install --frozen-lockfile && cd ..
+        run: cd e2e && yarn install --frozen-lockfile --network-timeout 600000 && cd ..
 
       # Run tests using test DB
       - name: Run Tests

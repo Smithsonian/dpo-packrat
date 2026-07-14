@@ -772,6 +772,7 @@ input GetObjectChildrenInput {
   projects: [Int!]!
   rows: Int!
   search: String!
+  start: Int
   units: [Int!]!
   variantType: [Int!]!
 }
@@ -782,6 +783,7 @@ type GetObjectChildrenResult {
   error: String
   metadataColumns: [Int!]!
   success: Boolean!
+  total: Int
 }
 
 input GetObjectsForItemInput {

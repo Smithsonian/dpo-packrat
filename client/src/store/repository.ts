@@ -21,20 +21,15 @@ export interface NavigationResultEntryState extends NavigationResultEntry {
     hierarchy?: string;
 }
 
-const loadingEntry: NavigationResultEntryState = {
-    idSystemObject: -1,
-    idObject: 0,
-    name: 'Loading...',
-    objectType: 1,
-    metadata: []
-};
-
 type RepositoryStore = {
     isExpanded: boolean;
     search: string;
     keyword: string;
     tree: Map<string, NavigationResultEntryState[]>;
     cursors: Map<string, string>;
+    rootPage: number;                         // 1-based page index of the top-level (root) objects
+    rootPageSize: number;                     // number of root objects per page (user-selectable)
+    rootTotal: number;                        // total count of root objects (Solr numFound) for pager math
     loading: boolean;
     expandedCount: number;
     updateSearch: (value: string) => void;
@@ -61,10 +56,10 @@ type RepositoryStore = {
     resetRepositoryFilter: (modifyCookie?: boolean, keepMetadata?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
-    getMoreRoot: () => Promise<void>;
+    setRootPage: (page: number) => Promise<void>;
+    setRootPageSize: (size: number) => Promise<void>;
     getChildren: (nodeId: string) => Promise<void>;
     deleteChildren: (nodeId: string) => Promise<void>;
-    getMoreChildren: (nodeId: string, cursorMark: string) => Promise<void>;
     updateRepositoryFilter: (filter: RepositoryFilter, isModal: boolean) => void;
     setCookieToState: () => void;
     setDefaultIngestionFilters: (systemObjectType: eSystemObjectType, idRoots: number[], displayOverride?: { repositoryRootType: eSystemObjectType[]; objectsToDisplay: eSystemObjectType[] }) => Promise<void>;
@@ -85,6 +80,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     keyword: '',
     tree: new Map<string, NavigationResultEntryState[]>([[treeRootKey, []]]),
     cursors: new Map<string, string>(),
+    rootPage: 1,
+    rootPageSize: 25,
+    rootTotal: 0,
     loading: true,
     expandedCount: 0,
     repositoryRootType: [],
@@ -105,7 +103,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     repositoryBrowserRootName: null,
     updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean): void => {
         const { initializeTree, setCookieToState, keyword } = get();
-        set({ [name]: value, loading: true, search: keyword });
+        // A filter change re-queries from the first page of roots.
+        set({ [name]: value, loading: true, search: keyword, rootPage: 1 });
         if (!isModal) setCookieToState();
 
         initializeTree();
@@ -119,12 +118,14 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         set({ isExpanded: !isExpanded });
     },
     initializeTree: async (): Promise<void> => {
-        const { getFilterState, getChildrenForIngestion, idRoots } = get();
+        const { getFilterState, getChildrenForIngestion, idRoots, rootPage, rootPageSize } = get();
         const filter = getFilterState();
         if (idRoots && idRoots.length > 0) {
             getChildrenForIngestion(idRoots);
         } else {
-            const { data, error } = await getObjectChildrenForRoot(filter);
+            // Root level uses numbered offset pagination: load exactly one page of roots.
+            const start = (rootPage - 1) * rootPageSize;
+            const { data, error } = await getObjectChildrenForRoot(filter, [], start, rootPageSize);
             if (data && !error) {
                 const { getObjectChildren } = data;
                 if (getObjectChildren.success === false) {
@@ -132,47 +133,26 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                     set({ loading: false });
                     return;
                 }
-                const { entries, cursorMark } = getObjectChildren;
-                const newCursors = new Map<string, string>();
-                if (cursorMark)
-                    newCursors.set(treeRootKey, cursorMark);
-                set({ cursors: newCursors });
+                const { entries, total } = getObjectChildren;
 
                 const updatedTree: Map<string, NavigationResultEntryState[]> = new Map();
                 updatedTree.set(treeRootKey, entries);
-                set({ tree: updatedTree, loading: false, expandedCount: 0 });
+                // Changing the root page resets the tree: drop prior pages' children and cursors.
+                set({ tree: updatedTree, cursors: new Map<string, string>(), rootTotal: total ?? 0, loading: false, expandedCount: 0 });
             }
         }
     },
-    getMoreRoot: async (): Promise<void> => {
-        const { tree, cursors, getFilterState } = get();
-        const filter = getFilterState();
-        const rootCursor = cursors.get(treeRootKey);
-
-        const treeCopy = new Map(tree);
-        const rootWithoutLoader = treeCopy.get(treeRootKey) ?? [];
-        const rootWithLoader = [...rootWithoutLoader, loadingEntry] as NavigationResultEntryState[];
-        treeCopy.set(treeRootKey, rootWithLoader);
-        set({ tree: treeCopy });
-
-        if (rootCursor) {
-            filter.cursorMark = rootCursor;
-        }
-        const { data, error } = await getObjectChildrenForRoot(filter);
-        if (data && !error) {
-            const { getObjectChildren } = data;
-            const { entries, cursorMark } = getObjectChildren;
-            const newCursors = new Map(cursors);
-            if (cursorMark && cursorMark !== rootCursor)
-                newCursors.set(treeRootKey, cursorMark);
-            else
-                newCursors.delete(treeRootKey);
-            set({ cursors: newCursors });
-
-            const updatedNode = rootWithoutLoader.concat(entries) as NavigationResultEntryState[];
-            treeCopy.set(treeRootKey, updatedNode);
-            set({ tree: treeCopy, loading: false });
-        }
+    setRootPage: async (page: number): Promise<void> => {
+        // Switching root pages tears down the current page (bounding mounted DOM) and loads the new one.
+        set({ rootPage: page, loading: true, tree: new Map<string, NavigationResultEntryState[]>([[treeRootKey, []]]), cursors: new Map<string, string>() });
+        get().setCookieToState();
+        await get().initializeTree();
+    },
+    setRootPageSize: async (size: number): Promise<void> => {
+        // Changing the page size restarts at page 1 with the new size and rebuilds the tree.
+        set({ rootPageSize: size, rootPage: 1, loading: true, tree: new Map<string, NavigationResultEntryState[]>([[treeRootKey, []]]), cursors: new Map<string, string>() });
+        get().setCookieToState();
+        await get().initializeTree();
     },
     getChildren: async (nodeId: string): Promise<void> => {
         const { tree, getFilterState, cursors } = get();
@@ -209,44 +189,6 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             updatedTree.delete(nodeId);
             // console.log('deleteChildren', updatedTree);
             set({ tree: updatedTree });
-        }
-    },
-    getMoreChildren: async (nodeId: string, cursorMark: string): Promise<void> => {
-        const { tree, cursors, getFilterState } = get();
-        const filter = getFilterState();
-        const { idSystemObject, hierarchy } = parseRepositoryTreeNodeId(nodeId);
-
-        const treeCopy = new Map(tree);
-        const nodeWithoutLoader = treeCopy.get(nodeId) ?? [];
-        const nodeWithLoader = [...nodeWithoutLoader, loadingEntry] as NavigationResultEntryState[];
-        treeCopy.set(nodeId, nodeWithLoader);
-        set({ tree: treeCopy });
-
-        if (cursorMark) filter.cursorMark = cursorMark;
-        const { data, error } = await getObjectChildren([idSystemObject], filter);
-        if (data && !error) {
-            const { getObjectChildren } = data;
-            const { entries, cursorMark } = getObjectChildren;
-
-            const uniqueEntries = entries.map((entry) => {
-                const entryCopy: NavigationResultEntryState = { ...entry };
-                entryCopy.hierarchy = (hierarchy ? hierarchy + '|' : '') + entryCopy.idSystemObject.toString();
-                return entryCopy;
-            });
-
-            const updatedNode = nodeWithoutLoader.concat(uniqueEntries) as NavigationResultEntryState[];
-            treeCopy.set(nodeId, updatedNode);
-
-            set({ tree: treeCopy });
-            if (cursorMark) {
-                const newCursors = cursors;
-                if (cursorMark !== cursors.get(nodeId)) {
-                    newCursors.set(nodeId, cursorMark);
-                } else {
-                    newCursors.delete(nodeId);
-                }
-                set({ cursors: newCursors });
-            }
         }
     },
     removeChipOption: (id: number, type: eRepositoryChipFilterType, isModal: boolean): void => {
@@ -318,7 +260,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 break;
             }
         }
-        set({ search: keyword, loading: true });
+        set({ search: keyword, loading: true, rootPage: 1 });
         if (!isModal) setCookieToState();
 
         initializeTree();
@@ -360,6 +302,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
                 // dateCreatedTo: filter.dateCreatedTo,
             };
             set(stateValues);
+            // Restore the page/size from a persisted URL/cookie state; a fresh filter (no page) starts at page 1.
+            set({ rootPage: filter.rootPage ?? 1, rootPageSize: filter.rootPageSize ?? get().rootPageSize });
 
             if (filter.idRoots && filter.idRoots.length > 0) {
                 const { data: { getSystemObjectDetails: { name, objectType } } } = await apolloClient.query({
@@ -397,7 +341,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             repositoryBrowserRootObjectType: null,
             repositoryBrowserRootName: null
         };
-        set({ ...stateValues, cursors: new Map<string, string>(), loading: true });
+        set({ ...stateValues, cursors: new Map<string, string>(), rootPage: 1, rootTotal: 0, loading: true });
         if (modifyCookie) {
             setCookieToState();
         }
@@ -445,7 +389,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
         };
     },
     setCookieToState: (): void => {
-        const { getFilterState } = get();
+        const { getFilterState, rootPage, rootPageSize } = get();
         const {
             repositoryRootType,
             objectsToDisplay,
@@ -476,7 +420,9 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             dateCreatedFrom,
             dateCreatedTo,
-            idRoots
+            idRoots,
+            rootPage,
+            rootPageSize
         };
         // 20 years
         document.cookie = `filterSelections=${JSON.stringify(currentFilterState)};path=/;max-age=630700000`;

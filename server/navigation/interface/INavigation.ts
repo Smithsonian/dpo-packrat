@@ -19,6 +19,7 @@ export type NavigationFilter = {
     dateCreatedTo: Date | null;             // Date Created filter
     rows: number;                           // max result row count; a value of 0 means "all"
     cursorMark: string;                     // a non-empty value indicates a cursor position through a set of result values, used to request the next set of values
+    start?: number;                         // offset (Solr start) for numbered root-level pagination; used instead of cursorMark for root-level queries (idRoots empty)
 };
 
 export type NavigationResultEntry = {
@@ -35,6 +36,7 @@ export type NavigationResult = {
     entries: NavigationResultEntry[];
     metadataColumns: COMMON.eMetadata[];
     cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the NavigationFilter.cursorMark
+    total?: number | null;                  // total matching row count (Solr numFound), used to compute the number of numbered root pages
 };
 
 export type MetadataFilter = {
