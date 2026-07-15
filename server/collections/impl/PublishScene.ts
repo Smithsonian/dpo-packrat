@@ -83,16 +83,16 @@ export class PublishScene {
         return resourceMap;
     }
 
-    async publish(ICol: COL.ICollection, ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {
+    async publish(ICol: COL.ICollection, ePublishedStateIntended: COMMON.ePublishedState): Promise<H.IOResults> {
         if (!this.analyzed) {
             const result: boolean = await this.analyze(ePublishedStateIntended);
             if (!result)
-                return false;
+                return { success: false, error: 'Scene could not be analyzed for publishing' };
         }
 
         if (!this.scene || !this.subject) {
             RK.logError(RK.LogSection.eCOLL,'publish failed','cannot publish. no scene/subject',{ scene: this.scene, subject: this.subject },'Publish.Scene');
-            return false;
+            return { success: false, error: 'Cannot publish: the scene has no associated subject' };
         }
 
         // fill any missing title metadata into the scene document so it carries the title EDAN reads;
@@ -102,7 +102,7 @@ export class PublishScene {
         // stage scene
         if (!await this.stageSceneFiles() || !this.sharedName) {
             RK.logError(RK.LogSection.eCOLL,'publish failed','cannot stage files',{ scene: this.scene, sharedName: this.sharedName },'Publish.Scene');
-            return false;
+            return { success: false, error: 'Could not stage the scene files for publishing' };
         }
 
         // create EDAN 3D Package for our scene and push to EDAN (un-published state)
@@ -110,7 +110,7 @@ export class PublishScene {
         let edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(this.sharedName, this.sceneFile);
         if (!edanRecord) {
             RK.logError(RK.LogSection.eCOLL,'publish failed','create EDAN package failed',{ scene: this.scene, sharedName: this.sharedName },'Publish.Scene');
-            return false;
+            return { success: false, error: 'Could not create the EDAN 3D package' };
         }
         RK.logInfo(RK.LogSection.eCOLL,'publish sucess','3D package published to EDAN',{ status: edanRecord.status, publicSearch: edanRecord.publicSearch, resources: this.edan3DResourceList?.length ?? 0, path: this.sharedName },'Publish.Scene');
 
@@ -118,7 +118,7 @@ export class PublishScene {
         // this determines whether we should stage downloads to the hot folder
         const LR: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(this.idSystemObject);
         if (!await this.updatePublishedState(LR, ePublishedStateIntended))
-            return false;
+            return { success: false, error: 'Could not update the scene\'s published state on EDAN' };
         const media_usage: COL.EdanLicenseInfo = EdanCollection.computeLicenseInfo(LR?.License?.Name); // eslint-disable-line camelcase
 
         // figure out our flags for the package so we have the correct visibility within EDAN
@@ -129,7 +129,7 @@ export class PublishScene {
         if (downloads) {
             if (!await this.stageDownloads() || !this.edan3DResourceList) {
                 RK.logError(RK.LogSection.eCOLL,'publish failed','failed to stage downloads',{ count: this.edan3DResourceList?.length ?? -1 },'Publish.Scene');
-                return false;
+                return { success: false, error: 'Could not stage the scene downloads' };
             }
         } else {
             this.edan3DResourceList = [];
@@ -162,7 +162,7 @@ export class PublishScene {
             edanRecord = await ICol.updateEdan3DPackage(edanRecord.url, edanRecord.title, E3DPackage, status, publicSearch);
             if (!edanRecord) {
                 RK.logError(RK.LogSection.eCOLL,'publish failed','EDAN package update failed',{ edanPackage: E3DPackage },'Publish.Scene');
-                return false;
+                return { success: false, error: 'The EDAN package update failed' };
             }
         }
 
@@ -172,11 +172,13 @@ export class PublishScene {
         // the subject's EDAN record / EDAN Record ID and republishing — but it is flagged so it is not
         // missed. This is the authoritative check: it reads EDAN's own output over the publishing API.
         const publishedTitle: string = (edanRecord.title ?? '').trim();
-        if (!publishedTitle || publishedTitle.startsWith(':'))
+        if (!publishedTitle || publishedTitle.startsWith(':')) {
             RK.logError(RK.LogSection.eCOLL,'publish','EDAN returned a malformed title; the subject EDAN record was likely not resolved',{ publishedTitle, UUID: this.scene.EdanUUID, idSubject: this.subject.idSubject },'Publish.Scene');
+            return { success: false, error: 'EDAN record for the subject could not be resolved' };
+        }
 
         RK.logInfo(RK.LogSection.eCOLL,'publish EDAN package success',undefined,{ UUID: this.scene.EdanUUID, status: COMMON.ePublishedState[status], publicSearch, downloads, haveDownloads, publishedTitle },'Publish.Scene');
-        return true;
+        return { success: true };
     }
 
     static async extractSceneMetadata(idSystemObject: number, idUser: number | null): Promise<H.IOResults> {

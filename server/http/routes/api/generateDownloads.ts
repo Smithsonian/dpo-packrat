@@ -246,7 +246,7 @@ const publishScene = async (response: GenDownloadsResponse, intendedState: COMMO
 
         // get our collection and publish the id with the same state
         const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-        const success: boolean = await ICol.publish(response.id, intendedState);
+        const success: boolean = (await ICol.publish(response.id, intendedState)).success;
         if (success===false) {
             RK.logError(RK.LogSection.eHTTP,'publish scene failed',response.message,{ id: response.id, intendedState: COMMON.ePublishedState[intendedState] },'HTTP.Route.GenDownloads');
             return;

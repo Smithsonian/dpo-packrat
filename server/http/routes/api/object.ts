@@ -26,11 +26,11 @@ type ProjectResponse = {
 type FieldStatus = {
     name: string,
     status: string,
-    level: 'pass' | 'fail' | 'warn' | 'critical',
+    level: 'pass' | 'fail' | 'warn' | 'critical' | 'info',
     notes: string
 };
 
-const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
+const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string): FieldStatus => {
     return { name, status, level, notes };
 };
 const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
@@ -110,7 +110,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     RK.profileEnd(profileKey);
 
     // helpers for determining state
-    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
+    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string): FieldStatus => {
         return { name, status, level, notes };
     };
     const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
@@ -356,7 +356,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             if(licenseAllows===true)
                 return formatResultField(name,'Found','pass','all generated downloads found for scene and will be published');
             else
-                return formatResultField(name,'Found','warn','license does not allow for downloads. they <b><u>WILL NOT</u></b> be published.');
+                return formatResultField(name,'Found','info','downloads exist but the license does not use them, so they <b><u>will not</u></b> be published. No action needed.');
         } else if(status === 'Missing') {
             // downloads are actually missing (count < 6)
             if(licenseAllows===true)

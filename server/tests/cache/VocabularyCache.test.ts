@@ -344,6 +344,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded: testVocabulary(vocabulary, 'Embedded'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive:   testVocabulary(vocabulary, 'Live'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther:  testVocabulary(vocabulary, 'Other'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationNone:   testVocabulary(vocabulary, 'None'); break;
 
                     case COMMON.eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested COMMON.eVocabularyID enum ${COMMON.eVocabularyID[eVocabID]}`).toBeFalsy(); break;

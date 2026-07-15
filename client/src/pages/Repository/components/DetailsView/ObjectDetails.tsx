@@ -15,6 +15,7 @@ import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useD
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 import { ToolTip } from '../../../../components';
 import { HelpOutline } from '@material-ui/icons';
@@ -245,7 +246,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             toast.success(`${action} succeeded`);
             onPublishUpdate?.();
         } else
-            toast.error(`${action} failed: ${data?.publish?.message}`);
+            toastError(data?.publish, `${action} failed`);
 
         setLoading(false);
     };
