@@ -33,16 +33,16 @@ async function unpublishScene(idSystemObject: number): Promise<UnpublishResult> 
     const prevState: COMMON.ePublishedState | null = SOVPrior ? SOVPrior.publishedStateEnum() : null;
 
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-    let ok: boolean;
+    let res: H.IOResults;
     try {
-        ok = await ICol.publish(idSystemObject, COMMON.ePublishedState.eNotPublished);
+        res = await ICol.publish(idSystemObject, COMMON.ePublishedState.eNotPublished);
     } catch (error) {
         RK.logError(RK.LogSection.eCOLL, 'retire unpublish', 'EDAN unpublish threw',
             { idSystemObject, error: H.Helpers.getErrorString(error) }, 'ObjectAction.Retire');
         return { success: false, error: H.Helpers.getErrorString(error) };
     }
-    if (!ok)
-        return { success: false, error: 'EDAN unpublish failed' };
+    if (!res.success)
+        return { success: false, error: res.error ?? 'EDAN unpublish failed' };
 
     await withAuditTransaction(async () => {
         await AuditFactory.emitSemantic({

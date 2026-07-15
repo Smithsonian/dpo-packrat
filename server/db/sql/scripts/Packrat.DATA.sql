@@ -284,6 +284,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 1, 'Microm
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 2, 'Millimeter');
 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (37, 'CaptureDataVolume.SpecimenPreparation', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 0, 'None');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 1, 'Fluid-preserved');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 2, 'Dry');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 3, 'Stained');

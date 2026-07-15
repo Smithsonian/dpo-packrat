@@ -7,6 +7,7 @@ import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 import { eAuditType } from '../../../../../db/api/ObjectType';
+import * as H from '../../../../../utils/helpers';
 
 export default async function publish(_: Parent, args: MutationPublishArgs): Promise<PublishResult> {
     const {
@@ -29,7 +30,8 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     // captures whether the EDAN call succeeded; the SystemObjectVersion update
     // it performs writes its own audit row through the standard DBObject path.
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-    const success: boolean = await ICol.publish(idSystemObject, eState);
+    const publishRes: H.IOResults = await ICol.publish(idSystemObject, eState);
+    const success: boolean = publishRes.success;
     if (success) {
         const isUnpublish: boolean = eState === COMMON.ePublishedState.eNotPublished;
         // Wrap only the semantic emit so the audit row inherits deadlock retry
@@ -49,5 +51,5 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
         });
         return { success, eState };
     }
-    return { success, message: 'Error encountered during publishing' };
+    return { success, message: publishRes.error ?? 'Error encountered during publishing' };
 }

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { EdanMDMContent, Edan3DPackageContent, EdanRecord }  from './EdanSchemas';
+import * as H from '../../utils/helpers';
 
 export type CollectionQueryResultRecord = {
     name: string;
@@ -48,7 +49,7 @@ export type CollectionQueryOptions = {
 export interface ICollection {
     queryCollection(query: string, rows: number, start: number, options: CollectionQueryOptions | null): Promise<CollectionQueryResults | null>;
     fetchContent(id?: string, url?: string): Promise<EdanRecord | null>;
-    publish(idSystemObject: number, ePublishState: number): Promise<boolean>;
+    publish(idSystemObject: number, ePublishState: number): Promise<H.IOResults>;
     createEdanMDM(edanmdm: EdanMDMContent, status: number, publicSearch: boolean): Promise<EdanRecord | null>;
     createEdan3DPackage(path: string, sceneFile?: string | undefined): Promise<EdanRecord | null>;
     updateEdan3DPackage(url: string, title: string | undefined, sceneContent: Edan3DPackageContent,

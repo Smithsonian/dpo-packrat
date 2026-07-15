@@ -171,7 +171,7 @@ export class EdanCollection implements COL.ICollection {
         return jsonResult;
     }
 
-    async publish(idSystemObject: number, ePublishState: number): Promise<boolean> {
+    async publish(idSystemObject: number, ePublishState: number): Promise<H.IOResults> {
 
         RK.logDebug(RK.LogSection.eCOLL,'publish',undefined,{ idSystemObject, publishState: COMMON.ePublishedState[ePublishState] },'Collection.EDAN');
 
@@ -183,13 +183,13 @@ export class EdanCollection implements COL.ICollection {
                 break;
             default:
                 RK.logError(RK.LogSection.eCOLL,'publish failed','called with invalid ePublishState for idSystemObject',{ idSystemObject, publishState: COMMON.ePublishedState[ePublishState] },'Collection.EDAN');
-                return false;
+                return { success: false, error: 'Invalid publish state requested' };
         }
 
         const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
         if (!oID) {
             RK.logError(RK.LogSection.eCOLL,'publish failed','unable to compute object id and type',{ idSystemObject, publishState: COMMON.ePublishedState[ePublishState] },'Collection.EDAN');
-            return false;
+            return { success: false, error: 'Could not resolve the object to publish' };
         }
 
         switch (oID.eObjectType) {
@@ -199,11 +199,10 @@ export class EdanCollection implements COL.ICollection {
             }
             case COMMON.eSystemObjectType.eSubject: {
                 const PS: PublishSubject = new PublishSubject(idSystemObject);
-                const PSRes: H.IOResults = await PS.publish(this);
-                return PSRes.success;
+                return PS.publish(this);
             }
         }
-        return false;
+        return { success: false, error: 'Unsupported object type for publishing' };
     }
 
     async createEdanMDM(edanmdm: COL.EdanMDMContent, status: number, publicSearch: boolean): Promise<COL.EdanRecord | null> {

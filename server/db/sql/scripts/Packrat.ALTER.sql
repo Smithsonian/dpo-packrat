@@ -867,6 +867,7 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 1, 'Microme
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 2, 'Millimeter' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Millimeter');
 
 -- SpecimenPreparation (set 37).
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 0, 'None'            FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='None');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 1, 'Fluid-preserved' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Fluid-preserved');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 2, 'Dry'      FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Dry');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 3, 'Stained'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Stained');

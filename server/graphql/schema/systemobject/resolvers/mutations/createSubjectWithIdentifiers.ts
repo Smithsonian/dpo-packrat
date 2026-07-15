@@ -125,6 +125,6 @@ function sendResult(success: boolean, message: string, reason?: string, data?: a
 
 async function publishSubject(idSystemObject: number): Promise<H.IOResults> {
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-    const success: boolean = await ICol.publish(idSystemObject, COMMON.ePublishedState.ePublished);
+    const success: boolean = (await ICol.publish(idSystemObject, COMMON.ePublishedState.ePublished)).success;
     return { success, error: success ? '' : 'Error encountered during publishing' };
 }

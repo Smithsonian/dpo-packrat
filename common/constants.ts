@@ -271,6 +271,7 @@ export enum eVocabularyID {
     eCaptureDataVolumeSpecimenPreparationEmbedded,
     eCaptureDataVolumeSpecimenPreparationLive,
     eCaptureDataVolumeSpecimenPreparationOther,
+    eCaptureDataVolumeSpecimenPreparationNone,
     eNone = -1
 }
 
