@@ -6,18 +6,19 @@
  *
  * This component renders details tab for Model specific details used in DetailsTab component.
  */
-import { Typography, Box, makeStyles, Select, MenuItem, fade, createStyles, Chip, Input } from '@material-ui/core';
+import { Typography, Box, makeStyles, Select, MenuItem, fade, createStyles } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader, ReadOnlyRow, } from '../../../../../components';
 import { useVocabularyStore, useDetailTabStore } from '../../../../../store';
-import { eVocabularySetID, eSystemObjectType } from '@dpo-packrat/common';
+import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
 import { extractModelConstellation } from '../../../../../constants/helperfunctions';
 import { DetailComponentProps } from './index';
 import { useStyles as useSelectStyles, SelectFieldProps } from '../../../../../components/controls/SelectField';
 import { DebounceInput } from 'react-debounce-input';
 import ObjectMeshTable from '../../../../Ingestion/components/Metadata/Model/ObjectMeshTable';
 import { updatedFieldStyling } from './CaptureDataDetails';
-import { isFieldUpdated } from '../../../../../utils/repository';
+import { isFieldUpdated, parseVocabIDs } from '../../../../../utils/repository';
+import VocabularyToggle from '../../../../../components/controls/VocabularyToggle';
 
 export const useStyles = makeStyles(({ palette, typography }) => createStyles({
     notRequiredFields: {
@@ -97,7 +98,7 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
 
     const { ingestionModel, modelObjects } = extractModelConstellation(data?.getDetailsTabDataForObject?.Model);
     const [ModelDetails, updateDetailField, setHasUnsavedDetails] = useDetailTabStore(state => [state.ModelDetails, state.updateDetailField, state.setHasUnsavedDetails]);
-    const [getEntries] = useVocabularyStore(state => [state.getEntries]);
+    const [getEntries, getVocabularyId] = useVocabularyStore(state => [state.getEntries, state.getVocabularyId]);
 
     useEffect(() => {
         onUpdateDetail(objectType, ModelDetails);
@@ -128,39 +129,11 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eModel, name, idFieldValue);
     };
 
-    const setVariantField = (event) => {
-        const  { value, name } = event.target;
-        // make sure we got an array as value
-        if(!Array.isArray(value))
-            return console.error('did not receive array', value);
-
-        // convert array into JSON array and feed to metadata update
-        const arrayString = JSON.stringify(value);
-        updateDetailField(eSystemObjectType.eModel, name, arrayString);
-    };
-    const getSelectedIDsFromJSON = (value: string | undefined | null): number[] => {
-        // used to extract array from JSON
-        try {
-            if(!value)
-                throw new Error('[PACKRAT:ERROR] cannot get selected IDs. undefined value');
-
-            const data = JSON.parse(value);
-            if(Array.isArray(data) === false)
-                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
-            return data.sort();
-        } catch(error) {
-            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
-        }
-
-        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Variant. Unsupported value. (${value})`);
-        return [];
-    };
-
     const isMasterModel = (): boolean => {
-        // hard coding the value since common constants does not align with the DB values
-        // (constants) eVocabularyID.eModelPurposeMaster = 85
-        // (database) idVocabulary.Master = 45
-        return (ModelDetails.idVPurpose===45);
+        // resolve the Master purpose id dynamically from the vocabulary map so this works
+        // across deployments, matching how the ingest form detects a master model
+        const masterId = getVocabularyId(eVocabularyID.eModelPurposeMaster);
+        return masterId !== null && ModelDetails.idVPurpose === masterId;
     };
 
     const readOnlyContainerProps: React.CSSProperties = {
@@ -241,18 +214,15 @@ function ModelDetails(props: DetailComponentProps): React.ReactElement {
                         updated={isFieldUpdated(ModelDetails, ingestionModel, 'idVPurpose')}
                     />
                     { isMasterModel() &&
-                        <SelectMultiField
-                            required
-                            label='Model Variant'
-                            value={getSelectedIDsFromJSON(ModelDetails.Variant)}
-                            name='Variant'
-                            onChange={setVariantField}
-                            options={getEntries(eVocabularySetID.eModelVariant)}
-                            selectHeight='24px'
-                            valueLeftAligned
-                            selectFitContent
-                            updated={isFieldUpdated(ModelDetails, ingestionModel, 'Variant')}
-                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', alignItems: 'center' }}>
+                            <Typography style={{ color: 'black' }} variant='caption'>Model Variant</Typography>
+                            <VocabularyToggle
+                                value={parseVocabIDs(ModelDetails.Variant)}
+                                entries={getEntries(eVocabularySetID.eModelVariant)}
+                                onChange={(ids) => updateDetailField(eSystemObjectType.eModel, 'Variant', JSON.stringify(ids))}
+                                updated={isFieldUpdated(ModelDetails, ingestionModel, 'Variant')}
+                            />
+                        </div>
                     }
                     <SelectField
                         required
@@ -317,50 +287,6 @@ function SelectField(props: SelectFieldProps): React.ReactElement {
                 inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}
                 style={{ minWidth: '100%', width: 'fit-content', ...updatedFieldStyling(updated) }}
                 SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-            >
-                {options.map(({ idVocabulary, Term }, index) => (
-                    <MenuItem key={index} value={idVocabulary}>
-                        {Term}
-                    </MenuItem>
-                ))}
-            </Select>
-        </div>
-    );
-}
-function SelectMultiField(props: SelectFieldProps): React.ReactElement {
-    const { value, name, options, onChange, disabled = false, label, updated = false } = props;
-    const classes = useSelectStyles(props);
-
-    return (
-        <div style={{ display: 'grid', gridTemplateColumns: '120px calc(100% - 120px)', gridColumnGap: 5, padding: '3px 10px 3px 10px', height: 20 }}>
-            <div style={{ gridColumnStart: 1, gridColumnEnd: 2 }}>
-                <Typography style={{ color: 'black' }} variant='caption'>
-                    {label}
-                </Typography>
-            </div>
-
-            <Select
-                multiple
-                value={value || []}
-                name='Variant'
-                onChange={onChange}
-                disabled={disabled}
-                disableUnderline
-                className={classes.select}
-                inputProps={{ 'title': `${name} select`, style: { width: '100%' } }}
-                input={<Input id='select-multiple-chip' />}
-                style={{ minWidth: '100%', width: 'fit-content', ...updatedFieldStyling(updated) }}
-                renderValue={(selected) => {
-                    // get our entries and cycle through what's selected drawing as Chips,
-                    // and pulling the name from the entries.
-                    const entries = options;
-                    return (<div className={classes.chips}>
-                        {(selected as number[]).map((value) => {
-                            const entry = entries.find(entry => entry.idVocabulary === value);
-                            return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
-                        })}
-                    </div>);
-                }}
             >
                 {options.map(({ idVocabulary, Term }, index) => (
                     <MenuItem key={index} value={idVocabulary}>
