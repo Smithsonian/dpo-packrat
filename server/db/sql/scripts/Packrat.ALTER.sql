@@ -866,15 +866,23 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 4, 'Both'  
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 1, 'Micrometer' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Micrometer');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 2, 'Millimeter' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Millimeter');
 
--- SpecimenPreparation (set 37).
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 0, 'None'            FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='None');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 1, 'Fluid-preserved' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Fluid-preserved');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 2, 'Dry'      FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Dry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 3, 'Stained'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Stained');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 4, 'Frozen'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Frozen');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 5, 'Embedded' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Embedded');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 6, 'Live'     FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Live');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 7, 'Other'    FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Other');
+-- SpecimenPreparation (set 37). 'None' first; SortOrder is 1-based and strictly increasing.
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 1, 'None'            FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='None');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 2, 'Fluid-preserved' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Fluid-preserved');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 3, 'Dry'      FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Dry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 4, 'Stained'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Stained');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 5, 'Frozen'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Frozen');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 6, 'Embedded' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Embedded');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 7, 'Live'     FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Live');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 37, 8, 'Other'    FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=37 AND Term='Other');
+UPDATE Vocabulary SET SortOrder=1 WHERE idVocabularySet=37 AND Term='None';
+UPDATE Vocabulary SET SortOrder=2 WHERE idVocabularySet=37 AND Term='Fluid-preserved';
+UPDATE Vocabulary SET SortOrder=3 WHERE idVocabularySet=37 AND Term='Dry';
+UPDATE Vocabulary SET SortOrder=4 WHERE idVocabularySet=37 AND Term='Stained';
+UPDATE Vocabulary SET SortOrder=5 WHERE idVocabularySet=37 AND Term='Frozen';
+UPDATE Vocabulary SET SortOrder=6 WHERE idVocabularySet=37 AND Term='Embedded';
+UPDATE Vocabulary SET SortOrder=7 WHERE idVocabularySet=37 AND Term='Live';
+UPDATE Vocabulary SET SortOrder=8 WHERE idVocabularySet=37 AND Term='Other';
 
 -- CaptureDataVolume: 1:1 with CaptureData via UNIQUE on idCaptureData.
 CREATE TABLE IF NOT EXISTS `CaptureDataVolume` (
