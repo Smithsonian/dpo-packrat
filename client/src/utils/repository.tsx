@@ -157,6 +157,22 @@ export function generateRepositoryUrl(filter: RepositoryFilter): string {
     return ret;
 }
 
+// Parse a stored multi-select vocabulary value (a JSON string of idVocabulary[], or an
+// array) into a sorted number[]. Returns [] for empty/invalid input. Shared by the Model
+// Variant and other vocabulary toggle fields so the JSON round-trip can't drift.
+export function parseVocabIDs(value: string | number[] | undefined | null): number[] {
+    if (Array.isArray(value))
+        return [...value].sort();
+    if (!value)
+        return [];
+    try {
+        const data = JSON.parse(value);
+        return Array.isArray(data) ? data.sort() : [];
+    } catch {
+        return [];
+    }
+}
+
 export function getTreeWidth(columnSize: number, sideBarExpanded: boolean, fullWidth: boolean): string {
     const computedWidth = 50 + columnSize * 10;
     const isXLScreen = window.innerWidth >= 1600;

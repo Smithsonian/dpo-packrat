@@ -5,7 +5,7 @@
  *
  * This component renders the metadata fields specific to photogrammetry asset.
  */
-import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Typography, Select, MenuItem, Checkbox, Chip, Input } from '@material-ui/core';
+import { Box, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Typography, Select, MenuItem, Checkbox } from '@material-ui/core';
 import { DebounceInput } from 'react-debounce-input';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, TextArea } from '../../../../../components';
@@ -21,6 +21,8 @@ import clsx from 'clsx';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import { getNullableSelectEntries } from '../../../../../utils/controls';
+import VocabularyToggle from '../../../../../components/controls/VocabularyToggle';
+import { parseVocabIDs } from '../../../../../utils/repository';
 
 interface PhotogrammetryProps {
     readonly metadataIndex: number;
@@ -204,17 +206,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, checked, MetadataType.photogrammetry);
     };
 
-    const setDatasetUseField = (event) => {
-        const  { value, name } = event.target;
-        // make sure we got an array as value
-        if(!Array.isArray(value))
-            return console.error('did not receive array', value);
-
-        // convert array into JSON array and feed to metadata update
-        const arrayString = JSON.stringify(value);
-        updateMetadataField(metadataIndex, name, arrayString, MetadataType.photogrammetry);
-    };
-
     const onIdentifersChange = (identifiers: StateIdentifier[]): void => {
         updateMetadataField(metadataIndex, 'identifiers', identifiers, MetadataType.photogrammetry);
     };
@@ -270,21 +261,6 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
     const onSelectedObjects = (newSourceObjects: StateRelatedObject[]) => {
         updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.photogrammetry);
         onModalClose();
-    };
-
-    const getSelectedIDsFromJSON = (value: string): number[] => {
-        // used to extract array from JSON
-        try {
-            const data = JSON.parse(value);
-            if(Array.isArray(data) === false)
-                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
-            return data.sort();
-        } catch(error) {
-            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
-        }
-
-        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Dataset Use. Unsupported value. (${value})`);
-        return [];
     };
 
     // console.log('>>> Metadata Photogrammetry index.ts ', photogrammetry);
@@ -370,35 +346,12 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
                                         <Typography className={tableClasses.labelText}>Dataset Use*</Typography>
                                     </TableCell>
                                     <TableCell className={tableClasses.tableCell}>
-                                        <Select
-                                            multiple
-                                            value={getSelectedIDsFromJSON(photogrammetry.datasetUse)}
-                                            name='datasetUse'
-                                            onChange={setDatasetUseField}
-                                            disableUnderline
-                                            className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
-                                            input={<Input id='select-multiple-chip' />}
-                                            renderValue={(selected) => {
-                                                // Render each selected vocab ID as a Chip. IDs that no longer resolve
-                                                // against the current vocabulary cache are surfaced as "Unknown (ID N)"
-                                                // so stale data stays visible rather than masquerading as a valid term.
-                                                const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
-                                                return (<div className={classes.chips}>
-                                                    {(selected as number[]).map((value) => {
-                                                        const entry = entries.find(entry => entry.idVocabulary === value);
-                                                        const label = entry ? entry.Term : `Unknown (ID ${value})`;
-                                                        return (<Chip key={value} label={label} className={classes.chip} />);
-                                                    })}
-                                                </div>);
-                                            }}
+                                        <VocabularyToggle
+                                            value={parseVocabIDs(photogrammetry.datasetUse)}
+                                            entries={getEntries(eVocabularySetID.eCaptureDataDatasetUse)}
+                                            onChange={(ids) => updateMetadataField(metadataIndex, 'datasetUse', JSON.stringify(ids), MetadataType.photogrammetry)}
                                             disabled={ingestionLoading}
-                                        >
-                                            { getEntries(eVocabularySetID.eCaptureDataDatasetUse)
-                                                .map(({ idVocabulary, Term }, index) =>
-                                                    <MenuItem key={index} value={idVocabulary}>
-                                                        {Term}
-                                                    </MenuItem>)}
-                                        </Select>
+                                        />
                                     </TableCell>
                                 </TableRow>
                             }
