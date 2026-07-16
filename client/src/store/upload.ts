@@ -16,6 +16,7 @@ import { apolloClient, apolloUploader } from '../graphql';
 import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutation, UploadAssetDocument, UploadAssetMutation, UploadStatus, UploadAssetInput } from '../types/graphql';
 import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
+import { toastError } from '../utils/toastError';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
 import { eIngestionMode, ROUTES } from '../constants';
 
@@ -510,7 +511,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 const { success } = discardUploadedAssetVersions;
 
                 if (!success) {
-                    toast.error('Failed to discard selected files');
+                    toastError(discardUploadedAssetVersions, 'Failed to discard selected files');
                     return;
                 }
 
@@ -523,7 +524,7 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                 return;
             }
         } catch {
-            toast.error('Failed to discard selected files');
+            toastError(undefined, 'Failed to discard selected files');
         }
     },
     removeSelectedUploads: (): void => {

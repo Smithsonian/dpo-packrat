@@ -4,6 +4,7 @@ const discardUploadedAssetVersions = gql`
     mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
         discardUploadedAssetVersions(input: $input) {
             success
+            message
         }
     }
 `;

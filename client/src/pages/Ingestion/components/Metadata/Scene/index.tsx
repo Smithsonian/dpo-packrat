@@ -17,6 +17,7 @@ import { apolloClient } from '../../../../../graphql/index';
 import { GetSceneForAssetVersionDocument, RelatedObjectType, GetSubjectDocument, GetIngestTitleDocument, GetIngestTitleQuery } from '../../../../../types/graphql';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
 import RelatedObjectsList from '../Model/RelatedObjectsList';
 import ObjectSelectModal from '../Model/ObjectSelectModal';
 import { TextArea } from '../../../../../components';
@@ -191,7 +192,7 @@ function Scene(props: SceneProps): React.ReactElement {
         const updatedSourceObjects = sourceObjects.filter(sourceObject => sourceObject.idSystemObject !== idSystemObject);
         updateMetadataField(metadataIndex, 'sourceObjects', updatedSourceObjects, MetadataType.scene);
 
-        const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+        const { data: { getIngestTitle } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
             query: GetIngestTitleDocument,
             variables: {
                 input: {
@@ -201,8 +202,9 @@ function Scene(props: SceneProps): React.ReactElement {
             fetchPolicy: 'no-cache'
         });
 
+        const { ingestTitle } = getIngestTitle;
         if (!ingestTitle) {
-            toast.error('Failed to fetch titles for ingestion items');
+            toastError(getIngestTitle, 'Failed to fetch titles for ingestion items');
             return;
         }
 
@@ -228,7 +230,7 @@ function Scene(props: SceneProps): React.ReactElement {
         updateMetadataField(metadataIndex, objectRelationship === RelatedObjectType.Source ? 'sourceObjects' : 'derivedObjects', newSourceObjects, MetadataType.scene);
 
         if (objectRelationship === RelatedObjectType.Source) {
-            const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+            const { data: { getIngestTitle } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
@@ -238,8 +240,9 @@ function Scene(props: SceneProps): React.ReactElement {
                 fetchPolicy: 'no-cache'
             });
 
+            const { ingestTitle } = getIngestTitle;
             if (!ingestTitle) {
-                toast.error('Failed to fetch titles for ingestion items');
+                toastError(getIngestTitle, 'Failed to fetch titles for ingestion items');
                 return;
             }
 

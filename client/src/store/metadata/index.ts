@@ -7,6 +7,7 @@
 import { ApolloQueryResult } from '@apollo/client';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
+import { toastError } from '../../utils/toastError';
 import * as yup from 'yup';
 import create, { GetState, SetState } from 'zustand';
 import { apolloClient } from '../../graphql';
@@ -484,7 +485,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             // const subtitle = Number(selectedItem?.id) > 0 ? selectedItem?.subtitle : subjects.length > 1 ? selectedItem?.subtitle : `${subjects[0].name}` + (selectedItem?.subtitle.length ? selectedItem?.subtitle : '');
 
             // console.log('subtitle', subtitle, 'name', name);
-            const { data: { getIngestTitle: { ingestTitle } } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
+            const { data: { getIngestTitle } }: ApolloQueryResult<GetIngestTitleQuery> = await apolloClient.query({
                 query: GetIngestTitleDocument,
                 variables: {
                     input: {
@@ -507,8 +508,9 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 }
             });
 
+            const { ingestTitle } = getIngestTitle;
             if (!ingestTitle) {
-                toast.error('Failed to fetch titles for ingestion items');
+                toastError(getIngestTitle, 'Failed to fetch titles for ingestion items');
                 return;
             }
             const metadatasCopy = lodash.cloneDeep(metadatas);

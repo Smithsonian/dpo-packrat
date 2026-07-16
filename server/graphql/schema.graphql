@@ -532,6 +532,7 @@ input DiscardUploadedAssetVersionsInput {
 }
 
 type DiscardUploadedAssetVersionsResult {
+  message: String
   success: Boolean!
 }
 
@@ -680,6 +681,7 @@ input GetIngestTitleInput {
 
 type GetIngestTitleResult {
   ingestTitle: IngestTitle
+  message: String
 }
 
 input GetIngestionItemsInput {
