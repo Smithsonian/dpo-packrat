@@ -11,6 +11,7 @@ import React, { useEffect, useState } from 'react';
 import KeepAlive from 'react-activation';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useMetadataStore, useUploadStore, useVocabularyStore } from '../../../../store';
@@ -139,7 +140,7 @@ function Uploads(): React.ReactElement {
                     toast.success('Ingestion complete');
                     ingestionComplete();
                 } else {
-                    toast.error(`Ingestion failed, please try again later. Error: ${message}`);
+                    toastError({ message }, 'Ingestion failed, please try again later');
                 }
                 return;
             } else {
@@ -155,8 +156,7 @@ function Uploads(): React.ReactElement {
                 await navigate(nextRoute);
             }
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Ingestion failed${message}`);
+            toastError(error, 'Ingestion failed');
             return;
         }
     };

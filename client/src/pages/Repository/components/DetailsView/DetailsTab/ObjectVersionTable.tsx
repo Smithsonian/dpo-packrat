@@ -12,6 +12,7 @@ import { PublishedStateEnumToString, eSystemObjectType } from '@dpo-packrat/comm
 import GetAppIcon from '@material-ui/icons/GetApp';
 import { SystemObjectVersion } from '../../../../../types/graphql';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import API from '../../../../../api';
 import { formatDateAndTime } from '../../../../../utils/shared';
@@ -74,7 +75,7 @@ function ObjectVersionsTable(props: ObjectVersionsTableProps): React.ReactElemen
             setExpanded(-1);
             window.location.reload();
         } else {
-            toast.error(`Error when attempting to rollback to ${idSystemObjectVersion}. Reason: ${data.message}`);
+            toastError(data, `Error when attempting to rollback to ${idSystemObjectVersion}`);
         }
     };
 

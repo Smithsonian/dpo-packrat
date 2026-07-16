@@ -125,7 +125,7 @@ function Scene(props: SceneProps): React.ReactElement {
                 }
             });
             if (!data.getSceneForAssetVersion.success) {
-                toast.error(`Error: unable to fetch scene; Message ${data.getSceneForAssetVersion.message}`, { autoClose: false });
+                toastError(data.getSceneForAssetVersion, 'Unable to fetch scene', { autoClose: false });
             }
             const ModelSceneXref: any = data.getSceneForAssetVersion?.SceneConstellation?.ModelSceneXref;
             const SvxNonModelAssets: any = data.getSceneForAssetVersion?.SceneConstellation?.SvxNonModelAssets;

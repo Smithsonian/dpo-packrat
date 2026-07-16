@@ -153,7 +153,7 @@ function UnitAuthorizedUsers({ idUnit }: UnitAuthorizedUsersProps): React.ReactE
             toast.success('Unit authorization updated');
             setSavedUserIds(authorizedUsers.map(u => u.idUser));
         } else {
-            toast.error(`Failed to update: ${result?.message}`);
+            toastError(result, 'Failed to update');
         }
 
         setSaving(false);

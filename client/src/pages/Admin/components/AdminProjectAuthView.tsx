@@ -161,7 +161,7 @@ function AdminProjectAuthView(): React.ReactElement {
             toast.success('Project authorization updated');
             navigate('/admin/projects');
         } else {
-            toast.error(`Failed to update: ${result?.message}`);
+            toastError(result, 'Failed to update');
         }
     };
 

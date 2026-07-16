@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useItemStore, useMetadataStore, useSubjectStore, useVocabularyStore } from '../../../../store';
@@ -137,8 +138,7 @@ function SubjectItem(): React.ReactElement {
             await updateMetadataFolders();
             setMetadataStepLoading(false);
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failure handling input${message}`);
+            toastError(error, 'Failure handling input');
             setMetadataStepLoading(false);
             return;
         }

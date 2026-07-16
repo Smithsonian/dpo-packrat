@@ -31,6 +31,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
 import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore, useDetailsEditStore, useNavHistoryStore } from '../../../../store';
@@ -867,8 +868,7 @@ function DetailsView(): React.ReactElement {
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed to save updated data${message}`);
+            toastError(error, 'Failed to save updated data');
             return false;
         } finally {
             setIsUpdatingData(false);

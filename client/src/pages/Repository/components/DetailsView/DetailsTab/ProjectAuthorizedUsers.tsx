@@ -178,7 +178,7 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
             setSavedIsRestricted(isRestricted);
             setSavedUserIds(authorizedUsers.map(u => u.idUser));
         } else {
-            toast.error(`Failed to update: ${result?.message}`);
+            toastError(result, 'Failed to update');
         }
 
         setSaving(false);

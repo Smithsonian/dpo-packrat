@@ -3,6 +3,7 @@ import API, { RequestResponse } from '../../../../api';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Box, Typography, Button, LinearProgress, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@material-ui/core';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 
 enum eSolrIndexPhase { eIdle = 0, eDeleting = 1, eObjects = 2, eMetadata = 3, eCompleted = 4, eError = 5 }
@@ -95,7 +96,7 @@ const ToolsSystemOps = (): React.ReactElement => {
             if (response.success) {
                 startPolling();
             } else {
-                toast.error(`Solr (Re)Index failed. ${response.message ?? ''}`);
+                toastError(response, 'Solr (Re)Index failed');
                 setIsIndexing(false);
             }
         } catch (error) {
@@ -115,7 +116,7 @@ const ToolsSystemOps = (): React.ReactElement => {
             if (response.success) {
                 startPolling();
             } else {
-                toast.error(`Solr Rebuild failed. ${response.message ?? ''}`);
+                toastError(response, 'Solr Rebuild failed');
                 setIsIndexing(false);
             }
         } catch (error) {

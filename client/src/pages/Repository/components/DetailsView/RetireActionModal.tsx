@@ -14,6 +14,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Chip, Tooltip, CircularProgress,
     Table, TableHead, TableBody, TableRow, TableCell } from '@material-ui/core';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import API from '../../../../api';
 
 type ItemStatus = 'succeeded' | 'failed' | 'skipped' | 'notApplied';
@@ -111,7 +112,7 @@ function RetireActionModal(props: RetireActionModalProps): React.ReactElement {
             toast.success(res.message ?? `${verb} succeeded`);
             onComplete();
         } else
-            toast.error(res?.message ?? `${verb} failed`);
+            toastError(res, `${verb} failed`);
     };
 
     const showStatus: boolean = phase === 'results';
