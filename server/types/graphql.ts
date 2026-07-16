@@ -760,6 +760,7 @@ export type GetIngestionItemsInput = {
 export type GetIngestionItemsResult = {
   __typename?: 'GetIngestionItemsResult';
   IngestionItem?: Maybe<Array<IngestionItem>>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIntermediaryFileInput = {

@@ -432,7 +432,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
                 };
             }
         } catch (error) {
-            toast.error('Failed to ingest selected files, please try again later');
+            toastError(error, 'Failed to ingest selected files, please try again later');
             // console.log(`Failed to ingest selected files, please try again later: ${JSON.stringify(error)}`);
         }
 
@@ -526,7 +526,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
             // console.log('metadatasCopy', metadatasCopy);
             set({ metadatas: metadatasCopy });
         } catch (error) {
-            toast.error(`Failed to fetch titles for ingestion items ${error}`);
+            toastError(error, 'Failed to fetch titles for ingestion items');
         }
 
     },
@@ -663,7 +663,7 @@ export const useMetadataStore = create<MetadataStore>((set: SetState<MetadataSto
 
                     photogrammetry.cameraSettingUniform = isUniform;
                 } catch {
-                    toast.error('Failed to retrieve camera settings details');
+                    toastError(undefined, 'Failed to retrieve camera settings details');
                 }
             }
         }

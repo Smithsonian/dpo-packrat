@@ -763,6 +763,7 @@ export type GetIngestionItemsInput = {
 export type GetIngestionItemsResult = {
   __typename?: 'GetIngestionItemsResult';
   IngestionItem?: Maybe<Array<IngestionItem>>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIntermediaryFileInput = {
@@ -3245,7 +3246,7 @@ export type GetIngestionItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetIngestionItemsQuery = { __typename?: 'Query', getIngestionItems: { __typename?: 'GetIngestionItemsResult', IngestionItem?: Array<{ __typename?: 'IngestionItem', idItem: number, EntireSubject: boolean, MediaGroupName: string, idProject: number, ProjectName: string }> | null } };
+export type GetIngestionItemsQuery = { __typename?: 'Query', getIngestionItems: { __typename?: 'GetIngestionItemsResult', message?: string | null, IngestionItem?: Array<{ __typename?: 'IngestionItem', idItem: number, EntireSubject: boolean, MediaGroupName: string, idProject: number, ProjectName: string }> | null } };
 
 export type GetItemQueryVariables = Exact<{
   input: GetItemInput;
@@ -6107,6 +6108,7 @@ export const GetIngestionItemsDocument = gql`
       idProject
       ProjectName
     }
+    message
   }
 }
     `;
