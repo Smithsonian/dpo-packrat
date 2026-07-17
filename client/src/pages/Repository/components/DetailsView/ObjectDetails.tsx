@@ -201,7 +201,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             toast.success(`License assignment successfully cleared${message ? ': ' + message : ''}`);
             onLicenseChange?.();
         } else {
-            toast.error(`License assignment failure: ${data?.clearLicenseAssignment?.message}`);
+            toastError(data?.clearLicenseAssignment, 'License assignment failure');
         }
 
         setLoading(false);
@@ -217,7 +217,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                 toast.success(`License assignment successfully assigned${message ? ': ' + message : ''}`);
                 onLicenseChange?.();
             } else
-                toast.error(`License assignment failure: ${data?.assignLicense?.message}`);
+                toastError(data?.assignLicense, 'License assignment failure');
         }
 
         setLoading(false);

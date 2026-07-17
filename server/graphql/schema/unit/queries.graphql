@@ -76,6 +76,7 @@ input GetIngestionItemsInput {
 
 type GetIngestionItemsResult {
     IngestionItem: [IngestionItem!]
+    message: String
 }
 
 input GetUnitInput {

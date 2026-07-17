@@ -9,6 +9,7 @@ import { RotationOriginInput, RotationQuaternionInput } from '../../../Repositor
 import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminView';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useNavigate } from 'react-router-dom';
@@ -299,11 +300,10 @@ function SubjectForm(): React.ReactElement {
                 resetMetadata();
                 navigate('/admin/subjects');
             } else {
-                toast.error(`Failed To Create Subject: ${message}`);
+                toastError({ message }, 'Failed To Create Subject');
             }
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed To Create Subject${message}`);
+            toastError(error, 'Failed To Create Subject');
         }
     };
 

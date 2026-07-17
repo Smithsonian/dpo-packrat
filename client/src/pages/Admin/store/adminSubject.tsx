@@ -1,6 +1,6 @@
 import create, { GetState, SetState } from 'zustand';
 import { SubjectUnitIdentifier, GetSubjectListInput } from '../../../types/graphql';
-import { toast } from 'react-toastify';
+import { toastError } from '../../../utils/toastError';
 import { getSubjectList } from '../hooks/useAdminView';
 import { eSubjectUnitIdentifierSortColumns } from '@dpo-packrat/common';
 
@@ -62,7 +62,7 @@ export const useAdminSubjectStore = create<AdminSubjectStore>((set: SetState<Adm
                 set({ subjects: [] });
             }
         } catch (error) {
-            toast.error(`Error in fetching subjects. Message: ${error}`);
+            toastError(error, 'Error in fetching subjects');
         }
 
         set({ loading: false });

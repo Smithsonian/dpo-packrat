@@ -64,6 +64,14 @@ export class LocalStore {
      */
     correlationId: string | null = null;
 
+    /**
+     * Per-request UUID surfaced to the client as an error/trace reference (shown as a
+     * short prefix in error toasts and logged on every RecordKeeper record for the
+     * request). Distinct from correlationId, which groups an operation's audit rows and
+     * may span multiple requests for one user action.
+     */
+    traceId: string | null = null;
+
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
         // RK.logDebug(RK.LogSection.eSYS,'incrementing ID',undefined,{ idRequest: LocalStore.idRequestNext, idRequestNew: LocalStore.idRequestNext+1 },'AsyncLocalStore');
@@ -96,6 +104,7 @@ export class LocalStore {
         const child = new LocalStore(false, this.idUser, this.idRequest);
         child.actor = this.actor;
         child.correlationId = this.correlationId;
+        child.traceId = this.traceId;
         child.authContext = this.authContext;
         child.userEmail = this.userEmail;
         child.userNotify = this.userNotify;

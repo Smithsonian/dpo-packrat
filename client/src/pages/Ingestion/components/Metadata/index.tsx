@@ -13,6 +13,7 @@ import React, { useState, useEffect } from 'react';
 import { MdNavigateNext } from 'react-icons/md';
 import { Navigate, useNavigate, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import {
@@ -226,7 +227,7 @@ function Metadata(): React.ReactElement {
                 ingestionComplete();
             } else {
                 setDisableNavigation(false);
-                toast.error(`Ingestion failed, please try again later. Error: ${message}`);
+                toastError({ message }, 'Ingestion failed, please try again later');
             }
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];

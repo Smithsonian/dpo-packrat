@@ -588,6 +588,7 @@ export type DiscardUploadedAssetVersionsInput = {
 
 export type DiscardUploadedAssetVersionsResult = {
   __typename?: 'DiscardUploadedAssetVersionsResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -752,6 +753,7 @@ export type GetIngestTitleInput = {
 export type GetIngestTitleResult = {
   __typename?: 'GetIngestTitleResult';
   ingestTitle?: Maybe<IngestTitle>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIngestionItemsInput = {
@@ -761,6 +763,7 @@ export type GetIngestionItemsInput = {
 export type GetIngestionItemsResult = {
   __typename?: 'GetIngestionItemsResult';
   IngestionItem?: Maybe<Array<IngestionItem>>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIntermediaryFileInput = {
@@ -2861,7 +2864,7 @@ export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
 }>;
 
 
-export type DiscardUploadedAssetVersionsMutation = { __typename?: 'Mutation', discardUploadedAssetVersions: { __typename?: 'DiscardUploadedAssetVersionsResult', success: boolean } };
+export type DiscardUploadedAssetVersionsMutation = { __typename?: 'Mutation', discardUploadedAssetVersions: { __typename?: 'DiscardUploadedAssetVersionsResult', success: boolean, message?: string | null } };
 
 export type RollbackAssetVersionMutationVariables = Exact<{
   input: RollbackAssetVersionInput;
@@ -3114,7 +3117,7 @@ export type GetIngestTitleQueryVariables = Exact<{
 }>;
 
 
-export type GetIngestTitleQuery = { __typename?: 'Query', getIngestTitle: { __typename?: 'GetIngestTitleResult', ingestTitle?: { __typename?: 'IngestTitle', title: string, forced: boolean, subtitle?: Array<string | null> | null } | null } };
+export type GetIngestTitleQuery = { __typename?: 'Query', getIngestTitle: { __typename?: 'GetIngestTitleResult', message?: string | null, ingestTitle?: { __typename?: 'IngestTitle', title: string, forced: boolean, subtitle?: Array<string | null> | null } | null } };
 
 export type GetLicenseQueryVariables = Exact<{
   input: GetLicenseInput;
@@ -3243,7 +3246,7 @@ export type GetIngestionItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetIngestionItemsQuery = { __typename?: 'Query', getIngestionItems: { __typename?: 'GetIngestionItemsResult', IngestionItem?: Array<{ __typename?: 'IngestionItem', idItem: number, EntireSubject: boolean, MediaGroupName: string, idProject: number, ProjectName: string }> | null } };
+export type GetIngestionItemsQuery = { __typename?: 'Query', getIngestionItems: { __typename?: 'GetIngestionItemsResult', message?: string | null, IngestionItem?: Array<{ __typename?: 'IngestionItem', idItem: number, EntireSubject: boolean, MediaGroupName: string, idProject: number, ProjectName: string }> | null } };
 
 export type GetItemQueryVariables = Exact<{
   input: GetItemInput;
@@ -3374,6 +3377,7 @@ export const DiscardUploadedAssetVersionsDocument = gql`
     mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
   discardUploadedAssetVersions(input: $input) {
     success
+    message
   }
 }
     `;
@@ -4889,6 +4893,7 @@ export const GetIngestTitleDocument = gql`
       forced
       subtitle
     }
+    message
   }
 }
     `;
@@ -6103,6 +6108,7 @@ export const GetIngestionItemsDocument = gql`
       idProject
       ProjectName
     }
+    message
   }
 }
     `;

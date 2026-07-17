@@ -6,7 +6,7 @@
 import { FetchResult } from '@apollo/client';
 import lodash from 'lodash';
 import { useNavigate } from 'react-router';
-import { toast } from 'react-toastify';
+import { toastError } from '../../../utils/toastError';
 import { HOME_ROUTES, INGESTION_ROUTES_TYPE, resolveSubRoute } from '../../../constants/routes';
 import { apolloClient } from '../../../graphql';
 import {
@@ -389,8 +389,7 @@ function useIngest(): UseIngest {
             }
         //This error message is auto-generated.  It does not lead to a custom message unless there's a throw.
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Ingestion failed ${message}`);
+            toastError(error, 'Ingestion failed');
         }
 
         return { success: false, message: 'unable to start ingestion process' };

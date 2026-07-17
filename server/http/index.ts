@@ -369,6 +369,15 @@ export class HttpServer {
             ? inboundStr.toLowerCase()
             : uuidv4();
 
+        // Honor an inbound x-trace-id header when it parses as a UUID; otherwise mint a
+        // fresh one. This per-request id is surfaced to the client as an error reference
+        // and is distinct from correlationId (which groups this operation's audit rows).
+        const inboundTrace = req.headers['x-trace-id'];
+        const inboundTraceStr = Array.isArray(inboundTrace) ? inboundTrace[0] : inboundTrace;
+        LS.traceId = (typeof inboundTraceStr === 'string' && CORRELATION_ID_RE.test(inboundTraceStr))
+            ? inboundTraceStr.toLowerCase()
+            : uuidv4();
+
         // run the store for this user
         ASL.run(LS, () => {
             // RK.logDebug(RK.LogSection.eSYS,'creating new LocalStore',undefined,{ idUser: id },'HttpServer');

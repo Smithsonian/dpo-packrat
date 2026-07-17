@@ -20,6 +20,7 @@ import { apolloClient } from '../../../../graphql/index';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcrumbsView';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import * as yup from 'yup';
 import { useUsersStore } from '../../../../store';
 import { Helmet } from 'react-helmet';
@@ -217,7 +218,7 @@ function AdminUserForm(): React.ReactElement {
         }
         const result = await API.setUserUnits(targetIdUser, unitIds);
         if (!result?.success) {
-            toast.error(`Failed to save unit assignments: ${result?.message}`);
+            toastError(result, 'Failed to save unit assignments');
             return false;
         }
         return true;
@@ -276,7 +277,7 @@ function AdminUserForm(): React.ReactElement {
                 throw new Error('Update request returned success: false');
             }
         } catch (error) {
-            toast.error(`Failed to update user: error ${error}`);
+            toastError(error, 'Failed to update user');
         }
     };
 
@@ -311,7 +312,7 @@ function AdminUserForm(): React.ReactElement {
                 throw new Error('Create request returned success: false');
             }
         } catch (error) {
-            toast.error(`Failed to create user: error ${error}`);
+            toastError(error, 'Failed to create user');
         }
     };
 

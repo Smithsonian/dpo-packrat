@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button } from '@material-ui/core';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import API, { RequestResponse } from '../../../../api';
 import { ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
@@ -37,7 +38,7 @@ function ToolsPublishedScenes(): React.ReactElement {
             setIsLoading(true);
             const result: RequestResponse = await API.getPublishedScenes();
             if (!result?.success) {
-                toast.error(result?.message ?? 'Failed to load published scenes');
+                toastError(result, 'Failed to load published scenes');
                 return;
             }
             const data = result.data ?? { scenes: [], total: 0, orphanCount: 0 };

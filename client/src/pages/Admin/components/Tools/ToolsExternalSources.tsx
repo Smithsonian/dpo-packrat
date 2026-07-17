@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Box, Typography, Button, TextField, Switch, FormControlLabel, Dialog, DialogTitle, DialogContent, DialogActions } from '@material-ui/core';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import API, { RequestResponse } from '../../../../api';
 import { ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
@@ -53,7 +54,7 @@ function ToolsExternalSources(): React.ReactElement {
             setIsLoading(true);
             const result: RequestResponse = await API.getExternalSources();
             if (!result.success) {
-                toast.error(result.message ?? 'Failed to load external sources');
+                toastError(result, 'Failed to load external sources');
                 return;
             }
             const sources = result.data ?? [];
@@ -92,7 +93,7 @@ function ToolsExternalSources(): React.ReactElement {
                 ReferrerPattern: addReferrer.trim() || null,
             });
             if (!result.success) {
-                toast.error(result.message ?? 'Failed to create external source');
+                toastError(result, 'Failed to create external source');
                 return;
             }
             const newSource = result.data;
@@ -104,7 +105,7 @@ function ToolsExternalSources(): React.ReactElement {
             setAddReferrer('');
             fetchData();
         } catch (error: any) {
-            toast.error(`Failed to create: ${error.message ?? 'unknown error'}`);
+            toastError(error, 'Failed to create external source');
         }
     };
 
@@ -129,7 +130,7 @@ function ToolsExternalSources(): React.ReactElement {
                 isActive: editActive,
             });
             if (!result.success) {
-                toast.error(result.message ?? 'Failed to update external source');
+                toastError(result, 'Failed to update external source');
                 return;
             }
             toast.success('External source updated');
@@ -137,7 +138,7 @@ function ToolsExternalSources(): React.ReactElement {
             setEditRow(null);
             fetchData();
         } catch (error: any) {
-            toast.error(`Failed to update: ${error.message ?? 'unknown error'}`);
+            toastError(error, 'Failed to update external source');
         }
     };
 
@@ -147,13 +148,13 @@ function ToolsExternalSources(): React.ReactElement {
                 isActive: !row._isActive,
             });
             if (!result.success) {
-                toast.error(result.message ?? 'Failed to toggle active state');
+                toastError(result, 'Failed to toggle active state');
                 return;
             }
             toast.success(`${row.name} ${row._isActive ? 'deactivated' : 'activated'}`);
             fetchData();
         } catch (error: any) {
-            toast.error(`Failed to toggle: ${error.message ?? 'unknown error'}`);
+            toastError(error, 'Failed to toggle active state');
         }
     };
 

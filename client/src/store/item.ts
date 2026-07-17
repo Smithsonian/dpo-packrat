@@ -14,7 +14,7 @@ import {
     GetIngestionItemsQuery,
     Project
 } from '../types/graphql';
-import { toast } from 'react-toastify';
+import { toastError } from '../utils/toastError';
 import { parseIngestionItemToState } from './utils';
 
 export type StateItem = {
@@ -110,7 +110,7 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
             if (projects)
                 set({ projectList: projects as Project[] });
         } catch (error) {
-            toast.error('Failed to get media group for subjects');
+            toastError(error, 'Failed to get media group for subjects');
         }
         const itemsCopy = lodash.cloneDeep(items);
         if (itemsCopy && itemsCopy.length)
@@ -171,12 +171,17 @@ export const useItemStore = create<ItemStore>((set: SetState<ItemStore>, get: Ge
                 },
                 fetchPolicy: 'no-cache'
             });
-            const { data: { getIngestionItems: { IngestionItem } } } = ingestionItemQuery;
-            const ingestionItemState = IngestionItem?.map(item => parseIngestionItemToState(item));
-            if (ingestionItemState?.length === 1) ingestionItemState[0].selected = true;
+            const { getIngestionItems } = ingestionItemQuery.data;
+            const { IngestionItem } = getIngestionItems;
+            if (!IngestionItem) {
+                toastError(getIngestionItems, 'Failed to get ingestion items for the selected subjects');
+                return;
+            }
+            const ingestionItemState = IngestionItem.map(item => parseIngestionItemToState(item));
+            if (ingestionItemState.length === 1) ingestionItemState[0].selected = true;
             set({ items: ingestionItemState, hasNewItem: false, newItem: { ...defaultItem } });
         } catch (error) {
-            toast.error('Failed to get media group for subjects');
+            toastError(error, 'Failed to get media group for subjects');
         }
     },
     reset: (): void => {

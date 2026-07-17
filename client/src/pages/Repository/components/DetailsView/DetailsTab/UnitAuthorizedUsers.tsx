@@ -6,6 +6,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import IconButton from '@material-ui/core/IconButton';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
 import { useUserStore } from '../../../../../store';
 import API from '../../../../../api';
 
@@ -97,7 +98,7 @@ function UnitAuthorizedUsers({ idUnit }: UnitAuthorizedUsersProps): React.ReactE
                 setAuthorizedUsers(users);
                 setSavedUserIds(users.map((u: AuthUser) => u.idUser));
             } else {
-                toast.error('Failed to load unit authorization data');
+                toastError(unitResult, 'Failed to load unit authorization data');
             }
 
             if (usersResult?.success && usersResult.data) {
@@ -152,7 +153,7 @@ function UnitAuthorizedUsers({ idUnit }: UnitAuthorizedUsersProps): React.ReactE
             toast.success('Unit authorization updated');
             setSavedUserIds(authorizedUsers.map(u => u.idUser));
         } else {
-            toast.error(`Failed to update: ${result?.message}`);
+            toastError(result, 'Failed to update');
         }
 
         setSaving(false);

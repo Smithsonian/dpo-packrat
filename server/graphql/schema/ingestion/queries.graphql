@@ -24,4 +24,5 @@ input GetIngestTitleInput {
 
 type GetIngestTitleResult {
     ingestTitle: IngestTitle
+    message: String
 }

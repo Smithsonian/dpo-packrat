@@ -585,6 +585,7 @@ export type DiscardUploadedAssetVersionsInput = {
 
 export type DiscardUploadedAssetVersionsResult = {
   __typename?: 'DiscardUploadedAssetVersionsResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -749,6 +750,7 @@ export type GetIngestTitleInput = {
 export type GetIngestTitleResult = {
   __typename?: 'GetIngestTitleResult';
   ingestTitle?: Maybe<IngestTitle>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIngestionItemsInput = {
@@ -758,6 +760,7 @@ export type GetIngestionItemsInput = {
 export type GetIngestionItemsResult = {
   __typename?: 'GetIngestionItemsResult';
   IngestionItem?: Maybe<Array<IngestionItem>>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIntermediaryFileInput = {
