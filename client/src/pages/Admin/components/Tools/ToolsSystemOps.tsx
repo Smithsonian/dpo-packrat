@@ -50,7 +50,7 @@ const ToolsSystemOps = (): React.ReactElement => {
             } else if (p.phase === eSolrIndexPhase.eError) {
                 stopPolling();
                 setIsIndexing(false);
-                toast.error(`${label} failed. ${p.error ?? ''}`);
+                toastError({ message: p.error, traceId: response.traceId }, `${label} failed.`);
             } else if (p.phase === eSolrIndexPhase.eIdle) {
                 stopPolling();
                 setIsIndexing(false);

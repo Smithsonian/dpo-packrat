@@ -7,6 +7,7 @@ import { FetchResult } from '@apollo/client';
 import lodash from 'lodash';
 import { useNavigate } from 'react-router';
 import { toastError } from '../../../utils/toastError';
+import { copyTraceId } from '../../../utils/traceRegistry';
 import { HOME_ROUTES, INGESTION_ROUTES_TYPE, resolveSubRoute } from '../../../constants/routes';
 import { apolloClient } from '../../../graphql';
 import {
@@ -385,7 +386,11 @@ function useIngest(): UseIngest {
                 const { ingestData } = data;
                 const { success, message } = ingestData;
 
-                return { success, message: message || '' };
+                const result: IngestionStartResult = { success, message: message || '' };
+                // The caller toasts this result; carry the request's trace id across so the
+                // reference it shows still matches the server log.
+                copyTraceId(ingestData, result);
+                return result;
             }
         //This error message is auto-generated.  It does not lead to a custom message unless there's a throw.
         } catch (error) {

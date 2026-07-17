@@ -5,6 +5,7 @@ import { Box, Typography, Button, Select, MenuItem, Table, TableContainer, Table
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { SceneSummary, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
 
@@ -179,7 +180,7 @@ const ToolsBatchGeneration = (): React.ReactElement => {
                     : `${BatchOperations[operation]} cannot run. ${uniqueMessages[0]}`;
 
                 console.log(`[Packrat:ERROR] ${errorMsg}`,response.data);
-                toast.error(`${BatchOperations[operation]} failed. (${toastErrorMsg})`);
+                toastError({ message: `${BatchOperations[operation]} failed. (${toastErrorMsg})`, traceId: response.traceId }, `${BatchOperations[operation]} failed.`);
                 return;
             }
 
