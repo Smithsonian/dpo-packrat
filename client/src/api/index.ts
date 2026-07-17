@@ -34,6 +34,7 @@ export type RequestResponse = {
     message?: string;
     originalUrl?: string;
     data?: any;
+    traceId?: string;
 };
 
 export default class API {
@@ -267,23 +268,34 @@ export default class API {
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
+
+        // Per-request trace id: sent as a header so it appears on every server log line for
+        // this request, and attached to the response so error toasts can reference it.
+        const traceId: string = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : '';
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...(options.headers as Record<string, string> ?? {})
+        };
+        if (traceId)
+            headers['X-Trace-Id'] = traceId;
         const defaultOptions: RequestInit = {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            ...options
+            ...options,
+            headers,
+            credentials: 'include'
         };
 
         // TODO: return an error response
         return fetch(`${serverEndpoint}/${route}`, defaultOptions)
-            .then(response => {
+            .then(async response => {
                 // Check if the response returned a successful status code
                 if (!response.ok) {
                     console.log('[Packrat: Error] response: ',response);
-                    return { success: false, message: response.statusText };
+                    return { success: false, message: response.statusText, traceId };
                 }
-                return response.json(); // Assuming the server responds with JSON
+                const data = await response.json(); // Assuming the server responds with JSON
+                if (data && typeof data === 'object' && traceId && data.traceId === undefined)
+                    data.traceId = traceId;
+                return data;
             })
             .catch(error => {
                 console.error(`[Packrat] could not complete request (${route}) due to error: ${error}`);

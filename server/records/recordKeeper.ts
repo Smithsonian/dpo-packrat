@@ -138,42 +138,42 @@ export class RecordKeeper {
 
         return { success: true, message: 'record keeper cleaned up' };
     }
-    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null, userSlack: string | null } {
+    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null, userSlack: string | null, traceId: string | null, correlationId: string | null } {
         // get our user and request ids from the local store
         // TEST: does it maintain store context since static and not async
         const LS: LocalStore | undefined = ASL?.getStore();
         if(!LS)
-            return { idUser: -1, idRequest: -1, userEmail: null, userSlack: null };
+            return { idUser: -1, idRequest: -1, userEmail: null, userSlack: null, traceId: null, correlationId: null };
 
         // if no user, return an error id. otherwise, return what we got
-        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail, userSlack: LS.userSlack };
+        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail, userSlack: LS.userSlack, traceId: LS.traceId, correlationId: LS.correlationId };
     }
 
     //#region LOG
     // Log routines for specific levels
     static async logCritical(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.critical(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.critical(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logError(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.error(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.error(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logWarning(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.warning(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.warning(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logInfo(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.info(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.info(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logDebug(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.debug(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.debug(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logPerformance(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static logFallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
         LOG.fallback(level,sec,message,reason,data,caller);
