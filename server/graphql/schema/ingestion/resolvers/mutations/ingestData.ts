@@ -254,9 +254,11 @@ class IngestDataWorker extends ResolverBase {
         } catch (err) {
             // Hard failure: ingestWorker threw. Emit the cleanup payload and
             // surface a generic failure to the caller. Behaviour preserved
-            // (resolver returns success:false, same as a soft failure).
+            // (resolver returns success:false, same as a soft failure). The raw
+            // exception is captured server-side by recordPartialStateFailure
+            // (logCritical + audit row); the user-facing message stays curated.
             await this.recordPartialStateFailure('ingestWorker threw', err);
-            IDR = { success: false, message: err instanceof Error ? err.message : 'ingest threw an exception' };
+            IDR = { success: false, message: 'Ingestion failed unexpectedly. Please try again or contact support.' };
         }
 
         // Soft failure: ingestWorker returned success:false. The body has

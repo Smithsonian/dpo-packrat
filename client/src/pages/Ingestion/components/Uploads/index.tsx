@@ -135,12 +135,12 @@ function Uploads(): React.ReactElement {
 
             // Start ingestion if every file is not an update and does not require metadata
             if (queuedUploadedFiles.every(file => !file.idAsset && !metadataStepRequiredAssetTypesSet.has(file.type))) {
-                const { success, message } = await ingestionStart();
-                if (success) {
+                const ingestResult = await ingestionStart();
+                if (ingestResult.success) {
                     toast.success('Ingestion complete');
                     ingestionComplete();
                 } else {
-                    toastError({ message }, 'Ingestion failed, please try again later');
+                    toastError(ingestResult, 'Ingestion failed, please try again later');
                 }
                 return;
             } else {

@@ -219,15 +219,15 @@ function Metadata(): React.ReactElement {
         if (isLast) {
             setDisableNavigation(true);
             setIngestionLoading(true);
-            const { success, message } = await ingestionStart();
+            const ingestResult = await ingestionStart();
             setIngestionLoading(false);
 
-            if (success) {
+            if (ingestResult.success) {
                 toast.success('Ingestion complete');
                 ingestionComplete();
             } else {
                 setDisableNavigation(false);
-                toastError({ message }, 'Ingestion failed, please try again later');
+                toastError(ingestResult, 'Ingestion failed, please try again later');
             }
         } else {
             const nextMetadata = metadatas[metadataIndex + 1];

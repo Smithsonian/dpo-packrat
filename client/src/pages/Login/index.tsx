@@ -114,13 +114,13 @@ function Login(): React.ReactElement {
         const { email, password } = values;
 
         try {
-            const { success, message } = await login(email, password);
+            const loginResult = await login(email, password);
 
-            if (success) {
+            if (loginResult.success) {
                 toast.success('Welcome to Packrat');
                 navigate(redirectPath ?? ROUTES.HOME);
             } else {
-                toast.error(message);
+                toastError(loginResult, 'Login failed');
             }
         } catch (error) {
             toastError(error, 'Login failed');

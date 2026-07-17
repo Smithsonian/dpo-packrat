@@ -23,3 +23,14 @@ export function getTraceId(target: unknown): string {
         return registry.get(target as TraceKey) ?? '';
     return '';
 }
+
+/**
+ * Carries a trace id from a registered result onto a value derived from it. Callers that
+ * reshape a result before toasting it (a hook returning its own type, for example) would
+ * otherwise hand toastError an unregistered object and lose the id the server logged.
+ */
+export function copyTraceId(from: unknown, to: unknown): void {
+    const traceId: string = getTraceId(from);
+    if (traceId)
+        setTraceId(to, traceId);
+}

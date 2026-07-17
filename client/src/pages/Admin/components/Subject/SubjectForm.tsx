@@ -290,17 +290,15 @@ function SubjectForm(): React.ReactElement {
             // console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
 
             const {
-                data: {
-                    createSubjectWithIdentifiers: { success, message }
-                }
+                data: { createSubjectWithIdentifiers: createResult }
             } = await createSubjectWithIdentifiers(createSubjectWithIdentifiersInput);
-            if (success) {
+            if (createResult.success) {
                 toast.success('Subject Successfully Created!');
                 reset();
                 resetMetadata();
                 navigate('/admin/subjects');
             } else {
-                toastError({ message }, 'Failed To Create Subject');
+                toastError(createResult, 'Failed To Create Subject');
             }
         } catch (error) {
             toastError(error, 'Failed To Create Subject');

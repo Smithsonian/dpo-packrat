@@ -498,8 +498,7 @@ function DetailsView(): React.ReactElement {
                 setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
-                const message = result?.data?.deleteIdentifier?.message || 'Error when removing identifier';
-                toast.error(message);
+                toastError(result?.data?.deleteIdentifier, 'Error when removing identifier');
             }
         } else {
             removeTargetIdentifier(0, id);
@@ -898,15 +897,14 @@ function DetailsView(): React.ReactElement {
         if(response.success === false) {
 
             // get our message from our first response
-            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+            const responseMessage: string | undefined = response.data?.[0]?.message;
 
             // if the job is running then handle differently
-            if(responseMessage.includes('already running')) {
+            if(responseMessage?.includes('already running')) {
                 console.log(`[Packrat - WARN] cannot generate downloads. (${responseMessage})`);
                 toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
             } else {
-                console.log(`[Packrat - ERROR] cannot generate downloads. (${responseMessage})`);
-                toast.error('Cannot generate downloads. Check the report.');
+                toastError({ message: responseMessage, traceId: response.traceId }, 'Cannot generate downloads. Check the report.');
             }
 
             // update our button state
@@ -950,15 +948,14 @@ function DetailsView(): React.ReactElement {
         if(response.success === false) {
 
             // get our message from our first response
-            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+            const responseMessage: string | undefined = response.data?.[0]?.message;
 
             // if the job is running then handle differently
-            if(responseMessage.includes('already running')) {
+            if(responseMessage?.includes('already running')) {
                 console.log(`[Packrat - WARN] cannot generate scene. (${responseMessage})`);
                 toast.warn('Not generating scene. Job already running. Please wait for it to finish.');
             } else {
-                console.log(`[Packrat - ERROR] cannot generate scene. (${responseMessage})`);
-                toast.error('Cannot generate scene. Check the report.');
+                toastError({ message: responseMessage, traceId: response.traceId }, 'Cannot generate scene. Check the report.');
             }
 
             console.log(idSystemObject,parameters,sceneGenParameters);
