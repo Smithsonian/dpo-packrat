@@ -983,6 +983,9 @@ export type GetSystemObjectDetailsResult = {
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;
+  edanRecordId?: Maybe<Scalars['String']>;
+  edanRecordUrl?: Maybe<Scalars['String']>;
+  edanUnitCode?: Maybe<Scalars['String']>;
   idObject: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   identifiers: Array<IngestIdentifier>;
@@ -1005,6 +1008,7 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   subTitle?: Maybe<Scalars['String']>;
   subject?: Maybe<Array<RepositoryPath>>;
+  subjectUnitMismatch?: Maybe<Scalars['Boolean']>;
   thumbnail?: Maybe<Scalars['String']>;
   unit?: Maybe<Array<RepositoryPath>>;
 };

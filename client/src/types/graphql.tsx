@@ -986,6 +986,9 @@ export type GetSystemObjectDetailsResult = {
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;
+  edanRecordId?: Maybe<Scalars['String']>;
+  edanRecordUrl?: Maybe<Scalars['String']>;
+  edanUnitCode?: Maybe<Scalars['String']>;
   idObject: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   identifiers: Array<IngestIdentifier>;
@@ -1008,6 +1011,7 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   subTitle?: Maybe<Scalars['String']>;
   subject?: Maybe<Array<RepositoryPath>>;
+  subjectUnitMismatch?: Maybe<Scalars['Boolean']>;
   thumbnail?: Maybe<Scalars['String']>;
   unit?: Maybe<Array<RepositoryPath>>;
 };
@@ -3220,7 +3224,7 @@ export type GetSystemObjectDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, isDraft: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, publishBlocker?: string | null, isDraft: boolean, edanRecordId?: string | null, edanRecordUrl?: string | null, edanUnitCode?: string | null, subjectUnitMismatch?: boolean | null, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
 
 export type GetVersionsForAssetQueryVariables = Exact<{
   input: GetVersionsForAssetInput;
@@ -5853,7 +5857,12 @@ export const GetSystemObjectDetailsDocument = gql`
     publishedState
     publishedEnum
     publishable
+    publishBlocker
     isDraft
+    edanRecordId
+    edanRecordUrl
+    edanUnitCode
+    subjectUnitMismatch
     thumbnail
     identifiers {
       identifier
