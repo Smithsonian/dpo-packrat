@@ -2,6 +2,7 @@ import { PublishResult, MutationPublishArgs } from '../../../../../types/graphql
 import { Parent } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface';
 import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
@@ -18,6 +19,11 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     const ctx = Authorization.getContext();
     if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
+
+    // Publishing a Subject requires admin (for the moment); Scene publishing is unchanged.
+    const oID = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+    if (oID?.eObjectType === COMMON.eSystemObjectType.eSubject && !ctx.isAdmin)
+        return { success: false, message: AUTH_ERROR.ADMIN_REQUIRED };
 
     // Capture the prior published state for the audit diff before the publish
     // call mutates SystemObjectVersion. Reads are cheap and the row may not

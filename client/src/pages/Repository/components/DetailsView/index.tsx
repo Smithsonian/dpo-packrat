@@ -475,11 +475,16 @@ function DetailsView(): React.ReactElement {
         objectVersions,
         metadata,
         licenseInheritance = null,
+        edanRecordUrl,
+        edanUnitCode,
+        subjectUnitMismatch,
     } = data.getSystemObjectDetails;
-    const disabled: boolean = !allowed;
+
+    const isAdmin = user?.isAdmin ?? false;
+    // Editing a Subject is admin-only for the moment; non-admins get a read-only view.
+    const disabled: boolean = !allowed || (objectType === eSystemObjectType.eSubject && !isAdmin);
 
     // Hide retire checkbox for Subject, Unit, Project if user is not admin
-    const isAdmin = user?.isAdmin ?? false;
     const adminOnlyRetireTypes = [eSystemObjectType.eSubject, eSystemObjectType.eUnit, eSystemObjectType.eProject];
     const hideRetired = !isAdmin && adminOnlyRetireTypes.includes(objectType);
 
@@ -1032,6 +1037,13 @@ function DetailsView(): React.ReactElement {
                         messageText={notice.messageText}
                     />
                 )}
+                {isAdmin && subjectUnitMismatch && (
+                    <NoticeBanner
+                        state='warning'
+                        title='Editing outside your Unit'
+                        messageText='This Subject belongs to a Unit you are not assigned to. You can still edit it, but confirm this is intentional.'
+                    />
+                )}
                 <DetailsEditGuard dirty={hasAnyUnsaved} />
                 <NavTrailRecorder idSystemObject={idSystemObject} objectType={objectType} name={detailsResponse.name ?? ''} />
                 {hasAnyUnsaved && (
@@ -1060,6 +1072,9 @@ function DetailsView(): React.ReactElement {
                         publishedEnum={publishedEnum}
                         publishable={publishable}
                         isDraft={isDraft}
+                        isAdmin={isAdmin}
+                        edanRecordUrl={edanRecordUrl}
+                        edanUnitCode={edanUnitCode}
                         retired={withDefaultValueBoolean(details.retired, false)}
                         hideRetired={hideRetired}
                         objectType={objectType}

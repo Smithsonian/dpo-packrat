@@ -199,7 +199,7 @@ export class EdanCollection implements COL.ICollection {
             }
             case COMMON.eSystemObjectType.eSubject: {
                 const PS: PublishSubject = new PublishSubject(idSystemObject);
-                return PS.publish(this);
+                return PS.publish(this, ePublishState);
             }
         }
         return { success: false, error: 'Unsupported object type for publishing' };

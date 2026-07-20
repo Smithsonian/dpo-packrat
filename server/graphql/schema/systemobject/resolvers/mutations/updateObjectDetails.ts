@@ -34,6 +34,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return sendResult(false, 'update object details failed', AUTH_ERROR.ACCESS_DENIED);
 
+    // Editing a Subject requires admin (for the moment); Scene/other editing is unchanged.
+    if (objectType === COMMON.eSystemObjectType.eSubject && !ctx.isAdmin)
+        return sendResult(false, 'update object details failed', AUTH_ERROR.ADMIN_REQUIRED);
+
     // Capture-by-reference for handleSceneUpdates to fire post-commit for the
     // Scene case. Cook download generation/removal must NOT run inside the tx.
     let pendingSceneUpdate: PendingSceneUpdate | null = null;

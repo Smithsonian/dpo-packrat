@@ -13,6 +13,7 @@ import {
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { SceneHelpers } from '../../../../../utils/sceneHelpers';
+import { SubjectHelpers } from '../../../../../utils/subjectHelpers';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 
 type PublishedStateInfo = {
@@ -21,6 +22,10 @@ type PublishedStateInfo = {
     publishable: boolean;
     publishBlocker: string | null;
     isDraft: boolean;
+    edanRecordId: string | null;
+    edanRecordUrl: string | null;
+    edanUnitCode: string | null;
+    subjectUnitMismatch: boolean;
 };
 
 const UNKNOWN_NAME: string = '<UNKNOWN>';
@@ -126,6 +131,10 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         publishable: publishedStateInfo.publishable,
         publishBlocker: publishedStateInfo.publishBlocker,
         isDraft: publishedStateInfo.isDraft,
+        edanRecordId: publishedStateInfo.edanRecordId,
+        edanRecordUrl: publishedStateInfo.edanRecordUrl,
+        edanUnitCode: publishedStateInfo.edanUnitCode,
+        subjectUnitMismatch: publishedStateInfo.subjectUnitMismatch,
         thumbnail: null,
         unit,
         project,
@@ -170,6 +179,10 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
 
     let publishable: boolean = false;
     let publishBlocker: string | null = null;
+    let edanRecordId: string | null = null;
+    let edanRecordUrl: string | null = null;
+    let edanUnitCode: string | null = null;
+    let subjectUnitMismatch: boolean = false;
     if (oID) {
         switch (oID.eObjectType) {
             case COMMON.eSystemObjectType.eScene: {
@@ -198,12 +211,35 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                     RK.logError(RK.LogSection.eGQL,'get published state failed','unable to compute scene',{ idSystemObject, ...oID },'GraphQL.SystemObject.Details');
             } break;
 
-            case COMMON.eSystemObjectType.eSubject:
-                publishable = true;
-                break;
+            case COMMON.eSystemObjectType.eSubject: {
+                // The EDAN Record ID Identifier is the target record and a real publish blocker:
+                // no record id -> nothing to upsert.
+                const target = await SubjectHelpers.computeTargetRecord(idSystemObject);
+                edanRecordId = target.recordId || null;
+                edanRecordUrl = target.url || null;
+                edanUnitCode = target.unitCode || null;
+                if (target.recordId) {
+                    publishable = true;
+                } else {
+                    publishable = false;
+                    publishBlocker = 'No EDAN Record ID';
+                }
+
+                // Warn an admin editing a Subject in a Unit they are not directly assigned to.
+                // Admin context units are zeroed, so read the raw assignments.
+                const ctx = Authorization.getContext();
+                if (ctx?.isAdmin && oID.idObject) {
+                    const subjectDB: DBAPI.Subject | null = await DBAPI.Subject.fetch(oID.idObject);
+                    if (subjectDB) {
+                        const ownUnits: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(ctx.idUser);
+                        subjectUnitMismatch = !ownUnits.includes(subjectDB.idUnit);
+                    }
+                }
+            } break;
         }
     }
-    return { publishedState, publishedEnum, publishable, publishBlocker, isDraft };
+    return { publishedState, publishedEnum, publishable, publishBlocker, isDraft,
+        edanRecordId, edanRecordUrl, edanUnitCode, subjectUnitMismatch };
 }
 
 // Classifies a Model's display Type + Variant from the Model row alone. Purpose distinguishes

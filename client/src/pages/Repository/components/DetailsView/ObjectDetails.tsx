@@ -105,6 +105,9 @@ interface ObjectDetailsProps {
     publishedEnum: number;
     publishable: boolean;
     isDraft?: boolean;
+    isAdmin?: boolean;
+    edanRecordUrl?: string | null;
+    edanUnitCode?: string | null;
     retired: boolean;
     hideRetired?: boolean;
     objectType?: number;
@@ -133,6 +136,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         publishedEnum,
         publishable,
         isDraft,
+        isAdmin,
+        edanRecordUrl,
+        edanUnitCode,
         retired,
         hideRetired,
         objectType,
@@ -227,7 +233,6 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish as Public (Unlisted)'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
     const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Publish as Internal'); };
-    const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {
         setLoading(true);
@@ -306,15 +311,35 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                 </>
             )}
             {(objectType === eSystemObjectType.eSubject) && (
-                <Detail
-                    label='Edan Sync State'
-                    valueComponent={
-                        <Box className={classes.inheritedLicense}>
-                            <Typography className={classes.value}>{publishedState}</Typography>
-                            &nbsp;<LoadingButton onClick={onSyncToEdan} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Sync to Edan</LoadingButton>
-                        </Box>
-                    }
-                />
+                <>
+                    <Divider className={classes.sectionDivider} />
+                    <Detail
+                        label='EDAN Publish State'
+                        valueComponent={
+                            <Box display='flex' flexDirection='column' width='100%'>
+                                <Box className={classes.inheritedLicense}>
+                                    <Typography className={classes.value}>{publishedState}</Typography>
+                                    &nbsp;<Tooltip arrow title={<ToolTip text={subjectPublishButtonNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+                                </Box>
+                                <Box className={classes.inheritedLicense}>
+                                    <Typography className={classes.value}>
+                                        {edanRecordUrl
+                                            ? `Target EDAN record: ${edanRecordUrl}${edanUnitCode ? ` (${edanUnitCode})` : ''}`
+                                            : 'No EDAN Record ID — add one before publishing.'}
+                                    </Typography>
+                                </Box>
+                                {isAdmin && (
+                                    <Box className={classes.buttonRow}>
+                                        <LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public</LoadingButton>
+                                        <LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public (Unlisted)</LoadingButton>
+                                        <LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
+                                        {(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                                    </Box>
+                                )}
+                            </Box>
+                        }
+                    />
+                </>
             )}
             {(objectType === eSystemObjectType.eScene) && <Divider className={classes.sectionDivider} />}
             {licenseSource ? (
@@ -459,6 +484,15 @@ Public (Unlisted): transmits the scene package to EDAN, but the record is not se
 Internal: transmits the scene package to EDAN, but access is restricted to users behind the Smithsonian firewall.
 .
 Unpublish: marks the EDAN package as inactive and not searchable.`;
+
+const subjectPublishButtonNotes =
+`Public: creates or updates this subject's EDANMDM record on EDAN and marks it searchable on si.edu.
+.
+Public (Unlisted): creates or updates the EDANMDM record but leaves it not searchable; it is reachable only via direct URL.
+.
+Internal: keeps the EDANMDM record inactive to the public (Smithsonian-internal only).
+.
+Unpublish: marks the EDANMDM record as inactive and not searchable. It is not deleted.`;
 
 export const scenePublishRequirementsNotes =
 `In order to publish a scene to EDAN, the following criteria must be met:

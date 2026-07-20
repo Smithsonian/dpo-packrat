@@ -893,6 +893,9 @@ type GetSystemObjectDetailsResult {
   asset: RepositoryPath
   assetOwner: RepositoryPath
   derivedObjects: [RelatedObject!]!
+  edanRecordId: String
+  edanRecordUrl: String
+  edanUnitCode: String
   idObject: Int!
   idSystemObject: Int!
   identifiers: [IngestIdentifier!]!
@@ -915,6 +918,7 @@ type GetSystemObjectDetailsResult {
   sourceObjects: [RelatedObject!]!
   subTitle: String
   subject: [RepositoryPath!]
+  subjectUnitMismatch: Boolean
   thumbnail: String
   unit: [RepositoryPath!]
 }
