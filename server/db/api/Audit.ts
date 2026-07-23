@@ -334,4 +334,31 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             return null;
         }
     }
+
+    /**
+     * Return the most recent approval row of the given action for a SystemObject,
+     * joined to the approver's name and stamped with the audit date. Sibling to
+     * fetchLastUser (which returns the User only) — used for DISPLAY (Verified by
+     * <name> on <date>). The honor decision for a QA approval is presence-only and
+     * does not consult AuditDate.
+     */
+    static async fetchLastApproval(idSystemObject: number, eAudit: eAuditType): Promise<{ idUser: number; Name: string; AuditDate: Date } | null> {
+        if (!idSystemObject || !eAudit)
+            return null;
+        try {
+            const rows: { idUser: number; Name: string; AuditDate: Date }[] =
+                await DBC.DBConnection.prisma.$queryRaw<{ idUser: number; Name: string; AuditDate: Date }[]>`
+                SELECT U.idUser, U.Name, AU.AuditDate
+                FROM Audit AS AU
+                JOIN User AS U ON (AU.idUser = U.idUser)
+                WHERE AU.AuditType = ${eAudit}
+                  AND AU.idSystemObject = ${idSystemObject}
+                ORDER BY AU.AuditDate DESC
+                LIMIT 1`;
+            return (rows && rows.length > 0) ? rows[0] : null;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch last approval failed',H.Helpers.getErrorString(error),{ idSystemObject, eAudit },'DB.Audit');
+            return null;
+        }
+    }
 }

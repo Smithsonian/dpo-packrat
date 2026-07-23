@@ -20,7 +20,7 @@ import {
     // Theme,
     createStyles
 } from '@material-ui/core';
-import { Edit, Sync } from '@material-ui/icons';
+import { Edit, Sync, CheckCircleOutline } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import API, { RequestResponse } from '../../../../../api';
@@ -95,6 +95,25 @@ const qcRowTooltips: Record<string, string> = {
     captureData: 'Source capture datasets (photogrammetry, CT, etc.) linked to this scene',
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapSceneQCData = (d: any): SceneQCData => ({
+    idSystemObject: d.idSystemObject,
+    idScene: d.idScene,
+    publishedUrl: d.publishedUrl,
+    published: d.published,
+    license: d.license,
+    reviewed: d.reviewed,
+    scale: d.scale,
+    thumbnails: d.thumbnails,
+    baseModels: d.baseModels,
+    downloads: d.downloads,
+    arModels: d.arModels,
+    captureData: d.captureData,
+    edanRecordId: d.edanRecordId,
+    edanUUID: d.edanUUID,
+    edanRecordIdRaw: d.edanRecordIdRaw,
+});
+
 // Define styles
 const useStyles = makeStyles(() =>
     createStyles({
@@ -168,6 +187,13 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     const [saving, setSaving] = useState<boolean>(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
+    // verify/approve dialog state (date-flagged AR + Downloads)
+    const [approveOpen, setApproveOpen] = useState<boolean>(false);
+    const [approveKind, setApproveKind] = useState<'ar' | 'downloads'>('ar');
+    const [approveReason, setApproveReason] = useState<string>('');
+    const [approveSaving, setApproveSaving] = useState<boolean>(false);
+    const [approveError, setApproveError] = useState<string | null>(null);
+
     const buildRows = useCallback((objectData: SceneQCData): QCRow[] => {
         return qcRowKeys.map((key) => {
             const row = objectData[key] as QCStatus;
@@ -196,23 +222,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             try {
                 const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
 
-                const objectData: SceneQCData = {
-                    idSystemObject: response.data.idSystemObject,
-                    idScene: response.data.idScene,
-                    publishedUrl: response.data.publishedUrl,
-                    published: response.data.published,
-                    license: response.data.license,
-                    reviewed: response.data.reviewed,
-                    scale: response.data.scale,
-                    thumbnails: response.data.thumbnails,
-                    baseModels: response.data.baseModels,
-                    downloads: response.data.downloads,
-                    arModels: response.data.arModels,
-                    captureData: response.data.captureData,
-                    edanRecordId: response.data.edanRecordId,
-                    edanUUID: response.data.edanUUID,
-                    edanRecordIdRaw: response.data.edanRecordIdRaw,
-                };
+                const objectData: SceneQCData = mapSceneQCData(response.data);
                 setData(objectData);
                 setRows(buildRows(objectData));
             } catch (err) {
@@ -265,23 +275,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
 
             // re-fetch full status to rebuild all rows
             const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
-            const updatedData: SceneQCData = {
-                idSystemObject: statusResponse.data.idSystemObject,
-                idScene: statusResponse.data.idScene,
-                publishedUrl: statusResponse.data.publishedUrl,
-                published: statusResponse.data.published,
-                license: statusResponse.data.license,
-                reviewed: statusResponse.data.reviewed,
-                scale: statusResponse.data.scale,
-                thumbnails: statusResponse.data.thumbnails,
-                baseModels: statusResponse.data.baseModels,
-                downloads: statusResponse.data.downloads,
-                arModels: statusResponse.data.arModels,
-                captureData: statusResponse.data.captureData,
-                edanRecordId: statusResponse.data.edanRecordId,
-                edanUUID: statusResponse.data.edanUUID,
-                edanRecordIdRaw: statusResponse.data.edanRecordIdRaw,
-            };
+            const updatedData: SceneQCData = mapSceneQCData(statusResponse.data);
             setData(updatedData);
             setRows(buildRows(updatedData));
             setDialogOpen(false);
@@ -292,6 +286,47 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             console.error(err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleOpenApprove = (kind: 'ar' | 'downloads') => {
+        setApproveKind(kind);
+        setApproveReason('');
+        setApproveError(null);
+        setApproveOpen(true);
+    };
+
+    const handleCancelApprove = () => {
+        setApproveOpen(false);
+        setApproveError(null);
+        setApproveReason('');
+    };
+
+    const handleApplyApprove = async () => {
+        if (!data) return;
+        setApproveSaving(true);
+        setApproveError(null);
+        try {
+            const field: string = approveKind === 'ar' ? 'approveARModels' : 'approveDownloadModels';
+            const patchResponse: RequestResponse = await API.patchObject(data.idSystemObject, { [field]: { reason: approveReason.trim() } });
+            if (!patchResponse.success) {
+                setApproveError(patchResponse.message ?? 'Failed to record approval');
+                return;
+            }
+
+            // re-fetch full status to rebuild all rows (server returns the row as "Verified")
+            const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+            const updatedData: SceneQCData = mapSceneQCData(statusResponse.data);
+            setData(updatedData);
+            setRows(buildRows(updatedData));
+            setApproveOpen(false);
+            setApproveReason('');
+            props.onUpdate?.();
+        } catch (err) {
+            setApproveError('An unexpected error occurred');
+            console.error(err);
+        } finally {
+            setApproveSaving(false);
         }
     };
 
@@ -343,6 +378,13 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                                         <Tooltip title='Edit EDAN Record ID'>
                                             <IconButton size='small' onClick={handleOpenDialog}>
                                                 <Edit fontSize='small' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                    {(row.key === 'arModels' || row.key === 'downloads') && row.status === 'Outdated' && (
+                                        <Tooltip title='Verify / Approve'>
+                                            <IconButton size='small' onClick={() => handleOpenApprove(row.key === 'arModels' ? 'ar' : 'downloads')}>
+                                                <CheckCircleOutline fontSize='small' />
                                             </IconButton>
                                         </Tooltip>
                                     )}
@@ -402,6 +444,47 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                         style={{ color: 'white' }}
                     >
                         {saving ? <CircularProgress size={20} /> : 'Apply'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={approveOpen} onClose={handleCancelApprove} maxWidth='sm' fullWidth>
+                <DialogTitle>Verify {approveKind === 'ar' ? 'AR Models' : 'Download Models'}</DialogTitle>
+                <DialogContent>
+                    <Typography variant='body2' style={{ marginBottom: 8 }}>
+                        These derivatives were generated before the 2024-06-14 Cook material fix, so
+                        Packrat flags them as possibly outdated. This is a <strong>date check</strong>,
+                        not a detected defect &mdash; the assets may be fine. Approving records a QA
+                        sign-off and clears the warning; it does not modify the assets.
+                    </Typography>
+                    <TextField
+                        variant='outlined'
+                        size='small'
+                        fullWidth
+                        multiline
+                        rows={2}
+                        label='Reason (optional)'
+                        placeholder='Optional note recorded with this approval'
+                        value={approveReason}
+                        onChange={(e) => setApproveReason(e.target.value)}
+                        disabled={approveSaving}
+                    />
+                    {approveError && (
+                        <Alert severity='error' style={{ marginTop: 8 }}>{approveError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelApprove} disabled={approveSaving}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleApplyApprove}
+                        color='primary'
+                        variant='contained'
+                        disabled={approveSaving}
+                        style={{ color: 'white' }}
+                    >
+                        {approveSaving ? <CircularProgress size={20} /> : 'Approve / Verify'}
                     </Button>
                 </DialogActions>
             </Dialog>
