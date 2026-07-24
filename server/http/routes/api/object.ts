@@ -8,9 +8,10 @@ import { Request, Response } from 'express';
 import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import * as CACHE from '../../../cache';
-import { buildProjectSceneDef, SceneSummary } from './project';
+import { buildProjectSceneDef, SceneSummary, COOK_MATERIAL_FIX_DATE } from './project';
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
 import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
+import { AuditFactory } from '../../../audit/interface/AuditFactory';
 
 //#region Types and Definitions
 
@@ -321,7 +322,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         else
             return { name, status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. unexpected relationships` };
     };
-    const getModelARStatus = (status: string, licenseAllows: boolean): FieldStatus => {
+    const formatApprovalDate = (d: Date): string => {
+        const date: Date = d instanceof Date ? d : new Date(String(d));
+        return isNaN(date.getTime()) ? String(d) : date.toISOString().slice(0, 10);
+    };
+    const getModelARStatus = async (status: string, licenseAllows: boolean): Promise<FieldStatus> => {
         const name = 'Models: AR';
 
         switch(status) {
@@ -334,8 +339,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             case 'Missing: All':
                 return { name, status, level: (licenseAllows)?'fail':'warn', notes: 'no AR models found. Regenerate the scene and generate downloads' };
             default: {
-                if (status.startsWith('Error:'))
+                if (status.startsWith('Error:')) {
+                    // Date-driven Outdated flag. Presence of an approval audit row clears it to a
+                    // neutral "Verified" state — no date comparison, no asset mutation. Non-date
+                    // failures fall through and are never cleared.
+                    const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveARModels);
+                    if (approval)
+                        return { name, status: 'Verified', level: 'info', notes: `Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}` };
                     return { name, status: 'Outdated', level: 'warn', notes: `AR model may have material issues. Consider regenerating. (${status})` };
+                }
                 return { name, status: 'Error', level: 'critical', notes: `unexpected AR model status: ${status}` };
             }
         }
@@ -348,7 +360,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         else
             return formatResultField(name,'Missing','fail',`${count}/${expected} base models found`);
     };
-    const getModelDownloadsStatus = ( status: string, count: number, expected: number, licenseAllows: boolean): FieldStatus => {
+    const getModelDownloadsStatus = async ( status: string, count: number, expected: number, licenseAllows: boolean): Promise<FieldStatus> => {
         const name = 'Download Models';
         const expectedCount = expected > 0 ? expected : 6;
 
@@ -364,7 +376,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             else
                 return formatResultField(name,'Missing','warn',`downloads not found (${count}/${expectedCount}). consider generating them.`);
         } else if(status === 'Error') {
-            // downloads exist but may have material issues (created before June 14, 2024 Cook fix)
+            // downloads exist but may have material issues (created before June 14, 2024 Cook fix).
+            // Presence of an approval audit row clears the date flag to a neutral "Verified" state.
+            const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveDownloadModels);
+            if(approval)
+                return formatResultField(name,'Verified','info',`Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}`);
             if(licenseAllows===true)
                 return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`);
             else
@@ -440,9 +456,9 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         baseModels:
             getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
         downloads:
-            getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status)),
+            await getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status)),
         arModels:
-            getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status)),
+            await getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status)),
         captureData:
             getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
     };
@@ -533,6 +549,49 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
                             db: edanResult.dbEdanRecordId,
                             subjectCount: edanResult.subjectCount,
                         }
+                    })));
+                    return;
+                }
+                case 'approveARModels':
+                case 'approveDownloadModels': {
+                    const isAR: boolean = key === 'approveARModels';
+                    const action: DBAPI.eAuditType = isAR
+                        ? DBAPI.eAuditType.eActionApproveARModels
+                        : DBAPI.eAuditType.eActionApproveDownloadModels;
+
+                    // optional free-text reason: client sends { [field]: { reason } }, but a bare
+                    // string is also accepted
+                    const rawValue = fields[key];
+                    const reason: string | undefined = (rawValue && typeof rawValue === 'object' && typeof rawValue.reason === 'string')
+                        ? (rawValue.reason.trim() || undefined)
+                        : (typeof rawValue === 'string' ? (rawValue.trim() || undefined) : undefined);
+
+                    // snapshot the currently date-flagged derivatives so the audit row records
+                    // exactly what was approved (forensics); honoring itself is presence-only
+                    const sceneSummary: SceneSummary | null = await buildProjectSceneDef(scene, null);
+                    const derivativeItems = sceneSummary
+                        ? (isAR ? sceneSummary.derivatives.ar.items : sceneSummary.derivatives.downloads.items)
+                        : [];
+                    const approvedModels = derivativeItems
+                        .filter(item => item.dateModified < COOK_MATERIAL_FIX_DATE)
+                        .map(item => ({ idSystemObject: item.id, name: item.name, dateModified: item.dateModified }));
+
+                    const emitted: boolean = await AuditFactory.emitSemantic({
+                        action,
+                        target: { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                        idSystemObject,
+                        payload: { reason, cutoff: COOK_MATERIAL_FIX_DATE, approvedModels },
+                    });
+                    if(!emitted) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: failed to record approval')));
+                        return;
+                    }
+
+                    RK.logInfo(RK.LogSection.eHTTP,'patch object',`approved ${isAR ? 'AR models':'download models'} for scene ${idSystemObject}`,
+                        { idSystemObject, action, approvedCount: approvedModels.length, reason },'HTTP.Object.PatchObject',true);
+                    res.status(200).send(JSON.stringify(generateResponse(true,'Approved',{
+                        field: isAR ? 'arModels' : 'downloads',
+                        approvedCount: approvedModels.length,
                     })));
                     return;
                 }

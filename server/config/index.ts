@@ -223,6 +223,11 @@ export const Config: ConfigType = {
             [eAuditType.eActionAccessRevoke]:       AuditTier.PROTECT,
             [eAuditType.eActionUpload]:             AuditTier.PROTECT,
             [eAuditType.eActionIngestFailed]:       AuditTier.PROTECT,
+            // INVARIANT: any eAuditType read back via Audit.fetchLast* to reconstruct current UI
+            // state (e.g. QA sign-offs surfaced in the scene status table) MUST be PROTECT so the
+            // row is never pruned or skeletonized out from under the status calc.
+            [eAuditType.eActionApproveARModels]:       AuditTier.PROTECT,
+            [eAuditType.eActionApproveDownloadModels]: AuditTier.PROTECT,
             // TIER_STANDARD - CRUD on meaningful business entities (routed at the entity level via logOnlyObjectTypes)
             [eAuditType.eDBCreate]:                 AuditTier.STANDARD,
             [eAuditType.eDBUpdate]:                 AuditTier.STANDARD,
