@@ -427,6 +427,51 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const edanUUIDStatus: FieldStatus = getEdanUUIDStatus(scene.EdanUUID ?? null, publishedStatus.status);
     //#endregion
 
+    //#region scale (display-unit validity)
+    const computeSceneScaleStatus = async (): Promise<{ status: FieldStatus; raw: any }> => {
+        const name = 'Scene Scale';
+        const info = await SceneHelpers.getSceneScaleInfo(idSystemObject);
+        if (!info.success || !info.models)
+            return { status: formatResultField(name, 'Not Evaluated', 'info', `scene scale not evaluated: ${info.error ?? 'no scene data'}`),
+                raw: { bboxState: 'absent' } };
+
+        const currentUnits: string | null = info.sceneUnits ?? null;
+        const multiModel: boolean = info.models.length > 1;
+        const validations = info.models.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+
+        // Stage 0: any corrupt/degenerate bbox short-circuits (no unit math)
+        const bad = validations.find(x => x.v.state === 'nonfinite' || x.v.state === 'inverted' || x.v.state === 'degenerate');
+        if (bad)
+            return { status: formatResultField(name, 'Invalid Bounds', 'warn',
+                `bounding box ${bad.v.state} for model '${bad.m.name ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
+            raw: { bboxState: bad.v.state, currentUnits, multiModel } };
+
+        const primary = validations.find(x => x.v.state === 'valid');
+        if (!primary || primary.v.longestSide === null)
+            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box on record'),
+                raw: { bboxState: 'absent', currentUnits, multiModel } };
+
+        // Stage 1: convert the longest side by the model's own units, then best-fit a scene unit
+        const modelUnits: string | null = primary.m.units ?? null;
+        const factor: number = SceneHelpers.unitToMeters(modelUnits) ?? 1; // 'inherit'/unknown -> meters
+        const realMeters: number = primary.v.longestSide * factor;
+        const intendedUnits: string = SceneHelpers.bestFitSceneUnit(realMeters);
+        const canFix: boolean = !multiModel;
+        const raw = { bboxState: 'valid', currentUnits, modelUnits, realMeters, intendedUnits, multiModel, canFix };
+
+        if (currentUnits && currentUnits.toLowerCase() === intendedUnits)
+            return { status: formatResultField(name, 'Good', 'pass', `display units (${currentUnits}) are plausible for the geometry`), raw };
+
+        const sizeStr: string = realMeters >= 1 ? `${realMeters.toFixed(2)} m`
+            : realMeters >= 0.01 ? `${(realMeters * 100).toFixed(1)} cm`
+                : `${(realMeters * 1000).toFixed(2)} mm`;
+        const base = `display units are '${currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${intendedUnits}'`;
+        const note = canFix ? base : `${base}. Multi-model scene: inline fix not supported.`;
+        return { status: formatResultField(name, 'Unit Mismatch', 'warn', note), raw };
+    };
+    const scaleResult = await computeSceneScaleStatus();
+    //#endregion
+
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
@@ -450,7 +495,9 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             subjectCount: edanResult.subjectCount,
         },
         scale:
-            formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
+            scaleResult.status,
+        scaleRaw:
+            scaleResult.raw,
         thumbnails:
             await getThumbnailsStatus(),
         baseModels:
@@ -593,6 +640,39 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
                         field: isAR ? 'arModels' : 'downloads',
                         approvedCount: approvedModels.length,
                     })));
+                    return;
+                }
+                case 'units': {
+                    const newValue = fields[key];
+                    if(typeof newValue !== 'string' || newValue.trim().length === 0) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: units must be a non-empty string')));
+                        return;
+                    }
+                    const units: string = newValue.trim().toLowerCase();
+                    const validUnits: string[] = ['mm','cm','m','km','in','ft','yd','mi'];
+                    if(!validUnits.includes(units)) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: invalid unit '${units}'`)));
+                        return;
+                    }
+
+                    // rewrite scenes[].units in the SVX as a new asset version
+                    const patchResult = await SceneHelpers.patchSvxUnits(idSystemObject, scene, units, idUser);
+                    if(!patchResult.success) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${patchResult.error}`)));
+                        return;
+                    }
+
+                    // audit the change (before/after units + new asset version)
+                    await AuditFactory.emitSemantic({
+                        action: DBAPI.eAuditType.eActionSVXUnitsFixed,
+                        target: { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                        idSystemObject,
+                        payload: { before: { units: patchResult.oldUnits }, after: { units: patchResult.newUnits }, idAssetVersion: patchResult.idAssetVersion },
+                    });
+
+                    RK.logInfo(RK.LogSection.eHTTP,'patch object',`fixed scene units ${patchResult.oldUnits} -> ${patchResult.newUnits} for scene ${idSystemObject}`,
+                        { idSystemObject, oldUnits: patchResult.oldUnits, newUnits: patchResult.newUnits },'HTTP.Object.PatchObject',true);
+                    res.status(200).send(JSON.stringify(generateResponse(true,'Updated',{ field: 'scale', oldUnits: patchResult.oldUnits, newUnits: patchResult.newUnits })));
                     return;
                 }
                 default:

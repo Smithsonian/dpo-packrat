@@ -243,6 +243,155 @@ export class SceneHelpers {
         return { success: true };
     }
 
+    /** Reads the preferred (.svx.json) SVX asset for a scene and returns its parsed JSON document.
+     *  Shared by the scale check and the units patch. Uses raw JSON.parse (avoids a lossy SvxReader round-trip). */
+    static async readPreferredSvxDocument(idSystemObject: number): Promise<{ success: boolean; error?: string; svxAsset?: DBAPI.Asset; svxAssetVersion?: DBAPI.AssetVersion; svxDoc?: any }> { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (!assetVersions)
+            return { success: false, error: 'Cannot fetch asset versions for scene' };
+
+        const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if (!sceneSO)
+            return { success: false, error: `Cannot fetch SystemObject ${idSystemObject}` };
+
+        let svxAsset: DBAPI.Asset | null = null;
+        let svxAssetVersion: DBAPI.AssetVersion | null = null;
+        for (const av of assetVersions) {
+            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(av.idAsset);
+            if (!asset) continue;
+            if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, sceneSO)) {
+                svxAsset = asset;
+                svxAssetVersion = av;
+                break;
+            }
+        }
+        if (!svxAsset || !svxAssetVersion)
+            return { success: false, error: 'Cannot find preferred SVX asset for scene' };
+
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(svxAssetVersion.idAssetVersion);
+        if (!RSR.success || !RSR.readStream)
+            return { success: false, error: `Cannot read SVX asset version: ${RSR.error}` };
+
+        const buffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+        if (!buffer)
+            return { success: false, error: 'Cannot read SVX stream into buffer' };
+
+        let svxDoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            svxDoc = JSON.parse(buffer.toString());
+        } catch (err) {
+            return { success: false, error: `Cannot parse SVX JSON: ${H.Helpers.getErrorString(err)}` };
+        }
+        return { success: true, svxAsset, svxAssetVersion, svxDoc };
+    }
+
+    // --- Scene scale / display-unit validation ---
+
+    /** Meters-per-unit for the SVX unit enum. Returns null for 'inherit'/unrecognized (caller falls back to meters). */
+    static unitToMeters(unit: string | null | undefined): number | null {
+        switch ((unit ?? '').toLowerCase()) {
+            case 'mm': return 0.001;
+            case 'cm': return 0.01;
+            case 'm':  return 1;
+            case 'km': return 1000;
+            case 'in': return 0.0254;
+            case 'ft': return 0.3048;
+            case 'yd': return 0.9144;
+            case 'mi': return 1609.344;
+            default:   return null; // 'inherit' or unrecognized
+        }
+    }
+
+    /** Initial scale heuristic: real-world longest side (meters) -> best-fit scene display unit.
+     *  Isolated on purpose so the thresholds can be retuned independently. */
+    static bestFitSceneUnit(realMeters: number): 'm' | 'cm' | 'mm' {
+        if (realMeters > 1) return 'm';
+        if (realMeters > 0.1) return 'cm';
+        return 'mm';
+    }
+
+    /** Classifies a per-model bounding box before any unit reasoning. */
+    static validateBoundingBox(bbox: { min?: number[]; max?: number[] } | null | undefined): { state: 'absent' | 'valid' | 'nonfinite' | 'inverted' | 'degenerate'; longestSide: number | null } {
+        if (!bbox || !Array.isArray(bbox.min) || !Array.isArray(bbox.max) || bbox.min.length < 3 || bbox.max.length < 3)
+            return { state: 'absent', longestSide: null };
+        const coords: number[] = [bbox.min[0], bbox.min[1], bbox.min[2], bbox.max[0], bbox.max[1], bbox.max[2]];
+        if (coords.some(c => typeof c !== 'number' || !isFinite(c)))
+            return { state: 'nonfinite', longestSide: null };
+        const extents: number[] = [0, 1, 2].map(i => (bbox.max as number[])[i] - (bbox.min as number[])[i]);
+        if (extents.some(e => e < 0))
+            return { state: 'inverted', longestSide: null };
+        if (extents.some(e => e < 1e-9))
+            return { state: 'degenerate', longestSide: null };
+        return { state: 'valid', longestSide: Math.max(...extents) };
+    }
+
+    /** Reads the SVX to return the scene display unit and each display model's units + bounding box. */
+    static async getSceneScaleInfo(idSystemObject: number): Promise<{ success: boolean; error?: string; sceneUnits?: string | null; models?: { name: string | null; units: string | null; bbox: { min?: number[]; max?: number[] } | null }[] }> {
+        const docResult = await SceneHelpers.readPreferredSvxDocument(idSystemObject);
+        if (!docResult.success || !docResult.svxDoc)
+            return { success: false, error: docResult.error };
+
+        const doc = docResult.svxDoc;
+        const sceneIdx: number = typeof doc.scene === 'number' ? doc.scene : 0;
+        const sceneUnits: string | null = doc.scenes?.[sceneIdx]?.units ?? null;
+        const models = Array.isArray(doc.models)
+            ? doc.models.map((m: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                name: m.name ?? null,
+                units: m.units ?? null,
+                bbox: m.boundingBox ? { min: m.boundingBox.min, max: m.boundingBox.max } : null,
+            }))
+            : [];
+        return { success: true, sceneUnits, models };
+    }
+
+    /** Rewrites the scene-level display units in the SVX (scenes[].units) and ingests a new asset version.
+     *  models[].units is left untouched (it defines the geometry's authored unit). Single-model scenes only. */
+    static async patchSvxUnits(idSystemObject: number, scene: DBAPI.Scene, newUnits: string, idUser: number): Promise<H.IOResults & { oldUnits?: string | null; newUnits?: string; idAssetVersion?: number }> {
+        const docResult = await SceneHelpers.readPreferredSvxDocument(idSystemObject);
+        if (!docResult.success || !docResult.svxDoc || !docResult.svxAsset || !docResult.svxAssetVersion)
+            return { success: false, error: docResult.error };
+
+        const { svxAsset, svxAssetVersion, svxDoc } = docResult;
+        if (!Array.isArray(svxDoc.scenes) || svxDoc.scenes.length === 0)
+            return { success: false, error: 'SVX has no scenes to update' };
+
+        const sceneIdx: number = typeof svxDoc.scene === 'number' ? svxDoc.scene : 0;
+        const targetScene = svxDoc.scenes[sceneIdx];
+        if (!targetScene)
+            return { success: false, error: `SVX scene index ${sceneIdx} not found` };
+
+        const oldUnits: string | null = targetScene.units ?? null;
+        targetScene.units = newUnits;
+
+        const updatedJson: string = JSON.stringify(svxDoc, null, 4);
+        const comment: string = oldUnits
+            ? `Updated scene display units from: ${oldUnits} to: ${newUnits}`
+            : `Set scene display units to: ${newUnits}`;
+        const readStream = Readable.from(updatedJson);
+        const ISI: STORE.IngestStreamOrFileInput = {
+            readStream,
+            localFilePath: null,
+            asset: svxAsset,
+            FileName: svxAssetVersion.FileName,
+            FilePath: '',
+            idAssetGroup: 0,
+            idVAssetType: svxAsset.idVAssetType,
+            allowZipCracking: false,
+            idUserCreator: idUser,
+            SOBased: scene,
+            Comment: comment,
+        };
+
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!IAR.success)
+            return { success: false, error: `Failed to ingest updated SVX: ${IAR.error}` };
+
+        const idAssetVersion: number | undefined = IAR.assetVersions?.[0]?.idAssetVersion;
+        RK.logInfo(RK.LogSection.eHTTP, 'patch SVX units', `success: ${oldUnits} -> ${newUnits}`,
+            { idSystemObject, idScene: scene.idScene }, 'Utils.Scene');
+        return { success: true, oldUnits, newUnits, idAssetVersion };
+    }
+
     /** Inspects an SVX buffer and injects the EDAN Record ID from the DB if it is missing in the SVX JSON.
      *  Only injects for single-subject scenes. Multi-subject scenes are skipped (require manual edanlists: prefix).
      *  Injection failure never blocks ingestion — the original buffer is returned with a warning. */
