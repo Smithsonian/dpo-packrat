@@ -457,7 +457,12 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         const realMeters: number = primary.v.longestSide * factor;
         const intendedUnits: string = SceneHelpers.bestFitSceneUnit(realMeters);
         const canFix: boolean = !multiModel;
-        const raw = { bboxState: 'valid', currentUnits, modelUnits, realMeters, intendedUnits, multiModel, canFix };
+        const bboxMin: number[] = (primary.m.bbox?.min ?? []).slice(0, 3);
+        const bboxMax: number[] = (primary.m.bbox?.max ?? []).slice(0, 3);
+        const bboxMinMeters: number[] = bboxMin.map(v => v * factor);
+        const bboxMaxMeters: number[] = bboxMax.map(v => v * factor);
+        const bboxSizeMeters: number[] = [0, 1, 2].map(i => ((bboxMax[i] ?? 0) - (bboxMin[i] ?? 0)) * factor);
+        const raw = { bboxState: 'valid', currentUnits, modelUnits, realMeters, intendedUnits, multiModel, canFix, bboxMinMeters, bboxMaxMeters, bboxSizeMeters };
 
         if (currentUnits && currentUnits.toLowerCase() === intendedUnits)
             return { status: formatResultField(name, 'Good', 'pass', `display units (${currentUnits}) are plausible for the geometry`), raw };
