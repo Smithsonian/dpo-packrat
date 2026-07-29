@@ -344,6 +344,66 @@ export class SceneHelpers {
         return { success: true, sceneUnits, models };
     }
 
+    /** Scene-scale evaluation shared by the QC status row and the bulk fix-units op. Reads the SVX,
+     *  validates the display-model bounding box, then converts the longest side by the model's own
+     *  units and best-fits a scene display unit. */
+    static async evaluateSceneScale(idSystemObject: number): Promise<{
+        state: 'no_scene' | 'invalid_bbox' | 'no_bbox' | 'ok' | 'mismatch';
+        detail: string | null;
+        modelName: string | null;
+        currentUnits: string | null;
+        modelUnits: string | null;
+        multiModel: boolean;
+        canFix: boolean;
+        realMeters: number | null;
+        intendedUnits: string | null;
+        bboxMinMeters: number[] | null;
+        bboxMaxMeters: number[] | null;
+        bboxSizeMeters: number[] | null;
+    }> {
+        const base = {
+            detail: null as string | null, modelName: null as string | null,
+            currentUnits: null as string | null, modelUnits: null as string | null,
+            multiModel: false, canFix: false,
+            realMeters: null as number | null, intendedUnits: null as string | null,
+            bboxMinMeters: null as number[] | null, bboxMaxMeters: null as number[] | null, bboxSizeMeters: null as number[] | null,
+        };
+
+        const info = await SceneHelpers.getSceneScaleInfo(idSystemObject);
+        if (!info.success || !info.models)
+            return { ...base, state: 'no_scene', detail: info.error ?? 'no scene data' };
+
+        const currentUnits: string | null = info.sceneUnits ?? null;
+        const multiModel: boolean = info.models.length > 1;
+        const validations = info.models.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+
+        const bad = validations.find(x => x.v.state === 'nonfinite' || x.v.state === 'inverted' || x.v.state === 'degenerate');
+        if (bad)
+            return { ...base, state: 'invalid_bbox', detail: bad.v.state, modelName: bad.m.name, currentUnits, multiModel };
+
+        const primary = validations.find(x => x.v.state === 'valid');
+        if (!primary || primary.v.longestSide === null)
+            return { ...base, state: 'no_bbox', currentUnits, multiModel };
+
+        const modelUnits: string | null = primary.m.units ?? null;
+        const factor: number = SceneHelpers.unitToMeters(modelUnits) ?? 1; // 'inherit'/unknown -> meters
+        const realMeters: number = primary.v.longestSide * factor;
+        const intendedUnits: string = SceneHelpers.bestFitSceneUnit(realMeters);
+        const bboxMin: number[] = (primary.m.bbox?.min ?? []).slice(0, 3);
+        const bboxMax: number[] = (primary.m.bbox?.max ?? []).slice(0, 3);
+        const bboxMinMeters: number[] = bboxMin.map(v => v * factor);
+        const bboxMaxMeters: number[] = bboxMax.map(v => v * factor);
+        const bboxSizeMeters: number[] = [0, 1, 2].map(i => ((bboxMax[i] ?? 0) - (bboxMin[i] ?? 0)) * factor);
+        const isMatch: boolean = !!currentUnits && currentUnits.toLowerCase() === intendedUnits;
+
+        return {
+            ...base,
+            state: isMatch ? 'ok' : 'mismatch',
+            currentUnits, modelUnits, multiModel, canFix: !multiModel,
+            realMeters, intendedUnits, bboxMinMeters, bboxMaxMeters, bboxSizeMeters,
+        };
+    }
+
     /** Rewrites the scene-level display units in the SVX (scenes[].units) and ingests a new asset version.
      *  models[].units is left untouched (it defines the geometry's authored unit). Single-model scenes only. */
     static async patchSvxUnits(idSystemObject: number, scene: DBAPI.Scene, newUnits: string, idUser: number): Promise<H.IOResults & { oldUnits?: string | null; newUnits?: string; idAssetVersion?: number }> {

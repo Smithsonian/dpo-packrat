@@ -430,48 +430,28 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     //#region scale (display-unit validity)
     const computeSceneScaleStatus = async (): Promise<{ status: FieldStatus; raw: any }> => {
         const name = 'Scene Scale';
-        const info = await SceneHelpers.getSceneScaleInfo(idSystemObject);
-        if (!info.success || !info.models)
-            return { status: formatResultField(name, 'Not Evaluated', 'info', `scene scale not evaluated: ${info.error ?? 'no scene data'}`),
+        const e = await SceneHelpers.evaluateSceneScale(idSystemObject);
+        if (e.state === 'no_scene')
+            return { status: formatResultField(name, 'Not Evaluated', 'info', `scene scale not evaluated: ${e.detail ?? 'no scene data'}`),
                 raw: { bboxState: 'absent' } };
-
-        const currentUnits: string | null = info.sceneUnits ?? null;
-        const multiModel: boolean = info.models.length > 1;
-        const validations = info.models.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
-
-        // Stage 0: any corrupt/degenerate bbox short-circuits (no unit math)
-        const bad = validations.find(x => x.v.state === 'nonfinite' || x.v.state === 'inverted' || x.v.state === 'degenerate');
-        if (bad)
+        if (e.state === 'invalid_bbox')
             return { status: formatResultField(name, 'Invalid Bounds', 'warn',
-                `bounding box ${bad.v.state} for model '${bad.m.name ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
-            raw: { bboxState: bad.v.state, currentUnits, multiModel } };
-
-        const primary = validations.find(x => x.v.state === 'valid');
-        if (!primary || primary.v.longestSide === null)
+                `bounding box ${e.detail} for model '${e.modelName ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
+            raw: { bboxState: e.detail, currentUnits: e.currentUnits, multiModel: e.multiModel } };
+        if (e.state === 'no_bbox')
             return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box on record'),
-                raw: { bboxState: 'absent', currentUnits, multiModel } };
+                raw: { bboxState: 'absent', currentUnits: e.currentUnits, multiModel: e.multiModel } };
 
-        // Stage 1: convert the longest side by the model's own units, then best-fit a scene unit
-        const modelUnits: string | null = primary.m.units ?? null;
-        const factor: number = SceneHelpers.unitToMeters(modelUnits) ?? 1; // 'inherit'/unknown -> meters
-        const realMeters: number = primary.v.longestSide * factor;
-        const intendedUnits: string = SceneHelpers.bestFitSceneUnit(realMeters);
-        const canFix: boolean = !multiModel;
-        const bboxMin: number[] = (primary.m.bbox?.min ?? []).slice(0, 3);
-        const bboxMax: number[] = (primary.m.bbox?.max ?? []).slice(0, 3);
-        const bboxMinMeters: number[] = bboxMin.map(v => v * factor);
-        const bboxMaxMeters: number[] = bboxMax.map(v => v * factor);
-        const bboxSizeMeters: number[] = [0, 1, 2].map(i => ((bboxMax[i] ?? 0) - (bboxMin[i] ?? 0)) * factor);
-        const raw = { bboxState: 'valid', currentUnits, modelUnits, realMeters, intendedUnits, multiModel, canFix, bboxMinMeters, bboxMaxMeters, bboxSizeMeters };
+        const raw = { bboxState: 'valid', currentUnits: e.currentUnits, modelUnits: e.modelUnits, realMeters: e.realMeters,
+            intendedUnits: e.intendedUnits, multiModel: e.multiModel, canFix: e.canFix,
+            bboxMinMeters: e.bboxMinMeters, bboxMaxMeters: e.bboxMaxMeters, bboxSizeMeters: e.bboxSizeMeters };
+        if (e.state === 'ok')
+            return { status: formatResultField(name, 'Good', 'pass', `display units (${e.currentUnits}) are plausible for the geometry`), raw };
 
-        if (currentUnits && currentUnits.toLowerCase() === intendedUnits)
-            return { status: formatResultField(name, 'Good', 'pass', `display units (${currentUnits}) are plausible for the geometry`), raw };
-
-        const sizeStr: string = realMeters >= 1 ? `${realMeters.toFixed(2)} m`
-            : realMeters >= 0.01 ? `${(realMeters * 100).toFixed(1)} cm`
-                : `${(realMeters * 1000).toFixed(2)} mm`;
-        const base = `display units are '${currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${intendedUnits}'`;
-        const note = canFix ? base : `${base}. Multi-model scene: inline fix not supported.`;
+        const rm: number = e.realMeters ?? 0;
+        const sizeStr: string = rm >= 1 ? `${rm.toFixed(2)} m` : rm >= 0.01 ? `${(rm * 100).toFixed(1)} cm` : `${(rm * 1000).toFixed(2)} mm`;
+        const baseNote = `display units are '${e.currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${e.intendedUnits}'`;
+        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene: inline fix not supported.`;
         return { status: formatResultField(name, 'Unit Mismatch', 'warn', note), raw };
     };
     const scaleResult = await computeSceneScaleStatus();

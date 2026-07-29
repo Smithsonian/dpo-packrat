@@ -118,6 +118,13 @@ export default class API {
         return this.request('api/object/action', { method: 'POST', body });
     }
 
+    // bulk operation — describe | validate (sweep) | apply (one item) a registered bulk op harness
+    static async bulkOperation(operation: string, mode: 'describe' | 'validate' | 'apply',
+        args: { idSystemObject?: number; idSystemObjects?: number[]; rowSettings?: Record<string, unknown> } = {}): Promise<RequestResponse> {
+        const body = JSON.stringify({ operation, mode, ...args });
+        return this.request('api/bulk/operation', { method: 'POST', body });
+    }
+
     // scenes still in a published EDAN state (retired-first); orphan reconciliation report
     static async getPublishedScenes(): Promise<RequestResponse> {
         return this.request('api/scene/published', { method: 'GET' });
