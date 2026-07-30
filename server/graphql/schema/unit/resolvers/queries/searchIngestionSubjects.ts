@@ -14,6 +14,13 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
     const resultsDB: DBAPI.SubjectUnitIdentifier[] | null = EdanOnly ? [] : await DBAPI.SubjectUnitIdentifier.fetch(query, 10);
     const resultsCOL: COL.CollectionQueryResults | null = await ICollection.queryCollection(query, 10, 0, null);
 
+    // A failed EDAN request (unreachable/timeout/unparseable) carries an error; a request that
+    // succeeded but matched nothing does not. Surfacing this lets the client distinguish an EDAN
+    // outage from a genuinely empty result set instead of always showing "no results".
+    const edanError: string | null = resultsCOL
+        ? (resultsCOL.error ?? null)
+        : 'EDAN search is currently unavailable. Please try again later.';
+
     const results: DBAPI.SubjectUnitIdentifier[] = [];
     const resultSet: Set<string> = new Set<string>();
 
@@ -105,8 +112,8 @@ export default async function searchIngestionSubjects(_: Parent, args: QuerySear
         if (effectiveUnitSet)
             Authorization.logFilteredResults('searchIngestionSubjects(collection)', totalCOL, results.length);
 
-        return { SubjectUnitIdentifier: results };
+        return { SubjectUnitIdentifier: results, error: edanError };
     }
 
-    return { SubjectUnitIdentifier: [] };
+    return { SubjectUnitIdentifier: results, error: edanError };
 }

@@ -100,6 +100,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         return;
     }
 
+    // a scene must be linked to a parent Item (Media Group) to resolve its subject/project
+    // ancestry; orphaned scenes (often legacy) cannot produce a QC summary. Detect this here so
+    // the client receives a specific, actionable message instead of a generic build failure.
+    const parentItems: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
+    if(!parentItems || parentItems.length===0) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`Scene is not linked to a parent Item (Media Group); cannot compute QC status (idScene: ${scene.idScene}).`)));
+        return;
+    }
+
     // get our status for the scene
     const profileKey: string = 'calc_status_'+H.Helpers.randomSlug();
     RK.profile(profileKey,RK.LogSection.eHTTP,'calculating scene status',{ name: scene.Name, idScene: scene.idScene, idSystemObject });

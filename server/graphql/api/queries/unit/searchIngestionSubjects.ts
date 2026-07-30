@@ -11,6 +11,7 @@ const searchIngestionSubjects = gql`
                 IdentifierPublic
                 IdentifierCollection
             }
+            error
         }
     }
 `;

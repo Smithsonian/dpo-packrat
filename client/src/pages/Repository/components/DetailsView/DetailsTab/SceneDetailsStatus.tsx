@@ -247,7 +247,15 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setError(null);
                 const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+
+                // A failed status request carries a human-readable message but no data payload;
+                // surface that message rather than dereferencing an undefined response.data.
+                if (!response.success || !response.data) {
+                    setError(response.message || 'Failed to load QC data');
+                    return;
+                }
 
                 const objectData: SceneQCData = mapSceneQCData(response.data);
                 setData(objectData);
