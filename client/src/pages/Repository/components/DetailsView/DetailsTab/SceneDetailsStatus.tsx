@@ -15,12 +15,13 @@ import {
     IconButton,
     TextField,
     Button,
+    MenuItem,
     Tooltip,
     Typography,
     // Theme,
     createStyles
 } from '@material-ui/core';
-import { Edit, Sync, CheckCircleOutline } from '@material-ui/icons';
+import { Edit, Sync, CheckCircleOutline, Straighten } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import API, { RequestResponse } from '../../../../../api';
@@ -35,6 +36,18 @@ interface EdanRecordIdRaw {
     svx: string | null;
     db: string | null;
     subjectCount: number;
+}
+interface ScaleRaw {
+    bboxState: string;
+    currentUnits?: string | null;
+    modelUnits?: string | null;
+    realMeters?: number;
+    intendedUnits?: string;
+    multiModel?: boolean;
+    canFix?: boolean;
+    bboxMinMeters?: number[];
+    bboxMaxMeters?: number[];
+    bboxSizeMeters?: number[];
 }
 interface SceneQCData {
     idSystemObject: number,
@@ -52,6 +65,7 @@ interface SceneQCData {
     edanRecordId: QCStatus;
     edanUUID: QCStatus;
     edanRecordIdRaw?: EdanRecordIdRaw;
+    scaleRaw?: ScaleRaw;
     // network: QCStatus;
 }
 interface QCRow {
@@ -77,6 +91,7 @@ const qcRowKeys: (keyof SceneQCData)[] = [
     'edanUUID',
     // 'thumbnails',
     'baseModels',
+    'scale',
     'downloads',
     'arModels',
     'captureData'
@@ -90,6 +105,7 @@ const qcRowTooltips: Record<string, string> = {
     edanUUID: 'Unique identifier used by EDAN to reference this scene\'s 3D package',
     thumbnails: 'Presence of generated thumbnail images for this scene',
     baseModels: 'Base 3D models (master geometry) linked to this scene',
+    scale: 'Whether the scene\'s Voyager display units are plausible for the model\'s real-world size',
     downloads: 'Generated download packages (GLB, OBJ, USDZ) for public distribution',
     arModels: 'AR-ready models (WebXR and native) for augmented reality viewing',
     captureData: 'Source capture datasets (photogrammetry, CT, etc.) linked to this scene',
@@ -112,7 +128,12 @@ const mapSceneQCData = (d: any): SceneQCData => ({
     edanRecordId: d.edanRecordId,
     edanUUID: d.edanUUID,
     edanRecordIdRaw: d.edanRecordIdRaw,
+    scaleRaw: d.scaleRaw,
 });
+
+const UNIT_OPTIONS: string[] = ['mm', 'cm', 'm', 'km', 'in', 'ft', 'yd', 'mi'];
+const fmtVec = (v?: number[] | null): string =>
+    Array.isArray(v) && v.length >= 3 ? `(${v.map(n => (Number.isFinite(n) ? String(Number(n.toFixed(4))) : '?')).join(', ')})` : '—';
 
 // Define styles
 const useStyles = makeStyles(() =>
@@ -194,6 +215,12 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     const [approveSaving, setApproveSaving] = useState<boolean>(false);
     const [approveError, setApproveError] = useState<string | null>(null);
 
+    // fix display-units dialog state
+    const [scaleOpen, setScaleOpen] = useState<boolean>(false);
+    const [scaleUnit, setScaleUnit] = useState<string>('m');
+    const [scaleSaving, setScaleSaving] = useState<boolean>(false);
+    const [scaleError, setScaleError] = useState<string | null>(null);
+
     const buildRows = useCallback((objectData: SceneQCData): QCRow[] => {
         return qcRowKeys.map((key) => {
             const row = objectData[key] as QCStatus;
@@ -220,7 +247,15 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setError(null);
                 const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+
+                // A failed status request carries a human-readable message but no data payload;
+                // surface that message rather than dereferencing an undefined response.data.
+                if (!response.success || !response.data) {
+                    setError(response.message || 'Failed to load QC data');
+                    return;
+                }
 
                 const objectData: SceneQCData = mapSceneQCData(response.data);
                 setData(objectData);
@@ -286,6 +321,43 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             console.error(err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleOpenScale = () => {
+        setScaleUnit(data?.scaleRaw?.intendedUnits ?? data?.scaleRaw?.currentUnits ?? 'm');
+        setScaleError(null);
+        setScaleOpen(true);
+    };
+
+    const handleCancelScale = () => {
+        setScaleOpen(false);
+        setScaleError(null);
+    };
+
+    const handleApplyScale = async () => {
+        if (!data || !scaleUnit) return;
+        setScaleSaving(true);
+        setScaleError(null);
+        try {
+            const patchResponse: RequestResponse = await API.patchObject(data.idSystemObject, { units: scaleUnit });
+            if (!patchResponse.success) {
+                setScaleError(patchResponse.message ?? 'Failed to update scene units');
+                return;
+            }
+
+            // re-fetch full status to rebuild all rows
+            const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+            const updatedData: SceneQCData = mapSceneQCData(statusResponse.data);
+            setData(updatedData);
+            setRows(buildRows(updatedData));
+            setScaleOpen(false);
+            props.onUpdate?.();
+        } catch (err) {
+            setScaleError('An unexpected error occurred');
+            console.error(err);
+        } finally {
+            setScaleSaving(false);
         }
     };
 
@@ -388,6 +460,13 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                                             </IconButton>
                                         </Tooltip>
                                     )}
+                                    {row.key === 'scale' && (
+                                        <Tooltip title='Set Display Units'>
+                                            <IconButton size='small' onClick={handleOpenScale}>
+                                                <Straighten fontSize='small' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -485,6 +564,71 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                         style={{ color: 'white' }}
                     >
                         {approveSaving ? <CircularProgress size={20} /> : 'Approve / Verify'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={scaleOpen}
+                onClose={handleCancelScale}
+                maxWidth='sm'
+                fullWidth
+                PaperProps={{ style: { maxWidth: 630 } }}
+            >
+                <DialogTitle>Set Display Units</DialogTitle>
+                <DialogContent>
+                    <Typography variant='body2' style={{ marginBottom: 16 }}>
+                        The display units for a Voyager scene help with user navigation (zooming, rotating, measurement) and should match the object&apos;s relative size.
+                    </Typography>
+                    <Typography component='div' variant='body2' style={{ marginBottom: 32 }}>
+                        <table style={{ borderCollapse: 'collapse' }}>
+                            <tbody>
+                                <tr>
+                                    <td style={{ paddingRight: 16, verticalAlign: 'top' }}><strong>Current display units</strong></td>
+                                    <td>{data?.scaleRaw?.currentUnits ?? 'unset'}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ paddingRight: 16, verticalAlign: 'top' }}><strong>Adjusted bbox size</strong></td>
+                                    <td>{fmtVec(data?.scaleRaw?.bboxSizeMeters)} m</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ paddingRight: 16, verticalAlign: 'top' }}><strong>Suggested unit</strong></td>
+                                    <td>{data?.scaleRaw?.intendedUnits ?? '—'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </Typography>
+                    <TextField
+                        select
+                        variant='outlined'
+                        size='small'
+                        fullWidth
+                        label='Display units'
+                        value={scaleUnit}
+                        onChange={(e) => setScaleUnit(e.target.value)}
+                        disabled={scaleSaving}
+                    >
+                        {UNIT_OPTIONS.map((u) => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </TextField>
+                    <Typography variant='caption' color='textSecondary' style={{ display: 'block', marginTop: 8 }}>
+                        Applying rewrites the scene&apos;s units in the SVX as a new asset version; the geometry is unchanged.
+                    </Typography>
+                    {scaleError && (
+                        <Alert severity='error' style={{ marginTop: 8 }}>{scaleError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelScale} disabled={scaleSaving}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleApplyScale}
+                        color='primary'
+                        variant='contained'
+                        disabled={scaleSaving || !scaleUnit}
+                        style={{ color: 'white' }}
+                    >
+                        {scaleSaving ? <CircularProgress size={20} /> : 'Apply'}
                     </Button>
                 </DialogActions>
             </Dialog>

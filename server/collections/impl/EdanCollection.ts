@@ -71,16 +71,20 @@ export class EdanCollection implements COL.ICollection {
         const params: string = `q=${encodeURIComponent(query).replace(/'/g, '%27')}${filter}&rows=${rows}&start=${start}`;
         const reqResult: HttpRequestResult  = await this.sendRequest(eAPIType.eEDAN, eHTTPMethod.eGet, path, params);
         if (!reqResult.success) {
-            RK.logError(RK.LogSection.eCOLL,'publish failed',`request error: ${reqResult.statusText}`,{ query },'Publish.Subject');
-            return null;
+            // Request itself failed (unreachable, timeout, or non-2xx). Carry the reason on the
+            // result so callers can distinguish an EDAN outage from a genuinely empty result set.
+            result.error = `EDAN request failed: ${reqResult.statusText}`;
+            RK.logError(RK.LogSection.eCOLL,'query collection failed',result.error,{ query, params },'Collection.EDAN');
+            return result;
         }
 
         let jsonResult: any | null = null;
         try {
             jsonResult = reqResult.output ? JSON.parse(reqResult.output) : /* istanbul ignore next */ null;
         } catch (error) /* istanbul ignore next */ {
-            RK.logError(RK.LogSection.eCOLL,'publish failed',H.Helpers.getErrorString(error),{ query },'Publish.Subject');
-            return null;
+            result.error = `EDAN response could not be parsed: ${H.Helpers.getErrorString(error)}`;
+            RK.logError(RK.LogSection.eCOLL,'query collection failed',result.error,{ query, params },'Collection.EDAN');
+            return result;
         }
 
         // jsonResult.rows -- array of { ..., title, id, unitCode, ..., content };
@@ -139,8 +143,9 @@ export class EdanCollection implements COL.ICollection {
             }
         }
 
-        // LOG.info(`Collections Processed Results = ${JSON.stringify(result)}'\n\n'`, LOG.LS.eCOLL);
-        // LOG.info(`EDAN Raw Results = ${reqResult.output}\n\n`, LOG.LS.eCOLL);
+        // Record the outcome of every successful EDAN round-trip: a rowCount of 0 with no error
+        // means EDAN responded normally and simply matched nothing (an empty result, not an outage).
+        RK.logDebug(RK.LogSection.eCOLL,'query collection',undefined,{ query, rowCount: result.rowCount, records: result.records.length },'Collection.EDAN');
         return result;
     }
 

@@ -100,6 +100,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         return;
     }
 
+    // a scene must be linked to a parent Item (Media Group) to resolve its subject/project
+    // ancestry; orphaned scenes (often legacy) cannot produce a QC summary. Detect this here so
+    // the client receives a specific, actionable message instead of a generic build failure.
+    const parentItems: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
+    if(!parentItems || parentItems.length===0) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`Scene is not linked to a parent Item (Media Group); cannot compute QC status (idScene: ${scene.idScene}).`)));
+        return;
+    }
+
     // get our status for the scene
     const profileKey: string = 'calc_status_'+H.Helpers.randomSlug();
     RK.profile(profileKey,RK.LogSection.eHTTP,'calculating scene status',{ name: scene.Name, idScene: scene.idScene, idSystemObject });
@@ -427,6 +436,36 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const edanUUIDStatus: FieldStatus = getEdanUUIDStatus(scene.EdanUUID ?? null, publishedStatus.status);
     //#endregion
 
+    //#region scale (display-unit validity)
+    const computeSceneScaleStatus = async (): Promise<{ status: FieldStatus; raw: any }> => {
+        const name = 'Scene Scale';
+        const e = await SceneHelpers.evaluateSceneScale(idSystemObject);
+        if (e.state === 'no_scene')
+            return { status: formatResultField(name, 'Not Evaluated', 'info', `scene scale not evaluated: ${e.detail ?? 'no scene data'}`),
+                raw: { bboxState: 'absent' } };
+        if (e.state === 'invalid_bbox')
+            return { status: formatResultField(name, 'Invalid Bounds', 'warn',
+                `bounding box ${e.detail} for model '${e.modelName ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
+            raw: { bboxState: e.detail, currentUnits: e.currentUnits, multiModel: e.multiModel } };
+        if (e.state === 'no_bbox')
+            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box on record'),
+                raw: { bboxState: 'absent', currentUnits: e.currentUnits, multiModel: e.multiModel } };
+
+        const raw = { bboxState: 'valid', currentUnits: e.currentUnits, modelUnits: e.modelUnits, realMeters: e.realMeters,
+            intendedUnits: e.intendedUnits, multiModel: e.multiModel, canFix: e.canFix,
+            bboxMinMeters: e.bboxMinMeters, bboxMaxMeters: e.bboxMaxMeters, bboxSizeMeters: e.bboxSizeMeters };
+        if (e.state === 'ok')
+            return { status: formatResultField(name, 'Good', 'pass', `display units (${e.currentUnits}) are plausible for the geometry`), raw };
+
+        const rm: number = e.realMeters ?? 0;
+        const sizeStr: string = rm >= 1 ? `${rm.toFixed(2)} m` : rm >= 0.01 ? `${(rm * 100).toFixed(1)} cm` : `${(rm * 1000).toFixed(2)} mm`;
+        const baseNote = `display units are '${e.currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${e.intendedUnits}'`;
+        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene: inline fix not supported.`;
+        return { status: formatResultField(name, 'Unit Mismatch', 'warn', note), raw };
+    };
+    const scaleResult = await computeSceneScaleStatus();
+    //#endregion
+
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
@@ -450,7 +489,9 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             subjectCount: edanResult.subjectCount,
         },
         scale:
-            formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
+            scaleResult.status,
+        scaleRaw:
+            scaleResult.raw,
         thumbnails:
             await getThumbnailsStatus(),
         baseModels:
@@ -593,6 +634,39 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
                         field: isAR ? 'arModels' : 'downloads',
                         approvedCount: approvedModels.length,
                     })));
+                    return;
+                }
+                case 'units': {
+                    const newValue = fields[key];
+                    if(typeof newValue !== 'string' || newValue.trim().length === 0) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: units must be a non-empty string')));
+                        return;
+                    }
+                    const units: string = newValue.trim().toLowerCase();
+                    const validUnits: string[] = ['mm','cm','m','km','in','ft','yd','mi'];
+                    if(!validUnits.includes(units)) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: invalid unit '${units}'`)));
+                        return;
+                    }
+
+                    // rewrite scenes[].units in the SVX as a new asset version
+                    const patchResult = await SceneHelpers.patchSvxUnits(idSystemObject, scene, units, idUser);
+                    if(!patchResult.success) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${patchResult.error}`)));
+                        return;
+                    }
+
+                    // audit the change (before/after units + new asset version)
+                    await AuditFactory.emitSemantic({
+                        action: DBAPI.eAuditType.eActionSVXUnitsFixed,
+                        target: { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                        idSystemObject,
+                        payload: { before: { units: patchResult.oldUnits }, after: { units: patchResult.newUnits }, idAssetVersion: patchResult.idAssetVersion },
+                    });
+
+                    RK.logInfo(RK.LogSection.eHTTP,'patch object',`fixed scene units ${patchResult.oldUnits} -> ${patchResult.newUnits} for scene ${idSystemObject}`,
+                        { idSystemObject, oldUnits: patchResult.oldUnits, newUnits: patchResult.newUnits },'HTTP.Object.PatchObject',true);
+                    res.status(200).send(JSON.stringify(generateResponse(true,'Updated',{ field: 'scale', oldUnits: patchResult.oldUnits, newUnits: patchResult.newUnits })));
                     return;
                 }
                 default:

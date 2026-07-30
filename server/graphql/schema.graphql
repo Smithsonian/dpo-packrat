@@ -1846,6 +1846,7 @@ input SearchIngestionSubjectsInput {
 
 type SearchIngestionSubjectsResult {
   SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+  error: String
 }
 
 type SourceObjectIdentifier {

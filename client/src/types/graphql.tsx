@@ -2353,6 +2353,7 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+  error?: Maybe<Scalars['String']>;
 };
 
 export type SourceObjectIdentifier = {
@@ -3327,7 +3328,7 @@ export type SearchIngestionSubjectsQueryVariables = Exact<{
 }>;
 
 
-export type SearchIngestionSubjectsQuery = { __typename?: 'Query', searchIngestionSubjects: { __typename?: 'SearchIngestionSubjectsResult', SubjectUnitIdentifier: Array<{ __typename?: 'SubjectUnitIdentifier', idSubject: number, idSystemObject: number, SubjectName: string, UnitAbbreviation: string, IdentifierPublic?: string | null, IdentifierCollection?: string | null }> } };
+export type SearchIngestionSubjectsQuery = { __typename?: 'Query', searchIngestionSubjects: { __typename?: 'SearchIngestionSubjectsResult', error?: string | null, SubjectUnitIdentifier: Array<{ __typename?: 'SubjectUnitIdentifier', idSubject: number, idSystemObject: number, SubjectName: string, UnitAbbreviation: string, IdentifierPublic?: string | null, IdentifierCollection?: string | null }> } };
 
 export type GetAllUsersQueryVariables = Exact<{
   input: GetAllUsersInput;
@@ -6565,6 +6566,7 @@ export const SearchIngestionSubjectsDocument = gql`
       IdentifierPublic
       IdentifierCollection
     }
+    error
   }
 }
     `;

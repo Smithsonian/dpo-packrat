@@ -2350,6 +2350,7 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+  error?: Maybe<Scalars['String']>;
 };
 
 export type SourceObjectIdentifier = {

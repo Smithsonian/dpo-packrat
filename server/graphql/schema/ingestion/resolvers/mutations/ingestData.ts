@@ -740,10 +740,11 @@ class IngestDataWorker extends ResolverBase {
             for (let retry: number = 1; retry <= 5; retry++) {
                 const results: COL.CollectionQueryResults | null = await ICol.queryCollection(edanQuery, 10, 0, { gatherIDMap: true });
                 // LOG.info(`ingestData EDAN Query: ${H.Helpers.JSONStringify(results)}`, LOG.LS.eGQL);
-                if (!results)
-                    continue;
-                if (results.error) {
-                    RK.logError(RK.LogSection.eGQL,'create subject identifiers failed',`unable to fetch EDAN information: ${edanQuery}`,{ edanQuery },'GraphQL.Ingestion.Data');
+                if (!results || results.error) {
+                    // Transient EDAN failure: exhaust the retry budget before giving up.
+                    if (retry < 5)
+                        continue;
+                    RK.logError(RK.LogSection.eGQL,'create subject identifiers failed',`unable to fetch EDAN information: ${edanQuery}`,{ edanQuery, error: results?.error },'GraphQL.Ingestion.Data');
                     break;
                 }
                 if (results.records.length !== 1) {

@@ -29,6 +29,7 @@ import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
 import { getObjectStatus, patchObject } from './routes/api/object';
 import { objectAction } from './routes/api/objectAction';
+import { bulkOperation } from './routes/api/bulkOperation';
 import { getPublishedScenes } from './routes/api/publishedScenes';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
@@ -242,6 +243,7 @@ export class HttpServer {
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
         this.app.post('/api/object/action', objectAction);          // describe | retire | reinstate an object + dependents
+        this.app.post('/api/bulk/operation', bulkOperation);        // describe | validate | apply a registered bulk operation
 
         this.app.get('/api/audit/lifeline/:id', getAuditLifeline);  // admin-only: per-SystemObject audit history
 

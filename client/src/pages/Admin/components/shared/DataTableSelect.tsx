@@ -397,10 +397,12 @@ function DataTableSelectInner<T extends DBReference>(
                                                             column.key !== 'id' && (
                                                                 <Tooltip
                                                                     key={column.key}
-                                                                    title={resolveProperty(row, column.key)}
+                                                                    title={column.render ? '' : resolveProperty(row, column.key)}
+                                                                    disableHoverListener={!!column.render}
                                                                 >
                                                                     <TableCell
                                                                         align={column.align ?? 'center'}
+                                                                        onClick={column.render ? handleElementClick : undefined}
                                                                         style={{
                                                                             whiteSpace: 'nowrap',
                                                                             textOverflow: 'ellipsis',
@@ -409,7 +411,7 @@ function DataTableSelectInner<T extends DBReference>(
                                                                             color: `${ expandable && expandedRow === row.id ? 'white' : 'black' }`
                                                                         }}
                                                                     >
-                                                                        {column.link ? (() => {
+                                                                        {column.render ? column.render(row) : column.link ? (() => {
                                                                             const link = resolveProperty(row, `${column.key}_link`);
                                                                             const displayText = resolveProperty(row, column.key);
                                                                             return link.includes('#') ? (
