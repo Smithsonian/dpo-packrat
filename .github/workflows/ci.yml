@@ -92,6 +92,10 @@ jobs:
       - name: Run Tests
         run: yarn test
         env:
+          # AppId and AuthKey are a matched pair — EDAN rejects a request whose signature was
+          # made with a key that does not belong to the supplied AppId. Both must be set together;
+          # otherwise PACKRAT_EDAN_APPID falls back to the OCIO3D default and mismatches the key.
+          PACKRAT_EDAN_APPID: ${{ secrets.PACKRAT_EDAN_APPID }}
           PACKRAT_EDAN_AUTH_KEY: ${{ secrets.PACKRAT_EDAN_AUTH_KEY }}
           PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat
 
