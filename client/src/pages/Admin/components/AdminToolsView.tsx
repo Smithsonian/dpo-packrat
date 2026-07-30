@@ -20,6 +20,7 @@ import ToolsSystemOps from './Tools/ToolsSystemOps';
 import ToolsAuthorizationOverview from './Tools/ToolsAuthorizationOverview';
 import ToolsExternalSources from './Tools/ToolsExternalSources';
 import ToolsPublishedScenes from './Tools/ToolsPublishedScenes';
+import ToolsBulkOperations from './Tools/ToolsBulkOperations';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -82,6 +83,7 @@ function AdminToolsView(): React.ReactElement {
     const isAdmin = user?.isAdmin ?? false;
     const [openSections, setOpenSections] = useState<{ [key: string]: boolean }>({
         batchOps: false,
+        bulkOperations: false,
         assetValidation: false,
         systemOps: false,
         publishedScenes: false,
@@ -115,6 +117,19 @@ function AdminToolsView(): React.ReactElement {
                                     <ToolsBatchGeneration />
                                 </Collapse>
                             </Box>
+
+                            {/* Bulk Operations (admin) */}
+                            {isAdmin && (
+                                <Box>
+                                    <IconButton className={classes.collapseHeader} onClick={() => toggleSection('bulkOperations')}>
+                                        Bulk Operations
+                                        {openSections.bulkOperations ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                    </IconButton>
+                                    <Collapse in={openSections.bulkOperations} className={classes.collapseContainer}>
+                                        {openSections.bulkOperations && <ToolsBulkOperations />}
+                                    </Collapse>
+                                </Box>
+                            )}
 
                             {/* Asset Validation Section */}
                             <Box>

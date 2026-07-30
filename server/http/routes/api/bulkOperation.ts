@@ -13,7 +13,7 @@ import { Request, Response } from 'express';
 // Each operation is a registry entry. A new op = a new entry; the route and client are generic.
 interface BulkOpColumn { key: string; label: string; }
 interface BulkOpSetting { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; }
-interface BulkOpValidateResult { isCandidate: boolean; name: string; rowData?: any; defaultSettings?: any; }
+interface BulkOpValidateResult { isCandidate: boolean; include?: boolean; name: string; rowData?: any; defaultSettings?: any; current?: any; }
 interface BulkOpApplyResult { success: boolean; message?: string; rowData?: any; }
 interface BulkOperationDef {
     key: string;
@@ -70,14 +70,17 @@ const fixDisplayUnits: BulkOperationDef = {
     validate: async (idSystemObject: number): Promise<BulkOpValidateResult> => {
         const name = await sceneName(idSystemObject);
         const e = await SceneHelpers.evaluateSceneScale(idSystemObject);
-        // candidate = a single-model scene with an implausible (fixable) unit mismatch
-        if (e.state !== 'mismatch' || !e.canFix)
-            return { isCandidate: false, name };
+        // show evaluable single-model scenes: mismatches (a change is suggested) and already-matching
+        const mismatch: boolean = e.state === 'mismatch' && e.canFix;
+        if (!mismatch && e.state !== 'ok')
+            return { isCandidate: false, include: false, name };
         return {
-            isCandidate: true,
+            isCandidate: mismatch,
+            include: true,
             name,
             rowData: { currentUnits: e.currentUnits ?? 'unset', bboxSize: fmtVec(e.bboxSizeMeters), suggestedUnit: e.intendedUnits },
             defaultSettings: { units: e.intendedUnits },
+            current: { units: e.currentUnits ?? '' },
         };
     },
     apply: async (idSystemObject: number, rowSettings: any, idUser: number): Promise<BulkOpApplyResult> => {
@@ -155,8 +158,8 @@ export async function bulkOperation(req: Request, res: Response): Promise<void> 
             const rows: any[] = [];
             for (const id of ids) {
                 const r = await op.validate(id);
-                if (r.isCandidate)
-                    rows.push({ id, name: r.name, rowData: r.rowData, defaultSettings: r.defaultSettings });
+                if (r.include ?? r.isCandidate)
+                    rows.push({ id, name: r.name, isCandidate: r.isCandidate, rowData: r.rowData, defaultSettings: r.defaultSettings, current: r.current });
             }
             respond(res, true, undefined, { operation: op.key, columns: op.columns, rowSettings: op.rowSettings, rows });
             return;
