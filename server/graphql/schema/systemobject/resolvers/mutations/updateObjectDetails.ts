@@ -24,6 +24,11 @@ type PendingSceneUpdate = {
     LicenseNew: DBAPI.License | undefined;
 };
 
+type PendingLicenseCache = {
+    clear: boolean;                                 // true = license cleared; false = license assigned
+    resolver: DBAPI.LicenseResolver | undefined;    // resolver to record post-commit when assigning
+};
+
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
     const { input } = args;
     const { user } = context;
@@ -45,6 +50,10 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     // performs EDAN unpublish for published scenes). Capture the intended transition here; null =
     // no change requested.
     let pendingRetire: boolean | null = null;
+    // LicenseCache maintenance runs the descendant traversal, so it is kept out of the tx and applied
+    // post-commit (see the license phases). Capture which maintenance the DB writes require; null =
+    // no license change.
+    let pendingLicenseCache: PendingLicenseCache | null = null;
 
     const txResult = await withAuditTransaction(async (): Promise<UpdateObjectDetailsResult> => {
         if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
@@ -97,12 +106,15 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (!reassignedLicense)
                     return sendResult(false,'update object details failed',`Unable to fetch license with id ${data.License}; update failed`);
 
-                if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
+                const dbWrite = await DBAPI.LicenseManager.setAssignmentDBWrites(idSystemObject, reassignedLicense);
+                if (!dbWrite.success)
                     return sendResult(false,'update object details failed',`Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
+                pendingLicenseCache = { clear: false, resolver: dbWrite.resolver };
                 LicenseNew = reassignedLicense;
             } else {
-                if (!await DBAPI.LicenseManager.clearAssignment(idSystemObject))
+                if (!await DBAPI.LicenseManager.clearAssignmentDBWrites(idSystemObject))
                     return sendResult(false,'update object details failed',`Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
+                pendingLicenseCache = { clear: true, resolver: undefined };
                 LicenseNew = undefined;
             }
         }
@@ -582,6 +594,18 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     // Tx errored, or business logic returned a failure result inside the tx.
     if (!txResult.success)
         return txResult;
+
+    // Post-commit: maintain the license cache now that the assignment change is durably persisted.
+    // Run this before the scene/retire side-effects so any downstream license read sees fresh data.
+    // A failure is non-fatal (the cache is rebuildable); drop to a targeted invalidation.
+    if (pendingLicenseCache) {
+        const plc: PendingLicenseCache = pendingLicenseCache;
+        const cacheOk: boolean = plc.clear
+            ? await DBAPI.LicenseManager.maintainCacheAfterClear(idSystemObject)
+            : await DBAPI.LicenseManager.maintainCacheAfterSet(idSystemObject, plc.resolver);
+        if (!cacheOk)
+            await CACHE.LicenseCache.invalidateResolver(idSystemObject);
+    }
 
     // Post-commit: apply retire/reinstate via the shared executor. Runs outside the tx because it
     // performs EDAN unpublish (external HTTP) for published scenes and manages its own audit
