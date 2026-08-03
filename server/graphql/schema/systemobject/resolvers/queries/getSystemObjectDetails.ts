@@ -156,7 +156,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
 
 // A published value is any state other than Not Published (Public / Public Unlisted / Internal).
 // Only these carry a live EDAN presence and can be drafted or unpublished.
-function isPublishedState(s: COMMON.ePublishedState): boolean {
+export function isPublishedState(s: COMMON.ePublishedState): boolean {
     return s === COMMON.ePublishedState.ePublished ||
         s === COMMON.ePublishedState.eAPIOnly ||
         s === COMMON.ePublishedState.eInternal;
@@ -165,7 +165,7 @@ function isPublishedState(s: COMMON.ePublishedState): boolean {
 // Read after.eState from a publish/unpublish audit payload (shape emitted by publish.ts /
 // RetireExecutorDeps.ts: { before, after: { eState, eStateName } }). Parsed defensively — an
 // unreadable or unknown payload yields null so the caller drops to the legacy version-chain read.
-function parsePublishedStateFromAudit(data: string | null): COMMON.ePublishedState | null {
+export function parsePublishedStateFromAudit(data: string | null): COMMON.ePublishedState | null {
     if (!data)
         return null;
     try {
@@ -179,6 +179,45 @@ function parsePublishedStateFromAudit(data: string | null): COMMON.ePublishedSta
     }
 }
 
+// Minimal SystemObjectVersion projection the derivation needs: identity (for chain ordering),
+// published state, and creation time (for draft-drift detection).
+export type PublishedStateVersion = {
+    idSystemObjectVersion: number;
+    published: COMMON.ePublishedState;
+    dateCreated: Date;
+};
+
+// Pure derivation of an object's CURRENT published state + draft flag from the latest publish/unpublish
+// audit event (its parsed after.eState `eventState` and timestamp `eventWhen`), the latest content
+// version, and the full version chain. No DB access, so the whole publish-state matrix is unit-testable.
+export function derivePublishedState(eventState: COMMON.ePublishedState | null, eventWhen: Date | null,
+    latest: PublishedStateVersion | null, allVersions: PublishedStateVersion[]): { publishedEnum: COMMON.ePublishedState; isDraft: boolean } {
+    // Audit-derived path: the event is the authoritative current state.
+    if (eventState !== null && eventWhen !== null) {
+        // Draft = currently published AND content has drifted since that publish. Publishing mutates a
+        // version in place without bumping DateCreated, so a published scene with no later edits has its
+        // latest SOV DateCreated before the event (not a draft); a subsequent edit rolls a newer SOV.
+        const isDraft: boolean = isPublishedState(eventState) && latest !== null
+            && latest.dateCreated.getTime() > eventWhen.getTime();
+        return { publishedEnum: eventState, isDraft };
+    }
+
+    // Legacy fallback (no usable audit event): compute from the version chain. Current state is the
+    // latest version's state; draft = latest version newer than the last published version and itself
+    // not published. No regression for un-audited objects; reconciled by the EDAN sync work.
+    const publishedEnum: COMMON.ePublishedState = latest ? latest.published : COMMON.ePublishedState.eNotPublished;
+    let isDraft: boolean = false;
+    if (allVersions.length > 0) {
+        const sorted = [...allVersions].sort((a, b) => b.idSystemObjectVersion - a.idSystemObjectVersion);
+        const latestV = sorted[0];
+        const lastPublished = sorted.find(v => isPublishedState(v.published)) ?? null;
+        if (lastPublished)
+            isDraft = latestV.idSystemObjectVersion > lastPublished.idSystemObjectVersion
+                && !isPublishedState(latestV.published);
+    }
+    return { publishedEnum, isDraft };
+}
+
 async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined,
     LR: DBAPI.LicenseResolver | undefined): Promise<PublishedStateInfo> {
     // Current publication state is derived from the authoritative publish/unpublish audit trail rather
@@ -190,38 +229,24 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
     // record of publication-state changes: any future path that writes PublishedState for a
     // publish/unpublish MUST emit eActionPublish / eActionUnpublish (today only publish.ts and
     // RetireExecutorDeps.ts do), or this label silently breaks.
-    let publishedEnum: COMMON.ePublishedState;
-    let isDraft: boolean = false;
-
     const publicationEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestPublicationEvent(idSystemObject);
     const eventState: COMMON.ePublishedState | null = publicationEvent ? parsePublishedStateFromAudit(publicationEvent.Data) : null;
+    const useAudit: boolean = eventState !== null;
 
-    if (publicationEvent && eventState !== null) {
-        publishedEnum = eventState;
-        // Draft = currently published AND content has drifted since that publish. Publishing mutates a
-        // version in place without bumping DateCreated, so a published scene with no later edits has its
-        // latest SOV DateCreated before the event (not a draft); a subsequent edit rolls a newer SOV.
-        if (isPublishedState(publishedEnum)) {
-            const latest: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
-            if (latest)
-                isDraft = latest.DateCreated.getTime() > publicationEvent.AuditDate.getTime();
-        }
-    } else {
-        // Legacy fallback (no publish/unpublish audit event): compute from the version chain exactly as
-        // before. No regression for un-audited objects; reconciled by the EDAN sync work.
-        const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
-        publishedEnum = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : COMMON.ePublishedState.eNotPublished;
+    const latestSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+    const latest: PublishedStateVersion | null = latestSOV
+        ? { idSystemObjectVersion: latestSOV.idSystemObjectVersion, published: latestSOV.publishedStateEnum(), dateCreated: latestSOV.DateCreated }
+        : null;
 
-        const allVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-        if (allVersions && allVersions.length > 0) {
-            const sorted = [...allVersions].sort((a, b) => b.idSystemObjectVersion - a.idSystemObjectVersion);
-            const latest = sorted[0];
-            const lastPublished = sorted.find(v => isPublishedState(v.publishedStateEnum())) ?? null;
-            if (lastPublished)
-                isDraft = latest.idSystemObjectVersion > lastPublished.idSystemObjectVersion
-                    && !isPublishedState(latest.publishedStateEnum());
-        }
+    // The full version chain is only consulted by the legacy fallback's draft computation.
+    let allVersions: PublishedStateVersion[] = [];
+    if (!useAudit) {
+        const versions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
+        allVersions = (versions ?? []).map(v => ({ idSystemObjectVersion: v.idSystemObjectVersion, published: v.publishedStateEnum(), dateCreated: v.DateCreated }));
     }
+
+    const { publishedEnum, isDraft } = derivePublishedState(eventState,
+        useAudit && publicationEvent ? publicationEvent.AuditDate : null, latest, allVersions);
     const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
 
     let publishable: boolean = false;
