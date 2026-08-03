@@ -361,4 +361,39 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             return null;
         }
     }
+
+    /**
+     * Return the most recent publish or unpublish audit event for a SystemObject, or null when the
+     * object has none. These PROTECT-tier events (eActionPublish / eActionUnpublish) are the
+     * authoritative record of the object's *current* publication state: unlike
+     * SystemObjectVersion.PublishedState — which is reset to eNotPublished on every content edit and so
+     * cannot tell an edit apart from a real unpublish — an eActionUnpublish is unambiguously an
+     * unpublish, and each event carries after.eState plus a timestamp.
+     *
+     * Indexing: this runs on the existing @@index([idSystemObject, AuditDate]) — MariaDB seeks the
+     * object, walks the index backward in AuditDate order, and applies the AuditType IN (…) filter as a
+     * residual, stopping at the first match. No filesort, no full scan; the residual only scans the
+     * per-object audit rows newer than the last publication event, which is bounded and small. A
+     * dedicated index is deliberately avoided: Audit is an append-heavy hot table (a row on nearly every
+     * mutation), so any added index is paid on every insert to speed a read that runs once per
+     * detail-page load — a bad trade at current volumes, and it would be a schema migration this change
+     * is scoped to avoid. If profiling ever shows this lookup hot (e.g. a scene with heavy post-publish
+     * audit churn — the edited-after-publish/draft case this query serves), the correctly shaped index
+     * is (idSystemObject, AuditType, AuditDate) — NOT (idSystemObject, AuditType) alone, which would
+     * filter but still sort on AuditDate — added as its own isolated migration.
+     */
+    static async fetchLatestPublicationEvent(idSystemObject: number): Promise<Audit | null> {
+        if (!idSystemObject)
+            return null;
+        try {
+            return DBC.CopyObject<AuditBase, Audit>(
+                await DBC.DBConnection.prisma.audit.findFirst({
+                    where: { idSystemObject, AuditType: { in: [eAuditType.eActionPublish, eAuditType.eActionUnpublish] } },
+                    orderBy: [{ AuditDate: 'desc' }, { idAudit: 'desc' }],
+                }), Audit);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch latest publication event failed',H.Helpers.getErrorString(error),{ idSystemObject },'DB.Audit');
+            return null;
+        }
+    }
 }
