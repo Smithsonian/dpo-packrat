@@ -962,6 +962,11 @@ export class PublishScene {
         return { filename, url, type, title, name, attributes, category: COMMON.toEdanFileQuality(category) };
     }
 
+    // Completeness invariant: the detail page derives an object's *current* publication state from the
+    // eActionPublish / eActionUnpublish audit events, not from this field. This writer is reached only
+    // via ICol.publish, whose callers (publish.ts, RetireExecutorDeps.ts) emit that audit event. Any new
+    // path that flips SystemObjectVersion.PublishedState for a publish/unpublish must emit the matching
+    // event, or the displayed state silently diverges from what was persisted.
     private async updatePublishedState(LR: DBAPI.LicenseResolver | undefined, ePublishedStateIntended: COMMON.ePublishedState): Promise<boolean> {
         if (!this.systemObjectVersion)
             return false;
