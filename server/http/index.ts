@@ -43,6 +43,7 @@ import { getZipContents } from './routes/api/zipContents';
 import { getZipEntry } from './routes/api/zipEntry';
 import { getVolumeInspection } from './routes/api/volumeInspection';
 import { getCaptureDataLatestZip } from './routes/api/captureDataLatestZip';
+import { subjectEDANSyncStart, subjectEDANSyncStatus, subjectEDANSyncResults } from './routes/api/subjectEDANSync';
 
 import express, { Request, Express, RequestHandler } from 'express';
 import cors from 'cors';
@@ -246,6 +247,11 @@ export class HttpServer {
         this.app.post('/api/bulk/operation', bulkOperation);        // describe | validate | apply a registered bulk operation
 
         this.app.get('/api/audit/lifeline/:id', getAuditLifeline);  // admin-only: per-SystemObject audit history
+
+        // admin-only: read-only EDAN reconciliation — walk Subjects and report their EDAN live status
+        this.app.post('/api/edan/subject-sync', subjectEDANSyncStart);
+        this.app.get('/api/edan/subject-sync/status', subjectEDANSyncStatus);
+        this.app.get('/api/edan/subject-sync/results', subjectEDANSyncResults);
 
         // Volumetric capture data — central-directory listing, single-entry stream, inspection result lookup
         this.app.get('/api/zip-contents/:idAssetVersion', getZipContents);

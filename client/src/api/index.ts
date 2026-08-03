@@ -272,6 +272,19 @@ export default class API {
         return this.request('solr/rebuild', { method: 'POST' });
     }
 
+    // EDAN Subject live-status reconciliation (admin, read-only)
+    static async subjectEDANSync(): Promise<RequestResponse> {
+        return this.request('api/edan/subject-sync', { method: 'POST' });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async subjectEDANSyncStatus(): Promise<any> {
+        return this.request('api/edan/subject-sync/status', { method: 'GET' });
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    static async subjectEDANSyncResults(): Promise<any> {
+        return this.request('api/edan/subject-sync/results', { method: 'GET' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();

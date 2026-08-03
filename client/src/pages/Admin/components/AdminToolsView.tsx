@@ -21,6 +21,7 @@ import ToolsAuthorizationOverview from './Tools/ToolsAuthorizationOverview';
 import ToolsExternalSources from './Tools/ToolsExternalSources';
 import ToolsPublishedScenes from './Tools/ToolsPublishedScenes';
 import ToolsBulkOperations from './Tools/ToolsBulkOperations';
+import ToolsSyncFromEDAN from './Tools/ToolsSyncFromEDAN';
 
 // styles
 import { makeStyles } from '@material-ui/core/styles';
@@ -87,6 +88,7 @@ function AdminToolsView(): React.ReactElement {
         assetValidation: false,
         systemOps: false,
         publishedScenes: false,
+        subjectEDANSync: false,
         authorization: false,
         externalSources: false,
     });
@@ -163,6 +165,19 @@ function AdminToolsView(): React.ReactElement {
                                     {openSections.publishedScenes && <ToolsPublishedScenes />}
                                 </Collapse>
                             </Box>
+
+                            {/* EDAN: Sync from EDAN — Subject live-status reconciliation (admin only) */}
+                            {isAdmin && (
+                                <Box>
+                                    <IconButton className={classes.collapseHeader} onClick={() => toggleSection('subjectEDANSync')}>
+                                        EDAN: Sync from EDAN
+                                        {openSections.subjectEDANSync ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                    </IconButton>
+                                    <Collapse in={openSections.subjectEDANSync} className={classes.collapseContainer}>
+                                        {openSections.subjectEDANSync && <ToolsSyncFromEDAN />}
+                                    </Collapse>
+                                </Box>
+                            )}
 
                             {/* Authorization Overview Section (admin only) */}
                             {isAdmin && (
