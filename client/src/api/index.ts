@@ -118,9 +118,9 @@ export default class API {
         return this.request('api/object/action', { method: 'POST', body });
     }
 
-    // bulk operation — describe | validate (sweep) | apply (one item) a registered bulk op harness
-    static async bulkOperation(operation: string, mode: 'describe' | 'validate' | 'apply',
-        args: { idSystemObject?: number; idSystemObjects?: number[]; rowSettings?: Record<string, unknown> } = {}): Promise<RequestResponse> {
+    // bulk operation harness — list | describe | start (async gather) | status | results | apply (one item)
+    static async bulkOperation(operation: string, mode: 'list' | 'describe' | 'start' | 'status' | 'results' | 'apply',
+        args: { params?: Record<string, unknown>; idSystemObject?: number; idSystemObjects?: number[]; rowSettings?: Record<string, unknown> } = {}): Promise<RequestResponse> {
         const body = JSON.stringify({ operation, mode, ...args });
         return this.request('api/bulk/operation', { method: 'POST', body });
     }
@@ -270,19 +270,6 @@ export default class API {
     }
     static async solrRebuildIndex(): Promise<RequestResponse> {
         return this.request('solr/rebuild', { method: 'POST' });
-    }
-
-    // EDAN Subject live-status reconciliation (admin, read-only)
-    static async subjectEDANSync(): Promise<RequestResponse> {
-        return this.request('api/edan/subject-sync', { method: 'POST' });
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static async subjectEDANSyncStatus(): Promise<any> {
-        return this.request('api/edan/subject-sync/status', { method: 'GET' });
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    static async subjectEDANSyncResults(): Promise<any> {
-        return this.request('api/edan/subject-sync/results', { method: 'GET' });
     }
 
     // general routines

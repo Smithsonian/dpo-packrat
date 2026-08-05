@@ -1,123 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as DBAPI from '../../../db';
-import * as COMMON from '@dpo-packrat/common';
 import { ASL, LocalStore } from '../../../utils/localStore';
 import { isAuthenticated } from '../../auth';
 import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
-import { AuditFactory } from '../../../audit/interface/AuditFactory';
-import { SceneHelpers } from '../../../utils/sceneHelpers';
 import { Request, Response } from 'express';
-
-// --- Op contract (the harness core) ---
-// Each operation is a registry entry. A new op = a new entry; the route and client are generic.
-interface BulkOpColumn { key: string; label: string; }
-interface BulkOpSetting { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; }
-interface BulkOpValidateResult { isCandidate: boolean; include?: boolean; name: string; rowData?: any; defaultSettings?: any; current?: any; }
-interface BulkOpApplyResult { success: boolean; message?: string; rowData?: any; }
-interface BulkOperationDef {
-    key: string;
-    label: string;
-    columns: BulkOpColumn[];                                      // op-declared table columns
-    rowSettings: BulkOpSetting[];                                 // op-declared per-row editable settings schema
-    candidateSystemObjectIds: () => Promise<number[]>;           // full candidate set (when the client does not scope the sweep)
-    validate: (idSystemObject: number) => Promise<BulkOpValidateResult>;  // read-only: is it a candidate + its row columns/defaults
-    apply: (idSystemObject: number, rowSettings: any, idUser: number) => Promise<BulkOpApplyResult>; // mutate ONE object
-}
+import { BulkOperationDef, BulkOpJob } from './bulkOps/BulkOpTypes';
+import { OPERATIONS, OPERATION_LIST } from './bulkOps/registry';
 
 function respond(res: Response, success: boolean, message: string | undefined, data?: any): void {
     res.status(200).send(JSON.stringify({ success, message, data }));
 }
 
-const SCENE_UNIT_OPTIONS: string[] = ['mm', 'cm', 'm', 'km', 'in', 'ft', 'yd', 'mi'];
-
-async function sceneName(idSystemObject: number): Promise<string> {
-    const so = await DBAPI.SystemObject.fetch(idSystemObject);
-    if (so?.idScene) {
-        const scene = await DBAPI.Scene.fetch(so.idScene);
-        if (scene) return scene.Name;
-    }
-    return `SystemObject ${idSystemObject}`;
-}
-
-function fmtVec(v: number[] | null | undefined): string {
-    if (!Array.isArray(v) || v.length < 3) return '—';
-    return `(${v.map(n => (Number.isFinite(n) ? String(Number(n.toFixed(4))) : '?')).join(', ')})`;
-}
-
-// --- Op 1: Fix Display Units ---
-const fixDisplayUnits: BulkOperationDef = {
-    key: 'fixDisplayUnits',
-    label: 'Fix Display Units',
-    columns: [
-        { key: 'currentUnits', label: 'Current Units' },
-        { key: 'bboxSize', label: 'Bounding Box Size (m)' },
-        { key: 'suggestedUnit', label: 'Suggested Unit' },
-    ],
-    rowSettings: [
-        { key: 'units', label: 'Target Units', type: 'select', options: SCENE_UNIT_OPTIONS.map(u => ({ value: u, label: u })) },
-    ],
-    candidateSystemObjectIds: async (): Promise<number[]> => {
-        const scenes = await DBAPI.Scene.fetchAll();
-        if (!scenes) return [];
-        const ids: number[] = [];
-        for (const scene of scenes) {
-            const so = await DBAPI.SystemObject.fetchFromSceneID(scene.idScene);
-            if (so) ids.push(so.idSystemObject);
-        }
-        return ids;
-    },
-    validate: async (idSystemObject: number): Promise<BulkOpValidateResult> => {
-        const name = await sceneName(idSystemObject);
-        const e = await SceneHelpers.evaluateSceneScale(idSystemObject);
-        // show evaluable single-model scenes: mismatches (a change is suggested) and already-matching
-        const mismatch: boolean = e.state === 'mismatch' && e.canFix;
-        if (!mismatch && e.state !== 'ok')
-            return { isCandidate: false, include: false, name };
-        return {
-            isCandidate: mismatch,
-            include: true,
-            name,
-            rowData: { currentUnits: e.currentUnits ?? 'unset', bboxSize: fmtVec(e.bboxSizeMeters), suggestedUnit: e.intendedUnits },
-            defaultSettings: { units: e.intendedUnits },
-            current: { units: e.currentUnits ?? '' },
-        };
-    },
-    apply: async (idSystemObject: number, rowSettings: any, idUser: number): Promise<BulkOpApplyResult> => {
-        const units: string = String(rowSettings?.units ?? '').trim().toLowerCase();
-        if (!SCENE_UNIT_OPTIONS.includes(units))
-            return { success: false, message: `invalid unit '${units}'` };
-        const so = await DBAPI.SystemObject.fetch(idSystemObject);
-        if (!so || !so.idScene)
-            return { success: false, message: 'not a scene' };
-        const scene = await DBAPI.Scene.fetch(so.idScene);
-        if (!scene)
-            return { success: false, message: `cannot fetch scene ${so.idScene}` };
-
-        const patch = await SceneHelpers.patchSvxUnits(idSystemObject, scene, units, idUser);
-        if (!patch.success)
-            return { success: false, message: patch.error };
-
-        await AuditFactory.emitSemantic({
-            action: DBAPI.eAuditType.eActionSVXUnitsFixed,
-            target: { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
-            idSystemObject,
-            payload: { before: { units: patch.oldUnits }, after: { units: patch.newUnits }, idAssetVersion: patch.idAssetVersion, via: 'bulkOperation' },
-        });
-        return { success: true, message: `${patch.oldUnits ?? 'unset'} → ${patch.newUnits}`, rowData: { newUnits: patch.newUnits } };
-    },
-};
-
-const OPERATIONS: Record<string, BulkOperationDef> = {
-    [fixDisplayUnits.key]: fixDisplayUnits,
-};
-
 /**
- * POST /api/bulk/operation — run a registered bulk operation over objects, one at a time.
- * Body: { operation, mode: 'describe'|'validate'|'apply', idSystemObject?, idSystemObjects?, rowSettings? }.
- *   describe — return the op's columns + per-row settings schema.
- *   validate — read-only sweep; returns the candidate rows (op columns + default settings).
- *   apply    — mutate ONE object with its (possibly edited) settings; the client loops these sequentially.
+ * POST /api/bulk/operation — run a registered bulk operation over objects.
+ * Body: { operation, mode, params?, idSystemObjects?, idSystemObject?, rowSettings? }.
+ *   describe — the op's columns + per-row settings + pre-run params.
+ *   list     — the registered operations (key + label).
+ *   start    — kick off the async gather job (fire-and-forget); the gather may be long (e.g. an EDAN
+ *              sweep), so it runs in the background and the client polls. One job at a time.
+ *   status   — the gather job progress (phase / processed / total).
+ *   results  — the rows the completed gather produced (op columns + defaults per row).
+ *   apply    — mutate ONE object with its (possibly edited) settings; the client loops these.
  * Admin-gated; apply is additionally per-object authorized.
  */
 export async function bulkOperation(req: Request, res: Response): Promise<void> {
@@ -138,7 +41,14 @@ export async function bulkOperation(req: Request, res: Response): Promise<void> 
         return;
     }
 
-    const { operation, mode, idSystemObject, idSystemObjects, rowSettings } = req.body ?? {};
+    const { operation, mode, params, idSystemObject, idSystemObjects, rowSettings } = req.body ?? {};
+
+    // The op catalog needs no specific operation.
+    if (mode === 'list') {
+        respond(res, true, undefined, { operations: OPERATION_LIST });
+        return;
+    }
+
     const op: BulkOperationDef | undefined = typeof operation === 'string' ? OPERATIONS[operation] : undefined;
     if (!op) {
         respond(res, false, `bulkOperation: unknown operation '${operation}'. Known: ${Object.keys(OPERATIONS).join(', ')}`);
@@ -147,21 +57,32 @@ export async function bulkOperation(req: Request, res: Response): Promise<void> 
 
     try {
         if (mode === 'describe') {
-            respond(res, true, undefined, { key: op.key, label: op.label, columns: op.columns, rowSettings: op.rowSettings });
+            respond(res, true, undefined, { key: op.key, label: op.label, columns: op.columns, rowSettings: op.rowSettings, params: op.params ?? [] });
             return;
         }
 
-        if (mode === 'validate') {
-            const ids: number[] = Array.isArray(idSystemObjects) && idSystemObjects.length > 0
-                ? idSystemObjects.map((n: any) => Number(n)).filter((n: number) => Number.isInteger(n) && n > 0)
-                : await op.candidateSystemObjectIds();
-            const rows: any[] = [];
-            for (const id of ids) {
-                const r = await op.validate(id);
-                if (r.include ?? r.isCandidate)
-                    rows.push({ id, name: r.name, isCandidate: r.isCandidate, rowData: r.rowData, defaultSettings: r.defaultSettings, current: r.current });
+        if (mode === 'start') {
+            if (BulkOpJob.isRunning) {
+                respond(res, false, 'bulkOperation: a bulk operation is already running');
+                return;
             }
-            respond(res, true, undefined, { operation: op.key, columns: op.columns, rowSettings: op.rowSettings, rows });
+            const scopedIds: number[] | undefined = Array.isArray(idSystemObjects) && idSystemObjects.length > 0
+                ? idSystemObjects.map((n: any) => Number(n)).filter((n: number) => Number.isInteger(n) && n > 0)
+                : undefined;
+            void BulkOpJob.run(op, { params: params ?? {}, scopedIds }).catch(error =>
+                RK.logError(RK.LogSection.eHTTP, 'bulkOperation start failed',
+                    error instanceof Error ? error.message : String(error), { operation: op.key }, 'HTTP.Route.BulkOperation'));
+            respond(res, true, 'Bulk operation started');
+            return;
+        }
+
+        if (mode === 'status') {
+            respond(res, true, undefined, { progress: BulkOpJob.progress });
+            return;
+        }
+
+        if (mode === 'results') {
+            respond(res, true, undefined, { operation: BulkOpJob.progress.operation, columns: op.columns, rowSettings: op.rowSettings, rows: BulkOpJob.rows });
             return;
         }
 
@@ -175,12 +96,12 @@ export async function bulkOperation(req: Request, res: Response): Promise<void> 
                 respond(res, false, AUTH_ERROR.ACCESS_DENIED);
                 return;
             }
-            const result = await op.apply(idSO, rowSettings ?? {}, idUser);
+            const result = await op.apply(idSO, rowSettings ?? {}, idUser, params ?? {});
             respond(res, result.success, result.message, { id: idSO, ...result });
             return;
         }
 
-        respond(res, false, 'bulkOperation: mode must be describe, validate, or apply');
+        respond(res, false, 'bulkOperation: mode must be list, describe, start, status, results, or apply');
     } catch (error) {
         RK.logError(RK.LogSection.eHTTP, 'bulkOperation failed',
             error instanceof Error ? error.message : String(error), { operation, mode }, 'HTTP.Route.BulkOperation');
