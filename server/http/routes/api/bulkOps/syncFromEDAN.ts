@@ -142,10 +142,119 @@ async function resolveRow(target: EdanTarget, ICol: COL.ICollection): Promise<Bu
     };
 }
 
+// --- Model target: a model's owning Subject holds the edanmdm; the question is whether EDAN has a 3D
+// scene for it, and whether Packrat has a scene for the model. Report-only (backfill discovery). ---
+
+// A model's EDAN record id comes from its owning Subject (Model -> Items -> Subjects -> EDAN Record ID).
+async function subjectRecordForModel(idModel: number): Promise<{ recordId: string; url: string }> {
+    const items = await DBAPI.Item.fetchMasterFromModels([idModel]);
+    const itemIds: number[] = items ? items.map(i => i.idItem) : [];
+    const subjects = itemIds.length > 0 ? await DBAPI.Subject.fetchMasterFromItems(itemIds) : null;
+    if (!subjects) return { recordId: '', url: '' };
+    for (const subject of subjects) {
+        const subjectSO = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
+        if (!subjectSO) continue;
+        const target = await SubjectHelpers.computeTargetRecord(subjectSO.idSystemObject);
+        if (target.recordId) return { recordId: target.recordId, url: target.url };
+    }
+    return { recordId: '', url: '' };
+}
+
+// Detect whether an EDAN record carries a 3D scene. EDAN assigns type '3d_package' to a 3D record; its
+// content holds the processed SVX with a 'Voyager Scene' (the submitted SVX) and a 'Package' (the full
+// asset package). The record type is the primary signal; scanning the content for those markers is the
+// fallback, covering an edanmdm record that references a 3D package rather than being one.
+function edanHasScene(record: COL.EdanRecord | null): boolean {
+    if (!record) return false;
+    if (typeof record.type === 'string' && record.type.toLowerCase().includes('3d_package'))
+        return true;
+    const content = JSON.stringify(record.content ?? record).toLowerCase();
+    return content.includes('3d_package') || content.includes('voyager scene')
+        || content.includes('voyagerid') || content.includes('voyager');
+}
+
+async function resolveModelRow(model: DBAPI.Model, ICol: COL.ICollection): Promise<BulkOpRow> {
+    const so = await DBAPI.SystemObject.fetchFromModelID(model.idModel);
+    const idSystemObject: number = so ? so.idSystemObject : 0;
+
+    // Packrat scene(s) for this model, via ModelSceneXref.
+    const scenes = await DBAPI.Scene.fetchFromXref(model.idModel);
+    const packratHasScene: boolean = !!(scenes && scenes.length > 0);
+    let packratLabel = 'No Scene';
+    if (scenes && scenes.length > 0) {
+        const sceneSO = await DBAPI.SystemObject.fetchFromSceneID(scenes[0].idScene);
+        const state = sceneSO ? await currentPackratState(sceneSO.idSystemObject) : COMMON.ePublishedState.eNotPublished;
+        packratLabel = `Scene: ${COMMON.PublishedStateEnumToString(state)}`;
+    }
+
+    // The owning Subject's EDAN record → does EDAN have a 3D scene for it.
+    const { recordId, url } = await subjectRecordForModel(model.idModel);
+    let edanLabel: string;
+    let searchable = '—';
+    let edanHas = false;
+    let note = '';
+    if (!recordId) {
+        edanLabel = 'No EDAN Record ID';
+        note = 'Subject has no EDAN Record ID';
+    } else {
+        let record: COL.EdanRecord | null = null;
+        try {
+            record = await ICol.fetchContent(undefined, url);
+        } catch (error) {
+            RK.logError(RK.LogSection.eCOLL, 'sync from EDAN model lookup failed',
+                error instanceof Error ? error.message : String(error), { idSystemObject, recordId }, SRC);
+            note = 'EDAN lookup failed';
+        }
+        if (!record) {
+            edanLabel = note ? 'Lookup failed' : 'Not found on EDAN';
+            if (!note) note = 'Record not found on EDAN';
+        } else {
+            searchable = record.publicSearch ? 'Yes' : 'No';
+            edanHas = edanHasScene(record);
+            edanLabel = edanHas ? 'Scene present' : 'No 3D scene';
+        }
+    }
+
+    if (!note) {
+        if (edanHas && !packratHasScene) note = 'EDAN scene, no Packrat scene — backfill candidate';
+        else if (edanHas && packratHasScene) note = 'Both present';
+        else if (!edanHas && packratHasScene) note = 'Packrat scene only';
+        else note = 'Neither';
+    }
+    // Report-only: a row is flagged when EDAN has a scene Packrat is missing (the backfill signal).
+    const isCandidate: boolean = edanHas && !packratHasScene;
+
+    return {
+        id: idSystemObject,
+        name: model.Name,
+        isCandidate,
+        rowData: { packratState: packratLabel, edanState: edanLabel, edanSearchable: searchable, note },
+        defaultSettings: {},
+        current: {},
+    };
+}
+
+async function gatherModels(report: BulkOpReporter): Promise<BulkOpRow[]> {
+    const models = await DBAPI.Model.fetchAll();
+    if (!models) return [];
+    report(0, models.length);
+    const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
+    const rows: BulkOpRow[] = [];
+    let processed = 0;
+    for (const model of models) {
+        rows.push(await resolveModelRow(model, ICol));
+        report(++processed, models.length);
+        if (THROTTLE_MS > 0)
+            await sleep(THROTTLE_MS);
+    }
+    return rows;
+}
+
 /**
- * Check every Subject or Scene against EDAN and report Packrat vs EDAN publish state side by side.
- * Read-only gather; apply is an explicit per-row reconcile that adopts a chosen state into Packrat
- * (never touches EDAN, never runs automatically). The target type (Subject / Scene) is a pre-run param.
+ * Check Subjects, Scenes, or Models against EDAN. Subjects/Scenes report Packrat vs EDAN publish state
+ * and support an explicit per-row reconcile (adopt a chosen state into Packrat — never touches EDAN,
+ * never automatic). Models report whether EDAN has a 3D scene for the owning Subject's record and
+ * whether Packrat has a scene — report-only for now (a backfill action is future work). Target is a param.
  */
 export const syncFromEDAN: BulkOperationDef = {
     key: 'syncFromEDAN',
@@ -162,9 +271,12 @@ export const syncFromEDAN: BulkOperationDef = {
     ],
     params: [
         { key: 'targetType', label: 'Target', type: 'select', default: 'subject',
-            options: [{ value: 'subject', label: 'Subjects' }, { value: 'scene', label: 'Scenes' }] },
+            options: [{ value: 'subject', label: 'Subjects' }, { value: 'scene', label: 'Scenes' }, { value: 'model', label: 'Models' }] },
     ],
     gather: async ({ params }: BulkOpGatherArgs, report: BulkOpReporter): Promise<BulkOpRow[]> => {
+        if (params?.targetType === 'model')
+            return gatherModels(report);
+
         const targetType: string = params?.targetType === 'scene' ? 'scene' : 'subject';
         const targets: EdanTarget[] = targetType === 'scene' ? await sceneTargets() : await subjectTargets();
         report(0, targets.length);
@@ -180,7 +292,11 @@ export const syncFromEDAN: BulkOperationDef = {
         }
         return rows;
     },
-    apply: async (idSystemObject: number, rowSettings: any): Promise<BulkOpApplyResult> => {
+    apply: async (idSystemObject: number, rowSettings: any, _idUser: number, params: any): Promise<BulkOpApplyResult> => {
+        // Models are report-only: no reconcile action exists yet (scene backfill is future work).
+        if (params?.targetType === 'model')
+            return { success: false, message: 'Models are report-only; no change is applied' };
+
         const target: number = Number(rowSettings?.targetState);
         if (!Number.isInteger(target) || COMMON.ePublishedState[target] === undefined)
             return { success: false, message: `invalid target state '${rowSettings?.targetState}'` };
