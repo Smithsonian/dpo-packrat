@@ -59,6 +59,42 @@ describe('Bulk op: Sync from EDAN — gather via the async harness job', () => {
         expect(noRecord?.rowData.edanState).toBe('Not Published');
     });
 
+    test('normalizes an already-prefixed record id (no double edanmdm)', async () => {
+        jest.spyOn(DBAPI.Subject, 'fetchAll').mockResolvedValue([{ idSubject: 1, Name: 'Prefixed' }] as unknown as DBAPI.Subject[]);
+        jest.spyOn(CACHE.SystemObjectCache, 'getSystemFromSubject')
+            .mockResolvedValue({ idSystemObject: 10 } as DBAPI.SystemObjectInfo);
+        // The stored record id already carries the scheme; computeTargetRecord's url double-prefixes it.
+        jest.spyOn(SubjectHelpers, 'computeTargetRecord')
+            .mockResolvedValue({ recordId: 'edanmdm:nmah_1', unitCode: '', dataSource: '', url: 'edanmdm:edanmdm:nmah_1' });
+        jest.spyOn(DBAPI.Audit, 'fetchLatestPublicationEvent').mockResolvedValue(null);
+        jest.spyOn(DBAPI.SystemObjectVersion, 'fetchLatestFromSystemObject')
+            .mockResolvedValue({ publishedStateEnum: () => COMMON.ePublishedState.eNotPublished } as DBAPI.SystemObjectVersion);
+        const fetchContent = jest.fn(async () => null);
+        jest.spyOn(COL.CollectionFactory, 'getInstance').mockReturnValue({ fetchContent } as unknown as COL.ICollection);
+
+        await BulkOpJob.run(syncFromEDAN, { params: { targetType: 'subject' } });
+        // The lookup uses the normalized single-scheme url, not the double-prefixed one.
+        expect(fetchContent).toHaveBeenCalledWith(undefined, 'edanmdm:nmah_1');
+    });
+
+    test('caps the number of items via the limit param', async () => {
+        const subs = Array.from({ length: 5 }, (_v, i) => ({ idSubject: i + 1, Name: `S${i + 1}` }));
+        jest.spyOn(DBAPI.Subject, 'fetchAll').mockResolvedValue(subs as unknown as DBAPI.Subject[]);
+        jest.spyOn(CACHE.SystemObjectCache, 'getSystemFromSubject')
+            .mockImplementation(async (s: DBAPI.Subject) => ({ idSystemObject: s.idSubject * 10 } as DBAPI.SystemObjectInfo));
+        jest.spyOn(SubjectHelpers, 'computeTargetRecord')
+            .mockResolvedValue({ recordId: '', unitCode: '', dataSource: '', url: '' });
+        jest.spyOn(DBAPI.Audit, 'fetchLatestPublicationEvent').mockResolvedValue(null);
+        jest.spyOn(DBAPI.SystemObjectVersion, 'fetchLatestFromSystemObject')
+            .mockResolvedValue({ publishedStateEnum: () => COMMON.ePublishedState.eNotPublished } as DBAPI.SystemObjectVersion);
+        const fetchContent = jest.fn(async () => null);
+        jest.spyOn(COL.CollectionFactory, 'getInstance').mockReturnValue({ fetchContent } as unknown as COL.ICollection);
+
+        await BulkOpJob.run(syncFromEDAN, { params: { targetType: 'subject', limit: '2' } });
+        expect(BulkOpJob.progress.total).toBe(2);
+        expect(BulkOpJob.rows).toHaveLength(2);
+    });
+
     test('completes with zero rows when there are no subjects', async () => {
         jest.spyOn(DBAPI.Subject, 'fetchAll').mockResolvedValue(null);
         jest.spyOn(COL.CollectionFactory, 'getInstance')

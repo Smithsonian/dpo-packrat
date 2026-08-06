@@ -31,6 +31,15 @@ function toEdanUrl(recordId: string): string {
     return recordId.includes(':') ? recordId : `edanmdm:${recordId}`;
 }
 
+// Cap on how many items a run touches, so a sweep does not hammer EDAN while being evaluated. 'all'
+// (or an unset value) means no cap. Selected as a pre-run param.
+function parseLimit(params: any): number {
+    const raw = params?.limit;
+    if (raw === undefined || raw === 'all') return Infinity;
+    const n = Number(raw);
+    return Number.isInteger(n) && n > 0 ? n : Infinity;
+}
+
 // Read after.eState from a publish/unpublish audit payload (the shape publish.ts / RetireExecutorDeps.ts
 // emit). This is the authoritative CURRENT Packrat state — matching what the details page derives.
 function parsePublicationState(data: string | null): COMMON.ePublishedState | null {
@@ -67,22 +76,26 @@ function edanRecordToState(record: COL.EdanRecord | null): COMMON.ePublishedStat
 
 type EdanTarget = { idSystemObject: number; name: string; edanUrl: string; edanId: string };
 
-async function subjectTargets(): Promise<EdanTarget[]> {
-    const subjects = await DBAPI.Subject.fetchAll();
-    if (!subjects) return [];
+async function subjectTargets(limit: number): Promise<EdanTarget[]> {
+    const all = await DBAPI.Subject.fetchAll();
+    if (!all) return [];
+    const subjects = Number.isFinite(limit) ? all.slice(0, limit) : all;
     const targets: EdanTarget[] = [];
     for (const subject of subjects) {
         const soInfo = await CACHE.SystemObjectCache.getSystemFromSubject(subject);
         if (!soInfo || !soInfo.idSystemObject) continue;
+        // computeTargetRecord prepends 'edanmdm:'; the stored record id may already carry the scheme, so
+        // normalize via toEdanUrl to avoid a double 'edanmdm:edanmdm:' prefix.
         const target = await SubjectHelpers.computeTargetRecord(soInfo.idSystemObject);
-        targets.push({ idSystemObject: soInfo.idSystemObject, name: subject.Name, edanUrl: target.url, edanId: '' });
+        targets.push({ idSystemObject: soInfo.idSystemObject, name: subject.Name, edanUrl: toEdanUrl(target.recordId), edanId: '' });
     }
     return targets;
 }
 
-async function sceneTargets(): Promise<EdanTarget[]> {
-    const scenes = await DBAPI.Scene.fetchAll();
-    if (!scenes) return [];
+async function sceneTargets(limit: number): Promise<EdanTarget[]> {
+    const all = await DBAPI.Scene.fetchAll();
+    if (!all) return [];
+    const scenes = Number.isFinite(limit) ? all.slice(0, limit) : all;
     const targets: EdanTarget[] = [];
     for (const scene of scenes) {
         const so = await DBAPI.SystemObject.fetchFromSceneID(scene.idScene);
@@ -155,7 +168,8 @@ async function subjectRecordForModel(idModel: number): Promise<{ recordId: strin
         const subjectSO = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
         if (!subjectSO) continue;
         const target = await SubjectHelpers.computeTargetRecord(subjectSO.idSystemObject);
-        if (target.recordId) return { recordId: target.recordId, url: target.url };
+        // Normalize to avoid a double 'edanmdm:' when the stored id already carries the scheme.
+        if (target.recordId) return { recordId: target.recordId, url: toEdanUrl(target.recordId) };
     }
     return { recordId: '', url: '' };
 }
@@ -234,9 +248,10 @@ async function resolveModelRow(model: DBAPI.Model, ICol: COL.ICollection): Promi
     };
 }
 
-async function gatherModels(report: BulkOpReporter): Promise<BulkOpRow[]> {
-    const models = await DBAPI.Model.fetchAll();
-    if (!models) return [];
+async function gatherModels(report: BulkOpReporter, limit: number): Promise<BulkOpRow[]> {
+    const all = await DBAPI.Model.fetchAll();
+    if (!all) return [];
+    const models = Number.isFinite(limit) ? all.slice(0, limit) : all;
     report(0, models.length);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
     const rows: BulkOpRow[] = [];
@@ -272,13 +287,16 @@ export const syncFromEDAN: BulkOperationDef = {
     params: [
         { key: 'targetType', label: 'Target', type: 'select', default: 'subject',
             options: [{ value: 'subject', label: 'Subjects' }, { value: 'scene', label: 'Scenes' }, { value: 'model', label: 'Models' }] },
+        { key: 'limit', label: 'Max items', type: 'select', default: '25',
+            options: [{ value: '10', label: '10' }, { value: '25', label: '25' }, { value: '100', label: '100' }, { value: '500', label: '500' }, { value: 'all', label: 'All' }] },
     ],
     gather: async ({ params }: BulkOpGatherArgs, report: BulkOpReporter): Promise<BulkOpRow[]> => {
+        const limit: number = parseLimit(params);
         if (params?.targetType === 'model')
-            return gatherModels(report);
+            return gatherModels(report, limit);
 
         const targetType: string = params?.targetType === 'scene' ? 'scene' : 'subject';
-        const targets: EdanTarget[] = targetType === 'scene' ? await sceneTargets() : await subjectTargets();
+        const targets: EdanTarget[] = targetType === 'scene' ? await sceneTargets(limit) : await subjectTargets(limit);
         report(0, targets.length);
 
         const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
