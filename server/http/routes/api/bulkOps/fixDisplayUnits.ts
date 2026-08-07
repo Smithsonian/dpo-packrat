@@ -97,6 +97,12 @@ export const fixDisplayUnits: BulkOperationDef = {
             idSystemObject,
             payload: { before: { units: patch.oldUnits }, after: { units: patch.newUnits }, idAssetVersion: patch.idAssetVersion, via: 'bulkOperation' },
         });
-        return { success: true, message: `${patch.oldUnits ?? 'unset'} → ${patch.newUnits}`, rowData: { newUnits: patch.newUnits } };
+        // Return the op-column keys so the client can merge them into the row: after the fix the current
+        // units are the new units, and the suggestion now matches (no longer a mismatch).
+        return {
+            success: true,
+            message: `${patch.oldUnits ?? 'unset'} → ${patch.newUnits}`,
+            rowData: { currentUnits: patch.newUnits, suggestedUnit: patch.newUnits },
+        };
     },
 };

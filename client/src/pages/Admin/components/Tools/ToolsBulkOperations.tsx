@@ -42,6 +42,7 @@ function ToolsBulkOperations(): React.ReactElement {
     const [operations, setOperations] = useState<{ key: string; label: string }[]>(FALLBACK_OPERATIONS);
     const [operation, setOperation] = useState<string>(FALLBACK_OPERATIONS[0].key);
     const [filterMode, setFilterMode] = useState<string>('needsChange');
+    const [nameFilter, setNameFilter] = useState<string>('');
     const [projects, setProjects] = useState<ProjectRef[]>([]);
     const [idProject, setIdProject] = useState<number>(ALL_PROJECTS);
 
@@ -249,7 +250,12 @@ function ToolsBulkOperations(): React.ReactElement {
                 const res: RequestResponse = await API.bulkOperation(operation, 'apply', { idSystemObject: id, rowSettings: current?.settings ?? {}, params: paramValues });
                 if (res?.success) {
                     ok++;
-                    setRowStatus(id, { state: 'success', message: res.message });
+                    // Merge any op-returned column values (e.g. the new current units) into the row so the
+                    // table reflects the change immediately, alongside the success status.
+                    const patch = res.data?.rowData ?? {};
+                    setRows(prev => prev.map(row => row.id === id
+                        ? { ...row, ...patch, status: { state: 'success', message: res.message } }
+                        : row));
                     remaining = remaining.filter(r => r !== id);
                     tableRef.current?.selectByIds(remaining);
                 } else {
@@ -267,8 +273,13 @@ function ToolsBulkOperations(): React.ReactElement {
         toast.info(`Done: ${ok} succeeded, ${fail} failed`);
     }, [selected, rows, operation, paramValues]);
 
-    // rows shown for the current filter (non-candidate rows hidden unless "All" is chosen)
-    const displayRows: Row[] = filterMode === 'all' ? rows : rows.filter(r => r.isCandidate);
+    // rows shown for the current filter (non-candidate rows hidden unless "All" is chosen), then narrowed
+    // by a case-insensitive substring match on the object name.
+    const candidateRows: Row[] = filterMode === 'all' ? rows : rows.filter(r => r.isCandidate);
+    const nameNeedle: string = nameFilter.trim().toLowerCase();
+    const displayRows: Row[] = nameNeedle
+        ? candidateRows.filter(r => String(r.name ?? '').toLowerCase().includes(nameNeedle))
+        : candidateRows;
 
     const exportCSV = () => {
         if (displayRows.length === 0) { toast.info('Nothing to export'); return; }
@@ -375,6 +386,23 @@ function ToolsBulkOperations(): React.ReactElement {
 
                         <TableRow className={tableClasses.tableRow}>
                             <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                <Typography className={tableClasses.labelText}>Filter: Name</Typography>
+                            </TableCell>
+                            <TableCell className={tableClasses.tableCell}>
+                                <div className={clsx(tableClasses.select, classes.fieldSizing)} style={{ width: '300px', paddingLeft: '5px' }}>
+                                    <input
+                                        type='text'
+                                        value={nameFilter}
+                                        onChange={(e) => setNameFilter(e.target.value)}
+                                        placeholder='Filter by object name'
+                                        style={{ width: '100%', border: 'none', height: '100%', background: 'none', paddingLeft: '5px' }}
+                                    />
+                                </div>
+                            </TableCell>
+                        </TableRow>
+
+                        <TableRow className={tableClasses.tableRow}>
+                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
                                 <Typography className={tableClasses.labelText}>Filter: Project</Typography>
                             </TableCell>
                             <TableCell className={tableClasses.tableCell}>
@@ -403,7 +431,7 @@ function ToolsBulkOperations(): React.ReactElement {
             </TableContainer>
 
             <Box style={{ display: 'flex', gap: 8, marginTop: '0.5rem' }}>
-                <Button className={classes.btn} onClick={loadCandidates} disableElevation disabled={busy}>
+                <Button className={busy ? classes.btnDisabled : classes.btn} onClick={loadCandidates} disableElevation disabled={busy}>
                     {isLoading ? 'Loading…' : 'Load'}
                 </Button>
             </Box>
@@ -434,10 +462,10 @@ function ToolsBulkOperations(): React.ReactElement {
             )}
 
             <Box style={{ display: 'flex', justifyContent: 'center', gap: 8 }}>
-                <Button className={classes.btn} onClick={run} disableElevation disabled={busy || selected.length === 0}>
+                <Button className={(busy || selected.length === 0) ? classes.btnDisabled : classes.btn} onClick={run} disableElevation disabled={busy || selected.length === 0}>
                     {running ? 'Running…' : 'Submit'}
                 </Button>
-                <Button className={classes.btn} onClick={exportCSV} disableElevation disabled={rows.length === 0}>
+                <Button className={rows.length === 0 ? classes.btnDisabled : classes.btn} onClick={exportCSV} disableElevation disabled={rows.length === 0}>
                     CSV
                 </Button>
             </Box>

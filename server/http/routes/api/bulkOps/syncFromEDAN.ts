@@ -31,6 +31,50 @@ function toEdanUrl(recordId: string): string {
     return recordId.includes(':') ? recordId : `edanmdm:${recordId}`;
 }
 
+// A Smithsonian ARK's public form is the n2t.net URL, which is what EDAN indexes as a record's public
+// id (guid). A stored ARK may be bare ('ark:/65665/…' or 'ark:65665/…') or already a full URL —
+// normalize to that public URL; '' for anything without an 'ark:' segment.
+function toArkUrl(value: string): string {
+    const v = (value || '').trim();
+    if (!v) return '';
+    if (/^https?:\/\//i.test(v)) return v;
+    const idx = v.indexOf('ark:');
+    return idx >= 0 ? `http://n2t.net/${v.substring(idx)}` : '';
+}
+
+// EDAN's getContent does NOT resolve an ARK URL (404); EDAN *search* does. Query by the ARK and return
+// the raw row whose public id matches it exactly (carries status/publicSearch/type/content, the fields
+// edanRecordToState/edanHasScene read). Exact match avoids the fuzzy neighbours a search also returns.
+async function fetchByArk(ICol: COL.ICollection, arkUrl: string): Promise<COL.EdanRecord | null> {
+    if (!arkUrl) return null;
+    const res = await ICol.queryCollection(arkUrl, 25, 0, { gatherRaw: true });
+    if (!res || !res.records) return null;
+    const match = res.records.find(r => r.identifierPublic === arkUrl && r.raw);
+    return match ? (match.raw as COL.EdanRecord) : null;
+}
+
+// The ARK-URL for a SystemObject's ARK Identifier, used as an EDAN fallback when no edanmdm record id
+// resolves (or its lookup misses). '' when the object has no ARK. Defensive: any resolution error
+// degrades to no-ARK rather than failing the sweep.
+async function arkUrlForSystemObject(idSystemObject: number): Promise<string> {
+    try {
+        const vocab = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK);
+        if (!vocab)
+            return '';
+        const identifiers: DBAPI.Identifier[] | null = await DBAPI.Identifier.fetchFromSystemObject(idSystemObject);
+        if (!identifiers)
+            return '';
+        for (const ident of identifiers)
+            if (ident.idVIdentifierType === vocab.idVocabulary && ident.IdentifierValue)
+                return toArkUrl(ident.IdentifierValue);
+        return '';
+    } catch (error) {
+        RK.logError(RK.LogSection.eCOLL, 'sync from EDAN ARK resolve failed',
+            error instanceof Error ? error.message : String(error), { idSystemObject }, SRC);
+        return '';
+    }
+}
+
 // Cap on how many items a run touches, so a sweep does not hammer EDAN while being evaluated. 'all'
 // (or an unset value) means no cap. Selected as a pre-run param.
 function parseLimit(params: any): number {
@@ -74,7 +118,7 @@ function edanRecordToState(record: COL.EdanRecord | null): COMMON.ePublishedStat
     return record.publicSearch ? COMMON.ePublishedState.ePublished : COMMON.ePublishedState.eAPIOnly;
 }
 
-type EdanTarget = { idSystemObject: number; name: string; edanUrl: string; edanId: string };
+type EdanTarget = { idSystemObject: number; name: string; edanUrl: string; edanId: string; arkUrl: string };
 
 async function subjectTargets(limit: number): Promise<EdanTarget[]> {
     const all = await DBAPI.Subject.fetchAll();
@@ -85,9 +129,11 @@ async function subjectTargets(limit: number): Promise<EdanTarget[]> {
         const soInfo = await CACHE.SystemObjectCache.getSystemFromSubject(subject);
         if (!soInfo || !soInfo.idSystemObject) continue;
         // computeTargetRecord prepends 'edanmdm:'; the stored record id may already carry the scheme, so
-        // normalize via toEdanUrl to avoid a double 'edanmdm:edanmdm:' prefix.
+        // normalize via toEdanUrl to avoid a double 'edanmdm:edanmdm:' prefix. The ARK (when present) is
+        // a fallback for records that carry no EDAN Record ID or whose record id misses on EDAN.
         const target = await SubjectHelpers.computeTargetRecord(soInfo.idSystemObject);
-        targets.push({ idSystemObject: soInfo.idSystemObject, name: subject.Name, edanUrl: toEdanUrl(target.recordId), edanId: '' });
+        const arkUrl = await arkUrlForSystemObject(soInfo.idSystemObject);
+        targets.push({ idSystemObject: soInfo.idSystemObject, name: subject.Name, edanUrl: toEdanUrl(target.recordId), edanId: '', arkUrl });
     }
     return targets;
 }
@@ -105,34 +151,51 @@ async function sceneTargets(limit: number): Promise<EdanTarget[]> {
         // fall back to the assigned record id (DB identifier or SVX); that path also does the SVX read,
         // which the UUID path skips.
         if (scene.EdanUUID) {
-            targets.push({ idSystemObject: so.idSystemObject, name: scene.Name, edanUrl: '', edanId: scene.EdanUUID });
+            targets.push({ idSystemObject: so.idSystemObject, name: scene.Name, edanUrl: '', edanId: scene.EdanUUID, arkUrl: '' });
             continue;
         }
         const rec = await SceneHelpers.validateEdanRecordId(so.idSystemObject, scene.idScene);
         const recordId: string = rec.dbEdanRecordId || rec.svxEdanRecordId || '';
-        targets.push({ idSystemObject: so.idSystemObject, name: scene.Name, edanUrl: toEdanUrl(recordId), edanId: '' });
+        targets.push({ idSystemObject: so.idSystemObject, name: scene.Name, edanUrl: toEdanUrl(recordId), edanId: '', arkUrl: '' });
     }
     return targets;
 }
 
 async function resolveRow(target: EdanTarget, ICol: COL.ICollection): Promise<BulkOpRow> {
     const packrat: COMMON.ePublishedState = await currentPackratState(target.idSystemObject);
-    const hasIdentity: boolean = !!(target.edanUrl || target.edanId);
+    const hasIdentity: boolean = !!(target.edanUrl || target.edanId || target.arkUrl);
 
     let record: COL.EdanRecord | null = null;
     let note: string = '';
+    let viaArk: boolean = false;
     if (!hasIdentity) {
         note = 'No EDAN Record ID';
     } else {
-        try {
-            record = target.edanUrl
-                ? await ICol.fetchContent(undefined, target.edanUrl)
-                : await ICol.fetchContent(target.edanId);
-        } catch (error) {
-            RK.logError(RK.LogSection.eCOLL, 'sync from EDAN lookup failed',
-                error instanceof Error ? error.message : String(error),
-                { idSystemObject: target.idSystemObject }, SRC);
-            note = 'EDAN lookup failed';
+        // Primary: the edanmdm record id (url form) or the scene's EDAN UUID (id form).
+        if (target.edanUrl || target.edanId) {
+            try {
+                record = target.edanUrl
+                    ? await ICol.fetchContent(undefined, target.edanUrl)
+                    : await ICol.fetchContent(target.edanId);
+            } catch (error) {
+                RK.logError(RK.LogSection.eCOLL, 'sync from EDAN lookup failed',
+                    error instanceof Error ? error.message : String(error),
+                    { idSystemObject: target.idSystemObject }, SRC);
+                note = 'EDAN lookup failed';
+            }
+        }
+        // Fallback: the ARK (via search). Covers records with no EDAN Record ID, or an id that is
+        // stale/missing on EDAN. Never overrides a primary hit.
+        if (!record && !note && target.arkUrl) {
+            try {
+                record = await fetchByArk(ICol, target.arkUrl);
+                if (record) viaArk = true;
+            } catch (error) {
+                RK.logError(RK.LogSection.eCOLL, 'sync from EDAN ARK lookup failed',
+                    error instanceof Error ? error.message : String(error),
+                    { idSystemObject: target.idSystemObject }, SRC);
+                note = 'EDAN lookup failed';
+            }
         }
         if (!record && !note)
             note = 'Not found on EDAN';
@@ -140,6 +203,7 @@ async function resolveRow(target: EdanTarget, ICol: COL.ICollection): Promise<Bu
 
     const edanState: COMMON.ePublishedState = edanRecordToState(record);
     const isCandidate: boolean = packrat !== edanState;
+    const statusNote: string = isCandidate ? 'Drift' : 'In sync';
     return {
         id: target.idSystemObject,
         name: target.name,
@@ -148,7 +212,7 @@ async function resolveRow(target: EdanTarget, ICol: COL.ICollection): Promise<Bu
             packratState: COMMON.PublishedStateEnumToString(packrat),
             edanState: COMMON.PublishedStateEnumToString(edanState),
             edanSearchable: record ? (record.publicSearch ? 'Yes' : 'No') : '—',
-            note: note || (isCandidate ? 'Drift' : 'In sync'),
+            note: note || (viaArk ? `${statusNote} · via ARK` : statusNote),
         },
         defaultSettings: { targetState: String(edanState) },
         current: { targetState: String(packrat) },
@@ -158,20 +222,23 @@ async function resolveRow(target: EdanTarget, ICol: COL.ICollection): Promise<Bu
 // --- Model target: a model's owning Subject holds the edanmdm; the question is whether EDAN has a 3D
 // scene for it, and whether Packrat has a scene for the model. Report-only (backfill discovery). ---
 
-// A model's EDAN record id comes from its owning Subject (Model -> Items -> Subjects -> EDAN Record ID).
-async function subjectRecordForModel(idModel: number): Promise<{ recordId: string; url: string }> {
+// A model's EDAN record id comes from its owning Subject (Model -> Items -> Subjects -> EDAN Record ID);
+// the owning Subject's ARK is carried alongside as an EDAN fallback.
+async function subjectRecordForModel(idModel: number): Promise<{ recordId: string; url: string; arkUrl: string }> {
     const items = await DBAPI.Item.fetchMasterFromModels([idModel]);
     const itemIds: number[] = items ? items.map(i => i.idItem) : [];
     const subjects = itemIds.length > 0 ? await DBAPI.Subject.fetchMasterFromItems(itemIds) : null;
-    if (!subjects) return { recordId: '', url: '' };
+    if (!subjects) return { recordId: '', url: '', arkUrl: '' };
+    let arkUrl: string = '';
     for (const subject of subjects) {
         const subjectSO = await DBAPI.SystemObject.fetchFromSubjectID(subject.idSubject);
         if (!subjectSO) continue;
         const target = await SubjectHelpers.computeTargetRecord(subjectSO.idSystemObject);
+        if (!arkUrl) arkUrl = await arkUrlForSystemObject(subjectSO.idSystemObject);
         // Normalize to avoid a double 'edanmdm:' when the stored id already carries the scheme.
-        if (target.recordId) return { recordId: target.recordId, url: toEdanUrl(target.recordId) };
+        if (target.recordId) return { recordId: target.recordId, url: toEdanUrl(target.recordId), arkUrl };
     }
-    return { recordId: '', url: '' };
+    return { recordId: '', url: '', arkUrl };
 }
 
 // Detect whether an EDAN record carries a 3D scene. EDAN assigns type '3d_package' to a 3D record; its
@@ -202,22 +269,36 @@ async function resolveModelRow(model: DBAPI.Model, ICol: COL.ICollection): Promi
     }
 
     // The owning Subject's EDAN record → does EDAN have a 3D scene for it.
-    const { recordId, url } = await subjectRecordForModel(model.idModel);
+    const { recordId, url, arkUrl } = await subjectRecordForModel(model.idModel);
     let edanLabel: string;
     let searchable = '—';
     let edanHas = false;
     let note = '';
-    if (!recordId) {
+    if (!recordId && !arkUrl) {
         edanLabel = 'No EDAN Record ID';
         note = 'Subject has no EDAN Record ID';
     } else {
         let record: COL.EdanRecord | null = null;
-        try {
-            record = await ICol.fetchContent(undefined, url);
-        } catch (error) {
-            RK.logError(RK.LogSection.eCOLL, 'sync from EDAN model lookup failed',
-                error instanceof Error ? error.message : String(error), { idSystemObject, recordId }, SRC);
-            note = 'EDAN lookup failed';
+        let viaArk = false;
+        if (recordId) {
+            try {
+                record = await ICol.fetchContent(undefined, url);
+            } catch (error) {
+                RK.logError(RK.LogSection.eCOLL, 'sync from EDAN model lookup failed',
+                    error instanceof Error ? error.message : String(error), { idSystemObject, recordId }, SRC);
+                note = 'EDAN lookup failed';
+            }
+        }
+        // Fallback to the owning Subject's ARK (via search) when no record id resolved.
+        if (!record && !note && arkUrl) {
+            try {
+                record = await fetchByArk(ICol, arkUrl);
+                if (record) viaArk = true;
+            } catch (error) {
+                RK.logError(RK.LogSection.eCOLL, 'sync from EDAN model ARK lookup failed',
+                    error instanceof Error ? error.message : String(error), { idSystemObject }, SRC);
+                note = 'EDAN lookup failed';
+            }
         }
         if (!record) {
             edanLabel = note ? 'Lookup failed' : 'Not found on EDAN';
@@ -225,7 +306,7 @@ async function resolveModelRow(model: DBAPI.Model, ICol: COL.ICollection): Promi
         } else {
             searchable = record.publicSearch ? 'Yes' : 'No';
             edanHas = edanHasScene(record);
-            edanLabel = edanHas ? 'Scene present' : 'No 3D scene';
+            edanLabel = `${edanHas ? 'Scene present' : 'No 3D scene'}${viaArk ? ' (via ARK)' : ''}`;
         }
     }
 
@@ -251,7 +332,15 @@ async function resolveModelRow(model: DBAPI.Model, ICol: COL.ICollection): Promi
 async function gatherModels(report: BulkOpReporter, limit: number): Promise<BulkOpRow[]> {
     const all = await DBAPI.Model.fetchAll();
     if (!all) return [];
-    const models = Number.isFinite(limit) ? all.slice(0, limit) : all;
+    // Only master models carry the EDAN identity (via the owning Subject); derivatives/downloads are not
+    // synced. Filter to Purpose = Master; if the vocab can't be resolved, log and fall back to all.
+    const masterVocab = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+    let masters = all;
+    if (masterVocab)
+        masters = all.filter(m => m.idVPurpose === masterVocab.idVocabulary);
+    else
+        RK.logWarning(RK.LogSection.eCOLL, 'sync from EDAN', 'master model vocab unresolved; sweeping all models', {}, SRC);
+    const models = Number.isFinite(limit) ? masters.slice(0, limit) : masters;
     report(0, models.length);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
     const rows: BulkOpRow[] = [];
@@ -266,7 +355,10 @@ async function gatherModels(report: BulkOpReporter, limit: number): Promise<Bulk
 }
 
 /**
- * Check Subjects, Scenes, or Models against EDAN. Subjects/Scenes report Packrat vs EDAN publish state
+ * Check Subjects, Scenes, or Models against EDAN. The EDAN record is resolved by the edanmdm record id
+ * (or a scene's EDAN UUID) via getContent; when that is absent or misses, the object's ARK Identifier is
+ * tried as a fallback via EDAN search (getContent does not resolve ARK URLs). Subjects/Scenes report
+ * Packrat vs EDAN publish state
  * and support an explicit per-row reconcile (adopt a chosen state into Packrat — never touches EDAN,
  * never automatic). Models report whether EDAN has a 3D scene for the owning Subject's record and
  * whether Packrat has a scene — report-only for now (a backfill action is future work). Target is a param.

@@ -9,6 +9,12 @@ import { syncFromEDAN } from '../../http/routes/api/bulkOps/syncFromEDAN';
 
 describe('Bulk op: Sync from EDAN — gather via the async harness job', () => {
     afterEach(() => jest.restoreAllMocks());
+    // Default: no ARK on any object (individual tests override for the ARK-fallback case). Keeps the
+    // ARK resolver off the DB in unit tests.
+    beforeEach(() => {
+        jest.spyOn(CACHE.VocabularyCache, 'vocabularyByEnum').mockResolvedValue(undefined);
+        jest.spyOn(DBAPI.Identifier, 'fetchFromSystemObject').mockResolvedValue(null);
+    });
 
     test('classifies drift vs in-sync and defaults each row to the EDAN state', async () => {
         // Subject 1 (idSO 10): Packrat says Not Published, EDAN says Public → drift (a candidate).
@@ -57,6 +63,42 @@ describe('Bulk op: Sync from EDAN — gather via the async harness job', () => {
         expect(noRecord?.isCandidate).toBe(false);
         expect(noRecord?.rowData.note).toBe('No EDAN Record ID');
         expect(noRecord?.rowData.edanState).toBe('Not Published');
+    });
+
+    test('falls back to the ARK when a Subject has no EDAN Record ID', async () => {
+        // No EDAN Record ID, but the Subject carries an ARK that resolves to a live EDAN record.
+        jest.spyOn(DBAPI.Subject, 'fetchAll').mockResolvedValue([{ idSubject: 1, Name: 'ARK only' }] as unknown as DBAPI.Subject[]);
+        jest.spyOn(CACHE.SystemObjectCache, 'getSystemFromSubject')
+            .mockResolvedValue({ idSystemObject: 10 } as DBAPI.SystemObjectInfo);
+        jest.spyOn(SubjectHelpers, 'computeTargetRecord')
+            .mockResolvedValue({ recordId: '', unitCode: '', dataSource: '', url: '' });
+        jest.spyOn(CACHE.VocabularyCache, 'vocabularyByEnum').mockResolvedValue({ idVocabulary: 79 } as DBAPI.Vocabulary);
+        jest.spyOn(DBAPI.Identifier, 'fetchFromSystemObject')
+            .mockResolvedValue([{ idVIdentifierType: 79, IdentifierValue: 'ark:/65665/abc123' }] as unknown as DBAPI.Identifier[]);
+        jest.spyOn(DBAPI.Audit, 'fetchLatestPublicationEvent').mockResolvedValue(null);
+        jest.spyOn(DBAPI.SystemObjectVersion, 'fetchLatestFromSystemObject')
+            .mockResolvedValue({ publishedStateEnum: () => COMMON.ePublishedState.eNotPublished } as DBAPI.SystemObjectVersion);
+
+        // No edanmdm id → getContent finds nothing; the ARK resolves via EDAN *search* (getContent does
+        // not accept ARK URLs). The matching row is the one whose public id equals the ARK exactly.
+        const fetchContent = jest.fn(async () => null);
+        const queryCollection = jest.fn(async (q: string) =>
+            q === 'http://n2t.net/ark:/65665/abc123'
+                ? { records: [
+                    { identifierPublic: 'http://n2t.net/ark:/65665/other', raw: { status: 0, publicSearch: false } },
+                    { identifierPublic: 'http://n2t.net/ark:/65665/abc123', raw: { status: 0, publicSearch: true } },
+                ], rowCount: 2 }
+                : { records: [], rowCount: 0 });
+        jest.spyOn(COL.CollectionFactory, 'getInstance')
+            .mockReturnValue({ fetchContent, queryCollection } as unknown as COL.ICollection);
+
+        await BulkOpJob.run(syncFromEDAN, { params: { targetType: 'subject' } });
+        const row = BulkOpJob.rows.find(r => r.id === 10);
+        // Resolved via the exact-ARK search row (publicSearch true → Public), not the fuzzy neighbour.
+        expect(queryCollection).toHaveBeenCalledWith('http://n2t.net/ark:/65665/abc123', 25, 0, { gatherRaw: true });
+        expect(row?.rowData.edanState).toBe('Public');
+        expect(row?.isCandidate).toBe(true);
+        expect(row?.rowData.note).toContain('via ARK');
     });
 
     test('normalizes an already-prefixed record id (no double edanmdm)', async () => {
@@ -110,13 +152,23 @@ describe('Bulk op: Sync from EDAN — gather via the async harness job', () => {
 
 describe('Bulk op: Sync from EDAN — Models (report-only backfill discovery)', () => {
     afterEach(() => jest.restoreAllMocks());
+    beforeEach(() => {
+        jest.spyOn(CACHE.VocabularyCache, 'vocabularyByEnum').mockResolvedValue(undefined);
+        jest.spyOn(DBAPI.Identifier, 'fetchFromSystemObject').mockResolvedValue(null);
+    });
 
     test('flags a model whose EDAN record has a scene but Packrat does not', async () => {
         // Model 1: EDAN record carries a Voyager scene, Packrat has none → backfill candidate.
         // Model 2: EDAN record has no 3D, Packrat already has a scene → not a candidate.
+        // Model 3: a non-master (download) model → excluded from the sweep entirely.
         jest.spyOn(DBAPI.Model, 'fetchAll').mockResolvedValue([
-            { idModel: 1, Name: 'Master A' }, { idModel: 2, Name: 'Master B' },
+            { idModel: 1, Name: 'Master A', idVPurpose: 45 },
+            { idModel: 2, Name: 'Master B', idVPurpose: 45 },
+            { idModel: 3, Name: 'Download C', idVPurpose: 46 },
         ] as unknown as DBAPI.Model[]);
+        // Master purpose resolves to 45; other vocab lookups (e.g. ARK) return undefined.
+        jest.spyOn(CACHE.VocabularyCache, 'vocabularyByEnum').mockImplementation(async (e: COMMON.eVocabularyID) =>
+            e === COMMON.eVocabularyID.eModelPurposeMaster ? ({ idVocabulary: 45 } as DBAPI.Vocabulary) : undefined);
         jest.spyOn(DBAPI.SystemObject, 'fetchFromModelID')
             .mockImplementation(async (idModel: number) => ({ idSystemObject: idModel * 100 } as DBAPI.SystemObject));
 
@@ -152,7 +204,8 @@ describe('Bulk op: Sync from EDAN — Models (report-only backfill discovery)', 
         await BulkOpJob.run(syncFromEDAN, { params: { targetType: 'model' } });
         expect(BulkOpJob.progress.phase).toBe('completed');
         const rows = BulkOpJob.rows;
-        expect(rows).toHaveLength(2);
+        expect(rows).toHaveLength(2);                          // the non-master model is excluded
+        expect(rows.find(r => r.id === 300)).toBeUndefined();  // Download C never gathered
 
         const backfill = rows.find(r => r.id === 100);
         expect(backfill?.isCandidate).toBe(true);

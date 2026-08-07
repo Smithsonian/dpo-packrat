@@ -363,6 +363,17 @@ export class EdanCollection implements COL.ICollection {
         return headers;
     }
 
+    // Retry-After is either a count of seconds or an HTTP-date; return the ms to wait, or null when the
+    // header is absent or unparseable (the caller then falls back to exponential backoff).
+    private static parseRetryAfter(value: string | null): number | null {
+        if (!value) return null;
+        const seconds: number = Number(value);
+        if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000);
+        const when: number = Date.parse(value);
+        if (!Number.isNaN(when)) return Math.max(0, when - Date.now());
+        return null;
+    }
+
     /**
      * Perform an HTTP GET request
      * @param path The URL path
@@ -394,7 +405,14 @@ export class EdanCollection implements COL.ICollection {
         // text searches). Independent of the kernel TCP connect timeout, which
         // is what dominates real failures and is addressed by the retry below.
         const REQUEST_TIMEOUT_MS = 60000;
-        const MAX_ATTEMPTS = 2;
+        const MAX_ATTEMPTS = 4;
+        // EDAN throttles bursts with a transient non-2xx (429/503, an occasional 401, or a 408 timeout)
+        // rather than a dropped connection; retry those with exponential backoff, honoring Retry-After
+        // when present. A genuine non-retryable response (404, 400) returns immediately; a persistent
+        // retryable status still returns after the attempts are exhausted.
+        const RETRYABLE_STATUS: Set<number> = new Set([401, 408, 429, 503]);
+        const BACKOFF_MS: number[] = [500, 1000, 2000, 4000];
+        const MAX_BACKOFF_MS = 30000;
 
         for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
             try {
@@ -411,11 +429,22 @@ export class EdanCollection implements COL.ICollection {
                 };
                 const res = await fetch(url, init);
 
-                return {
-                    output: await res.text(),
-                    statusText: res.statusText,
-                    success: res.ok
-                };
+                // Success, a non-retryable status, or the final attempt → return the response as-is.
+                if (res.ok || !RETRYABLE_STATUS.has(res.status) || attempt === MAX_ATTEMPTS) {
+                    return {
+                        output: await res.text(),
+                        statusText: res.statusText,
+                        success: res.ok
+                    };
+                }
+
+                // Transient throttle/timeout status: drain the body, then wait (Retry-After or backoff).
+                await res.text();
+                const retryAfterMs: number | null = EdanCollection.parseRetryAfter(res.headers.get('retry-after'));
+                const backoff: number = BACKOFF_MS[Math.min(attempt - 1, BACKOFF_MS.length - 1)];
+                const waitMs: number = Math.min(retryAfterMs ?? backoff, MAX_BACKOFF_MS);
+                RK.logWarning(RK.LogSection.eCOLL,'send request throttled',`status ${res.status}; retry ${attempt + 1}/${MAX_ATTEMPTS} in ${waitMs}ms`,{ url, attempt, status: res.status },'Collection.EDAN');
+                await new Promise(resolve => setTimeout(resolve, waitMs));
             } catch (error) /* istanbul ignore next */ {
                 const isLastAttempt: boolean = attempt === MAX_ATTEMPTS;
                 if (isLastAttempt) {
@@ -426,10 +455,11 @@ export class EdanCollection implements COL.ICollection {
                         success: false
                     };
                 }
-                // Brief backoff before retry — gives intermittent network or load-balancer
+                // Exponential backoff before retry — gives intermittent network or load-balancer
                 // hiccups a chance to clear. Errors logged at warn level only.
-                RK.logWarning(RK.LogSection.eCOLL,'send request transient failure',`${H.Helpers.getErrorString(error)} — will retry`,{ url, attempt },'Collection.EDAN');
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                const backoff: number = BACKOFF_MS[Math.min(attempt - 1, BACKOFF_MS.length - 1)];
+                RK.logWarning(RK.LogSection.eCOLL,'send request transient failure',`${H.Helpers.getErrorString(error)} — will retry in ${backoff}ms`,{ url, attempt },'Collection.EDAN');
+                await new Promise(resolve => setTimeout(resolve, backoff));
             }
         }
         /* istanbul ignore next */
