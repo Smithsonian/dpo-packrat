@@ -118,9 +118,9 @@ export default class API {
         return this.request('api/object/action', { method: 'POST', body });
     }
 
-    // bulk operation — describe | validate (sweep) | apply (one item) a registered bulk op harness
-    static async bulkOperation(operation: string, mode: 'describe' | 'validate' | 'apply',
-        args: { idSystemObject?: number; idSystemObjects?: number[]; rowSettings?: Record<string, unknown> } = {}): Promise<RequestResponse> {
+    // bulk operation harness — list | describe | start (async gather) | status | results | apply (one item)
+    static async bulkOperation(operation: string, mode: 'list' | 'describe' | 'start' | 'status' | 'results' | 'apply',
+        args: { params?: Record<string, unknown>; idSystemObject?: number; idSystemObjects?: number[]; rowSettings?: Record<string, unknown> } = {}): Promise<RequestResponse> {
         const body = JSON.stringify({ operation, mode, ...args });
         return this.request('api/bulk/operation', { method: 'POST', body });
     }

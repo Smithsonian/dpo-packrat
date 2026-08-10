@@ -53,6 +53,12 @@ export class SubjectHelpers {
             }
         }
 
+        // The stored value is sometimes entered with the 'edanmdm:' scheme; the EDAN record_ID is the
+        // bare id and the url form is 'edanmdm:<id>'. Strip any leading scheme so recordId is bare (the
+        // publish path writes it as record_ID) and url is single-prefixed (a double 'edanmdm:edanmdm:'
+        // url is rejected by EDAN with a 404).
+        recordId = recordId.trim().replace(/^edanmdm:/i, '');
+
         let unitCode: string = '';
         let dataSource: string = '';
         const unit: DBAPI.Unit | null = await DBAPI.Unit.fetch(subject.idUnit);

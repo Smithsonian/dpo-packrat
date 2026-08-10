@@ -259,6 +259,12 @@ function DataTableSelectInner<T extends DBReference>(
 
     }, [resetSelection]);
 
+    // when the shown row count changes (e.g. a "Show" filter toggles the data set), return to the first
+    // page so the view is never stranded on an empty page past the new end.
+    useEffect(() => {
+        setPage(0);
+    }, [data.length]);
+
     // expose a small imperative API
     useImperativeHandle(ref, () => ({
         closeAll: () => setExpandedRow(-1),
