@@ -15,6 +15,7 @@ import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 import { palette } from '../../../../theme';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
+import { retiredItemStyles } from '../../../../components/controls/RetiredFilterToggle';
 import MetadataView, { TreeViewColumn } from './MetadataView';
 
 interface TreeLabelProps {
@@ -22,6 +23,7 @@ interface TreeLabelProps {
     label?: React.ReactNode;
     objectType: number;
     color: string;
+    retired?: boolean;
     treeColumns: TreeViewColumn[];
     renderSelected?: boolean;
     selected?: boolean;
@@ -33,7 +35,7 @@ interface TreeLabelProps {
 
 // pass the event handler for clicking to this component
 function TreeLabel(props: TreeLabelProps): React.ReactElement {
-    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color, nodeId } = props;
+    const { idSystemObject, label, treeColumns, renderSelected = false, selected = false, onSelect, onUnSelect, objectType, makeStyles, color, nodeId, retired = false } = props;
     const [waitTime, setWaitTime] = useState<NodeJS.Timeout[]>([]);
     const objectTitle = useMemo(() => `${getTermForSystemObjectType(objectType)} ${label}`, [objectType, label]);
     const navigate = useNavigate();
@@ -86,7 +88,7 @@ function TreeLabel(props: TreeLabelProps): React.ReactElement {
                         </Box>
                     )}
                     <div className={makeStyles?.labelText} style={{ backgroundColor: color }}>
-                        <span title={objectTitle} onClick={onClick} onAuxClick={onAuxClick}>{label}</span>
+                        <span title={objectTitle} onClick={onClick} onAuxClick={onAuxClick} style={retired ? retiredItemStyles.retiredText : undefined}>{label}{retired ? retiredItemStyles.retiredSuffix : ''}</span>
                     </div>
                 </div>
                 <MetadataView header={false} treeColumns={treeColumns} makeStyles={{ text: makeStyles?.text || '', column: makeStyles?.column || '' }} />

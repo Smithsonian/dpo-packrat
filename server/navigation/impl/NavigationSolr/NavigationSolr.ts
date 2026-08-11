@@ -53,8 +53,9 @@ export class NavigationSolr implements NAV.INavigation {
     private async computeSolrNavQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
         let SQ: solr.Query = this._solrClientPackrat._client.query().edismax();    // use edismax query parser instead of lucene default
 
-        // For now, do not show retired assets to anyone:
-        SQ = SQ.matchFilter('CommonRetired', 0);
+        // Retired objects are hidden unless the caller opts in via the "Show retired" filter.
+        if (filter.showRetired !== true)
+            SQ = SQ.matchFilter('CommonRetired', 0);
 
         // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
         if (filter.search && filter.idRoots.length === 0) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
@@ -140,7 +141,7 @@ export class NavigationSolr implements NAV.INavigation {
         }
 
         // metadataColumns: COMMON.eMetadata[];           // empty array means give no metadata
-        const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
+        const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName', 'CommonRetired']; // fetch standard fields // don't need ChildrenID
         for (const metadataColumn of filter.metadataColumns) {
             const filterColumn: string = COMMON.eMetadata[metadataColumn];
             if (filterColumn)
@@ -275,7 +276,8 @@ export class NavigationSolr implements NAV.INavigation {
                 name: doc.CommonName || '<UNKNOWN>',
                 objectType: DBAPI.SystemObjectNameToType(doc.CommonObjectType),
                 idObject: doc.CommonidObject,
-                metadata: this.computeNavMetadata(doc, filter.metadataColumns)
+                metadata: this.computeNavMetadata(doc, filter.metadataColumns),
+                retired: doc.CommonRetired === true
             };
 
             entries.push(entry);

@@ -24,6 +24,7 @@ input GetObjectChildrenInput {
     rows: Int!
     cursorMark: String!
     start: Int
+    showRetired: Boolean
 }
 
 type NavigationResultEntry {
@@ -32,6 +33,7 @@ type NavigationResultEntry {
     objectType: Int!
     idObject: Int!
     metadata: [String!]!
+    retired: Boolean
 }
 
 type GetObjectChildrenResult {

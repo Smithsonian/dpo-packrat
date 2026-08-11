@@ -856,6 +856,7 @@ export type GetObjectChildrenInput = {
   projects: Array<Scalars['Int']>;
   rows: Scalars['Int'];
   search: Scalars['String'];
+  showRetired?: InputMaybe<Scalars['Boolean']>;
   start?: InputMaybe<Scalars['Int']>;
   units: Array<Scalars['Int']>;
   variantType: Array<Scalars['Int']>;
@@ -1869,6 +1870,7 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired?: Maybe<Scalars['Boolean']>;
 };
 
 export type ObjectPropertyResult = {
@@ -3162,7 +3164,7 @@ export type GetObjectChildrenQueryVariables = Exact<{
 }>;
 
 
-export type GetObjectChildrenQuery = { __typename?: 'Query', getObjectChildren: { __typename?: 'GetObjectChildrenResult', success: boolean, error?: string | null, metadataColumns: Array<number>, cursorMark?: string | null, total?: number | null, entries: Array<{ __typename?: 'NavigationResultEntry', idSystemObject: number, name: string, objectType: number, idObject: number, metadata: Array<string> }> } };
+export type GetObjectChildrenQuery = { __typename?: 'Query', getObjectChildren: { __typename?: 'GetObjectChildrenResult', success: boolean, error?: string | null, metadataColumns: Array<number>, cursorMark?: string | null, total?: number | null, entries: Array<{ __typename?: 'NavigationResultEntry', idSystemObject: number, name: string, objectType: number, idObject: number, metadata: Array<string>, retired?: boolean | null }> } };
 
 export type GetIntermediaryFileQueryVariables = Exact<{
   input: GetIntermediaryFileInput;
@@ -5248,6 +5250,7 @@ export const GetObjectChildrenDocument = gql`
       objectType
       idObject
       metadata
+      retired
     }
     metadataColumns
     cursorMark

@@ -28,7 +28,8 @@ type FieldStatus = {
     name: string,
     status: string,
     level: 'pass' | 'fail' | 'warn' | 'critical' | 'info',
-    notes: string
+    notes: string,
+    approvable?: boolean   // true when a reviewer may record a QC sign-off on this row (AR / Download derivatives that are present but not yet Verified)
 };
 
 const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string): FieldStatus => {
@@ -120,8 +121,8 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     RK.profileEnd(profileKey);
 
     // helpers for determining state
-    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string): FieldStatus => {
-        return { name, status, level, notes };
+    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string, approvable?: boolean): FieldStatus => {
+        return { name, status, level, notes, approvable };
     };
     const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
         const name = 'Is Reviewed';
@@ -335,12 +336,39 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         const date: Date = d instanceof Date ? d : new Date(String(d));
         return isNaN(date.getTime()) ? String(d) : date.toISOString().slice(0, 10);
     };
-    const getModelARStatus = async (status: string, licenseAllows: boolean): Promise<FieldStatus> => {
+    // Newest asset-version date across a derivative set (or null when empty), used to decide whether
+    // an approval still covers the current derivatives.
+    const latestDerivativeDate = (items: { dateModified: Date }[]): Date | null => {
+        let latest: Date | null = null;
+        for (const it of items) {
+            const d: Date = it.dateModified instanceof Date ? it.dateModified : new Date(String(it.dateModified));
+            if (!isNaN(d.getTime()) && (latest === null || d.getTime() > latest.getTime()))
+                latest = d;
+        }
+        return latest;
+    };
+    // An approval is honored only while it is at least as new as the newest derivative asset version.
+    // Regenerating a derivative after the sign-off makes the approval stale, reverting the row to the
+    // non-blocking "not yet approved" state until a reviewer approves again.
+    const isApprovalCurrent = (approvalDate: Date, latestDerivative: Date | null): boolean => {
+        if (latestDerivative === null)
+            return true;
+        const a: Date = approvalDate instanceof Date ? approvalDate : new Date(String(approvalDate));
+        return !isNaN(a.getTime()) && a.getTime() >= latestDerivative.getTime();
+    };
+    const getModelARStatus = async (status: string, licenseAllows: boolean, latestDerivative: Date | null): Promise<FieldStatus> => {
         const name = 'Models: AR';
 
         switch(status) {
-            case 'Good':
-                return { name, status: 'Found', level: 'pass', notes: 'all AR models found' };
+            case 'Good': {
+                // AR derivatives are present. Treat as pending QC until a reviewer signs off:
+                // a current approval audit row clears it to a neutral "Verified"; otherwise it stays a
+                // "Not yet approved" warning that still offers the approve action.
+                const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveARModels);
+                if (approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                    return { name, status: 'Verified', level: 'pass', notes: `Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}` };
+                return { name, status: 'Found', level: 'warn', notes: 'all AR models found. Not yet approved — verify to record QC sign-off.', approvable: true };
+            }
             case 'Missing: WebAR':
                 return { name, status, level: 'fail', notes: 'WebXR models are generated with the scene. Try regenerating it from the source model page' };
             case 'Missing: NativeAR':
@@ -349,13 +377,13 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 return { name, status, level: (licenseAllows)?'fail':'warn', notes: 'no AR models found. Regenerate the scene and generate downloads' };
             default: {
                 if (status.startsWith('Error:')) {
-                    // Date-driven Outdated flag. Presence of an approval audit row clears it to a
-                    // neutral "Verified" state — no date comparison, no asset mutation. Non-date
-                    // failures fall through and are never cleared.
+                    // Date-driven Outdated flag. A current approval audit row clears it to a neutral
+                    // "Verified" state — no asset mutation. A stale approval (older than a regenerated
+                    // derivative) or non-date failures fall through and are not cleared.
                     const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveARModels);
-                    if (approval)
-                        return { name, status: 'Verified', level: 'info', notes: `Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}` };
-                    return { name, status: 'Outdated', level: 'warn', notes: `AR model may have material issues. Consider regenerating. (${status})` };
+                    if (approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                        return { name, status: 'Verified', level: 'pass', notes: `Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}` };
+                    return { name, status: 'Outdated', level: 'warn', notes: `AR model may have material issues. Consider regenerating. (${status})`, approvable: true };
                 }
                 return { name, status: 'Error', level: 'critical', notes: `unexpected AR model status: ${status}` };
             }
@@ -369,14 +397,20 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         else
             return formatResultField(name,'Missing','fail',`${count}/${expected} base models found`);
     };
-    const getModelDownloadsStatus = async ( status: string, count: number, expected: number, licenseAllows: boolean): Promise<FieldStatus> => {
+    const getModelDownloadsStatus = async ( status: string, count: number, expected: number, licenseAllows: boolean, latestDerivative: Date | null): Promise<FieldStatus> => {
         const name = 'Download Models';
         const expectedCount = expected > 0 ? expected : 6;
 
         if(status === 'Good') {
-            if(licenseAllows===true)
-                return formatResultField(name,'Found','pass','all generated downloads found for scene and will be published');
-            else
+            if(licenseAllows===true) {
+                // Downloads are present and will publish. Treat as pending QC until a reviewer signs
+                // off: a current approval audit row clears it to "Verified"; otherwise it stays a
+                // "Not yet approved" warning that still offers the approve action.
+                const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveDownloadModels);
+                if(approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                    return formatResultField(name,'Verified','pass',`Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}`);
+                return formatResultField(name,'Found','warn','all generated downloads found for scene and will be published. Not yet approved — verify to record QC sign-off.',true);
+            } else
                 return formatResultField(name,'Found','info','downloads exist but the license does not use them, so they <b><u>will not</u></b> be published. No action needed.');
         } else if(status === 'Missing') {
             // downloads are actually missing (count < 6)
@@ -386,14 +420,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 return formatResultField(name,'Missing','warn',`downloads not found (${count}/${expectedCount}). consider generating them.`);
         } else if(status === 'Error') {
             // downloads exist but may have material issues (created before June 14, 2024 Cook fix).
-            // Presence of an approval audit row clears the date flag to a neutral "Verified" state.
+            // A current approval audit row clears the date flag to a neutral "Verified" state; a stale
+            // approval (older than a regenerated download) falls through to the warning.
             const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveDownloadModels);
-            if(approval)
-                return formatResultField(name,'Verified','info',`Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}`);
+            if(approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                return formatResultField(name,'Verified','pass',`Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}`);
             if(licenseAllows===true)
-                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`);
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`,true);
             else
-                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`);
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`,true);
         } else {
             // fallback for unexpected status values
             if(licenseAllows===true)
@@ -497,9 +532,9 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         baseModels:
             getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
         downloads:
-            await getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status)),
+            await getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.downloads.items)),
         arModels:
-            await getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status)),
+            await getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.ar.items)),
         captureData:
             getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
     };

@@ -853,6 +853,7 @@ export type GetObjectChildrenInput = {
   projects: Array<Scalars['Int']>;
   rows: Scalars['Int'];
   search: Scalars['String'];
+  showRetired?: InputMaybe<Scalars['Boolean']>;
   start?: InputMaybe<Scalars['Int']>;
   units: Array<Scalars['Int']>;
   variantType: Array<Scalars['Int']>;
@@ -1866,6 +1867,7 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired?: Maybe<Scalars['Boolean']>;
 };
 
 export type ObjectPropertyResult = {

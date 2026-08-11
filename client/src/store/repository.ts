@@ -47,12 +47,13 @@ type RepositoryStore = {
     modelFileType: number[];
     dateCreatedFrom: Date | string | null;
     dateCreatedTo: Date | string | null;
+    showRetired: boolean;
     idRoots: number[] | null;
     repositoryBrowserRootObjectType: string | null;
     repositoryBrowserRootName: string | null;
     getFilterState: () => RepositoryFilter;
     removeChipOption: (id: number, type: eRepositoryChipFilterType, isModal: boolean) => void;
-    updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean) => void;
+    updateFilterValue: (name: string, value: number | number[] | Date | boolean | null, isModal: boolean) => void;
     resetRepositoryFilter: (modifyCookie?: boolean, keepMetadata?: boolean) => void;
     resetKeywordSearch: () => void;
     initializeTree: () => Promise<void>;
@@ -98,10 +99,11 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
     modelFileType: [],
     dateCreatedFrom: null,
     dateCreatedTo: null,
+    showRetired: false,
     idRoots: null,
     repositoryBrowserRootObjectType: null,
     repositoryBrowserRootName: null,
-    updateFilterValue: (name: string, value: number | number[] | Date | null, isModal: boolean): void => {
+    updateFilterValue: (name: string, value: number | number[] | Date | boolean | null, isModal: boolean): void => {
         const { initializeTree, setCookieToState, keyword } = get();
         // A filter change re-queries from the first page of roots.
         set({ [name]: value, loading: true, search: keyword, rootPage: 1 });
@@ -337,6 +339,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null,
+            showRetired: false,
             idRoots: null,
             repositoryBrowserRootObjectType: null,
             repositoryBrowserRootName: null
@@ -366,7 +369,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             idRoots,
             dateCreatedFrom,
-            dateCreatedTo
+            dateCreatedTo,
+            showRetired
         } = get();
 
         return {
@@ -385,7 +389,8 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             idRoots,
             dateCreatedFrom,
-            dateCreatedTo
+            dateCreatedTo,
+            showRetired
         };
     },
     setCookieToState: (): void => {
@@ -404,6 +409,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             dateCreatedFrom,
             dateCreatedTo,
+            showRetired,
             idRoots
         } = getFilterState();
         const currentFilterState = {
@@ -420,6 +426,7 @@ export const useRepositoryStore = create<RepositoryStore>((set: SetState<Reposit
             modelFileType,
             dateCreatedFrom,
             dateCreatedTo,
+            showRetired,
             idRoots,
             rootPage,
             rootPageSize

@@ -22,6 +22,7 @@ import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
+import FilterBoolean from './FilterBoolean';
 import { ChipOption, getRepositoryFilterOptions, eRepositoryChipFilterType, getTermForRepositoryFilterType } from './RepositoryFilterOptions';
 import { extractISOMonthDateYear } from '../../../../constants';
 import { HOME_ROUTES } from '../../../../constants';
@@ -286,6 +287,7 @@ function RepositoryFilterView(): React.ReactElement {
                             <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
                         </Box>
                         <FilterDate label='Date Created' name='dateCreated' />
+                        <FilterBoolean label='Retired' name='showRetired' falseLabel='Hide' trueLabel='Show' />
                     </Box>
                 </Box>
             </React.Fragment>

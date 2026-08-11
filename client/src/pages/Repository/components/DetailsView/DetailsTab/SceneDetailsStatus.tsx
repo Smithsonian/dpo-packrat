@@ -21,7 +21,7 @@ import {
     // Theme,
     createStyles
 } from '@material-ui/core';
-import { Edit, Sync, CheckCircleOutline, Straighten } from '@material-ui/icons';
+import { Edit, Sync } from '@material-ui/icons';
 import { Alert } from '@material-ui/lab';
 import { makeStyles } from '@material-ui/core/styles';
 import API, { RequestResponse } from '../../../../../api';
@@ -31,6 +31,7 @@ interface QCStatus {
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
+    approvable?: boolean;
 }
 interface EdanRecordIdRaw {
     svx: string | null;
@@ -75,6 +76,7 @@ interface QCRow {
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
     tooltip: string;
+    approvable?: boolean;
 }
 interface SceneDetailsStatusProps {
     idSceneSO: number;
@@ -240,6 +242,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 level: row.level,
                 notes: (publishedNotes) ?? row.notes,
                 tooltip: qcRowTooltips[key as string] ?? '',
+                approvable: row.approvable,
             };
         });
     }, []);
@@ -453,17 +456,17 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                                             </IconButton>
                                         </Tooltip>
                                     )}
-                                    {(row.key === 'arModels' || row.key === 'downloads') && row.status === 'Outdated' && (
+                                    {(row.key === 'arModels' || row.key === 'downloads') && row.approvable === true && (
                                         <Tooltip title='Verify / Approve'>
                                             <IconButton size='small' onClick={() => handleOpenApprove(row.key === 'arModels' ? 'ar' : 'downloads')}>
-                                                <CheckCircleOutline fontSize='small' />
+                                                <Edit fontSize='small' />
                                             </IconButton>
                                         </Tooltip>
                                     )}
                                     {row.key === 'scale' && (
                                         <Tooltip title='Set Display Units'>
                                             <IconButton size='small' onClick={handleOpenScale}>
-                                                <Straighten fontSize='small' />
+                                                <Edit fontSize='small' />
                                             </IconButton>
                                         </Tooltip>
                                     )}
@@ -531,10 +534,8 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 <DialogTitle>Verify {approveKind === 'ar' ? 'AR Models' : 'Download Models'}</DialogTitle>
                 <DialogContent>
                     <Typography variant='body2' style={{ marginBottom: 8 }}>
-                        These derivatives were generated before the 2024-06-14 Cook material fix, so
-                        Packrat flags them as possibly outdated. This is a <strong>date check</strong>,
-                        not a detected defect &mdash; the assets may be fine. Approving records a QA
-                        sign-off and clears the warning; it does not modify the assets.
+                        Approving signals that you have QC&apos;d these derivatives. This is a non-blocking
+                        sign-off &mdash; it does not prevent publishing and does not modify the assets.
                     </Typography>
                     <TextField
                         variant='outlined'
