@@ -270,6 +270,7 @@ function RepositoryFilterView(): React.ReactElement {
                         <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
                         <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
                         <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
+                        <FilterBoolean label='Retired' name='showRetired' falseLabel='Hide' trueLabel='Show' />
                     </Box>
 
                     <Box className={classes.selectContainer} width={225}>
@@ -287,7 +288,6 @@ function RepositoryFilterView(): React.ReactElement {
                             <FilterSelect multiple label='Model File Type' name='modelFileType' options={fileTypeOptions} />
                         </Box>
                         <FilterDate label='Date Created' name='dateCreated' />
-                        <FilterBoolean label='Retired' name='showRetired' falseLabel='Hide' trueLabel='Show' />
                     </Box>
                 </Box>
             </React.Fragment>

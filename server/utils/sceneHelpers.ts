@@ -879,6 +879,72 @@ export class SceneHelpers {
         return results;
     }
 
+    /**
+     * Ensure a scene SystemObjectVersion's asset manifest includes the current, non-retired
+     * derivative-model asset versions (downloads / AR / web-display models) linked via ModelSceneXref.
+     * Those models are separate SystemObjects, so their assets are not the scene's own assets and are
+     * only present in a scene version when explicitly bound. A freshly cloned scene version (e.g. from a
+     * WebDAV save, attachment ingest, SVX edit, re-ingest, or a zip rebuild) carries forward only what
+     * the clone source held; this re-binds the current derivative set so every new scene version is a
+     * complete snapshot. Idempotent (addOrUpdate) and additive. Returns the number of bindings written.
+     */
+    static async ensureSceneDerivativeBindings(idSceneSystemObject: number, idSystemObjectVersion: number): Promise<number> {
+        if (!idSceneSystemObject || !idSystemObjectVersion)
+            return 0;
+
+        const assetVersions: DBAPI.AssetVersion[] = await SceneHelpers.getSceneDerivativeAssetVersions(idSceneSystemObject);
+        if (assetVersions.length === 0)
+            return 0;
+
+        // Only write bindings that are missing or point at an older asset version -- keeps this a no-op on
+        // the hot re-version path (e.g. repeated WebDAV saves) once a scene's manifest is already complete.
+        const boundMap: Map<number, number> = (await DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(idSystemObjectVersion)) ?? new Map<number, number>();
+        let count: number = 0;
+        for (const assetVersion of assetVersions) {
+            if (boundMap.get(assetVersion.idAsset) === assetVersion.idAssetVersion)
+                continue; // already bound to this exact version
+
+            const bound: DBAPI.SystemObjectVersionAssetVersionXref | null =
+                await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(idSystemObjectVersion, assetVersion.idAsset, assetVersion.idAssetVersion);
+            if (bound)
+                count++;
+            else
+                RK.logError(RK.LogSection.eSYS,'ensure scene derivative bindings','failed to bind derivative asset version to scene version',
+                    { idSceneSystemObject, idSystemObjectVersion, idAsset: assetVersion.idAsset, idAssetVersion: assetVersion.idAssetVersion },'Utils.Scene');
+        }
+        return count;
+    }
+
+    /**
+     * The current, non-retired derivative-model (ModelSceneXref-linked) asset versions for a scene:
+     * downloads, native AR, and web-display models. These belong to separate model SystemObjects, so
+     * they are the assets that must be re-bound into a scene version to make it a complete snapshot.
+     * Returns [] for a non-scene system object.
+     */
+    static async getSceneDerivativeAssetVersions(idSceneSystemObject: number): Promise<DBAPI.AssetVersion[]> {
+        const result: DBAPI.AssetVersion[] = [];
+        if (!idSceneSystemObject)
+            return result;
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSceneSystemObject);
+        if (!SO || !SO.idScene)
+            return result; // only scenes carry ModelSceneXref-linked derivatives
+
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(SO.idScene);
+        if (!MSXs)
+            return result;
+
+        for (const MSX of MSXs) {
+            const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!modelSO || modelSO.Retired)
+                continue; // skip retired derivative models -- they are not part of the current snapshot
+
+            const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(modelSO.idSystemObject);
+            if (assetVersions)
+                result.push(...assetVersions);
+        }
+        return result;
+    }
+
     /** idAssetVersion is the assetversion ID of the ingested object */
     static async handleComplexIngestionScene(scene: DBAPI.Scene, IAR: STORE.IngestAssetResult,
         idUser?: number | undefined, idAssetVersion?: number | undefined, modelSource?: DBAPI.Model | undefined): Promise<H.IOResults & { transformUpdated: boolean }> {
