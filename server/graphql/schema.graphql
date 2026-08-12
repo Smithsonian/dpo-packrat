@@ -775,6 +775,7 @@ input GetObjectChildrenInput {
   projects: [Int!]!
   rows: Int!
   search: String!
+  showRetired: Boolean
   start: Int
   units: [Int!]!
   variantType: [Int!]!
@@ -1598,6 +1599,7 @@ type NavigationResultEntry {
   metadata: [String!]!
   name: String!
   objectType: Int!
+  retired: Boolean
 }
 
 type ObjectPropertyResult {

@@ -243,7 +243,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
 
         if (!children) return null;
         const items = children.map((child: NavigationResultEntryState, index: number) => {
-            const { idSystemObject, objectType, idObject, name, metadata, hierarchy } = child;
+            const { idSystemObject, objectType, idObject, name, metadata, hierarchy, retired } = child;
             let idSystemObjectParent: number = 0;
             if (parentNodeId) {
                 const { idSystemObject: idSystemObjectParentUpdated } = parseRepositoryTreeNodeId(parentNodeId);
@@ -303,6 +303,7 @@ function RepositoryTreeView(props: RepositoryTreeViewProps): React.ReactElement 
                     onUnSelect={unSelect}
                     objectType={objectType}
                     color={color}
+                    retired={retired === true}
                     treeColumns={treeColumns}
                     nodeId={nodeId}
                     makeStyles={{ container: classes.treeLabelContainer, label: classes.label, labelText: classes.labelText, column: classes.column, text: classes.text, options: classes.options, option: classes.option, link: classes.link }}

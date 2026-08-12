@@ -57,6 +57,7 @@ export type RepositoryFilter = {
     modelFileType: number[];
     dateCreatedFrom?: Date | string | null;
     dateCreatedTo?: Date | string | null;
+    showRetired?: boolean;
     cursorMark?: string | null;
     idRoots?: number[] | null;
     rootPage?: number;
@@ -106,6 +107,7 @@ function TreeViewPage(): React.ReactElement {
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
+        showRetired,
         idRoots,
         rootPage,
         rootPageSize,
@@ -130,6 +132,7 @@ function TreeViewPage(): React.ReactElement {
             modelFileType: [],
             dateCreatedFrom: null,
             dateCreatedTo: null,
+            showRetired: false,
             idRoots: null,
             rootPage: 1,
             rootPageSize: 25
@@ -175,6 +178,7 @@ function TreeViewPage(): React.ReactElement {
         modelFileType,
         dateCreatedFrom,
         dateCreatedTo,
+        showRetired,
         idRoots,
         rootPage,
         rootPageSize

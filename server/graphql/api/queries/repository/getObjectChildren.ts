@@ -11,6 +11,7 @@ const getObjectChildren = gql`
                 objectType
                 idObject
                 metadata
+                retired
             }
             metadataColumns
             cursorMark

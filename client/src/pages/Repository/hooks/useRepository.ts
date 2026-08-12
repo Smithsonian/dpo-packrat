@@ -30,6 +30,7 @@ function getObjectChildrenForRoot(filter: RepositoryFilter, idSystemObjects: num
                 modelFileType: filter.modelFileType,
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
+                showRetired: filter.showRetired ?? false,
                 rows,
                 cursorMark: filter.cursorMark ?? '',
                 start
@@ -59,6 +60,7 @@ function getObjectChildren(idRoots: number[], filter: RepositoryFilter): Promise
                 modelFileType: filter.modelFileType,
                 dateCreatedFrom: filter.dateCreatedFrom,
                 dateCreatedTo: filter.dateCreatedTo,
+                showRetired: filter.showRetired ?? false,
                 rows: 0, // load all children at once when a node is expanded (0 = all)
                 cursorMark: filter.cursorMark ?? ''
             }

@@ -22,6 +22,7 @@ import { eSystemObjectType, eVocabularySetID } from '@dpo-packrat/common';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../utils/repository';
 import FilterDate from './FilterDate';
 import FilterSelect from './FilterSelect';
+import FilterBoolean from './FilterBoolean';
 import { ChipOption, getRepositoryFilterOptions, eRepositoryChipFilterType, getTermForRepositoryFilterType } from './RepositoryFilterOptions';
 import { extractISOMonthDateYear } from '../../../../constants';
 import { HOME_ROUTES } from '../../../../constants';
@@ -269,6 +270,7 @@ function RepositoryFilterView(): React.ReactElement {
                         <FilterSelect multiple label='Top-Level Objects' name='repositoryRootType' options={repositoryRootTypesOptions} />
                         <FilterSelect multiple label='Children Objects' name='objectsToDisplay' options={objectToDisplayOptions} />
                         <FilterSelect multiple label='Metadata To Display' name='metadataToDisplay' options={metadataToDisplayOptions} />
+                        <FilterBoolean label='Retired' name='showRetired' falseLabel='Hide' trueLabel='Show' />
                     </Box>
 
                     <Box className={classes.selectContainer} width={225}>
