@@ -67,6 +67,7 @@ interface SceneQCData {
     edanUUID: QCStatus;
     edanRecordIdRaw?: EdanRecordIdRaw;
     scaleRaw?: ScaleRaw;
+    retired?: boolean;
     // network: QCStatus;
 }
 interface QCRow {
@@ -131,6 +132,7 @@ const mapSceneQCData = (d: any): SceneQCData => ({
     edanUUID: d.edanUUID,
     edanRecordIdRaw: d.edanRecordIdRaw,
     scaleRaw: d.scaleRaw,
+    retired: d.retired,
 });
 
 const UNIT_OPTIONS: string[] = ['mm', 'cm', 'm', 'km', 'in', 'ft', 'yd', 'mi'];
@@ -423,6 +425,12 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
 
     return (
         <div>
+            {data.retired && (
+                <Alert severity='info' style={{ marginBottom: 8 }}>
+                    This scene is <strong>retired</strong>. Publishing checks are not applicable &mdash; its
+                    derivatives are excluded from publishing and shown here for reference only.
+                </Alert>
+            )}
             <TableContainer component={Paper} className={classes.tableContainer}>
                 <Table>
                     <TableHead className={classes.tableHeader}>

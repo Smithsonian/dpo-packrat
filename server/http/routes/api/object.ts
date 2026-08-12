@@ -101,6 +101,11 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         return;
     }
 
+    // Retiring a scene cascades to its derivative models, which the summary then omits (they are
+    // excluded from publishing). Rather than reporting the derivatives as failing/Missing, a retired
+    // scene reframes those rows as a neutral "present but retired" state.
+    const sceneRetired: boolean = systemObject.Retired === true;
+
     // a scene must be linked to a parent Item (Media Group) to resolve its subject/project
     // ancestry; orphaned scenes (often legacy) cannot produce a QC summary. Detect this here so
     // the client receives a specific, actionable message instead of a generic build failure.
@@ -123,6 +128,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     // helpers for determining state
     const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string, approvable?: boolean): FieldStatus => {
         return { name, status, level, notes, approvable };
+    };
+    // Neutral (info-level) row for a retired scene: present derivatives read as "Found (retired)",
+    // absent ones as "None", and rows without a presence signal as "Retired" -- never a red failure.
+    const retiredRow = (name: string, present?: boolean): FieldStatus => {
+        if (present === true)
+            return { name, status: 'Found (retired)', level: 'info', notes: 'Present but retired; excluded from publishing.' };
+        if (present === false)
+            return { name, status: 'None', level: 'info', notes: 'Scene is retired; nothing to evaluate.' };
+        return { name, status: 'Retired', level: 'info', notes: 'Not evaluated while the scene is retired.' };
     };
     const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
         const name = 'Is Reviewed';
@@ -501,10 +515,29 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const scaleResult = await computeSceneScaleStatus();
     //#endregion
 
+    // For a retired scene, determine which derivative kinds exist (retired or not) so the reframed rows
+    // can read "Found (retired)" vs "None". Uses ModelSceneXref usage/name directly, since the summary
+    // omits the (cascade-retired) models.
+    let hasBaseModels = false, hasDownloadModels = false, hasARModels = false;
+    if (sceneRetired) {
+        const retiredMSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
+        for (const msx of retiredMSXs ?? []) {
+            const usage: string = msx.Usage ?? '';
+            const quality: string = (msx.Quality ?? '').toLowerCase();
+            if (usage.includes('Web3D'))
+                hasBaseModels = true;
+            if (msx.isDownloadable())
+                hasDownloadModels = true;
+            if (usage === 'App3D' || usage === 'iOSApp3D' || (usage.includes('Web3D') && quality === 'ar'))
+                hasARModels = true;
+        }
+    }
+
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
         idScene: systemObject.idScene,
+        retired: sceneRetired,
 
         publishedUrl:
             getPublishedUrl(publishedStatus.status),
@@ -530,13 +563,17 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         thumbnails:
             await getThumbnailsStatus(),
         baseModels:
-            getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
+            sceneRetired ? retiredRow('Models: Base', hasBaseModels)
+                : getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
         downloads:
-            await getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.downloads.items)),
+            sceneRetired ? retiredRow('Download Models', hasDownloadModels)
+                : await getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.downloads.items)),
         arModels:
-            await getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.ar.items)),
+            sceneRetired ? retiredRow('Models: AR', hasARModels)
+                : await getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.ar.items)),
         captureData:
-            getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
+            sceneRetired ? retiredRow('Capture Data')
+                : getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
     };
 
     // return success
