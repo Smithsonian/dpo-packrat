@@ -183,8 +183,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
-        super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
-            CookRecipe.getCookRecipeID('si-vogager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
+        super(jobEngine, Config.job.cookClientId, 'si-voyager-scene',
+            CookRecipe.getCookRecipeID('si-voyager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
             null, idAssetVersions, report, dbJobRun);
 
         if (parameters.skipJobCleanup) {
@@ -266,22 +266,34 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         if (!scenes)
             return this.logError('create system objects failed','unable to fetch children scenes of model', { idModel: modelSource.idModel });
 
-        // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one);
-        // If we have just one scene, before reusing it, see if the model names all match up
-        let createScene: boolean = (scenes.length !== 1);
-        if (!createScene && scenes.length > 0 && svx.SvxExtraction.modelDetails) {
+        // Decide whether to create a new scene or reuse the single existing one. A model source with
+        // no child scene legitimately creates its first scene. Reusing an existing scene must never
+        // silently fork a duplicate against the same model source: a model-name mismatch means a
+        // rename propagated into Cook's derivative names, so we block rather than fork, and a model
+        // source that already carries multiple scenes is refused rather than compounded (each such
+        // run would otherwise fork again). Recovery from a rename is the Fix Scene Basenames op.
+        if (scenes.length > 1)
+            return this.logError('create system objects failed',
+                `model source has ${scenes.length} child scenes; refusing to create another to avoid compounding duplicates (manual remediation required)`,
+                { idModel: modelSource.idModel, sceneCount: scenes.length });
+
+        if (scenes.length === 1 && svx.SvxExtraction.modelDetails) {
             for (const MSX of svx.SvxExtraction.modelDetails) {
-                if (MSX.Name) {
-                    // look for existing models, children of our scene, that match this model's purpose
-                    const model: DBAPI.Model | null = await this.findMatchingModel(scenes[0], MSX.computeModelAutomationTag());
-                    if (!model || (model.Name !== MSX.Name)) {
-                        createScene = true;
-                        break;
-                    }
-                }
+                if (!MSX.Name)
+                    continue;
+                // match by automation tag (model purpose), which is stable across a display-name
+                // rename. A missing match is not a fork trigger: the reuse path below creates the
+                // model on the existing scene. Only a present model whose Name differs signals a
+                // rename that would otherwise fork.
+                const model: DBAPI.Model | null = await this.findMatchingModel(scenes[0], MSX.computeModelAutomationTag());
+                if (model && model.Name !== MSX.Name)
+                    return this.logError('create system objects failed',
+                        `existing scene model "${model.Name}" does not match Cook output "${MSX.Name}"; a rename was detected. Refusing to fork a duplicate scene (run Fix Scene Basenames to remediate)`,
+                        { idModel: modelSource.idModel, idScene: scenes[0].idScene, expectedModelName: MSX.Name, existingModelName: model.Name, automationTag: MSX.computeModelAutomationTag() });
             }
         }
 
+        const createScene: boolean = (scenes.length === 0);
         const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
 
         let asset: DBAPI.Asset | null = null;
