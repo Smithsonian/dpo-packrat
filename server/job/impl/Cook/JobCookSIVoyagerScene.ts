@@ -398,11 +398,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-        await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
+        const sceneRef: COMMON.IWorkflowReportRef = { name: scene.Name, idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+        await this.appendToReportAndLog(`${this.name()} ingested scene ${scene.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.SceneIngested, data: { scene: sceneRef, href: pathDownload || undefined } });
 
         const SOV: DBAPI.SystemObjectVersion | null | undefined = IAR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
@@ -635,7 +634,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RK.logError(RK.LogSection.eJOB,'scene generation failed','post-processing failed after Cook success',undefined,'Job.VoyagerScene');
             await this.sendJobNotification({
                 success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
-                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+                extraContent: `<p><b>Parameters</b>: ${JSON.stringify(this.parameters)}<p>`
             });
         }
         return updated;
@@ -647,7 +646,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RK.logError(RK.LogSection.eJOB,'scene generation failed',undefined,undefined,'Job.VoyagerScene');
             await this.sendJobNotification({
                 success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
-                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+                extraContent: `<p><b>Parameters</b>: ${JSON.stringify(this.parameters)}<p>`
             });
         }
         return updated;

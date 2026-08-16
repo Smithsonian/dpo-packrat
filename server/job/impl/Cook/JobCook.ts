@@ -8,6 +8,7 @@ import { Config } from '../../../config';
 import * as H from '../../../utils/helpers';
 import * as COOKRES from '../../../job/impl/Cook/CookResource';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import * as COMMON from '@dpo-packrat/common';
 
 import { Actor } from '../../../audit/Actor';
 import { withActor } from '../../../audit/resolveActor';
@@ -86,6 +87,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     // TODO: additional error reporting out to generated report
 
+    protected reportPhase: COMMON.WorkflowReportPhase = 'cook';
     private _configuration: JobCookConfiguration;
     protected _idAssetVersions: number[] | null;
     protected _skipCleanup: boolean = false;
@@ -150,7 +152,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // TODO: debug mode outputting all considered resources and the one chosen
         const bestFit: COOKRES.CookResourceInfo = cookResources.resources[this._configuration.cookServerURLIndex];
         const reportMsg: string = `Matched ${cookResources.resources.length} Cook resources. The best fit is ${COOKRES.getResourceInfoString(bestFit,job)}`;
-        this.appendToReportAndLog(reportMsg);
+        this.appendToReportAndLog(reportMsg, undefined, { code: COMMON.WorkflowReportCode.CookMatched, data: { matched: cookResources.resources.length, cookServer: bestFit.name, recipe: job } });
 
         // return success
         this._initialized = true;

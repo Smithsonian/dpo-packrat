@@ -141,7 +141,11 @@ export abstract class JobPackrat implements JOB.IJob {
     }
 
     // #region JobPackrat helper methods
-    protected async appendToReportAndLog(content: string, error?: boolean | undefined): Promise<H.IOResults> {
+    // Phase attributed to report events emitted by this job; Cook subclasses override to 'cook'.
+    protected reportPhase: COMMON.WorkflowReportPhase = 'engine';
+
+    protected async appendToReportAndLog(content: string, error?: boolean | undefined,
+        opts?: { code?: string; phase?: COMMON.WorkflowReportPhase; data?: { [key: string]: unknown } }): Promise<H.IOResults> {
         if (error)
             RK.logError(RK.LogSection.eJOB,'job error',content,{ idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
         else
@@ -151,7 +155,15 @@ export abstract class JobPackrat implements JOB.IJob {
             RK.logWarning(RK.LogSection.eJOB,'append report error',`no active report: ${content}`,{ idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
             return { success: false, error: 'No Active WorkflowReport' };
         }
-        return await this._report.append(content);
+        const result = await RK.reportEvent({
+            ts: new Date().toISOString(),
+            phase: opts?.phase ?? this.reportPhase,
+            code: opts?.code ?? COMMON.WorkflowReportCode.JobLog,
+            level: error ? 'error' : 'info',
+            msg: content,
+            data: opts?.data
+        }, this._report);
+        return { success: result.success, error: result.success ? undefined : result.message };
     }
 
     protected async updateJobOutput(output: string, updateEngines: boolean=false): Promise<void> {
@@ -165,7 +177,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected async recordCreated(): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() == COMMON.eWorkflowJobRunStatus.eUnitialized);
         if (updated) {
-            this.appendToReportAndLog(`JobPackrat [${this.name()}] Created`);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Created`, undefined, { code: COMMON.WorkflowReportCode.JobCreated });
 
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eCreated);
@@ -190,7 +202,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected async recordWaiting(): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eWaiting);
         if (updated) {
-            this.appendToReportAndLog(`JobPackrat [${this.name()}] Waiting`);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Waiting`, undefined, { code: COMMON.WorkflowReportCode.JobWaiting });
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eWaiting);
 
             // update the status/values of our job
@@ -213,7 +225,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected async recordStart(idJob: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eRunning);
         if (updated) {
-            this.appendToReportAndLog(`JobPackrat [${this.name()}] Starting (CookJobId: ${idJob})`);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Starting (CookJobId: ${idJob})`, undefined, { code: COMMON.WorkflowReportCode.JobStart, data: { cookJobId: idJob } });
             this._dbJobRun.DateStart = new Date();
             this._dbJobRun.setStatus(COMMON.eWorkflowJobRunStatus.eRunning);
 
@@ -237,7 +249,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eDone);
         if (updated) {
-            this.appendToReportAndLog(`JobPackrat [${this.name()}] Success`);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Success`, undefined, { code: COMMON.WorkflowReportCode.JobSuccess });
 
             this._results = { success: true };   // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
@@ -254,9 +266,8 @@ export abstract class JobPackrat implements JOB.IJob {
 
             // add url for output to the report
             const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
-            const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
             if (this._report)
-                await this._report.append(`${hrefDownload}<br/>\n`);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: 'Cook Job Output', data: { href: pathDownload } }, this._report);
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record success','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
@@ -280,7 +291,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected async recordFailure(output: string | null, errorMsg?: string): Promise<boolean> {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eError);
         if (updated) {
-            this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true);
+            this.appendToReportAndLog(`JobPackrat [${this.name()}] Failure: ${errorMsg}`, true, { code: COMMON.WorkflowReportCode.JobFailure });
 
             this._results = { success: false, error: errorMsg }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
@@ -298,10 +309,9 @@ export abstract class JobPackrat implements JOB.IJob {
 
             // add url for output to the report
             const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
-            const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
 
             if (this._report)
-                await this._report.append(`${hrefDownload}<br/>\n`);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: 'Cook Job Output', data: { href: pathDownload } }, this._report);
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
@@ -321,10 +331,10 @@ export abstract class JobPackrat implements JOB.IJob {
         const updated: boolean = (this._dbJobRun.getStatus() != COMMON.eWorkflowJobRunStatus.eCancelled);
         if (updated) {
             if (errorMsg) {
-                this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`, true);
+                this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel: ${errorMsg}`, true, { code: COMMON.WorkflowReportCode.JobCancel });
                 this._dbJobRun.Error = errorMsg;
             } else
-                this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel`, true);
+                this.appendToReportAndLog(`JobPackrat [${this.name()}] Cancel`, true, { code: COMMON.WorkflowReportCode.JobCancel });
 
             this._results = { success: false, error: 'Job Cancelled' + (errorMsg ? ` ${errorMsg}` : '') }; // do this before we await this._dbJobRun.update()
             this._dbJobRun.DateEnd = new Date();
@@ -341,10 +351,9 @@ export abstract class JobPackrat implements JOB.IJob {
 
             // add url for output to the report
             const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
-            const hrefDownload: string = H.Helpers.computeHref(pathDownload, 'Cook Job Output');
 
             if (this._report)
-                await this._report.append(`${hrefDownload}<br/>\n`);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: 'Cook Job Output', data: { href: pathDownload } }, this._report);
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record cancel','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
