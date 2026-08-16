@@ -274,20 +274,14 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         RK.logDebug(RK.LogSection.eWF,'generate downloads','compute names',{ sceneBaseName, modelBaseName },'Workflow.Engine');
 
         // Basename safeguard. Cook names every generated download
-        // `{sceneBaseName}-{variant}.{ext}` across .glb, .usdz and .zip outputs
-        // (model tiers, AR variants, OBJ/glTF bundles). If the scene already
-        // has downloads from a previous run, those basenames must match the
-        // basename we're about to send. A mismatch means the master model or
-        // scene was renamed and re-running Cook would orphan the old set
-        // instead of replacing it. Fail loudly. Source assets (master model,
-        // SVX scene file, texture maps) are excluded so they don't false-trip.
-        const sourceAssetVersionIds: Set<number> = new Set<number>();
-        if (CSIR.assetVersionGeometry)  sourceAssetVersionIds.add(CSIR.assetVersionGeometry.idAssetVersion);
-        if (CSIR.assetSVX)              sourceAssetVersionIds.add(CSIR.assetSVX.idAssetVersion);
-        if (CSIR.assetVersionDiffuse)   sourceAssetVersionIds.add(CSIR.assetVersionDiffuse.idAssetVersion);
-        if (CSIR.assetVersionRoughMetal) sourceAssetVersionIds.add(CSIR.assetVersionRoughMetal.idAssetVersion);
-        if (CSIR.assetVersionMTL)       sourceAssetVersionIds.add(CSIR.assetVersionMTL.idAssetVersion);
-        const basenameCheck: H.IOResults = await WorkflowEngine.verifyDownloadBasenameConsistency(sceneSO.idSystemObject, sceneBaseName, sourceAssetVersionIds);
+        // `{sceneBaseName}{suffix}` from the CookDownloadDescriptors set plus
+        // the `{sceneBaseName}.svx.json` descriptor. If the scene already holds
+        // an asset with one of those suffixes under a different basename, the
+        // master model or scene was renamed and re-running Cook would orphan the
+        // old set instead of replacing it. The same rule runs after Cook returns
+        // (JobCookSIGenerateDownloads.verifyIncomingCookData); block here so no
+        // Cook job is spent on a run that cannot be ingested.
+        const basenameCheck: H.IOResults = await WorkflowEngine.verifyDownloadBasenameConsistency(scene.idScene, sceneBaseName);
         if (!basenameCheck.success) {
             RK.logError(RK.LogSection.eWF,'generate downloads blocked','basename mismatch against existing downloads',
                 { idScene, sceneBaseName, error: basenameCheck.error }, 'Workflow.Engine');
@@ -482,26 +476,33 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
 
         // if we have a scene, we want to use it's SVX (if any) as the base for the recipe.
         // if we don't have a scene then the model may have just been ingested
-        const svxFilename: string = sceneBaseName + '.svx.json';
+        const svxFilename: string = COOK.predictCookOutput('si-voyager-scene', sceneBaseName).filenames[0];
         if(scene) {
             // get the asset version for the active voyager scene. only returns the most recent and does not support
             // multiple SVX files for a single scene
             const svxAssetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetchActiveVoyagerSceneFromScene(scene.idScene);
             if(!svxAssetVersion)
                 RK.logWarning(RK.LogSection.eWF,'generate scene','no active SVX file found for scene',{ idModel, idScene },'Workflow.Engine');
-            else {
-                // compare filenames. if a match then add it to staged resources. otherwise, fail
-                // TODO: should we return on this failure?
-                if(svxAssetVersion.FileName !== svxFilename)
-                    RK.logWarning(RK.LogSection.eWF,'generate scene failed','basenames do not match',{ idModel, idScene, expected: svxFilename, observed: svxAssetVersion.FileName },'Workflow.Engine');
-                else {
-                    // grab our SystemObject since we need to feed it to the list of staged files
-                    const svxAssetVersionSO: DBAPI.SystemObject | null = await svxAssetVersion.fetchSystemObject();
-                    if(!svxAssetVersionSO)
-                        RK.logWarning(RK.LogSection.eWF,'generate scene failed','cannot get SystemObject for asset version',{ idModel, idScene, idAssetVersion: svxAssetVersion.idAssetVersion },'Workflow.Engine');
-                    else
-                        idSystemObjects.push(svxAssetVersionSO.idSystemObject);
-                }
+            else if(svxAssetVersion.FileName !== svxFilename) {
+                // Hard block. The existing scene's SVX descriptor has a different basename than the
+                // name this run will produce, so the scene/model was renamed. Re-running scene
+                // generation would fork a duplicate Scene against the same model source (see
+                // JobCookSIVoyagerScene.createSystemObjects) instead of updating this one. Block
+                // before a Cook job is spent; recovery is the Fix Scene Basenames bulk operation.
+                RK.logError(RK.LogSection.eWF,'generate scene blocked','existing scene SVX basename differs from current model',
+                    { idModel, idScene, expected: svxFilename, existing: svxAssetVersion.FileName },'Workflow.Engine');
+                return { success: false,
+                    message: `Scene generation blocked: the existing scene descriptor "${svxAssetVersion.FileName}" `
+                        + `does not match the current name "${svxFilename}". The model or scene was renamed and re-running `
+                        + 'would create a duplicate scene. Revert the name change or run Fix Scene Basenames before retrying.',
+                    data: { isValid: false } };
+            } else {
+                // grab our SystemObject since we need to feed it to the list of staged files
+                const svxAssetVersionSO: DBAPI.SystemObject | null = await svxAssetVersion.fetchSystemObject();
+                if(!svxAssetVersionSO)
+                    RK.logWarning(RK.LogSection.eWF,'generate scene failed','cannot get SystemObject for asset version',{ idModel, idScene, idAssetVersion: svxAssetVersion.idAssetVersion },'Workflow.Engine');
+                else
+                    idSystemObjects.push(svxAssetVersionSO.idSystemObject);
             }
         }
         //#endregion scene
@@ -923,51 +924,34 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
     }
 
     /**
-     * Verify that every existing Cook-output download asset under the scene's
-     * SystemObject has a basename consistent with the supplied `sceneBaseName`.
-     * Cook names downloads `{sceneBaseName}-{variant}.{ext}` across .glb (tier
-     * geometry), .usdz (AR variants) and .zip (OBJ / glTF bundles). Any
-     * download whose filename does not begin with `${sceneBaseName}` indicates
-     * the scene/model was renamed since the last run.
-     *
-     * `excludeIds` lists AssetVersion ids that are *source* assets attached to
-     * the scene (master model, SVX scene file, diffuse / rough-metal / MTL
-     * maps) so they don't false-trip the prefix check when they happen to be
-     * .glb or .zip. Returns success when no Cook downloads exist or every one
-     * is consistent.
+     * Pre-flight guard for Generate Downloads. Predicts the filenames Cook will
+     * produce for `sceneBaseName` and, using the shared CookOutputContract rule,
+     * blocks if the scene already holds an asset carrying one of those Cook
+     * suffixes under a different basename. That state means the scene/model was
+     * renamed since the last run and re-running Cook would orphan the old set.
+     * The identical rule runs post-Cook in
+     * JobCookSIGenerateDownloads.verifyIncomingCookData; both read scene assets
+     * via Asset.fetchFromScene so they cannot disagree. Returns success when no
+     * same-suffix asset exists (first run / partial set) or all match.
      */
-    private static readonly COOK_OUTPUT_EXTENSIONS: readonly string[] = ['.glb', '.usdz', '.zip'];
-
-    private static async verifyDownloadBasenameConsistency(idSceneSystemObject: number, sceneBaseName: string, excludeIds: Set<number>): Promise<H.IOResults> {
-        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSystemObject(idSceneSystemObject);
-        if (!assetVersions || assetVersions.length === 0)
+    private static async verifyDownloadBasenameConsistency(idScene: number, sceneBaseName: string): Promise<H.IOResults> {
+        const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromScene(idScene);
+        if (!sceneAssets || sceneAssets.length === 0)
             return { success: true };
 
-        const offenders: string[] = [];
-        for (const av of assetVersions) {
-            if (excludeIds.has(av.idAssetVersion)) continue;
-
-            const ext: string = path.extname(av.FileName).toLowerCase();
-            if (!WorkflowEngine.COOK_OUTPUT_EXTENSIONS.includes(ext)) continue;
-
-            const stem: string = path.parse(av.FileName).name;
-            const prefix: string = `${sceneBaseName}-`;
-            const exactMatch: boolean = stem === sceneBaseName;
-            const variantMatch: boolean = stem.startsWith(prefix);
-            if (!exactMatch && !variantMatch)
-                offenders.push(av.FileName);
-        }
+        const existingFilenames: string[] = sceneAssets.map(asset => asset.FileName);
+        const prediction: COOK.CookOutputPrediction = COOK.predictCookOutput('si-generate-downloads', sceneBaseName);
+        const offenders: COOK.BasenameOffender[] = COOK.findBasenameOffenders('si-generate-downloads', prediction.filenames, existingFilenames);
 
         if (offenders.length === 0)
             return { success: true };
 
-        const sample: string = offenders.slice(0, 3).join(', ');
+        const detail: string = offenders.map(o => `${o.expected} → ${o.actual}`).join('; ');
         return {
             success: false,
-            error: 'Existing scene downloads have a different basename than the current model '
-                + `(expected prefix "${sceneBaseName}", got: ${sample}${offenders.length > 3 ? `, +${offenders.length - 3} more` : ''}). `
-                + 'Re-running Cook would orphan the existing downloads. Retire or rename the existing downloads, '
-                + 'or revert the model/scene name change before retrying.'
+            error: 'Existing scene downloads have a different basename than the current model. '
+                + `Re-running Cook would orphan the existing downloads (expected → existing: ${detail}). `
+                + 'Retire or rename the existing downloads, or revert the model/scene name change before retrying.'
         };
     }
 

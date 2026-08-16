@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
 import { CookRecipe } from './CookRecipe';
+import { findBasenameOffenders, BasenameOffender } from './CookOutputContract';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
@@ -1108,24 +1109,20 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const sceneAssetFilenames: string[] = sceneAssets.map(asset => asset.FileName);
         RK.logDebug(RK.LogSection.eJOB,'verify Cook data',undefined, { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneAssetFilenames, fileMap },'Job.GenerateDownloads');
 
-        // cycle through returned downloads seeing if we have a similar file already in the scene
-        // if so, then we check to see if they have the same basename. If not, then we fail and the
-        // scene needs to be rebuilt.
-        const assetsToReplace: string[] = [];
-        for(let i=0; i<incomingFilenames.length; i++) {
-            const filename: string = incomingFilenames[i];
-            const suffix: string | undefined = suffixes.find(s => filename.endsWith(s) );
-            if(!suffix)
-                return this.logError('verify Cook data','could not find suffix in verified filenames',{ fileName: filename });
+        // For each returned download, if the scene already holds an asset with the same Cook suffix,
+        // its basename must match. A mismatch means the scene/model was renamed and re-running Cook
+        // would orphan the old set. This delegates to the shared CookOutputContract rule that the
+        // pre-flight guard (WorkflowEngine.verifyDownloadBasenameConsistency) also runs, so the two
+        // paths cannot diverge. Absence of a same-suffix asset is not an offender.
+        const offenders: BasenameOffender[] = findBasenameOffenders('si-generate-downloads', incomingFilenames, sceneAssetFilenames);
+        if(offenders.length > 0)
+            return this.logError('verify Cook data','incoming download has different basename than existing asset', { offenders });
 
-            // find the existing scene asset with the same suffix and check it's basename
-            const matchingAsset: DBAPI.Asset | undefined = sceneAssets.find(asset => asset.FileName.endsWith(suffix) );
-            if(matchingAsset)
-                if(filename!=matchingAsset.FileName)
-                    return this.logError('verify Cook data','incoming download has different basename than existing asset', { fileName: filename, matchingAsset });
-                else
-                    assetsToReplace.push(filename);
-        }
+        // count how many incoming downloads replace an existing same-suffix asset (for the info log)
+        const assetsToReplace: string[] = incomingFilenames.filter(filename => {
+            const suffix: string | undefined = suffixes.find(s => filename.endsWith(s));
+            return suffix !== undefined && sceneAssetFilenames.some(existing => existing.endsWith(suffix));
+        });
 
         RK.logInfo(RK.LogSection.eJOB,'verify Cook data','verified', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, logInfo: sceneSource.fetchLogInfo(), numFilesNew: (incomingFilenames.length-assetsToReplace.length), numFilesUpdated: assetsToReplace.length },'Job.GenerateDownloads');
         return { success: true };
