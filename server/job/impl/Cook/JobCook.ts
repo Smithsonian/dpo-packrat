@@ -37,6 +37,7 @@ type CookIOResults = H.IOResults & {
 class JobCookConfiguration {
     clientId: string;
     jobName: string;
+    recipeName: string;
     recipeId: string;
     jobId: string;
     cookServerURLs: string[];
@@ -44,6 +45,7 @@ class JobCookConfiguration {
 
     constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null, dbJobRun: DBAPI.JobRun, serverURL: string[] | null) {
         this.clientId = clientId;
+        this.recipeName = jobName;
         this.jobName = `${jobName}: ${dbJobRun.idJobRun}`;
         this.recipeId = recipeId;
         this.jobId = jobId || uuidv4(); // create a new JobID if we haven't provided one
@@ -305,6 +307,9 @@ export abstract class JobCook<T> extends JobPackrat {
         try {
             // get our parameters
             const sceneParams = await this.getParameters();
+
+            // write an initial report summary now that domain context is available (refined at start/terminal)
+            await this.writeReportSummary();
 
             // Create job via POST to /job
             let requestUrl: string = this.CookServerURL() + 'job';
@@ -886,6 +891,34 @@ export abstract class JobCook<T> extends JobPackrat {
         );
     }
 
+    //#region report summary
+    /** Subclasses provide domain-specific summary fields; merged with the base Cook fields below. */
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        return {};
+    }
+
+    /** Write the compact, table-driving report summary. Progressive: called at start and terminal, so
+     * later writes refine fields (e.g. an ingested scene) that were not yet known at start. */
+    protected async writeReportSummary(): Promise<void> {
+        if (!this._report)
+            return;
+        const summary: COMMON.IWorkflowReportSummary = {
+            cookServer: this.CookServerURL(),
+            cookJobId: this._configuration.jobId,
+            recipe: this._configuration.recipeName,
+            ...this.reportSummaryContext(),
+        };
+        await RK.reportSetSummary(summary, this._report);
+    }
+    //#endregion
+
+    protected async recordStart(idJob: string): Promise<boolean> {
+        const updated: boolean = await super.recordStart(idJob);
+        if (updated)
+            await this.writeReportSummary();
+        return updated;
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
 
         // make sure underlying job has updated
@@ -894,6 +927,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // if it did update that means we had success and finished job specific cleanup
         // so it should be safe to remove the cook resources used
         if(updated) {
+            await this.writeReportSummary();
             if (this._skipCleanup) {
                 RK.logInfo(RK.LogSection.eJOB, 'Cook cleanup skipped', 'skipJobCleanup flag is set', { ...this._configuration }, 'Job.Cook');
             } else {

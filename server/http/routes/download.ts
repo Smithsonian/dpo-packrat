@@ -238,6 +238,25 @@ export class Downloader {
         const mimeType: string = WFReports[0].MimeType;
         const idWorkflowReport: number = WFReports[0].idWorkflowReport;
 
+        // JSON reports merge as a single JSON array of parsed bodies; legacy text/html reports keep the <br/> join
+        if (mimeType === 'application/json') {
+            this.response.setHeader('Content-disposition', `inline; filename=WorkflowReport.${idWorkflowReport}.json`);
+            this.response.setHeader('Content-type', 'application/json');
+            const merged: unknown[] = [];
+            for (const report of WFReports) {
+                try {
+                    const parsed: unknown = JSON.parse(report.Data || '[]');
+                    merged.push(parsed);
+                } catch {
+                    merged.push(report.Data); // preserve an unparseable body rather than fail the whole set
+                }
+            }
+            // a single report emits its own body directly; a set emits an array of report bodies
+            this.response.write(JSON.stringify(merged.length === 1 ? merged[0] : merged));
+            this.response.end();
+            return true;
+        }
+
         this.response.setHeader('Content-disposition', `inline; filename=WorkflowReport.${idWorkflowReport}.htm`);
         if (mimeType)
             this.response.setHeader('Content-type', mimeType);

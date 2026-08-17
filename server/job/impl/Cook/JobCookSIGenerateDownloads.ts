@@ -460,6 +460,19 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         };
     }
 
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        const sph = this.sceneParameterHelper;
+        return {
+            subject: sph?.OG?.subject?.[0]?.Name,
+            idSubject: sph?.OG?.subject?.[0]?.idSubject,
+            scene: sph?.sceneName,
+            idScene: this.idScene ?? undefined,
+            idModel: sph?.SOModelSource?.idModel ?? undefined,
+            idSystemObject: sph?.SOModelSource?.idSystemObject,
+            input: this.parameters?.svxFile,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = await super.recordSuccess(output);
         if (updated) {

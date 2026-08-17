@@ -176,6 +176,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private parameters: JobCookSIVoyagerSceneParameters;
     private parameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
     private cleanupCalled: boolean = false;
+    private reportScene: { idScene?: number; idSystemObject?: number; name?: string } | undefined = undefined;
 
     private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
     private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
@@ -400,6 +401,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
         const sceneRef: COMMON.IWorkflowReportRef = { name: scene.Name, idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+        this.reportScene = { idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, name: scene.Name };
         await this.appendToReportAndLog(`${this.name()} ingested scene ${scene.Name}`, undefined,
             { code: COMMON.WorkflowReportCode.SceneIngested, data: { scene: sceneRef, href: pathDownload || undefined } });
 
@@ -621,6 +623,19 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             successUrl: this.parameterHelper
                 ? RouteBuilder.RepositoryDetails(this.parameterHelper.SOModelSource.idSystemObject, eHrefMode.ePrependClientURL)
                 : undefined,
+        };
+    }
+
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        const ph = this.parameterHelper;
+        return {
+            subject: ph?.OG?.subject?.[0]?.Name,
+            idSubject: ph?.OG?.subject?.[0]?.idSubject,
+            scene: this.reportScene?.name ?? ph?.sceneName,
+            idScene: this.reportScene?.idScene,
+            idModel: ph?.SOModelSource?.idModel ?? undefined,
+            idSystemObject: this.reportScene?.idSystemObject ?? ph?.SOModelSource?.idSystemObject,
+            input: this.parameters?.sourceMeshFile,
         };
     }
 

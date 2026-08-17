@@ -17,6 +17,8 @@ export class WorkflowListResult {
     DateLast: Date = new Date();
     Error: string = '';
     ProjectName: string | null = null;
+    Summary: string | null = null;
+    ReportMimeType: string | null = null;
 
     static async search(idVWorkflowType: number[] | undefined | null, idVJobType: number[] | undefined | null, State: number[] | undefined | null,
         DateFrom: Date | undefined | null, DateTo: Date | undefined | null, idUserInitiator: number[] | undefined | null, idUserOwner: number[] | undefined | null,
@@ -142,7 +144,9 @@ export class WorkflowListResult {
                 CASE IFNULL(JOB.JobStatus, WFL.WFState) WHEN 0 THEN 'Uninitialized' WHEN 1 THEN 'Created' WHEN 2 THEN 'Running' WHEN 3 THEN 'Waiting' WHEN 4 THEN 'Done' WHEN 5 THEN 'Error' WHEN 6 THEN 'Canceled' ELSE 'Uninitialized' END AS 'State',
                 WF.idUserInitiator AS 'idUserInitiator', WFL.idWFSOwner AS 'idOwner', WF.DateInitiated AS 'DateStart', WF.DateUpdated AS 'DateLast',
                 JOB.JobError AS 'Error',
-                P.Name AS 'ProjectName'
+                P.Name AS 'ProjectName',
+                WR.Name AS 'Summary',
+                WR.MimeType AS 'ReportMimeType'
             FROM Workflow AS WF
             LEFT JOIN Vocabulary AS VWF ON (WF.idVWorkflowType = VWF.idVocabulary)
             LEFT JOIN WFLast AS WFL ON (WF.idWorkflow = WFL.idWorkflow)

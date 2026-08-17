@@ -17,6 +17,8 @@ const getWorkflowList = gql`
                 DateLast
                 Error
                 ProjectName
+                Summary
+                ReportMimeType
             }
         }
     }
