@@ -8,14 +8,27 @@ import { formatDateAndTime } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
 import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
-import { eWorkflowListSortColumns } from '@dpo-packrat/common';
+import { eWorkflowListSortColumns, IWorkflowReportSummary } from '@dpo-packrat/common';
 import { ePaginationChange } from '../../../../store';
-import { EmptyTable } from '../../../../components';
+import { EmptyTable, NewTabLink } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
 import { DataTableOptions } from '../../../../types/component';
-import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob } from '../../../../utils/repository';
+import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob, getDetailsUrlForObject } from '../../../../utils/repository';
 import API from '../../../../api';
+import WorkflowReportViewer from './WorkflowReportViewer';
 import clsx from 'clsx';
+
+/** Parse the compact per-row JSON summary (WorkflowReport.Name). Returns null for legacy/absent/invalid rows. */
+function parseWorkflowSummary(row: { Summary?: string | null; ReportMimeType?: string | null }): IWorkflowReportSummary | null {
+    if (!row || row.ReportMimeType !== 'application/json' || !row.Summary)
+        return null;
+    try {
+        const parsed = JSON.parse(row.Summary);
+        return (parsed && typeof parsed === 'object') ? parsed as IWorkflowReportSummary : null;
+    } catch {
+        return null;
+    }
+}
 
 interface WorkflowIconProps {
     reportType: eWorkflowLinkType;
@@ -183,6 +196,8 @@ function WorkflowList(): React.ReactElement {
 
     const count = calculateTotalRowCount();
 
+    const [reportViewer, setReportViewer] = React.useState<{ open: boolean; url: string; title: string }>({ open: false, url: '', title: '' });
+
     const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
@@ -299,6 +314,73 @@ function WorkflowList(): React.ReactElement {
             }
         },
         {
+            name: 'Object',
+            label: 'Object',
+            options: {
+                sort: false,
+                customBodyRenderLite(dataIndex) {
+                    const summary = parseWorkflowSummary(rows[dataIndex]);
+                    if (!summary) return '';
+                    const label = summary.scene || summary.subject || summary.mediaGroup || '';
+                    const id = summary.idSystemObject;
+                    if (id) {
+                        const text = truncateWithEllipses(label || `Object ${id}`, 24);
+                        return (
+                            <Tooltip placement='top' title={label || `Object ${id}`} arrow>
+                                <span>
+                                    <NewTabLink to={getDetailsUrlForObject(id)} className={classes.link}>{text}</NewTabLink>
+                                </span>
+                            </Tooltip>
+                        );
+                    }
+                    if (!label) return '';
+                    return (
+                        <Tooltip placement='top' title={label} arrow>
+                            <div style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
+                        </Tooltip>
+                    );
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
+            name: 'CookServer',
+            label: 'Cook Server',
+            options: {
+                sort: false,
+                customBodyRenderLite(dataIndex) {
+                    const summary = parseWorkflowSummary(rows[dataIndex]);
+                    if (!summary?.cookServer) return '';
+                    return (
+                        <Tooltip placement='top' title={summary.cookServer} arrow>
+                            <div style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{summary.cookServer}</div>
+                        </Tooltip>
+                    );
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
+            name: 'CookJob',
+            label: 'Cook Job',
+            options: {
+                sort: false,
+                customBodyRenderLite(dataIndex) {
+                    const summary = parseWorkflowSummary(rows[dataIndex]);
+                    if (!summary?.cookJobId) return '';
+                    return (
+                        <Tooltip placement='top' title={summary.cookJobId} arrow>
+                            <div>{truncateWithEllipses(summary.cookJobId, 10)}</div>
+                        </Tooltip>
+                    );
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
             name: 'DateStart',
             label: 'Start',
             options: {
@@ -326,9 +408,26 @@ function WorkflowList(): React.ReactElement {
             name: 'idWorkflowReport',
             label: 'Report',
             options: {
-                customBodyRender(value) {
+                customBodyRenderLite(dataIndex) {
+                    const row = rows[dataIndex];
+                    const value = row?.idWorkflowReport;
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={getDownloadValueForWorkflowReport(serverEndpoint, value)} />;
+                    const url = getDownloadValueForWorkflowReport(serverEndpoint, value);
+                    if (row.ReportMimeType === 'application/json') {
+                        const summary = parseWorkflowSummary(row);
+                        const title = `Workflow Report — ${summary?.scene || summary?.subject || row.Type || `#${value}`}`;
+                        return (
+                            <button
+                                type='button'
+                                onClick={() => setReportViewer({ open: true, url, title })}
+                                aria-label='Open workflow report'
+                                style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', display: 'flex', justifyContent: 'center', width: '100%' }}
+                            >
+                                <img src={ReportIcon} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable report.' />
+                            </button>
+                        );
+                    }
+                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={url} />;
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
@@ -385,6 +484,12 @@ function WorkflowList(): React.ReactElement {
             <Box className={classes.tableContainer}>
                 <MUIDataTable title='' data={rows} columns={columns} options={options} />
             </Box>
+            <WorkflowReportViewer
+                open={reportViewer.open}
+                onClose={() => setReportViewer({ open: false, url: '', title: '' })}
+                reportUrl={reportViewer.url}
+                title={reportViewer.title}
+            />
         </MuiThemeProvider>
     );
 }
