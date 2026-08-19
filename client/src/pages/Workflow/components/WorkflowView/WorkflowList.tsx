@@ -8,27 +8,16 @@ import { formatDateAndTime } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
 import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
-import { eWorkflowListSortColumns, IWorkflowReportSummary } from '@dpo-packrat/common';
+import { eWorkflowListSortColumns } from '@dpo-packrat/common';
 import { ePaginationChange } from '../../../../store';
 import { EmptyTable, NewTabLink } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
 import { DataTableOptions } from '../../../../types/component';
 import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob, getDetailsUrlForObject } from '../../../../utils/repository';
 import API from '../../../../api';
-import WorkflowReportViewer from './WorkflowReportViewer';
+import WorkflowReportViewer, { WorkflowReportHeader } from './WorkflowReportViewer';
+import { parseWorkflowSummary } from './workflowSummary';
 import clsx from 'clsx';
-
-/** Parse the compact per-row JSON summary (WorkflowReport.Name). Returns null for legacy/absent/invalid rows. */
-function parseWorkflowSummary(row: { Summary?: string | null; ReportMimeType?: string | null }): IWorkflowReportSummary | null {
-    if (!row || row.ReportMimeType !== 'application/json' || !row.Summary)
-        return null;
-    try {
-        const parsed = JSON.parse(row.Summary);
-        return (parsed && typeof parsed === 'object') ? parsed as IWorkflowReportSummary : null;
-    } catch {
-        return null;
-    }
-}
 
 interface WorkflowIconProps {
     reportType: eWorkflowLinkType;
@@ -196,7 +185,7 @@ function WorkflowList(): React.ReactElement {
 
     const count = calculateTotalRowCount();
 
-    const [reportViewer, setReportViewer] = React.useState<{ open: boolean; url: string; title: string }>({ open: false, url: '', title: '' });
+    const [reportViewer, setReportViewer] = React.useState<{ open: boolean; url: string; header: WorkflowReportHeader; mimeType: string | null }>({ open: false, url: '', header: { title: '' }, mimeType: null });
 
     const options: DataTableOptions = {
         filter: false,
@@ -322,57 +311,22 @@ function WorkflowList(): React.ReactElement {
                     const summary = parseWorkflowSummary(rows[dataIndex]);
                     if (!summary) return '';
                     const label = summary.scene || summary.subject || summary.mediaGroup || '';
+                    const type = summary.idScene ? 'Scene' : (summary.idModel ? 'Model' : (summary.idSubject ? 'Subject' : 'Object'));
                     const id = summary.idSystemObject;
                     if (id) {
-                        const text = truncateWithEllipses(label || `Object ${id}`, 24);
+                        const full = `[${type}] ${label || `Object ${id}`}`;
                         return (
-                            <Tooltip placement='top' title={label || `Object ${id}`} arrow>
+                            <Tooltip placement='top' title={full} arrow>
                                 <span>
-                                    <NewTabLink to={getDetailsUrlForObject(id)} className={classes.link}>{text}</NewTabLink>
+                                    <NewTabLink to={getDetailsUrlForObject(id)} className={classes.link}>{truncateWithEllipses(full, 30)}</NewTabLink>
                                 </span>
                             </Tooltip>
                         );
                     }
                     if (!label) return '';
                     return (
-                        <Tooltip placement='top' title={label} arrow>
-                            <div style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
-                        </Tooltip>
-                    );
-                },
-                setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader
-            }
-        },
-        {
-            name: 'CookServer',
-            label: 'Cook Server',
-            options: {
-                sort: false,
-                customBodyRenderLite(dataIndex) {
-                    const summary = parseWorkflowSummary(rows[dataIndex]);
-                    if (!summary?.cookServer) return '';
-                    return (
-                        <Tooltip placement='top' title={summary.cookServer} arrow>
-                            <div style={{ maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{summary.cookServer}</div>
-                        </Tooltip>
-                    );
-                },
-                setCellProps: setCenterCell,
-                setCellHeaderProps: setCenterHeader
-            }
-        },
-        {
-            name: 'CookJob',
-            label: 'Cook Job',
-            options: {
-                sort: false,
-                customBodyRenderLite(dataIndex) {
-                    const summary = parseWorkflowSummary(rows[dataIndex]);
-                    if (!summary?.cookJobId) return '';
-                    return (
-                        <Tooltip placement='top' title={summary.cookJobId} arrow>
-                            <div>{truncateWithEllipses(summary.cookJobId, 10)}</div>
+                        <Tooltip placement='top' title={`[${type}] ${label}`} arrow>
+                            <div style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{`[${type}] ${label}`}</div>
                         </Tooltip>
                     );
                 },
@@ -413,21 +367,24 @@ function WorkflowList(): React.ReactElement {
                     const value = row?.idWorkflowReport;
                     if (!value) return '';
                     const url = getDownloadValueForWorkflowReport(serverEndpoint, value);
-                    if (row.ReportMimeType === 'application/json') {
-                        const summary = parseWorkflowSummary(row);
-                        const title = `Workflow Report — ${summary?.scene || summary?.subject || row.Type || `#${value}`}`;
-                        return (
-                            <button
-                                type='button'
-                                onClick={() => setReportViewer({ open: true, url, title })}
-                                aria-label='Open workflow report'
-                                style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', display: 'flex', justifyContent: 'center', width: '100%' }}
-                            >
-                                <img src={ReportIcon} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable report.' />
-                            </button>
-                        );
-                    }
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={url} />;
+                    const summary = parseWorkflowSummary(row);
+                    const header: WorkflowReportHeader = {
+                        title: summary?.scene || summary?.subject || row.Type || `Report #${value}`,
+                        recipe: summary?.recipe ?? undefined,
+                        cookJobId: summary?.cookJobId ?? undefined,
+                        cookServer: summary?.cookServer ?? undefined,
+                        started: row.DateStart ? formatDateAndTime(row.DateStart) : undefined
+                    };
+                    return (
+                        <button
+                            type='button'
+                            onClick={() => setReportViewer({ open: true, url, header, mimeType: row.ReportMimeType ?? null })}
+                            aria-label='Open workflow report'
+                            style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', display: 'flex', justifyContent: 'center', width: '100%' }}
+                        >
+                            <img src={ReportIcon} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable report.' />
+                        </button>
+                    );
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
@@ -486,9 +443,10 @@ function WorkflowList(): React.ReactElement {
             </Box>
             <WorkflowReportViewer
                 open={reportViewer.open}
-                onClose={() => setReportViewer({ open: false, url: '', title: '' })}
+                onClose={() => setReportViewer({ open: false, url: '', header: { title: '' }, mimeType: null })}
                 reportUrl={reportViewer.url}
-                title={reportViewer.title}
+                header={reportViewer.header}
+                mimeType={reportViewer.mimeType}
             />
         </MuiThemeProvider>
     );

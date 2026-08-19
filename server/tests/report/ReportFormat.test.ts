@@ -65,4 +65,35 @@ describe('Report: format (de)serialization', () => {
         expect(parsed.idSystemObject).toBe(12178);
         expect(parsed.idScene).toBe(555);
     });
+
+    test('mergeJSONReports: a single report emits its own body (not wrapped in an array)', () => {
+        const body = JSON.stringify([{ ts: '', phase: 'cook', code: 'x', msg: 'a' }]);
+        const merged = ReportFormat.mergeJSONReports([body]);
+        const parsed = JSON.parse(merged);
+        expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed).toHaveLength(1);
+        expect(parsed[0].code).toBe('x');
+    });
+
+    test('mergeJSONReports: a set emits an array of report bodies', () => {
+        const a = JSON.stringify([{ code: 'a' }]);
+        const b = JSON.stringify([{ code: 'b' }]);
+        const parsed = JSON.parse(ReportFormat.mergeJSONReports([a, b]));
+        expect(Array.isArray(parsed)).toBe(true);
+        expect(parsed).toHaveLength(2);
+        expect(parsed[0][0].code).toBe('a');
+        expect(parsed[1][0].code).toBe('b');
+    });
+
+    test('mergeJSONReports: an unparseable body is preserved verbatim, not fatal', () => {
+        const good = JSON.stringify([{ code: 'ok' }]);
+        const parsed = JSON.parse(ReportFormat.mergeJSONReports([good, 'not json']));
+        expect(parsed).toHaveLength(2);
+        expect(parsed[1]).toBe('not json');
+    });
+
+    test('mergeJSONReports: empty body defaults to an empty array', () => {
+        const parsed = JSON.parse(ReportFormat.mergeJSONReports(['']));
+        expect(parsed).toEqual([]);
+    });
 });

@@ -18,6 +18,21 @@ export class ReportFormat {
         return [{ ts: new Date().toISOString(), phase: 'system', code: COMMON.WorkflowReportCode.LegacyText, msg: data }];
     }
 
+    /** Merge one or more JSON report bodies into a single JSON string for /download. A single report
+     * emits its own body; a set emits an array of bodies. An unparseable body is preserved verbatim
+     * rather than failing the whole set. */
+    static mergeJSONReports(bodies: string[]): string {
+        const merged: unknown[] = [];
+        for (const data of bodies) {
+            try {
+                merged.push(JSON.parse(data || '[]'));
+            } catch {
+                merged.push(data);
+            }
+        }
+        return JSON.stringify(merged.length === 1 ? merged[0] : merged);
+    }
+
     /** Serialize the summary to <= WorkflowReportSummaryMaxLength by shortening name VALUES first
      * (numeric ids retained), never by slicing the serialized JSON (which would break it). */
     static serializeSummary(summary: COMMON.IWorkflowReportSummary): string {

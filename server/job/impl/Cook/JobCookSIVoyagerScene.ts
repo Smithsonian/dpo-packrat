@@ -494,11 +494,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                     const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-                    const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
                     const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-                    await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
+                    const modelRef: COMMON.IWorkflowReportRef = { name: model.Name, idModel: model.idModel, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+                    await this.appendToReportAndLog(`${this.name()} ingested model ${model.Name}`, undefined,
+                        { code: COMMON.WorkflowReportCode.ModelIngested, data: { model: modelRef, href: pathDownload || undefined } });
 
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
                     // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets

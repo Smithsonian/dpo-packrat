@@ -145,7 +145,7 @@ export abstract class JobPackrat implements JOB.IJob {
     protected reportPhase: COMMON.WorkflowReportPhase = 'engine';
 
     protected async appendToReportAndLog(content: string, error?: boolean | undefined,
-        opts?: { code?: string; phase?: COMMON.WorkflowReportPhase; data?: { [key: string]: unknown } }): Promise<H.IOResults> {
+        opts?: { code?: string; phase?: COMMON.WorkflowReportPhase; level?: COMMON.WorkflowReportLevel; data?: { [key: string]: unknown } }): Promise<H.IOResults> {
         if (error)
             RK.logError(RK.LogSection.eJOB,'job error',content,{ idJobRun: this._dbJobRun.idJobRun },'Job.Packrat');
         else
@@ -159,7 +159,7 @@ export abstract class JobPackrat implements JOB.IJob {
             ts: new Date().toISOString(),
             phase: opts?.phase ?? this.reportPhase,
             code: opts?.code ?? COMMON.WorkflowReportCode.JobLog,
-            level: error ? 'error' : 'info',
+            level: opts?.level ?? (error ? 'error' : 'info'),
             msg: content,
             data: opts?.data
         }, this._report);
@@ -267,7 +267,7 @@ export abstract class JobPackrat implements JOB.IJob {
             // add url for output to the report
             const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
             if (this._report)
-                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: 'Cook Job Output', data: { href: pathDownload } }, this._report);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: '', data: { output: pathDownload } }, this._report);
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record success','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
@@ -311,7 +311,7 @@ export abstract class JobPackrat implements JOB.IJob {
             const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
 
             if (this._report)
-                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: 'Cook Job Output', data: { href: pathDownload } }, this._report);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: '', data: { output: pathDownload } }, this._report);
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record failure','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 
@@ -353,7 +353,7 @@ export abstract class JobPackrat implements JOB.IJob {
             const pathDownload: string = RouteBuilder.DownloadJobRun(this._dbJobRun.idJobRun , eHrefMode.ePrependServerURL);
 
             if (this._report)
-                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: 'Cook Job Output', data: { href: pathDownload } }, this._report);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: this.reportPhase, code: COMMON.WorkflowReportCode.JobLog, msg: '', data: { output: pathDownload } }, this._report);
             else
                 RK.logWarning(RK.LogSection.eJOB,'job record cancel','no report to append results',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathDownload, output: this._dbJobRun.Output },'Job.Packrat');
 

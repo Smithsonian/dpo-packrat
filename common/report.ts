@@ -67,6 +67,8 @@ export const WorkflowReportCode = {
     InspectInvalid: 'inspect.invalid',
     SceneNote: 'scene.note',
     SceneIngested: 'scene.ingested',
+    ModelNote: 'model.note',
+    ModelIngested: 'model.ingested',
     DownloadNote: 'download.note',
     DownloadIngested: 'download.ingested',
     IngestNote: 'ingest.note',

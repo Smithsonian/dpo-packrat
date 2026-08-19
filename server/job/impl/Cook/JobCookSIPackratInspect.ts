@@ -299,7 +299,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         const JCOutput: JobCookSIPackratInspectOutput = await JobCookSIPackratInspectOutput.extractWorker(output, fileName, dateCreated);
         const report: REP.IReport | null = await REP.ReportFactory.getReport();
         if (report)
-            report.append(`Cook si-packrat-inspect ${JCOutput.success ? 'succeeded' : 'failed: ' + JCOutput.error}`);
+            await RK.reportEvent({
+                ts: new Date().toISOString(),
+                phase: 'cook',
+                code: COMMON.WorkflowReportCode.InspectNote,
+                level: JCOutput.success ? 'info' : 'error',
+                msg: `Cook si-packrat-inspect ${JCOutput.success ? 'succeeded' : 'failed: ' + JCOutput.error}`
+            }, report);
         return JCOutput;
     }
 
@@ -880,11 +886,20 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
     }
 
+    // Report an inspection outcome as a coded event (invalid → error-tinted). RK error logging is
+    // handled at each call site, so this only sets the event level, not another RK.logError.
+    private async reportInspect(msg: string, invalid: boolean): Promise<void> {
+        await this.appendToReportAndLog(msg, undefined, {
+            code: invalid ? COMMON.WorkflowReportCode.InspectInvalid : COMMON.WorkflowReportCode.InspectNote,
+            level: invalid ? 'error' : 'info'
+        });
+    }
+
     protected async verifyRequest(): Promise<JobIOResults> {
         const superResult: JobIOResults = await super.verifyRequest();
         if(superResult.success===false) {
             RK.logError(RK.LogSection.eJOB,'verify request failed',`request is invalid: ${superResult.error}`,{ sourceMeshFile: this.parameters.sourceMeshFile, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog(`[CookJob:Inspection] request is invalid. ${superResult.error} (${this.parameters.sourceMeshFile})`);
+            this.reportInspect(`[CookJob:Inspection] request is invalid. ${superResult.error} (${this.parameters.sourceMeshFile})`, true);
             return superResult;
         }
 
@@ -897,7 +912,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // we're good to continue
         RK.logDebug(RK.LogSection.eJOB,'verify request success','request is valid. sending to Cook...',{ sourceMeshFile: this.parameters.sourceMeshFile, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-        this.appendToReportAndLog(`[CookJob:Inspection] request is valid. sending to Cook... (${this.parameters.sourceMeshFile})`);
+        this.reportInspect(`[CookJob:Inspection] request is valid. sending to Cook... (${this.parameters.sourceMeshFile})`, false);
         return { success: true, allowRetry: false };
     }
 
@@ -911,7 +926,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // does not consolidate the log messages.
         if(!cookJobReport.steps['inspect-mesh'] || !cookJobReport.steps['inspect-mesh'].log) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: missing inspect-mesh and/or log objects',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects');
+            this.reportInspect('[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects', true);
             return { success: false, error: 'missing log objects in Cook report', allowRetry: false };
         }
         const logs = cookJobReport.steps['inspect-mesh'].log;
@@ -934,14 +949,14 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             }
 
             RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${superResult.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. ${superResult.error}`);
+            this.reportInspect(`[CookJob:Inspection] response is invalid. ${superResult.error}`, true);
             return superResult;
         }
 
         // check for ZIP processing errors
         if(logContains(logs,'Error: Unsupported file type: .zip')===true) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Zip package incomplete or corrupt.',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.', true);
             return { success: false, error: 'Zip package incomplete or corrupt.', allowRetry: false };
         }
 
@@ -957,7 +972,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             if(errors.length>0) {
                 const errorMsg = errors.join(' | ');
                 RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${errorMsg}`,{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-                this.appendToReportAndLog(`[CookJob:Inspection] response is invalid: ${errorMsg}`);
+                this.reportInspect(`[CookJob:Inspection] response is invalid: ${errorMsg}`, true);
                 return { success: false, error: errorMsg, allowRetry: false };
             }
         }
@@ -965,7 +980,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // get our geometry results
         if (!inspectionRoot?.meshes) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Missing meshes in inspection result.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Missing meshes in inspection result.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Missing meshes in inspection result.', true);
             return { success: false, error: 'Missing meshes in Cook report', allowRetry: false };
         }
 
@@ -973,19 +988,19 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         const sizeSum = inspectionRoot.scene.geometry.size.reduce((acc, num) => acc + num, 0);
         if(sizeSum <= 0) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh size is zero.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh size is zero.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Mesh size is zero.', true);
             return { success: false, error: 'Invalid mesh. Size is zero.', allowRetry: false };
         }
 
         // check for invalid geometry counts
         if(inspectionRoot.scene.statistics.numFaces<=0 || inspectionRoot.scene.statistics.numVertices<=0 || inspectionRoot.scene.statistics.numEdges<=0 || inspectionRoot.scene.statistics.numTriangles<=0 || logContains(logs,'Invalid vertex index')===true) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh missing vertices and/or faces.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.', true);
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
         if(logContains(logs,'Invalid vertex index')===true) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh size is zero.',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid: Missing vertices/faces.');
+            this.reportInspect('[CookJob:Inspection] response is invalid: Missing vertices/faces.', true);
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
 
@@ -994,7 +1009,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             // NOTE: just looking at first mesh. multi-model inspection will need special handling
             if(inspectionRoot.meshes[0].statistics.hasTexCoords===false) {
                 RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh missing UVs for included texture.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, ...inspectionRoot.scene.statistics },'Job.PackratInspect');
-                this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.');
+                this.reportInspect('[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.', true);
                 return { success: false, error: 'Invalid mesh. Missing UVs for included texture.', allowRetry: false };
             }
         }

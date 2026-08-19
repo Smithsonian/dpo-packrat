@@ -10,6 +10,21 @@ export interface IWorkflowHelper extends H.IOResults {
     workflowReport?: REP.IReport | null | undefined;
 }
 
+/** Reduce a legacy HTML-ish report line to plain text: drop tags, decode the few common entities,
+ * collapse whitespace. Keeps the structured JSON body free of markup (and of its XSS surface). */
+function stripReportHtml(content: string): string {
+    return content
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, '\'')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .trim();
+}
+
 export class ResolverBase {
     protected workflowHelper: IWorkflowHelper | undefined = undefined;
     private buffer: COMMON.IWorkflowReportEvent[] = [];
@@ -30,7 +45,7 @@ export class ResolverBase {
             phase: 'ingest',
             code: COMMON.WorkflowReportCode.IngestNote,
             level: (error === true) ? 'error' : 'info',
-            msg: content
+            msg: stripReportHtml(content)
         };
 
         if (!(this?.workflowHelper?.workflowReport)) {
