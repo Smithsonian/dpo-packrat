@@ -460,6 +460,19 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         };
     }
 
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        const sph = this.sceneParameterHelper;
+        return {
+            subject: sph?.OG?.subject?.[0]?.Name,
+            idSubject: sph?.OG?.subject?.[0]?.idSubject,
+            scene: sph?.sceneName,
+            idScene: this.idScene ?? undefined,
+            idModel: sph?.SOModelSource?.idModel ?? undefined,
+            idSystemObject: sph?.SOModelSource?.idSystemObject,
+            input: this.parameters?.svxFile,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = await super.recordSuccess(output);
         if (updated) {
@@ -601,13 +614,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // build out our report details and add
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
+        const modelRef: COMMON.IWorkflowReportRef = { name: model.Name, idModel: model.idModel, idSystemObject: idSystemObjectModel ?? undefined, idAssetVersion: assetVersion?.idAssetVersion };
 
-        RK.logInfo(RK.LogSection.eJOB,'process model','ingested generated download model',{ jobName: this.name(), pathObject, pathDownload },'Job.GenerateDownloads');
-        await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
+        RK.logInfo(RK.LogSection.eJOB,'process model','ingested generated download model',{ jobName: this.name(), idSystemObjectModel, pathDownload },'Job.GenerateDownloads');
+        await this.appendToReportAndLog(`${this.name()} ingested generated download model ${model.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.DownloadIngested, data: { model: modelRef, href: pathDownload || undefined } });
 
         // currently not passed in. how is this used?
         const assetVersionOverrideMap: Map< number, number> = new Map<number, number>();
@@ -957,13 +969,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
+        const sceneRef: COMMON.IWorkflowReportRef = { name: scene.Name, idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
 
-        RK.logInfo(RK.LogSection.eJOB,'process scene','ingested scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathObject, pathDownload },'Job.GenerateDownloads');
-        await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
+        RK.logInfo(RK.LogSection.eJOB,'process scene','ingested scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idSystemObject: SOI?.idSystemObject, pathDownload },'Job.GenerateDownloads');
+        await this.appendToReportAndLog(`${this.name()} ingested scene ${scene.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.SceneIngested, data: { scene: sceneRef, href: pathDownload || undefined } });
 
         //#region legacy
         // previous version handled all models while working with the scene. Order of operations prevents this from working

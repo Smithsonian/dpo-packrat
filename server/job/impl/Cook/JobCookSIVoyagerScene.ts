@@ -176,6 +176,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private parameters: JobCookSIVoyagerSceneParameters;
     private parameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
     private cleanupCalled: boolean = false;
+    private reportScene: { idScene?: number; idSystemObject?: number; name?: string } | undefined = undefined;
 
     private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
     private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
@@ -398,11 +399,11 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-        await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
+        const sceneRef: COMMON.IWorkflowReportRef = { name: scene.Name, idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+        this.reportScene = { idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, name: scene.Name };
+        await this.appendToReportAndLog(`${this.name()} ingested scene ${scene.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.SceneIngested, data: { scene: sceneRef, href: pathDownload || undefined } });
 
         const SOV: DBAPI.SystemObjectVersion | null | undefined = IAR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
@@ -493,11 +494,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                     const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-                    const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
                     const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-                    await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
+                    const modelRef: COMMON.IWorkflowReportRef = { name: model.Name, idModel: model.idModel, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+                    await this.appendToReportAndLog(`${this.name()} ingested model ${model.Name}`, undefined,
+                        { code: COMMON.WorkflowReportCode.ModelIngested, data: { model: modelRef, href: pathDownload || undefined } });
 
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
                     // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
@@ -625,6 +625,19 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         };
     }
 
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        const ph = this.parameterHelper;
+        return {
+            subject: ph?.OG?.subject?.[0]?.Name,
+            idSubject: ph?.OG?.subject?.[0]?.idSubject,
+            scene: this.reportScene?.name ?? ph?.sceneName,
+            idScene: this.reportScene?.idScene,
+            idModel: ph?.SOModelSource?.idModel ?? undefined,
+            idSystemObject: this.reportScene?.idSystemObject ?? ph?.SOModelSource?.idSystemObject,
+            input: this.parameters?.sourceMeshFile,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = await super.recordSuccess(output);
         if (updated) {
@@ -635,7 +648,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RK.logError(RK.LogSection.eJOB,'scene generation failed','post-processing failed after Cook success',undefined,'Job.VoyagerScene');
             await this.sendJobNotification({
                 success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
-                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+                extraContent: `<p><b>Parameters</b>: ${JSON.stringify(this.parameters)}<p>`
             });
         }
         return updated;
@@ -647,7 +660,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RK.logError(RK.LogSection.eJOB,'scene generation failed',undefined,undefined,'Job.VoyagerScene');
             await this.sendJobNotification({
                 success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
-                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+                extraContent: `<p><b>Parameters</b>: ${JSON.stringify(this.parameters)}<p>`
             });
         }
         return updated;

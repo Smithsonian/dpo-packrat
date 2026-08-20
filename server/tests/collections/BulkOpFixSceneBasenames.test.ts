@@ -55,8 +55,8 @@ describe('Bulk op: Fix Scene Basenames', () => {
         const rows = BulkOpJob.rows;
         expect(rows).toHaveLength(1);
         const row = rows.find(r => r.id === 1000);
-        expect(row?.isCandidate).toBe(true);
-        expect(row?.rowData.status).toBe('Fixable');
+        expect(row?.isCandidate).toBe(false); // review-only: reported, not selectable
+        expect(row?.rowData.status).toBe('Affected (manual)');
         expect(row?.rowData.canonicalName).toBe('NewName');
         expect(row?.rowData.currentBasename).toBe('OldName');
         expect(row?.rowData.fileCount).toBe(7);
@@ -75,7 +75,7 @@ describe('Bulk op: Fix Scene Basenames', () => {
         expect(BulkOpJob.rows).toHaveLength(0);
     });
 
-    test('affected mode lists both fixable and mixed scenes; only fixable is selectable', async () => {
+    test('affected mode lists both affected and mixed scenes; none selectable (review-only)', async () => {
         jest.spyOn(DBAPI.Scene, 'fetchAll').mockResolvedValue([{ idScene: 1 }, { idScene: 2 }] as unknown as DBAPI.Scene[]);
         jest.spyOn(DBAPI.SystemObject, 'fetchFromSceneID')
             .mockImplementation(async (idScene: number) => ({ idSystemObject: idScene * 1000 } as DBAPI.SystemObject));
@@ -92,9 +92,9 @@ describe('Bulk op: Fix Scene Basenames', () => {
         const rows = BulkOpJob.rows;
         expect(rows).toHaveLength(2);
 
-        const fixable = rows.find(r => r.id === 1000);
-        expect(fixable?.isCandidate).toBe(true);
-        expect(fixable?.rowData.status).toBe('Fixable');
+        const affected = rows.find(r => r.id === 1000);
+        expect(affected?.isCandidate).toBe(false); // review-only: reported, not selectable
+        expect(affected?.rowData.status).toBe('Affected (manual)');
 
         const mixed = rows.find(r => r.id === 2000);
         expect(mixed?.isCandidate).toBe(false); // report-only: visible but not selectable
@@ -114,89 +114,11 @@ describe('Bulk op: Fix Scene Basenames', () => {
         expect(BulkOpJob.rows).toHaveLength(0);
     });
 
-    test('apply renames each Cook-output asset to the canonical Subject.Name', async () => {
-        jest.spyOn(DBAPI.SystemObject, 'fetch').mockResolvedValue({ idScene: 1 } as DBAPI.SystemObject);
-        jest.spyOn(DBAPI.Scene, 'fetch').mockResolvedValue({ idScene: 1, Name: 'Scene 1' } as DBAPI.Scene);
-        jest.spyOn(DBAPI.User, 'fetch').mockResolvedValue({ idUser: 5, Name: 'Curator', EmailAddress: 'c@si.edu' } as DBAPI.User);
-        stubCanonicalName('NewName');
-
-        const drifted = outputSet('OldName').map((fn, i) => asAsset(i + 1, fn));
-        const fixed = outputSet('NewName').map((fn, i) => asAsset(i + 1, fn));
-        jest.spyOn(DBAPI.Asset, 'fetchFromScene')
-            .mockResolvedValueOnce(drifted)   // first evaluation
-            .mockResolvedValueOnce(fixed);    // post-rename re-check
-
-        const rename = jest.spyOn(STORE.AssetStorageAdapter, 'renameAsset')
-            .mockResolvedValue({ success: true } as STORE.AssetStorageResult);
-
-        const res = await fixSceneBasenames.apply(1000, {}, 5, {});
-        expect(rename).toHaveBeenCalledTimes(7);
-        for (const call of rename.mock.calls) {
-            expect((call[1] as string).startsWith('NewName')).toBe(true);
-            expect((call[2] as STORE.OperationInfo).userEmailAddress).toBe('c@si.edu');
-        }
-        expect(res.success).toBe(true);
-        expect(res.message).toContain('renamed 7');
-        expect(res.rowData.fileCount).toBe(0);
-    });
-
-    test('apply refuses a mixed-basename scene and renames nothing', async () => {
-        jest.spyOn(DBAPI.SystemObject, 'fetch').mockResolvedValue({ idScene: 1 } as DBAPI.SystemObject);
-        jest.spyOn(DBAPI.Scene, 'fetch').mockResolvedValue({ idScene: 1, Name: 'Scene 1' } as DBAPI.Scene);
-        stubCanonicalName('NewName');
-        jest.spyOn(DBAPI.Asset, 'fetchFromScene').mockResolvedValue(mixedSet().map((fn, i) => asAsset(i + 1, fn)));
+    test('apply is review-only: refuses and performs no rename', async () => {
         const rename = jest.spyOn(STORE.AssetStorageAdapter, 'renameAsset');
-
         const res = await fixSceneBasenames.apply(1000, {}, 5, {});
         expect(res.success).toBe(false);
-        expect(res.message).toContain('refused');
-        expect(rename).not.toHaveBeenCalled();
-    });
-
-    test('apply refuses a multi-subject scene and renames nothing', async () => {
-        jest.spyOn(DBAPI.SystemObject, 'fetch').mockResolvedValue({ idScene: 1 } as DBAPI.SystemObject);
-        jest.spyOn(DBAPI.Scene, 'fetch').mockResolvedValue({ idScene: 1, Name: 'Scene 1' } as DBAPI.Scene);
-        stubMultiSubject();
-        jest.spyOn(DBAPI.Asset, 'fetchFromScene').mockResolvedValue(outputSet('WhateverBase').map((fn, i) => asAsset(i + 1, fn)));
-        const rename = jest.spyOn(STORE.AssetStorageAdapter, 'renameAsset');
-
-        const res = await fixSceneBasenames.apply(1000, {}, 5, {});
-        expect(res.success).toBe(false);
-        expect(res.message).toContain('refused');
-        expect(rename).not.toHaveBeenCalled();
-    });
-
-    test('apply reports partial failure when a rename fails', async () => {
-        jest.spyOn(DBAPI.SystemObject, 'fetch').mockResolvedValue({ idScene: 1 } as DBAPI.SystemObject);
-        jest.spyOn(DBAPI.Scene, 'fetch').mockResolvedValue({ idScene: 1, Name: 'Scene 1' } as DBAPI.Scene);
-        jest.spyOn(DBAPI.User, 'fetch').mockResolvedValue({ idUser: 5, Name: 'Curator', EmailAddress: 'c@si.edu' } as DBAPI.User);
-        stubCanonicalName('NewName');
-        jest.spyOn(DBAPI.Asset, 'fetchFromScene').mockResolvedValue(outputSet('OldName').map((fn, i) => asAsset(i + 1, fn)));
-        jest.spyOn(STORE.AssetStorageAdapter, 'renameAsset')
-            .mockResolvedValue({ success: false, error: 'storage locked' } as STORE.AssetStorageResult);
-
-        const res = await fixSceneBasenames.apply(1000, {}, 5, {});
-        expect(res.success).toBe(false);
-        expect(res.message).toContain('failed');
-    });
-
-    test('apply refuses cleanly for a non-scene system object', async () => {
-        jest.spyOn(DBAPI.SystemObject, 'fetch').mockResolvedValue({ idScene: null } as unknown as DBAPI.SystemObject);
-        const res = await fixSceneBasenames.apply(1000, {}, 5, {});
-        expect(res.success).toBe(false);
-        expect(res.message).toContain('not a scene');
-    });
-
-    test('apply is a no-op when the scene is already consistent', async () => {
-        jest.spyOn(DBAPI.SystemObject, 'fetch').mockResolvedValue({ idScene: 1 } as DBAPI.SystemObject);
-        jest.spyOn(DBAPI.Scene, 'fetch').mockResolvedValue({ idScene: 1, Name: 'Scene 1' } as DBAPI.Scene);
-        stubCanonicalName('NewName');
-        jest.spyOn(DBAPI.Asset, 'fetchFromScene').mockResolvedValue(outputSet('NewName').map((fn, i) => asAsset(i + 1, fn)));
-        const rename = jest.spyOn(STORE.AssetStorageAdapter, 'renameAsset');
-
-        const res = await fixSceneBasenames.apply(1000, {}, 5, {});
-        expect(res.success).toBe(true);
-        expect(res.message).toBe('already consistent');
+        expect(res.message).toMatch(/review-only/i);
         expect(rename).not.toHaveBeenCalled();
     });
 });

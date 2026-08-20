@@ -2277,7 +2277,9 @@ type WorkflowListResult {
   JobRun: JobRun
   Owner: User
   ProjectName: String
+  ReportMimeType: String
   State: String
+  Summary: String
   Type: String
   UserInitiator: User
   Workflow: Workflow

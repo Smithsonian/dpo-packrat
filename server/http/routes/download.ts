@@ -3,6 +3,7 @@ import * as CACHE from '../../cache';
 import * as H from '../../utils/helpers';
 import * as ZIP from '../../utils/zipStream';
 import * as STORE from '../../storage/interface';
+import * as REP from '../../report/interface';
 import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eEventKey } from '../../event/interface/EventEnums';
 import { DownloaderParser, DownloaderParserResults, eDownloadMode } from './DownloaderParser';
@@ -237,6 +238,15 @@ export class Downloader {
             return false;
         const mimeType: string = WFReports[0].MimeType;
         const idWorkflowReport: number = WFReports[0].idWorkflowReport;
+
+        // JSON reports merge as a single JSON body (a set becomes an array); legacy text/html keeps the <br/> join
+        if (mimeType === 'application/json') {
+            this.response.setHeader('Content-disposition', `inline; filename=WorkflowReport.${idWorkflowReport}.json`);
+            this.response.setHeader('Content-type', 'application/json');
+            this.response.write(REP.ReportFormat.mergeJSONReports(WFReports.map(report => report.Data)));
+            this.response.end();
+            return true;
+        }
 
         this.response.setHeader('Content-disposition', `inline; filename=WorkflowReport.${idWorkflowReport}.htm`);
         if (mimeType)

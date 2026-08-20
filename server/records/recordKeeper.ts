@@ -5,6 +5,8 @@ import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection, LogLevel  } from './logger/log';
 import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
+import * as REP from '../report/interface';
+import * as COMMON from '@dpo-packrat/common';
 
 // temp definition for where IOResults will be
 export type IOResults = {
@@ -134,6 +136,7 @@ export class RecordKeeper {
 
     static async shutdown(): Promise<IOResults> {
 
+        await RecordKeeper.reportWaitForEmptyQueue();
         await LOG.shutdown();
 
         return { success: true, message: 'record keeper cleaned up' };
@@ -449,6 +452,29 @@ export class RecordKeeper {
     }
     //#endregion
 
+    //#region REPORT
+    // Single entry point for workflow-report writes, mirroring the log facade. Unlike logs, a report
+    // has a per-workflow target: pass the report handle when you hold one (jobs run detached/scheduled,
+    // outside the request's ASL context, so they cannot resolve the target from LocalStore); omit it to
+    // resolve the active report from LocalStore (resolvers/ingest). All writes serialize per report in
+    // the report queue (see report/impl/ReportQueue).
+    static async reportEvent(event: COMMON.IWorkflowReportEvent, report?: REP.IReport | null): Promise<IOResults> {
+        const target: REP.IReport | null = report ?? await REP.ReportFactory.getReport();
+        if (!target)
+            return { success: false, message: 'no active WorkflowReport' };
+        return RecordKeeper.convertResults(await target.appendEvent(event));
+    }
+    static async reportSetSummary(summary: COMMON.IWorkflowReportSummary, report?: REP.IReport | null): Promise<IOResults> {
+        const target: REP.IReport | null = report ?? await REP.ReportFactory.getReport();
+        if (!target)
+            return { success: false, message: 'no active WorkflowReport' };
+        return RecordKeeper.convertResults(await target.setSummary(summary));
+    }
+    static async reportWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return RecordKeeper.convertResults(await REP.ReportQueue.waitForQueueToDrain(timeout));
+    }
+    //#endregion
+
     //#region UTILITY
     static convertResults(src: any, message?: string, data?: any): IOResults {
         if(!src)
@@ -478,6 +504,9 @@ export class RecordKeeper {
 
         result = await RecordKeeper.slackWaitForEmptyQueue(timeout);
         if(!result.success) errors.push(`slack: ${result.message}`);
+
+        result = await RecordKeeper.reportWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`report: ${result.message}`);
 
         if(errors.length === 0)
             return { success: true, message: 'all queues drained' };

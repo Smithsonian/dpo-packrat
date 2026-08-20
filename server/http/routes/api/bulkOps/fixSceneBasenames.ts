@@ -1,12 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../../db';
-import * as STORE from '../../../../storage/interface';
 import { cookOutputSuffixes } from '../../../../job/impl/Cook/CookOutputContract';
 import { NameHelpers, UNKNOWN_NAME } from '../../../../utils/nameHelpers';
-import { RecordKeeper as RK } from '../../../../records/recordKeeper';
 import { BulkOperationDef, BulkOpRow, BulkOpGatherArgs, BulkOpReporter, BulkOpApplyResult } from './BulkOpTypes';
-
-const SRC = 'HTTP.Route.BulkOp.FixSceneBasenames';
 
 // The endsWith-form suffixes of every Cook-output asset (6 downloads + the .svx.json descriptor),
 // sourced from the shared CookOutputContract so this stays aligned with the guards it recovers from.
@@ -117,7 +113,7 @@ async function computeState(idSystemObject: number): Promise<StateInfo> {
 
 function statusLabel(status: SceneStatus): string {
     switch (status) {
-        case 'fixable':    return 'Fixable';
+        case 'fixable':    return 'Affected (manual)';
         case 'mixed':      return 'Mixed basenames (manual)';
         case 'consistent': return 'Consistent';
         case 'unresolved': return 'Name unresolved (manual)';
@@ -132,7 +128,7 @@ async function toRow(idSystemObject: number, state: StateInfo): Promise<BulkOpRo
     return {
         id: idSystemObject,
         name: await sceneName(idSystemObject),
-        isCandidate: state.status === 'fixable', // only fixable rows are selectable; the rest are report-only
+        isCandidate: false, // review-only: every row is report-only; no row is selectable / auto-correctable
         rowData: {
             status: statusLabel(state.status),
             canonicalName: state.canonical ?? '—',
@@ -144,30 +140,30 @@ async function toRow(idSystemObject: number, state: StateInfo): Promise<BulkOpRo
 }
 
 /**
- * Recover a scene whose download/SVX asset filenames drifted from the current Subject.Name (the state
- * that makes the Generate Downloads pre-flight guard and the scene-generation SVX check hard block
- * after a subject is renamed). `apply` renames each Cook-output asset to the canonical basename via
- * AssetStorageAdapter.renameAsset — an OCFL-aware rename creating a new, non-destructive AssetVersion.
+ * REVIEW-ONLY. Reports scenes whose download/SVX asset filenames drifted from the current Subject.Name
+ * — the state that makes the Generate Downloads pre-flight guard and the scene-generation SVX check
+ * hard block after a subject is renamed — and classifies each. It performs NO correction.
  *
- * Scope param:
- *   - `fixable`  (default) — list only scenes we can confidently repair (selectable).
- *   - `affected` (report-only) — additionally list scenes that are affected but NOT auto-fixable
- *     (mixed basenames), each with a Status + reason so the extent and cause are visible. Only
- *     `fixable` rows are selectable; the report rows can be seen but not acted on.
+ * Why no automated rename: a safe correction is a three-part transaction — rename the storage assets,
+ * rewrite the SVX's internal `asset.uri` references, AND update the derivative model/asset DB records.
+ * Renaming the files alone would break the published/viewed SVX (its internal URIs would point at
+ * filenames that no longer exist) and leave the DB inconsistent. So remediation is manual for now (or
+ * a future correction op that performs all three). The scene-generation and Generate Downloads hard
+ * blocks are what prevent NEW drift from being created; this op only surfaces existing drift.
  *
- * Confidence gate (both gather and apply): the op only acts on a single, uniform Subject.Name rename
- * — canonical resolves to exactly one Subject.Name AND every Cook-output asset shares one old
- * basename that differs from it. Multi-subject / ambiguous-hierarchy and mixed-basename scenes are
- * refused, not guessed at. (Multi-subject scenes take the source-filename basename, which a subject
- * rename does not change, so a uniform one is not affected and is not listed even in `affected`.)
+ * Scope param (both are report scopes; nothing is selectable):
+ *   - `fixable`  (default) — list only cleanly-identifiable single Subject.Name drift.
+ *   - `affected` — additionally list scenes affected but not cleanly classifiable (mixed basenames),
+ *     each with a Status + reason so the extent and cause are visible.
  *
- * Scope boundary: renames the download and SVX *filenames* only. It does NOT rename derivative model
- * records or re-point the SVX's internal `asset.uri` values, so it does not by itself clear the deeper
- * scene-generation model-name fork. It unblocks Generate Downloads and the SVX-filename check.
+ * Classification gate: a scene is flagged only when canonical resolves to exactly one Subject.Name AND
+ * every Cook-output asset shares one old basename that differs from it. Multi-subject / ambiguous and
+ * mixed-basename scenes are reported (or omitted), never guessed at. (Multi-subject scenes take the
+ * source-filename basename, which a subject rename does not change, so a uniform one is not affected.)
  */
 export const fixSceneBasenames: BulkOperationDef = {
     key: 'fixSceneBasenames',
-    label: 'Fix Scene Basenames',
+    label: 'Review Scene Basenames',
     columns: [
         { key: 'status', label: 'Status' },
         { key: 'canonicalName', label: 'Canonical Name (Subject)' },
@@ -203,50 +199,14 @@ export const fixSceneBasenames: BulkOperationDef = {
         }
         return rows;
     },
-    apply: async (idSystemObject: number, _rowSettings: any, idUser: number): Promise<BulkOpApplyResult> => {
-        const state = await computeState(idSystemObject);
-
-        if (state.status === 'consistent')
-            return { success: true, message: 'already consistent', rowData: { status: 'Consistent', fileCount: 0, details: '—' } };
-        if (state.status !== 'fixable')
-            return { success: false, message: `refused: ${state.reason || state.status}` };
-
-        const user = await DBAPI.User.fetch(idUser);
-        const opInfo: STORE.OperationInfo = {
-            message: `Fix scene basenames → ${state.canonical}`,
-            idUser,
-            userEmailAddress: user?.EmailAddress ?? '',
-            userName: user?.Name ?? '',
-        };
-
-        const renamed: string[] = [];
-        const failed: string[] = [];
-        for (const r of state.renames) {
-            const ASR = await STORE.AssetStorageAdapter.renameAsset(r.asset, r.to, opInfo);
-            if (ASR.success)
-                renamed.push(`${r.from} → ${r.to}`);
-            else {
-                failed.push(r.from);
-                RK.logError(RK.LogSection.eHTTP,'fix scene basenames','asset rename failed',
-                    { idSystemObject, from: r.from, to: r.to, error: ASR.error, idUser },SRC);
-            }
-        }
-
-        const after = await computeState(idSystemObject);
-        const remaining: number = after.status === 'fixable' ? after.renames.length : 0;
-        RK.logInfo(RK.LogSection.eHTTP,'fix scene basenames',`renamed ${renamed.length} asset(s), ${remaining} remaining`,
-            { idSystemObject, canonicalName: state.canonical, renamed, failed, idUser },SRC);
-
+    // Review-only: no automated correction. A safe rename must also rewrite the SVX internal asset
+    // references and the model/asset DB records (see the header), so it is left to manual remediation.
+    // No row is selectable, so the harness never invokes this; it refuses defensively if ever called.
+    apply: async (): Promise<BulkOpApplyResult> => {
         return {
-            success: failed.length === 0 && remaining === 0,
-            message: failed.length === 0
-                ? `renamed ${renamed.length} asset(s) to ${state.canonical}`
-                : `renamed ${renamed.length}, ${failed.length} failed`,
-            rowData: {
-                status: statusLabel(after.status),
-                fileCount: remaining,
-                details: after.status === 'fixable' ? after.renames.map(r => `${r.from} → ${r.to}`).sort().join(', ') : '—',
-            },
+            success: false,
+            message: 'Review Scene Basenames is review-only: a safe rename must also rewrite the SVX '
+                + 'internal asset references and the model DB records, so correction is manual.',
         };
     },
 };
