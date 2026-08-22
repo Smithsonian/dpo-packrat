@@ -96,3 +96,40 @@ export function scanCookReport(cookJobReport: unknown): CookScanResult {
 
     return { errors, warnings };
 }
+
+function pushWarning(warnings: CookScanFinding[], message: string): void {
+    if (warnings.some(w => w.message === message))
+        return;
+    warnings.push({ code: COMMON.WorkflowReportCode.CookWarning, level: 'warn', message });
+}
+
+// Non-blocking advisories derived from a successful inspection result: likely mistakes that do not
+// prevent ingest, so they are surfaced as CookWarning rather than failing the job. Kept pure and
+// separate from the verify path so it is unit-testable. Only the first mesh is examined, matching
+// the existing single-mesh convention in the inspector.
+export function collectInspectionWarnings(inspectionRoot: unknown): CookScanFinding[] {
+    const warnings: CookScanFinding[] = [];
+    if (!inspectionRoot || typeof inspectionRoot !== 'object')
+        return warnings;
+
+    const root = inspectionRoot as {
+        scene?: { materials?: Array<{ error?: string }> };
+        meshes?: Array<{ statistics?: { hasNormals?: boolean; materialIndex?: number[] } }>;
+    };
+    const firstMeshStats = Array.isArray(root.meshes) ? root.meshes[0]?.statistics : undefined;
+
+    // Missing normals are a likely oversight but are derivable downstream, so advise rather than block.
+    if (firstMeshStats?.hasNormals === false)
+        pushWarning(warnings, 'Model has no normals; they will be derived downstream.');
+
+    // A mesh that references a material slot Cook resolved to nothing (an empty or unmatched .mtl)
+    // usually signals a mistake, though the geometry still ingests — advise rather than block. Firing
+    // requires a positive material reference on the mesh, so a legitimately material-free model is not
+    // flagged. NOTE: confirm the exact fields against a captured xMtlEmpty/xMtlRef inspection report.
+    const materialCount: number = Array.isArray(root.scene?.materials) ? (root.scene as { materials: unknown[] }).materials.length : -1;
+    const referencesMaterial: boolean = Array.isArray(firstMeshStats?.materialIndex) && (firstMeshStats as { materialIndex: number[] }).materialIndex.length > 0;
+    if (referencesMaterial && materialCount === 0)
+        pushWarning(warnings, 'A material is referenced but none was resolved (empty or unmatched .mtl).');
+
+    return warnings;
+}

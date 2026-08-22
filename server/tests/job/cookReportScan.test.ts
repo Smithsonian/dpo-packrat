@@ -1,5 +1,5 @@
 import * as COMMON from '@dpo-packrat/common';
-import { scanCookReport } from '../../job/impl/Cook/CookReportScan';
+import { scanCookReport, collectInspectionWarnings } from '../../job/impl/Cook/CookReportScan';
 
 describe('Cook: CookReportScan.scanCookReport', () => {
     test('a successful (done) report yields no findings', () => {
@@ -55,5 +55,45 @@ describe('Cook: CookReportScan.scanCookReport', () => {
     test('a non-object report is handled without throwing', () => {
         expect(scanCookReport(null).errors).toHaveLength(0);
         expect(scanCookReport('boom').errors).toHaveLength(0);
+    });
+});
+
+describe('Cook: CookReportScan.collectInspectionWarnings', () => {
+    const withMesh = (statistics: Record<string, unknown>, materials: Record<string, unknown>[] = [{ name: 'Material' }]) =>
+        ({ scene: { materials }, meshes: [{ statistics }] });
+
+    test('a clean textured model yields no warnings', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true, materialIndex: [0] }));
+        expect(warnings).toHaveLength(0);
+    });
+
+    test('a mesh without normals warns (non-blocking)', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: false, materialIndex: [0] }));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].code).toBe(COMMON.WorkflowReportCode.CookWarning);
+        expect(warnings[0].level).toBe('warn');
+        expect(warnings[0].message).toMatch(/no normals/i);
+    });
+
+    test('a referenced-but-unresolved material warns', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true, materialIndex: [0] }, []));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].message).toMatch(/none was resolved/i);
+    });
+
+    test('a legitimately material-free model is not flagged', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true, materialIndex: [] }, []));
+        expect(warnings).toHaveLength(0);
+    });
+
+    test('both advisories can fire together', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: false, materialIndex: [0] }, []));
+        expect(warnings).toHaveLength(2);
+    });
+
+    test('a missing/garbage inspection root yields no warnings', () => {
+        expect(collectInspectionWarnings(null)).toHaveLength(0);
+        expect(collectInspectionWarnings({})).toHaveLength(0);
+        expect(collectInspectionWarnings('nope')).toHaveLength(0);
     });
 });

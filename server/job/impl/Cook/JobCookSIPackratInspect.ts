@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
+import { collectInspectionWarnings, CookScanFinding } from './CookReportScan';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
@@ -998,6 +999,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 return { success: false, error: 'Invalid mesh. Missing UVs for included texture.', allowRetry: false };
             }
         }
+
+        // Non-blocking advisories: likely mistakes that still ingest, surfaced as CookWarning so a
+        // user sees them without the job failing.
+        const warnings: CookScanFinding[] = collectInspectionWarnings(inspectionRoot);
+        for (const warning of warnings)
+            await this.appendToReportAndLog(warning.message, undefined, { code: warning.code, level: warning.level });
 
         // we have success
         await this.recordSuccess(JSON.stringify(cookJobReport));
