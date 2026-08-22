@@ -157,19 +157,21 @@ export class Asset extends DBC.DBObject<AssetBase> implements AssetBase, SystemO
         }
     }
 
-    /** Fetch assets that are connected to a specific Scene via the scene's id. **/
+    /** Fetch the live assets connected to a specific Scene via the scene's id. Assets are gathered
+     * both through the scene's SystemObjectXref-derived children (e.g. models) and through assets that
+     * link directly to the scene's own SystemObject. Retired assets are excluded and the result is
+     * ordered by FileName then idAsset, so callers that compare against this set — the download
+     * basename checks — receive a stable, current-only list on every execution. **/
     static async fetchFromScene(idScene: number): Promise<Asset[] | null> {
-
-        // when grabbing assets we need to grab those that are referenced by SystemObjectXref where
-        // our Packrat scene is the parent (e.g. models), but we also need to return those assets
-        // that don't use the xrefs and explicitly link to the Packrat Scene via it's idSystemObject field.
         return DBC.CopyArray<AssetBase, Asset>(
             await DBC.DBConnection.prisma.$queryRaw<Asset[]>`
                 SELECT DISTINCT a.* FROM Scene AS scn
-                JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene 
+                JOIN SystemObject AS scnSO ON scn.idScene = scnSO.idScene
                 JOIN SystemObjectXref AS scnSOX ON scnSO.idSystemObject = scnSOX.idSystemObjectMaster
                 JOIN Asset AS a ON (a.idSystemObject = scnSOX.idSystemObjectDerived OR a.idSystemObject = scnSO.idSystemObject)
-                WHERE scn.idScene = ${idScene};
+                JOIN SystemObject AS aSO ON aSO.idAsset = a.idAsset
+                WHERE scn.idScene = ${idScene} AND aSO.Retired = 0
+                ORDER BY a.FileName, a.idAsset;
             `,Asset);
     }
 
