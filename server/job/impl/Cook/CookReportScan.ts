@@ -107,14 +107,16 @@ function pushWarning(warnings: CookScanFinding[], message: string): void {
 // prevent ingest, so they are surfaced as CookWarning rather than failing the job. Kept pure and
 // separate from the verify path so it is unit-testable. Only the first mesh is examined, matching
 // the existing single-mesh convention in the inspector.
+interface InspectionMaterial { name?: string; channels?: Array<{ type?: string }> }
+
 export function collectInspectionWarnings(inspectionRoot: unknown): CookScanFinding[] {
     const warnings: CookScanFinding[] = [];
     if (!inspectionRoot || typeof inspectionRoot !== 'object')
         return warnings;
 
     const root = inspectionRoot as {
-        scene?: { materials?: Array<{ error?: string }> };
-        meshes?: Array<{ statistics?: { hasNormals?: boolean; materialIndex?: number[] } }>;
+        scene?: { materials?: InspectionMaterial[] };
+        meshes?: Array<{ statistics?: { hasNormals?: boolean } }>;
     };
     const firstMeshStats = Array.isArray(root.meshes) ? root.meshes[0]?.statistics : undefined;
 
@@ -122,14 +124,18 @@ export function collectInspectionWarnings(inspectionRoot: unknown): CookScanFind
     if (firstMeshStats?.hasNormals === false)
         pushWarning(warnings, 'Model has no normals; they will be derived downstream.');
 
-    // A mesh that references a material slot Cook resolved to nothing (an empty or unmatched .mtl)
-    // usually signals a mistake, though the geometry still ingests — advise rather than block. Firing
-    // requires a positive material reference on the mesh, so a legitimately material-free model is not
-    // flagged. NOTE: confirm the exact fields against a captured xMtlEmpty/xMtlRef inspection report.
-    const materialCount: number = Array.isArray(root.scene?.materials) ? (root.scene as { materials: unknown[] }).materials.length : -1;
-    const referencesMaterial: boolean = Array.isArray(firstMeshStats?.materialIndex) && (firstMeshStats as { materialIndex: number[] }).materialIndex.length > 0;
-    if (referencesMaterial && materialCount === 0)
-        pushWarning(warnings, 'A material is referenced but none was resolved (empty or unmatched .mtl).');
+    // A material Cook resolved with no diffuse channel is effectively empty: it comes from an empty
+    // .mtl or a usemtl name that matched no material definition, so Cook falls back to a default
+    // (roughness-only) material. The geometry still ingests, so advise rather than block. A material
+    // carrying a diffuse channel — a texture uri and/or a colour value — is a normal material and is
+    // not flagged, so a legitimately untextured, solid-colour model does not trip this.
+    const materials: InspectionMaterial[] = Array.isArray(root.scene?.materials) ? (root.scene as { materials: InspectionMaterial[] }).materials : [];
+    for (const material of materials) {
+        const hasDiffuse: boolean = Array.isArray(material?.channels)
+            && material.channels.some(c => typeof c?.type === 'string' && c.type.toLowerCase() === 'diffuse');
+        if (!hasDiffuse)
+            pushWarning(warnings, `Material "${material?.name ?? 'unnamed'}" has no diffuse channel (empty or unmatched .mtl).`);
+    }
 
     return warnings;
 }

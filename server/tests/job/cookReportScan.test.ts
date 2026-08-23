@@ -59,35 +59,41 @@ describe('Cook: CookReportScan.scanCookReport', () => {
 });
 
 describe('Cook: CookReportScan.collectInspectionWarnings', () => {
-    const withMesh = (statistics: Record<string, unknown>, materials: Record<string, unknown>[] = [{ name: 'Material' }]) =>
+    // Material shapes mirror real Cook inspection output: an empty/unmatched .mtl resolves to a
+    // default material carrying only a roughness channel (idJobRun 611/616), a healthy material
+    // carries a diffuse channel (idJobRun 612/613).
+    const emptyMaterial = { name: 'Material', channels: [{ type: 'roughness', value: '1.0' }] };
+    const texturedMaterial = { name: 'Material', channels: [{ type: 'reflection' }, { type: 'diffuse', uri: 'Box_Test_Txr.png' }] };
+    const withMesh = (statistics: Record<string, unknown>, materials: Record<string, unknown>[] = [texturedMaterial]) =>
         ({ scene: { materials }, meshes: [{ statistics }] });
 
-    test('a clean textured model yields no warnings', () => {
-        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true, materialIndex: [0] }));
+    test('a healthy textured model yields no warnings', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true }));
         expect(warnings).toHaveLength(0);
     });
 
     test('a mesh without normals warns (non-blocking)', () => {
-        const warnings = collectInspectionWarnings(withMesh({ hasNormals: false, materialIndex: [0] }));
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: false }));
         expect(warnings).toHaveLength(1);
         expect(warnings[0].code).toBe(COMMON.WorkflowReportCode.CookWarning);
         expect(warnings[0].level).toBe('warn');
         expect(warnings[0].message).toMatch(/no normals/i);
     });
 
-    test('a referenced-but-unresolved material warns', () => {
-        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true, materialIndex: [0] }, []));
+    test('an empty/unmatched material (no diffuse channel) warns', () => {
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true }, [emptyMaterial]));
         expect(warnings).toHaveLength(1);
-        expect(warnings[0].message).toMatch(/none was resolved/i);
+        expect(warnings[0].message).toMatch(/no diffuse channel/i);
     });
 
-    test('a legitimately material-free model is not flagged', () => {
-        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true, materialIndex: [] }, []));
+    test('a solid-colour material with a diffuse value is not flagged', () => {
+        const solidColour = { name: 'Material', channels: [{ type: 'diffuse', value: '1.0, 1.0, 1.0, 1.0' }] };
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true }, [solidColour]));
         expect(warnings).toHaveLength(0);
     });
 
     test('both advisories can fire together', () => {
-        const warnings = collectInspectionWarnings(withMesh({ hasNormals: false, materialIndex: [0] }, []));
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: false }, [emptyMaterial]));
         expect(warnings).toHaveLength(2);
     });
 
