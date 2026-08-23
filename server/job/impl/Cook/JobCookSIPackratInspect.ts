@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
+import { collectInspectionWarnings, CookScanFinding } from './CookReportScan';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
@@ -931,27 +932,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
         const logs = cookJobReport.steps['inspect-mesh'].log;
 
-        // make sure our base/super routine doesn't have anything to report
+        // The base pass scans the Cook report and emits a ranked CookError event with a friendly
+        // message for an errored job (including the Blender/MeshSmith tool-termination cases), so
+        // surface that result here without re-deriving the reason.
         const superResult: JobIOResults = await super.verifyResponse(cookJobReport);
-        if(superResult.success===false) {
-            // check for known issues and improve error message returned
-            if(superResult.error?.includes('Tool Blender: terminated with code: 1')===true) {
-                if(logContains(logs,'Error: Unsupported file type: .zip')===true)
-                    superResult.error = 'Zip package is invalid/corrupt.';
-                else
-                    superResult.error = 'Unknown Blender error. Check report.';
-            }
-            if(superResult.error?.includes('Tool MeshSmith: terminated with code: 1')===true) {
-                if(logContains(logs,'Invalid vertex index')===true)
-                    superResult.error = 'Invalid mesh. Missing vertices/faces.';
-                else
-                    superResult.error = 'Unknown MeshSmith error. Check report.';
-            }
-
-            RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${superResult.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.reportInspect(`[CookJob:Inspection] response is invalid. ${superResult.error}`, true);
+        if(superResult.success===false)
             return superResult;
-        }
 
         // check for ZIP processing errors
         if(logContains(logs,'Error: Unsupported file type: .zip')===true) {
@@ -1013,6 +999,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
                 return { success: false, error: 'Invalid mesh. Missing UVs for included texture.', allowRetry: false };
             }
         }
+
+        // Non-blocking advisories: likely mistakes that still ingest, surfaced as CookWarning so a
+        // user sees them without the job failing.
+        const warnings: CookScanFinding[] = collectInspectionWarnings(inspectionRoot);
+        for (const warning of warnings)
+            await this.appendToReportAndLog(warning.message, undefined, { code: warning.code, level: warning.level });
 
         // we have success
         await this.recordSuccess(JSON.stringify(cookJobReport));

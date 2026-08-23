@@ -63,6 +63,8 @@ export const WorkflowReportCode = {
     JobLog: 'job.log',
     CookMatched: 'cook.matched',
     CookLog: 'cook.log',
+    CookError: 'cook.error',
+    CookWarning: 'cook.warning',
     InspectNote: 'inspect.note',
     InspectInvalid: 'inspect.invalid',
     SceneNote: 'scene.note',

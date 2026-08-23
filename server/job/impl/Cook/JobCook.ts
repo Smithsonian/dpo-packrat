@@ -7,6 +7,7 @@ import * as REP from '../../../report/interface';
 import { Config } from '../../../config';
 import * as H from '../../../utils/helpers';
 import * as COOKRES from '../../../job/impl/Cook/CookResource';
+import { scanCookReport, CookScanResult, CookScanFinding } from './CookReportScan';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import * as COMMON from '@dpo-packrat/common';
 
@@ -522,9 +523,18 @@ export abstract class JobCook<T> extends JobPackrat {
     }
 
     protected async verifyResponse(cookJobReport: any): Promise<JobIOResults> {
-        // verify the response received from Cook, checking the report and job details
+        // Surface Cook's own failure signals as ranked, coded report events for every recipe, so the
+        // reason is highlighted rather than buried in the raw report body. Recipe subclasses layer
+        // their own structured checks on top of this shared pass.
+        const scan: CookScanResult = scanCookReport(cookJobReport);
+        for (const finding of scan.errors)
+            await this.appendToReportAndLog(finding.message, true, { code: finding.code, level: finding.level });
+
         if(cookJobReport['state']==='error') {
-            return { success: false, allowRetry: false, error: cookJobReport['error'] };
+            const error: string = scan.errors.length > 0
+                ? scan.errors.map((f: CookScanFinding) => f.message).join(' | ')
+                : (cookJobReport['error'] ?? 'Cook error');
+            return { success: false, allowRetry: false, error };
         }
 
         // we made it here so the job appears successful
