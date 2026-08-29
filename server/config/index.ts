@@ -130,6 +130,11 @@ export type ConfigType = {
         /** Upload-time package/asset-type compatibility check. 'off' disables it; 'warn' logs mismatches
          *  without blocking (rollout/observation); 'enforce' rejects mismatched uploads. */
         packageValidationMode: 'off' | 'warn' | 'enforce';
+        /** When true, a scene publish whose EDAN title comes back with an unresolved subject (leading ':')
+         *  is logged as a warning instead of failing the publish. For local/dev testing against EDAN dev,
+         *  where the subject's EDAN record cannot be resolved. Off in production, where the strict check
+         *  guards against publishing a record with a broken title. */
+        edanAllowUnresolvedSubject: boolean;
     },
     environment: {
         type: ENVIRONMENT_TYPE;
@@ -319,6 +324,10 @@ export const Config: ConfigType = {
         packageValidationMode: ((): 'off' | 'warn' | 'enforce' => {
             const raw: string = (process.env.PACKRAT_INGEST_VALIDATION_MODE ?? '').trim().toLowerCase();
             return (raw === 'warn' || raw === 'enforce') ? raw : 'off';
+        })(),
+        edanAllowUnresolvedSubject: ((): boolean => {
+            const normalized: string = (process.env.PACKRAT_EDAN_ALLOW_UNRESOLVED_SUBJECT ?? '').trim().toLowerCase();
+            return normalized === 'true' || normalized === '1';
         })(),
     },
     environment: {

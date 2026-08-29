@@ -108,6 +108,18 @@ class UploadAssetWorker extends ResolverBase {
         if (this.workflowHelper?.workflow)
             await this.workflowHelper.workflow.updateStatus(success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
 
+        // Record the uploaded file on the workflow summary so the workflow list's Object column shows
+        // what was uploaded (the upload workflow runs no Cook job, so it has no summary otherwise).
+        if (this.workflowHelper?.workflowReport) {
+            const uploadedName: string = (this.apolloFile.filename ?? '').split(/[\\/]/).pop() ?? '';
+            if (uploadedName)
+                await RK.reportSetSummary({ input: uploadedName }, this.workflowHelper.workflowReport);
+        }
+
+        // Surface any non-blocking warnings this upload's inspect emitted so the client can nudge the
+        // user to the Workflow report. Read from the request scope, not another job's report.
+        UAR.warnings = this.LS?.reportWarningCount ?? 0;
+
         return UAR;
     }
 

@@ -2710,6 +2710,7 @@ export type UploadAssetResult = {
   error?: Maybe<Scalars['String']>;
   idAssetVersions?: Maybe<Array<Scalars['Int']>>;
   status: UploadStatus;
+  warnings?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -2890,7 +2891,7 @@ export type UploadAssetMutationVariables = Exact<{
 }>;
 
 
-export type UploadAssetMutation = { __typename?: 'Mutation', uploadAsset: { __typename?: 'UploadAssetResult', status: UploadStatus, idAssetVersions?: Array<number> | null, error?: string | null } };
+export type UploadAssetMutation = { __typename?: 'Mutation', uploadAsset: { __typename?: 'UploadAssetResult', status: UploadStatus, idAssetVersions?: Array<number> | null, error?: string | null, warnings?: number | null } };
 
 export type CreateCaptureDataMutationVariables = Exact<{
   input: CreateCaptureDataInput;
@@ -3461,6 +3462,7 @@ export const UploadAssetDocument = gql`
     status
     idAssetVersions
     error
+    warnings
   }
 }
     `;

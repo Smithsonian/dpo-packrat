@@ -6,7 +6,8 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
-import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
+import { SystemObjectTypeToName, eAuditType } from '../../../../../db/api/ObjectType';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import * as H from '../../../../../utils/helpers';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
@@ -111,11 +112,32 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                     return sendResult(false,'update object details failed',`Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
                 pendingLicenseCache = { clear: false, resolver: dbWrite.resolver };
                 LicenseNew = reassignedLicense;
+                // Emit the same semantic license audit as the standalone assignLicense resolver, so the
+                // change is recorded on the object and consumers (e.g. the draft-drift check) see it.
+                // Only when the effective license actually changed.
+                if (LicenseOld?.idLicense !== reassignedLicense.idLicense)
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionAssignLicense,
+                        idSystemObject,
+                        payload: {
+                            before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+                            after:  { idLicense: reassignedLicense.idLicense, Name: reassignedLicense.Name, RestrictLevel: reassignedLicense.RestrictLevel },
+                        },
+                    });
             } else {
                 if (!await DBAPI.LicenseManager.clearAssignmentDBWrites(idSystemObject))
                     return sendResult(false,'update object details failed',`Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
                 pendingLicenseCache = { clear: true, resolver: undefined };
                 LicenseNew = undefined;
+                if (LicenseOld)
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionClearLicense,
+                        idSystemObject,
+                        payload: {
+                            before: { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel },
+                            after:  null,
+                        },
+                    });
             }
         }
         RK.logDebug(RK.LogSection.eGQL,'update object details','changing license',{ oldLicense: LicenseOld, newLicense: LicenseNew },'GraphQL.SystemObject.ObjectDetails');

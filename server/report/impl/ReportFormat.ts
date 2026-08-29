@@ -33,6 +33,19 @@ export class ReportFormat {
         return JSON.stringify(merged.length === 1 ? merged[0] : merged);
     }
 
+    /** Parse a serialized summary (WorkflowReport.Name) back into an object. Returns {} for an empty
+     * or non-JSON value (legacy rows), so callers can read-modify-write without a guard at each site. */
+    static parseSummary(name: string | null | undefined): COMMON.IWorkflowReportSummary {
+        if (!name)
+            return {};
+        try {
+            const parsed: unknown = JSON.parse(name);
+            return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed as COMMON.IWorkflowReportSummary : {};
+        } catch {
+            return {};
+        }
+    }
+
     /** Serialize the summary to <= WorkflowReportSummaryMaxLength by shortening name VALUES first
      * (numeric ids retained), never by slicing the serialized JSON (which would break it). */
     static serializeSummary(summary: COMMON.IWorkflowReportSummary): string {

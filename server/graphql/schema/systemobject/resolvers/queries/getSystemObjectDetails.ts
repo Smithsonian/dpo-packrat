@@ -191,14 +191,17 @@ export type PublishedStateVersion = {
 // audit event (its parsed after.eState `eventState` and timestamp `eventWhen`), the latest content
 // version, and the full version chain. No DB access, so the whole publish-state matrix is unit-testable.
 export function derivePublishedState(eventState: COMMON.ePublishedState | null, eventWhen: Date | null,
-    latest: PublishedStateVersion | null, allVersions: PublishedStateVersion[]): { publishedEnum: COMMON.ePublishedState; isDraft: boolean } {
+    latest: PublishedStateVersion | null, allVersions: PublishedStateVersion[],
+    lastConfigChangeWhen: Date | null = null): { publishedEnum: COMMON.ePublishedState; isDraft: boolean } {
     // Audit-derived path: the event is the authoritative current state.
     if (eventState !== null && eventWhen !== null) {
-        // Draft = currently published AND content has drifted since that publish. Publishing mutates a
-        // version in place without bumping DateCreated, so a published scene with no later edits has its
-        // latest SOV DateCreated before the event (not a draft); a subsequent edit rolls a newer SOV.
-        const isDraft: boolean = isPublishedState(eventState) && latest !== null
-            && latest.dateCreated.getTime() > eventWhen.getTime();
+        // Draft = currently published AND something publish-affecting has drifted since that publish.
+        // Two drift sources: (a) content — publishing mutates a version in place without bumping
+        // DateCreated, so a later edit rolls a newer SOV; (b) configuration that rolls no new SOV but
+        // still requires a republish (e.g. a license reassignment), detected via its audit timestamp.
+        const contentDrift: boolean = latest !== null && latest.dateCreated.getTime() > eventWhen.getTime();
+        const configDrift: boolean = lastConfigChangeWhen !== null && lastConfigChangeWhen.getTime() > eventWhen.getTime();
+        const isDraft: boolean = isPublishedState(eventState) && (contentDrift || configDrift);
         return { publishedEnum: eventState, isDraft };
     }
 
@@ -245,8 +248,17 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
         allVersions = (versions ?? []).map(v => ({ idSystemObjectVersion: v.idSystemObjectVersion, published: v.publishedStateEnum(), dateCreated: v.DateCreated }));
     }
 
+    // A license reassignment rolls no new content version but still requires a republish, so treat a
+    // license change made after the last publication as draft drift. Only consulted on the audit path.
+    let lastConfigChangeWhen: Date | null = null;
+    if (useAudit) {
+        const licenseEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestEventOfTypes(idSystemObject,
+            [DBAPI.eAuditType.eActionAssignLicense, DBAPI.eAuditType.eActionClearLicense, DBAPI.eAuditType.eActionLicenseUpdate]);
+        lastConfigChangeWhen = licenseEvent ? licenseEvent.AuditDate : null;
+    }
+
     const { publishedEnum, isDraft } = derivePublishedState(eventState,
-        useAudit && publicationEvent ? publicationEvent.AuditDate : null, latest, allVersions);
+        useAudit && publicationEvent ? publicationEvent.AuditDate : null, latest, allVersions, lastConfigChangeWhen);
     const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
 
     let publishable: boolean = false;

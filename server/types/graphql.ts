@@ -2707,6 +2707,7 @@ export type UploadAssetResult = {
   error?: Maybe<Scalars['String']>;
   idAssetVersions?: Maybe<Array<Scalars['Int']>>;
   status: UploadStatus;
+  warnings?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {

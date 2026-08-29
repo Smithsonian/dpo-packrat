@@ -6,6 +6,7 @@ const uploadAsset = gql`
             status
             idAssetVersions
             error
+            warnings
         }
     }
 `;

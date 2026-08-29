@@ -33,6 +33,10 @@ function event(code: string): COMMON.IWorkflowReportEvent {
     return { ts: '2026-08-16T00:00:00.000Z', phase: 'cook', code, msg: code };
 }
 
+function leveledEvent(code: string, level: COMMON.WorkflowReportLevel): COMMON.IWorkflowReportEvent {
+    return { ts: '2026-08-16T00:00:00.000Z', phase: 'cook', code, level, msg: code };
+}
+
 describe('Report: write queue', () => {
     test('appendEvent serializes concurrent writes in order with no lost events', async () => {
         const wr = fake(1);
@@ -90,6 +94,41 @@ describe('Report: write queue', () => {
         const summary = JSON.parse(backing.Name) as COMMON.IWorkflowReportSummary;
         expect(events.map((e) => e.code)).toEqual(['e1', 'e2']); // Data intact
         expect(summary.idSystemObject).toBe(12178);               // Name intact
+    });
+
+    test('appendEvent tallies warn/error levels into the summary; info does not count', async () => {
+        const wr = fake(21);
+        await ReportQueue.appendEvent(wr, leveledEvent('cook.warning', 'warn'));
+        await ReportQueue.appendEvent(wr, leveledEvent('cook.warning', 'warn'));
+        await ReportQueue.appendEvent(wr, leveledEvent('cook.error', 'error'));
+        await ReportQueue.appendEvent(wr, event('cook.log')); // no level -> info, not counted
+
+        const summary = JSON.parse((wr as unknown as FakeWorkflowReport).Name) as COMMON.IWorkflowReportSummary;
+        expect(summary.warnings).toBe(2);
+        expect(summary.errors).toBe(1);
+    });
+
+    test('warn tally is preserved alongside an existing summary set via setSummary', async () => {
+        const wr = fake(22);
+        await ReportQueue.setSummary(wr, { subject: 'DPO Testing', idSystemObject: 12178 });
+        await ReportQueue.appendEvent(wr, leveledEvent('cook.warning', 'warn'));
+
+        const summary = JSON.parse((wr as unknown as FakeWorkflowReport).Name) as COMMON.IWorkflowReportSummary;
+        expect(summary.idSystemObject).toBe(12178);
+        expect(summary.warnings).toBe(1);
+    });
+
+    test('a later setSummary does NOT clobber a tally accrued earlier (terminal Cook summary)', async () => {
+        const wr = fake(23);
+        await ReportQueue.appendEvent(wr, leveledEvent('cook.warning', 'warn'));
+        await ReportQueue.appendEvent(wr, leveledEvent('cook.error', 'error'));
+        // Progressive summary rebuilt from scratch (no counts), as JobCook.writeReportSummary does:
+        await ReportQueue.setSummary(wr, { recipe: 'si-voyager-scene', cookJobId: 'abc' });
+
+        const summary = JSON.parse((wr as unknown as FakeWorkflowReport).Name) as COMMON.IWorkflowReportSummary;
+        expect(summary.recipe).toBe('si-voyager-scene');
+        expect(summary.warnings).toBe(1);
+        expect(summary.errors).toBe(1);
     });
 
     test('waitForQueueToDrain resolves after in-flight writes complete', async () => {

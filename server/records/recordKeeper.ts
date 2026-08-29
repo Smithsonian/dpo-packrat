@@ -462,6 +462,13 @@ export class RecordKeeper {
         const target: REP.IReport | null = report ?? await REP.ReportFactory.getReport();
         if (!target)
             return { success: false, message: 'no active WorkflowReport' };
+        // Tally warn-level events onto the request scope so a client-facing resolver can surface
+        // "completed with warnings" without reading back another job's report.
+        if (event.level === 'warn') {
+            const LS: LocalStore | undefined = ASL?.getStore();
+            if (LS)
+                LS.reportWarningCount++;
+        }
         return RecordKeeper.convertResults(await target.appendEvent(event));
     }
     static async reportSetSummary(summary: COMMON.IWorkflowReportSummary, report?: REP.IReport | null): Promise<IOResults> {

@@ -94,7 +94,41 @@ export function scanCookReport(cookJobReport: unknown): CookScanResult {
         errors.push({ code: COMMON.WorkflowReportCode.CookError, level: 'error', message });
     }
 
+    // Non-blocking advisories Cook writes into step logs even on an otherwise-successful run: a
+    // referenced texture image or material file it could not load and worked around. These are
+    // ordinary log lines that would otherwise stay buried in the raw report body, so surface them
+    // for every recipe. Benign engine chatter (e.g. a Blender DeprecationWarning) is deliberately
+    // excluded by the curated rule set.
+    for (const warning of collectCookLogWarnings(report))
+        warnings.push(warning);
+
     return { errors, warnings };
+}
+
+// A Cook step-log line that signals a real asset problem, keyed to a friendly, user-facing message.
+// Kept curated (not a blanket "[ISSUE]"/"WARNING" match) so engine deprecation notices and other
+// noise do not become user-visible advisories.
+interface CookLogWarningRule { test: RegExp; message: string }
+const COOK_LOG_WARNING_RULES: CookLogWarningRule[] = [
+    { test: /cannot load image file|cannot load image|could not load .*(texture|image)/i,
+        message: 'A referenced texture image could not be loaded (the file is missing or unreadable). The model ingests without that texture.' },
+    { test: /cannot read from mtl file|cannot read .*\.mtl|could not read .*material library/i,
+        message: 'A referenced material library (.mtl) could not be read (the file is missing or unreadable). The model ingests without its materials.' },
+    { test: /missing texture|texture file .*not found|referenced texture .*missing/i,
+        message: 'A referenced texture file is missing. The model ingests without that texture.' },
+];
+
+// Scan the raw Cook step logs for the curated asset-problem markers above and return one CookWarning
+// per distinct match. Pure and separate from the verify path so it is unit-testable.
+export function collectCookLogWarnings(cookJobReport: unknown): CookScanFinding[] {
+    const warnings: CookScanFinding[] = [];
+    if (!cookJobReport || typeof cookJobReport !== 'object')
+        return warnings;
+    const messages: string[] = collectMessages(cookJobReport as CookReportLike);
+    for (const rule of COOK_LOG_WARNING_RULES)
+        if (messages.some(m => rule.test.test(m)))
+            pushWarning(warnings, rule.message);
+    return warnings;
 }
 
 function pushWarning(warnings: CookScanFinding[], message: string): void {

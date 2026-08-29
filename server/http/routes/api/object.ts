@@ -497,7 +497,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 `bounding box ${e.detail} for model '${e.modelName ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
             raw: { bboxState: e.detail, currentUnits: e.currentUnits, multiModel: e.multiModel } };
         if (e.state === 'no_bbox')
-            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box on record'),
+            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box yet; pose the scene in Voyager to generate one'),
                 raw: { bboxState: 'absent', currentUnits: e.currentUnits, multiModel: e.multiModel } };
 
         const raw = { bboxState: 'valid', currentUnits: e.currentUnits, modelUnits: e.modelUnits, realMeters: e.realMeters,
@@ -509,7 +509,7 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         const rm: number = e.realMeters ?? 0;
         const sizeStr: string = rm >= 1 ? `${rm.toFixed(2)} m` : rm >= 0.01 ? `${(rm * 100).toFixed(1)} cm` : `${(rm * 1000).toFixed(2)} mm`;
         const baseNote = `display units are '${e.currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${e.intendedUnits}'`;
-        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene: inline fix not supported.`;
+        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene (multiple source models): inline fix not supported.`;
         return { status: formatResultField(name, 'Unit Mismatch', 'warn', note), raw };
     };
     const scaleResult = await computeSceneScaleStatus();
@@ -718,6 +718,14 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
                     const validUnits: string[] = ['mm','cm','m','km','in','ft','yd','mi'];
                     if(!validUnits.includes(units)) {
                         res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: invalid unit '${units}'`)));
+                        return;
+                    }
+
+                    // Match the status message and the bulk op: the inline fix rewrites one scene-level
+                    // display unit, so it is only meaningful for a single-source scene. Refuse when the
+                    // scene has multiple source (master) models rather than silently applying it.
+                    if(await SceneHelpers.getSceneSourceModelCount(idSystemObject) > 1) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: inline unit fix is not supported for multi-model scenes (multiple source models)')));
                         return;
                     }
 

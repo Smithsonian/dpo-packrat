@@ -69,9 +69,10 @@ export function toastError(source: unknown, fallback: string, options?: ToastOpt
     }
 
     const traceId = extractTraceId(source);
-    // Prefer the request's server-logged trace id (shown as an 8-char prefix); fall back to
-    // a local code when the source carries none (e.g. some GraphQL results).
-    const ref = traceId ? traceId.slice(0, 8) : shortId();
+    // Prefer the request's server-logged trace id (shown as an 8-char prefix, searchable in the
+    // server logs). When the source carries none, fall back to a local code marked `local:` so it is
+    // not mistaken for a server trace — its absence signals the trace id did not reach the client.
+    const ref = traceId ? traceId.slice(0, 8) : `local:${shortId()}`;
     const detail = extractDetail(source);
     // Only offer Details when it adds a human-readable reason beyond the main message.
     const showDetails = detail.length > 0 && detail !== message;

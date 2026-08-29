@@ -2184,6 +2184,7 @@ type UploadAssetResult {
   error: String
   idAssetVersions: [Int!]
   status: UploadStatus!
+  warnings: Int
 }
 
 enum UploadStatus {

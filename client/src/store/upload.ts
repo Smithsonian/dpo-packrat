@@ -17,6 +17,7 @@ import { DiscardUploadedAssetVersionsDocument, DiscardUploadedAssetVersionsMutat
 import { FetchResult } from '@apollo/client';
 import { parseFileId } from './utils';
 import { toastError } from '../utils/toastError';
+import { copyTraceId } from '../utils/traceRegistry';
 import { UploadEvents, UploadEventType, UploadCompleteEvent, UploadProgressEvent, UploadSetCancelEvent, UploadFailedEvent } from '../utils/events';
 import { eIngestionMode, ROUTES } from '../constants';
 
@@ -443,12 +444,21 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     UploadEvents.dispatch(UploadEventType.COMPLETE, uploadEvent);
                     //This message occurs when the upload is successfully transferred for processing.
                     toast.success(`Upload finished for ${file.name}`);
+                    // Non-blocking inspection warnings (e.g. a missing texture) don't fail the upload,
+                    // but nudge the user to the Workflow report where the detail lives.
+                    const warnings: number = uploadAsset.warnings ?? 0;
+                    if (warnings > 0)
+                        toast.warn(`${file.name}: completed with ${warnings} warning${warnings === 1 ? '' : 's'} — see the Workflow report for details.`);
                 } else if (status === UploadStatus.Failed) {
                     console.log(`[PACKRAT] startUploadTransfer upload failed (id: ${id} | file: ${(file)?file['path']:'na'} | error: ${error})`);
                     const failedEvent: UploadFailedEvent = { id, message: error || 'Unknown error' };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
-                    toastError({ message: error }, `Upload failed for ${file.name}`);
+                    // Reshaping the result to { message } drops the trace id the Apollo wrapper
+                    // registered on `uploadAsset`; carry it over so the toast shows the server trace.
+                    const failedResult = { message: error };
+                    copyTraceId(uploadAsset, failedResult);
+                    toastError(failedResult, `Upload failed for ${file.name}`);
                 } else if (status === UploadStatus.Noauth) {
                     console.log(`[PACKRAT:ERROR] startUploadTransfer upload failed ${id}, ${JSON.stringify(file)}, user not authenticated`);
                     const failedEvent: UploadFailedEvent = { id, message: error || 'Unknown error' };

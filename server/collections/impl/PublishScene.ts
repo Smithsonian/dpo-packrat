@@ -173,8 +173,15 @@ export class PublishScene {
         // missed. This is the authoritative check: it reads EDAN's own output over the publishing API.
         const publishedTitle: string = (edanRecord.title ?? '').trim();
         if (!publishedTitle || publishedTitle.startsWith(':')) {
-            RK.logError(RK.LogSection.eCOLL,'publish','EDAN returned a malformed title; the subject EDAN record was likely not resolved',{ publishedTitle, UUID: this.scene.EdanUUID, idSubject: this.subject.idSubject },'Publish.Scene');
-            return { success: false, error: 'EDAN record for the subject could not be resolved' };
+            // Local/dev EDAN cannot resolve the subject's EDAN record, so the title always comes back
+            // malformed. When explicitly allowed, downgrade to a warning so publishing to EDAN dev can
+            // still be exercised end-to-end; production keeps the strict check.
+            if (Config.features.edanAllowUnresolvedSubject) {
+                RK.logWarning(RK.LogSection.eCOLL,'publish','EDAN returned a malformed title (unresolved subject); allowed by config, publish continues',{ publishedTitle, UUID: this.scene.EdanUUID, idSubject: this.subject.idSubject },'Publish.Scene');
+            } else {
+                RK.logError(RK.LogSection.eCOLL,'publish','EDAN returned a malformed title; the subject EDAN record was likely not resolved',{ publishedTitle, UUID: this.scene.EdanUUID, idSubject: this.subject.idSubject },'Publish.Scene');
+                return { success: false, error: 'EDAN record for the subject could not be resolved' };
+            }
         }
 
         RK.logInfo(RK.LogSection.eCOLL,'publish EDAN package success',undefined,{ UUID: this.scene.EdanUUID, status: COMMON.ePublishedState[status], publicSearch, downloads, haveDownloads, publishedTitle },'Publish.Scene');

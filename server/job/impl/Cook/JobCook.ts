@@ -529,6 +529,10 @@ export abstract class JobCook<T> extends JobPackrat {
         const scan: CookScanResult = scanCookReport(cookJobReport);
         for (const finding of scan.errors)
             await this.appendToReportAndLog(finding.message, true, { code: finding.code, level: finding.level });
+        // Non-blocking advisories (e.g. a missing texture Cook worked around) surfaced for every
+        // recipe; a warning does not fail the job. The inspect subclass reaches this via super.
+        for (const finding of scan.warnings)
+            await this.appendToReportAndLog(finding.message, undefined, { code: finding.code, level: finding.level });
 
         if(cookJobReport['state']==='error') {
             const error: string = scan.errors.length > 0
