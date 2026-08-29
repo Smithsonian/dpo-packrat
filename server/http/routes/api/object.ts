@@ -503,8 +503,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         const raw = { bboxState: 'valid', currentUnits: e.currentUnits, modelUnits: e.modelUnits, realMeters: e.realMeters,
             intendedUnits: e.intendedUnits, multiModel: e.multiModel, canFix: e.canFix,
             bboxMinMeters: e.bboxMinMeters, bboxMaxMeters: e.bboxMaxMeters, bboxSizeMeters: e.bboxSizeMeters };
-        if (e.state === 'ok')
-            return { status: formatResultField(name, 'Good', 'pass', `display units (${e.currentUnits}) are plausible for the geometry`), raw };
+        const sizeVec: string = Array.isArray(e.bboxSizeMeters)
+            ? e.bboxSizeMeters.map(v => v >= 1 ? v.toFixed(2) : Number(v.toPrecision(2)).toString()).join(' × ')
+            : '';
+        if (e.state === 'ok') {
+            const okNote: string = sizeVec
+                ? `display units (${e.currentUnits}) are plausible for the geometry (bbox ${sizeVec} m)`
+                : `display units (${e.currentUnits}) are plausible for the geometry`;
+            return { status: formatResultField(name, 'Good', 'pass', okNote), raw };
+        }
 
         const rm: number = e.realMeters ?? 0;
         const sizeStr: string = rm >= 1 ? `${rm.toFixed(2)} m` : rm >= 0.01 ? `${(rm * 100).toFixed(1)} cm` : `${(rm * 1000).toFixed(2)} mm`;
