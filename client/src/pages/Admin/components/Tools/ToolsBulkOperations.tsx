@@ -19,6 +19,48 @@ const FALLBACK_OPERATIONS: { key: string; label: string }[] = [
 ];
 const ALL_PROJECTS = -1;
 
+// Per-operation description + best-practice hints, shown in the panel beside the fields. Keyed by
+// operation key; a new op falls back to a generic message until an entry is added here.
+const OP_INFO: Record<string, { description: string; hints: string[] }> = {
+    fixDisplayUnits: {
+        description: 'Corrects a scene’s display units (scenes[].units in the SVX) when they don’t match the geometry’s real-world size, so Voyager navigation (zoom / orbit / measure) behaves correctly.',
+        hints: [
+            'Single-source scenes only — multi-model scenes are listed report-only.',
+            'Review the suggested unit against the bbox size before submitting.',
+            'Applying writes a new SVX asset version (rollback-able).',
+        ],
+    },
+    syncFromEDAN: {
+        description: 'Reconciles Packrat’s publish / record state against EDAN for Subjects, Scenes, or Models. The gather is read-only; each per-row reconcile emits a publish / unpublish audit.',
+        hints: [
+            'Set a Max Items cap before large runs — the cap applies before any EDAN calls.',
+            'Rows flagged with drift differ from EDAN; review before applying.',
+            'Throttled and retried automatically on EDAN 429 / 503.',
+        ],
+    },
+    rebindSceneDerivatives: {
+        description: 'Re-binds a scene’s download / AR derivative models into its current version when a re-ingest dropped them.',
+        hints: [
+            'Dry-run first to list scenes missing derivative bindings.',
+            'Apply binds in place — no new version, no publish churn.',
+        ],
+    },
+    fixSceneBasenames: {
+        description: 'Reports scenes whose asset basenames drifted from the subject name. Review-only for now.',
+        hints: [
+            'No rename is performed — rows are informational.',
+            'A true rename needs SVX reference + DB updates (tracked separately).',
+        ],
+    },
+    republishScenes: {
+        description: 'Re-pushes ever-published scenes (those with an EdanUUID) to EDAN, defaulting each row to its current published state.',
+        hints: [
+            'QC-blocked scenes are listed report-only and cannot be selected.',
+            'Each applied row emits a publish / unpublish audit.',
+        ],
+    },
+};
+
 type OpColumn = { key: string; label: string };
 type OpSetting = { key: string; label: string; type: string; options: { value: string; label: string }[] };
 type OpParam = { key: string; label: string; type: string; options: { value: string; label: string }[]; default?: string };
@@ -324,111 +366,134 @@ function ToolsBulkOperations(): React.ReactElement {
                 the rows, and <b>Submit</b>. Nothing is changed until you submit. Items apply one at a time.
             </Typography>
 
-            <TableContainer component={Paper} elevation={0} style={{ overflow: 'hidden', marginTop: '1rem' }}>
-                <Table className={tableClasses.table}>
-                    <TableBody>
-                        <TableRow className={tableClasses.tableRow}>
-                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Typography className={tableClasses.labelText}>Operation</Typography>
-                            </TableCell>
-                            <TableCell className={tableClasses.tableCell}>
-                                <Select
-                                    value={operation}
-                                    onChange={(e) => setOperation(e.target.value as string)}
-                                    disabled={busy}
-                                    disableUnderline
-                                    className={clsx(tableClasses.select, classes.fieldSizing)}
-                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                >
-                                    {operations.map(op => <MenuItem key={op.key} value={op.key}>{op.label}</MenuItem>)}
-                                </Select>
-                            </TableCell>
-                        </TableRow>
+            <Box display='flex' style={{ gap: '1.5rem', marginTop: '1rem', alignItems: 'stretch' }}>
+                <Box style={{ flex: '1 1 50%', minWidth: 0 }}>
+                    <TableContainer component={Paper} elevation={0} style={{ overflow: 'hidden' }}>
+                        <Table className={tableClasses.table}>
+                            <TableBody>
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Operation</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Select
+                                            value={operation}
+                                            onChange={(e) => setOperation(e.target.value as string)}
+                                            disabled={busy}
+                                            disableUnderline
+                                            className={clsx(tableClasses.select, classes.fieldSizing)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            {operations.map(op => <MenuItem key={op.key} value={op.key}>{op.label}</MenuItem>)}
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
 
-                        {opParams.map(p => (
-                            <TableRow key={p.key} className={tableClasses.tableRow}>
-                                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                    <Typography className={tableClasses.labelText}>{p.label}</Typography>
-                                </TableCell>
-                                <TableCell className={tableClasses.tableCell}>
-                                    <Select
-                                        value={paramValues[p.key] ?? ''}
-                                        onChange={(e) => setParamValues(prev => ({ ...prev, [p.key]: e.target.value as string }))}
-                                        disabled={busy}
-                                        disableUnderline
-                                        className={clsx(tableClasses.select, classes.fieldSizing)}
-                                        SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                    >
-                                        {p.options.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
-                                    </Select>
-                                </TableCell>
-                            </TableRow>
-                        ))}
+                                {opParams.map(p => (
+                                    <TableRow key={p.key} className={tableClasses.tableRow}>
+                                        <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                            <Typography className={tableClasses.labelText}>{p.label}</Typography>
+                                        </TableCell>
+                                        <TableCell className={tableClasses.tableCell}>
+                                            <Select
+                                                value={paramValues[p.key] ?? ''}
+                                                onChange={(e) => setParamValues(prev => ({ ...prev, [p.key]: e.target.value as string }))}
+                                                disabled={busy}
+                                                disableUnderline
+                                                className={clsx(tableClasses.select, classes.fieldSizing)}
+                                                SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                            >
+                                                {p.options.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+                                            </Select>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
 
-                        <TableRow className={tableClasses.tableRow}>
-                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Typography className={tableClasses.labelText}>Show</Typography>
-                            </TableCell>
-                            <TableCell className={tableClasses.tableCell}>
-                                <Select
-                                    value={filterMode}
-                                    onChange={(e) => setFilterMode(e.target.value as string)}
-                                    disabled={busy}
-                                    disableUnderline
-                                    className={clsx(tableClasses.select, classes.fieldSizing)}
-                                    SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
-                                >
-                                    <MenuItem value='needsChange'>Needs change</MenuItem>
-                                    <MenuItem value='all'>All</MenuItem>
-                                </Select>
-                            </TableCell>
-                        </TableRow>
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Show</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Select
+                                            value={filterMode}
+                                            onChange={(e) => setFilterMode(e.target.value as string)}
+                                            disabled={busy}
+                                            disableUnderline
+                                            className={clsx(tableClasses.select, classes.fieldSizing)}
+                                            SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
+                                        >
+                                            <MenuItem value='needsChange'>Needs change</MenuItem>
+                                            <MenuItem value='all'>All</MenuItem>
+                                        </Select>
+                                    </TableCell>
+                                </TableRow>
 
-                        <TableRow className={tableClasses.tableRow}>
-                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Typography className={tableClasses.labelText}>Filter: Name</Typography>
-                            </TableCell>
-                            <TableCell className={tableClasses.tableCell}>
-                                <div className={clsx(tableClasses.select, classes.fieldSizing)} style={{ width: '300px', paddingLeft: '5px' }}>
-                                    <input
-                                        type='text'
-                                        value={nameFilter}
-                                        onChange={(e) => setNameFilter(e.target.value)}
-                                        placeholder='Filter by object name'
-                                        style={{ width: '100%', border: 'none', height: '100%', background: 'none', paddingLeft: '5px' }}
-                                    />
-                                </div>
-                            </TableCell>
-                        </TableRow>
-
-                        <TableRow className={tableClasses.tableRow}>
-                            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                                <Typography className={tableClasses.labelText}>Filter: Project</Typography>
-                            </TableCell>
-                            <TableCell className={tableClasses.tableCell}>
-                                <Autocomplete
-                                    id='bulk-ops-project'
-                                    options={projectOptions}
-                                    value={selectedProject}
-                                    getOptionLabel={(option) => option.Name}
-                                    getOptionSelected={(option, value) => option.idProject === value.idProject}
-                                    onChange={(_e, value) => setIdProject(value ? value.idProject : ALL_PROJECTS)}
-                                    disabled={busy}
-                                    disableClearable
-                                    size='small'
-                                    className={clsx(tableClasses.select, classes.fieldSizing)}
-                                    style={{ width: '300px', paddingLeft: '5px' }}
-                                    renderInput={(params) => (
-                                        <div ref={params.InputProps.ref} style={{ height: '100%' }}>
-                                            <input style={{ width: '100%', border: 'none', height: '100%', background: 'none', paddingLeft: '5px' }} type='text' {...params.inputProps} />
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Filter: Name</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <div className={clsx(tableClasses.select, classes.fieldSizing)} style={{ width: '300px', paddingLeft: '5px' }}>
+                                            <input
+                                                type='text'
+                                                value={nameFilter}
+                                                onChange={(e) => setNameFilter(e.target.value)}
+                                                placeholder='Filter by object name'
+                                                style={{ width: '100%', border: 'none', height: '100%', background: 'none', paddingLeft: '5px' }}
+                                            />
                                         </div>
-                                    )}
-                                />
-                            </TableCell>
-                        </TableRow>
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                                    </TableCell>
+                                </TableRow>
+
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                                        <Typography className={tableClasses.labelText}>Filter: Project</Typography>
+                                    </TableCell>
+                                    <TableCell className={tableClasses.tableCell}>
+                                        <Autocomplete
+                                            id='bulk-ops-project'
+                                            options={projectOptions}
+                                            value={selectedProject}
+                                            getOptionLabel={(option) => option.Name}
+                                            getOptionSelected={(option, value) => option.idProject === value.idProject}
+                                            onChange={(_e, value) => setIdProject(value ? value.idProject : ALL_PROJECTS)}
+                                            disabled={busy}
+                                            disableClearable
+                                            size='small'
+                                            className={clsx(tableClasses.select, classes.fieldSizing)}
+                                            style={{ width: '300px', paddingLeft: '5px' }}
+                                            renderInput={(params) => (
+                                                <div ref={params.InputProps.ref} style={{ height: '100%' }}>
+                                                    <input style={{ width: '100%', border: 'none', height: '100%', background: 'none', paddingLeft: '5px' }} type='text' {...params.inputProps} />
+                                                </div>
+                                            )}
+                                        />
+                                    </TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Box>
+
+                <Box style={{ flex: '1 1 50%', minWidth: 0, border: '1px solid #d7dbe0', borderRadius: 6, backgroundColor: '#f6f8fa', padding: '12px 16px', alignSelf: 'flex-start' }}>
+                    <Typography variant='subtitle2' style={{ fontWeight: 600, marginBottom: 6 }}>
+                        {operations.find(op => op.key === operation)?.label ?? operation}
+                    </Typography>
+                    <Typography variant='body2' style={{ marginBottom: 8, color: '#3c4450' }}>
+                        {(OP_INFO[operation]?.description) ?? 'Select an operation to see its description and recommended usage.'}
+                    </Typography>
+                    {(OP_INFO[operation]?.hints?.length ?? 0) > 0 && (
+                        <>
+                            <Typography variant='caption' style={{ fontWeight: 600, color: '#5a6472' }}>Best practices</Typography>
+                            <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                                {OP_INFO[operation].hints.map((h, i) => (
+                                    <li key={i}><Typography variant='caption' style={{ color: '#5a6472' }}>{h}</Typography></li>
+                                ))}
+                            </ul>
+                        </>
+                    )}
+                </Box>
+            </Box>
 
             <Box style={{ display: 'flex', gap: 8, marginTop: '0.5rem' }}>
                 <Button className={busy ? classes.btnDisabled : classes.btn} onClick={loadCandidates} disableElevation disabled={busy}>
