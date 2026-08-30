@@ -670,9 +670,12 @@ export class PublishScene {
             const resource: COL.Edan3DResource | null = await this.extractResource(SAC, this.scene.EdanUUID!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
             if (resource)
                 this.edan3DResourceList.push(resource);
-            else if (COMMON.isCustomDownloadUsage(SAC.modelSceneXref?.Usage)) {
-                // a custom download that fails resource extraction must not be silently dropped from
-                // the package; fail the publish so the misconfiguration is surfaced, not hidden
+            else if (COMMON.isCustomDownloadUsage(SAC.modelSceneXref?.Usage)
+                && !COMMON.isZipOnlyCustomDownload((SAC.modelSceneXref?.Usage ?? '').replace('Download:', ''))) {
+                // a (geometry) custom download that fails resource extraction must not be silently dropped
+                // from the package; fail the publish so the misconfiguration is surfaced, not hidden.
+                // Supplemental-file downloads (Project Files / Documentation) are intentionally omitted
+                // pending EDAN resource-shape confirmation, so they skip here rather than fail the publish.
                 RK.logError(RK.LogSection.eCOLL,'stage downloads failed','custom download could not be published (missing required EDAN fields)',{ usage: SAC.modelSceneXref?.Usage, filename: SAC.assetVersion?.FileName },'Publish.Scene');
                 return false;
             }
@@ -923,6 +926,20 @@ export class PublishScene {
                 case 'watertight': {
                     category = 'Watertight';
                     break;
+                }
+
+                // Supplementary-file downloads (Project Files / Documentation) are not 3D geometry, so
+                // they carry none of the model resource fields (UNITS / MODEL_FILE_TYPE / mesh type) and
+                // the file_quality enum has no non-geometry value. Their EDAN resource *shape* — not just
+                // a tag — is still being confirmed with EDAN owners, so they are intentionally OMITTED
+                // from the published package for now. Ingest still stores them; edanSupplementalDownloadCategory
+                // reserves the tag for when the shape is finalized.
+                case 'projectfiles':
+                case 'documentation': {
+                    RK.logWarning(RK.LogSection.eCOLL,'stage downloads',
+                        'supplemental-file download omitted from EDAN package pending EDAN resource-shape confirmation',
+                        { usage: SAC.modelSceneXref.Usage, filename: SAC.assetVersion.FileName, reservedCategory: Config.features.edanSupplementalDownloadCategory },'Publish.Scene');
+                    return null;
                 }
 
                 // 'other' shares the generic extension-inference body; generic is the safety net for

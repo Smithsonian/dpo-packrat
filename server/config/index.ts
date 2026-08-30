@@ -139,6 +139,11 @@ export type ConfigType = {
          *  Subject publishing is additionally admin-only. Restricts the control while the set of EDAN
          *  records a subject publish can modify is confirmed with EDAN owners. */
         subjectPublishUnitAllowlist: string[];
+        /** EDAN file_quality / category token applied to supplementary-file downloads (Project Files /
+         *  Documentation) when building the published package. PLACEHOLDER: empty by default. Until EDAN
+         *  owners confirm the token, these downloads are ingested but omitted from the EDAN package (a
+         *  warning is logged), so no unconfirmed tag is ever sent to EDAN. */
+        edanSupplementalDownloadCategory: string;
     },
     environment: {
         type: ENVIRONMENT_TYPE;
@@ -337,6 +342,7 @@ export const Config: ConfigType = {
             (process.env.PACKRAT_SUBJECT_PUBLISH_UNITS ?? 'OCIO,DPO,ODI')
                 .split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
         )(),
+        edanSupplementalDownloadCategory: (process.env.PACKRAT_EDAN_SUPPLEMENTAL_DOWNLOAD_CATEGORY ?? '').trim(),
     },
     environment: {
         type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,

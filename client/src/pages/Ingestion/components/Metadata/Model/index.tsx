@@ -13,7 +13,7 @@ import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../.
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID, eVocabularyID } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularySetID, eVocabularyID, CustomDownloadTypes, CustomDownloadTypeLabels } from '@dpo-packrat/common';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -592,8 +592,9 @@ function Model(props: ModelProps): React.ReactElement {
                                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                         disabled={ingestionLoading}
                                                     >
-                                                        <MenuItem value='watertight'>Watertight</MenuItem>
-                                                        <MenuItem value='other'>Other</MenuItem>
+                                                        {CustomDownloadTypes.map(t => (
+                                                            <MenuItem key={t} value={t}>{CustomDownloadTypeLabels[t] ?? t}</MenuItem>
+                                                        ))}
                                                     </Select>
                                                 </TableCell>
                                             </TableRow>

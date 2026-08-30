@@ -2372,7 +2372,9 @@ class IngestDataWorker extends ResolverBase {
                             RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ downloadType: model.downloadType },'GraphQL.Ingestion.Data');
                             return { success: false, error };
                         }
-                        if (!model.units || !model.creationMethod) {
+                        // Supplementary-file downloads (Project Files / Documentation) are not geometry,
+                        // so they do not carry Units / Creation Method.
+                        if (!COMMON.isZipOnlyCustomDownload(model.downloadType) && (!model.units || !model.creationMethod)) {
                             const error: string = 'A download model requires Units and Creation Method (needed to publish to EDAN)';
                             RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ units: model.units, creationMethod: model.creationMethod },'GraphQL.Ingestion.Data');
                             return { success: false, error };
@@ -2389,6 +2391,14 @@ class IngestDataWorker extends ResolverBase {
                     const av: DBAPI.AssetVersion | null = model.idAssetVersion ? await DBAPI.AssetVersion.fetch(model.idAssetVersion) : null;
                     const fileName: string = av?.FileName ?? '';
                     const ext: string = COMMON.fileExtension(fileName);
+
+                    // Supplementary-file downloads must be a single .zip (arbitrary file bundle, no
+                    // standalone EDAN file type).
+                    if (COMMON.isZipOnlyCustomDownload(model.downloadType) && ext !== '.zip') {
+                        const error: string = `A ${model.downloadType} download must be delivered as a .zip`;
+                        RK.logError(RK.LogSection.eGQL,'validate input failed',error,{ fileName, downloadType: model.downloadType },'GraphQL.Ingestion.Data');
+                        return { success: false, error };
+                    }
 
                     // explicit fail on unsupported file type (no silent drop at publish):
                     // .obj/.stl are valid model formats but have no standalone EDAN file_type -> must be zipped.
