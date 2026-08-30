@@ -135,6 +135,10 @@ export type ConfigType = {
          *  where the subject's EDAN record cannot be resolved. Off in production, where the strict check
          *  guards against publishing a record with a broken title. */
         edanAllowUnresolvedSubject: boolean;
+        /** Unit abbreviations (upper-case) whose Subjects may have their EDAN published state changed.
+         *  Subject publishing is additionally admin-only. Restricts the control while the set of EDAN
+         *  records a subject publish can modify is confirmed with EDAN owners. */
+        subjectPublishUnitAllowlist: string[];
     },
     environment: {
         type: ENVIRONMENT_TYPE;
@@ -329,6 +333,10 @@ export const Config: ConfigType = {
             const normalized: string = (process.env.PACKRAT_EDAN_ALLOW_UNRESOLVED_SUBJECT ?? '').trim().toLowerCase();
             return normalized === 'true' || normalized === '1';
         })(),
+        subjectPublishUnitAllowlist: ((): string[] =>
+            (process.env.PACKRAT_SUBJECT_PUBLISH_UNITS ?? 'OCIO,DPO,ODI')
+                .split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+        )(),
     },
     environment: {
         type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,

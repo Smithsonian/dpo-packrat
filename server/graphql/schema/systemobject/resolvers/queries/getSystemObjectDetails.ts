@@ -15,12 +15,14 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { SceneHelpers } from '../../../../../utils/sceneHelpers';
 import { SubjectHelpers } from '../../../../../utils/subjectHelpers';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { Config } from '../../../../../config';
 
 type PublishedStateInfo = {
     publishedState: string;
     publishedEnum: COMMON.ePublishedState;
     publishable: boolean;
     publishBlocker: string | null;
+    publishControlVisible: boolean;
     isDraft: boolean;
     edanRecordId: string | null;
     edanRecordUrl: string | null;
@@ -130,6 +132,7 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,
         publishBlocker: publishedStateInfo.publishBlocker,
+        publishControlVisible: publishedStateInfo.publishControlVisible,
         isDraft: publishedStateInfo.isDraft,
         edanRecordId: publishedStateInfo.edanRecordId,
         edanRecordUrl: publishedStateInfo.edanRecordUrl,
@@ -263,6 +266,7 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
 
     let publishable: boolean = false;
     let publishBlocker: string | null = null;
+    let publishControlVisible: boolean = true;   // subjects gate this to admin + allow-listed units
     let edanRecordId: string | null = null;
     let edanRecordUrl: string | null = null;
     let edanUnitCode: string | null = null;
@@ -302,7 +306,23 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                 edanRecordId = target.recordId || null;
                 edanRecordUrl = target.url || null;
                 edanUnitCode = target.unitCode || null;
-                if (target.recordId) {
+
+                // Subject publishing is gated to admins AND an allow-list of units while the set of EDAN
+                // records a subject publish can modify is confirmed with EDAN owners. Everyone else sees
+                // the state read-only (publishControlVisible=false hides the controls client-side).
+                const ctx = Authorization.getContext();
+                const isAdmin: boolean = ctx?.isAdmin === true;
+                const subjectDB: DBAPI.Subject | null = oID.idObject ? await DBAPI.Subject.fetch(oID.idObject) : null;
+                const unit: DBAPI.Unit | null = subjectDB ? await DBAPI.Unit.fetch(subjectDB.idUnit) : null;
+                const unitAllowed: boolean = Config.features.subjectPublishUnitAllowlist.includes((unit?.Abbreviation ?? '').toUpperCase());
+                publishControlVisible = isAdmin && unitAllowed;
+
+                if (!publishControlVisible) {
+                    publishable = false;
+                    publishBlocker = !isAdmin
+                        ? 'Subject publishing is limited to administrators'
+                        : `Subject publishing is limited to units: ${Config.features.subjectPublishUnitAllowlist.join(', ')}`;
+                } else if (target.recordId) {
                     publishable = true;
                 } else {
                     publishable = false;
@@ -311,18 +331,14 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
 
                 // Warn an admin editing a Subject in a Unit they are not directly assigned to.
                 // Admin context units are zeroed, so read the raw assignments.
-                const ctx = Authorization.getContext();
-                if (ctx?.isAdmin && oID.idObject) {
-                    const subjectDB: DBAPI.Subject | null = await DBAPI.Subject.fetch(oID.idObject);
-                    if (subjectDB) {
-                        const ownUnits: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(ctx.idUser);
-                        subjectUnitMismatch = !ownUnits.includes(subjectDB.idUnit);
-                    }
+                if (isAdmin && subjectDB) {
+                    const ownUnits: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(ctx!.idUser);
+                    subjectUnitMismatch = !ownUnits.includes(subjectDB.idUnit);
                 }
             } break;
         }
     }
-    return { publishedState, publishedEnum, publishable, publishBlocker, isDraft,
+    return { publishedState, publishedEnum, publishable, publishBlocker, publishControlVisible, isDraft,
         edanRecordId, edanRecordUrl, edanUnitCode, subjectUnitMismatch };
 }
 

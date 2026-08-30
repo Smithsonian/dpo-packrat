@@ -104,6 +104,7 @@ interface ObjectDetailsProps {
     publishedState: string;
     publishedEnum: number;
     publishable: boolean;
+    publishControlVisible?: boolean;
     isDraft?: boolean;
     isAdmin?: boolean;
     edanRecordUrl?: string | null;
@@ -135,6 +136,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        publishControlVisible = true,
         isDraft,
         isAdmin,
         edanRecordUrl,
@@ -328,13 +330,17 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                                             : 'No EDAN Record ID — add one before publishing.'}
                                     </Typography>
                                 </Box>
-                                {isAdmin && (
+                                {isAdmin && publishControlVisible ? (
                                     <Box className={classes.buttonRow}>
                                         <LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public</LoadingButton>
                                         <LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public (Unlisted)</LoadingButton>
                                         <LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
                                         {(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
                                     </Box>
+                                ) : (
+                                    <Typography className={classes.value} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                                        Publishing controls are limited to administrators for select units while EDAN record handling is confirmed.
+                                    </Typography>
                                 )}
                             </Box>
                         }

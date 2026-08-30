@@ -461,6 +461,7 @@ function DetailsView(): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        publishControlVisible,
         isDraft,
         thumbnail,
         unit,
@@ -1071,6 +1072,7 @@ function DetailsView(): React.ReactElement {
                         publishedState={publishedState}
                         publishedEnum={publishedEnum}
                         publishable={publishable}
+                        publishControlVisible={publishControlVisible ?? true}
                         isDraft={isDraft}
                         isAdmin={isAdmin}
                         edanRecordUrl={edanRecordUrl}

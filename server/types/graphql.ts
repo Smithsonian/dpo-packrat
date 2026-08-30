@@ -1002,6 +1002,7 @@ export type GetSystemObjectDetailsResult = {
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
   publishBlocker?: Maybe<Scalars['String']>;
+  publishControlVisible?: Maybe<Scalars['Boolean']>;
   publishable: Scalars['Boolean'];
   publishedEnum: Scalars['Int'];
   publishedState: Scalars['String'];

@@ -912,6 +912,7 @@ type GetSystemObjectDetailsResult {
   objectVersions: [SystemObjectVersion!]!
   project: [RepositoryPath!]
   publishBlocker: String
+  publishControlVisible: Boolean
   publishable: Boolean!
   publishedEnum: Int!
   publishedState: String!
