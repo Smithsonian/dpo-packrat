@@ -260,15 +260,24 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         // RK.logDebug(RK.LogSection.eJOB,'extracted svx',undefined,svx.SvxExtraction,'Job.VoyagerScene');
 
-        // Look for an existing scene, which is a child of modelSource
-        // TODO: what if there are multiple scenes as a child of modelSource?
+        // Look for an existing scene, which is a child of modelSource.
         const modelSource: DBAPI.Model = this.parameterHelper.modelSource;
-        const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
-        if (!scenes)
+        const allScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
+        if (!allScenes)
             return this.logError('create system objects failed','unable to fetch children scenes of model', { idModel: modelSource.idModel });
 
+        // Only ACTIVE (non-retired) scenes participate in the reuse-vs-create decision. A model may
+        // carry retired scenes (failed or superseded runs) that must be ignored — never reused, never
+        // counted toward the multi-scene refusal. One active scene -> reuse it; none -> create a new one.
+        const scenes: DBAPI.Scene[] = [];
+        for (const s of allScenes) {
+            const sSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(s.idScene);
+            if (sSO && !sSO.Retired)
+                scenes.push(s);
+        }
+
         // Decide whether to create a new scene or reuse the single existing one. A model source with
-        // no child scene legitimately creates its first scene. Reusing an existing scene must never
+        // no active child scene legitimately creates its first scene. Reusing an existing scene must never
         // silently fork a duplicate against the same model source: a model-name mismatch means a
         // rename propagated into Cook's derivative names, so we block rather than fork, and a model
         // source that already carries multiple scenes is refused rather than compounded (each such

@@ -84,14 +84,19 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
             return generateResponse(false,`cannot find required model: ${idSystemObject}`,idSystemObject);
         }
 
-        // get our associated scene from the model
-        // NOTE: a scene may not exist yet especially if the model is being ingested
-        const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
-        if(scenes) {
-            if(scenes.length>1)
-                RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','master model has multiple parent scenes',{ idSystemObject, numScenes: scenes?.length ?? -1 },'HTTP.Route.GenVoyagerScene');
-            scene = scenes[0];
+        // get our associated scene from the model. Consider only ACTIVE (non-retired) scenes: a model
+        // may carry retired scenes (failed/superseded) that must be ignored. One active scene is reused;
+        // none means a new scene is created downstream. (A scene may also not exist yet during ingest.)
+        const allScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
+        const activeScenes: DBAPI.Scene[] = [];
+        for (const s of allScenes ?? []) {
+            const sSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(s.idScene);
+            if(sSO && !sSO.Retired)
+                activeScenes.push(s);
         }
+        if(activeScenes.length > 1)
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','master model has multiple active parent scenes',{ idSystemObject, numActiveScenes: activeScenes.length },'HTTP.Route.GenVoyagerScene');
+        scene = activeScenes.length > 0 ? activeScenes[0] : null;
 
     } else if(systemObject.idScene) {
         // grab it and make sure it's a scene

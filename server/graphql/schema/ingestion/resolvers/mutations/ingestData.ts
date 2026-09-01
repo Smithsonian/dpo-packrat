@@ -18,7 +18,7 @@ import * as NAV from '../../../../../navigation/interface';
 import { Config } from '../../../../../config';
 import { AssetStorageAdapter, IngestAssetInput, IngestAssetResult, OperationInfo, StorageFactory, IStorage } from '../../../../../storage/interface';
 import { VocabularyCache } from '../../../../../cache';
-import { JobCookSIPackratInspectOutput } from '../../../../../job/impl/Cook';
+import { JobCookSIPackratInspectOutput, findBasenameOffenders } from '../../../../../job/impl/Cook';
 import * as VOL from '../../../../../job/impl/Volume';
 import { RouteBuilder, eHrefMode } from '../../../../../http/routes/routeBuilder';
 import { getRelatedObjects } from '../../../systemobject/resolvers/queries/getSystemObjectDetails';
@@ -1700,6 +1700,26 @@ class IngestDataWorker extends ResolverBase {
 
         if (sceneDB === null)
             sceneDB = sceneConstellation.Scene;
+
+        // Re-upload basename guard, tied to PACKRAT_INGEST_VALIDATION_MODE. Multi-model scenes are often
+        // uploaded (not Packrat-generated) with non-traditional naming; a re-upload whose scene document
+        // (.svx.json) carries a different basename than the existing scene's assets would orphan them.
+        // Only compares against the existing scene assets, and only in update mode.
+        if (updateMode && sceneDB.idScene && Config.features.packageValidationMode !== 'off') {
+            const enforce: boolean = Config.features.packageValidationMode === 'enforce';
+            const incomingAV: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(scene.idAssetVersion);
+            const existingAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromScene(sceneDB.idScene);
+            if (incomingAV && existingAssets && existingAssets.length > 0) {
+                const offenders = findBasenameOffenders('si-voyager-scene', [incomingAV.FileName], existingAssets.map(a => a.FileName));
+                if (offenders.length > 0) {
+                    const detail: string = offenders.map(o => `${o.actual} → ${incomingAV.FileName}`).join('; ');
+                    RK.logWarning(RK.LogSection.eGQL,'scene re-upload basename mismatch','incoming scene document basename differs from the existing scene assets',{ idScene: sceneDB.idScene, incoming: incomingAV.FileName, mismatches: offenders, mode: Config.features.packageValidationMode },'GraphQL.Ingestion.Data');
+                    await this.appendToWFReport(`Scene re-upload basename mismatch: the incoming package (${incomingAV.FileName}) has a different basename than the existing scene assets, so re-ingesting would orphan them (${detail}).${enforce ? ' Ingest blocked — re-upload using the existing basename.' : ' Proceeding (validation mode: warn).'}`, true, enforce);
+                    if (enforce)
+                        return { success: false };
+                }
+            }
+        }
 
         const MHs: ModelHierarchy[] | null = await NameHelpers.computeModelHierarchiesFromSourceObjects(scene.sourceObjects);
         if (!updateMode) sceneDB.Name = MHs ? NameHelpers.sceneDisplayName(scene.subtitle, MHs) : scene.subtitle;
