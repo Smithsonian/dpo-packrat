@@ -3,6 +3,8 @@ import { Model as ModelBase, SystemObject as SystemObjectBase, Prisma } from '@p
 import { SystemObject, SystemObjectBased } from '..';
 import * as DBC from '../connection';
 import * as H from '../../utils/helpers';
+import { VocabularyCache } from '../../cache';
+import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemObjectBased {
@@ -214,9 +216,12 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     }
 
     static async fetchMasterFromScene(idScene: number): Promise<Model[] | null> {
-        // get the master Model associated with a given Scene
-        // TODO: get 'Master' model type id from VocabularyID
-        const idvMasterModelType: number = 45;
+        // get the master Model associated with a given Scene. The Master model-purpose vocabulary id is
+        // resolved at runtime — it is assigned at seed time and is not stable across databases.
+        const masterVocab = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
+        if (!masterVocab)
+            return null;
+        const idvMasterModelType: number = masterVocab.idVocabulary;
 
         return DBC.CopyArray<ModelBase, Model>(
             await DBC.DBConnection.prisma.$queryRaw<Model[]>`

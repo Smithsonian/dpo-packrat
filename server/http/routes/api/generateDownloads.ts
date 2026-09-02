@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../db';
+import * as CACHE from '../../../cache';
 import * as H from '../../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import * as COL from '../../../collections/interface';
@@ -33,9 +34,15 @@ type GenDownloadsResponse = {   // general response for each processed scene
     state?: OpState
 };
 
-// HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
-//       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
-const idJob: number = 8;
+// Resolve the Cook si-generate-downloads Job.idJob at runtime. Its job-type vocabulary id is assigned
+// at seed time and is not stable across databases, so it must never be hardcoded.
+const resolveDownloadsJobId = async (): Promise<number | undefined> => {
+    const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIGenerateDownloads);
+    if (!idVJobType)
+        return undefined;
+    const jobs: DBAPI.Job[] | null = await DBAPI.Job.fetchByType(idVJobType);
+    return (jobs && jobs.length > 0) ? jobs[0].idJob : undefined;
+};
 const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined, detail?: string | undefined): GenDownloadsResponse => {
     return {
         success,
@@ -130,6 +137,11 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<GenDownloads
     }
 
     // get any active jobs
+    const idJob: number | undefined = await resolveDownloadsJobId();
+    if(!idJob) {
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot resolve Cook si-generate-downloads job type',{ ...scene },'HTTP.Route.GenDownloads');
+        return generateResponse(false,'failed to resolve download job type',idSystemObject,{ isValid, isJobRunning: false });
+    }
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,scene.idScene);
     if(!activeJobs) {
         RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot determine if job is running',{ ...scene },'HTTP.Route.GenDownloads');

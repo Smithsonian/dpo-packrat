@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../db';
+import * as CACHE from '../../../cache';
+import * as COMMON from '@dpo-packrat/common';
 // import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { ASL, LocalStore } from '../../../utils/localStore';
@@ -40,9 +42,15 @@ type SceneGenParameters = {
 //#endregion
 
 //#region Utility
-// HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
-//       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
-const idJob: number = 8;
+// Resolve the Cook si-voyager-scene Job.idJob at runtime. Its job-type vocabulary id is assigned at
+// seed time and is not stable across databases, so it must never be hardcoded.
+const resolveVoyagerSceneJobId = async (): Promise<number | undefined> => {
+    const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene);
+    if (!idVJobType)
+        return undefined;
+    const jobs: DBAPI.Job[] | null = await DBAPI.Job.fetchByType(idVJobType);
+    return (jobs && jobs.length > 0) ? jobs[0].idJob : undefined;
+};
 const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined, detail?: string | undefined): WorkflowResponse => {
     return {
         success,
@@ -183,6 +191,11 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResp
     const isValid: boolean = true;
 
     // get any active jobs
+    const idJob: number | undefined = await resolveVoyagerSceneJobId();
+    if(!idJob) {
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot resolve Cook si-voyager-scene job type',{ ...model },'HTTP.Route.GenVoyagerScene');
+        return generateResponse(false,'failed to resolve scene job type',idSystemObject,{ isValid, isJobRunning: false });
+    }
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,model.idModel);
     if(!activeJobs) {
         RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot determine if job is running',{ ...model },'HTTP.Route.GenVoyagerScene');
