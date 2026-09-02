@@ -28,6 +28,7 @@ type OpResponse = {             // matches the expected returns on the client si
 type GenDownloadsResponse = {   // general response for each processed scene
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
+    detail?: string,            // optional expanded reason (e.g. the affected files) for the toast's Details disclosure
     id?: number,                // optional number for the object this response refers to
     state?: OpState
 };
@@ -35,10 +36,11 @@ type GenDownloadsResponse = {   // general response for each processed scene
 // HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
 //       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
 const idJob: number = 8;
-const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined): GenDownloadsResponse => {
+const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined, detail?: string | undefined): GenDownloadsResponse => {
     return {
         success,
         message,
+        detail,
         id,
         state
     };
@@ -101,7 +103,7 @@ const createOpForScene = async (idSystemObject: number, idUser: number): Promise
     // make sure we saw success, otherwise bail
     if(result.success===false) {
         RK.logError(RK.LogSection.eHTTP,'create scene op failed',result.message,{ scene, workflowParams },'HTTP.Route.GenDownloads');
-        return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
+        return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport },result.data.detail);
     }
 
     return generateResponse(true,`Generating Downloads for: ${scene.Name}`,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });

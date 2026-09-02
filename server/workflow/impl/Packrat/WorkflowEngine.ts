@@ -288,11 +288,11 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // old set instead of replacing it. The same rule runs after Cook returns
         // (JobCookSIGenerateDownloads.verifyIncomingCookData); block here so no
         // Cook job is spent on a run that cannot be ingested.
-        const basenameCheck: H.IOResults = await WorkflowEngine.verifyDownloadBasenameConsistency(scene.idScene, sceneBaseName);
+        const basenameCheck: H.IOResults & { detail?: string } = await WorkflowEngine.verifyDownloadBasenameConsistency(scene.idScene, sceneBaseName);
         if (!basenameCheck.success) {
             RK.logError(RK.LogSection.eWF,'generate downloads blocked','basename mismatch against existing downloads',
                 { idScene, sceneBaseName, error: basenameCheck.error }, 'Workflow.Engine');
-            return { success: false, message: basenameCheck.error ?? 'basename mismatch', data: { isValid: false, activeJobs } };
+            return { success: false, message: basenameCheck.error ?? 'basename mismatch', data: { isValid: false, activeJobs, detail: basenameCheck.detail } };
         }
 
         // #region build our scene parameters
@@ -493,10 +493,10 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         // refuse if a model/scene rename would orphan the scene's assets under a different basename. A
         // brand-new scene (no existing assets) has nothing to conflict with.
         if(scene) {
-            const basenameCheck: H.IOResults = await WorkflowEngine.verifySceneAssetBasenameConsistency(scene.idScene, sceneBaseName, 'si-voyager-scene');
+            const basenameCheck: H.IOResults & { detail?: string } = await WorkflowEngine.verifySceneAssetBasenameConsistency(scene.idScene, sceneBaseName, 'si-voyager-scene');
             if(!basenameCheck.success) {
                 RK.logError(RK.LogSection.eWF,'generate scene blocked','basename mismatch against existing scene',{ idModel, idScene: scene.idScene, sceneBaseName },'Workflow.Engine');
-                return { success: false, message: basenameCheck.error ?? 'basename mismatch', data: { isValid: false } };
+                return { success: false, message: basenameCheck.error ?? 'basename mismatch', data: { isValid: false, detail: basenameCheck.detail } };
             }
         }
 
@@ -960,7 +960,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
      * via Asset.fetchFromScene so they cannot disagree. Returns success when no
      * same-suffix asset exists (first run / partial set) or all match.
      */
-    private static async verifyDownloadBasenameConsistency(idScene: number, sceneBaseName: string): Promise<H.IOResults> {
+    private static async verifyDownloadBasenameConsistency(idScene: number, sceneBaseName: string): Promise<H.IOResults & { detail?: string }> {
         return WorkflowEngine.verifySceneAssetBasenameConsistency(idScene, sceneBaseName, 'si-generate-downloads');
     }
 
@@ -973,7 +973,7 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
      * runs post-Cook (verifyIncomingCookData); both read scene assets via Asset.fetchFromScene so they
      * cannot disagree. Returns success when the scene has no assets or all match.
      */
-    static async verifySceneAssetBasenameConsistency(idScene: number, sceneBaseName: string, recipe: COOK.CookRecipeKey): Promise<H.IOResults> {
+    static async verifySceneAssetBasenameConsistency(idScene: number, sceneBaseName: string, recipe: COOK.CookRecipeKey): Promise<H.IOResults & { detail?: string }> {
         const sceneAssets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromScene(idScene);
         if (!sceneAssets || sceneAssets.length === 0)
             return { success: true };
@@ -995,7 +995,8 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
         return {
             success: false,
             error: `${n} existing scene asset${n === 1 ? '' : 's'} have a different basename than the current model — a rename was detected, so re-running would orphan them. `
-                + 'Revert the name change, or run Fix Scene Basenames. (Full list in the server log for this request.)'
+                + 'Revert the name change, or run Fix Scene Basenames. (Expand Details for the affected files.)',
+            detail: `Rename detected — existing scene assets that would be orphaned:\n${offenders.map(o => `• ${o.actual}  (expected: ${o.expected})`).join('\n')}`
         };
     }
 

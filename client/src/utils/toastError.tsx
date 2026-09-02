@@ -14,6 +14,7 @@
  */
 import React from 'react';
 import { toast, ToastOptions } from 'react-toastify';
+import { MdContentCopy } from 'react-icons/md';
 import { getTraceId } from './traceRegistry';
 
 type ResultWithMessage = { message?: string | null };
@@ -42,13 +43,44 @@ function extractDetail(source: unknown): string {
     if (typeof source === 'string')
         return source;
     if (source && typeof source === 'object') {
-        const r = source as { message?: unknown; error?: unknown };
+        const r = source as { detail?: unknown; message?: unknown; error?: unknown };
+        // A dedicated `detail` is the expanded reason (e.g. the list of affected files) and takes
+        // priority so it shows in the disclosure even when a short `message` is the toast headline.
+        if (typeof r.detail === 'string' && r.detail.trim().length > 0)
+            return r.detail.trim();
         if (typeof r.message === 'string' && r.message.trim().length > 0)
             return r.message.trim();
         if (typeof r.error === 'string' && r.error.trim().length > 0)
             return r.error.trim();
     }
     return '';
+}
+
+// Copies the toast's text (headline, expanded detail when present, and the full trace id) so a user
+// can paste it into a bug report or a log search. Shows a copy icon, flips to "Copied" on click, then
+// reverts to the icon so it can be copied again. Fails silently when the clipboard API is absent.
+function CopyButton({ text }: { text: string }): React.ReactElement {
+    const [copied, setCopied] = React.useState<boolean>(false);
+    const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    React.useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+    const onCopy = (e: React.MouseEvent): void => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            void navigator.clipboard?.writeText(text);
+            setCopied(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => setCopied(false), 1500);
+        } catch { /* clipboard unavailable; ignore */ }
+    };
+    return (
+        <button type='button' onClick={onCopy} title='Copy' aria-label='Copy error details'
+            style={{ marginLeft: 8, cursor: 'pointer', fontSize: '0.75em', padding: 0, border: 'none',
+                background: 'transparent', color: 'inherit', verticalAlign: 'middle', display: 'inline-flex', alignItems: 'center' }}
+        >
+            {copied ? '** copied **' : <MdContentCopy style={{ fontSize: '1.3em' }} />}
+        </button>
+    );
 }
 
 export function toastError(source: unknown, fallback: string, options?: ToastOptions): void {
@@ -83,9 +115,12 @@ export function toastError(source: unknown, fallback: string, options?: ToastOpt
     console.error(source);
     console.groupEnd();
 
+    // Copy carries the full trace id (not the 8-char ref) so it is directly searchable in the logs.
+    const copyPayload = `${message}${showDetails ? `\n\n${detail}` : ''}\n(${traceId || ref})`;
     const content = (
         <div>
             <span>{message} ({ref})</span>
+            <CopyButton text={copyPayload} />
             {showDetails && (
                 <details style={{ marginTop: 4 }}>
                     <summary style={{ cursor: 'pointer', fontSize: '0.85em' }}>Details</summary>
