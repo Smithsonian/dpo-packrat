@@ -144,6 +144,20 @@ describe('Cook: CookReportScan.collectCookLogWarnings', () => {
         expect(result.warnings[0].code).toBe(COMMON.WorkflowReportCode.CookWarning);
     });
 
+    test('image-load warnings are suppressed for si-packrat-inspect (textures are not sent to it)', () => {
+        const report = { state: 'done', recipe: { name: 'si-packrat-inspect' },
+            steps: { 'inspect-mesh': { log: [{ level: 'debug', message: '[ISSUE] io.obj | WARNING Cannot load image file: DPO_Testing-150k-4096-diffuse.jpg' }] } } };
+        expect(collectCookLogWarnings(report)).toHaveLength(0);
+    });
+
+    test('an unreadable .mtl still warns for si-packrat-inspect (the .mtl IS sent to it)', () => {
+        const report = { state: 'done', recipe: { name: 'si-packrat-inspect' },
+            steps: { 'inspect-mesh': { log: [{ level: 'debug', message: 'ERROR OBJ import: cannot read from MTL file: \'Model_Test.mtl\'' }] } } };
+        const warnings = collectCookLogWarnings(report);
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].message).toMatch(/material library \(\.mtl\) could not be read/i);
+    });
+
     test('a non-object report is handled without throwing', () => {
         expect(collectCookLogWarnings(null)).toHaveLength(0);
         expect(collectCookLogWarnings('boom')).toHaveLength(0);
