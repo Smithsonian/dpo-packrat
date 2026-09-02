@@ -1,5 +1,5 @@
 import * as COMMON from '@dpo-packrat/common';
-import { scanCookReport, collectInspectionWarnings } from '../../job/impl/Cook/CookReportScan';
+import { scanCookReport, collectInspectionWarnings, collectCookLogWarnings } from '../../job/impl/Cook/CookReportScan';
 
 describe('Cook: CookReportScan.scanCookReport', () => {
     test('a successful (done) report yields no findings', () => {
@@ -101,5 +101,65 @@ describe('Cook: CookReportScan.collectInspectionWarnings', () => {
         expect(collectInspectionWarnings(null)).toHaveLength(0);
         expect(collectInspectionWarnings({})).toHaveLength(0);
         expect(collectInspectionWarnings('nope')).toHaveLength(0);
+    });
+});
+
+describe('Cook: CookReportScan.collectCookLogWarnings', () => {
+    // Log shape mirrors real Cook output: { time, level, message }. The offending lines carry a
+    // '[ISSUE]' prefix but land at level 'debug', so the rules key off message content, not level.
+    const reportWith = (...msgs: string[]) =>
+        ({ state: 'done', steps: { 'inspect-mesh': { log: msgs.map(message => ({ level: 'debug', message })) } } });
+
+    test('a missing texture image (Cannot load image file) warns', () => {
+        const warnings = collectCookLogWarnings(reportWith('[ISSUE] io.image | WARNING Cannot load image file: Box_Test_Txr.png'));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].code).toBe(COMMON.WorkflowReportCode.CookWarning);
+        expect(warnings[0].level).toBe('warn');
+        expect(warnings[0].message).toMatch(/texture image could not be loaded/i);
+    });
+
+    test('a missing/unreadable .mtl (cannot read from MTL file) warns', () => {
+        const warnings = collectCookLogWarnings(reportWith('[ISSUE] io.obj | ERROR OBJ import: cannot read from MTL file: \'Model_Test_xMtl.mtl\''));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].message).toMatch(/material library \(\.mtl\) could not be read/i);
+    });
+
+    test('benign engine chatter (DeprecationWarning) is not surfaced', () => {
+        const warnings = collectCookLogWarnings(reportWith('[ISSUE] BlenderInspectMesh.py:320: DeprecationWarning: \'Material.use_nodes\' is expected to be removed in Blender 6.0'));
+        expect(warnings).toHaveLength(0);
+    });
+
+    test('each distinct problem is reported once even across repeated log lines', () => {
+        const warnings = collectCookLogWarnings(reportWith(
+            'WARNING Cannot load image file: a.png',
+            'WARNING Cannot load image file: b.png',
+        ));
+        expect(warnings).toHaveLength(1);
+    });
+
+    test('scanCookReport folds log warnings into a successful report', () => {
+        const result = scanCookReport(reportWith('WARNING Cannot load image file: Box_Test_Txr.png'));
+        expect(result.errors).toHaveLength(0);
+        expect(result.warnings).toHaveLength(1);
+        expect(result.warnings[0].code).toBe(COMMON.WorkflowReportCode.CookWarning);
+    });
+
+    test('image-load warnings are suppressed for si-packrat-inspect (textures are not sent to it)', () => {
+        const report = { state: 'done', recipe: { name: 'si-packrat-inspect' },
+            steps: { 'inspect-mesh': { log: [{ level: 'debug', message: '[ISSUE] io.obj | WARNING Cannot load image file: DPO_Testing-150k-4096-diffuse.jpg' }] } } };
+        expect(collectCookLogWarnings(report)).toHaveLength(0);
+    });
+
+    test('an unreadable .mtl still warns for si-packrat-inspect (the .mtl IS sent to it)', () => {
+        const report = { state: 'done', recipe: { name: 'si-packrat-inspect' },
+            steps: { 'inspect-mesh': { log: [{ level: 'debug', message: 'ERROR OBJ import: cannot read from MTL file: \'Model_Test.mtl\'' }] } } };
+        const warnings = collectCookLogWarnings(report);
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].message).toMatch(/material library \(\.mtl\) could not be read/i);
+    });
+
+    test('a non-object report is handled without throwing', () => {
+        expect(collectCookLogWarnings(null)).toHaveLength(0);
+        expect(collectCookLogWarnings('boom')).toHaveLength(0);
     });
 });

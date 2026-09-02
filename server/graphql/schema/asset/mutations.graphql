@@ -23,6 +23,7 @@ type UploadAssetResult {
     status: UploadStatus!
     idAssetVersions: [Int!]
     error: String
+    warnings: Int
 }
 
 input DiscardUploadedAssetVersionsInput {

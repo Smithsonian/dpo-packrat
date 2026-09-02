@@ -130,6 +130,20 @@ export type ConfigType = {
         /** Upload-time package/asset-type compatibility check. 'off' disables it; 'warn' logs mismatches
          *  without blocking (rollout/observation); 'enforce' rejects mismatched uploads. */
         packageValidationMode: 'off' | 'warn' | 'enforce';
+        /** When true, a scene publish whose EDAN title comes back with an unresolved subject (leading ':')
+         *  is logged as a warning instead of failing the publish. For local/dev testing against EDAN dev,
+         *  where the subject's EDAN record cannot be resolved. Off in production, where the strict check
+         *  guards against publishing a record with a broken title. */
+        edanAllowUnresolvedSubject: boolean;
+        /** Unit abbreviations (upper-case) whose Subjects may have their EDAN published state changed.
+         *  Subject publishing is additionally admin-only. Restricts the control while the set of EDAN
+         *  records a subject publish can modify is confirmed with EDAN owners. */
+        subjectPublishUnitAllowlist: string[];
+        /** EDAN file_quality / category token applied to supplementary-file downloads (Project Files /
+         *  Documentation) when building the published package. PLACEHOLDER: empty by default. Until EDAN
+         *  owners confirm the token, these downloads are ingested but omitted from the EDAN package (a
+         *  warning is logged), so no unconfirmed tag is ever sent to EDAN. */
+        edanSupplementalDownloadCategory: string;
     },
     environment: {
         type: ENVIRONMENT_TYPE;
@@ -320,6 +334,15 @@ export const Config: ConfigType = {
             const raw: string = (process.env.PACKRAT_INGEST_VALIDATION_MODE ?? '').trim().toLowerCase();
             return (raw === 'warn' || raw === 'enforce') ? raw : 'off';
         })(),
+        edanAllowUnresolvedSubject: ((): boolean => {
+            const normalized: string = (process.env.PACKRAT_EDAN_ALLOW_UNRESOLVED_SUBJECT ?? '').trim().toLowerCase();
+            return normalized === 'true' || normalized === '1';
+        })(),
+        subjectPublishUnitAllowlist: ((): string[] =>
+            (process.env.PACKRAT_SUBJECT_PUBLISH_UNITS ?? 'OCIO,DPO,ODI')
+                .split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+        )(),
+        edanSupplementalDownloadCategory: (process.env.PACKRAT_EDAN_SUPPLEMENTAL_DOWNLOAD_CATEGORY ?? '').trim(),
     },
     environment: {
         type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,

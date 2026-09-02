@@ -15,6 +15,7 @@ const getSystemObjectDetails = gql`
             publishedEnum
             publishable
             publishBlocker
+            publishControlVisible
             isDraft
             edanRecordId
             edanRecordUrl

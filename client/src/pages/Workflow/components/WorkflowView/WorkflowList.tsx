@@ -3,6 +3,7 @@ import MUIDataTable from 'mui-datatables';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, TablePagination, Tooltip } from '@material-ui/core';
+import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
 import { useWorkflowStore } from '../../../../store';
 import { formatDateAndTime } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
@@ -313,22 +314,38 @@ function WorkflowList(): React.ReactElement {
                     const label = summary.scene || summary.subject || summary.mediaGroup || '';
                     const type = summary.idScene ? 'Scene' : (summary.idModel ? 'Model' : (summary.idSubject ? 'Subject' : 'Object'));
                     const id = summary.idSystemObject;
+                    // The input file fed to the job (uploaded zip / mesh / svx), shown as a basename so a
+                    // pre-ingest inspect row still says what it acted on, even with no object to link.
+                    const fileName: string = summary.input ? (summary.input.split(/[\\/]/).pop() ?? '') : '';
+                    const fileLine = fileName
+                        ? <div title={summary.input ?? ''} style={{ fontSize: '0.75em', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 170 }}>{truncateWithEllipses(fileName, 34)}</div>
+                        : null;
                     if (id) {
                         const full = `[${type}] ${label || `Object ${id}`}`;
                         return (
-                            <Tooltip placement='top' title={full} arrow>
-                                <span>
-                                    <NewTabLink to={getDetailsUrlForObject(id)} className={classes.link}>{truncateWithEllipses(full, 30)}</NewTabLink>
-                                </span>
-                            </Tooltip>
+                            <span>
+                                <Tooltip placement='top' title={full} arrow>
+                                    <span>
+                                        <NewTabLink to={getDetailsUrlForObject(id)} className={classes.link}>{truncateWithEllipses(full, 30)}</NewTabLink>
+                                    </span>
+                                </Tooltip>
+                                {fileLine}
+                            </span>
                         );
                     }
-                    if (!label) return '';
-                    return (
-                        <Tooltip placement='top' title={`[${type}] ${label}`} arrow>
-                            <div style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{`[${type}] ${label}`}</div>
-                        </Tooltip>
-                    );
+                    if (label)
+                        return (
+                            <span>
+                                <Tooltip placement='top' title={`[${type}] ${label}`} arrow>
+                                    <div style={{ maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{`[${type}] ${label}`}</div>
+                                </Tooltip>
+                                {fileLine}
+                            </span>
+                        );
+                    // No linkable object yet (pre-ingest upload/inspect) — show the filename as the value.
+                    return fileName
+                        ? <Tooltip placement='top' title={summary.input ?? ''} arrow><div style={{ maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncateWithEllipses(fileName, 30)}</div></Tooltip>
+                        : '';
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader
@@ -415,6 +432,29 @@ function WorkflowList(): React.ReactElement {
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 sort: false
+            }
+        },
+        {
+            name: 'Warnings',
+            label: 'Warn',
+            options: {
+                sort: false,
+                customBodyRenderLite(dataIndex) {
+                    const summary = parseWorkflowSummary(rows[dataIndex]);
+                    const count = summary?.warnings ?? 0;
+                    if (!count) return '';
+                    const title = `${count} non-blocking warning${count === 1 ? '' : 's'} — open the report for details`;
+                    return (
+                        <Tooltip placement='left' title={title} arrow>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#b26a00' }}>
+                                <WarningRoundedIcon style={{ fontSize: 18 }} />
+                                {count > 1 ? count : ''}
+                            </span>
+                        </Tooltip>
+                    );
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
             }
         },
         {

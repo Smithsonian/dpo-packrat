@@ -12,6 +12,9 @@ import { buildProjectSceneDef, SceneSummary, COOK_MATERIAL_FIX_DATE } from './pr
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
 import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
 import { AuditFactory } from '../../../audit/interface/AuditFactory';
+// Shared, audit-based publication-state derivation — the single source of truth the details header
+// uses. Reused here so the scene status table can't diverge from it (was the legacy version-chain).
+import { derivePublishedState, parsePublishedStateFromAudit, isPublishedState, PublishedStateVersion } from '../../../graphql/schema/systemobject/resolvers/queries/getSystemObjectDetails';
 
 //#region Types and Definitions
 
@@ -155,76 +158,60 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
 
     //#region publish
     const getPublishedStatus = async (): Promise<FieldStatus> => {
+        // Authoritative current publication state: the newest publish/unpublish audit event (matching
+        // getSystemObjectDetails). The SystemObjectVersion chain answers "was it ever published?" not
+        // "is it published now?" (an unpublish no-ops on an already-unpublished latest version), so it
+        // is only the legacy fallback when no audit event exists.
+        const publicationEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestPublicationEvent(idSystemObject);
+        const eventState: COMMON.ePublishedState | null = publicationEvent ? parsePublishedStateFromAudit(publicationEvent.Data) : null;
+        const useAudit: boolean = eventState !== null;
 
-        // get all system object versions which represent changes to the
-        // scene. We do this to get the earliest and current states of the scene
-        const sceneSOVs: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-        if(!sceneSOVs || sceneSOVs.length===0) {
+        const latestSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (!latestSOV) {
             RK.logError(RK.LogSection.eHTTP,'get published status failed','cannot get SystemObjectVersion for scene',{ ...scene },'HTTP.Route.ObjectStatus');
             return formatResultField('Published','Error','critical',`cannot get version for scene: ${idSystemObject}`);
         }
+        const latest: PublishedStateVersion = { idSystemObjectVersion: latestSOV.idSystemObjectVersion, published: latestSOV.publishedStateEnum(), dateCreated: latestSOV.DateCreated };
 
-        // Sort by idSystemObjectVersion descending (newest/highest ID first)
-        // This matches how fetchLatestFromSystemObject determines the "latest" version
-        const sorted = [...sceneSOVs].sort((a, b) =>
-            b.idSystemObjectVersion - a.idSystemObjectVersion
-        );
+        // Only the legacy fallback consults the full version chain.
+        let allVersions: PublishedStateVersion[] = [];
+        if (!useAudit) {
+            const versions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
+            allVersions = (versions ?? []).map(v => ({ idSystemObjectVersion: v.idSystemObjectVersion, published: v.publishedStateEnum(), dateCreated: v.DateCreated }));
+        }
 
-        // get our latest (highest ID) and find if any version is published
-        const latest = sorted[0];
-        const isPublished = (s: COMMON.ePublishedState) =>
-            s === COMMON.ePublishedState.ePublished ||
-            s === COMMON.ePublishedState.eAPIOnly ||
-            s === COMMON.ePublishedState.eInternal;
-        const lastPublished = sorted.find(v => isPublished(v.PublishedState)) ?? null;
+        // A license change after the last publish is draft drift (mirrors the header's config-drift).
+        let lastConfigChangeWhen: Date | null = null;
+        if (useAudit) {
+            const licenseEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestEventOfTypes(idSystemObject,
+                [DBAPI.eAuditType.eActionAssignLicense, DBAPI.eAuditType.eActionClearLicense, DBAPI.eAuditType.eActionLicenseUpdate]);
+            lastConfigChangeWhen = licenseEvent ? licenseEvent.AuditDate : null;
+        }
 
-        // No published versions at all
-        if (!lastPublished)
-            return formatResultField('Published','Unpublished','pass','Scene is not currently published');
-
-        // Compare version IDs to determine if we have unpublished changes (draft)
-        const latestId = latest.idSystemObjectVersion;
-        const lastPubId = lastPublished.idSystemObjectVersion;
+        const { publishedEnum, isDraft } = derivePublishedState(eventState,
+            useAudit && publicationEvent ? publicationEvent.AuditDate : null, latest, allVersions, lastConfigChangeWhen);
 
         const mapStateToStatus = (s: COMMON.ePublishedState): { status: string, notes: string } => {
             switch (s) {
-                case COMMON.ePublishedState.eNotPublished:
-                    return { status: 'Not Published', notes: 'Scene is not published.' };
                 case COMMON.ePublishedState.eAPIOnly:
-                    return { status: 'Public (Unlisted)', notes: 'Scene was published via <b>Public (Unlisted)</b>. Accessible publicly via the url, but <b><u>IS NOT</u></b> searchable via 3d.si.edu.' };
+                    return { status: 'Public (Unlisted)', notes: 'Scene is published via <b>Public (Unlisted)</b>. Accessible publicly via the url, but <b><u>IS NOT</u></b> searchable via 3d.si.edu.' };
                 case COMMON.ePublishedState.ePublished:
-                    return { status: 'Public', notes: 'Scene was published via <b>Public</b>. Accessible publicly via the url and searchable on 3d.si.edu.' };
+                    return { status: 'Public', notes: 'Scene is published via <b>Public</b>. Accessible publicly via the url and searchable on 3d.si.edu.' };
                 case COMMON.ePublishedState.eInternal:
-                    return { status: 'Internal', notes: 'Scene was published via <b>Internal</b>. Only accessible to those behind the Smithsonian firewall.' };
+                    return { status: 'Internal', notes: 'Scene is published via <b>Internal</b>. Only accessible to those behind the Smithsonian firewall.' };
                 default:
                     return { status: 'Unknown', notes: `Unknown published state: ${s}` };
             }
         };
-        // If the latest version is the last published one (same ID means current version is published)
-        if (latestId === lastPubId && isPublished(latest.PublishedState)) {
-            const { status, notes } = mapStateToStatus(latest.PublishedState);
-            return formatResultField('Published',status,'pass',notes);
-        }
 
-        // If the latest version ID is greater than the last published version ID and the latest
-        // is not published, then we have unpublished changes (a draft)
-        if (latestId > lastPubId && !isPublished(latest.PublishedState)) {
-            const prior = mapStateToStatus(lastPublished.PublishedState);
-            const d: Date = lastPublished.DateCreated instanceof Date
-                ? lastPublished.DateCreated
-                : new Date(String(lastPublished.DateCreated));
-            const priorDateTime: string = isNaN(d.getTime())
-                ? String(lastPublished.DateCreated)
-                : `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)} UTC`;
-            const draftNotes: string =
-                'Latest scene changes have not been published. Previously published as '
-                + `<b>'${prior.status}'</b> on ${priorDateTime}.`;
-            return formatResultField('Published','Draft','warn',draftNotes);
-        }
+        // 'Unpublished' (not 'Not Published') keeps the downstream includes('Unpublished') checks working.
+        if (!isPublishedState(publishedEnum))
+            return formatResultField('Published','Unpublished','pass','Scene is not currently published.');
 
-        // Otherwise, the latest is not newer than the last published (or ties but latest isn't published),
-        // so the last published remains the effective status (not a draft).
-        const { status, notes } = mapStateToStatus(lastPublished.PublishedState);
+        const { status, notes } = mapStateToStatus(publishedEnum);
+        if (isDraft)
+            return formatResultField('Published','Draft','warn',
+                `Currently published as <b>'${status}'</b>, but the latest scene changes have not been republished.`);
         return formatResultField('Published',status,'pass',notes);
     };
     const publishedStatus: FieldStatus = await getPublishedStatus();
@@ -497,19 +484,26 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
                 `bounding box ${e.detail} for model '${e.modelName ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
             raw: { bboxState: e.detail, currentUnits: e.currentUnits, multiModel: e.multiModel } };
         if (e.state === 'no_bbox')
-            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box on record'),
+            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box yet; pose the scene in Voyager to generate one'),
                 raw: { bboxState: 'absent', currentUnits: e.currentUnits, multiModel: e.multiModel } };
 
         const raw = { bboxState: 'valid', currentUnits: e.currentUnits, modelUnits: e.modelUnits, realMeters: e.realMeters,
             intendedUnits: e.intendedUnits, multiModel: e.multiModel, canFix: e.canFix,
             bboxMinMeters: e.bboxMinMeters, bboxMaxMeters: e.bboxMaxMeters, bboxSizeMeters: e.bboxSizeMeters };
-        if (e.state === 'ok')
-            return { status: formatResultField(name, 'Good', 'pass', `display units (${e.currentUnits}) are plausible for the geometry`), raw };
+        const sizeVec: string = Array.isArray(e.bboxSizeMeters)
+            ? e.bboxSizeMeters.map(v => v >= 1 ? v.toFixed(2) : Number(v.toPrecision(2)).toString()).join(' × ')
+            : '';
+        if (e.state === 'ok') {
+            const okNote: string = sizeVec
+                ? `display units (${e.currentUnits}) are plausible for the geometry (bbox ${sizeVec} m)`
+                : `display units (${e.currentUnits}) are plausible for the geometry`;
+            return { status: formatResultField(name, 'Good', 'pass', okNote), raw };
+        }
 
         const rm: number = e.realMeters ?? 0;
         const sizeStr: string = rm >= 1 ? `${rm.toFixed(2)} m` : rm >= 0.01 ? `${(rm * 100).toFixed(1)} cm` : `${(rm * 1000).toFixed(2)} mm`;
         const baseNote = `display units are '${e.currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${e.intendedUnits}'`;
-        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene: inline fix not supported.`;
+        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene (multiple source models): inline fix not supported.`;
         return { status: formatResultField(name, 'Unit Mismatch', 'warn', note), raw };
     };
     const scaleResult = await computeSceneScaleStatus();
@@ -718,6 +712,14 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
                     const validUnits: string[] = ['mm','cm','m','km','in','ft','yd','mi'];
                     if(!validUnits.includes(units)) {
                         res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: invalid unit '${units}'`)));
+                        return;
+                    }
+
+                    // Match the status message and the bulk op: the inline fix rewrites one scene-level
+                    // display unit, so it is only meaningful for a single-source scene. Refuse when the
+                    // scene has multiple source (master) models rather than silently applying it.
+                    if(await SceneHelpers.getSceneSourceModelCount(idSystemObject) > 1) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: inline unit fix is not supported for multi-model scenes (multiple source models)')));
                         return;
                     }
 

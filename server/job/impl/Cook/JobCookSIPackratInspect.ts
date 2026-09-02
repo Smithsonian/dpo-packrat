@@ -896,6 +896,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         });
     }
 
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        // Surface the inspected file so the workflow list shows what was fed to inspect, even before
+        // any object exists to link to.
+        return { input: this.parameters?.sourceMeshFile };
+    }
+
     protected async verifyRequest(): Promise<JobIOResults> {
         const superResult: JobIOResults = await super.verifyRequest();
         if(superResult.success===false) {

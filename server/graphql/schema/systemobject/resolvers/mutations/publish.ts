@@ -8,6 +8,7 @@ import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 import { eAuditType } from '../../../../../db/api/ObjectType';
+import { Config } from '../../../../../config';
 import * as H from '../../../../../utils/helpers';
 
 export default async function publish(_: Parent, args: MutationPublishArgs): Promise<PublishResult> {
@@ -20,10 +21,17 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
 
-    // Publishing a Subject requires admin (for the moment); Scene publishing is unchanged.
+    // Publishing a Subject requires admin AND a Subject in an allow-listed unit, while the set of EDAN
+    // records a subject publish can modify is confirmed with EDAN owners. Scene publishing is unchanged.
     const oID = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
-    if (oID?.eObjectType === COMMON.eSystemObjectType.eSubject && !ctx.isAdmin)
-        return { success: false, message: AUTH_ERROR.ADMIN_REQUIRED };
+    if (oID?.eObjectType === COMMON.eSystemObjectType.eSubject) {
+        if (!ctx.isAdmin)
+            return { success: false, message: AUTH_ERROR.ADMIN_REQUIRED };
+        const subjectDB: DBAPI.Subject | null = oID.idObject ? await DBAPI.Subject.fetch(oID.idObject) : null;
+        const unit: DBAPI.Unit | null = subjectDB ? await DBAPI.Unit.fetch(subjectDB.idUnit) : null;
+        if (!Config.features.subjectPublishUnitAllowlist.includes((unit?.Abbreviation ?? '').toUpperCase()))
+            return { success: false, message: `Subject publishing is limited to units: ${Config.features.subjectPublishUnitAllowlist.join(', ')}` };
+    }
 
     // Capture the prior published state for the audit diff before the publish
     // call mutates SystemObjectVersion. Reads are cheap and the row may not

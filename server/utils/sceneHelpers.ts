@@ -290,6 +290,7 @@ export class SceneHelpers {
     /** Meters-per-unit for the SVX unit enum. Returns null for 'inherit'/unrecognized (caller falls back to meters). */
     static unitToMeters(unit: string | null | undefined): number | null {
         switch ((unit ?? '').toLowerCase()) {
+            case 'um': return 0.000001;
             case 'mm': return 0.001;
             case 'cm': return 0.01;
             case 'm':  return 1;
@@ -344,6 +345,77 @@ export class SceneHelpers {
         return { success: true, sceneUnits, models };
     }
 
+    /** Fallback bounding-box source for evaluateSceneScale: the scene's live derivative models and the
+     *  inspection bounding boxes recorded on their ModelObjects at ingest. Shaped to match
+     *  getSceneScaleInfo().models so the same validation path handles both. Units come from each
+     *  Model's authored units (idVUnits). Returns [] for a non-scene system object. */
+    static async getSceneDerivativeModelBBoxes(idSceneSystemObject: number): Promise<{ name: string | null; units: string | null; bbox: { min: number[]; max: number[] } | null }[]> {
+        const result: { name: string | null; units: string | null; bbox: { min: number[]; max: number[] } | null }[] = [];
+        if (!idSceneSystemObject)
+            return result;
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSceneSystemObject);
+        if (!SO || !SO.idScene)
+            return result;
+
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(SO.idScene);
+        if (!MSXs)
+            return result;
+
+        for (const MSX of MSXs) {
+            const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!modelSO || modelSO.Retired)
+                continue; // skip retired derivative models -- not part of the current snapshot
+            const model: DBAPI.Model | null = await DBAPI.Model.fetch(MSX.idModel);
+            if (!model)
+                continue;
+            const modelObjects: DBAPI.ModelObject[] | null = await DBAPI.ModelObject.fetchFromModel(MSX.idModel);
+            const bbox = SceneHelpers.unionModelObjectBoundingBox(modelObjects);
+            if (!bbox)
+                continue;
+            result.push({ name: model.Name ?? null, units: await SceneHelpers.modelUnitsShort(model.idVUnits), bbox });
+        }
+        return result;
+    }
+
+    /** Axis-aligned union of one model's ModelObject bounding boxes, tolerant of P1/P2 ordering. Null
+     *  when no ModelObject carries a complete, finite box. Pure so it is unit-testable. */
+    static unionModelObjectBoundingBox(modelObjects: { BoundingBoxP1X: number | null; BoundingBoxP1Y: number | null; BoundingBoxP1Z: number | null; BoundingBoxP2X: number | null; BoundingBoxP2Y: number | null; BoundingBoxP2Z: number | null }[] | null | undefined): { min: number[]; max: number[] } | null {
+        const min: number[] = [Infinity, Infinity, Infinity];
+        const max: number[] = [-Infinity, -Infinity, -Infinity];
+        let found = false;
+        for (const o of modelObjects ?? []) {
+            const p1: (number | null)[] = [o.BoundingBoxP1X, o.BoundingBoxP1Y, o.BoundingBoxP1Z];
+            const p2: (number | null)[] = [o.BoundingBoxP2X, o.BoundingBoxP2Y, o.BoundingBoxP2Z];
+            if ([...p1, ...p2].some(v => typeof v !== 'number' || !isFinite(v)))
+                continue;
+            for (let i = 0; i < 3; i++) {
+                min[i] = Math.min(min[i], p1[i] as number, p2[i] as number);
+                max[i] = Math.max(max[i], p1[i] as number, p2[i] as number);
+            }
+            found = true;
+        }
+        return found ? { min, max } : null;
+    }
+
+    /** A Model's authored units (idVUnits vocabulary) as the short token unitToMeters understands.
+     *  Null when unset or unmapped, so the caller falls back to meters. */
+    static async modelUnitsShort(idVUnits: number | null): Promise<string | null> {
+        if (!idVUnits)
+            return null;
+        switch (await CACHE.VocabularyCache.vocabularyIdToEnum(idVUnits)) {
+            case COMMON.eVocabularyID.eModelUnitsMicrometer: return 'um';
+            case COMMON.eVocabularyID.eModelUnitsMillimeter: return 'mm';
+            case COMMON.eVocabularyID.eModelUnitsCentimeter: return 'cm';
+            case COMMON.eVocabularyID.eModelUnitsMeter:      return 'm';
+            case COMMON.eVocabularyID.eModelUnitsKilometer:  return 'km';
+            case COMMON.eVocabularyID.eModelUnitsInch:       return 'in';
+            case COMMON.eVocabularyID.eModelUnitsFoot:       return 'ft';
+            case COMMON.eVocabularyID.eModelUnitsYard:       return 'yd';
+            case COMMON.eVocabularyID.eModelUnitsMile:       return 'mi';
+            default:                                         return null;
+        }
+    }
+
     /** Scene-scale evaluation shared by the QC status row and the bulk fix-units op. Reads the SVX,
      *  validates the display-model bounding box, then converts the longest side by the model's own
      *  units and best-fits a scene display unit. */
@@ -374,8 +446,27 @@ export class SceneHelpers {
             return { ...base, state: 'no_scene', detail: info.error ?? 'no scene data' };
 
         const currentUnits: string | null = info.sceneUnits ?? null;
-        const multiModel: boolean = info.models.length > 1;
-        const validations = info.models.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+        let sourceModels = info.models;
+        let validations = sourceModels.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+
+        // A freshly generated scene that has not been posed in Voyager carries no boundingBox in its
+        // SVX. When the SVX has no bounding box at all (every model absent), fall back to the
+        // derivative models' inspection bounding boxes recorded in the DB, which are populated at
+        // ingest. Scene display units still come from the SVX above.
+        if (validations.every(x => x.v.state === 'absent')) {
+            const dbModels = await SceneHelpers.getSceneDerivativeModelBBoxes(idSystemObject);
+            const dbValidations = dbModels.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+            if (dbValidations.some(x => x.v.state !== 'absent')) {
+                sourceModels = dbModels;
+                validations = dbValidations;
+            }
+        }
+
+        // Multi-model is a structural fact: how many distinct SOURCE (master) models the scene was
+        // built from. The SVX's several models[] entries are derivatives of those sources (which all
+        // share one authored unit), so they are NOT the signal here. A single-source scene is safe to
+        // auto-fix; a multi-source scene is left to manual review.
+        const multiModel: boolean = (await SceneHelpers.getSceneSourceModelCount(idSystemObject)) > 1;
 
         const bad = validations.find(x => x.v.state === 'nonfinite' || x.v.state === 'inverted' || x.v.state === 'degenerate');
         if (bad)
@@ -385,6 +476,9 @@ export class SceneHelpers {
         if (!primary || primary.v.longestSide === null)
             return { ...base, state: 'no_bbox', currentUnits, multiModel };
 
+        // Scale heuristic: convert the model's longest side to meters by its own authored units, then
+        // best-fit a scene display unit (longest side < ~0.1 m -> mm, < ~1 m -> cm, else m). Derivatives
+        // share units, so any valid-bbox model is representative.
         const modelUnits: string | null = primary.m.units ?? null;
         const factor: number = SceneHelpers.unitToMeters(modelUnits) ?? 1; // 'inherit'/unknown -> meters
         const realMeters: number = primary.v.longestSide * factor;
@@ -402,6 +496,35 @@ export class SceneHelpers {
             currentUnits, modelUnits, multiModel, canFix: !multiModel,
             realMeters, intendedUnits, bboxMinMeters, bboxMaxMeters, bboxSizeMeters,
         };
+    }
+
+    /** Count the distinct SOURCE (master) models a scene was built from. Each of the scene's component
+     *  models (ModelSceneXref) is wired to its source model as a SystemObjectXref master; the scene is
+     *  the other master. We collect the Model-typed masters across all components and count distinct
+     *  ones. 0/1 => single-model (safe to inline-fix scale); >1 => multi-model. */
+    static async getSceneSourceModelCount(idSceneSystemObject: number): Promise<number> {
+        if (!idSceneSystemObject)
+            return 0;
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSceneSystemObject);
+        if (!SO || !SO.idScene)
+            return 0;
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(SO.idScene);
+        if (!MSXs)
+            return 0;
+
+        const sourceModelIDs: Set<number> = new Set<number>();
+        for (const MSX of MSXs) {
+            const componentSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!componentSO)
+                continue;
+            const masters: DBAPI.SystemObjectXref[] | null = await DBAPI.SystemObjectXref.fetchMasters(componentSO.idSystemObject);
+            for (const master of masters ?? []) {
+                const masterSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(master.idSystemObjectMaster);
+                if (masterSO && masterSO.idModel && masterSO.idModel !== MSX.idModel)
+                    sourceModelIDs.add(masterSO.idModel); // a Model-typed master (not the scene) is a source model
+            }
+        }
+        return sourceModelIDs.size;
     }
 
     /** Rewrites the scene-level display units in the SVX (scenes[].units) and ingests a new asset version.

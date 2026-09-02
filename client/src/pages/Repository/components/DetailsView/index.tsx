@@ -461,6 +461,7 @@ function DetailsView(): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        publishControlVisible,
         isDraft,
         thumbnail,
         unit,
@@ -903,13 +904,14 @@ function DetailsView(): React.ReactElement {
 
             // get our message from our first response
             const responseMessage: string | undefined = response.data?.[0]?.message;
+            const responseDetail: string | undefined = response.data?.[0]?.detail;
 
             // if the job is running then handle differently
             if(responseMessage?.includes('already running')) {
                 console.log(`[Packrat - WARN] cannot generate downloads. (${responseMessage})`);
                 toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
             } else {
-                toastError({ message: responseMessage, traceId: response.traceId }, 'Cannot generate downloads. Check the report.');
+                toastError({ message: responseMessage, detail: responseDetail, traceId: response.traceId }, 'Cannot generate downloads. Check the report.');
             }
 
             // update our button state
@@ -954,13 +956,14 @@ function DetailsView(): React.ReactElement {
 
             // get our message from our first response
             const responseMessage: string | undefined = response.data?.[0]?.message;
+            const responseDetail: string | undefined = response.data?.[0]?.detail;
 
             // if the job is running then handle differently
             if(responseMessage?.includes('already running')) {
                 console.log(`[Packrat - WARN] cannot generate scene. (${responseMessage})`);
                 toast.warn('Not generating scene. Job already running. Please wait for it to finish.');
             } else {
-                toastError({ message: responseMessage, traceId: response.traceId }, 'Cannot generate scene. Check the report.');
+                toastError({ message: responseMessage, detail: responseDetail, traceId: response.traceId }, 'Cannot generate scene. Check the report.');
             }
 
             console.log(idSystemObject,parameters,sceneGenParameters);
@@ -1071,6 +1074,7 @@ function DetailsView(): React.ReactElement {
                         publishedState={publishedState}
                         publishedEnum={publishedEnum}
                         publishable={publishable}
+                        publishControlVisible={publishControlVisible ?? true}
                         isDraft={isDraft}
                         isAdmin={isAdmin}
                         edanRecordUrl={edanRecordUrl}

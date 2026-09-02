@@ -77,6 +77,21 @@ describe('derivePublishedState — audit-derived current state', () => {
         expect(result.isDraft).toBe(false);
     });
 
+    // Config drift: a license change AFTER publish rolls no new SOV but requires a republish -> draft.
+    test('published then license changed (no new SOV) -> Public + draft', () => {
+        const latest = version(1, COMMON.ePublishedState.ePublished, BEFORE_PUBLISH);
+        const result = derivePublishedState(COMMON.ePublishedState.ePublished, PUBLISH_EVENT, latest, [], AFTER_PUBLISH);
+        expect(result.publishedEnum).toBe(COMMON.ePublishedState.ePublished);
+        expect(result.isDraft).toBe(true);
+    });
+
+    // A license change made BEFORE the last publish is already reflected -> not draft.
+    test('license changed before publish -> no draft', () => {
+        const latest = version(1, COMMON.ePublishedState.ePublished, BEFORE_PUBLISH);
+        const result = derivePublishedState(COMMON.ePublishedState.ePublished, PUBLISH_EVENT, latest, [], BEFORE_PUBLISH);
+        expect(result.isDraft).toBe(false);
+    });
+
     // Re-publish clears the draft: a fresh publish event newer than the latest content.
     test('re-publish after edit -> draft cleared', () => {
         const latest = version(3, COMMON.ePublishedState.eNotPublished, PUBLISH_EVENT);

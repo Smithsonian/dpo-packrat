@@ -22,12 +22,33 @@ export class ReportQueue {
             wr.Data = JSON.stringify(events);
             if (wr.MimeType !== 'application/json')
                 wr.MimeType = 'application/json';
+
+            // Maintain a running warn/error tally in the summary so the workflow list can show a
+            // warning indicator without fetching and parsing the whole event body per row.
+            if (event.level === 'warn' || event.level === 'error') {
+                const summary: COMMON.IWorkflowReportSummary = ReportFormat.parseSummary(wr.Name);
+                if (event.level === 'warn')
+                    summary.warnings = (summary.warnings ?? 0) + 1;
+                else
+                    summary.errors = (summary.errors ?? 0) + 1;
+                wr.Name = ReportFormat.serializeSummary(summary);
+            }
         });
     }
 
     static async setSummary(workflowReport: DBAPI.WorkflowReport, summary: COMMON.IWorkflowReportSummary): Promise<H.IOResults> {
         return ReportQueue.run(workflowReport, (wr) => {
-            wr.Name = ReportFormat.serializeSummary(summary);
+            // Preserve the running warn/error tally that appendEvent maintains. Callers (e.g. the Cook
+            // progressive summary) rebuild the summary from scratch and would otherwise clobber the
+            // counts on a terminal write that lands after the warning events. An explicit count in the
+            // incoming summary still wins.
+            const existing: COMMON.IWorkflowReportSummary = ReportFormat.parseSummary(wr.Name);
+            const merged: COMMON.IWorkflowReportSummary = { ...summary };
+            if (merged.warnings === undefined && existing.warnings !== undefined)
+                merged.warnings = existing.warnings;
+            if (merged.errors === undefined && existing.errors !== undefined)
+                merged.errors = existing.errors;
+            wr.Name = ReportFormat.serializeSummary(merged);
         });
     }
 

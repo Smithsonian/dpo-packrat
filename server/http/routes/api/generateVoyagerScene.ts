@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as DBAPI from '../../../db';
+import * as CACHE from '../../../cache';
+import * as COMMON from '@dpo-packrat/common';
 // import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import { ASL, LocalStore } from '../../../utils/localStore';
@@ -27,6 +29,7 @@ type OpResponse = {             // matches the expected returns on the client si
 type WorkflowResponse = {       // general response for each
     success: boolean,           // was the request successful
     message?: string,           // errors from the request|workflow to put in console or display to user
+    detail?: string,            // optional expanded reason (e.g. the affected files) for the toast's Details disclosure
     id?: number,                // optional number for the object this response refers to
     state?: OpState
 };
@@ -39,13 +42,20 @@ type SceneGenParameters = {
 //#endregion
 
 //#region Utility
-// HACK: hardcoding the job id since vocabulary is returning different values for looking up the job
-//       enum should provide 149, but is returning 125. The actual idJob is 8 (see above)
-const idJob: number = 8;
-const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined): WorkflowResponse => {
+// Resolve the Cook si-voyager-scene Job.idJob at runtime. Its job-type vocabulary id is assigned at
+// seed time and is not stable across databases, so it must never be hardcoded.
+const resolveVoyagerSceneJobId = async (): Promise<number | undefined> => {
+    const idVJobType: number | undefined = await CACHE.VocabularyCache.vocabularyEnumToId(COMMON.eVocabularyID.eJobJobTypeCookSIVoyagerScene);
+    if (!idVJobType)
+        return undefined;
+    const jobs: DBAPI.Job[] | null = await DBAPI.Job.fetchByType(idVJobType);
+    return (jobs && jobs.length > 0) ? jobs[0].idJob : undefined;
+};
+const generateResponse = (success: boolean, message?: string | undefined, id?: number | undefined, state?: OpState | undefined, detail?: string | undefined): WorkflowResponse => {
     return {
         success,
         message,
+        detail,
         id,
         state
     };
@@ -84,14 +94,19 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
             return generateResponse(false,`cannot find required model: ${idSystemObject}`,idSystemObject);
         }
 
-        // get our associated scene from the model
-        // NOTE: a scene may not exist yet especially if the model is being ingested
-        const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
-        if(scenes) {
-            if(scenes.length>1)
-                RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','master model has multiple parent scenes',{ idSystemObject, numScenes: scenes?.length ?? -1 },'HTTP.Route.GenVoyagerScene');
-            scene = scenes[0];
+        // get our associated scene from the model. Consider only ACTIVE (non-retired) scenes: a model
+        // may carry retired scenes (failed/superseded) that must be ignored. One active scene is reused;
+        // none means a new scene is created downstream. (A scene may also not exist yet during ingest.)
+        const allScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(model.idModel);
+        const activeScenes: DBAPI.Scene[] = [];
+        for (const s of allScenes ?? []) {
+            const sSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(s.idScene);
+            if(sSO && !sSO.Retired)
+                activeScenes.push(s);
         }
+        if(activeScenes.length > 1)
+            RK.logError(RK.LogSection.eHTTP,'create generate scene op failed','master model has multiple active parent scenes',{ idSystemObject, numActiveScenes: activeScenes.length },'HTTP.Route.GenVoyagerScene');
+        scene = activeScenes.length > 0 ? activeScenes[0] : null;
 
     } else if(systemObject.idScene) {
         // grab it and make sure it's a scene
@@ -152,7 +167,7 @@ const createGenSceneOp = async (idSystemObject: number, idUser: number, paramete
     // make sure we saw success, otherwise bail
     if(result.success===false) {
         RK.logError(RK.LogSection.eHTTP,'create generate scene op failed',result.message,{ idSystemObject, isJobRunning, idWorkflow, idWorkflowReport },'HTTP.Route.GenVoyagerScene');
-        return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
+        return generateResponse(false,result.message,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport },result.data.detail);
     }
 
     return generateResponse(true,`Generating Scene for: ${model.Name}`,idSystemObject,{ isValid, isJobRunning, idWorkflow, idWorkflowReport });
@@ -176,6 +191,11 @@ const getOpStatusForScene = async (idSystemObject: number): Promise<WorkflowResp
     const isValid: boolean = true;
 
     // get any active jobs
+    const idJob: number | undefined = await resolveVoyagerSceneJobId();
+    if(!idJob) {
+        RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot resolve Cook si-voyager-scene job type',{ ...model },'HTTP.Route.GenVoyagerScene');
+        return generateResponse(false,'failed to resolve scene job type',idSystemObject,{ isValid, isJobRunning: false });
+    }
     const activeJobs: DBAPI.JobRun[] | null = await DBAPI.JobRun.fetchActiveByScene(idJob,model.idModel);
     if(!activeJobs) {
         RK.logError(RK.LogSection.eHTTP,'get scene op status failed','cannot determine if job is running',{ ...model },'HTTP.Route.GenVoyagerScene');

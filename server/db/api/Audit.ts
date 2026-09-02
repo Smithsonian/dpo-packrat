@@ -396,4 +396,22 @@ export class Audit extends DBC.DBObject<AuditBase> implements AuditBase {
             return null;
         }
     }
+
+    /** The newest audit event among the given action types for an object (or null). Used to detect a
+     *  publish-affecting change (e.g. a license reassignment) made after the last publication, which
+     *  should surface the object as a draft even though it rolled no new content version. */
+    static async fetchLatestEventOfTypes(idSystemObject: number, auditTypes: eAuditType[]): Promise<Audit | null> {
+        if (!idSystemObject || auditTypes.length === 0)
+            return null;
+        try {
+            return DBC.CopyObject<AuditBase, Audit>(
+                await DBC.DBConnection.prisma.audit.findFirst({
+                    where: { idSystemObject, AuditType: { in: auditTypes } },
+                    orderBy: [{ AuditDate: 'desc' }, { idAudit: 'desc' }],
+                }), Audit);
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch latest event of types failed',H.Helpers.getErrorString(error),{ idSystemObject, auditTypes },'DB.Audit');
+            return null;
+        }
+    }
 }

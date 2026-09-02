@@ -638,7 +638,21 @@ export const CookDownloadFileSuffixes: string[] = cookDownloadSuffixes('short');
 
 // User-selectable custom (non-Cook) download types. Drives the ingestion dropdown and the
 // server-side whitelist. These are fixed protocol values, not deployment settings.
-export const CustomDownloadTypes: string[] = ['watertight', 'other'];
+export const CustomDownloadTypes: string[] = ['watertight', 'other', 'projectFiles', 'documentation'];
+
+// Human-readable labels for the ingestion dropdown (keys above are the wire/usage tokens).
+export const CustomDownloadTypeLabels: { [type: string]: string } = {
+    watertight: 'Watertight',
+    other: 'Other',
+    projectFiles: 'Project Files',
+    documentation: 'Documentation',
+};
+
+// Supplementary-file download types: not 3D geometry, so they are always delivered as a single .zip,
+// skip the model units / creation-method requirement, and carry a documentation-style EDAN tag.
+export const CustomDownloadZipOnlyTypes: string[] = ['projectFiles', 'documentation'];
+export const isZipOnlyCustomDownload = (type: string | null | undefined): boolean =>
+    !!type && CustomDownloadZipOnlyTypes.includes(type);
 
 // Upload file extensions a custom download may use as-is: each maps directly to an EDAN file_type.
 export const CustomDownloadAcceptedExtensions: string[] = ['.glb', '.ply', '.usdz', '.zip'];

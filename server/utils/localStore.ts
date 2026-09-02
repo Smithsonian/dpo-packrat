@@ -72,6 +72,14 @@ export class LocalStore {
      */
     traceId: string | null = null;
 
+    /**
+     * Count of warn-level workflow-report events emitted during this request. Bumped at the single
+     * RK.reportEvent choke point so a client-facing resolver (e.g. uploadAsset) can tell the user a
+     * completed operation produced non-blocking warnings worth checking in the Workflow report,
+     * without harvesting a separate job's report.
+     */
+    reportWarningCount: number = 0;
+
     private static idRequestNext: number = 0;
     private static getIDRequestNext(): number {
         // RK.logDebug(RK.LogSection.eSYS,'incrementing ID',undefined,{ idRequest: LocalStore.idRequestNext, idRequestNew: LocalStore.idRequestNext+1 },'AsyncLocalStore');

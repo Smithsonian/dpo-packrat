@@ -21,8 +21,15 @@ export interface CookScanResult {
 interface CookReportLike {
     state?: string;
     error?: string;
+    recipe?: { name?: string };
     steps?: { [step: string]: { error?: string; log?: Array<{ message?: string }> } };
 }
+
+// The inspection recipe intentionally uploads only geometry, .mtl and .bin — never texture images —
+// so Cook always reports referenced images as unloadable during inspection. Image/texture-load rules
+// therefore do not apply to it; genuine missing-texture detection happens on recipes that ship the
+// full textured package. The .mtl IS sent to the inspector, so its read-failure rule still applies.
+const INSPECT_RECIPE_NAME: string = 'si-packrat-inspect';
 
 // Collect every log message across all steps, plus per-step and top-level error strings, into one
 // flat list the rules can scan for corroborating markers.
@@ -94,7 +101,48 @@ export function scanCookReport(cookJobReport: unknown): CookScanResult {
         errors.push({ code: COMMON.WorkflowReportCode.CookError, level: 'error', message });
     }
 
+    // Non-blocking advisories Cook writes into step logs even on an otherwise-successful run: a
+    // referenced texture image or material file it could not load and worked around. These are
+    // ordinary log lines that would otherwise stay buried in the raw report body, so surface them
+    // for every recipe. Benign engine chatter (e.g. a Blender DeprecationWarning) is deliberately
+    // excluded by the curated rule set.
+    for (const warning of collectCookLogWarnings(report))
+        warnings.push(warning);
+
     return { errors, warnings };
+}
+
+// A Cook step-log line that signals a real asset problem, keyed to a friendly, user-facing message.
+// Kept curated (not a blanket "[ISSUE]"/"WARNING" match) so engine deprecation notices and other
+// noise do not become user-visible advisories.
+interface CookLogWarningRule { test: RegExp; message: string; skipRecipes?: string[] }
+const COOK_LOG_WARNING_RULES: CookLogWarningRule[] = [
+    { test: /cannot load image file|cannot load image|could not load .*(texture|image)/i,
+        message: 'A referenced texture image could not be loaded (the file is missing or unreadable). The model ingests without that texture.',
+        skipRecipes: [INSPECT_RECIPE_NAME] },
+    { test: /cannot read from mtl file|cannot read .*\.mtl|could not read .*material library/i,
+        message: 'A referenced material library (.mtl) could not be read (the file is missing or unreadable). The model ingests without its materials.' },
+    { test: /missing texture|texture file .*not found|referenced texture .*missing/i,
+        message: 'A referenced texture file is missing. The model ingests without that texture.',
+        skipRecipes: [INSPECT_RECIPE_NAME] },
+];
+
+// Scan the raw Cook step logs for the curated asset-problem markers above and return one CookWarning
+// per distinct match. Pure and separate from the verify path so it is unit-testable.
+export function collectCookLogWarnings(cookJobReport: unknown): CookScanFinding[] {
+    const warnings: CookScanFinding[] = [];
+    if (!cookJobReport || typeof cookJobReport !== 'object')
+        return warnings;
+    const report: CookReportLike = cookJobReport as CookReportLike;
+    const recipeName: string = report.recipe?.name ?? '';
+    const messages: string[] = collectMessages(report);
+    for (const rule of COOK_LOG_WARNING_RULES) {
+        if (rule.skipRecipes && rule.skipRecipes.includes(recipeName))
+            continue;
+        if (messages.some(m => rule.test.test(m)))
+            pushWarning(warnings, rule.message);
+    }
+    return warnings;
 }
 
 function pushWarning(warnings: CookScanFinding[], message: string): void {

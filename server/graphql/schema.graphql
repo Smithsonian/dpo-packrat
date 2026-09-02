@@ -912,6 +912,7 @@ type GetSystemObjectDetailsResult {
   objectVersions: [SystemObjectVersion!]!
   project: [RepositoryPath!]
   publishBlocker: String
+  publishControlVisible: Boolean
   publishable: Boolean!
   publishedEnum: Int!
   publishedState: String!
@@ -2184,6 +2185,7 @@ type UploadAssetResult {
   error: String
   idAssetVersions: [Int!]
   status: UploadStatus!
+  warnings: Int
 }
 
 enum UploadStatus {

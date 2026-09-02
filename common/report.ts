@@ -46,6 +46,8 @@ export interface IWorkflowReportSummary {
     cookJobId?: string;
     input?: string;
     recipe?: string;
+    warnings?: number;                      // running count of warn-level events, for a list indicator
+    errors?: number;                        // running count of error-level events
 }
 
 /** Stable string codes for events. New codes append here; renderers key off these. */

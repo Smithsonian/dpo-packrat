@@ -1002,6 +1002,7 @@ export type GetSystemObjectDetailsResult = {
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
   publishBlocker?: Maybe<Scalars['String']>;
+  publishControlVisible?: Maybe<Scalars['Boolean']>;
   publishable: Scalars['Boolean'];
   publishedEnum: Scalars['Int'];
   publishedState: Scalars['String'];
@@ -2707,6 +2708,7 @@ export type UploadAssetResult = {
   error?: Maybe<Scalars['String']>;
   idAssetVersions?: Maybe<Array<Scalars['Int']>>;
   status: UploadStatus;
+  warnings?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
