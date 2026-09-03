@@ -251,6 +251,7 @@ export const Config: ConfigType = {
             // "who linked/unlinked what and when" fact survives even after payload pruning.
             [eAuditType.eActionRelationshipCreate]: AuditTier.STANDARD,
             [eAuditType.eActionRelationshipDelete]: AuditTier.STANDARD,
+            [eAuditType.eActionDownloadTagBackfill]: AuditTier.STANDARD,
             // TIER_TRANSIENT - ownership-relevant but not forensic
             [eAuditType.eSolrRebuild]:              AuditTier.TRANSIENT,
             [eAuditType.eGenDownloads]:             AuditTier.TRANSIENT,

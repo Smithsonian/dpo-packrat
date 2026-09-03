@@ -332,6 +332,7 @@ export enum eAuditType {
     eActionSVXUnitsFixed = 120,
     eActionRelationshipCreate = 121,
     eActionRelationshipDelete = 122,
+    eActionDownloadTagBackfill = 123,
 }
 
 export function LicenseRestrictLevelToPublishedStateEnum(restrictLevel: number): COMMON.ePublishedState {

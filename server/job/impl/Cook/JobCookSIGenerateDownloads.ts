@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
 import { CookRecipe } from './CookRecipe';
-import { findBasenameOffenders, BasenameOffender } from './CookOutputContract';
+import { findBasenameOffenders, BasenameOffender, cookDownloadTagForTypeKey, cookModelAutomationTagForTypeKey } from './CookOutputContract';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
@@ -735,55 +735,25 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     public static computeModelPropertiesFromDownloadType(downloadType: string): { usage: string|undefined, quality: string|undefined, uvResolution: number|undefined } {
 
-        // NOTE: caution if return types from Cook change
-        switch(downloadType) {
-
-            case 'objZipFull':
-                return { usage: 'Download:'+downloadType, quality: 'Highest', uvResolution: 0 };
-
-            case 'objZipLow':
-            case 'gltfZipLow':
-            case 'webAssetGlbLowUncompressed':
-                return { usage: 'Download:'+downloadType, quality: 'Low', uvResolution: 4096 };
-
-            // refers to: <baseName>-100k-2048_std_draco.glb
-            case 'webAssetGlbARCompressed':
-                return { usage: 'App3D', quality: 'AR', uvResolution: 2048 };
-
-            case 'usdz':
-                return { usage: 'iOSApp3D', quality: 'AR', uvResolution: 2048 };
+        // Delegates to the shared CookOutputContract mapping (single source of truth also used by the
+        // download-tag backfill), so generation and backfill can never drift apart.
+        const tag = cookDownloadTagForTypeKey(downloadType);
+        if (!tag) {
+            RK.logError(RK.LogSection.eJOB,'compute model properties failed','unsupported downloadType',{ downloadType },'Job.GenerateDownloads');
+            return { usage: undefined, quality: undefined, uvResolution: undefined };
         }
-
-        RK.logError(RK.LogSection.eJOB,'compute model properties failed','unsupported downloadType',{ downloadType },'Job.GenerateDownloads');
-        return { usage: undefined, quality: undefined, uvResolution: undefined };
+        return { usage: tag.usage, quality: tag.quality, uvResolution: tag.uvResolution };
     }
 
     public static computeModelAutomationTagFromDownloadType(downloadType: string): string {
 
-        const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(downloadType);
-        if(usage==undefined || quality==undefined || uvResolution==undefined) {
-            // LOG.error(`JobCookSIGenerateDownloads.computeModelAutomationTag unsupported downloadType: '${downloadType}' (${usage} | ${quality} | ${uvResolution})`,LOG.LS.eDEBUG);
-            return `error-${downloadType}-null-null`;
-        }
-
-        switch(downloadType) {
-            // HACK: need to hardcode these because the model is created outside ModelScreneXref context
-            // and doesn't have the needed Usage, Quality, and UVResolution details. skipping 'Usage'.
-            case 'objZipFull':
-            case 'objZipLow':
-            case 'gltfZipLow':
-            case 'webAssetGlbLowUncompressed':
-                return `download-${downloadType}-${quality}-${uvResolution}`;
-
-            // HACK: hardcoding these as well expecting them to be reassigned/overwritten by ModelSceneXref
-            // MSX format is: `scene-${this.Usage}-${this.Quality}-${this.UVResolution}`
-            case 'webAssetGlbARCompressed':
-            case 'usdz':
-                return `scene-${usage}-${quality}-${uvResolution}`;
-        }
-
+        // Delegates to the shared CookOutputContract mapping (single source of truth also used by the
+        // download-tag backfill). Preserves the legacy fallback string for an unsupported type.
+        const auto = cookModelAutomationTagForTypeKey(downloadType);
+        if (auto)
+            return auto;
         RK.logError(RK.LogSection.eJOB,'compute model automation tag failed','unsupported downloadType',{ downloadType },'Job.GenerateDownloads');
-        return `unknown-${downloadType}`;
+        return `error-${downloadType}-null-null`;
     }
 
     private async computeVocabModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
