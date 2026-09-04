@@ -68,3 +68,47 @@ export function findBasenameOffenders(recipe: CookRecipeKey, candidateFilenames:
     }
     return offenders;
 }
+
+// The deterministic ModelSceneXref tag (Usage/Quality/UVResolution) a Cook download-type key maps to.
+// This is the single source of truth shared by si-generate-downloads generation and the backfill op, so
+// a repaired legacy row carries values identical to a freshly generated one. Returns null for a type key
+// that is not a recognized download output.
+export interface DownloadTag { usage: string; quality: string; uvResolution: number; }
+export function cookDownloadTagForTypeKey(typeKey: string): DownloadTag | null {
+    switch (typeKey) {
+        case 'objZipFull':                 return { usage: `Download:${typeKey}`, quality: 'Highest', uvResolution: 0 };
+        case 'objZipLow':
+        case 'gltfZipLow':
+        case 'webAssetGlbLowUncompressed': return { usage: `Download:${typeKey}`, quality: 'Low', uvResolution: 4096 };
+        case 'webAssetGlbARCompressed':    return { usage: 'App3D',    quality: 'AR', uvResolution: 2048 };
+        case 'usdz':                       return { usage: 'iOSApp3D', quality: 'AR', uvResolution: 2048 };
+    }
+    return null;
+}
+
+// The Model.AutomationTag a download-type key maps to (same values si-generate-downloads writes).
+export function cookModelAutomationTagForTypeKey(typeKey: string): string | null {
+    const tag: DownloadTag | null = cookDownloadTagForTypeKey(typeKey);
+    if (!tag)
+        return null;
+    switch (typeKey) {
+        case 'objZipFull':
+        case 'objZipLow':
+        case 'gltfZipLow':
+        case 'webAssetGlbLowUncompressed': return `download-${typeKey}-${tag.quality}-${tag.uvResolution}`;
+        case 'webAssetGlbARCompressed':
+        case 'usdz':                       return `scene-${tag.usage}-${tag.quality}-${tag.uvResolution}`;
+    }
+    return null;
+}
+
+// The Cook download typeKey a filename maps to, by endsWith over the canonical suffix table. Returns
+// null for no match and 'ambiguous' when more than one suffix matches, so callers (backfill) never guess.
+export function cookDownloadTypeKeyFromFilename(fileName: string): string | null | 'ambiguous' {
+    const matches = COMMON.CookDownloadDescriptors.filter(d => fileName.endsWith(d.suffixFull));
+    if (matches.length === 0)
+        return null;
+    if (matches.length > 1)
+        return 'ambiguous';
+    return matches[0].typeKey;
+}

@@ -185,10 +185,18 @@ export class WorkflowEngine implements WF.IWorkflowEngine {
             return { success: false, message: 'Scene is retired — reinstate it before generating downloads.', data: { isValid: false } };
         }
 
-        // check for multiple master models (not yet supported for download generation)
-        const masterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchMasterFromScene(scene.idScene);
-        if(masterModels && masterModels.length > 1) {
-            RK.logError(RK.LogSection.eWF,'generate downloads blocked','download generation is not yet supported for scenes with multiple master models',{ idScene, numModels: masterModels.length },'Workflow.Engine');
+        // check for multiple master models (not yet supported for download generation). Retired master
+        // models (superseded/failed runs) are ignored — never counted toward the multi-model refusal —
+        // mirroring the active-scene filter in JobCookSIVoyagerScene.
+        const allMasterModels: DBAPI.Model[] | null = await DBAPI.Model.fetchMasterFromScene(scene.idScene);
+        const activeMasterModels: DBAPI.Model[] = [];
+        for(const m of allMasterModels ?? []) {
+            const mSO: DBAPI.SystemObject | null = await m.fetchSystemObject();
+            if(mSO && !mSO.Retired)
+                activeMasterModels.push(m);
+        }
+        if(activeMasterModels.length > 1) {
+            RK.logError(RK.LogSection.eWF,'generate downloads blocked','download generation is not yet supported for scenes with multiple master models',{ idScene, numModels: activeMasterModels.length },'Workflow.Engine');
             return { success: false, message: 'download generation is not yet supported for scenes with multiple master models', data: { isValid: false } };
         }
 

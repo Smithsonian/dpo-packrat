@@ -247,6 +247,11 @@ export const Config: ConfigType = {
             [eAuditType.eDBCreate]:                 AuditTier.STANDARD,
             [eAuditType.eDBUpdate]:                 AuditTier.STANDARD,
             [eAuditType.eDBDelete]:                 AuditTier.STANDARD,
+            // Object-graph relationship changes made from the UX — skeleton kept forever so the
+            // "who linked/unlinked what and when" fact survives even after payload pruning.
+            [eAuditType.eActionRelationshipCreate]: AuditTier.STANDARD,
+            [eAuditType.eActionRelationshipDelete]: AuditTier.STANDARD,
+            [eAuditType.eActionDownloadTagBackfill]: AuditTier.STANDARD,
             // TIER_TRANSIENT - ownership-relevant but not forensic
             [eAuditType.eSolrRebuild]:              AuditTier.TRANSIENT,
             [eAuditType.eGenDownloads]:             AuditTier.TRANSIENT,
