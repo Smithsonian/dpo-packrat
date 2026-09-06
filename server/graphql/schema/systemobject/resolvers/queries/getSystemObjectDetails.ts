@@ -331,8 +331,8 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
 
                 // Warn an admin editing a Subject in a Unit they are not directly assigned to.
                 // Admin context units are zeroed, so read the raw assignments.
-                if (isAdmin && subjectDB) {
-                    const ownUnits: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(ctx!.idUser);
+                if (isAdmin && subjectDB && ctx) {
+                    const ownUnits: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(ctx.idUser);
                     subjectUnitMismatch = !ownUnits.includes(subjectDB.idUnit);
                 }
             } break;

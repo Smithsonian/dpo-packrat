@@ -36,6 +36,7 @@ import { getUnit } from './routes/api/object';
 import { getExternalSources, createExternalSource, updateExternalSource } from './routes/api/object';
 import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
 import { getServiceStatus } from './routes/api/status';
+import { getMetrics } from './routes/api/metrics';
 import { createWebDAVToken } from './routes/api/scene';
 import { sceneByUUID } from './routes/api/sceneByUUID';
 import { getAuditLifeline } from './routes/api/auditLifeline';
@@ -285,6 +286,8 @@ export class HttpServer {
         this.app.get('/api/auth/denials', getAuthDenials);
 
         this.app.get('/api/status', getServiceStatus);
+
+        this.app.get('/api/metrics', getMetrics);                   // admin/tools: preservation metrics for a date range (+ optional series)
 
         this.app.get('/api/sandbox/play',play);
 

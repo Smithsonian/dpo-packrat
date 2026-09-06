@@ -394,6 +394,22 @@ export const Config: ConfigType = {
     }
 };
 
+/**
+ * Resolves the set of user IDs treated as DPO staff for reporting. Reads a comma-separated
+ * override from PACKRAT_DPO_USER_IDS; when unset or empty, defaults to the union of the
+ * admin and tools user lists (representative of DPO staff at this time). Everyone else is
+ * treated as non-DPO by the metrics endpoints.
+ */
+export function getDPOUserIDs(): number[] {
+    const raw: string | undefined = process.env.PACKRAT_DPO_USER_IDS;
+    if (raw && raw.trim().length > 0) {
+        const ids: number[] = raw.split(',').map(s => parseInt(s.trim(), 10)).filter(n => Number.isInteger(n) && n > 0);
+        if (ids.length > 0)
+            return [...new Set(ids)];
+    }
+    return [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
+}
+
 function parseEnvDays(raw: string | undefined, fallback: number): number {
     if (raw === undefined) return fallback;
     const n = parseInt(raw, 10);
