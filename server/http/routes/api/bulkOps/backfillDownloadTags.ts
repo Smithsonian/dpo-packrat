@@ -33,6 +33,16 @@ interface TagState {
 const tagSummary = (usage: string | null | undefined, quality: string | null | undefined, uv: number | null | undefined): string =>
     `${usage ?? '∅'} / ${quality ?? '∅'} / ${uv ?? '∅'}`;
 
+// The full recipe identity a generated row carries is broader than the Usage/Quality/UV triplet: it also
+// includes Model.idVPurpose (must be Download) and Model.AutomationTag. A row can be 'fixable' on those
+// two alone while its triplet already matches — so the summary must show them, or Current/Proposed look
+// identical for a real fix. purposeLabel renders the Download purpose by name and anything else by id.
+const purposeLabel = (idVPurpose: number | null | undefined, downloadVPurpose: number | undefined): string =>
+    idVPurpose == null ? '∅' : (downloadVPurpose !== undefined && idVPurpose === downloadVPurpose ? 'Download' : `#${idVPurpose}`);
+const identitySummary = (usage: string | null | undefined, quality: string | null | undefined, uv: number | null | undefined,
+    idVPurpose: number | null | undefined, automationTag: string | null | undefined, downloadVPurpose: number | undefined): string =>
+    `${tagSummary(usage, quality, uv)} · purpose=${purposeLabel(idVPurpose, downloadVPurpose)} · tag=${automationTag ?? '∅'}`;
+
 async function downloadPurposeId(): Promise<number | undefined> {
     const v = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
     return v?.idVocabulary;
@@ -61,16 +71,16 @@ async function classifyMSX(msx: DBAPI.ModelSceneXref, downloadVPurpose: number |
     const tagsMatch: boolean = msx.Usage === tag.usage && msx.Quality === tag.quality && msx.UVResolution === tag.uvResolution
         && model.idVPurpose === (downloadVPurpose ?? model.idVPurpose) && model.AutomationTag === autoTag;
     const contentComplete: boolean = msx.FileSize !== null && msx.BoundingBoxP1X !== null;
-    const current: string = tagSummary(msx.Usage, msx.Quality, msx.UVResolution);
-    const proposed: string = tagSummary(tag.usage, tag.quality, tag.uvResolution);
+    const current: string = identitySummary(msx.Usage, msx.Quality, msx.UVResolution, model.idVPurpose, model.AutomationTag, downloadVPurpose);
+    const proposed: string = identitySummary(tag.usage, tag.quality, tag.uvResolution, downloadVPurpose ?? model.idVPurpose, autoTag, downloadVPurpose);
 
     if (tagsMatch) {
         if (contentComplete)
             return null;                                // fully correct — nothing to show
         return { status: 'needs-manual', typeKey, current, proposed,
-            reason: 'tag correct but FileSize/bounding-box missing — run inspection to fully match a generated row' };
+            reason: 'tag correct but FileSize/bounding-box missing — re-run Generate Downloads on the scene to fully match a generated row' };
     }
-    const contentNote: string = contentComplete ? '' : ' (note: FileSize/bbox missing — inspection recommended after the tag fix)';
+    const contentNote: string = contentComplete ? '' : ' (note: FileSize/bbox missing — re-run Generate Downloads on the scene to complete content)';
     return { status: 'fixable', typeKey, current, proposed, reason: `${current} → ${proposed}${contentNote}` };
 }
 
@@ -90,7 +100,7 @@ export const backfillDownloadTags: BulkOperationDef = {
     key: 'backfillDownloadTags',
     label: 'Backfill Download Tags',
     columns: [
-        { key: 'status', label: 'Status' },
+        { key: 'classification', label: 'Classification' },
         { key: 'modelName', label: 'Model / Download' },
         { key: 'matchedType', label: 'Cook Type' },
         { key: 'currentTag', label: 'Current (Usage/Quality/UV)' },
@@ -120,7 +130,7 @@ export const backfillDownloadTags: BulkOperationDef = {
                         name: msx.Name ?? `Model ${msx.idModel}`,
                         isCandidate: state.status === 'fixable',
                         rowData: {
-                            status: state.status,
+                            classification: state.status,
                             modelName: msx.Name ?? `Model ${msx.idModel}`,
                             matchedType: state.typeKey ?? '—',
                             currentTag: state.current,
@@ -179,6 +189,6 @@ export const backfillDownloadTags: BulkOperationDef = {
         }
         if (applied === 0)
             return { success: false, message: 'no recognized download tag to apply for this model' };
-        return { success: true, message: lastProposed, rowData: { status: 'fixable', currentTag: lastProposed, proposedTag: lastProposed, details: 'tag applied' } };
+        return { success: true, message: lastProposed, rowData: { classification: 'fixable', currentTag: lastProposed, proposedTag: lastProposed, details: 'tag applied' } };
     },
 };

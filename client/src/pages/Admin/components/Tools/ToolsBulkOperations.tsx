@@ -59,6 +59,14 @@ const OP_INFO: Record<string, { description: string; hints: string[] }> = {
             'Each applied row emits a publish / unpublish audit.',
         ],
     },
+    backfillDownloadTags: {
+        description: 'Repairs the download tag (Usage / Quality / UV + Download purpose + AutomationTag) on legacy scene-derivative models so a fixed row is identical to one produced by si-generate-downloads. The tag is derived purely from the filename suffix — never guessed.',
+        hints: [
+            'Only “fixable” rows apply; “ambiguous” / “needs-manual” are report-only.',
+            'FileSize / bounding-box are never written — rows missing them are flagged needs-manual (re-run Generate Downloads).',
+            'Each applied row emits a download-tag-backfill audit.',
+        ],
+    },
 };
 
 type OpColumn = { key: string; label: string };
@@ -195,7 +203,9 @@ function ToolsBulkOperations(): React.ReactElement {
     const buildColumns = (): ColumnHeader[] => ([
         { key: 'id', label: 'ID', align: 'center' },
         { key: 'name', label: 'Object', align: 'left', link: true },
-        ...opColumns.map(c => ({ key: c.key, label: c.label, align: 'center' as const })),
+        // 'status' is reserved by the harness for the live run-status column below; drop any op column
+        // that reuses it so the two never collide into a duplicate React key (which blanks cells on re-render).
+        ...opColumns.filter(c => c.key !== 'status').map(c => ({ key: c.key, label: c.label, align: 'center' as const })),
         ...rowSettings.map(s => ({ key: `set_${s.key}`, label: s.label, align: 'center' as const, render: (row: Row) => renderSettingControl(s, row) })),
         { key: 'status', label: 'Status', align: 'center' as const, render: (row: Row) => renderStatus(row) },
     ]);
@@ -333,7 +343,7 @@ function ToolsBulkOperations(): React.ReactElement {
         const cols: { label: string; value: (r: Row) => any }[] = [
             { label: 'ID', value: (r) => r.id },
             { label: 'Object', value: (r) => r.name },
-            ...opColumns.map(c => ({ label: c.label, value: (r: Row) => r[c.key] })),
+            ...opColumns.filter(c => c.key !== 'status').map(c => ({ label: c.label, value: (r: Row) => r[c.key] })),
             ...rowSettings.map(s => ({ label: s.label, value: (r: Row) => r.settings[s.key] })),
             { label: 'Status', value: (r) => {
                 if (r.status?.state) return r.status.message ? `${r.status.state}: ${r.status.message}` : r.status.state;

@@ -10,6 +10,9 @@ Packrat administrative users can manage the following types of content by select
 - [Units](#units)
 - [Subjects](#subjects)
 
+Packrat also surfaces a read-only reporting view for administrators and tools users:
+- [Metrics](#metrics) — preservation statistics for any date range
+
 ### Licenses
 Packrat licensing controls [publishing](../user/publishing) behavior as well as [download generation](../user/workflows#download-generation). Licenses are defined at the object level and then inherited from that object to all child objects which do not have explicit licenses defined.
 
@@ -68,6 +71,14 @@ Additional metadata can be provided:
 3. Supply a Value (and Label, when appropriate)
 
 These metadata fields will be persisted to Packrat and transmitted to EDAN when "Create" is clicked. 
+
+### Metrics
+
+The **Admin → Metrics** page reports preservation statistics for a chosen date range — objects and TB preserved (with the non-DPO subset), active non-DPO users, and scene content published/updated — for on-demand questions and quarterly reporting. It is available to administrators and tools users.
+
+Pick a start and end date (or use the **This Quarter / Last Quarter / Year to Date / Last 12 Months** presets), choose a granularity, and click **Run** to see range and cumulative tiles, per-period charts, and CSV / JSON export.
+
+For the metric definitions, the DPO/non-DPO configuration, and the underlying `GET /api/metrics` REST endpoint, see the [Metrics guide](../guides/GUIDE_SYSTEM_METRICS.md).
 
 Below is an additional set of metadata Names that have special meaning for EDAN. This [very thorough list of terms](http://dev.3d.api.si.edu/resources/terms.pdf) may help guide data entry here.
 
