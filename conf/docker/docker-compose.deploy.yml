@@ -1,5 +1,3 @@
-version: "3.4"
-
 services:
     packrat-client-dev:
         container_name: packrat-client-dev
@@ -54,10 +52,13 @@ services:
         ports:
             - $PACKRAT_SERVER_PORT:4000
         # Inject the whole env file so every PACKRAT_* variable (and any added later) reaches the
-        # container — no per-variable allow-list to keep in sync. This service is the staging deploy
-        # (deploy.sh dev), so it always loads .env.dev. Path is relative to this compose file.
+        # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
+        # deploy.sh selected (dev=staging | prod | inspect); deploy.sh only starts packrat-server-$ENV, so
+        # the started service always loads its own file (.env.dev for staging, .env.prod for production).
+        # Using ${ENV} rather than a fixed name keeps the non-started services pointing at that same
+        # existing file, so an absent .env.prod on a staging host can't fail the compose parse.
         env_file:
-            - ../../.env.dev
+            - ../../.env.${ENV}
 
         volumes:
             - $PACKRAT_OCFL_STORAGE_ROOT:$PACKRAT_OCFL_STORAGE_ROOT
@@ -79,10 +80,13 @@ services:
         ports:
             - $PACKRAT_SERVER_PORT:4000
         # Inject the whole env file so every PACKRAT_* variable (and any added later) reaches the
-        # container — no per-variable allow-list to keep in sync. This service is the production deploy
-        # (deploy.sh prod), so it always loads .env.prod. Path is relative to this compose file.
+        # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
+        # deploy.sh selected (dev=staging | prod | inspect); deploy.sh only starts packrat-server-$ENV, so
+        # the started service always loads its own file (.env.dev for staging, .env.prod for production).
+        # Using ${ENV} rather than a fixed name keeps the non-started services pointing at that same
+        # existing file, so an absent .env.prod on a staging host can't fail the compose parse.
         env_file:
-            - ../../.env.prod
+            - ../../.env.${ENV}
 
         volumes:
             - $PACKRAT_OCFL_STORAGE_ROOT:$PACKRAT_OCFL_STORAGE_ROOT
@@ -105,10 +109,11 @@ services:
             - $PACKRAT_SERVER_PORT:4000
             - 9229:9230
         # Inject the whole env file so every PACKRAT_* variable (and any added later) reaches the
-        # container — no per-variable allow-list to keep in sync. This is the debug build (deploy.sh
-        # inspect), so it loads .env.inspect. NODE_OPTIONS stays inline (debug-only, not in the env file).
+        # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
+        # deploy.sh selected; deploy.sh only starts packrat-server-$ENV, so the started service always
+        # loads its own file. NODE_OPTIONS stays inline (debug-only, not in the env file).
         env_file:
-            - ../../.env.inspect
+            - ../../.env.${ENV}
         environment:
             - NODE_OPTIONS=--inspect
 
