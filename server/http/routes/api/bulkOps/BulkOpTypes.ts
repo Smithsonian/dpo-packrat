@@ -2,7 +2,7 @@
 import { RecordKeeper as RK } from '../../../../records/recordKeeper';
 import * as H from '../../../../utils/helpers';
 
-export interface BulkOpColumn { key: string; label: string; }
+export interface BulkOpColumn { key: string; label: string; hidden?: boolean; } // hidden: excluded from the table, still exported to CSV
 export interface BulkOpSetting { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; }
 /** A pre-run parameter the user chooses before gathering (e.g. the Sync-from-EDAN target: Subject vs Scene). */
 export interface BulkOpParam { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; default?: string; }
@@ -11,6 +11,7 @@ export interface BulkOpRow {
     id: number;                 // idSystemObject
     name: string;
     isCandidate: boolean;       // selectable-by-default: a change is available/needed for this row
+    severity?: 'ok' | 'warn';   // status hint for a non-candidate row: 'warn' = needs a human, 'ok'/absent = fine
     rowData?: any;              // values for the op-declared columns
     defaultSettings?: any;      // initial per-row settings
     current?: any;              // current per-setting value (the "before")

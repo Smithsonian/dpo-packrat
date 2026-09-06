@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Typography, Button, Select, MenuItem, LinearProgress, Table, TableContainer, TableBody, TableRow, TableCell, Paper, Tooltip, CircularProgress } from '@material-ui/core';
-import { CheckCircle, HighlightOff } from '@material-ui/icons';
+import { CheckCircle, HighlightOff, Warning } from '@material-ui/icons';
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
@@ -69,7 +69,7 @@ const OP_INFO: Record<string, { description: string; hints: string[] }> = {
     },
 };
 
-type OpColumn = { key: string; label: string };
+type OpColumn = { key: string; label: string; hidden?: boolean };
 type OpSetting = { key: string; label: string; type: string; options: { value: string; label: string }[] };
 type OpParam = { key: string; label: string; type: string; options: { value: string; label: string }[]; default?: string };
 type ProjectRef = { idProject: number; Name: string };
@@ -77,6 +77,7 @@ type RowStatus = { state?: 'working' | 'success' | 'error'; message?: string };
 type Row = DBReference & {
     name_link: string;
     isCandidate: boolean;            // server: does this row have a change to apply (vs already in sync / no change)
+    severity?: 'ok' | 'warn';        // non-candidate hint: 'warn' = needs a human (amber), else treated as no-change
     settings: Record<string, any>;   // current (possibly edited) per-row settings, sent to apply
     current: Record<string, any>;    // the current value per setting, from the op
     status: RowStatus;               // live run status
@@ -176,6 +177,10 @@ function ToolsBulkOperations(): React.ReactElement {
         if (st === 'success') return <CheckCircle style={{ color: '#2e7d32' }} fontSize='small' />;
         if (st === 'error')
             return <Tooltip title={row.status?.message || 'Failed'}><HighlightOff style={{ color: '#c62828' }} fontSize='small' /></Tooltip>;
+        // a non-candidate row flagged 'warn' is not a clean no-change — it needs a human (e.g. ambiguous /
+        // needs-manual). Show an amber warning with the row's plain-English detail, not a green check.
+        if (!row.isCandidate && row.severity === 'warn')
+            return <Tooltip title={row.details || 'Needs manual handling'}><Warning style={{ color: '#ed6c02' }} fontSize='small' /></Tooltip>;
         if (!row.isCandidate) return <Tooltip title='No change'><CheckCircle style={{ color: '#2e7d32' }} fontSize='small' /></Tooltip>;
         return null;
     };
@@ -205,7 +210,8 @@ function ToolsBulkOperations(): React.ReactElement {
         { key: 'name', label: 'Object', align: 'left', link: true },
         // 'status' is reserved by the harness for the live run-status column below; drop any op column
         // that reuses it so the two never collide into a duplicate React key (which blanks cells on re-render).
-        ...opColumns.filter(c => c.key !== 'status').map(c => ({ key: c.key, label: c.label, align: 'center' as const })),
+        // Hidden columns are omitted from the table but still exported to CSV (see exportCSV).
+        ...opColumns.filter(c => c.key !== 'status' && !c.hidden).map(c => ({ key: c.key, label: c.label, align: 'center' as const })),
         ...rowSettings.map(s => ({ key: `set_${s.key}`, label: s.label, align: 'center' as const, render: (row: Row) => renderSettingControl(s, row) })),
         { key: 'status', label: 'Status', align: 'center' as const, render: (row: Row) => renderStatus(row) },
     ]);
@@ -216,6 +222,7 @@ function ToolsBulkOperations(): React.ReactElement {
         name_link: `/repository/details/${r.id}`,
         ...(r.rowData ?? {}),
         isCandidate: !!r.isCandidate,
+        severity: r.severity,
         settings: { ...(r.defaultSettings ?? {}) },
         current: { ...(r.current ?? {}) },
         status: {},
