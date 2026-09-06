@@ -1,5 +1,5 @@
 import type { eSystemObjectType } from '@dpo-packrat/common';
-import type { ResolvedNode, ResolvedNodeKind, RetireResolution, ScopeBlocker } from '../db';
+import type { ResolvedNode, ResolvedNodeKind, RetireResolution, RetireScope, ScopeBlocker } from '../db';
 
 export type RetireItemStatus =
     | 'succeeded'    // flag was flipped by this operation
@@ -33,8 +33,9 @@ export type UnpublishResult = { success: boolean; error?: string };
  * unit-tested with fakes independently of the database and EDAN.
  */
 export interface RetireExecutorDeps {
-    /** Resolve the candidate set (root + derived + assets) and scope blockers. */
-    resolve(idSystemObject: number): Promise<RetireResolution | null>;
+    /** Resolve the candidate set (root + derived + assets) and scope blockers. `scope` narrows the reach
+     *  to the root object alone when 'direct'; omitted/undefined resolves the full cascade. */
+    resolve(idSystemObject: number, scope?: RetireScope): Promise<RetireResolution | null>;
     /** idSystemObject of candidates that are scenes currently published to EDAN. */
     findPublishedScenes(candidates: ResolvedNode[]): Promise<number[]>;
     /** Unpublish one scene from EDAN. Runs outside any DB transaction (external HTTP). */
@@ -63,8 +64,8 @@ function summarize(retire: boolean, items: RetireItemResult[], unpublished: numb
  *
  * Reinstate flips flags only — it never republishes to EDAN.
  */
-export async function executeRetire(idSystemObject: number, retire: boolean, deps: RetireExecutorDeps): Promise<RetireExecutionResult> {
-    const resolution: RetireResolution | null = await deps.resolve(idSystemObject);
+export async function executeRetire(idSystemObject: number, retire: boolean, deps: RetireExecutorDeps, scope: RetireScope = 'cascade'): Promise<RetireExecutionResult> {
+    const resolution: RetireResolution | null = await deps.resolve(idSystemObject, scope);
     if (!resolution) {
         return { applied: false, retire, items: [], blockers: [], edanFailures: 0,
             message: `Unable to resolve retire candidates for SystemObject ${idSystemObject}` };

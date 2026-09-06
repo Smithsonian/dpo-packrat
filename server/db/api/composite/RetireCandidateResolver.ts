@@ -5,6 +5,12 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export type ResolvedNodeKind = 'object' | 'asset';
 
+/** Retire/reinstate reach.
+ *  - 'cascade' (default): the root, every derived object beneath it, and all their assets.
+ *  - 'direct': only the root object and its own attached assets — derived objects (e.g. a scene
+ *    generated from a retired master) stay untouched. */
+export type RetireScope = 'cascade' | 'direct';
+
 /** A single object slated for retire/reinstate. `depth` is 0 for the root and increments per level
  *  down the derived graph; assets carry the depth of the object that owns them. */
 export type ResolvedNode = {
@@ -45,17 +51,18 @@ export interface RetireGraphSource {
  * descendant that is a structural container ranked above the root is recorded as a blocker and its
  * subtree is skipped.
  */
-export async function resolveRetireCandidates(root: ResolvedNode, source: RetireGraphSource): Promise<RetireResolution> {
+export async function resolveRetireCandidates(root: ResolvedNode, source: RetireGraphSource, scope: RetireScope = 'cascade'): Promise<RetireResolution> {
     const visited: Set<number> = new Set<number>([root.idSystemObject]);
     const blockers: ScopeBlocker[] = [];
 
     // Breadth-first discovery of derived objects, recording the object children of each node. The
     // visited-set makes cycles/diamonds terminate and pins each object under the first parent that
-    // reaches it, so `childrenOf` forms a tree.
+    // reaches it, so `childrenOf` forms a tree. In 'direct' scope this discovery is skipped entirely,
+    // so only the root object (and its own assets, collected below) is a candidate.
     const objectOrder: ResolvedNode[] = [root];
     const childrenOf: Map<number, ResolvedNode[]> = new Map<number, ResolvedNode[]>();
     const queue: ResolvedNode[] = [root];
-    while (queue.length > 0) {
+    while (scope === 'cascade' && queue.length > 0) {
         const node: ResolvedNode = queue.shift()!; // eslint-disable-line @typescript-eslint/no-non-null-assertion
         const children: ResolvedNode[] = await source.getChildren(node.idSystemObject);
         const kept: ResolvedNode[] = [];
@@ -204,7 +211,7 @@ export class DBRetireGraphSource implements RetireGraphSource {
 }
 
 /** Resolves the retire/reinstate candidate set for a root SystemObject against the live database. */
-export async function resolveRetireCandidatesFromSystemObject(idSystemObject: number): Promise<RetireResolution | null> {
+export async function resolveRetireCandidatesFromSystemObject(idSystemObject: number, scope: RetireScope = 'cascade'): Promise<RetireResolution | null> {
     const source: DBRetireGraphSource = new DBRetireGraphSource();
     const root: ResolvedNode | null = await source.loadNode(idSystemObject, 0, 'object');
     if (!root) {
@@ -212,5 +219,5 @@ export async function resolveRetireCandidatesFromSystemObject(idSystemObject: nu
             { idSystemObject }, 'DB.Composite.RetireResolver');
         return null;
     }
-    return resolveRetireCandidates(root, source);
+    return resolveRetireCandidates(root, source, scope);
 }

@@ -33,7 +33,7 @@ export async function objectAction(req: Request, res: Response): Promise<void> {
         return;
     }
 
-    const { idSystemObject, action } = req.body ?? {};
+    const { idSystemObject, action, scope: scopeRaw } = req.body ?? {};
     const idSO: number = Number(idSystemObject);
     if (!Number.isInteger(idSO) || idSO <= 0) {
         respond(res, false, 'objectAction: valid idSystemObject required');
@@ -43,6 +43,8 @@ export async function objectAction(req: Request, res: Response): Promise<void> {
         respond(res, false, `objectAction: action must be one of ${ACTIONS.join(', ')}`);
         return;
     }
+    // Retire reach: 'cascade' (root + all dependents, the default) or 'direct' (root + its own assets only).
+    const scope: DBAPI.RetireScope = scopeRaw === 'direct' ? 'direct' : 'cascade';
 
     // Authorization: fail-closed on access to the target SystemObject.
     const ctx = Authorization.getContext();
@@ -53,7 +55,7 @@ export async function objectAction(req: Request, res: Response): Promise<void> {
 
     try {
         if (action === 'describe') {
-            const resolution: DBAPI.RetireResolution | null = await DBAPI.resolveRetireCandidatesFromSystemObject(idSO);
+            const resolution: DBAPI.RetireResolution | null = await DBAPI.resolveRetireCandidatesFromSystemObject(idSO, scope);
             if (!resolution) {
                 respond(res, false, `objectAction: unable to resolve objects for ${idSO}`);
                 return;
@@ -68,7 +70,7 @@ export async function objectAction(req: Request, res: Response): Promise<void> {
         }
 
         const retire: boolean = action === 'retire';
-        const result: RetireExecutionResult = await retireSystemObjectTree(idSO, retire);
+        const result: RetireExecutionResult = await retireSystemObjectTree(idSO, retire, scope);
         respond(res, result.applied, result.message, {
             action,
             idSystemObject: idSO,

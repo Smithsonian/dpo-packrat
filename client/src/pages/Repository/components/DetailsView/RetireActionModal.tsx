@@ -12,10 +12,11 @@
  */
 import React, { useCallback, useEffect, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box, Typography, Chip, Tooltip, CircularProgress,
-    Table, TableHead, TableBody, TableRow, TableCell } from '@material-ui/core';
+    Table, TableHead, TableBody, TableRow, TableCell, Checkbox, FormControlLabel } from '@material-ui/core';
 import { toast } from 'react-toastify';
 import { toastError } from '../../../../utils/toastError';
 import API from '../../../../api';
+import { useUserStore } from '../../../../store';
 
 type ItemStatus = 'succeeded' | 'failed' | 'skipped' | 'notApplied';
 
@@ -62,6 +63,8 @@ function statusColor(status?: ItemStatus): string {
 function RetireActionModal(props: RetireActionModalProps): React.ReactElement {
     const { open, idSystemObject, retire, onClose, onComplete } = props;
     const verb: string = retire ? 'Retire' : 'Reinstate';
+    // The direct-only reach is admin-gated for now; everyone else always cascades (the safe default).
+    const isAdmin: boolean = useUserStore(state => state.user)?.isAdmin ?? false;
 
     const [phase, setPhase] = useState<Phase>('loading');
     const [objects, setObjects] = useState<ObjectActionSummary[]>([]);
@@ -69,11 +72,13 @@ function RetireActionModal(props: RetireActionModalProps): React.ReactElement {
     const [applied, setApplied] = useState<boolean>(false);
     const [message, setMessage] = useState<string>('');
     const [loadError, setLoadError] = useState<string>('');
+    // cascade (default) reaches all dependents; unchecked = 'direct' (this object and its own assets only).
+    const [cascade, setCascade] = useState<boolean>(true);
 
     const loadPreview = useCallback(async () => {
         setPhase('loading');
         setLoadError('');
-        const res = await API.objectAction(idSystemObject, 'describe');
+        const res = await API.objectAction(idSystemObject, 'describe', cascade ? 'cascade' : 'direct');
         if (!res?.success || !res.data) {
             setLoadError(res?.message ?? 'Unable to load preview');
             setPhase('preview');
@@ -82,8 +87,10 @@ function RetireActionModal(props: RetireActionModalProps): React.ReactElement {
         setObjects(res.data.objects ?? []);
         setBlockers(res.data.blockers ?? []);
         setPhase('preview');
-    }, [idSystemObject]);
+    }, [idSystemObject, cascade]);
 
+    // Reloads on open AND whenever the cascade toggle changes (loadPreview depends on it), so the preview
+    // always reflects the current reach.
     useEffect(() => {
         if (open) {
             setObjects([]);
@@ -94,9 +101,15 @@ function RetireActionModal(props: RetireActionModalProps): React.ReactElement {
         }
     }, [open, loadPreview]);
 
+    // Reset the reach to the safe default (cascade) each time the dialog closes.
+    useEffect(() => {
+        if (!open)
+            setCascade(true);
+    }, [open]);
+
     const execute = async () => {
         setPhase('executing');
-        const res = await API.objectAction(idSystemObject, retire ? 'retire' : 'reinstate');
+        const res = await API.objectAction(idSystemObject, retire ? 'retire' : 'reinstate', cascade ? 'cascade' : 'direct');
         const resultObjects: ObjectActionSummary[] = res?.data?.objects ?? [];
         const statusById: Map<number, ObjectActionSummary> = new Map(resultObjects.map(o => [o.idSystemObject, o]));
 
@@ -181,6 +194,17 @@ function RetireActionModal(props: RetireActionModalProps): React.ReactElement {
                             <Typography variant='body2' style={{ marginBottom: 4 }}>
                                 {verb} will affect {objectCount} object(s){assetCount > 0 ? ` and ${assetCount} asset(s)` : ''}.
                             </Typography>
+                        )}
+
+                        {!showStatus && isAdmin && (
+                            <FormControlLabel
+                                style={{ marginBottom: 4 }}
+                                control={<Checkbox checked={cascade} size='small' disabled={phase === 'executing'} onChange={(e) => setCascade(e.target.checked)} />}
+                                label={<Typography variant='body2'>
+                                    Also {retire ? 'retire' : 'reinstate'} dependent objects (derivatives, generated scenes).
+                                    {' '}Uncheck to affect only this object and its own files.
+                                </Typography>}
+                            />
                         )}
 
                         {message && showStatus && <Typography variant='caption' style={{ color: '#757575' }}>{message}</Typography>}

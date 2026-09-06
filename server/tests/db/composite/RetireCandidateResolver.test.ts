@@ -139,4 +139,21 @@ describe('resolveRetireCandidates', () => {
         expect(byId.get(2)).toBe(1);
         expect(byId.get(3)).toBe(2);
     });
+
+    test('direct scope returns only the root and its own assets, not derived objects', async () => {
+        const root = obj(1, eSystemObjectType.eModel);
+        const source = new MemSource(
+            new Map([
+                [1, [obj(2, eSystemObjectType.eScene)]],  // derived scene — must NOT be retired in 'direct'
+                [2, [obj(3, eSystemObjectType.eModel)]],
+            ]),
+            new Map([
+                [1, [asset(10)]],  // the root model's own asset — included
+                [2, [asset(11)]],  // the derived scene's asset — excluded
+            ]),
+        );
+        const { candidates, blockers } = await resolveRetireCandidates(root, source, 'direct');
+        expect(blockers).toHaveLength(0);
+        expect(ids(candidates)).toEqual([1, 10]);
+    });
 });

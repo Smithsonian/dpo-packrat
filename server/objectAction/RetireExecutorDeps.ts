@@ -100,13 +100,14 @@ async function applyRetireFlags(candidates: DBAPI.ResolvedNode[], retire: boolea
 
 /** Production dependencies: resolve against the DB, unpublish via EDAN, flip flags transactionally. */
 export const dbRetireExecutorDeps: RetireExecutorDeps = {
-    resolve: (idSystemObject: number) => DBAPI.resolveRetireCandidatesFromSystemObject(idSystemObject),
+    resolve: (idSystemObject: number, scope?: DBAPI.RetireScope) => DBAPI.resolveRetireCandidatesFromSystemObject(idSystemObject, scope),
     findPublishedScenes,
     unpublishScene,
     applyFlags: applyRetireFlags,
 };
 
-/** Retire or reinstate an object and its resolved dependents/assets against the live DB and EDAN. */
-export async function retireSystemObjectTree(idSystemObject: number, retire: boolean): Promise<RetireExecutionResult> {
-    return executeRetire(idSystemObject, retire, dbRetireExecutorDeps);
+/** Retire or reinstate an object and its resolved dependents/assets against the live DB and EDAN.
+ *  `scope` defaults to 'cascade' (root + all dependents); 'direct' retires only the root and its assets. */
+export async function retireSystemObjectTree(idSystemObject: number, retire: boolean, scope: DBAPI.RetireScope = 'cascade'): Promise<RetireExecutionResult> {
+    return executeRetire(idSystemObject, retire, dbRetireExecutorDeps, scope);
 }
