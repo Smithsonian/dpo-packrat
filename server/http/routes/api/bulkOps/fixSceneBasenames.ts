@@ -129,8 +129,9 @@ async function toRow(idSystemObject: number, state: StateInfo): Promise<BulkOpRo
         id: idSystemObject,
         name: await sceneName(idSystemObject),
         isCandidate: false, // review-only: every row is report-only; no row is selectable / auto-correctable
+        severity: state.status === 'consistent' ? 'ok' : 'warn', // drift rows need a human; show amber, not a green check
         rowData: {
-            status: statusLabel(state.status),
+            classification: statusLabel(state.status),
             canonicalName: state.canonical ?? '—',
             currentBasename: state.bases.join(', '),
             fileCount: state.fileCount,
@@ -165,7 +166,7 @@ export const fixSceneBasenames: BulkOperationDef = {
     key: 'fixSceneBasenames',
     label: 'Review Scene Basenames',
     columns: [
-        { key: 'status', label: 'Status' },
+        { key: 'classification', label: 'Classification' },
         { key: 'canonicalName', label: 'Canonical Name (Subject)' },
         { key: 'currentBasename', label: 'Current Basename(s)' },
         { key: 'fileCount', label: 'Cook Output Files' },
