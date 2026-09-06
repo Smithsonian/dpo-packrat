@@ -306,8 +306,19 @@ export abstract class JobCook<T> extends JobPackrat {
         let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
         try {
-            // get our parameters
-            const sceneParams = await this.getParameters();
+            // get our parameters. A setup failure here (e.g. an unreadable/unsupported zip) must abort with
+            // its own message and never reach Cook — otherwise Cook fails with a generic error that hides the
+            // real, actionable reason. Record the failure and return non-retryable.
+            let sceneParams: T;
+            try {
+                sceneParams = await this.getParameters();
+            } catch (paramError) {
+                const message: string = H.Helpers.getErrorString(paramError);
+                RK.logError(RK.LogSection.eJOB,'start job worker failed',`parameter setup failed: ${message}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                await this.recordFailure(message, message);
+                res = { success: false, error: message, allowRetry: false, connectFailure: false, otherCookError: false };
+                return res;
+            }
 
             // write an initial report summary now that domain context is available (refined at start/terminal)
             await this.writeReportSummary();

@@ -778,8 +778,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
-            RK.logError(RK.LogSection.eJOB,'test for zip failed',`unable to load zip for AssetVersion: ${zipRes.error}`,{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            return false;
+            // The zip can't be read locally (e.g. an unsupported compression method). Fail hard rather than
+            // returning quietly — otherwise the job proceeds to Cook, which fails with a generic "invalid or
+            // corrupt" and hides the real, actionable reason. The thrown message is recorded as the failure.
+            const error: string = zipRes.error ?? `unable to load zip ${assetVersion.FileName}`;
+            RK.logError(RK.LogSection.eJOB,'test for zip failed',`unable to load zip for AssetVersion: ${error}`,{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+            throw new Error(error);
         }
 
         // grab our list of files in the ZIP and cycle through each streaming them in

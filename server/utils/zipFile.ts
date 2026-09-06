@@ -1,8 +1,28 @@
 import * as fs from 'fs-extra';
+import * as path from 'path';
 import StreamZip from 'node-stream-zip';
 import * as H from './helpers';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 import { IZip, zipFilterResults } from './IZip';
+
+// node-stream-zip can only decompress Stored (0) and Deflate (8). Anything else (Deflate64=9, BZIP2=12,
+// LZMA=14, …) reads fine in the central directory but throws on extraction, which otherwise surfaces deep
+// in a per-entry stream and reads as "invalid or corrupt". Detect it at load time and explain the fix.
+const SUPPORTED_COMPRESSION_METHODS: number[] = [0, 8];
+function compressionMethodLabel(method: number): string {
+    switch (method) {
+        case 9:  return 'Deflate64';
+        case 12: return 'BZIP2';
+        case 14: return 'LZMA';
+        case 99: return 'AES-encrypted';
+        default: return `method ${method}`;
+    }
+}
+function unsupportedCompressionMessage(fileName: string, entry: string, method: number): string {
+    return `Cannot read ZIP '${path.basename(fileName)}': entry '${entry}' uses unsupported compression (${compressionMethodLabel(method)}). `
+        + 'Re-compress the package with standard Deflate — e.g. Windows "Send to → Compressed (zipped) folder", '
+        + '7-Zip with Method "Deflate" (not Deflate64), or the "zip" CLI — and re-upload.';
+}
 
 /**
  * Zip contents are stored at the end of the zip file.  In order to decompress a zip file,
@@ -33,6 +53,7 @@ export class ZipFile implements IZip {
                         /* istanbul ignore else */
                         if (this._zip) {
                             this.clearState();
+                            let unsupported: { entry: string; method: number } | null = null;
                             for (const entry of Object.values(this._zip.entries())) { /* istanbul ignore next */
                                 if (entry.name.toUpperCase().startsWith('__MACOSX')) // ignore wacky MAC OSX resource folder stuffed into zips created on that platform
                                     continue; /* istanbul ignore next */
@@ -41,8 +62,17 @@ export class ZipFile implements IZip {
                                 this._entries.push(entry.name);
                                 if (entry.isDirectory)
                                     this._dirs.push(entry.name);
-                                else
+                                else {
                                     this._files.push(entry.name);
+                                    if (!unsupported && !SUPPORTED_COMPRESSION_METHODS.includes(entry.method))
+                                        unsupported = { entry: entry.name, method: entry.method };
+                                }
+                            }
+                            if (unsupported) {
+                                const error: string = unsupportedCompressionMessage(this._fileName, unsupported.entry, unsupported.method);
+                                RK.logError(RK.LogSection.eSYS,'load',error,{ fileName: this._fileName, entry: unsupported.entry, method: unsupported.method },'Utils.ZipFile');
+                                resolve({ success: false, error });
+                                return;
                             }
                             resolve({ success: true });
                         } else {
