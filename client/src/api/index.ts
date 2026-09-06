@@ -130,6 +130,16 @@ export default class API {
         return this.request('api/scene/published', { method: 'GET' });
     }
 
+    // preservation metrics for an inclusive date range; pass series=true for per-period plot data
+    static async getMetrics(start: string, end: string, series: boolean = false, granularity: 'day' | 'week' | 'month' | 'year' = 'month'): Promise<RequestResponse> {
+        const params = new URLSearchParams({ start, end });
+        if (series) {
+            params.set('series', '1');
+            params.set('granularity', granularity);
+        }
+        return this.request(`api/metrics?${params.toString()}`, { method: 'GET' });
+    }
+
     // volumetric inspection results — returns the JSON produced by JobVolumeInspect
     // for the given asset version. data is null when no completed inspection exists.
     static async getVolumetricInspectionResults(idAssetVersion: number): Promise<RequestResponse> {

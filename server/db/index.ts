@@ -32,6 +32,7 @@ export * from './api/JobRun';
 export * from './api/License';
 export * from './api/LicenseAssignment';
 export * from './api/Metadata';
+export * from './api/Metrics';
 export * from './api/Model';
 export * from './api/ModelMaterial';
 export * from './api/ModelMaterialChannel';

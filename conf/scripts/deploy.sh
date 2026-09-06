@@ -53,5 +53,14 @@ export ENV=$ENV
 
 echo "Deploying docker images for env $ENV with tag: $IMAGE_TAG"
 
+# Docker containers need IPv4 forwarding for build-time egress (apk/npm reach package mirrors) and for
+# runtime networking. A hardened sysctl baseline (e.g. CIS/STIG) can pin net.ipv4.ip_forward=0, which
+# severs container egress and fails the build at 'apk update'. Assert it here so a deploy never fails on
+# it. The host should persist this as 1 (a container host requires it); this is a build-time safety net.
+if [ "$(sysctl -n net.ipv4.ip_forward 2>/dev/null)" != "1" ]; then
+  echo "WARN: net.ipv4.ip_forward=0 — enabling for Docker container egress (host should persist this as 1)"
+  sudo sysctl -w net.ipv4.ip_forward=1 || echo "WARN: could not set net.ipv4.ip_forward (need passwordless sudo); build may fail to reach package mirrors"
+fi
+
 # Build packrat-server and client dynamically for environment's requested
 docker compose --env-file .env.$ENV -f ./conf/docker/docker-compose.deploy.yml up --build -d packrat-server-$ENV packrat-client-$ENV packrat-solr-$ENV
