@@ -1,6 +1,6 @@
 /* eslint-disable react/jsx-max-props-per-line */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Button, MenuItem, Select, TextField, Typography } from '@material-ui/core';
+import { Box, Button, MenuItem, Select, TextField, Tooltip, Typography } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import { useLocation } from 'react-router';
 import { Helmet } from 'react-helmet';
@@ -15,7 +15,7 @@ type Totals = {
     objectsPreserved: { assetVersions: number; repositoryObjects: number };
     storage: { bytes: number; terabytes: number; bytesNonDPO: number; terabytesNonDPO: number };
     activeNonDPOUsers: number;
-    scenes: { publishEvents: number; distinctScenes: number };
+    scenes: { publishEvents: number; distinctScenes: number; currentlyPublished: number };
 };
 
 type SeriesPoint = {
@@ -29,6 +29,7 @@ type SeriesPoint = {
     activeNonDPOUsers: number;
     scenePublishEvents: number;
     scenesPublished: number;
+    scenesPublishedCurrent: number;
 };
 
 type MetricsData = {
@@ -94,6 +95,7 @@ const useStyles = makeStyles(({ palette }) => ({
         background: '#FAFCFF',
     },
     tileLabel: { fontSize: '0.75rem', color: '#5B6B7F', marginBottom: 6 },
+    infoLabel: { borderBottom: '1px dotted #9AAABD', cursor: 'help' },
     tileValue: { fontSize: '1.5rem', fontWeight: 600, color: '#25384F', lineHeight: 1.1 },
     tileSub: { fontSize: '0.72rem', color: '#7A8Aa0', marginTop: 4 },
     chartCard: {
@@ -120,6 +122,19 @@ function quarterStart(d: Date): Date {
 }
 
 const NUM = (n: number): string => n.toLocaleString();
+
+// Plain-English explanations shown on hover so the metric titles make sense to end users.
+const TT = {
+    objects: 'Distinct repository objects (models, scenes, capture data, etc.) that received ingested content. Many file versions can roll up into one object.',
+    assetVersions: 'Every preserved file version ingested. Each re-ingest of a file adds another version.',
+    data: 'Total size of ingested file versions (full storage footprint across all versions).',
+    dataNonDPO: 'Portion of the preserved data contributed by users outside the DPO team.',
+    activeUsers: 'Distinct non-DPO users with any audited activity in the selected range.',
+    scenesRange: 'Scenes whose latest version was created in this range and is currently in a published (EDAN) state. Counts each scene once; excludes scenes later unpublished.',
+    publishEvents: 'Raw publish activity: every published-state version created in the range, including repeated re-publishes of the same scene.',
+    scenesCurrent: 'Total scenes currently published (EDAN) as of the end date, based on each scene’s latest version. This is a snapshot, not a sum of the range.',
+    scenesGrowth: 'Running total of scenes currently published at the end of each period — a system-growth view. Can dip when scenes are unpublished.',
+};
 
 // Auto-scaling byte formatter (decimal units, matching the 10^12 TB used for reporting).
 function formatBytes(bytes: number): string {
@@ -171,14 +186,29 @@ function BarChart({ points, getValue, color, format }: { points: SeriesPoint[]; 
     );
 }
 
-function Tile({ label, value, sub }: { label: string; value: string; sub?: string }): React.ReactElement {
+function Tile({ label, value, sub, info }: { label: string; value: string; sub?: string; info?: string }): React.ReactElement {
     const classes = useStyles();
+    const labelEl = info
+        ? <Tooltip title={info} arrow><span className={classes.infoLabel}>{label}</span></Tooltip>
+        : <span>{label}</span>;
     return (
         <Box className={classes.tile}>
-            <div className={classes.tileLabel}>{label}</div>
+            <div className={classes.tileLabel}>{labelEl}</div>
             <div className={classes.tileValue}>{value}</div>
             {sub && <div className={classes.tileSub}>{sub}</div>}
         </Box>
+    );
+}
+
+// Chart heading with an optional hover tooltip explaining what the series shows.
+function ChartTitle({ title, info }: { title: string; info?: string }): React.ReactElement {
+    const classes = useStyles();
+    if (!info)
+        return <div className={classes.chartTitle}>{title}</div>;
+    return (
+        <Tooltip title={info} arrow>
+            <div className={`${classes.chartTitle} ${classes.infoLabel}`}>{title}</div>
+        </Tooltip>
     );
 }
 
@@ -233,8 +263,8 @@ function AdminMetricsView(): React.ReactElement {
     };
     const downloadCSV = (): void => {
         if (!data?.series) return;
-        const header = ['period', 'assetVersions', 'repositoryObjects', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished'];
-        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished].join(','));
+        const header = ['period', 'assetVersions', 'repositoryObjects', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
+        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
         triggerDownload([header.join(','), ...lines].join('\n'), `packrat-metrics_${start}_${end}.csv`, 'text/csv');
     };
 
@@ -294,36 +324,40 @@ function AdminMetricsView(): React.ReactElement {
 
                         <div className={classes.sectionTitle}>Selected Range</div>
                         <Box className={classes.tileRow}>
-                            <Tile label='Objects Preserved' value={NUM(data.summary.objectsPreserved.repositoryObjects)} sub={`${NUM(data.summary.objectsPreserved.assetVersions)} asset versions`} />
-                            <Tile label='Data Preserved' value={formatBytes(data.summary.storage.bytes)} />
-                            <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.summary.storage.bytesNonDPO)} />
-                            <Tile label='Active non-DPO Users' value={NUM(data.summary.activeNonDPOUsers)} />
-                            <Tile label='Scenes Published/Updated' value={NUM(data.summary.scenes.distinctScenes)} sub={`${NUM(data.summary.scenes.publishEvents)} publish events`} />
+                            <Tile label='Objects Preserved' value={NUM(data.summary.objectsPreserved.repositoryObjects)} sub={`${NUM(data.summary.objectsPreserved.assetVersions)} asset versions`} info={TT.objects} />
+                            <Tile label='Data Preserved' value={formatBytes(data.summary.storage.bytes)} info={TT.data} />
+                            <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.summary.storage.bytesNonDPO)} info={TT.dataNonDPO} />
+                            <Tile label='Active non-DPO Users' value={NUM(data.summary.activeNonDPOUsers)} info={TT.activeUsers} />
+                            <Tile label='Scenes Published/Updated' value={NUM(data.summary.scenes.distinctScenes)} sub={`${NUM(data.summary.scenes.publishEvents)} publish events`} info={TT.scenesRange} />
                         </Box>
 
                         <div className={classes.sectionTitle}>Cumulative (through end date)</div>
                         <Box className={classes.tileRow}>
-                            <Tile label='Objects Preserved' value={NUM(data.cumulative.objectsPreserved.repositoryObjects)} sub={`${NUM(data.cumulative.objectsPreserved.assetVersions)} asset versions`} />
-                            <Tile label='Data Preserved' value={formatBytes(data.cumulative.storage.bytes)} />
-                            <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.cumulative.storage.bytesNonDPO)} />
-                            <Tile label='Scenes Published (total)' value={NUM(data.cumulative.scenes.distinctScenes)} />
+                            <Tile label='Objects Preserved' value={NUM(data.cumulative.objectsPreserved.repositoryObjects)} sub={`${NUM(data.cumulative.objectsPreserved.assetVersions)} asset versions`} info={TT.objects} />
+                            <Tile label='Data Preserved' value={formatBytes(data.cumulative.storage.bytes)} info={TT.data} />
+                            <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.cumulative.storage.bytesNonDPO)} info={TT.dataNonDPO} />
+                            <Tile label='Scenes Published (total)' value={NUM(data.cumulative.scenes.currentlyPublished)} info={TT.scenesCurrent} />
                         </Box>
 
                         <div className={classes.sectionTitle}>Over Time</div>
                         <Box className={classes.chartCard}>
-                            <div className={classes.chartTitle}>Data preserved per period</div>
+                            <ChartTitle title='Data preserved per period' info={TT.data} />
                             <BarChart points={series} getValue={p => p.storageBytes} color='#2B7DE9' format={formatBytes} />
                         </Box>
                         <Box className={classes.chartCard}>
-                            <div className={classes.chartTitle}>Objects preserved per period</div>
+                            <ChartTitle title='Objects preserved per period' info={TT.objects} />
                             <BarChart points={series} getValue={p => p.repositoryObjects} color='#37A66B' />
                         </Box>
                         <Box className={classes.chartCard}>
-                            <div className={classes.chartTitle}>Scenes published/updated per period</div>
+                            <ChartTitle title='Scenes published/updated per period' info={TT.scenesRange} />
                             <BarChart points={series} getValue={p => p.scenesPublished} color='#B07CE0' />
                         </Box>
                         <Box className={classes.chartCard}>
-                            <div className={classes.chartTitle}>Active non-DPO users per period</div>
+                            <ChartTitle title='Scenes currently published (running total)' info={TT.scenesGrowth} />
+                            <BarChart points={series} getValue={p => p.scenesPublishedCurrent} color='#6C63C4' />
+                        </Box>
+                        <Box className={classes.chartCard}>
+                            <ChartTitle title='Active non-DPO users per period' info={TT.activeUsers} />
                             <BarChart points={series} getValue={p => p.activeNonDPOUsers} color='#E0913C' />
                         </Box>
                     </>

@@ -2,7 +2,7 @@
 import { RecordKeeper as RK } from '../../../../records/recordKeeper';
 import * as H from '../../../../utils/helpers';
 
-export interface BulkOpColumn { key: string; label: string; hidden?: boolean; } // hidden: excluded from the table, still exported to CSV
+export interface BulkOpColumn { key: string; label: string; hidden?: boolean; tooltip?: string; } // hidden: excluded from the table, still exported to CSV. tooltip: shown on the column header.
 export interface BulkOpSetting { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; }
 /** A pre-run parameter the user chooses before gathering (e.g. the Sync-from-EDAN target: Subject vs Scene). */
 export interface BulkOpParam { key: string; label: string; type: 'select'; options: { value: string; label: string }[]; default?: string; }

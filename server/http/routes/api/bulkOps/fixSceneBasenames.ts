@@ -166,7 +166,11 @@ export const fixSceneBasenames: BulkOperationDef = {
     key: 'fixSceneBasenames',
     label: 'Review Scene Basenames',
     columns: [
-        { key: 'classification', label: 'Classification' },
+        { key: 'classification', label: 'Classification',
+            tooltip: '“(manual)” means Packrat reports the issue but does not auto-correct it: a safe basename '
+                + 'rename must also rewrite the scene’s SVX asset references and the model/asset DB records, so a '
+                + 'person performs it. Affected = one old basename to correct; Mixed = several basenames; Name '
+                + 'unresolved = the Subject name could not be derived.' },
         { key: 'canonicalName', label: 'Canonical Name (Subject)' },
         { key: 'currentBasename', label: 'Current Basename(s)' },
         { key: 'fileCount', label: 'Cook Output Files' },

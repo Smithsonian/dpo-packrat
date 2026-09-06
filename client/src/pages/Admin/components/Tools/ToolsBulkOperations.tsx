@@ -69,7 +69,7 @@ const OP_INFO: Record<string, { description: string; hints: string[] }> = {
     },
 };
 
-type OpColumn = { key: string; label: string; hidden?: boolean };
+type OpColumn = { key: string; label: string; hidden?: boolean; tooltip?: string };
 type OpSetting = { key: string; label: string; type: string; options: { value: string; label: string }[] };
 type OpParam = { key: string; label: string; type: string; options: { value: string; label: string }[]; default?: string };
 type ProjectRef = { idProject: number; Name: string };
@@ -211,7 +211,7 @@ function ToolsBulkOperations(): React.ReactElement {
         // 'status' is reserved by the harness for the live run-status column below; drop any op column
         // that reuses it so the two never collide into a duplicate React key (which blanks cells on re-render).
         // Hidden columns are omitted from the table but still exported to CSV (see exportCSV).
-        ...opColumns.filter(c => c.key !== 'status' && !c.hidden).map(c => ({ key: c.key, label: c.label, align: 'center' as const })),
+        ...opColumns.filter(c => c.key !== 'status' && !c.hidden).map(c => ({ key: c.key, label: c.label, align: 'center' as const, tooltip: c.tooltip })),
         ...rowSettings.map(s => ({ key: `set_${s.key}`, label: s.label, align: 'center' as const, render: (row: Row) => renderSettingControl(s, row) })),
         { key: 'status', label: 'Status', align: 'center' as const, render: (row: Row) => renderStatus(row) },
     ]);

@@ -120,7 +120,10 @@ export const backfillDownloadTags: BulkOperationDef = {
     key: 'backfillDownloadTags',
     label: 'Backfill Download Tags',
     columns: [
-        { key: 'classification', label: 'Classification' },
+        { key: 'classification', label: 'Classification',
+            tooltip: 'Fixable rows are corrected on Apply. “ambiguous” and “needs-manual” are report-only — '
+                + 'Packrat will not change them automatically; they need a person (resolve an ambiguous filename, '
+                + 're-ingest a missing model, or re-run Generate Downloads to complete content).' },
         { key: 'modelName', label: 'Model / Download' },
         { key: 'matchedType', label: 'Cook Type' },
         { key: 'currentTag', label: 'Current (Usage/Quality/UV)' },
