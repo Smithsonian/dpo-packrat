@@ -216,8 +216,11 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
     }
 
     static async fetchMasterFromScene(idScene: number): Promise<Model[] | null> {
-        // get the master Model associated with a given Scene. The Master model-purpose vocabulary id is
-        // resolved at runtime — it is assigned at seed time and is not stable across databases.
+        // get the active master Model(s) associated with a given Scene. Retired masters are excluded:
+        // Packrat retires rather than deletes, so only active objects count — a scene with one active plus
+        // any number of retired masters resolves as single-master (not a multi-master scene). The Master
+        // model-purpose vocabulary id is resolved at runtime — it is assigned at seed time and is not stable
+        // across databases.
         const masterVocab = await VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeMaster);
         if (!masterVocab)
             return null;
@@ -231,7 +234,7 @@ export class Model extends DBC.DBObject<ModelBase> implements ModelBase, SystemO
                 JOIN SystemObject AS masterSO ON (scnSOX.idSystemObjectMaster = masterSO.idSystemObject AND masterSO.idModel IS NOT NULL)
                 JOIN Model AS mdl ON (masterSO.idModel = mdl.idModel AND mdl.idVPurpose = ${idvMasterModelType})
                 JOIN SystemObject AS mdlSO ON mdl.idModel = mdlSO.idModel
-                WHERE scn.idScene = ${idScene};
+                WHERE scn.idScene = ${idScene} AND mdlSO.Retired = 0;
             `,Model);
     }
 

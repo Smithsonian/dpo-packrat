@@ -56,7 +56,7 @@ describe('Bulk op: Fix Scene Basenames', () => {
         expect(rows).toHaveLength(1);
         const row = rows.find(r => r.id === 1000);
         expect(row?.isCandidate).toBe(false); // review-only: reported, not selectable
-        expect(row?.rowData.status).toBe('Affected (manual)');
+        expect(row?.rowData.classification).toBe('Affected (manual)');
         expect(row?.rowData.canonicalName).toBe('NewName');
         expect(row?.rowData.currentBasename).toBe('OldName');
         expect(row?.rowData.fileCount).toBe(7);
@@ -94,11 +94,11 @@ describe('Bulk op: Fix Scene Basenames', () => {
 
         const affected = rows.find(r => r.id === 1000);
         expect(affected?.isCandidate).toBe(false); // review-only: reported, not selectable
-        expect(affected?.rowData.status).toBe('Affected (manual)');
+        expect(affected?.rowData.classification).toBe('Affected (manual)');
 
         const mixed = rows.find(r => r.id === 2000);
         expect(mixed?.isCandidate).toBe(false); // report-only: visible but not selectable
-        expect(mixed?.rowData.status).toContain('Mixed');
+        expect(mixed?.rowData.classification).toContain('Mixed');
         expect(mixed?.rowData.details).toContain('distinct basenames');
     });
 

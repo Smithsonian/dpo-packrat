@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Box, Typography, Button, Select, MenuItem, LinearProgress, Table, TableContainer, TableBody, TableRow, TableCell, Paper, Tooltip, CircularProgress } from '@material-ui/core';
-import { CheckCircle, HighlightOff } from '@material-ui/icons';
+import { CheckCircle, HighlightOff, Warning } from '@material-ui/icons';
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
@@ -59,9 +59,17 @@ const OP_INFO: Record<string, { description: string; hints: string[] }> = {
             'Each applied row emits a publish / unpublish audit.',
         ],
     },
+    backfillDownloadTags: {
+        description: 'Repairs the download tag (Usage / Quality / UV + Download purpose + AutomationTag) on legacy scene-derivative models so a fixed row is identical to one produced by si-generate-downloads. The tag is derived purely from the filename suffix — never guessed.',
+        hints: [
+            'Only “fixable” rows apply; “ambiguous” / “needs-manual” are report-only.',
+            'FileSize / bounding-box are never written — rows missing them are flagged needs-manual (re-run Generate Downloads).',
+            'Each applied row emits a download-tag-backfill audit.',
+        ],
+    },
 };
 
-type OpColumn = { key: string; label: string };
+type OpColumn = { key: string; label: string; hidden?: boolean; tooltip?: string };
 type OpSetting = { key: string; label: string; type: string; options: { value: string; label: string }[] };
 type OpParam = { key: string; label: string; type: string; options: { value: string; label: string }[]; default?: string };
 type ProjectRef = { idProject: number; Name: string };
@@ -69,6 +77,7 @@ type RowStatus = { state?: 'working' | 'success' | 'error'; message?: string };
 type Row = DBReference & {
     name_link: string;
     isCandidate: boolean;            // server: does this row have a change to apply (vs already in sync / no change)
+    severity?: 'ok' | 'warn';        // non-candidate hint: 'warn' = needs a human (amber), else treated as no-change
     settings: Record<string, any>;   // current (possibly edited) per-row settings, sent to apply
     current: Record<string, any>;    // the current value per setting, from the op
     status: RowStatus;               // live run status
@@ -168,6 +177,10 @@ function ToolsBulkOperations(): React.ReactElement {
         if (st === 'success') return <CheckCircle style={{ color: '#2e7d32' }} fontSize='small' />;
         if (st === 'error')
             return <Tooltip title={row.status?.message || 'Failed'}><HighlightOff style={{ color: '#c62828' }} fontSize='small' /></Tooltip>;
+        // a non-candidate row flagged 'warn' is not a clean no-change — it needs a human (e.g. ambiguous /
+        // needs-manual). Show an amber warning with the row's plain-English detail, not a green check.
+        if (!row.isCandidate && row.severity === 'warn')
+            return <Tooltip title={row.details || 'Needs manual handling'}><Warning style={{ color: '#ed6c02' }} fontSize='small' /></Tooltip>;
         if (!row.isCandidate) return <Tooltip title='No change'><CheckCircle style={{ color: '#2e7d32' }} fontSize='small' /></Tooltip>;
         return null;
     };
@@ -195,7 +208,10 @@ function ToolsBulkOperations(): React.ReactElement {
     const buildColumns = (): ColumnHeader[] => ([
         { key: 'id', label: 'ID', align: 'center' },
         { key: 'name', label: 'Object', align: 'left', link: true },
-        ...opColumns.map(c => ({ key: c.key, label: c.label, align: 'center' as const })),
+        // 'status' is reserved by the harness for the live run-status column below; drop any op column
+        // that reuses it so the two never collide into a duplicate React key (which blanks cells on re-render).
+        // Hidden columns are omitted from the table but still exported to CSV (see exportCSV).
+        ...opColumns.filter(c => c.key !== 'status' && !c.hidden).map(c => ({ key: c.key, label: c.label, align: 'center' as const, tooltip: c.tooltip })),
         ...rowSettings.map(s => ({ key: `set_${s.key}`, label: s.label, align: 'center' as const, render: (row: Row) => renderSettingControl(s, row) })),
         { key: 'status', label: 'Status', align: 'center' as const, render: (row: Row) => renderStatus(row) },
     ]);
@@ -206,6 +222,7 @@ function ToolsBulkOperations(): React.ReactElement {
         name_link: `/repository/details/${r.id}`,
         ...(r.rowData ?? {}),
         isCandidate: !!r.isCandidate,
+        severity: r.severity,
         settings: { ...(r.defaultSettings ?? {}) },
         current: { ...(r.current ?? {}) },
         status: {},
@@ -333,7 +350,7 @@ function ToolsBulkOperations(): React.ReactElement {
         const cols: { label: string; value: (r: Row) => any }[] = [
             { label: 'ID', value: (r) => r.id },
             { label: 'Object', value: (r) => r.name },
-            ...opColumns.map(c => ({ label: c.label, value: (r: Row) => r[c.key] })),
+            ...opColumns.filter(c => c.key !== 'status').map(c => ({ label: c.label, value: (r: Row) => r[c.key] })),
             ...rowSettings.map(s => ({ label: s.label, value: (r: Row) => r.settings[s.key] })),
             { label: 'Status', value: (r) => {
                 if (r.status?.state) return r.status.message ? `${r.status.state}: ${r.status.message}` : r.status.state;

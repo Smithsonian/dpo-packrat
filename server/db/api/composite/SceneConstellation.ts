@@ -3,7 +3,7 @@ import * as STORE from '../../../storage/interface';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { IZip } from '../../../utils/IZip';
-import { SvxReader, SvxNonModelAsset } from '../../../utils/parser/svxReader';
+import { SvxReader, SvxNonModelAsset, ScenePackageReferenceIssue, detectSvxReferenceCaseMismatches } from '../../../utils/parser/svxReader';
 import * as path from 'path';
 import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
@@ -12,6 +12,10 @@ export class SceneConstellation {
     Scene: Scene | null;
     ModelSceneXref: ModelSceneXref[] | null;
     SvxNonModelAssets: SvxNonModelAsset[] | null;
+    // Case-mismatched SVX references from a zip package: a file the SVX names is present only under a
+    // different case. Filenames are case-sensitive on the (Linux) server, so these would fail to resolve.
+    // Populated by fetchFromAssetVersion for a zip package; empty otherwise.
+    PackageReferenceIssues: ScenePackageReferenceIssue[] = [];
 
     private static vocabAssetTypeModel: Vocabulary | undefined = undefined;
     private static vocabAssetTypeModelGeometryFile: Vocabulary | undefined = undefined;
@@ -236,7 +240,12 @@ export class SceneConstellation {
                 }
             }
             // LOG.info(`SceneConstellation.fetchFromAssetVersion scene=${H.Helpers.JSONStringify(scene)}\nmodelSceneXrefs=${H.Helpers.JSONStringify(modelSceneXrefs)}\nnonModelAssets=${H.Helpers.JSONStringify(nonModelAssets)}`, LOG.LS.eDB);
-            return new SceneConstellation(scene, modelSceneXrefs, nonModelAssets);
+            const sceneConstellation: SceneConstellation = new SceneConstellation(scene, modelSceneXrefs, nonModelAssets);
+            // Backstop for the ingest path: the primary block is at upload validation (WorkflowUpload).
+            if (zip)
+                sceneConstellation.PackageReferenceIssues = detectSvxReferenceCaseMismatches(await zip.getJustFiles(null),
+                    (modelSceneXrefs ?? []).map(m => m.Name), (nonModelAssets ?? []).map(n => n.uri));
+            return sceneConstellation;
         } finally {
             if (zip)
                 await zip.close();

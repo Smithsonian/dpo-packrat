@@ -461,7 +461,11 @@ function WorkflowList(): React.ReactElement {
             name: 'Error',
             label: 'Error',
             options: {
-                customBodyRender(value) {
+                customBodyRenderLite(dataIndex) {
+                    const row = rows[dataIndex];
+                    // JobRun.Error for Cook steps; fall back to the workflow-level error (from the report
+                    // summary) for job-less workflows like upload validation, which have no JobRun.
+                    const value: string = row?.Error || parseWorkflowSummary(row)?.error || '';
                     if (!value) return '';
                     return (
                         <Tooltip placement='left' title={value} arrow>
@@ -469,7 +473,6 @@ function WorkflowList(): React.ReactElement {
                         </Tooltip>
                     );
                 },
-                // setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 sort: false
             }

@@ -25,13 +25,25 @@ type TagStatus = 'fixable' | 'ambiguous' | 'needs-manual';
 interface TagState {
     status: TagStatus;
     typeKey: string | null;
-    current: string;         // current usage/quality/uv (+ purpose/automationTag) summary
-    proposed: string;        // proposed summary (empty for non-fixable)
-    reason: string;
+    current: string;         // concise Usage/Quality/UV triplet, for the visible Current column
+    proposed: string;        // concise proposed triplet (empty for non-fixable)
+    detail: string;          // plain-English description of the issue, for the visible Details column
+    technical: string;       // full identity delta + diagnostics, CSV-only (hidden column)
+    severity: 'ok' | 'warn'; // 'warn' for rows a human must handle (ambiguous / needs-manual)
 }
 
 const tagSummary = (usage: string | null | undefined, quality: string | null | undefined, uv: number | null | undefined): string =>
     `${usage ?? '∅'} / ${quality ?? '∅'} / ${uv ?? '∅'}`;
+
+// The full recipe identity a generated row carries is broader than the Usage/Quality/UV triplet: it also
+// includes Model.idVPurpose (must be Download) and Model.AutomationTag. The concise triplet is what the
+// table shows; this fuller form (purpose + automation tag) is the CSV-only diagnostic so a purpose/tag-only
+// fix is still fully documented without cluttering the table.
+const purposeLabel = (idVPurpose: number | null | undefined, downloadVPurpose: number | undefined): string =>
+    idVPurpose == null ? '∅' : (downloadVPurpose !== undefined && idVPurpose === downloadVPurpose ? 'Download' : `#${idVPurpose}`);
+const identitySummary = (usage: string | null | undefined, quality: string | null | undefined, uv: number | null | undefined,
+    idVPurpose: number | null | undefined, automationTag: string | null | undefined, downloadVPurpose: number | undefined): string =>
+    `${tagSummary(usage, quality, uv)} · purpose=${purposeLabel(idVPurpose, downloadVPurpose)} · tag=${automationTag ?? '∅'}`;
 
 async function downloadPurposeId(): Promise<number | undefined> {
     const v = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eModelPurposeDownload);
@@ -40,38 +52,56 @@ async function downloadPurposeId(): Promise<number | undefined> {
 
 // Classify one ModelSceneXref (a model-in-scene) that looks like a Cook download derivative.
 async function classifyMSX(msx: DBAPI.ModelSceneXref, downloadVPurpose: number | undefined): Promise<TagState | null> {
+    const triplet: string = tagSummary(msx.Usage, msx.Quality, msx.UVResolution);
     const typeKey = cookDownloadTypeKeyFromFilename(msx.Name ?? '');
     if (typeKey === null)
         return null;                                    // not a recognized download derivative — skip silently
     if (typeKey === 'ambiguous')
-        return { status: 'ambiguous', typeKey: null, current: tagSummary(msx.Usage, msx.Quality, msx.UVResolution), proposed: '',
-            reason: `filename '${msx.Name}' matches more than one Cook suffix — not auto-assigned` };
+        return { status: 'ambiguous', typeKey: null, current: triplet, proposed: '', severity: 'warn',
+            detail: 'Filename matches more than one Cook type — left unchanged for review.',
+            technical: `filename '${msx.Name}' matches multiple Cook suffixes` };
 
     const model: DBAPI.Model | null = await DBAPI.Model.fetch(msx.idModel);
     if (!model)
-        return { status: 'needs-manual', typeKey, current: tagSummary(msx.Usage, msx.Quality, msx.UVResolution), proposed: '',
-            reason: `Model ${msx.idModel} record missing — re-ingest/regenerate` };
+        return { status: 'needs-manual', typeKey, current: triplet, proposed: '', severity: 'warn',
+            detail: 'The model record is missing — re-ingest or regenerate.',
+            technical: `Model ${msx.idModel} not found` };
 
     const tag: DownloadTag | null = cookDownloadTagForTypeKey(typeKey);
     const autoTag: string | null = cookModelAutomationTagForTypeKey(typeKey);
     if (!tag || !autoTag)
-        return { status: 'needs-manual', typeKey, current: tagSummary(msx.Usage, msx.Quality, msx.UVResolution), proposed: '',
-            reason: `no deterministic tag for '${typeKey}'` };
+        return { status: 'needs-manual', typeKey, current: triplet, proposed: '', severity: 'warn',
+            detail: 'No download tag applies to this file type.',
+            technical: `typeKey '${typeKey}' has no tag mapping` };
 
-    const tagsMatch: boolean = msx.Usage === tag.usage && msx.Quality === tag.quality && msx.UVResolution === tag.uvResolution
-        && model.idVPurpose === (downloadVPurpose ?? model.idVPurpose) && model.AutomationTag === autoTag;
-    const contentComplete: boolean = msx.FileSize !== null && msx.BoundingBoxP1X !== null;
-    const current: string = tagSummary(msx.Usage, msx.Quality, msx.UVResolution);
-    const proposed: string = tagSummary(tag.usage, tag.quality, tag.uvResolution);
+    // Completeness is judged by FileSize alone: generation always sets it (the stored asset's StorageSize),
+    // whereas the MSX bounding box is inherited from the source master and is routinely null even on a
+    // freshly generated row — so it is not a completeness signal.
+    const contentComplete: boolean = msx.FileSize !== null;
+    const tripletDiffers: boolean = !(msx.Usage === tag.usage && msx.Quality === tag.quality && msx.UVResolution === tag.uvResolution);
+    const purposeDiffers: boolean = model.idVPurpose !== (downloadVPurpose ?? model.idVPurpose);
+    const autoTagDiffers: boolean = model.AutomationTag !== autoTag;
+    const tagsMatch: boolean = !tripletDiffers && !purposeDiffers && !autoTagDiffers;
+
+    const proposedTriplet: string = tagSummary(tag.usage, tag.quality, tag.uvResolution);
+    const identityCurrent: string = identitySummary(msx.Usage, msx.Quality, msx.UVResolution, model.idVPurpose, model.AutomationTag, downloadVPurpose);
+    const identityProposed: string = identitySummary(tag.usage, tag.quality, tag.uvResolution, downloadVPurpose ?? model.idVPurpose, autoTag, downloadVPurpose);
 
     if (tagsMatch) {
         if (contentComplete)
             return null;                                // fully correct — nothing to show
-        return { status: 'needs-manual', typeKey, current, proposed,
-            reason: 'tag correct but FileSize/bounding-box missing — run inspection to fully match a generated row' };
+        return { status: 'needs-manual', typeKey, current: triplet, proposed: proposedTriplet, severity: 'warn',
+            detail: 'Tag is correct but file size is missing — re-run Generate Downloads on the scene.',
+            technical: `${identityCurrent} · FileSize null` };
     }
-    const contentNote: string = contentComplete ? '' : ' (note: FileSize/bbox missing — inspection recommended after the tag fix)';
-    return { status: 'fixable', typeKey, current, proposed, reason: `${current} → ${proposed}${contentNote}` };
+    const diffs: string[] = [];
+    if (tripletDiffers) diffs.push('tag values');
+    if (purposeDiffers) diffs.push('download purpose');
+    if (autoTagDiffers) diffs.push('automation tag');
+    const detail: string = `Differs from a generated download (${diffs.join(', ')}) — will be corrected.`
+        + (contentComplete ? '' : ' File size is missing.');
+    return { status: 'fixable', typeKey, current: triplet, proposed: proposedTriplet, severity: 'ok',
+        detail, technical: `${identityCurrent} → ${identityProposed}` };
 }
 
 async function sceneSystemObjectIds(scopedIds?: number[]): Promise<number[]> {
@@ -90,12 +120,16 @@ export const backfillDownloadTags: BulkOperationDef = {
     key: 'backfillDownloadTags',
     label: 'Backfill Download Tags',
     columns: [
-        { key: 'status', label: 'Status' },
+        { key: 'classification', label: 'Classification',
+            tooltip: 'Fixable rows are corrected on Apply. “ambiguous” and “needs-manual” are report-only — '
+                + 'Packrat will not change them automatically; they need a person (resolve an ambiguous filename, '
+                + 're-ingest a missing model, or re-run Generate Downloads to complete content).' },
         { key: 'modelName', label: 'Model / Download' },
         { key: 'matchedType', label: 'Cook Type' },
         { key: 'currentTag', label: 'Current (Usage/Quality/UV)' },
         { key: 'proposedTag', label: 'Proposed (Usage/Quality/UV)' },
         { key: 'details', label: 'Details' },
+        { key: 'technical', label: 'Technical', hidden: true }, // CSV-only: full identity delta + diagnostics
     ],
     rowSettings: [],
     gather: async ({ scopedIds }: BulkOpGatherArgs, report: BulkOpReporter): Promise<BulkOpRow[]> => {
@@ -119,13 +153,15 @@ export const backfillDownloadTags: BulkOperationDef = {
                         id: modelSO.idSystemObject,
                         name: msx.Name ?? `Model ${msx.idModel}`,
                         isCandidate: state.status === 'fixable',
+                        severity: state.severity,
                         rowData: {
-                            status: state.status,
+                            classification: state.status,
                             modelName: msx.Name ?? `Model ${msx.idModel}`,
                             matchedType: state.typeKey ?? '—',
                             currentTag: state.current,
                             proposedTag: state.proposed || '—',
-                            details: state.reason,
+                            details: state.detail,
+                            technical: state.technical,
                         },
                     });
                 }
@@ -179,6 +215,6 @@ export const backfillDownloadTags: BulkOperationDef = {
         }
         if (applied === 0)
             return { success: false, message: 'no recognized download tag to apply for this model' };
-        return { success: true, message: lastProposed, rowData: { status: 'fixable', currentTag: lastProposed, proposedTag: lastProposed, details: 'tag applied' } };
+        return { success: true, message: lastProposed, rowData: { classification: 'fixable', currentTag: lastProposed, proposedTag: lastProposed, details: 'tag applied' } };
     },
 };

@@ -8,7 +8,7 @@ import * as STORE from '../../../storage/interface';
 import * as REP from '../../../report/interface';
 import * as H from '../../../utils/helpers';
 import { ZipFile } from '../../../utils';
-import { SvxReader } from '../../../utils/parser';
+import { SvxReader, detectSvxReferenceCaseMismatches } from '../../../utils/parser';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // import * as sharp from 'sharp';
@@ -232,7 +232,7 @@ export class WorkflowUpload implements WF.IWorkflow {
                     const readStream: NodeJS.ReadableStream | null = await ZS.streamContent(fileName);
                     if (!readStream)
                         return this.handleError(`WorkflowUpload.validateFiles unable to fetch read stream for ${fileName} in zip of asset version ${JSON.stringify(assetVersion, H.Helpers.saferStringify)}`);
-                    const entryRes: H.IOResults = await this.validateFile(fileName, readStream, true, idSystemObject, asset);
+                    const entryRes: H.IOResults = await this.validateFile(fileName, readStream, true, idSystemObject, asset, files);
                     if (!entryRes.success) {
                         fileRes = entryRes;
                         break;
@@ -261,7 +261,7 @@ export class WorkflowUpload implements WF.IWorkflow {
     new Set(['.avif', '.gif', '.jpg', '.jpeg', '.png', '.svg', '.tif', '.tiff', '.webp']);
 
     private async validateFile(fileName: string, readStream: NodeJS.ReadableStream, fromZip: boolean, idSystemObject: number,
-        asset: DBAPI.Asset): Promise<H.IOResults> {
+        asset: DBAPI.Asset, packageFiles?: string[]): Promise<H.IOResults> {
 
         const ext: string = path.extname(fileName).toLowerCase();
 
@@ -273,7 +273,7 @@ export class WorkflowUpload implements WF.IWorkflow {
 
         // Scene descriptor is self-describing by name, independent of the asset type.
         if (fileName.toLowerCase().endsWith('.svx.json'))
-            return this.validateFileScene(fileName, readStream);
+            return this.validateFileScene(fileName, readStream, packageFiles);
 
         // Tie remaining validation to the chosen asset type rather than inferring it from content.
         // Files that do not match the type's expected formats are skipped (capture-data sets routinely
@@ -301,13 +301,29 @@ export class WorkflowUpload implements WF.IWorkflow {
         return { success: true };
     }
 
-    private async validateFileScene(fileName: string, readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
+    private async validateFileScene(fileName: string, readStream: NodeJS.ReadableStream, packageFiles?: string[]): Promise<H.IOResults> {
         const svxReader: SvxReader = new SvxReader();
         const svxRes: H.IOResults = await svxReader.loadFromStream(readStream);
         RK.logDebug(RK.LogSection.eWF,'validating voyager scene',undefined, { fileName },'Workflow.Upload');
-        return (svxRes.success)
-            ? this.appendToWFReport(`Upload validated ${fileName}`)
-            : this.handleError(`WorkflowUpload.validateFile failed to parse svx file ${fileName}: ${svxRes.error}`);
+        if (!svxRes.success)
+            return this.handleError(`WorkflowUpload.validateFile failed to parse svx file ${fileName}: ${svxRes.error}`);
+
+        // Case-sensitivity guard: verify each SVX reference (derivative model / thumbnail) exists in the
+        // package with EXACT case. Filenames are case-sensitive on the (Linux) server, so a mismatch would
+        // fail to resolve — block the upload here so it surfaces on the upload workflow, before ingest/Cook.
+        if (packageFiles && packageFiles.length > 0 && svxReader.SvxExtraction) {
+            const issues = detectSvxReferenceCaseMismatches(packageFiles,
+                (svxReader.SvxExtraction.modelDetails ?? []).map(m => m.Name),
+                (svxReader.SvxExtraction.nonModelAssets ?? []).map(n => n.uri));
+            if (issues.length > 0) {
+                // Headline (toast) and the affected files (toast "Details" disclosure) are separated by a
+                // blank line; the client splits on it. One file per line for legibility.
+                const detail: string = issues.map(o => `${o.kind} '${o.ref}' (present as '${o.actual}')`).join('\n');
+                return this.handleError('Scene package reference case mismatch — filenames are case-sensitive. '
+                    + `Fix the SVX reference or the file name so they match exactly, then re-upload.\n\n${detail}`);
+            }
+        }
+        return this.appendToWFReport(`Upload validated ${fileName}`);
     }
 
     private async validateFileImage(fileName: string, readStream: NodeJS.ReadableStream): Promise<H.IOResults> {
@@ -442,7 +458,14 @@ export class WorkflowUpload implements WF.IWorkflow {
             RK.logError(RK.LogSection.eWF,'workflow upload error',message, { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Upload');
         else
             RK.logInfo(RK.LogSection.eWF,'workflow upload status',message, { idWorkflow: this.workflowData.workflow?.idWorkflow },'Workflow.Upload');
-        return (this.workflowReport) ? this.workflowReport.append(message) : { success: true };
+        if (!this.workflowReport)
+            return { success: true };
+        // Record errors as error-level events so the report summary captures them (drives the list Error
+        // column for this job-less workflow); everything else stays a plain text line.
+        if (isError)
+            return this.workflowReport.appendEvent({ ts: new Date().toISOString(), phase: 'ingest',
+                code: COMMON.WorkflowReportCode.UploadError, level: 'error', msg: message });
+        return this.workflowReport.append(message);
     }
 
     private async handleError(error: string): Promise<H.IOResults> {

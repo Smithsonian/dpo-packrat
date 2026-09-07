@@ -15,6 +15,41 @@ export type SvxNonModelAsset = {
     idAssetVersion?: number | undefined;
 };
 
+export type ScenePackageReferenceIssue = { ref: string; actual: string; kind: 'model' | 'asset' };
+
+// Compare SVX references (derivative models, non-model assets) against a package's actual filenames by
+// EXACT case. A reference whose file exists in the package only under a different case is a case mismatch —
+// it breaks on the case-sensitive (Linux) server. A reference absent from the package entirely is not
+// flagged (on an update it is a legitimate existing/DB asset, not a packaged one).
+export function detectSvxReferenceCaseMismatches(packageFileNames: string[],
+    modelRefs: (string | null | undefined)[], assetRefs: (string | null | undefined)[]): ScenePackageReferenceIssue[] {
+    const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
+    const exact: Set<string> = new Set<string>();
+    const lowerToActual: Map<string, string> = new Map<string, string>();
+    for (const f of packageFileNames) {
+        const b: string = baseName(f);
+        exact.add(b);
+        if (!lowerToActual.has(b.toLowerCase()))
+            lowerToActual.set(b.toLowerCase(), b);
+    }
+    const issues: ScenePackageReferenceIssue[] = [];
+    const check = (ref: string | null | undefined, kind: 'model' | 'asset'): void => {
+        if (!ref)
+            return;
+        const b: string = baseName(ref);
+        if (exact.has(b))
+            return;                                        // exact-case match in the package — fine
+        const actual: string | undefined = lowerToActual.get(b.toLowerCase());
+        if (actual)
+            issues.push({ ref: b, actual, kind });         // present only under a different case — the bug
+    };
+    for (const r of modelRefs)
+        check(r, 'model');
+    for (const r of assetRefs)
+        check(r, 'asset');
+    return issues;
+}
+
 /** Create instances using the static SvxExtraction.extract() */
 export class SvxExtraction {
     document: SVX.IDocument;

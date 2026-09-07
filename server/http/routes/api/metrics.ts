@@ -40,7 +40,7 @@ function shapeTotals(t: MetricsTotals): any {
             terabytesNonDPO: toTB(t.storageBytesNonDPO),
         },
         activeNonDPOUsers: t.activeNonDPOUsers,
-        scenes: { publishEvents: t.scenePublishEvents, distinctScenes: t.scenesPublished },
+        scenes: { publishEvents: t.scenePublishEvents, distinctScenes: t.scenesPublished, currentlyPublished: t.scenesPublishedCurrent },
     };
 }
 
@@ -57,6 +57,7 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
         activeNonDPOUsers: p.activeNonDPOUsers,
         scenePublishEvents: p.scenePublishEvents,
         scenesPublished: p.scenesPublished,
+        scenesPublishedCurrent: p.scenesPublishedCurrent,
     };
 }
 
@@ -67,7 +68,7 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
  *   - objects preserved (ingested asset versions + distinct repository objects)
  *   - TB of data preserved (total, and the non-DPO-contributed subset)
  *   - active non-DPO users (distinct users with audited activity)
- *   - scene content published/updated (publish events + distinct scenes)
+ *   - scene content published/updated (publish activity + distinct scenes newly published + total currently published)
  *
  * Returns `summary` (delta within the range) and `cumulative` (all-time through `end`).
  * With `series=1`, also returns a per-period array (granularity: day|week|month|year, default month)

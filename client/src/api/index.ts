@@ -112,9 +112,11 @@ export default class API {
         return this.request(uri, { method: 'PATCH', body });
     }
 
-    // object action — describe/retire/reinstate an object and its resolved dependents/assets
-    static async objectAction(idSystemObject: number, action: 'describe' | 'retire' | 'reinstate'): Promise<RequestResponse> {
-        const body = JSON.stringify({ idSystemObject, action });
+    // object action — describe/retire/reinstate an object and its resolved dependents/assets.
+    // scope 'cascade' (default) reaches all dependents; 'direct' touches only the object and its own assets.
+    static async objectAction(idSystemObject: number, action: 'describe' | 'retire' | 'reinstate',
+        scope: 'cascade' | 'direct' = 'cascade'): Promise<RequestResponse> {
+        const body = JSON.stringify({ idSystemObject, action, scope });
         return this.request('api/object/action', { method: 'POST', body });
     }
 
@@ -280,6 +282,14 @@ export default class API {
     }
     static async solrRebuildIndex(): Promise<RequestResponse> {
         return this.request('solr/rebuild', { method: 'POST' });
+    }
+
+    // EDAN resource-folder retention cleanup: preview (read-only) vs execute (removes eligible entries)
+    static async edanCleanupPreview(days: number): Promise<RequestResponse> {
+        return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'GET' });
+    }
+    static async edanCleanupExecute(days: number): Promise<RequestResponse> {
+        return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'POST' });
     }
 
     // general routines
