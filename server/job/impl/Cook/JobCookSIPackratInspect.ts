@@ -792,6 +792,20 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         const RSRs: STORE.ReadStreamResult[] = [];
         RK.logDebug(RK.LogSection.eJOB,'test for zip','processing files in zip',{ files, idAssetVersions: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
 
+        // Our own pre-Cook inspection: verify each texture an .mtl references exists in the package with
+        // EXACT case. Filenames are case-sensitive on the (Linux) server, so a reference differing only by
+        // case would silently drop the texture from the generated derivatives. Block here — before the Cook
+        // round-trip — so the failure surfaces on the inspect workflow rather than after generation.
+        const texIssues = await this.collectMtlTextureIssues(ZS, files);
+        if (texIssues.missing.length > 0)
+            RK.logWarning(RK.LogSection.eJOB,'test for zip','model references textures not present in the package',{ missing: texIssues.missing, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+        if (texIssues.caseMismatch.length > 0) {
+            const detail: string = texIssues.caseMismatch.map(o => `'${o.ref}' (present as '${o.actual}')`).join('; ');
+            const message: string = `Model texture case mismatch — filenames are case-sensitive on the server: ${detail}. Fix the .mtl reference or the file name so they match exactly, then re-upload.`;
+            RK.logError(RK.LogSection.eJOB,'test for zip failed',message,{ caseMismatch: texIssues.caseMismatch, fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+            throw new Error(message);
+        }
+
         for (const file of files) {
             // figure out our type based on the file's extension
             const eVocabID: COMMON.eVocabularyID | undefined = CACHE.VocabularyCache.mapModelFileByExtensionID(file);
@@ -851,6 +865,62 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // no streams found so we return
         RK.logWarning(RK.LogSection.eJOB,'test for zip failed','no streams found',{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
         return false;
+    }
+
+    // Parse the package's .mtl files for texture map references and compare each against the packaged
+    // files by exact case. Returns case mismatches (a same-name file exists under a different case — a
+    // Linux-only break we block on) and fully-missing references (no case variant — surfaced as a warning).
+    private async collectMtlTextureIssues(ZS: IZip, files: string[]):
+    Promise<{ caseMismatch: { ref: string; actual: string; mtl: string }[]; missing: { ref: string; mtl: string }[] }> {
+
+        const IMAGE_EXT: Set<string> = new Set(['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp', '.tga', '.gif', '.exr', '.hdr', '.webp']);
+        const MAP_KEYS: Set<string> = new Set(['map_kd', 'map_ka', 'map_ks', 'map_ns', 'map_d', 'map_bump', 'bump',
+            'disp', 'decal', 'refl', 'norm', 'map_pr', 'map_pm', 'map_ps', 'map_ke']);
+        const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
+
+        const exact: Set<string> = new Set<string>();
+        const lowerToActual: Map<string, string> = new Map<string, string>();
+        for (const f of files) {
+            const b: string = baseName(f);
+            exact.add(b);
+            if (!lowerToActual.has(b.toLowerCase()))
+                lowerToActual.set(b.toLowerCase(), b);
+        }
+
+        const caseMismatch: { ref: string; actual: string; mtl: string }[] = [];
+        const missing: { ref: string; mtl: string }[] = [];
+        for (const f of files) {
+            if (path.extname(f).toLowerCase() !== '.mtl')
+                continue;
+            const stream: NodeJS.ReadableStream | null = await ZS.streamContent(f);
+            if (!stream)
+                continue;
+            const text: string = await new Promise<string>((resolve) => {
+                const chunks: Buffer[] = [];
+                stream.on('data', (c: Buffer) => chunks.push(Buffer.from(c)));
+                stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+                stream.on('error', () => resolve(''));
+            });
+            for (const rawLine of text.split(/\r?\n/)) {
+                const line: string = rawLine.trim();
+                if (!line || line.startsWith('#'))
+                    continue;
+                const tokens: string[] = line.split(/\s+/);
+                if (!MAP_KEYS.has(tokens[0].toLowerCase()))
+                    continue;
+                const ref: string = baseName(tokens[tokens.length - 1]); // filename is the last token (after any -o/-s/-bm options)
+                if (!IMAGE_EXT.has(path.extname(ref).toLowerCase()))
+                    continue;                                  // last token isn't an image (bare/option line) — skip
+                if (exact.has(ref))
+                    continue;                                  // exact-case match — fine
+                const actual: string | undefined = lowerToActual.get(ref.toLowerCase());
+                if (actual)
+                    caseMismatch.push({ ref, actual, mtl: baseName(f) });
+                else
+                    missing.push({ ref, mtl: baseName(f) });
+            }
+        }
+        return { caseMismatch, missing };
     }
 
     private async fetchZip(assetVersion: DBAPI.AssetVersion): Promise<IZip | null> {

@@ -284,6 +284,14 @@ export default class API {
         return this.request('solr/rebuild', { method: 'POST' });
     }
 
+    // EDAN resource-folder retention cleanup: preview (read-only) vs execute (removes eligible entries)
+    static async edanCleanupPreview(days: number): Promise<RequestResponse> {
+        return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'GET' });
+    }
+    static async edanCleanupExecute(days: number): Promise<RequestResponse> {
+        return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'POST' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
