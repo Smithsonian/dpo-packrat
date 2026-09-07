@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
 import { CookRecipe } from './CookRecipe';
+import { findBasenameOffenders, BasenameOffender, cookDownloadTagForTypeKey, cookModelAutomationTagForTypeKey } from './CookOutputContract';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
@@ -459,6 +460,19 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         };
     }
 
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        const sph = this.sceneParameterHelper;
+        return {
+            subject: sph?.OG?.subject?.[0]?.Name,
+            idSubject: sph?.OG?.subject?.[0]?.idSubject,
+            scene: sph?.sceneName,
+            idScene: this.idScene ?? undefined,
+            idModel: sph?.SOModelSource?.idModel ?? undefined,
+            idSystemObject: sph?.SOModelSource?.idSystemObject,
+            input: this.parameters?.svxFile,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = await super.recordSuccess(output);
         if (updated) {
@@ -600,13 +614,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // build out our report details and add
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = idSystemObjectModel ? RouteBuilder.RepositoryDetails(idSystemObjectModel, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
+        const modelRef: COMMON.IWorkflowReportRef = { name: model.Name, idModel: model.idModel, idSystemObject: idSystemObjectModel ?? undefined, idAssetVersion: assetVersion?.idAssetVersion };
 
-        RK.logInfo(RK.LogSection.eJOB,'process model','ingested generated download model',{ jobName: this.name(), pathObject, pathDownload },'Job.GenerateDownloads');
-        await this.appendToReportAndLog(`${this.name()} ingested generated download model ${hrefObject}${hrefDownload}`);
+        RK.logInfo(RK.LogSection.eJOB,'process model','ingested generated download model',{ jobName: this.name(), idSystemObjectModel, pathDownload },'Job.GenerateDownloads');
+        await this.appendToReportAndLog(`${this.name()} ingested generated download model ${model.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.DownloadIngested, data: { model: modelRef, href: pathDownload || undefined } });
 
         // currently not passed in. how is this used?
         const assetVersionOverrideMap: Map< number, number> = new Map<number, number>();
@@ -722,55 +735,25 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     public static computeModelPropertiesFromDownloadType(downloadType: string): { usage: string|undefined, quality: string|undefined, uvResolution: number|undefined } {
 
-        // NOTE: caution if return types from Cook change
-        switch(downloadType) {
-
-            case 'objZipFull':
-                return { usage: 'Download:'+downloadType, quality: 'Highest', uvResolution: 0 };
-
-            case 'objZipLow':
-            case 'gltfZipLow':
-            case 'webAssetGlbLowUncompressed':
-                return { usage: 'Download:'+downloadType, quality: 'Low', uvResolution: 4096 };
-
-            // refers to: <baseName>-100k-2048_std_draco.glb
-            case 'webAssetGlbARCompressed':
-                return { usage: 'App3D', quality: 'AR', uvResolution: 2048 };
-
-            case 'usdz':
-                return { usage: 'iOSApp3D', quality: 'AR', uvResolution: 2048 };
+        // Delegates to the shared CookOutputContract mapping (single source of truth also used by the
+        // download-tag backfill), so generation and backfill can never drift apart.
+        const tag = cookDownloadTagForTypeKey(downloadType);
+        if (!tag) {
+            RK.logError(RK.LogSection.eJOB,'compute model properties failed','unsupported downloadType',{ downloadType },'Job.GenerateDownloads');
+            return { usage: undefined, quality: undefined, uvResolution: undefined };
         }
-
-        RK.logError(RK.LogSection.eJOB,'compute model properties failed','unsupported downloadType',{ downloadType },'Job.GenerateDownloads');
-        return { usage: undefined, quality: undefined, uvResolution: undefined };
+        return { usage: tag.usage, quality: tag.quality, uvResolution: tag.uvResolution };
     }
 
     public static computeModelAutomationTagFromDownloadType(downloadType: string): string {
 
-        const { usage, quality, uvResolution } = JobCookSIGenerateDownloads.computeModelPropertiesFromDownloadType(downloadType);
-        if(usage==undefined || quality==undefined || uvResolution==undefined) {
-            // LOG.error(`JobCookSIGenerateDownloads.computeModelAutomationTag unsupported downloadType: '${downloadType}' (${usage} | ${quality} | ${uvResolution})`,LOG.LS.eDEBUG);
-            return `error-${downloadType}-null-null`;
-        }
-
-        switch(downloadType) {
-            // HACK: need to hardcode these because the model is created outside ModelScreneXref context
-            // and doesn't have the needed Usage, Quality, and UVResolution details. skipping 'Usage'.
-            case 'objZipFull':
-            case 'objZipLow':
-            case 'gltfZipLow':
-            case 'webAssetGlbLowUncompressed':
-                return `download-${downloadType}-${quality}-${uvResolution}`;
-
-            // HACK: hardcoding these as well expecting them to be reassigned/overwritten by ModelSceneXref
-            // MSX format is: `scene-${this.Usage}-${this.Quality}-${this.UVResolution}`
-            case 'webAssetGlbARCompressed':
-            case 'usdz':
-                return `scene-${usage}-${quality}-${uvResolution}`;
-        }
-
+        // Delegates to the shared CookOutputContract mapping (single source of truth also used by the
+        // download-tag backfill). Preserves the legacy fallback string for an unsupported type.
+        const auto = cookModelAutomationTagForTypeKey(downloadType);
+        if (auto)
+            return auto;
         RK.logError(RK.LogSection.eJOB,'compute model automation tag failed','unsupported downloadType',{ downloadType },'Job.GenerateDownloads');
-        return `unknown-${downloadType}`;
+        return `error-${downloadType}-null-null`;
     }
 
     private async computeVocabModelGeometryFile(): Promise<DBAPI.Vocabulary | undefined> {
@@ -956,13 +939,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
+        const sceneRef: COMMON.IWorkflowReportRef = { name: scene.Name, idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
 
-        RK.logInfo(RK.LogSection.eJOB,'process scene','ingested scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, pathObject, pathDownload },'Job.GenerateDownloads');
-        await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
+        RK.logInfo(RK.LogSection.eJOB,'process scene','ingested scene', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, idSystemObject: SOI?.idSystemObject, pathDownload },'Job.GenerateDownloads');
+        await this.appendToReportAndLog(`${this.name()} ingested scene ${scene.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.SceneIngested, data: { scene: sceneRef, href: pathDownload || undefined } });
 
         //#region legacy
         // previous version handled all models while working with the scene. Order of operations prevents this from working
@@ -1108,24 +1090,20 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         const sceneAssetFilenames: string[] = sceneAssets.map(asset => asset.FileName);
         RK.logDebug(RK.LogSection.eJOB,'verify Cook data',undefined, { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, sceneAssetFilenames, fileMap },'Job.GenerateDownloads');
 
-        // cycle through returned downloads seeing if we have a similar file already in the scene
-        // if so, then we check to see if they have the same basename. If not, then we fail and the
-        // scene needs to be rebuilt.
-        const assetsToReplace: string[] = [];
-        for(let i=0; i<incomingFilenames.length; i++) {
-            const filename: string = incomingFilenames[i];
-            const suffix: string | undefined = suffixes.find(s => filename.endsWith(s) );
-            if(!suffix)
-                return this.logError('verify Cook data','could not find suffix in verified filenames',{ fileName: filename });
+        // For each returned download, if the scene already holds an asset with the same Cook suffix,
+        // its basename must match. A mismatch means the scene/model was renamed and re-running Cook
+        // would orphan the old set. This delegates to the shared CookOutputContract rule that the
+        // pre-flight guard (WorkflowEngine.verifyDownloadBasenameConsistency) also runs, so the two
+        // paths cannot diverge. Absence of a same-suffix asset is not an offender.
+        const offenders: BasenameOffender[] = findBasenameOffenders('si-generate-downloads', incomingFilenames, sceneAssetFilenames);
+        if(offenders.length > 0)
+            return this.logError('verify Cook data','incoming download has different basename than existing asset', { offenders });
 
-            // find the existing scene asset with the same suffix and check it's basename
-            const matchingAsset: DBAPI.Asset | undefined = sceneAssets.find(asset => asset.FileName.endsWith(suffix) );
-            if(matchingAsset)
-                if(filename!=matchingAsset.FileName)
-                    return this.logError('verify Cook data','incoming download has different basename than existing asset', { fileName: filename, matchingAsset });
-                else
-                    assetsToReplace.push(filename);
-        }
+        // count how many incoming downloads replace an existing same-suffix asset (for the info log)
+        const assetsToReplace: string[] = incomingFilenames.filter(filename => {
+            const suffix: string | undefined = suffixes.find(s => filename.endsWith(s));
+            return suffix !== undefined && sceneAssetFilenames.some(existing => existing.endsWith(suffix));
+        });
 
         RK.logInfo(RK.LogSection.eJOB,'verify Cook data','verified', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, logInfo: sceneSource.fetchLogInfo(), numFilesNew: (incomingFilenames.length-assetsToReplace.length), numFilesUpdated: assetsToReplace.length },'Job.GenerateDownloads');
         return { success: true };

@@ -22,31 +22,49 @@ export default async function clearLicenseAssignment(_: Parent, args: MutationCl
     const LROld: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
     const LicenseOld: DBAPI.License | undefined = LROld?.License ?? undefined;
 
-    // DB-mutating section commits atomically with its audit row. The Cook
-    // workflow trigger via PublishScene.handleSceneUpdates runs post-commit.
-    const dbResult = await withAuditTransaction(async () => {
-        const clearAssignmentSuccess = await DBAPI.LicenseManager.clearAssignment(idSystemObject, clearAll ?? undefined);
-        if (!clearAssignmentSuccess)
-            return { ok: false as const, message: 'There was an error clearing the assigned license. Please try again.' };
+    // Wrap only the LicenseAssignment writes and the audit row. The LicenseCache maintenance (a
+    // potentially large descendant traversal) is kept OUT of the tx and run post-commit — inside it
+    // blew the statement timeout and left the cache inconsistent after a rollback. The Cook trigger
+    // via PublishScene.handleSceneUpdates likewise runs post-commit.
+    let LicenseNew: DBAPI.License | undefined = undefined;
+    let dbResult: { ok: boolean; message?: string };
+    try {
+        dbResult = await withAuditTransaction(async () => {
+            const clearAssignmentSuccess = await DBAPI.LicenseManager.clearAssignmentDBWrites(idSystemObject, clearAll ?? undefined);
+            if (!clearAssignmentSuccess)
+                return { ok: false, message: 'There was an error clearing the assigned license. Please try again.' };
 
-        const LRNewInner: DBAPI.LicenseResolver | undefined = await CACHE.LicenseCache.getLicenseResolver(idSystemObject);
-        const LicenseNewInner: DBAPI.License | undefined = LRNewInner?.License ?? undefined;
+            // Resolve the post-clear inherited license directly from the DB (reflecting this tx's
+            // termination writes) rather than the cache, which still holds the pre-clear value until
+            // the post-commit maintenance runs.
+            const LRNewInner: DBAPI.LicenseResolver | null = await DBAPI.LicenseResolver.fetch(idSystemObject);
+            LicenseNew = LRNewInner?.License ?? undefined;
 
-        await AuditFactory.emitSemantic({
-            action: eAuditType.eActionClearLicense,
-            idSystemObject,
-            payload: {
-                clearAll: Boolean(clearAll),
-                before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
-                after:  LicenseNewInner ? { idLicense: LicenseNewInner.idLicense, Name: LicenseNewInner.Name, RestrictLevel: LicenseNewInner.RestrictLevel } : null,
-            },
+            await AuditFactory.emitSemantic({
+                action: eAuditType.eActionClearLicense,
+                idSystemObject,
+                payload: {
+                    clearAll: Boolean(clearAll),
+                    before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+                    after:  LicenseNew ? { idLicense: LicenseNew.idLicense, Name: LicenseNew.Name, RestrictLevel: LicenseNew.RestrictLevel } : null,
+                },
+            });
+            return { ok: true };
         });
-        return { ok: true as const, LicenseNew: LicenseNewInner };
-    });
+    } catch (error) {
+        RK.logError(RK.LogSection.eGQL,'clear license assignment failed','transaction failed',{ idSystemObject, error: error instanceof Error ? error.message : String(error) },'GraphQL.License.Assignment');
+        await CACHE.LicenseCache.invalidateResolver(idSystemObject);
+        return { success: false, message: 'There was an error clearing the assigned license. Please try again.' };
+    }
 
-    if (!dbResult.ok)
-        return { success: false, message: dbResult.message };
-    const LicenseNew = dbResult.LicenseNew;
+    if (!dbResult.ok) {
+        await CACHE.LicenseCache.invalidateResolver(idSystemObject);
+        return { success: false, message: dbResult.message ?? 'There was an error clearing the assigned license. Please try again.' };
+    }
+
+    // Post-commit: maintain the license cache now that the clear is durably persisted.
+    if (!await DBAPI.LicenseManager.maintainCacheAfterClear(idSystemObject))
+        await CACHE.LicenseCache.invalidateResolver(idSystemObject);
 
     // If this is a scene, handle license changes:
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);

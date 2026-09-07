@@ -61,7 +61,7 @@ export type SceneSummary = DBAPI.DBReference & {
 // Cook fix for material properties during inspection landed on 2024-06-14.
 // Downloads/AR assets produced before this date may have material issues and
 // should be flagged as outdated until regenerated.
-const COOK_MATERIAL_FIX_DATE: Date = new Date('2024-06-14T00:00:00Z');
+export const COOK_MATERIAL_FIX_DATE: Date = new Date('2024-06-14T00:00:00Z');
 //#endregion
 
 //#region Get Projects & Scenes

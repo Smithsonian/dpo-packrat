@@ -8,6 +8,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { FieldType, SidebarBottomNavigator } from '../../../../components';
 import { HOME_ROUTES, INGESTION_ROUTE, resolveSubRoute } from '../../../../constants';
 import { useItemStore, useMetadataStore, useSubjectStore, useVocabularyStore } from '../../../../store';
@@ -26,7 +27,8 @@ const useStyles = makeStyles(({ palette }) => ({
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px - var(--status-banner-height, 0px))'
+        height: '100%',
+        minHeight: 0
     },
     content: {
         display: 'flex',
@@ -136,8 +138,7 @@ function SubjectItem(): React.ReactElement {
             await updateMetadataFolders();
             setMetadataStepLoading(false);
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failure handling input${message}`);
+            toastError(error, 'Failure handling input');
             setMetadataStepLoading(false);
             return;
         }

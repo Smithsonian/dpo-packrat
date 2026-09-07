@@ -12,7 +12,7 @@ export default async function getIngestionItems(_: Parent, args: QueryGetIngesti
     const items: DBAPI.Item[] | null = await DBAPI.Item.fetchDerivedFromSubjects(idSubjects);
     if (!items) {
         RK.logError(RK.LogSection.eGQL,'get ingestion items failed','unable to fetch items from scene',{ idSubjects },'GraphQL.Unit.IngestionItems');
-        return { };
+        return { message: 'Could not load ingestion items for the selected subjects.' };
     }
 
     const idItems: number[] = [];
@@ -25,7 +25,7 @@ export default async function getIngestionItems(_: Parent, args: QueryGetIngesti
     const ItemAndProjects: DBAPI.ItemAndProject[] | null = await DBAPI.Item.fetchRelatedItemsAndProjects(idItems);
     if (!ItemAndProjects) {
         RK.logError(RK.LogSection.eGQL,'get ingestion items failed','unable to fetch projects related to items',{ idItems },'GraphQL.Unit.IngestionItems');
-        return { };
+        return { message: 'Could not load projects for the selected ingestion items.' };
     }
 
     // Filter by accessible projects (authorized units' projects + assigned restricted projects)

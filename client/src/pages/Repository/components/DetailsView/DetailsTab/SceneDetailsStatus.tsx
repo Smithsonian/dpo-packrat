@@ -15,6 +15,7 @@ import {
     IconButton,
     TextField,
     Button,
+    MenuItem,
     Tooltip,
     Typography,
     // Theme,
@@ -30,11 +31,24 @@ interface QCStatus {
     status: string;
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
+    approvable?: boolean;
 }
 interface EdanRecordIdRaw {
     svx: string | null;
     db: string | null;
     subjectCount: number;
+}
+interface ScaleRaw {
+    bboxState: string;
+    currentUnits?: string | null;
+    modelUnits?: string | null;
+    realMeters?: number;
+    intendedUnits?: string;
+    multiModel?: boolean;
+    canFix?: boolean;
+    bboxMinMeters?: number[];
+    bboxMaxMeters?: number[];
+    bboxSizeMeters?: number[];
 }
 interface SceneQCData {
     idSystemObject: number,
@@ -52,6 +66,8 @@ interface SceneQCData {
     edanRecordId: QCStatus;
     edanUUID: QCStatus;
     edanRecordIdRaw?: EdanRecordIdRaw;
+    scaleRaw?: ScaleRaw;
+    retired?: boolean;
     // network: QCStatus;
 }
 interface QCRow {
@@ -61,6 +77,7 @@ interface QCRow {
     level: 'pass' | 'warn' | 'fail' | 'critical' | 'info';
     notes: string;
     tooltip: string;
+    approvable?: boolean;
 }
 interface SceneDetailsStatusProps {
     idSceneSO: number;
@@ -77,6 +94,7 @@ const qcRowKeys: (keyof SceneQCData)[] = [
     'edanUUID',
     // 'thumbnails',
     'baseModels',
+    'scale',
     'downloads',
     'arModels',
     'captureData'
@@ -90,10 +108,36 @@ const qcRowTooltips: Record<string, string> = {
     edanUUID: 'Unique identifier used by EDAN to reference this scene\'s 3D package',
     thumbnails: 'Presence of generated thumbnail images for this scene',
     baseModels: 'Base 3D models (master geometry) linked to this scene',
+    scale: 'Whether the scene\'s Voyager display units are plausible for the model\'s real-world size',
     downloads: 'Generated download packages (GLB, OBJ, USDZ) for public distribution',
     arModels: 'AR-ready models (WebXR and native) for augmented reality viewing',
     captureData: 'Source capture datasets (photogrammetry, CT, etc.) linked to this scene',
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapSceneQCData = (d: any): SceneQCData => ({
+    idSystemObject: d.idSystemObject,
+    idScene: d.idScene,
+    publishedUrl: d.publishedUrl,
+    published: d.published,
+    license: d.license,
+    reviewed: d.reviewed,
+    scale: d.scale,
+    thumbnails: d.thumbnails,
+    baseModels: d.baseModels,
+    downloads: d.downloads,
+    arModels: d.arModels,
+    captureData: d.captureData,
+    edanRecordId: d.edanRecordId,
+    edanUUID: d.edanUUID,
+    edanRecordIdRaw: d.edanRecordIdRaw,
+    scaleRaw: d.scaleRaw,
+    retired: d.retired,
+});
+
+const UNIT_OPTIONS: string[] = ['mm', 'cm', 'm', 'km', 'in', 'ft', 'yd', 'mi'];
+const fmtVec = (v?: number[] | null): string =>
+    Array.isArray(v) && v.length >= 3 ? `(${v.map(n => (Number.isFinite(n) ? String(Number(n.toFixed(4))) : '?')).join(', ')})` : '—';
 
 // Define styles
 const useStyles = makeStyles(() =>
@@ -168,6 +212,19 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     const [saving, setSaving] = useState<boolean>(false);
     const [saveError, setSaveError] = useState<string | null>(null);
 
+    // verify/approve dialog state (date-flagged AR + Downloads)
+    const [approveOpen, setApproveOpen] = useState<boolean>(false);
+    const [approveKind, setApproveKind] = useState<'ar' | 'downloads'>('ar');
+    const [approveReason, setApproveReason] = useState<string>('');
+    const [approveSaving, setApproveSaving] = useState<boolean>(false);
+    const [approveError, setApproveError] = useState<string | null>(null);
+
+    // fix display-units dialog state
+    const [scaleOpen, setScaleOpen] = useState<boolean>(false);
+    const [scaleUnit, setScaleUnit] = useState<string>('m');
+    const [scaleSaving, setScaleSaving] = useState<boolean>(false);
+    const [scaleError, setScaleError] = useState<string | null>(null);
+
     const buildRows = useCallback((objectData: SceneQCData): QCRow[] => {
         return qcRowKeys.map((key) => {
             const row = objectData[key] as QCStatus;
@@ -177,7 +234,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             if(key==='published') {
                 publishedNotes = row.notes;
                 if(objectData.publishedUrl && objectData.publishedUrl.length>0)
-                    publishedNotes += ` (<a href='${objectData.publishedUrl}'><b>Link</b></a>)`;
+                    publishedNotes += ` (<a href='${objectData.publishedUrl}' target='_blank' rel='noopener noreferrer'><b>Link</b></a>)`;
             }
 
             return {
@@ -187,6 +244,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                 level: row.level,
                 notes: (publishedNotes) ?? row.notes,
                 tooltip: qcRowTooltips[key as string] ?? '',
+                approvable: row.approvable,
             };
         });
     }, []);
@@ -194,25 +252,17 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setError(null);
                 const response: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
 
-                const objectData: SceneQCData = {
-                    idSystemObject: response.data.idSystemObject,
-                    idScene: response.data.idScene,
-                    publishedUrl: response.data.publishedUrl,
-                    published: response.data.published,
-                    license: response.data.license,
-                    reviewed: response.data.reviewed,
-                    scale: response.data.scale,
-                    thumbnails: response.data.thumbnails,
-                    baseModels: response.data.baseModels,
-                    downloads: response.data.downloads,
-                    arModels: response.data.arModels,
-                    captureData: response.data.captureData,
-                    edanRecordId: response.data.edanRecordId,
-                    edanUUID: response.data.edanUUID,
-                    edanRecordIdRaw: response.data.edanRecordIdRaw,
-                };
+                // A failed status request carries a human-readable message but no data payload;
+                // surface that message rather than dereferencing an undefined response.data.
+                if (!response.success || !response.data) {
+                    setError(response.message || 'Failed to load QC data');
+                    return;
+                }
+
+                const objectData: SceneQCData = mapSceneQCData(response.data);
                 setData(objectData);
                 setRows(buildRows(objectData));
             } catch (err) {
@@ -265,23 +315,7 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
 
             // re-fetch full status to rebuild all rows
             const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
-            const updatedData: SceneQCData = {
-                idSystemObject: statusResponse.data.idSystemObject,
-                idScene: statusResponse.data.idScene,
-                publishedUrl: statusResponse.data.publishedUrl,
-                published: statusResponse.data.published,
-                license: statusResponse.data.license,
-                reviewed: statusResponse.data.reviewed,
-                scale: statusResponse.data.scale,
-                thumbnails: statusResponse.data.thumbnails,
-                baseModels: statusResponse.data.baseModels,
-                downloads: statusResponse.data.downloads,
-                arModels: statusResponse.data.arModels,
-                captureData: statusResponse.data.captureData,
-                edanRecordId: statusResponse.data.edanRecordId,
-                edanUUID: statusResponse.data.edanUUID,
-                edanRecordIdRaw: statusResponse.data.edanRecordIdRaw,
-            };
+            const updatedData: SceneQCData = mapSceneQCData(statusResponse.data);
             setData(updatedData);
             setRows(buildRows(updatedData));
             setDialogOpen(false);
@@ -292,6 +326,84 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
             console.error(err);
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleOpenScale = () => {
+        setScaleUnit(data?.scaleRaw?.intendedUnits ?? data?.scaleRaw?.currentUnits ?? 'm');
+        setScaleError(null);
+        setScaleOpen(true);
+    };
+
+    const handleCancelScale = () => {
+        setScaleOpen(false);
+        setScaleError(null);
+    };
+
+    const handleApplyScale = async () => {
+        if (!data || !scaleUnit) return;
+        setScaleSaving(true);
+        setScaleError(null);
+        try {
+            const patchResponse: RequestResponse = await API.patchObject(data.idSystemObject, { units: scaleUnit });
+            if (!patchResponse.success) {
+                setScaleError(patchResponse.message ?? 'Failed to update scene units');
+                return;
+            }
+
+            // re-fetch full status to rebuild all rows
+            const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+            const updatedData: SceneQCData = mapSceneQCData(statusResponse.data);
+            setData(updatedData);
+            setRows(buildRows(updatedData));
+            setScaleOpen(false);
+            props.onUpdate?.();
+        } catch (err) {
+            setScaleError('An unexpected error occurred');
+            console.error(err);
+        } finally {
+            setScaleSaving(false);
+        }
+    };
+
+    const handleOpenApprove = (kind: 'ar' | 'downloads') => {
+        setApproveKind(kind);
+        setApproveReason('');
+        setApproveError(null);
+        setApproveOpen(true);
+    };
+
+    const handleCancelApprove = () => {
+        setApproveOpen(false);
+        setApproveError(null);
+        setApproveReason('');
+    };
+
+    const handleApplyApprove = async () => {
+        if (!data) return;
+        setApproveSaving(true);
+        setApproveError(null);
+        try {
+            const field: string = approveKind === 'ar' ? 'approveARModels' : 'approveDownloadModels';
+            const patchResponse: RequestResponse = await API.patchObject(data.idSystemObject, { [field]: { reason: approveReason.trim() } });
+            if (!patchResponse.success) {
+                setApproveError(patchResponse.message ?? 'Failed to record approval');
+                return;
+            }
+
+            // re-fetch full status to rebuild all rows (server returns the row as "Verified")
+            const statusResponse: RequestResponse = await API.getObjectDetailsStatus(props.idSceneSO);
+            const updatedData: SceneQCData = mapSceneQCData(statusResponse.data);
+            setData(updatedData);
+            setRows(buildRows(updatedData));
+            setApproveOpen(false);
+            setApproveReason('');
+            props.onUpdate?.();
+        } catch (err) {
+            setApproveError('An unexpected error occurred');
+            console.error(err);
+        } finally {
+            setApproveSaving(false);
         }
     };
 
@@ -313,6 +425,12 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
 
     return (
         <div>
+            {data.retired && (
+                <Alert severity='info' style={{ marginBottom: 8 }}>
+                    This scene is <strong>retired</strong>. Publishing checks are not applicable &mdash; its
+                    derivatives are excluded from publishing and shown here for reference only.
+                </Alert>
+            )}
             <TableContainer component={Paper} className={classes.tableContainer}>
                 <Table>
                     <TableHead className={classes.tableHeader}>
@@ -342,6 +460,20 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                                     {row.key === 'edanRecordId' && (
                                         <Tooltip title='Edit EDAN Record ID'>
                                             <IconButton size='small' onClick={handleOpenDialog}>
+                                                <Edit fontSize='small' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                    {(row.key === 'arModels' || row.key === 'downloads') && row.approvable === true && (
+                                        <Tooltip title='Verify / Approve'>
+                                            <IconButton size='small' onClick={() => handleOpenApprove(row.key === 'arModels' ? 'ar' : 'downloads')}>
+                                                <Edit fontSize='small' />
+                                            </IconButton>
+                                        </Tooltip>
+                                    )}
+                                    {row.key === 'scale' && (
+                                        <Tooltip title='Set Display Units'>
+                                            <IconButton size='small' onClick={handleOpenScale}>
                                                 <Edit fontSize='small' />
                                             </IconButton>
                                         </Tooltip>
@@ -402,6 +534,110 @@ const SceneDetailsStatus = (props: SceneDetailsStatusProps): React.ReactElement 
                         style={{ color: 'white' }}
                     >
                         {saving ? <CircularProgress size={20} /> : 'Apply'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog open={approveOpen} onClose={handleCancelApprove} maxWidth='sm' fullWidth>
+                <DialogTitle>Verify {approveKind === 'ar' ? 'AR Models' : 'Download Models'}</DialogTitle>
+                <DialogContent>
+                    <Typography variant='body2' style={{ marginBottom: 8 }}>
+                        Approving signals that you have QC&apos;d these derivatives. This is a non-blocking
+                        sign-off &mdash; it does not prevent publishing and does not modify the assets.
+                    </Typography>
+                    <TextField
+                        variant='outlined'
+                        size='small'
+                        fullWidth
+                        multiline
+                        rows={2}
+                        label='Reason (optional)'
+                        placeholder='Optional note recorded with this approval'
+                        value={approveReason}
+                        onChange={(e) => setApproveReason(e.target.value)}
+                        disabled={approveSaving}
+                    />
+                    {approveError && (
+                        <Alert severity='error' style={{ marginTop: 8 }}>{approveError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelApprove} disabled={approveSaving}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleApplyApprove}
+                        color='primary'
+                        variant='contained'
+                        disabled={approveSaving}
+                        style={{ color: 'white' }}
+                    >
+                        {approveSaving ? <CircularProgress size={20} /> : 'Approve / Verify'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            <Dialog
+                open={scaleOpen}
+                onClose={handleCancelScale}
+                maxWidth='sm'
+                fullWidth
+                PaperProps={{ style: { maxWidth: 630 } }}
+            >
+                <DialogTitle>Set Display Units</DialogTitle>
+                <DialogContent>
+                    <Typography variant='body2' style={{ marginBottom: 16 }}>
+                        The display units for a Voyager scene help with user navigation (zooming, rotating, measurement) and should match the object&apos;s relative size.
+                    </Typography>
+                    <Typography component='div' variant='body2' style={{ marginBottom: 32 }}>
+                        <table style={{ borderCollapse: 'collapse' }}>
+                            <tbody>
+                                <tr>
+                                    <td style={{ paddingRight: 16, verticalAlign: 'top' }}><strong>Current display units</strong></td>
+                                    <td>{data?.scaleRaw?.currentUnits ?? 'unset'}</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ paddingRight: 16, verticalAlign: 'top' }}><strong>Adjusted bbox size</strong></td>
+                                    <td>{fmtVec(data?.scaleRaw?.bboxSizeMeters)} m</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ paddingRight: 16, verticalAlign: 'top' }}><strong>Suggested unit</strong></td>
+                                    <td>{data?.scaleRaw?.intendedUnits ?? '—'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </Typography>
+                    <TextField
+                        select
+                        variant='outlined'
+                        size='small'
+                        fullWidth
+                        label='Display units'
+                        value={scaleUnit}
+                        onChange={(e) => setScaleUnit(e.target.value)}
+                        disabled={scaleSaving}
+                    >
+                        {UNIT_OPTIONS.map((u) => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+                    </TextField>
+                    <Typography variant='caption' color='textSecondary' style={{ display: 'block', marginTop: 8 }}>
+                        Applying rewrites the scene&apos;s units in the SVX as a new asset version; the geometry is unchanged.
+                    </Typography>
+                    {scaleError && (
+                        <Alert severity='error' style={{ marginTop: 8 }}>{scaleError}</Alert>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelScale} disabled={scaleSaving}>
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleApplyScale}
+                        color='primary'
+                        variant='contained'
+                        disabled={scaleSaving || !scaleUnit}
+                        style={{ color: 'white' }}
+                    >
+                        {scaleSaving ? <CircularProgress size={20} /> : 'Apply'}
                     </Button>
                 </DialogActions>
             </Dialog>

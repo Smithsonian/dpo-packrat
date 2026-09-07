@@ -2,11 +2,14 @@ import { PublishResult, MutationPublishArgs } from '../../../../../types/graphql
 import { Parent } from '../../../../../types/resolvers';
 import * as COL from '../../../../../collections/interface';
 import * as DBAPI from '../../../../../db';
+import * as CACHE from '../../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
 import { eAuditType } from '../../../../../db/api/ObjectType';
+import { Config } from '../../../../../config';
+import * as H from '../../../../../utils/helpers';
 
 export default async function publish(_: Parent, args: MutationPublishArgs): Promise<PublishResult> {
     const {
@@ -17,6 +20,18 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     const ctx = Authorization.getContext();
     if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return { success: false, message: AUTH_ERROR.ACCESS_DENIED };
+
+    // Publishing a Subject requires admin AND a Subject in an allow-listed unit, while the set of EDAN
+    // records a subject publish can modify is confirmed with EDAN owners. Scene publishing is unchanged.
+    const oID = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);
+    if (oID?.eObjectType === COMMON.eSystemObjectType.eSubject) {
+        if (!ctx.isAdmin)
+            return { success: false, message: AUTH_ERROR.ADMIN_REQUIRED };
+        const subjectDB: DBAPI.Subject | null = oID.idObject ? await DBAPI.Subject.fetch(oID.idObject) : null;
+        const unit: DBAPI.Unit | null = subjectDB ? await DBAPI.Unit.fetch(subjectDB.idUnit) : null;
+        if (!Config.features.subjectPublishUnitAllowlist.includes((unit?.Abbreviation ?? '').toUpperCase()))
+            return { success: false, message: `Subject publishing is limited to units: ${Config.features.subjectPublishUnitAllowlist.join(', ')}` };
+    }
 
     // Capture the prior published state for the audit diff before the publish
     // call mutates SystemObjectVersion. Reads are cheap and the row may not
@@ -29,7 +44,8 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
     // captures whether the EDAN call succeeded; the SystemObjectVersion update
     // it performs writes its own audit row through the standard DBObject path.
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
-    const success: boolean = await ICol.publish(idSystemObject, eState);
+    const publishRes: H.IOResults = await ICol.publish(idSystemObject, eState);
+    const success: boolean = publishRes.success;
     if (success) {
         const isUnpublish: boolean = eState === COMMON.ePublishedState.eNotPublished;
         // Wrap only the semantic emit so the audit row inherits deadlock retry
@@ -49,5 +65,5 @@ export default async function publish(_: Parent, args: MutationPublishArgs): Pro
         });
         return { success, eState };
     }
-    return { success, message: 'Error encountered during publishing' };
+    return { success, message: publishRes.error ?? 'Error encountered during publishing' };
 }

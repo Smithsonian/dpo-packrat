@@ -6,7 +6,8 @@ import * as DBAPI from '../../../../../db';
 import * as CACHE from '../../../../../cache';
 import { maybe } from '../../../../../utils/types';
 import { isNull, isUndefined } from 'lodash';
-import { SystemObjectTypeToName } from '../../../../../db/api/ObjectType';
+import { SystemObjectTypeToName, eAuditType } from '../../../../../db/api/ObjectType';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
 import * as H from '../../../../../utils/helpers';
 import { PublishScene, SceneUpdateResult } from '../../../../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
@@ -14,6 +15,7 @@ import { NameHelpers } from '../../../../../utils/nameHelpers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
+import { retireSystemObjectTree } from '../../../../../objectAction/RetireExecutorDeps';
 
 type PendingSceneUpdate = {
     idScene: number;
@@ -21,6 +23,11 @@ type PendingSceneUpdate = {
     newPosedAndQCd: boolean;
     LicenseOld: DBAPI.License | undefined;
     LicenseNew: DBAPI.License | undefined;
+};
+
+type PendingLicenseCache = {
+    clear: boolean;                                 // true = license cleared; false = license assigned
+    resolver: DBAPI.LicenseResolver | undefined;    // resolver to record post-commit when assigning
 };
 
 export default async function updateObjectDetails(_: Parent, args: MutationUpdateObjectDetailsArgs, context: Context): Promise<UpdateObjectDetailsResult> {
@@ -33,9 +40,21 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     if (!ctx || !await Authorization.canAccessSystemObject(ctx, idSystemObject))
         return sendResult(false, 'update object details failed', AUTH_ERROR.ACCESS_DENIED);
 
+    // Editing a Subject requires admin (for the moment); Scene/other editing is unchanged.
+    if (objectType === COMMON.eSystemObjectType.eSubject && !ctx.isAdmin)
+        return sendResult(false, 'update object details failed', AUTH_ERROR.ADMIN_REQUIRED);
+
     // Capture-by-reference for handleSceneUpdates to fire post-commit for the
     // Scene case. Cook download generation/removal must NOT run inside the tx.
     let pendingSceneUpdate: PendingSceneUpdate | null = null;
+    // Retire/reinstate is applied post-commit by the shared executor (outside this tx, since it
+    // performs EDAN unpublish for published scenes). Capture the intended transition here; null =
+    // no change requested.
+    let pendingRetire: boolean | null = null;
+    // LicenseCache maintenance runs the descendant traversal, so it is kept out of the tx and applied
+    // post-commit (see the license phases). Capture which maintenance the DB writes require; null =
+    // no license change.
+    let pendingLicenseCache: PendingLicenseCache | null = null;
 
     const txResult = await withAuditTransaction(async (): Promise<UpdateObjectDetailsResult> => {
         if (!data.Name || isUndefined(data.Retired) || isNull(data.Retired))
@@ -45,24 +64,12 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
         if (!SO)
             return sendResult(false,'update object details failed',`Error fetching object ${idSystemObject}; update failed`);
 
-        if (!SO.Retired && data.Retired) {
-        // Root retire emits a semantic eActionRetire row; its idAudit threads
-        // into cascade children as parentRetirement.idAudit so the full
-        // retirement tree can be reconstructed from the Audit table.
-            const rootResult = await SO.retireObjectWithContext({ reason: null });
-            if (!rootResult.success)
-                return sendResult(false,'update object details failed','Error retiring object; update failed');
-            const cascadeResult = await cascadeRetirementToAssets(idSystemObject, true, rootResult.idAudit);
-            if (!cascadeResult.success)
-                return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error retiring child assets');
-        } else if (SO.Retired && !data.Retired) {
-            const rootResult = await SO.reinstateObjectWithContext({ reason: null });
-            if (!rootResult.success)
-                return sendResult(false,'update object details failed','Error reinstating object; update failed');
-            const cascadeResult = await cascadeRetirementToAssets(idSystemObject, false, rootResult.idAudit);
-            if (!cascadeResult.success)
-                return sendResult(false,'update object details failed',cascadeResult.error ?? 'Error reinstating child assets');
-        }
+        // Decide the retire/reinstate transition; the flip + cascade + EDAN unpublish run
+        // post-commit via the shared executor (deduped resolver replaces the legacy inline cascade).
+        if (!SO.Retired && data.Retired)
+            pendingRetire = true;
+        else if (SO.Retired && !data.Retired)
+            pendingRetire = false;
 
         let identifierPreferred: null | number = null;
         if (data?.Identifiers && data?.Identifiers.length) {
@@ -100,13 +107,37 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                 if (!reassignedLicense)
                     return sendResult(false,'update object details failed',`Unable to fetch license with id ${data.License}; update failed`);
 
-                if (!await DBAPI.LicenseManager.setAssignment(idSystemObject, reassignedLicense))
+                const dbWrite = await DBAPI.LicenseManager.setAssignmentDBWrites(idSystemObject, reassignedLicense);
+                if (!dbWrite.success)
                     return sendResult(false,'update object details failed',`Unable to reassign license for idSystemObject ${idSystemObject} with id ${reassignedLicense.idLicense}; update failed`);
+                pendingLicenseCache = { clear: false, resolver: dbWrite.resolver };
                 LicenseNew = reassignedLicense;
+                // Emit the same semantic license audit as the standalone assignLicense resolver, so the
+                // change is recorded on the object and consumers (e.g. the draft-drift check) see it.
+                // Only when the effective license actually changed.
+                if (LicenseOld?.idLicense !== reassignedLicense.idLicense)
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionAssignLicense,
+                        idSystemObject,
+                        payload: {
+                            before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+                            after:  { idLicense: reassignedLicense.idLicense, Name: reassignedLicense.Name, RestrictLevel: reassignedLicense.RestrictLevel },
+                        },
+                    });
             } else {
-                if (!await DBAPI.LicenseManager.clearAssignment(idSystemObject))
+                if (!await DBAPI.LicenseManager.clearAssignmentDBWrites(idSystemObject))
                     return sendResult(false,'update object details failed',`Unable to clear license with for idSystemObject ${idSystemObject}; update failed`);
+                pendingLicenseCache = { clear: true, resolver: undefined };
                 LicenseNew = undefined;
+                if (LicenseOld)
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionClearLicense,
+                        idSystemObject,
+                        payload: {
+                            before: { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel },
+                            after:  null,
+                        },
+                    });
             }
         }
         RK.logDebug(RK.LogSection.eGQL,'update object details','changing license',{ oldLicense: LicenseOld, newLicense: LicenseNew },'GraphQL.SystemObject.ObjectDetails');
@@ -586,6 +617,27 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
     if (!txResult.success)
         return txResult;
 
+    // Post-commit: maintain the license cache now that the assignment change is durably persisted.
+    // Run this before the scene/retire side-effects so any downstream license read sees fresh data.
+    // A failure is non-fatal (the cache is rebuildable); drop to a targeted invalidation.
+    if (pendingLicenseCache) {
+        const plc: PendingLicenseCache = pendingLicenseCache;
+        const cacheOk: boolean = plc.clear
+            ? await DBAPI.LicenseManager.maintainCacheAfterClear(idSystemObject)
+            : await DBAPI.LicenseManager.maintainCacheAfterSet(idSystemObject, plc.resolver);
+        if (!cacheOk)
+            await CACHE.LicenseCache.invalidateResolver(idSystemObject);
+    }
+
+    // Post-commit: apply retire/reinstate via the shared executor. Runs outside the tx because it
+    // performs EDAN unpublish (external HTTP) for published scenes and manages its own audit
+    // transaction. Idempotent — a no-op transition (already in state) is skipped internally.
+    if (pendingRetire !== null) {
+        const retireResult = await retireSystemObjectTree(idSystemObject, pendingRetire);
+        if (!retireResult.applied)
+            return sendResult(false, 'update object details failed', retireResult.message);
+    }
+
     // Post-commit: fire Cook download generation/removal for the Scene case.
     // Stays outside the tx so the workflow trigger does not extend the lock.
     if (pendingSceneUpdate) {
@@ -658,132 +710,4 @@ function computeNewName(oldName: string, oldTitle: string | null, newTitle: stri
     // LOG.info(`updateObjectDetails computeNewName(${oldName}, ${oldTitle}, ${newTitle}) = ${newName} (oldBaseName = ${oldBaseName})`, LOG.LS.eGQL);
 
     return newName;
-}
-
-/**
- * Cascades retirement/reinstatement to related objects and assets.
- * Order of operations for retirement:
- * 1. Retire derived/child objects (Scenes first, then Models)
- * 2. Retire direct Assets
- * For Scenes, uses fetchFromSceneByVersion to get all assets including model assets.
- */
-async function cascadeRetirementToAssets(idSystemObject: number, retire: boolean, parentAuditId: number | null = null): Promise<H.IOResults> {
-    const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
-    if (!SO) {
-        return { success: false, error: `Unable to fetch SystemObject ${idSystemObject}` };
-    }
-
-    // Cascade to derived/child objects (Scenes first, then Models)
-    const derivedObjects: DBAPI.SystemObject[] | null = await DBAPI.SystemObject.fetchDerivedFromXref(idSystemObject);
-    if (derivedObjects && derivedObjects.length > 0) {
-        // Sort: Scenes first, then Models, then others
-        const scenes: DBAPI.SystemObject[] = [];
-        const models: DBAPI.SystemObject[] = [];
-        const others: DBAPI.SystemObject[] = [];
-
-        for (const derived of derivedObjects) {
-            if (derived.idScene) {
-                scenes.push(derived);
-            } else if (derived.idModel) {
-                models.push(derived);
-            } else {
-                others.push(derived);
-            }
-        }
-
-        // Process in order: Scenes, then Models, then others
-        const orderedDerived = [...scenes, ...models, ...others];
-        for (const derivedSO of orderedDerived) {
-            if (retire) {
-                if (!derivedSO.Retired) {
-                    const res = await derivedSO.retireObjectWithContext({ parentAuditId });
-                    if (!res.success)
-                        return { success: false, error: `Failed to retire derived object SO ${derivedSO.idSystemObject}` };
-                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId);
-                    if (!cascadeResult.success) {
-                        return cascadeResult;
-                    }
-                    RK.logInfo(RK.LogSection.eGQL, 'cascade retirement', `Retired derived object (SO ${derivedSO.idSystemObject})`, { idSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
-                }
-            } else {
-                if (derivedSO.Retired) {
-                    const res = await derivedSO.reinstateObjectWithContext({ parentAuditId });
-                    if (!res.success)
-                        return { success: false, error: `Failed to reinstate derived object SO ${derivedSO.idSystemObject}` };
-                    const cascadeResult = await cascadeRetirementToAssets(derivedSO.idSystemObject, retire, parentAuditId);
-                    if (!cascadeResult.success) {
-                        return cascadeResult;
-                    }
-                    RK.logInfo(RK.LogSection.eGQL, 'cascade reinstatement', `Reinstated derived object (SO ${derivedSO.idSystemObject})`, { idSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
-                }
-            }
-        }
-    }
-
-    // Retire assets - use fetchFromSceneByVersion for Scenes to get all assets including model assets
-    if (SO.idScene) {
-        // For Scenes, use the comprehensive fetch that includes model assets
-        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchFromSceneByVersion(SO.idScene);
-        if (assetVersions && assetVersions.length > 0) {
-            // Get unique Assets from the AssetVersions
-            const assetIdSet = new Set<number>();
-            for (const av of assetVersions) {
-                assetIdSet.add(av.idAsset);
-            }
-
-            for (const idAsset of assetIdSet) {
-                const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(idAsset);
-                if (!assetSO) {
-                    RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
-                    continue;
-                }
-
-                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${idAsset}`, idSystemObject, parentAuditId);
-                if (!result.success) {
-                    return result;
-                }
-            }
-        }
-    } else {
-        // For non-Scene objects, use fetchFromSystemObject
-        const assets: DBAPI.Asset[] | null = await DBAPI.Asset.fetchFromSystemObject(idSystemObject);
-        if (assets && assets.length > 0) {
-            for (const asset of assets) {
-                const assetSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromAssetID(asset.idAsset);
-                if (!assetSO) {
-                    RK.logError(RK.LogSection.eGQL, 'cascade retirement failed', `Unable to fetch SystemObject for Asset ${asset.idAsset}`, { idSystemObject, retire }, 'GraphQL.SystemObject.ObjectDetails');
-                    continue;
-                }
-
-                const result = await retireOrReinstateObject(assetSO, retire, `Asset ${asset.idAsset}`, idSystemObject, parentAuditId);
-                if (!result.success) {
-                    return result;
-                }
-            }
-        }
-    }
-
-    return { success: true };
-}
-
-/**
- * Helper to retire or reinstate a single SystemObject with logging.
- */
-async function retireOrReinstateObject(so: DBAPI.SystemObject, retire: boolean, objectDesc: string, parentIdSystemObject: number, parentAuditId: number | null = null): Promise<H.IOResults> {
-    if (retire) {
-        if (!so.Retired) {
-            const res = await so.retireObjectWithContext({ parentAuditId });
-            if (!res.success)
-                return { success: false, error: `Failed to retire ${objectDesc}` };
-            RK.logInfo(RK.LogSection.eGQL, 'cascade retirement', `Retired ${objectDesc} (SO ${so.idSystemObject})`, { parentIdSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
-        }
-    } else {
-        if (so.Retired) {
-            const res = await so.reinstateObjectWithContext({ parentAuditId });
-            if (!res.success)
-                return { success: false, error: `Failed to reinstate ${objectDesc}` };
-            RK.logInfo(RK.LogSection.eGQL, 'cascade reinstatement', `Reinstated ${objectDesc} (SO ${so.idSystemObject})`, { parentIdSystemObject }, 'GraphQL.SystemObject.ObjectDetails');
-        }
-    }
-    return { success: true };
 }

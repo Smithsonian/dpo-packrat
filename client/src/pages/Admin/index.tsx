@@ -26,6 +26,7 @@ import AdminUserForm from './components/User/AdminUserForm';
 import AdminProjectsView from './components/AdminProjectsView';
 import AdminUnitsView from './components/AdminUnitsView';
 import AdminToolsView from './components/AdminToolsView';
+import AdminMetricsView from './components/Metrics/AdminMetricsView';
 import AdminContactView from './components/Contact/AdminContactView';
 import AddUnitForm from './components/AddUnitForm';
 import AddProjectForm from './components/AddProjectForm';
@@ -52,6 +53,7 @@ function Admin(): React.ReactElement {
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.CREATESUBJECT)} element={<SubjectForm />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.SUBJECTS)} element={<SubjectView />} />
             <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.TOOLS)} element={<AdminToolsView />} />
+            <Route path={resolveRoute(ADMIN_ROUTE.ROUTES.METRICS)} element={<AdminMetricsView />} />
             <Route path='/' element={<Navigate to={resolveSubRoute(ADMIN_ROUTE.TYPE, ADMIN_ROUTE.ROUTES.LICENSES)} />} />
         </Routes>
     );

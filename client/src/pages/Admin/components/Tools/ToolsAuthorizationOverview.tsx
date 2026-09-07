@@ -5,6 +5,7 @@ import { Box, Typography, Button, Table, TableContainer, TableCell, TableRow, Ta
 import { Autocomplete } from '@material-ui/lab';
 import clsx from 'clsx';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { DBReference, ColumnHeader, useStyles as useToolsStyles } from '../shared/DataTypesStyles';
 import { DataTableSelect } from '../shared/DataTableSelect';
 
@@ -92,7 +93,7 @@ const ToolsAuthorizationOverview = (): React.ReactElement => {
             setIsLoadingSummary(true);
             const response: RequestResponse = await API.getAuthSummary();
             if (!response.success) {
-                toast.error(`Failed to load auth summary: ${response.message ?? 'unknown error'}`);
+                toastError(response, 'Failed to load auth summary');
                 setRawRows([]);
                 return;
             }
@@ -178,7 +179,7 @@ const ToolsAuthorizationOverview = (): React.ReactElement => {
             setIsLoadingDenials(true);
             const response: RequestResponse = await API.getAuthDenials(startDate, endDate);
             if (!response.success) {
-                toast.error(`Failed to load denials: ${response.message ?? 'unknown error'}`);
+                toastError(response, 'Failed to load denials');
                 setDenialRows([]);
                 return;
             }

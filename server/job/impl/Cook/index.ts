@@ -4,3 +4,4 @@ export * from './JobCookSIPackratInspect';
 export * from './JobCookSIVoyagerScene';
 export * from './CookRecipe';
 export * from './CookResource';
+export * from './CookOutputContract';

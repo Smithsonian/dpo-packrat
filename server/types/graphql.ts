@@ -585,6 +585,7 @@ export type DiscardUploadedAssetVersionsInput = {
 
 export type DiscardUploadedAssetVersionsResult = {
   __typename?: 'DiscardUploadedAssetVersionsResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -749,6 +750,7 @@ export type GetIngestTitleInput = {
 export type GetIngestTitleResult = {
   __typename?: 'GetIngestTitleResult';
   ingestTitle?: Maybe<IngestTitle>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIngestionItemsInput = {
@@ -758,6 +760,7 @@ export type GetIngestionItemsInput = {
 export type GetIngestionItemsResult = {
   __typename?: 'GetIngestionItemsResult';
   IngestionItem?: Maybe<Array<IngestionItem>>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIntermediaryFileInput = {
@@ -850,6 +853,8 @@ export type GetObjectChildrenInput = {
   projects: Array<Scalars['Int']>;
   rows: Scalars['Int'];
   search: Scalars['String'];
+  showRetired?: InputMaybe<Scalars['Boolean']>;
+  start?: InputMaybe<Scalars['Int']>;
   units: Array<Scalars['Int']>;
   variantType: Array<Scalars['Int']>;
 };
@@ -861,6 +866,7 @@ export type GetObjectChildrenResult = {
   error?: Maybe<Scalars['String']>;
   metadataColumns: Array<Scalars['Int']>;
   success: Scalars['Boolean'];
+  total?: Maybe<Scalars['Int']>;
 };
 
 export type GetObjectsForItemInput = {
@@ -978,6 +984,9 @@ export type GetSystemObjectDetailsResult = {
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;
+  edanRecordId?: Maybe<Scalars['String']>;
+  edanRecordUrl?: Maybe<Scalars['String']>;
+  edanUnitCode?: Maybe<Scalars['String']>;
   idObject: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   identifiers: Array<IngestIdentifier>;
@@ -993,6 +1002,7 @@ export type GetSystemObjectDetailsResult = {
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
   publishBlocker?: Maybe<Scalars['String']>;
+  publishControlVisible?: Maybe<Scalars['Boolean']>;
   publishable: Scalars['Boolean'];
   publishedEnum: Scalars['Int'];
   publishedState: Scalars['String'];
@@ -1000,6 +1010,7 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   subTitle?: Maybe<Scalars['String']>;
   subject?: Maybe<Array<RepositoryPath>>;
+  subjectUnitMismatch?: Maybe<Scalars['Boolean']>;
   thumbnail?: Maybe<Scalars['String']>;
   unit?: Maybe<Array<RepositoryPath>>;
 };
@@ -1857,6 +1868,7 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired?: Maybe<Scalars['Boolean']>;
 };
 
 export type ObjectPropertyResult = {
@@ -2341,6 +2353,7 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+  error?: Maybe<Scalars['String']>;
 };
 
 export type SourceObjectIdentifier = {
@@ -2695,6 +2708,7 @@ export type UploadAssetResult = {
   error?: Maybe<Scalars['String']>;
   idAssetVersions?: Maybe<Array<Scalars['Int']>>;
   status: UploadStatus;
+  warnings?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -2796,7 +2810,9 @@ export type WorkflowListResult = {
   JobRun?: Maybe<JobRun>;
   Owner?: Maybe<User>;
   ProjectName?: Maybe<Scalars['String']>;
+  ReportMimeType?: Maybe<Scalars['String']>;
   State?: Maybe<Scalars['String']>;
+  Summary?: Maybe<Scalars['String']>;
   Type?: Maybe<Scalars['String']>;
   UserInitiator?: Maybe<User>;
   Workflow?: Maybe<Workflow>;

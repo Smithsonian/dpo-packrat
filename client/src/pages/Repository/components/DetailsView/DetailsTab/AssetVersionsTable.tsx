@@ -20,6 +20,7 @@ import API from '../../../../../api';
 import { truncateWithEllipses, truncateMiddleWithEllipses } from '../../../../../constants/helperfunctions';
 import { MdExpandMore, MdExpandLess } from 'react-icons/md';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
 
 interface AssetVersionsTableProps {
     idSystemObject: number;
@@ -95,7 +96,7 @@ function AssetVersionsTable(props: AssetVersionsTableProps): React.ReactElement 
             setExpanded(-1);
             window.location.reload();
         } else {
-            toast.error(`Error when attempting to rollback to ${idAssetVersion}. Reason: ${data.message}`);
+            toastError(data, `Error when attempting to rollback to ${idAssetVersion}`);
         }
     };
 

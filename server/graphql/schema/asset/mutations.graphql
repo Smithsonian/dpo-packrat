@@ -23,6 +23,7 @@ type UploadAssetResult {
     status: UploadStatus!
     idAssetVersions: [Int!]
     error: String
+    warnings: Int
 }
 
 input DiscardUploadedAssetVersionsInput {
@@ -31,6 +32,7 @@ input DiscardUploadedAssetVersionsInput {
 
 type DiscardUploadedAssetVersionsResult {
     success: Boolean!
+    message: String
 }
 
 type RollbackAssetVersionResult {

@@ -1,4 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
+import type * as React from 'react';
 
 export type DBReference = {
     id: number,     // system object id
@@ -9,7 +10,9 @@ export type ColumnHeader = {
     label: string,
     align?: 'left' | 'right' | 'inherit' | 'center' | 'justify' | undefined,
     tooltip?: string,
-    link?: boolean
+    link?: boolean,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    render?: (row: any) => React.ReactNode   // custom cell content (e.g. an inline editor); overrides the default text/link cell
 };
 
 // TODO: add enums and types to library and/or COMMON as needed

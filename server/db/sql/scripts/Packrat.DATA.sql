@@ -284,13 +284,14 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 1, 'Microm
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 2, 'Millimeter');
 
 INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (37, 'CaptureDataVolume.SpecimenPreparation', 1);
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 1, 'Fluid-preserved');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 2, 'Dry');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 3, 'Stained');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 4, 'Frozen');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 5, 'Embedded');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 6, 'Live');
-INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 7, 'Other');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 1, 'None');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 2, 'Fluid-preserved');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 3, 'Dry');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 4, 'Stained');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 5, 'Frozen');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 6, 'Embedded');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 7, 'Live');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (37, 8, 'Other');
 
 -- MetadataSource: Volumetric — moved out of inline position (set 18 SortOrder 3)
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 3, 'Volumetric');

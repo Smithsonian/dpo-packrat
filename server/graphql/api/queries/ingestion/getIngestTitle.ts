@@ -8,6 +8,7 @@ const getIngestTitle = gql`
                 forced
                 subtitle
             }
+            message
         }
     }
 `;

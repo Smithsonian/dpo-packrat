@@ -133,3 +133,4 @@ JTConfig
 *.md
 tmp*-cwd
 .claude
+*.xlsx

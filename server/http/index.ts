@@ -28,11 +28,16 @@ import { generateScene } from './routes/api/generateVoyagerScene';
 import { getProjects, getProjectScenes } from './routes/api/project';
 import { createReport, getReportList, getReportFile } from './routes/api/report';
 import { getObjectStatus, patchObject } from './routes/api/object';
+import { objectAction } from './routes/api/objectAction';
+import { bulkOperation } from './routes/api/bulkOperation';
+import { getPublishedScenes } from './routes/api/publishedScenes';
 import { getContact, updateContact, createContact } from './routes/api/object';
 import { getUnit } from './routes/api/object';
 import { getExternalSources, createExternalSource, updateExternalSource } from './routes/api/object';
 import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, setProjectAuth, getAuthUsers, getAuthUnits, getAuthProjects, getAuthSummary, getAuthDenials } from './routes/api/authorization';
 import { getServiceStatus } from './routes/api/status';
+import { getMetrics } from './routes/api/metrics';
+import { edanCleanup } from './routes/api/edanCleanup';
 import { createWebDAVToken } from './routes/api/scene';
 import { sceneByUUID } from './routes/api/sceneByUUID';
 import { getAuditLifeline } from './routes/api/auditLifeline';
@@ -230,6 +235,7 @@ export class HttpServer {
 
         this.app.get('/api/scene/gen-downloads', generateDownloads);
         this.app.post('/api/scene/gen-downloads', generateDownloads);
+        this.app.get('/api/scene/published', getPublishedScenes);   // scenes still in a published EDAN state (orphan reconciliation)
         this.app.post('/api/scene/:id/webdav-token', createWebDAVToken);
 
         // External deep-link endpoints
@@ -238,6 +244,8 @@ export class HttpServer {
 
         this.app.get('/api/object/:id/status', getObjectStatus);
         this.app.patch('/api/object/:id', patchObject);
+        this.app.post('/api/object/action', objectAction);          // describe | retire | reinstate an object + dependents
+        this.app.post('/api/bulk/operation', bulkOperation);        // describe | validate | apply a registered bulk operation
 
         this.app.get('/api/audit/lifeline/:id', getAuditLifeline);  // admin-only: per-SystemObject audit history
 
@@ -279,6 +287,11 @@ export class HttpServer {
         this.app.get('/api/auth/denials', getAuthDenials);
 
         this.app.get('/api/status', getServiceStatus);
+
+        this.app.get('/api/metrics', getMetrics);                   // admin/tools: preservation metrics for a date range (+ optional series)
+
+        this.app.get('/api/system/edan-cleanup', edanCleanup);      // admin/tools: preview EDAN resource-folder retention cleanup
+        this.app.post('/api/system/edan-cleanup', edanCleanup);     // admin/tools: execute the cleanup
 
         this.app.get('/api/sandbox/play',play);
 
@@ -363,6 +376,15 @@ export class HttpServer {
         const inboundStr = Array.isArray(inbound) ? inbound[0] : inbound;
         LS.correlationId = (typeof inboundStr === 'string' && CORRELATION_ID_RE.test(inboundStr))
             ? inboundStr.toLowerCase()
+            : uuidv4();
+
+        // Honor an inbound x-trace-id header when it parses as a UUID; otherwise mint a
+        // fresh one. This per-request id is surfaced to the client as an error reference
+        // and is distinct from correlationId (which groups this operation's audit rows).
+        const inboundTrace = req.headers['x-trace-id'];
+        const inboundTraceStr = Array.isArray(inboundTrace) ? inboundTrace[0] : inboundTrace;
+        LS.traceId = (typeof inboundTraceStr === 'string' && CORRELATION_ID_RE.test(inboundTraceStr))
+            ? inboundTraceStr.toLowerCase()
             : uuidv4();
 
         // run the store for this user

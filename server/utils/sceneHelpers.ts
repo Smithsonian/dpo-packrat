@@ -243,6 +243,338 @@ export class SceneHelpers {
         return { success: true };
     }
 
+    /** Reads the preferred (.svx.json) SVX asset for a scene and returns its parsed JSON document.
+     *  Shared by the scale check and the units patch. Uses raw JSON.parse (avoids a lossy SvxReader round-trip). */
+    static async readPreferredSvxDocument(idSystemObject: number): Promise<{ success: boolean; error?: string; svxAsset?: DBAPI.Asset; svxAssetVersion?: DBAPI.AssetVersion; svxDoc?: any }> { // eslint-disable-line @typescript-eslint/no-explicit-any
+        const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (!assetVersions)
+            return { success: false, error: 'Cannot fetch asset versions for scene' };
+
+        const sceneSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSystemObject);
+        if (!sceneSO)
+            return { success: false, error: `Cannot fetch SystemObject ${idSystemObject}` };
+
+        let svxAsset: DBAPI.Asset | null = null;
+        let svxAssetVersion: DBAPI.AssetVersion | null = null;
+        for (const av of assetVersions) {
+            const asset: DBAPI.Asset | null = await DBAPI.Asset.fetch(av.idAsset);
+            if (!asset) continue;
+            if (await CACHE.VocabularyCache.isPreferredAsset(asset.idVAssetType, sceneSO)) {
+                svxAsset = asset;
+                svxAssetVersion = av;
+                break;
+            }
+        }
+        if (!svxAsset || !svxAssetVersion)
+            return { success: false, error: 'Cannot find preferred SVX asset for scene' };
+
+        const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(svxAssetVersion.idAssetVersion);
+        if (!RSR.success || !RSR.readStream)
+            return { success: false, error: `Cannot read SVX asset version: ${RSR.error}` };
+
+        const buffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+        if (!buffer)
+            return { success: false, error: 'Cannot read SVX stream into buffer' };
+
+        let svxDoc: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+        try {
+            svxDoc = JSON.parse(buffer.toString());
+        } catch (err) {
+            return { success: false, error: `Cannot parse SVX JSON: ${H.Helpers.getErrorString(err)}` };
+        }
+        return { success: true, svxAsset, svxAssetVersion, svxDoc };
+    }
+
+    // --- Scene scale / display-unit validation ---
+
+    /** Meters-per-unit for the SVX unit enum. Returns null for 'inherit'/unrecognized (caller falls back to meters). */
+    static unitToMeters(unit: string | null | undefined): number | null {
+        switch ((unit ?? '').toLowerCase()) {
+            case 'um': return 0.000001;
+            case 'mm': return 0.001;
+            case 'cm': return 0.01;
+            case 'm':  return 1;
+            case 'km': return 1000;
+            case 'in': return 0.0254;
+            case 'ft': return 0.3048;
+            case 'yd': return 0.9144;
+            case 'mi': return 1609.344;
+            default:   return null; // 'inherit' or unrecognized
+        }
+    }
+
+    /** Initial scale heuristic: real-world longest side (meters) -> best-fit scene display unit.
+     *  Isolated on purpose so the thresholds can be retuned independently. */
+    static bestFitSceneUnit(realMeters: number): 'm' | 'cm' | 'mm' {
+        if (realMeters > 1) return 'm';
+        if (realMeters > 0.1) return 'cm';
+        return 'mm';
+    }
+
+    /** Classifies a per-model bounding box before any unit reasoning. */
+    static validateBoundingBox(bbox: { min?: number[]; max?: number[] } | null | undefined): { state: 'absent' | 'valid' | 'nonfinite' | 'inverted' | 'degenerate'; longestSide: number | null } {
+        if (!bbox || !Array.isArray(bbox.min) || !Array.isArray(bbox.max) || bbox.min.length < 3 || bbox.max.length < 3)
+            return { state: 'absent', longestSide: null };
+        const coords: number[] = [bbox.min[0], bbox.min[1], bbox.min[2], bbox.max[0], bbox.max[1], bbox.max[2]];
+        if (coords.some(c => typeof c !== 'number' || !isFinite(c)))
+            return { state: 'nonfinite', longestSide: null };
+        const extents: number[] = [0, 1, 2].map(i => (bbox.max as number[])[i] - (bbox.min as number[])[i]);
+        if (extents.some(e => e < 0))
+            return { state: 'inverted', longestSide: null };
+        if (extents.some(e => e < 1e-9))
+            return { state: 'degenerate', longestSide: null };
+        return { state: 'valid', longestSide: Math.max(...extents) };
+    }
+
+    /** Reads the SVX to return the scene display unit and each display model's units + bounding box. */
+    static async getSceneScaleInfo(idSystemObject: number): Promise<{ success: boolean; error?: string; sceneUnits?: string | null; models?: { name: string | null; units: string | null; bbox: { min?: number[]; max?: number[] } | null }[] }> {
+        const docResult = await SceneHelpers.readPreferredSvxDocument(idSystemObject);
+        if (!docResult.success || !docResult.svxDoc)
+            return { success: false, error: docResult.error };
+
+        const doc = docResult.svxDoc;
+        const sceneIdx: number = typeof doc.scene === 'number' ? doc.scene : 0;
+        const sceneUnits: string | null = doc.scenes?.[sceneIdx]?.units ?? null;
+        const models = Array.isArray(doc.models)
+            ? doc.models.map((m: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
+                name: m.name ?? null,
+                units: m.units ?? null,
+                bbox: m.boundingBox ? { min: m.boundingBox.min, max: m.boundingBox.max } : null,
+            }))
+            : [];
+        return { success: true, sceneUnits, models };
+    }
+
+    /** Fallback bounding-box source for evaluateSceneScale: the scene's live derivative models and the
+     *  inspection bounding boxes recorded on their ModelObjects at ingest. Shaped to match
+     *  getSceneScaleInfo().models so the same validation path handles both. Units come from each
+     *  Model's authored units (idVUnits). Returns [] for a non-scene system object. */
+    static async getSceneDerivativeModelBBoxes(idSceneSystemObject: number): Promise<{ name: string | null; units: string | null; bbox: { min: number[]; max: number[] } | null }[]> {
+        const result: { name: string | null; units: string | null; bbox: { min: number[]; max: number[] } | null }[] = [];
+        if (!idSceneSystemObject)
+            return result;
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSceneSystemObject);
+        if (!SO || !SO.idScene)
+            return result;
+
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(SO.idScene);
+        if (!MSXs)
+            return result;
+
+        for (const MSX of MSXs) {
+            const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!modelSO || modelSO.Retired)
+                continue; // skip retired derivative models -- not part of the current snapshot
+            const model: DBAPI.Model | null = await DBAPI.Model.fetch(MSX.idModel);
+            if (!model)
+                continue;
+            const modelObjects: DBAPI.ModelObject[] | null = await DBAPI.ModelObject.fetchFromModel(MSX.idModel);
+            const bbox = SceneHelpers.unionModelObjectBoundingBox(modelObjects);
+            if (!bbox)
+                continue;
+            result.push({ name: model.Name ?? null, units: await SceneHelpers.modelUnitsShort(model.idVUnits), bbox });
+        }
+        return result;
+    }
+
+    /** Axis-aligned union of one model's ModelObject bounding boxes, tolerant of P1/P2 ordering. Null
+     *  when no ModelObject carries a complete, finite box. Pure so it is unit-testable. */
+    static unionModelObjectBoundingBox(modelObjects: { BoundingBoxP1X: number | null; BoundingBoxP1Y: number | null; BoundingBoxP1Z: number | null; BoundingBoxP2X: number | null; BoundingBoxP2Y: number | null; BoundingBoxP2Z: number | null }[] | null | undefined): { min: number[]; max: number[] } | null {
+        const min: number[] = [Infinity, Infinity, Infinity];
+        const max: number[] = [-Infinity, -Infinity, -Infinity];
+        let found = false;
+        for (const o of modelObjects ?? []) {
+            const p1: (number | null)[] = [o.BoundingBoxP1X, o.BoundingBoxP1Y, o.BoundingBoxP1Z];
+            const p2: (number | null)[] = [o.BoundingBoxP2X, o.BoundingBoxP2Y, o.BoundingBoxP2Z];
+            if ([...p1, ...p2].some(v => typeof v !== 'number' || !isFinite(v)))
+                continue;
+            for (let i = 0; i < 3; i++) {
+                min[i] = Math.min(min[i], p1[i] as number, p2[i] as number);
+                max[i] = Math.max(max[i], p1[i] as number, p2[i] as number);
+            }
+            found = true;
+        }
+        return found ? { min, max } : null;
+    }
+
+    /** A Model's authored units (idVUnits vocabulary) as the short token unitToMeters understands.
+     *  Null when unset or unmapped, so the caller falls back to meters. */
+    static async modelUnitsShort(idVUnits: number | null): Promise<string | null> {
+        if (!idVUnits)
+            return null;
+        switch (await CACHE.VocabularyCache.vocabularyIdToEnum(idVUnits)) {
+            case COMMON.eVocabularyID.eModelUnitsMicrometer: return 'um';
+            case COMMON.eVocabularyID.eModelUnitsMillimeter: return 'mm';
+            case COMMON.eVocabularyID.eModelUnitsCentimeter: return 'cm';
+            case COMMON.eVocabularyID.eModelUnitsMeter:      return 'm';
+            case COMMON.eVocabularyID.eModelUnitsKilometer:  return 'km';
+            case COMMON.eVocabularyID.eModelUnitsInch:       return 'in';
+            case COMMON.eVocabularyID.eModelUnitsFoot:       return 'ft';
+            case COMMON.eVocabularyID.eModelUnitsYard:       return 'yd';
+            case COMMON.eVocabularyID.eModelUnitsMile:       return 'mi';
+            default:                                         return null;
+        }
+    }
+
+    /** Scene-scale evaluation shared by the QC status row and the bulk fix-units op. Reads the SVX,
+     *  validates the display-model bounding box, then converts the longest side by the model's own
+     *  units and best-fits a scene display unit. */
+    static async evaluateSceneScale(idSystemObject: number): Promise<{
+        state: 'no_scene' | 'invalid_bbox' | 'no_bbox' | 'ok' | 'mismatch';
+        detail: string | null;
+        modelName: string | null;
+        currentUnits: string | null;
+        modelUnits: string | null;
+        multiModel: boolean;
+        canFix: boolean;
+        realMeters: number | null;
+        intendedUnits: string | null;
+        bboxMinMeters: number[] | null;
+        bboxMaxMeters: number[] | null;
+        bboxSizeMeters: number[] | null;
+    }> {
+        const base = {
+            detail: null as string | null, modelName: null as string | null,
+            currentUnits: null as string | null, modelUnits: null as string | null,
+            multiModel: false, canFix: false,
+            realMeters: null as number | null, intendedUnits: null as string | null,
+            bboxMinMeters: null as number[] | null, bboxMaxMeters: null as number[] | null, bboxSizeMeters: null as number[] | null,
+        };
+
+        const info = await SceneHelpers.getSceneScaleInfo(idSystemObject);
+        if (!info.success || !info.models)
+            return { ...base, state: 'no_scene', detail: info.error ?? 'no scene data' };
+
+        const currentUnits: string | null = info.sceneUnits ?? null;
+        let sourceModels = info.models;
+        let validations = sourceModels.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+
+        // A freshly generated scene that has not been posed in Voyager carries no boundingBox in its
+        // SVX. When the SVX has no bounding box at all (every model absent), fall back to the
+        // derivative models' inspection bounding boxes recorded in the DB, which are populated at
+        // ingest. Scene display units still come from the SVX above.
+        if (validations.every(x => x.v.state === 'absent')) {
+            const dbModels = await SceneHelpers.getSceneDerivativeModelBBoxes(idSystemObject);
+            const dbValidations = dbModels.map(m => ({ m, v: SceneHelpers.validateBoundingBox(m.bbox) }));
+            if (dbValidations.some(x => x.v.state !== 'absent')) {
+                sourceModels = dbModels;
+                validations = dbValidations;
+            }
+        }
+
+        // Multi-model is a structural fact: how many distinct SOURCE (master) models the scene was
+        // built from. The SVX's several models[] entries are derivatives of those sources (which all
+        // share one authored unit), so they are NOT the signal here. A single-source scene is safe to
+        // auto-fix; a multi-source scene is left to manual review.
+        const multiModel: boolean = (await SceneHelpers.getSceneSourceModelCount(idSystemObject)) > 1;
+
+        const bad = validations.find(x => x.v.state === 'nonfinite' || x.v.state === 'inverted' || x.v.state === 'degenerate');
+        if (bad)
+            return { ...base, state: 'invalid_bbox', detail: bad.v.state, modelName: bad.m.name, currentUnits, multiModel };
+
+        const primary = validations.find(x => x.v.state === 'valid');
+        if (!primary || primary.v.longestSide === null)
+            return { ...base, state: 'no_bbox', currentUnits, multiModel };
+
+        // Scale heuristic: convert the model's longest side to meters by its own authored units, then
+        // best-fit a scene display unit (longest side < ~0.1 m -> mm, < ~1 m -> cm, else m). Derivatives
+        // share units, so any valid-bbox model is representative.
+        const modelUnits: string | null = primary.m.units ?? null;
+        const factor: number = SceneHelpers.unitToMeters(modelUnits) ?? 1; // 'inherit'/unknown -> meters
+        const realMeters: number = primary.v.longestSide * factor;
+        const intendedUnits: string = SceneHelpers.bestFitSceneUnit(realMeters);
+        const bboxMin: number[] = (primary.m.bbox?.min ?? []).slice(0, 3);
+        const bboxMax: number[] = (primary.m.bbox?.max ?? []).slice(0, 3);
+        const bboxMinMeters: number[] = bboxMin.map(v => v * factor);
+        const bboxMaxMeters: number[] = bboxMax.map(v => v * factor);
+        const bboxSizeMeters: number[] = [0, 1, 2].map(i => ((bboxMax[i] ?? 0) - (bboxMin[i] ?? 0)) * factor);
+        const isMatch: boolean = !!currentUnits && currentUnits.toLowerCase() === intendedUnits;
+
+        return {
+            ...base,
+            state: isMatch ? 'ok' : 'mismatch',
+            currentUnits, modelUnits, multiModel, canFix: !multiModel,
+            realMeters, intendedUnits, bboxMinMeters, bboxMaxMeters, bboxSizeMeters,
+        };
+    }
+
+    /** Count the distinct SOURCE (master) models a scene was built from. Each of the scene's component
+     *  models (ModelSceneXref) is wired to its source model as a SystemObjectXref master; the scene is
+     *  the other master. We collect the Model-typed masters across all components and count distinct
+     *  ones. 0/1 => single-model (safe to inline-fix scale); >1 => multi-model. */
+    static async getSceneSourceModelCount(idSceneSystemObject: number): Promise<number> {
+        if (!idSceneSystemObject)
+            return 0;
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSceneSystemObject);
+        if (!SO || !SO.idScene)
+            return 0;
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(SO.idScene);
+        if (!MSXs)
+            return 0;
+
+        const sourceModelIDs: Set<number> = new Set<number>();
+        for (const MSX of MSXs) {
+            const componentSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!componentSO)
+                continue;
+            const masters: DBAPI.SystemObjectXref[] | null = await DBAPI.SystemObjectXref.fetchMasters(componentSO.idSystemObject);
+            for (const master of masters ?? []) {
+                const masterSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(master.idSystemObjectMaster);
+                if (masterSO && masterSO.idModel && masterSO.idModel !== MSX.idModel)
+                    sourceModelIDs.add(masterSO.idModel); // a Model-typed master (not the scene) is a source model
+            }
+        }
+        return sourceModelIDs.size;
+    }
+
+    /** Rewrites the scene-level display units in the SVX (scenes[].units) and ingests a new asset version.
+     *  models[].units is left untouched (it defines the geometry's authored unit). Single-model scenes only. */
+    static async patchSvxUnits(idSystemObject: number, scene: DBAPI.Scene, newUnits: string, idUser: number): Promise<H.IOResults & { oldUnits?: string | null; newUnits?: string; idAssetVersion?: number }> {
+        const docResult = await SceneHelpers.readPreferredSvxDocument(idSystemObject);
+        if (!docResult.success || !docResult.svxDoc || !docResult.svxAsset || !docResult.svxAssetVersion)
+            return { success: false, error: docResult.error };
+
+        const { svxAsset, svxAssetVersion, svxDoc } = docResult;
+        if (!Array.isArray(svxDoc.scenes) || svxDoc.scenes.length === 0)
+            return { success: false, error: 'SVX has no scenes to update' };
+
+        const sceneIdx: number = typeof svxDoc.scene === 'number' ? svxDoc.scene : 0;
+        const targetScene = svxDoc.scenes[sceneIdx];
+        if (!targetScene)
+            return { success: false, error: `SVX scene index ${sceneIdx} not found` };
+
+        const oldUnits: string | null = targetScene.units ?? null;
+        targetScene.units = newUnits;
+
+        const updatedJson: string = JSON.stringify(svxDoc, null, 4);
+        const comment: string = oldUnits
+            ? `Updated scene display units from: ${oldUnits} to: ${newUnits}`
+            : `Set scene display units to: ${newUnits}`;
+        const readStream = Readable.from(updatedJson);
+        const ISI: STORE.IngestStreamOrFileInput = {
+            readStream,
+            localFilePath: null,
+            asset: svxAsset,
+            FileName: svxAssetVersion.FileName,
+            FilePath: '',
+            idAssetGroup: 0,
+            idVAssetType: svxAsset.idVAssetType,
+            allowZipCracking: false,
+            idUserCreator: idUser,
+            SOBased: scene,
+            Comment: comment,
+        };
+
+        const IAR: STORE.IngestAssetResult = await STORE.AssetStorageAdapter.ingestStreamOrFile(ISI);
+        if (!IAR.success)
+            return { success: false, error: `Failed to ingest updated SVX: ${IAR.error}` };
+
+        const idAssetVersion: number | undefined = IAR.assetVersions?.[0]?.idAssetVersion;
+        RK.logInfo(RK.LogSection.eHTTP, 'patch SVX units', `success: ${oldUnits} -> ${newUnits}`,
+            { idSystemObject, idScene: scene.idScene }, 'Utils.Scene');
+        return { success: true, oldUnits, newUnits, idAssetVersion };
+    }
+
     /** Inspects an SVX buffer and injects the EDAN Record ID from the DB if it is missing in the SVX JSON.
      *  Only injects for single-subject scenes. Multi-subject scenes are skipped (require manual edanlists: prefix).
      *  Injection failure never blocks ingestion — the original buffer is returned with a warning. */
@@ -668,6 +1000,72 @@ export class SceneHelpers {
         if (!results.success)
             return SceneHelpers.recordError(results.error);
         return results;
+    }
+
+    /**
+     * Ensure a scene SystemObjectVersion's asset manifest includes the current, non-retired
+     * derivative-model asset versions (downloads / AR / web-display models) linked via ModelSceneXref.
+     * Those models are separate SystemObjects, so their assets are not the scene's own assets and are
+     * only present in a scene version when explicitly bound. A freshly cloned scene version (e.g. from a
+     * WebDAV save, attachment ingest, SVX edit, re-ingest, or a zip rebuild) carries forward only what
+     * the clone source held; this re-binds the current derivative set so every new scene version is a
+     * complete snapshot. Idempotent (addOrUpdate) and additive. Returns the number of bindings written.
+     */
+    static async ensureSceneDerivativeBindings(idSceneSystemObject: number, idSystemObjectVersion: number): Promise<number> {
+        if (!idSceneSystemObject || !idSystemObjectVersion)
+            return 0;
+
+        const assetVersions: DBAPI.AssetVersion[] = await SceneHelpers.getSceneDerivativeAssetVersions(idSceneSystemObject);
+        if (assetVersions.length === 0)
+            return 0;
+
+        // Only write bindings that are missing or point at an older asset version -- keeps this a no-op on
+        // the hot re-version path (e.g. repeated WebDAV saves) once a scene's manifest is already complete.
+        const boundMap: Map<number, number> = (await DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(idSystemObjectVersion)) ?? new Map<number, number>();
+        let count: number = 0;
+        for (const assetVersion of assetVersions) {
+            if (boundMap.get(assetVersion.idAsset) === assetVersion.idAssetVersion)
+                continue; // already bound to this exact version
+
+            const bound: DBAPI.SystemObjectVersionAssetVersionXref | null =
+                await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(idSystemObjectVersion, assetVersion.idAsset, assetVersion.idAssetVersion);
+            if (bound)
+                count++;
+            else
+                RK.logError(RK.LogSection.eSYS,'ensure scene derivative bindings','failed to bind derivative asset version to scene version',
+                    { idSceneSystemObject, idSystemObjectVersion, idAsset: assetVersion.idAsset, idAssetVersion: assetVersion.idAssetVersion },'Utils.Scene');
+        }
+        return count;
+    }
+
+    /**
+     * The current, non-retired derivative-model (ModelSceneXref-linked) asset versions for a scene:
+     * downloads, native AR, and web-display models. These belong to separate model SystemObjects, so
+     * they are the assets that must be re-bound into a scene version to make it a complete snapshot.
+     * Returns [] for a non-scene system object.
+     */
+    static async getSceneDerivativeAssetVersions(idSceneSystemObject: number): Promise<DBAPI.AssetVersion[]> {
+        const result: DBAPI.AssetVersion[] = [];
+        if (!idSceneSystemObject)
+            return result;
+        const SO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetch(idSceneSystemObject);
+        if (!SO || !SO.idScene)
+            return result; // only scenes carry ModelSceneXref-linked derivatives
+
+        const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(SO.idScene);
+        if (!MSXs)
+            return result;
+
+        for (const MSX of MSXs) {
+            const modelSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromModelID(MSX.idModel);
+            if (!modelSO || modelSO.Retired)
+                continue; // skip retired derivative models -- they are not part of the current snapshot
+
+            const assetVersions: DBAPI.AssetVersion[] | null = await DBAPI.AssetVersion.fetchLatestFromSystemObject(modelSO.idSystemObject);
+            if (assetVersions)
+                result.push(...assetVersions);
+        }
+        return result;
     }
 
     /** idAssetVersion is the assetversion ID of the ingested object */

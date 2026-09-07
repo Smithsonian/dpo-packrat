@@ -36,10 +36,10 @@ export default async function getIngestTitle(_: Parent, args: QueryGetIngestTitl
     if (sourceObjects) {
         const MHs: ModelHierarchy[] | null = await NameHelpers.computeModelHierarchiesFromSourceObjects(sourceObjects);
         if (!MHs)
-            return { };
+            return { message: 'Could not determine a title from the selected source objects.' };
         const ingestTitle: IngestTitle = NameHelpers.sceneTitleOptions(MHs);
         return { ingestTitle };
     }
 
-    return { };
+    return { message: 'Could not determine an ingestion title: no item or source objects provided.' };
 }

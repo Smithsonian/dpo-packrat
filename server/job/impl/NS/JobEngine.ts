@@ -169,12 +169,12 @@ export class JobEngine implements JOB.IJobEngine {
         if (frequency === '') { // empty frequency means run it once, now
             RK.logInfo(RK.LogSection.eJOB,'create job','immediate job start',{ idJobRun: dbJobRun.idJobRun, jobType: COMMON.eVocabularyID[eJobType] ?? 'undefined', parameters },'Job.Engine');
             if (report)
-                await report.append(`JobEngine running ${job.name()}`);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: 'engine', code: COMMON.WorkflowReportCode.JobRun, msg: `Running ${job.name()}` }, report);
             job.executeJob(new Date()); // do not use await here, so that we remain unblocked while the job starts
         } else {                 // non-empty frequency means run job on schedule
             const nsJob: NS.Job = NS.scheduleJob(job.name(), frequency, job.executeJob);
             if (report)
-                await report.append(`JobEngine scheduling ${job.name()}`);
+                await RK.reportEvent({ ts: new Date().toISOString(), phase: 'engine', code: COMMON.WorkflowReportCode.JobSchedule, msg: `Scheduling ${job.name()}`, data: { frequency } }, report);
             job.setNSJob(nsJob);
         }
         return job;
@@ -184,7 +184,6 @@ export class JobEngine implements JOB.IJobEngine {
         parameters: any, dbJobRun: DBAPI.JobRun): Promise<JobPackrat | null> {
         let job: JobPackrat | null = null;
         let expectedJob: string = '';
-        const context: string = `: ${JSON.stringify(parameters, H.Helpers.saferStringify)}`;
         switch (eJobType) {
             case COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect:
                 expectedJob = 'Cook si-packrat-inspect';
@@ -214,7 +213,7 @@ export class JobEngine implements JOB.IJobEngine {
         if (!job)
             RK.logError(RK.LogSection.eJOB,'create job worker failed','called with parameters not consistent with job type',{ idJobRun: dbJobRun.idJobRun, expectedJob, parameters },'Job.Engine');
         else if (report)
-            await report.append(`JobEngine creating ${expectedJob}${context}`);
+            await RK.reportEvent({ ts: new Date().toISOString(), phase: 'engine', code: COMMON.WorkflowReportCode.JobCreate, msg: `Creating ${expectedJob}`, data: { recipe: expectedJob } }, report);
 
         return job;
     }

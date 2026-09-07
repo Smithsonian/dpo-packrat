@@ -30,7 +30,22 @@ describe('Custom Downloads: common contract', () => {
     });
 
     test('download type whitelist', () => {
-        expect(COMMON.CustomDownloadTypes).toEqual(['watertight', 'other']);
+        expect(COMMON.CustomDownloadTypes).toEqual(['watertight', 'other', 'projectFiles', 'documentation']);
+    });
+
+    test('supplemental-file (zip-only, non-geometry) download types', () => {
+        expect(COMMON.isZipOnlyCustomDownload('projectFiles')).toBe(true);
+        expect(COMMON.isZipOnlyCustomDownload('documentation')).toBe(true);
+        expect(COMMON.isZipOnlyCustomDownload('watertight')).toBe(false);
+        expect(COMMON.isZipOnlyCustomDownload('other')).toBe(false);
+        expect(COMMON.isZipOnlyCustomDownload(null)).toBe(false);
+        // every zip-only type is a registered custom download type with a label
+        for (const t of COMMON.CustomDownloadZipOnlyTypes) {
+            expect(COMMON.CustomDownloadTypes).toContain(t);
+            expect(typeof COMMON.CustomDownloadTypeLabels[t]).toBe('string');
+        }
+        expect(COMMON.CustomDownloadTypeLabels['projectFiles']).toBe('Project Files');
+        expect(COMMON.CustomDownloadTypeLabels['documentation']).toBe('Documentation');
     });
 
     test('accepted vs must-zip upload extensions', () => {

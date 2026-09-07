@@ -34,6 +34,7 @@ export type RequestResponse = {
     message?: string;
     originalUrl?: string;
     data?: any;
+    traceId?: string;
 };
 
 export default class API {
@@ -109,6 +110,36 @@ export default class API {
         const uri = `api/object/${idSystemObject}`;
         const body = JSON.stringify({ fields });
         return this.request(uri, { method: 'PATCH', body });
+    }
+
+    // object action — describe/retire/reinstate an object and its resolved dependents/assets.
+    // scope 'cascade' (default) reaches all dependents; 'direct' touches only the object and its own assets.
+    static async objectAction(idSystemObject: number, action: 'describe' | 'retire' | 'reinstate',
+        scope: 'cascade' | 'direct' = 'cascade'): Promise<RequestResponse> {
+        const body = JSON.stringify({ idSystemObject, action, scope });
+        return this.request('api/object/action', { method: 'POST', body });
+    }
+
+    // bulk operation harness — list | describe | start (async gather) | status | results | apply (one item)
+    static async bulkOperation(operation: string, mode: 'list' | 'describe' | 'start' | 'status' | 'results' | 'apply',
+        args: { params?: Record<string, unknown>; idSystemObject?: number; idSystemObjects?: number[]; rowSettings?: Record<string, unknown> } = {}): Promise<RequestResponse> {
+        const body = JSON.stringify({ operation, mode, ...args });
+        return this.request('api/bulk/operation', { method: 'POST', body });
+    }
+
+    // scenes still in a published EDAN state (retired-first); orphan reconciliation report
+    static async getPublishedScenes(): Promise<RequestResponse> {
+        return this.request('api/scene/published', { method: 'GET' });
+    }
+
+    // preservation metrics for an inclusive date range; pass series=true for per-period plot data
+    static async getMetrics(start: string, end: string, series: boolean = false, granularity: 'day' | 'week' | 'month' | 'year' = 'month'): Promise<RequestResponse> {
+        const params = new URLSearchParams({ start, end });
+        if (series) {
+            params.set('series', '1');
+            params.set('granularity', granularity);
+        }
+        return this.request(`api/metrics?${params.toString()}`, { method: 'GET' });
     }
 
     // volumetric inspection results — returns the JSON produced by JobVolumeInspect
@@ -253,26 +284,45 @@ export default class API {
         return this.request('solr/rebuild', { method: 'POST' });
     }
 
+    // EDAN resource-folder retention cleanup: preview (read-only) vs execute (removes eligible entries)
+    static async edanCleanupPreview(days: number): Promise<RequestResponse> {
+        return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'GET' });
+    }
+    static async edanCleanupExecute(days: number): Promise<RequestResponse> {
+        return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'POST' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();
+
+        // Per-request trace id: sent as a header so it appears on every server log line for
+        // this request, and attached to the response so error toasts can reference it.
+        const traceId: string = (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : '';
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            ...(options.headers as Record<string, string> ?? {})
+        };
+        if (traceId)
+            headers['X-Trace-Id'] = traceId;
         const defaultOptions: RequestInit = {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            ...options
+            ...options,
+            headers,
+            credentials: 'include'
         };
 
         // TODO: return an error response
         return fetch(`${serverEndpoint}/${route}`, defaultOptions)
-            .then(response => {
+            .then(async response => {
                 // Check if the response returned a successful status code
                 if (!response.ok) {
                     console.log('[Packrat: Error] response: ',response);
-                    return { success: false, message: response.statusText };
+                    return { success: false, message: response.statusText, traceId };
                 }
-                return response.json(); // Assuming the server responds with JSON
+                const data = await response.json(); // Assuming the server responds with JSON
+                if (data && typeof data === 'object' && traceId && data.traceId === undefined)
+                    data.traceId = traceId;
+                return data;
             })
             .catch(error => {
                 console.error(`[Packrat] could not complete request (${route}) due to error: ${error}`);

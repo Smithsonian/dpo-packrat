@@ -5,6 +5,8 @@ import { Config, ENVIRONMENT_TYPE } from '../config';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Logger as LOG, LogSection, LogLevel  } from './logger/log';
 import { Notify as NOTIFY, NotifyUserGroup, NotifyType, NotifyPackage, SlackChannel } from './notify/notify';
+import * as REP from '../report/interface';
+import * as COMMON from '@dpo-packrat/common';
 
 // temp definition for where IOResults will be
 export type IOResults = {
@@ -134,46 +136,47 @@ export class RecordKeeper {
 
     static async shutdown(): Promise<IOResults> {
 
+        await RecordKeeper.reportWaitForEmptyQueue();
         await LOG.shutdown();
 
         return { success: true, message: 'record keeper cleaned up' };
     }
-    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null, userSlack: string | null } {
+    private static getContext(): { idUser: number, idRequest: number, userEmail: string | null, userSlack: string | null, traceId: string | null, correlationId: string | null } {
         // get our user and request ids from the local store
         // TEST: does it maintain store context since static and not async
         const LS: LocalStore | undefined = ASL?.getStore();
         if(!LS)
-            return { idUser: -1, idRequest: -1, userEmail: null, userSlack: null };
+            return { idUser: -1, idRequest: -1, userEmail: null, userSlack: null, traceId: null, correlationId: null };
 
         // if no user, return an error id. otherwise, return what we got
-        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail, userSlack: LS.userSlack };
+        return { idUser: LS.idUser ?? -1, idRequest: LS.idRequest, userEmail: LS.userEmail, userSlack: LS.userSlack, traceId: LS.traceId, correlationId: LS.correlationId };
     }
 
     //#region LOG
     // Log routines for specific levels
     static async logCritical(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.critical(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.critical(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logError(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.error(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.error(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logWarning(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.warning(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.warning(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logInfo(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.info(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.info(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logDebug(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.debug(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.debug(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static async logPerformance(sec: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean = false): Promise<IOResults> {
-        const { idUser, idRequest } = RecordKeeper.getContext();
-        return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest);
+        const { idUser, idRequest, traceId, correlationId } = RecordKeeper.getContext();
+        return LOG.performance(sec,message,reason,data,caller,audit,idUser,idRequest,traceId,correlationId);
     }
     static logFallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
         LOG.fallback(level,sec,message,reason,data,caller);
@@ -449,6 +452,36 @@ export class RecordKeeper {
     }
     //#endregion
 
+    //#region REPORT
+    // Single entry point for workflow-report writes, mirroring the log facade. Unlike logs, a report
+    // has a per-workflow target: pass the report handle when you hold one (jobs run detached/scheduled,
+    // outside the request's ASL context, so they cannot resolve the target from LocalStore); omit it to
+    // resolve the active report from LocalStore (resolvers/ingest). All writes serialize per report in
+    // the report queue (see report/impl/ReportQueue).
+    static async reportEvent(event: COMMON.IWorkflowReportEvent, report?: REP.IReport | null): Promise<IOResults> {
+        const target: REP.IReport | null = report ?? await REP.ReportFactory.getReport();
+        if (!target)
+            return { success: false, message: 'no active WorkflowReport' };
+        // Tally warn-level events onto the request scope so a client-facing resolver can surface
+        // "completed with warnings" without reading back another job's report.
+        if (event.level === 'warn') {
+            const LS: LocalStore | undefined = ASL?.getStore();
+            if (LS)
+                LS.reportWarningCount++;
+        }
+        return RecordKeeper.convertResults(await target.appendEvent(event));
+    }
+    static async reportSetSummary(summary: COMMON.IWorkflowReportSummary, report?: REP.IReport | null): Promise<IOResults> {
+        const target: REP.IReport | null = report ?? await REP.ReportFactory.getReport();
+        if (!target)
+            return { success: false, message: 'no active WorkflowReport' };
+        return RecordKeeper.convertResults(await target.setSummary(summary));
+    }
+    static async reportWaitForEmptyQueue(timeout: number = 10000): Promise<IOResults> {
+        return RecordKeeper.convertResults(await REP.ReportQueue.waitForQueueToDrain(timeout));
+    }
+    //#endregion
+
     //#region UTILITY
     static convertResults(src: any, message?: string, data?: any): IOResults {
         if(!src)
@@ -478,6 +511,9 @@ export class RecordKeeper {
 
         result = await RecordKeeper.slackWaitForEmptyQueue(timeout);
         if(!result.success) errors.push(`slack: ${result.message}`);
+
+        result = await RecordKeeper.reportWaitForEmptyQueue(timeout);
+        if(!result.success) errors.push(`report: ${result.message}`);
 
         if(errors.length === 0)
             return { success: true, message: 'all queues drained' };

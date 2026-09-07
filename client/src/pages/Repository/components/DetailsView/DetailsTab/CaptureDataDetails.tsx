@@ -6,13 +6,14 @@
  *
  * This component renders details tab for CaptureData specific details used in DetailsTab component.
  */
-import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Chip, Input, Tooltip } from '@material-ui/core';
+import { Box, MenuItem, Select, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Checkbox, Tooltip } from '@material-ui/core';
 import React, { useEffect } from 'react';
 import { DateInputField, Loader } from '../../../../../components';
 import { parseFoldersToState, StateFolder, useVocabularyStore } from '../../../../../store';
 import { eVocabularySetID, eSystemObjectType, eVocabularyID } from '@dpo-packrat/common';
-import { isFieldUpdated } from '../../../../../utils/repository';
+import { isFieldUpdated, parseVocabIDs } from '../../../../../utils/repository';
 import { withDefaultValueNumber } from '../../../../../utils/shared';
+import VocabularyToggle from '../../../../../components/controls/VocabularyToggle';
 import AssetContents from '../../../../Ingestion/components/Metadata/Photogrammetry/AssetContents';
 import { DetailComponentProps } from './index';
 import { toast } from 'react-toastify';
@@ -228,35 +229,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         updateDetailField(eSystemObjectType.eCaptureData, name, parsed);
     };
 
-    const setDatasetUseField = (event) => {
-        const  { value, name } = event.target;
-        // make sure we got an array as value
-        if(!Array.isArray(value))
-            return console.error('did not receive array', value);
-
-        // convert array into JSON array and feed to metadata update
-        const arrayString = JSON.stringify(value);
-        updateDetailField(eSystemObjectType.eCaptureData, name, arrayString);
-    };
-
-    const getSelectedIDsFromJSON = (value: string | undefined | null): number[] => {
-        // used to extract array from JSON
-        try {
-            if(!value)
-                throw new Error('[PACKRAT:ERROR] cannot get selected IDs. undefined value');
-
-            const data = JSON.parse(value);
-            if(Array.isArray(data) === false)
-                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
-            return data.sort();
-        } catch(error) {
-            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
-        }
-
-        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Dataset Use. Unsupported value. (${value})`);
-        return [];
-    };
-
     const captureDataData = data.getDetailsTabDataForObject?.CaptureData;
     const cdMethods = getEntries(eVocabularySetID.eCaptureDataCaptureMethod);
     const captureMethodidVocabulary = withDefaultValueNumber(CaptureDataDetails?.captureMethod, getInitialEntry(eVocabularySetID.eCaptureDataCaptureMethod));
@@ -313,34 +285,12 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                         <Typography className={classes.labelText}>Dataset Use</Typography>
                                     </TableCell>
                                     <TableCell className={classes.tableCell}>
-                                        <Select
-                                            multiple
-                                            value={getSelectedIDsFromJSON(CaptureDataDetails?.datasetUse)}
-                                            name='datasetUse'
-                                            onChange={setDatasetUseField}
-                                            disableUnderline
-                                            className={clsx(classes.select, classes.fieldSizing, classes.chipSelect)}
-                                            input={<Input id='select-multiple-chip' />}
-                                            renderValue={(selected) => {
-                                                // Render each selected vocab ID as a Chip. IDs that no longer resolve
-                                                // against the current vocabulary cache are surfaced as "Unknown (ID N)"
-                                                // so stale data stays visible rather than masquerading as a valid term.
-                                                const entries = getEntries(eVocabularySetID.eCaptureDataDatasetUse);
-                                                return (<div className={classes.chips}>
-                                                    {(selected as number[]).map((value) => {
-                                                        const entry = entries.find(entry => entry.idVocabulary === value);
-                                                        const label = entry ? entry.Term : `Unknown (ID ${value})`;
-                                                        return (<Chip key={value} label={label} className={classes.chip} />);
-                                                    })}
-                                                </div>);
-                                            }}
-                                        >
-                                            { getEntries(eVocabularySetID.eCaptureDataDatasetUse)
-                                                .map(({ idVocabulary, Term }, index) =>
-                                                    <MenuItem key={index} value={idVocabulary}>
-                                                        {Term}
-                                                    </MenuItem>)}
-                                        </Select>
+                                        <VocabularyToggle
+                                            value={parseVocabIDs(CaptureDataDetails?.datasetUse)}
+                                            entries={getEntries(eVocabularySetID.eCaptureDataDatasetUse)}
+                                            onChange={(ids) => updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', JSON.stringify(ids))}
+                                            updated={isFieldUpdated(CaptureDataDetails, captureDataData, 'datasetUse')}
+                                        />
                                     </TableCell>
                                 </TableRow>
                             }

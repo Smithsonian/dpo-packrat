@@ -6,6 +6,7 @@
 import create, { SetState, GetState } from 'zustand';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
+import { toastError } from '../utils/toastError';
 import { useItemStore } from './item';
 
 export type StateSubject = {
@@ -62,7 +63,7 @@ export const useSubjectStore = create<SubjectStore>((set: SetState<SubjectStore>
         try {
             await fetchAndInitializeIngestionItems(selectedSubjects.map(subject => subject.id));
         } catch (error) {
-            toast.error('Failed to get ingestion items');
+            toastError(error, 'Failed to get ingestion items');
         }
 
         if (selectedSubjects.length > 1)

@@ -53,8 +53,9 @@ export class NavigationSolr implements NAV.INavigation {
     private async computeSolrNavQuery(filter: NAV.NavigationFilter): Promise<solr.Query> {
         let SQ: solr.Query = this._solrClientPackrat._client.query().edismax();    // use edismax query parser instead of lucene default
 
-        // For now, do not show retired assets to anyone:
-        SQ = SQ.matchFilter('CommonRetired', 0);
+        // Retired objects are hidden unless the caller opts in via the "Show retired" filter.
+        if (filter.showRetired !== true)
+            SQ = SQ.matchFilter('CommonRetired', 0);
 
         // search: string;                         // search string from the user -- for now, only apply to root-level queries, as well as queries of units, projects, and subjects
         if (filter.search && filter.idRoots.length === 0) {     // if we have a search string, apply it to root-level queries (i.e. with no specified filter root ID)
@@ -77,7 +78,13 @@ export class NavigationSolr implements NAV.INavigation {
             SQ = SQ.q('*:*');
             SQ = SQ.sort({ CommonOTNumber: 'asc', CommonName: 'asc', id: 'asc' }); // sort by the object type enumeration, then by name, then by id (idSystemObject)
         }
-        SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
+        // Root-level queries (no idRoots) use numbered offset pagination; drill-down queries
+        // keep cursor pagination for the child "Load more". Solr forbids start and cursorMark
+        // in the same request, so apply exactly one.
+        if (filter.idRoots.length === 0)
+            SQ = SQ.start(filter.start && filter.start > 0 ? filter.start : 0);
+        else
+            SQ = SQ.cursorMark(filter.cursorMark ? filter.cursorMark : '*'); // c.f. https://lucene.apache.org/solr/guide/6_6/pagination-of-results.html#using-cursors
 
         // idRoots: number[];                      // idSystemObject[] of items for which we should get children; empty means get everything
         if (filter.idRoots.length > 0) {          // objectsToDisplay: COMMON.eSystemObjectType[];  // objects to display
@@ -134,7 +141,7 @@ export class NavigationSolr implements NAV.INavigation {
         }
 
         // metadataColumns: COMMON.eMetadata[];           // empty array means give no metadata
-        const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName']; // fetch standard fields // don't need ChildrenID
+        const filterColumns: string[] = ['id', 'CommonObjectType', 'CommonidObject', 'CommonName', 'CommonRetired']; // fetch standard fields // don't need ChildrenID
         for (const metadataColumn of filter.metadataColumns) {
             const filterColumn: string = COMMON.eMetadata[metadataColumn];
             if (filterColumn)
@@ -148,6 +155,8 @@ export class NavigationSolr implements NAV.INavigation {
 
         if (filter.rows > 0)
             SQ = SQ.rows(filter.rows);
+        else
+            SQ = SQ.rows(1000000); // rows <= 0 means "all" (per the NavigationFilter contract); Solr needs an explicit upper bound
 
         RK.logDebug(RK.LogSection.eNAV,'compute search query success',undefined,H.Helpers.removeEmptyFields(filter),'Navigation.Solr');
         return SQ;
@@ -267,7 +276,8 @@ export class NavigationSolr implements NAV.INavigation {
                 name: doc.CommonName || '<UNKNOWN>',
                 objectType: DBAPI.SystemObjectNameToType(doc.CommonObjectType),
                 idObject: doc.CommonidObject,
-                metadata: this.computeNavMetadata(doc, filter.metadataColumns)
+                metadata: this.computeNavMetadata(doc, filter.metadataColumns),
+                retired: doc.CommonRetired === true
             };
 
             entries.push(entry);
@@ -279,7 +289,7 @@ export class NavigationSolr implements NAV.INavigation {
 
         // LOG.info(`NavigationSolr.executeSolrQuery: ${JSON.stringify(queryResult.result)}`, LOG.LS.eNAV);
         RK.logInfo(RK.LogSection.eNAV,'execute search query success',undefined,{ numFound: queryResult.result.numFound, start: queryResult.result.start, docsCount: queryResult.result.docs.length, nextCursorMark: queryResult.nextCursorMark },'Navigation.Solr');
-        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark };
+        return { success: true, entries, metadataColumns: filter.metadataColumns, cursorMark, total: queryResult.result.numFound };
     }
 
     private computeNavMetadata(doc: any, metadataColumns: COMMON.eMetadata[]): string[] {

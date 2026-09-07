@@ -13,14 +13,21 @@ import {
 import { Parent } from '../../../../../types/resolvers';
 import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { SceneHelpers } from '../../../../../utils/sceneHelpers';
+import { SubjectHelpers } from '../../../../../utils/subjectHelpers';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
+import { Config } from '../../../../../config';
 
 type PublishedStateInfo = {
     publishedState: string;
     publishedEnum: COMMON.ePublishedState;
     publishable: boolean;
     publishBlocker: string | null;
+    publishControlVisible: boolean;
     isDraft: boolean;
+    edanRecordId: string | null;
+    edanRecordUrl: string | null;
+    edanUnitCode: string | null;
+    subjectUnitMismatch: boolean;
 };
 
 const UNKNOWN_NAME: string = '<UNKNOWN>';
@@ -125,7 +132,12 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
         publishedEnum: publishedStateInfo.publishedEnum,
         publishable: publishedStateInfo.publishable,
         publishBlocker: publishedStateInfo.publishBlocker,
+        publishControlVisible: publishedStateInfo.publishControlVisible,
         isDraft: publishedStateInfo.isDraft,
+        edanRecordId: publishedStateInfo.edanRecordId,
+        edanRecordUrl: publishedStateInfo.edanRecordUrl,
+        edanUnitCode: publishedStateInfo.edanUnitCode,
+        subjectUnitMismatch: publishedStateInfo.subjectUnitMismatch,
         thumbnail: null,
         unit,
         project,
@@ -145,31 +157,120 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     };
 }
 
+// A published value is any state other than Not Published (Public / Public Unlisted / Internal).
+// Only these carry a live EDAN presence and can be drafted or unpublished.
+export function isPublishedState(s: COMMON.ePublishedState): boolean {
+    return s === COMMON.ePublishedState.ePublished ||
+        s === COMMON.ePublishedState.eAPIOnly ||
+        s === COMMON.ePublishedState.eInternal;
+}
+
+// Read after.eState from a publish/unpublish audit payload (shape emitted by publish.ts /
+// RetireExecutorDeps.ts: { before, after: { eState, eStateName } }). Parsed defensively — an
+// unreadable or unknown payload yields null so the caller drops to the legacy version-chain read.
+export function parsePublishedStateFromAudit(data: string | null): COMMON.ePublishedState | null {
+    if (!data)
+        return null;
+    try {
+        const parsed = JSON.parse(data);
+        const eState: unknown = parsed?.after?.eState;
+        if (typeof eState !== 'number' || COMMON.ePublishedState[eState] === undefined)
+            return null;
+        return eState as COMMON.ePublishedState;
+    } catch {
+        return null;
+    }
+}
+
+// Minimal SystemObjectVersion projection the derivation needs: identity (for chain ordering),
+// published state, and creation time (for draft-drift detection).
+export type PublishedStateVersion = {
+    idSystemObjectVersion: number;
+    published: COMMON.ePublishedState;
+    dateCreated: Date;
+};
+
+// Pure derivation of an object's CURRENT published state + draft flag from the latest publish/unpublish
+// audit event (its parsed after.eState `eventState` and timestamp `eventWhen`), the latest content
+// version, and the full version chain. No DB access, so the whole publish-state matrix is unit-testable.
+export function derivePublishedState(eventState: COMMON.ePublishedState | null, eventWhen: Date | null,
+    latest: PublishedStateVersion | null, allVersions: PublishedStateVersion[],
+    lastConfigChangeWhen: Date | null = null): { publishedEnum: COMMON.ePublishedState; isDraft: boolean } {
+    // Audit-derived path: the event is the authoritative current state.
+    if (eventState !== null && eventWhen !== null) {
+        // Draft = currently published AND something publish-affecting has drifted since that publish.
+        // Two drift sources: (a) content — publishing mutates a version in place without bumping
+        // DateCreated, so a later edit rolls a newer SOV; (b) configuration that rolls no new SOV but
+        // still requires a republish (e.g. a license reassignment), detected via its audit timestamp.
+        const contentDrift: boolean = latest !== null && latest.dateCreated.getTime() > eventWhen.getTime();
+        const configDrift: boolean = lastConfigChangeWhen !== null && lastConfigChangeWhen.getTime() > eventWhen.getTime();
+        const isDraft: boolean = isPublishedState(eventState) && (contentDrift || configDrift);
+        return { publishedEnum: eventState, isDraft };
+    }
+
+    // Legacy fallback (no usable audit event): compute from the version chain. Current state is the
+    // latest version's state; draft = latest version newer than the last published version and itself
+    // not published. No regression for un-audited objects; reconciled by the EDAN sync work.
+    const publishedEnum: COMMON.ePublishedState = latest ? latest.published : COMMON.ePublishedState.eNotPublished;
+    let isDraft: boolean = false;
+    if (allVersions.length > 0) {
+        const sorted = [...allVersions].sort((a, b) => b.idSystemObjectVersion - a.idSystemObjectVersion);
+        const latestV = sorted[0];
+        const lastPublished = sorted.find(v => isPublishedState(v.published)) ?? null;
+        if (lastPublished)
+            isDraft = latestV.idSystemObjectVersion > lastPublished.idSystemObjectVersion
+                && !isPublishedState(latestV.published);
+    }
+    return { publishedEnum, isDraft };
+}
+
 async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndType | undefined,
     LR: DBAPI.LicenseResolver | undefined): Promise<PublishedStateInfo> {
-    const systemObjectVersion: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
-    const publishedEnum: COMMON.ePublishedState = systemObjectVersion ? systemObjectVersion.publishedStateEnum() : COMMON.ePublishedState.eNotPublished;
-    const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
+    // Current publication state is derived from the authoritative publish/unpublish audit trail rather
+    // than SystemObjectVersion.PublishedState. The version field is reset to eNotPublished on every
+    // content edit, so reading the latest version mislabels a still-live scene as Not Published, and
+    // reading the last-published version answers "was it ever published?" not "is it published now?"
+    // (an unpublish no-ops on an already-eNotPublished latest version, so it never registers). The
+    // audit events are unambiguous, timestamped, and PROTECT-tier (never pruned). This is the complete
+    // record of publication-state changes: any future path that writes PublishedState for a
+    // publish/unpublish MUST emit eActionPublish / eActionUnpublish (today only publish.ts and
+    // RetireExecutorDeps.ts do), or this label silently breaks.
+    const publicationEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestPublicationEvent(idSystemObject);
+    const eventState: COMMON.ePublishedState | null = publicationEvent ? parsePublishedStateFromAudit(publicationEvent.Data) : null;
+    const useAudit: boolean = eventState !== null;
 
-    // A scene is a "draft" when the latest version is newer than the last published version
-    // and the latest version itself is not published.
-    let isDraft: boolean = false;
-    const allVersions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-    if (allVersions && allVersions.length > 0) {
-        const sorted = [...allVersions].sort((a, b) => b.idSystemObjectVersion - a.idSystemObjectVersion);
-        const latest = sorted[0];
-        const isPublished = (s: COMMON.ePublishedState): boolean =>
-            s === COMMON.ePublishedState.ePublished ||
-            s === COMMON.ePublishedState.eAPIOnly ||
-            s === COMMON.ePublishedState.eInternal;
-        const lastPublished = sorted.find(v => isPublished(v.publishedStateEnum())) ?? null;
-        if (lastPublished)
-            isDraft = latest.idSystemObjectVersion > lastPublished.idSystemObjectVersion
-                && !isPublished(latest.publishedStateEnum());
+    const latestSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+    const latest: PublishedStateVersion | null = latestSOV
+        ? { idSystemObjectVersion: latestSOV.idSystemObjectVersion, published: latestSOV.publishedStateEnum(), dateCreated: latestSOV.DateCreated }
+        : null;
+
+    // The full version chain is only consulted by the legacy fallback's draft computation.
+    let allVersions: PublishedStateVersion[] = [];
+    if (!useAudit) {
+        const versions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
+        allVersions = (versions ?? []).map(v => ({ idSystemObjectVersion: v.idSystemObjectVersion, published: v.publishedStateEnum(), dateCreated: v.DateCreated }));
     }
+
+    // A license reassignment rolls no new content version but still requires a republish, so treat a
+    // license change made after the last publication as draft drift. Only consulted on the audit path.
+    let lastConfigChangeWhen: Date | null = null;
+    if (useAudit) {
+        const licenseEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestEventOfTypes(idSystemObject,
+            [DBAPI.eAuditType.eActionAssignLicense, DBAPI.eAuditType.eActionClearLicense, DBAPI.eAuditType.eActionLicenseUpdate]);
+        lastConfigChangeWhen = licenseEvent ? licenseEvent.AuditDate : null;
+    }
+
+    const { publishedEnum, isDraft } = derivePublishedState(eventState,
+        useAudit && publicationEvent ? publicationEvent.AuditDate : null, latest, allVersions, lastConfigChangeWhen);
+    const publishedState: string = COMMON.PublishedStateEnumToString(publishedEnum);
 
     let publishable: boolean = false;
     let publishBlocker: string | null = null;
+    let publishControlVisible: boolean = true;   // subjects gate this to admin + allow-listed units
+    let edanRecordId: string | null = null;
+    let edanRecordUrl: string | null = null;
+    let edanUnitCode: string | null = null;
+    let subjectUnitMismatch: boolean = false;
     if (oID) {
         switch (oID.eObjectType) {
             case COMMON.eSystemObjectType.eScene: {
@@ -198,12 +299,47 @@ async function getPublishedState(idSystemObject: number, oID: DBAPI.ObjectIDAndT
                     RK.logError(RK.LogSection.eGQL,'get published state failed','unable to compute scene',{ idSystemObject, ...oID },'GraphQL.SystemObject.Details');
             } break;
 
-            case COMMON.eSystemObjectType.eSubject:
-                publishable = true;
-                break;
+            case COMMON.eSystemObjectType.eSubject: {
+                // The EDAN Record ID Identifier is the target record and a real publish blocker:
+                // no record id -> nothing to upsert.
+                const target = await SubjectHelpers.computeTargetRecord(idSystemObject);
+                edanRecordId = target.recordId || null;
+                edanRecordUrl = target.url || null;
+                edanUnitCode = target.unitCode || null;
+
+                // Subject publishing is gated to admins AND an allow-list of units while the set of EDAN
+                // records a subject publish can modify is confirmed with EDAN owners. Everyone else sees
+                // the state read-only (publishControlVisible=false hides the controls client-side).
+                const ctx = Authorization.getContext();
+                const isAdmin: boolean = ctx?.isAdmin === true;
+                const subjectDB: DBAPI.Subject | null = oID.idObject ? await DBAPI.Subject.fetch(oID.idObject) : null;
+                const unit: DBAPI.Unit | null = subjectDB ? await DBAPI.Unit.fetch(subjectDB.idUnit) : null;
+                const unitAllowed: boolean = Config.features.subjectPublishUnitAllowlist.includes((unit?.Abbreviation ?? '').toUpperCase());
+                publishControlVisible = isAdmin && unitAllowed;
+
+                if (!publishControlVisible) {
+                    publishable = false;
+                    publishBlocker = !isAdmin
+                        ? 'Subject publishing is limited to administrators'
+                        : `Subject publishing is limited to units: ${Config.features.subjectPublishUnitAllowlist.join(', ')}`;
+                } else if (target.recordId) {
+                    publishable = true;
+                } else {
+                    publishable = false;
+                    publishBlocker = 'No EDAN Record ID';
+                }
+
+                // Warn an admin editing a Subject in a Unit they are not directly assigned to.
+                // Admin context units are zeroed, so read the raw assignments.
+                if (isAdmin && subjectDB && ctx) {
+                    const ownUnits: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(ctx.idUser);
+                    subjectUnitMismatch = !ownUnits.includes(subjectDB.idUnit);
+                }
+            } break;
         }
     }
-    return { publishedState, publishedEnum, publishable, publishBlocker, isDraft };
+    return { publishedState, publishedEnum, publishable, publishBlocker, publishControlVisible, isDraft,
+        edanRecordId, edanRecordUrl, edanUnitCode, subjectUnitMismatch };
 }
 
 // Classifies a Model's display Type + Variant from the Model row alone. Purpose distinguishes

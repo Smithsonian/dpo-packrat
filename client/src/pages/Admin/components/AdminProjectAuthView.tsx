@@ -8,6 +8,7 @@ import { useParams, useLocation, useNavigate } from 'react-router';
 import GenericBreadcrumbsView from '../../../components/shared/GenericBreadcrumbsView';
 import { Helmet } from 'react-helmet';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../utils/toastError';
 import { useUserStore } from '../../../store';
 import API from '../../../api';
 
@@ -115,7 +116,7 @@ function AdminProjectAuthView(): React.ReactElement {
                 setIsRestricted(projectResult.data.isRestricted);
                 setAuthorizedUsers(projectResult.data.authorizedUsers || []);
             } else {
-                toast.error('Failed to load project authorization data');
+                toastError(projectResult, 'Failed to load project authorization data');
             }
 
             if (usersResult?.success && usersResult.data) {
@@ -160,7 +161,7 @@ function AdminProjectAuthView(): React.ReactElement {
             toast.success('Project authorization updated');
             navigate('/admin/projects');
         } else {
-            toast.error(`Failed to update: ${result?.message}`);
+            toastError(result, 'Failed to update');
         }
     };
 

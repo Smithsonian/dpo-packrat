@@ -176,6 +176,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
     private parameters: JobCookSIVoyagerSceneParameters;
     private parameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
     private cleanupCalled: boolean = false;
+    private reportScene: { idScene?: number; idSystemObject?: number; name?: string } | undefined = undefined;
 
     private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
     private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
@@ -183,8 +184,8 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
     constructor(jobEngine: JOB.IJobEngine, idAssetVersions: number[] | null, report: REP.IReport | null,
         parameters: JobCookSIVoyagerSceneParameters, dbJobRun: DBAPI.JobRun) {
-        super(jobEngine, Config.job.cookClientId, 'si-vogager-scene',
-            CookRecipe.getCookRecipeID('si-vogager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
+        super(jobEngine, Config.job.cookClientId, 'si-voyager-scene',
+            CookRecipe.getCookRecipeID('si-voyager-scene', '512211e5-f2e8-4723-93e9-e30116c88ab0'),
             null, idAssetVersions, report, dbJobRun);
 
         if (parameters.skipJobCleanup) {
@@ -259,29 +260,50 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         // RK.logDebug(RK.LogSection.eJOB,'extracted svx',undefined,svx.SvxExtraction,'Job.VoyagerScene');
 
-        // Look for an existing scene, which is a child of modelSource
-        // TODO: what if there are multiple scenes as a child of modelSource?
+        // Look for an existing scene, which is a child of modelSource.
         const modelSource: DBAPI.Model = this.parameterHelper.modelSource;
-        const scenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
-        if (!scenes)
+        const allScenes: DBAPI.Scene[] | null = await DBAPI.Scene.fetchChildrenScenes(modelSource.idModel);
+        if (!allScenes)
             return this.logError('create system objects failed','unable to fetch children scenes of model', { idModel: modelSource.idModel });
 
-        // If needed, create a new scene (if we have no scenes, or if we have multiple scenes, then create a new one);
-        // If we have just one scene, before reusing it, see if the model names all match up
-        let createScene: boolean = (scenes.length !== 1);
-        if (!createScene && scenes.length > 0 && svx.SvxExtraction.modelDetails) {
+        // Only ACTIVE (non-retired) scenes participate in the reuse-vs-create decision. A model may
+        // carry retired scenes (failed or superseded runs) that must be ignored — never reused, never
+        // counted toward the multi-scene refusal. One active scene -> reuse it; none -> create a new one.
+        const scenes: DBAPI.Scene[] = [];
+        for (const s of allScenes) {
+            const sSO: DBAPI.SystemObject | null = await DBAPI.SystemObject.fetchFromSceneID(s.idScene);
+            if (sSO && !sSO.Retired)
+                scenes.push(s);
+        }
+
+        // Decide whether to create a new scene or reuse the single existing one. A model source with
+        // no active child scene legitimately creates its first scene. Reusing an existing scene must never
+        // silently fork a duplicate against the same model source: a model-name mismatch means a
+        // rename propagated into Cook's derivative names, so we block rather than fork, and a model
+        // source that already carries multiple scenes is refused rather than compounded (each such
+        // run would otherwise fork again). Recovery from a rename is the Fix Scene Basenames op.
+        if (scenes.length > 1)
+            return this.logError('create system objects failed',
+                `model source has ${scenes.length} child scenes; refusing to create another to avoid compounding duplicates (manual remediation required)`,
+                { idModel: modelSource.idModel, sceneCount: scenes.length });
+
+        if (scenes.length === 1 && svx.SvxExtraction.modelDetails) {
             for (const MSX of svx.SvxExtraction.modelDetails) {
-                if (MSX.Name) {
-                    // look for existing models, children of our scene, that match this model's purpose
-                    const model: DBAPI.Model | null = await this.findMatchingModel(scenes[0], MSX.computeModelAutomationTag());
-                    if (!model || (model.Name !== MSX.Name)) {
-                        createScene = true;
-                        break;
-                    }
-                }
+                if (!MSX.Name)
+                    continue;
+                // match by automation tag (model purpose), which is stable across a display-name
+                // rename. A missing match is not a fork trigger: the reuse path below creates the
+                // model on the existing scene. Only a present model whose Name differs signals a
+                // rename that would otherwise fork.
+                const model: DBAPI.Model | null = await this.findMatchingModel(scenes[0], MSX.computeModelAutomationTag());
+                if (model && model.Name !== MSX.Name)
+                    return this.logError('create system objects failed',
+                        `existing scene model "${model.Name}" does not match Cook output "${MSX.Name}"; a rename was detected. Refusing to fork a duplicate scene (run Fix Scene Basenames to remediate)`,
+                        { idModel: modelSource.idModel, idScene: scenes[0].idScene, expectedModelName: MSX.Name, existingModelName: model.Name, automationTag: MSX.computeModelAutomationTag() });
             }
         }
 
+        const createScene: boolean = (scenes.length === 0);
         const scene: DBAPI.Scene = createScene ? svx.SvxExtraction.extractScene() : scenes[0];
 
         let asset: DBAPI.Asset | null = null;
@@ -386,11 +408,11 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
         const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromScene(scene);
         const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-        const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-        const hrefObject: string = H.Helpers.computeHref(pathObject, scene.Name);
         const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-        const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-        await this.appendToReportAndLog(`${this.name()} ingested scene ${hrefObject}${hrefDownload}`);
+        const sceneRef: COMMON.IWorkflowReportRef = { name: scene.Name, idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+        this.reportScene = { idScene: scene.idScene, idSystemObject: SOI?.idSystemObject, name: scene.Name };
+        await this.appendToReportAndLog(`${this.name()} ingested scene ${scene.Name}`, undefined,
+            { code: COMMON.WorkflowReportCode.SceneIngested, data: { scene: sceneRef, href: pathDownload || undefined } });
 
         const SOV: DBAPI.SystemObjectVersion | null | undefined = IAR.systemObjectVersion; // SystemObjectVersion for updated 'scene', with new version of scene asset
         // LOG.info(`JobCookSIVoyagerScene.createSystemObjects[${svxFile}] wire ingestStreamOrFile: ${JSON.stringify(ISI, H.Helpers.stringifyMapsAndBigints)}`, LOG.LS.eJOB);
@@ -481,11 +503,10 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
 
                     const SOI: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromModel(model);
                     const assetVersion: DBAPI.AssetVersion | null = (IAR.assetVersions && IAR.assetVersions.length > 0) ? IAR.assetVersions[0] : null;
-                    const pathObject: string = SOI ? RouteBuilder.RepositoryDetails(SOI.idSystemObject, eHrefMode.ePrependClientURL) : '';
-                    const hrefObject: string = H.Helpers.computeHref(pathObject, model.Name);
                     const pathDownload: string = assetVersion ? RouteBuilder.DownloadAssetVersion(assetVersion.idAssetVersion, eHrefMode.ePrependServerURL) : '';
-                    const hrefDownload: string = pathDownload ? ': ' + H.Helpers.computeHref(pathDownload, 'Download') : '';
-                    await this.appendToReportAndLog(`${this.name()} ingested model ${hrefObject}${hrefDownload}`);
+                    const modelRef: COMMON.IWorkflowReportRef = { name: model.Name, idModel: model.idModel, idSystemObject: SOI?.idSystemObject, idAssetVersion: assetVersion?.idAssetVersion };
+                    await this.appendToReportAndLog(`${this.name()} ingested model ${model.Name}`, undefined,
+                        { code: COMMON.WorkflowReportCode.ModelIngested, data: { model: modelRef, href: pathDownload || undefined } });
 
                     // if an asset version was created for ingestion of this model, and if a system object version was created for scene ingestion,
                     // associate the asset version with the scene's system object version (enabling a scene package to be downloaded, even if some assets
@@ -613,6 +634,19 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
         };
     }
 
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        const ph = this.parameterHelper;
+        return {
+            subject: ph?.OG?.subject?.[0]?.Name,
+            idSubject: ph?.OG?.subject?.[0]?.idSubject,
+            scene: this.reportScene?.name ?? ph?.sceneName,
+            idScene: this.reportScene?.idScene,
+            idModel: ph?.SOModelSource?.idModel ?? undefined,
+            idSystemObject: this.reportScene?.idSystemObject ?? ph?.SOModelSource?.idSystemObject,
+            input: this.parameters?.sourceMeshFile,
+        };
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
         const updated: boolean = await super.recordSuccess(output);
         if (updated) {
@@ -623,7 +657,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RK.logError(RK.LogSection.eJOB,'scene generation failed','post-processing failed after Cook success',undefined,'Job.VoyagerScene');
             await this.sendJobNotification({
                 success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
-                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+                extraContent: `<p><b>Parameters</b>: ${JSON.stringify(this.parameters)}<p>`
             });
         }
         return updated;
@@ -635,7 +669,7 @@ export class JobCookSIVoyagerScene extends JobCook<JobCookSIVoyagerSceneParamete
             RK.logError(RK.LogSection.eJOB,'scene generation failed',undefined,undefined,'Job.VoyagerScene');
             await this.sendJobNotification({
                 success: false, titlePrefix: 'Scene Generation', ...this.notificationContext,
-                extraContent: `<p><b>Parameters</b>: ${this.parameters}<p>`
+                extraContent: `<p><b>Parameters</b>: ${JSON.stringify(this.parameters)}<p>`
             });
         }
         return updated;

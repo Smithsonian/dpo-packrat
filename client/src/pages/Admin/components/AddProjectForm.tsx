@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../utils/toastError';
 import { DebounceInput } from 'react-debounce-input';
 import { Helmet } from 'react-helmet';
 import * as yup from 'yup';
@@ -196,8 +197,7 @@ function AddProjectForm(): React.ReactElement {
                 throw new Error('Create request returned success: false');
             }
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed to create project${message}`);
+            toastError(error, 'Failed to create project');
         } finally {
             if (newProjectSystemObjectId) {
                 navigate(`/repository/details/${newProjectSystemObjectId}`);

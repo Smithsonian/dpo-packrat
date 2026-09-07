@@ -3,6 +3,7 @@ import MUIDataTable from 'mui-datatables';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, TablePagination, Tooltip } from '@material-ui/core';
+import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
 import { useWorkflowStore } from '../../../../store';
 import { formatDateAndTime } from '../../../../utils/shared';
 import SetIcon from '../../../../assets/images/Workflow_Set_Icon.svg';
@@ -10,11 +11,13 @@ import ReportIcon from '../../../../assets/images/Workflow_Report_Icon.svg';
 import JobIcon from '../../../../assets/images/Workflow_Job_Icon.svg';
 import { eWorkflowListSortColumns } from '@dpo-packrat/common';
 import { ePaginationChange } from '../../../../store';
-import { EmptyTable } from '../../../../components';
+import { EmptyTable, NewTabLink } from '../../../../components';
 import { truncateWithEllipses } from '../../../../constants/helperfunctions';
 import { DataTableOptions } from '../../../../types/component';
-import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob } from '../../../../utils/repository';
+import { getDownloadValueForWorkflowReport, getDownloadValueForWorkflowSet, getDownloadValueForJob, getDetailsUrlForObject } from '../../../../utils/repository';
 import API from '../../../../api';
+import WorkflowReportViewer, { WorkflowReportHeader } from './WorkflowReportViewer';
+import { parseWorkflowSummary } from './workflowSummary';
 import clsx from 'clsx';
 
 interface WorkflowIconProps {
@@ -183,6 +186,8 @@ function WorkflowList(): React.ReactElement {
 
     const count = calculateTotalRowCount();
 
+    const [reportViewer, setReportViewer] = React.useState<{ open: boolean; url: string; header: WorkflowReportHeader; mimeType: string | null }>({ open: false, url: '', header: { title: '' }, mimeType: null });
+
     const options: DataTableOptions = {
         filter: false,
         filterType: 'dropdown',
@@ -299,6 +304,54 @@ function WorkflowList(): React.ReactElement {
             }
         },
         {
+            name: 'Object',
+            label: 'Object',
+            options: {
+                sort: false,
+                customBodyRenderLite(dataIndex) {
+                    const summary = parseWorkflowSummary(rows[dataIndex]);
+                    if (!summary) return '';
+                    const label = summary.scene || summary.subject || summary.mediaGroup || '';
+                    const type = summary.idScene ? 'Scene' : (summary.idModel ? 'Model' : (summary.idSubject ? 'Subject' : 'Object'));
+                    const id = summary.idSystemObject;
+                    // The input file fed to the job (uploaded zip / mesh / svx), shown as a basename so a
+                    // pre-ingest inspect row still says what it acted on, even with no object to link.
+                    const fileName: string = summary.input ? (summary.input.split(/[\\/]/).pop() ?? '') : '';
+                    const fileLine = fileName
+                        ? <div title={summary.input ?? ''} style={{ fontSize: '0.75em', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 170 }}>{truncateWithEllipses(fileName, 34)}</div>
+                        : null;
+                    if (id) {
+                        const full = `[${type}] ${label || `Object ${id}`}`;
+                        return (
+                            <span>
+                                <Tooltip placement='top' title={full} arrow>
+                                    <span>
+                                        <NewTabLink to={getDetailsUrlForObject(id)} className={classes.link}>{truncateWithEllipses(full, 30)}</NewTabLink>
+                                    </span>
+                                </Tooltip>
+                                {fileLine}
+                            </span>
+                        );
+                    }
+                    if (label)
+                        return (
+                            <span>
+                                <Tooltip placement='top' title={`[${type}] ${label}`} arrow>
+                                    <div style={{ maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{`[${type}] ${label}`}</div>
+                                </Tooltip>
+                                {fileLine}
+                            </span>
+                        );
+                    // No linkable object yet (pre-ingest upload/inspect) — show the filename as the value.
+                    return fileName
+                        ? <Tooltip placement='top' title={summary.input ?? ''} arrow><div style={{ maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{truncateWithEllipses(fileName, 30)}</div></Tooltip>
+                        : '';
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
             name: 'DateStart',
             label: 'Start',
             options: {
@@ -326,9 +379,29 @@ function WorkflowList(): React.ReactElement {
             name: 'idWorkflowReport',
             label: 'Report',
             options: {
-                customBodyRender(value) {
+                customBodyRenderLite(dataIndex) {
+                    const row = rows[dataIndex];
+                    const value = row?.idWorkflowReport;
                     if (!value) return '';
-                    return <WorkflowIcon reportType={eWorkflowLinkType.eReport} path={getDownloadValueForWorkflowReport(serverEndpoint, value)} />;
+                    const url = getDownloadValueForWorkflowReport(serverEndpoint, value);
+                    const summary = parseWorkflowSummary(row);
+                    const header: WorkflowReportHeader = {
+                        title: summary?.scene || summary?.subject || row.Type || `Report #${value}`,
+                        recipe: summary?.recipe ?? undefined,
+                        cookJobId: summary?.cookJobId ?? undefined,
+                        cookServer: summary?.cookServer ?? undefined,
+                        started: row.DateStart ? formatDateAndTime(row.DateStart) : undefined
+                    };
+                    return (
+                        <button
+                            type='button'
+                            onClick={() => setReportViewer({ open: true, url, header, mimeType: row.ReportMimeType ?? null })}
+                            aria-label='Open workflow report'
+                            style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer', display: 'flex', justifyContent: 'center', width: '100%' }}
+                        >
+                            <img src={ReportIcon} style={{ height: '20px', width: '20px' }} alt='This icon indicates a clickable report.' />
+                        </button>
+                    );
                 },
                 setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
@@ -362,10 +435,37 @@ function WorkflowList(): React.ReactElement {
             }
         },
         {
+            name: 'Warnings',
+            label: 'Warn',
+            options: {
+                sort: false,
+                customBodyRenderLite(dataIndex) {
+                    const summary = parseWorkflowSummary(rows[dataIndex]);
+                    const count = summary?.warnings ?? 0;
+                    if (!count) return '';
+                    const title = `${count} non-blocking warning${count === 1 ? '' : 's'} — open the report for details`;
+                    return (
+                        <Tooltip placement='left' title={title} arrow>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#b26a00' }}>
+                                <WarningRoundedIcon style={{ fontSize: 18 }} />
+                                {count > 1 ? count : ''}
+                            </span>
+                        </Tooltip>
+                    );
+                },
+                setCellProps: setCenterCell,
+                setCellHeaderProps: setCenterHeader
+            }
+        },
+        {
             name: 'Error',
             label: 'Error',
             options: {
-                customBodyRender(value) {
+                customBodyRenderLite(dataIndex) {
+                    const row = rows[dataIndex];
+                    // JobRun.Error for Cook steps; fall back to the workflow-level error (from the report
+                    // summary) for job-less workflows like upload validation, which have no JobRun.
+                    const value: string = row?.Error || parseWorkflowSummary(row)?.error || '';
                     if (!value) return '';
                     return (
                         <Tooltip placement='left' title={value} arrow>
@@ -373,7 +473,6 @@ function WorkflowList(): React.ReactElement {
                         </Tooltip>
                     );
                 },
-                // setCellProps: setCenterCell,
                 setCellHeaderProps: setCenterHeader,
                 sort: false
             }
@@ -385,6 +484,13 @@ function WorkflowList(): React.ReactElement {
             <Box className={classes.tableContainer}>
                 <MUIDataTable title='' data={rows} columns={columns} options={options} />
             </Box>
+            <WorkflowReportViewer
+                open={reportViewer.open}
+                onClose={() => setReportViewer({ open: false, url: '', header: { title: '' }, mimeType: null })}
+                reportUrl={reportViewer.url}
+                header={reportViewer.header}
+                mimeType={reportViewer.mimeType}
+            />
         </MuiThemeProvider>
     );
 }

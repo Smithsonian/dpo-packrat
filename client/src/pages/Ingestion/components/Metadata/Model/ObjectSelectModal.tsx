@@ -11,6 +11,7 @@ import { AppBar, Box, Button, Dialog, Toolbar, Typography, IconButton } from '@m
 import { makeStyles, fade, createStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
 import { StateRelatedObject } from '../../../../../store';
 import { updateSourceObjects, updateDerivedObjects } from '../../../../Repository/hooks/useDetailsView';
 import RepositoryFilterView from '../../../../Repository/components/RepositoryFilterView';
@@ -145,7 +146,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                     if (data.updateSourceObjects.status === 'success') toast.success('Parents successfully added');
                     if (data.updateSourceObjects.status === 'warn') toast.warn(`The following parents had mismatched relationship: ${data.updateSourceObjects.message}`);
                 } else {
-                    toast.error('Parents could not be added. Please try again later');
+                    toastError(data.updateSourceObjects, 'Parents could not be added. Please try again later');
                 }
             } else if (props.relationship === 'Derived' && idSystemObject) {
                 const { data } = await updateDerivedObjects(idSystemObject, objectType, selectedRelationships, []);
@@ -153,7 +154,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
                     if (data.updateDerivedObjects.status === 'success') toast.success('Children successfully added');
                     if (data.updateDerivedObjects.status === 'warn') toast.warn(`The following children had mismatched relationship: ${data.updateDerivedObjects.message}`);
                 } else {
-                    toast.error('Children could not be added. Please try again later');
+                    toastError(data.updateDerivedObjects, 'Children could not be added. Please try again later');
                 }
             }
         } catch (error) {
@@ -212,8 +213,7 @@ function ObjectSelectModal(props: ObjectSelectModalProps): React.ReactElement {
 
             setSelected([...selected, sourceObject]);
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed to select object${message}`);
+            toastError(error, 'Failed to select object');
         }
     };
 

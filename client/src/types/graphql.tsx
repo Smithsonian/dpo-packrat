@@ -588,6 +588,7 @@ export type DiscardUploadedAssetVersionsInput = {
 
 export type DiscardUploadedAssetVersionsResult = {
   __typename?: 'DiscardUploadedAssetVersionsResult';
+  message?: Maybe<Scalars['String']>;
   success: Scalars['Boolean'];
 };
 
@@ -752,6 +753,7 @@ export type GetIngestTitleInput = {
 export type GetIngestTitleResult = {
   __typename?: 'GetIngestTitleResult';
   ingestTitle?: Maybe<IngestTitle>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIngestionItemsInput = {
@@ -761,6 +763,7 @@ export type GetIngestionItemsInput = {
 export type GetIngestionItemsResult = {
   __typename?: 'GetIngestionItemsResult';
   IngestionItem?: Maybe<Array<IngestionItem>>;
+  message?: Maybe<Scalars['String']>;
 };
 
 export type GetIntermediaryFileInput = {
@@ -853,6 +856,8 @@ export type GetObjectChildrenInput = {
   projects: Array<Scalars['Int']>;
   rows: Scalars['Int'];
   search: Scalars['String'];
+  showRetired?: InputMaybe<Scalars['Boolean']>;
+  start?: InputMaybe<Scalars['Int']>;
   units: Array<Scalars['Int']>;
   variantType: Array<Scalars['Int']>;
 };
@@ -864,6 +869,7 @@ export type GetObjectChildrenResult = {
   error?: Maybe<Scalars['String']>;
   metadataColumns: Array<Scalars['Int']>;
   success: Scalars['Boolean'];
+  total?: Maybe<Scalars['Int']>;
 };
 
 export type GetObjectsForItemInput = {
@@ -981,6 +987,9 @@ export type GetSystemObjectDetailsResult = {
   asset?: Maybe<RepositoryPath>;
   assetOwner?: Maybe<RepositoryPath>;
   derivedObjects: Array<RelatedObject>;
+  edanRecordId?: Maybe<Scalars['String']>;
+  edanRecordUrl?: Maybe<Scalars['String']>;
+  edanUnitCode?: Maybe<Scalars['String']>;
   idObject: Scalars['Int'];
   idSystemObject: Scalars['Int'];
   identifiers: Array<IngestIdentifier>;
@@ -996,6 +1005,7 @@ export type GetSystemObjectDetailsResult = {
   objectVersions: Array<SystemObjectVersion>;
   project?: Maybe<Array<RepositoryPath>>;
   publishBlocker?: Maybe<Scalars['String']>;
+  publishControlVisible?: Maybe<Scalars['Boolean']>;
   publishable: Scalars['Boolean'];
   publishedEnum: Scalars['Int'];
   publishedState: Scalars['String'];
@@ -1003,6 +1013,7 @@ export type GetSystemObjectDetailsResult = {
   sourceObjects: Array<RelatedObject>;
   subTitle?: Maybe<Scalars['String']>;
   subject?: Maybe<Array<RepositoryPath>>;
+  subjectUnitMismatch?: Maybe<Scalars['Boolean']>;
   thumbnail?: Maybe<Scalars['String']>;
   unit?: Maybe<Array<RepositoryPath>>;
 };
@@ -1860,6 +1871,7 @@ export type NavigationResultEntry = {
   metadata: Array<Scalars['String']>;
   name: Scalars['String'];
   objectType: Scalars['Int'];
+  retired?: Maybe<Scalars['Boolean']>;
 };
 
 export type ObjectPropertyResult = {
@@ -2344,6 +2356,7 @@ export type SearchIngestionSubjectsInput = {
 export type SearchIngestionSubjectsResult = {
   __typename?: 'SearchIngestionSubjectsResult';
   SubjectUnitIdentifier: Array<SubjectUnitIdentifier>;
+  error?: Maybe<Scalars['String']>;
 };
 
 export type SourceObjectIdentifier = {
@@ -2698,6 +2711,7 @@ export type UploadAssetResult = {
   error?: Maybe<Scalars['String']>;
   idAssetVersions?: Maybe<Array<Scalars['Int']>>;
   status: UploadStatus;
+  warnings?: Maybe<Scalars['Int']>;
 };
 
 export enum UploadStatus {
@@ -2799,7 +2813,9 @@ export type WorkflowListResult = {
   JobRun?: Maybe<JobRun>;
   Owner?: Maybe<User>;
   ProjectName?: Maybe<Scalars['String']>;
+  ReportMimeType?: Maybe<Scalars['String']>;
   State?: Maybe<Scalars['String']>;
+  Summary?: Maybe<Scalars['String']>;
   Type?: Maybe<Scalars['String']>;
   UserInitiator?: Maybe<User>;
   Workflow?: Maybe<Workflow>;
@@ -2859,7 +2875,7 @@ export type DiscardUploadedAssetVersionsMutationVariables = Exact<{
 }>;
 
 
-export type DiscardUploadedAssetVersionsMutation = { __typename?: 'Mutation', discardUploadedAssetVersions: { __typename?: 'DiscardUploadedAssetVersionsResult', success: boolean } };
+export type DiscardUploadedAssetVersionsMutation = { __typename?: 'Mutation', discardUploadedAssetVersions: { __typename?: 'DiscardUploadedAssetVersionsResult', success: boolean, message?: string | null } };
 
 export type RollbackAssetVersionMutationVariables = Exact<{
   input: RollbackAssetVersionInput;
@@ -2876,7 +2892,7 @@ export type UploadAssetMutationVariables = Exact<{
 }>;
 
 
-export type UploadAssetMutation = { __typename?: 'Mutation', uploadAsset: { __typename?: 'UploadAssetResult', status: UploadStatus, idAssetVersions?: Array<number> | null, error?: string | null } };
+export type UploadAssetMutation = { __typename?: 'Mutation', uploadAsset: { __typename?: 'UploadAssetResult', status: UploadStatus, idAssetVersions?: Array<number> | null, error?: string | null, warnings?: number | null } };
 
 export type CreateCaptureDataMutationVariables = Exact<{
   input: CreateCaptureDataInput;
@@ -3112,7 +3128,7 @@ export type GetIngestTitleQueryVariables = Exact<{
 }>;
 
 
-export type GetIngestTitleQuery = { __typename?: 'Query', getIngestTitle: { __typename?: 'GetIngestTitleResult', ingestTitle?: { __typename?: 'IngestTitle', title: string, forced: boolean, subtitle?: Array<string | null> | null } | null } };
+export type GetIngestTitleQuery = { __typename?: 'Query', getIngestTitle: { __typename?: 'GetIngestTitleResult', message?: string | null, ingestTitle?: { __typename?: 'IngestTitle', title: string, forced: boolean, subtitle?: Array<string | null> | null } | null } };
 
 export type GetLicenseQueryVariables = Exact<{
   input: GetLicenseInput;
@@ -3152,7 +3168,7 @@ export type GetObjectChildrenQueryVariables = Exact<{
 }>;
 
 
-export type GetObjectChildrenQuery = { __typename?: 'Query', getObjectChildren: { __typename?: 'GetObjectChildrenResult', success: boolean, error?: string | null, metadataColumns: Array<number>, cursorMark?: string | null, entries: Array<{ __typename?: 'NavigationResultEntry', idSystemObject: number, name: string, objectType: number, idObject: number, metadata: Array<string> }> } };
+export type GetObjectChildrenQuery = { __typename?: 'Query', getObjectChildren: { __typename?: 'GetObjectChildrenResult', success: boolean, error?: string | null, metadataColumns: Array<number>, cursorMark?: string | null, total?: number | null, entries: Array<{ __typename?: 'NavigationResultEntry', idSystemObject: number, name: string, objectType: number, idObject: number, metadata: Array<string>, retired?: boolean | null }> } };
 
 export type GetIntermediaryFileQueryVariables = Exact<{
   input: GetIntermediaryFileInput;
@@ -3215,7 +3231,7 @@ export type GetSystemObjectDetailsQueryVariables = Exact<{
 }>;
 
 
-export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, isDraft: boolean, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
+export type GetSystemObjectDetailsQuery = { __typename?: 'Query', getSystemObjectDetails: { __typename?: 'GetSystemObjectDetailsResult', idSystemObject: number, idObject: number, name: string, subTitle?: string | null, retired: boolean, objectType: number, allowed: boolean, allowedReason?: string | null, publishedState: string, publishedEnum: number, publishable: boolean, publishBlocker?: string | null, publishControlVisible?: boolean | null, isDraft: boolean, edanRecordId?: string | null, edanRecordUrl?: string | null, edanUnitCode?: string | null, subjectUnitMismatch?: boolean | null, thumbnail?: string | null, licenseInheritance?: number | null, identifiers: Array<{ __typename?: 'IngestIdentifier', identifier: string, identifierType: number, idIdentifier: number }>, unit?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, project?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, subject?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, item?: Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }> | null, asset?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, assetOwner?: { __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number } | null, objectAncestors: Array<Array<{ __typename?: 'RepositoryPath', idSystemObject: number, name: string, objectType: number }>>, sourceObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, derivedObjects: Array<{ __typename?: 'RelatedObject', idSystemObject: number, name: string, identifier?: string | null, objectType: number, retired: boolean, type?: string | null, variant?: string | null }>, objectVersions: Array<{ __typename?: 'SystemObjectVersion', idSystemObjectVersion: number, idSystemObject: number, PublishedState: number, DateCreated: any, Comment?: string | null, CommentLink?: string | null }>, metadata: Array<{ __typename?: 'Metadata', idMetadata: number, Name: string, ValueShort?: string | null, ValueExtended?: string | null, idAssetVersionValue?: number | null, idVMetadataSource?: number | null, Value?: string | null, Label?: string | null }>, license?: { __typename?: 'License', idLicense: number, Name: string, Description: string, RestrictLevel: number } | null, objectProperties: Array<{ __typename?: 'ObjectPropertyResult', propertyType: string, level: number, rationale: string, idContact?: number | null }> } };
 
 export type GetVersionsForAssetQueryVariables = Exact<{
   input: GetVersionsForAssetInput;
@@ -3241,7 +3257,7 @@ export type GetIngestionItemsQueryVariables = Exact<{
 }>;
 
 
-export type GetIngestionItemsQuery = { __typename?: 'Query', getIngestionItems: { __typename?: 'GetIngestionItemsResult', IngestionItem?: Array<{ __typename?: 'IngestionItem', idItem: number, EntireSubject: boolean, MediaGroupName: string, idProject: number, ProjectName: string }> | null } };
+export type GetIngestionItemsQuery = { __typename?: 'Query', getIngestionItems: { __typename?: 'GetIngestionItemsResult', message?: string | null, IngestionItem?: Array<{ __typename?: 'IngestionItem', idItem: number, EntireSubject: boolean, MediaGroupName: string, idProject: number, ProjectName: string }> | null } };
 
 export type GetItemQueryVariables = Exact<{
   input: GetItemInput;
@@ -3318,7 +3334,7 @@ export type SearchIngestionSubjectsQueryVariables = Exact<{
 }>;
 
 
-export type SearchIngestionSubjectsQuery = { __typename?: 'Query', searchIngestionSubjects: { __typename?: 'SearchIngestionSubjectsResult', SubjectUnitIdentifier: Array<{ __typename?: 'SubjectUnitIdentifier', idSubject: number, idSystemObject: number, SubjectName: string, UnitAbbreviation: string, IdentifierPublic?: string | null, IdentifierCollection?: string | null }> } };
+export type SearchIngestionSubjectsQuery = { __typename?: 'Query', searchIngestionSubjects: { __typename?: 'SearchIngestionSubjectsResult', error?: string | null, SubjectUnitIdentifier: Array<{ __typename?: 'SubjectUnitIdentifier', idSubject: number, idSystemObject: number, SubjectName: string, UnitAbbreviation: string, IdentifierPublic?: string | null, IdentifierCollection?: string | null }> } };
 
 export type GetAllUsersQueryVariables = Exact<{
   input: GetAllUsersInput;
@@ -3365,13 +3381,14 @@ export type GetWorkflowListQueryVariables = Exact<{
 }>;
 
 
-export type GetWorkflowListQuery = { __typename?: 'Query', getWorkflowList: { __typename?: 'GetWorkflowListResult', WorkflowList?: Array<{ __typename?: 'WorkflowListResult', idWorkflow: number, idWorkflowSet?: number | null, idWorkflowReport?: number | null, idJobRun?: number | null, Type?: string | null, State?: string | null, DateStart?: any | null, DateLast?: any | null, Error?: string | null, ProjectName?: string | null, Owner?: { __typename?: 'User', Name: string } | null } | null> | null } };
+export type GetWorkflowListQuery = { __typename?: 'Query', getWorkflowList: { __typename?: 'GetWorkflowListResult', WorkflowList?: Array<{ __typename?: 'WorkflowListResult', idWorkflow: number, idWorkflowSet?: number | null, idWorkflowReport?: number | null, idJobRun?: number | null, Type?: string | null, State?: string | null, DateStart?: any | null, DateLast?: any | null, Error?: string | null, ProjectName?: string | null, Summary?: string | null, ReportMimeType?: string | null, Owner?: { __typename?: 'User', Name: string } | null } | null> | null } };
 
 
 export const DiscardUploadedAssetVersionsDocument = gql`
     mutation discardUploadedAssetVersions($input: DiscardUploadedAssetVersionsInput!) {
   discardUploadedAssetVersions(input: $input) {
     success
+    message
   }
 }
     `;
@@ -3446,6 +3463,7 @@ export const UploadAssetDocument = gql`
     status
     idAssetVersions
     error
+    warnings
   }
 }
     `;
@@ -4887,6 +4905,7 @@ export const GetIngestTitleDocument = gql`
       forced
       subtitle
     }
+    message
   }
 }
     `;
@@ -5236,9 +5255,11 @@ export const GetObjectChildrenDocument = gql`
       objectType
       idObject
       metadata
+      retired
     }
     metadataColumns
     cursorMark
+    total
   }
 }
     `;
@@ -5845,7 +5866,13 @@ export const GetSystemObjectDetailsDocument = gql`
     publishedState
     publishedEnum
     publishable
+    publishBlocker
+    publishControlVisible
     isDraft
+    edanRecordId
+    edanRecordUrl
+    edanUnitCode
+    subjectUnitMismatch
     thumbnail
     identifiers {
       identifier
@@ -6100,6 +6127,7 @@ export const GetIngestionItemsDocument = gql`
       idProject
       ProjectName
     }
+    message
   }
 }
     `;
@@ -6547,6 +6575,7 @@ export const SearchIngestionSubjectsDocument = gql`
       IdentifierPublic
       IdentifierCollection
     }
+    error
   }
 }
     `;
@@ -6849,6 +6878,8 @@ export const GetWorkflowListDocument = gql`
       DateLast
       Error
       ProjectName
+      Summary
+      ReportMimeType
     }
   }
 }

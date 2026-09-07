@@ -8,6 +8,17 @@ import { AuditFactory } from '../../audit/interface/AuditFactory';
 import { eAuditType } from './ObjectType';
 import * as COMMON from '@dpo-packrat/common';
 
+/** One scene whose latest version is in a published EDAN state; `Retired` true marks an orphan
+ *  (retired in Packrat but still live in EDAN) that needs reconciliation. */
+export type EdanPublishedSceneRow = {
+    idScene: number;
+    idSystemObject: number;
+    Name: string;
+    EdanUUID: string | null;
+    PublishedState: number;
+    Retired: boolean;
+};
+
 export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemObjectBased {
     idScene!: number;
     Name!: string;
@@ -244,6 +255,38 @@ export class Scene extends DBC.DBObject<SceneBase> implements SceneBase, SystemO
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB,'fetch derived from Items failed',H.Helpers.getErrorString(error),{ idItem },'DB.Scene');
             return null;
+        }
+    }
+
+    /**
+     * Scenes whose latest SystemObjectVersion is in a published EDAN state (Published / API Only /
+     * Internal). Ordered retired-first so orphans (retired in Packrat but still live in EDAN) surface
+     * at the top. PublishedState lives only on the latest SystemObjectVersion, so the join selects the
+     * MAX(idSystemObjectVersion) per SystemObject.
+     */
+    static async fetchEdanPublished(): Promise<EdanPublishedSceneRow[]> {
+        type RawRow = { idScene: number | bigint; idSystemObject: number | bigint; Name: string; EdanUUID: string | null; PublishedState: number | bigint; Retired: number | bigint };
+        try {
+            const rows: RawRow[] = await DBC.DBConnection.prisma.$queryRaw<RawRow[]>`
+                SELECT scn.idScene, so.idSystemObject, scn.Name, scn.EdanUUID, sov.PublishedState,
+                       CAST(so.Retired AS UNSIGNED) AS Retired
+                FROM Scene AS scn
+                JOIN SystemObject AS so ON (scn.idScene = so.idScene)
+                JOIN SystemObjectVersion AS sov ON (sov.idSystemObjectVersion =
+                    (SELECT MAX(sov2.idSystemObjectVersion) FROM SystemObjectVersion AS sov2 WHERE sov2.idSystemObject = so.idSystemObject))
+                WHERE sov.PublishedState <> 0
+                ORDER BY so.Retired DESC, scn.Name`;
+            return rows.map(r => ({
+                idScene: Number(r.idScene),
+                idSystemObject: Number(r.idSystemObject),
+                Name: r.Name,
+                EdanUUID: r.EdanUUID,
+                PublishedState: Number(r.PublishedState),
+                Retired: Number(r.Retired) !== 0,
+            }));
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB,'fetch EDAN published scenes failed',H.Helpers.getErrorString(error),undefined,'DB.Scene');
+            return [];
         }
     }
 

@@ -55,6 +55,8 @@ interface LoggerContext {
     environment: 'production' | 'development';
     idUser: number | undefined;
     idRequest: number | undefined;
+    traceId: string | null;
+    correlationId: string | null;
 }
 interface LogEntry {
     timestamp: string;
@@ -462,7 +464,7 @@ export class Logger {
     }
 
     // build our log entry structure/object
-    private static getLogEntry(level: LogLevel, message: string, reason: string,  data: any | undefined, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number }): LogEntry {
+    private static getLogEntry(level: LogLevel, message: string, reason: string,  data: any | undefined, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null }): LogEntry {
         // create our data structure wrapping in reason if it exists
         const hasReason = reason && reason.trim().length > 0;
         const combinedData = hasReason
@@ -480,7 +482,9 @@ export class Logger {
                 caller: context.caller ?? null,
                 environment: Logger.environment,
                 idUser: context.idUser,
-                idRequest: context.idRequest
+                idRequest: context.idRequest,
+                traceId: context.traceId ?? null,
+                correlationId: context.correlationId ?? null
             }
         };
         return entry;
@@ -675,41 +679,41 @@ export class Logger {
     }
 
     // wrappers for each level of log
-    public static async critical(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async critical(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry(LogLevel.CRITICAL, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.CRITICAL, message, reason ?? '', data, audit, { section, caller, idUser, idRequest, traceId, correlationId }));
     }
-    public static async error(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async error(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry(LogLevel.ERROR, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.ERROR, message, reason ?? '', data, audit, { section, caller, idUser, idRequest, traceId, correlationId }));
     }
-    public static async warning(section: LogSection, message: string, reason?: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async warning(section: LogSection, message: string, reason?: string, data?: any,  caller?: string, audit: boolean=false, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry(LogLevel.WARNING, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.WARNING, message, reason ?? '', data, audit, { section, caller, idUser, idRequest, traceId, correlationId }));
     }
-    public static async info(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async info(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry(LogLevel.INFO, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.INFO, message, reason ?? '', data, audit, { section, caller, idUser, idRequest, traceId, correlationId }));
     }
-    public static async debug(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async debug(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry(LogLevel.DEBUG, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.DEBUG, message, reason ?? '', data, audit, { section, caller, idUser, idRequest, traceId, correlationId }));
     }
-    public static async performance(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number): Promise<LoggerResult> {
+    public static async performance(section: LogSection, message: string, reason?: string, data?: any, caller?: string, audit: boolean=false, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null): Promise<LoggerResult> {
         if(Logger.isActive()===false)
             return { success: false, message: 'cannot post log. no Logger. run configure' };
 
-        return Logger.postLog(Logger.getLogEntry(LogLevel.PERFORMANCE, message, reason ?? '', data, audit, { section, caller, idUser, idRequest }));
+        return Logger.postLog(Logger.getLogEntry(LogLevel.PERFORMANCE, message, reason ?? '', data, audit, { section, caller, idUser, idRequest, traceId, correlationId }));
     }
     public static fallback(level: LogLevel, sec: LogSection, message: string, reason: string, data?: any, caller?: string): void {
 
@@ -902,6 +906,8 @@ export class Logger {
                 environment: Math.random() < 0.5 ? 'production' : 'development',
                 idUser: Math.random() < 0.5 ? Math.floor(100 + Math.random() * 900) : undefined,
                 idRequest: Math.random() < 0.5 ? Math.floor(Math.random() * 100000) : undefined,
+                traceId: null,
+                correlationId: null,
             }
         };
 

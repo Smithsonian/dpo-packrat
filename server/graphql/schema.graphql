@@ -532,6 +532,7 @@ input DiscardUploadedAssetVersionsInput {
 }
 
 type DiscardUploadedAssetVersionsResult {
+  message: String
   success: Boolean!
 }
 
@@ -680,6 +681,7 @@ input GetIngestTitleInput {
 
 type GetIngestTitleResult {
   ingestTitle: IngestTitle
+  message: String
 }
 
 input GetIngestionItemsInput {
@@ -688,6 +690,7 @@ input GetIngestionItemsInput {
 
 type GetIngestionItemsResult {
   IngestionItem: [IngestionItem!]
+  message: String
 }
 
 input GetIntermediaryFileInput {
@@ -772,6 +775,8 @@ input GetObjectChildrenInput {
   projects: [Int!]!
   rows: Int!
   search: String!
+  showRetired: Boolean
+  start: Int
   units: [Int!]!
   variantType: [Int!]!
 }
@@ -782,6 +787,7 @@ type GetObjectChildrenResult {
   error: String
   metadataColumns: [Int!]!
   success: Boolean!
+  total: Int
 }
 
 input GetObjectsForItemInput {
@@ -888,6 +894,9 @@ type GetSystemObjectDetailsResult {
   asset: RepositoryPath
   assetOwner: RepositoryPath
   derivedObjects: [RelatedObject!]!
+  edanRecordId: String
+  edanRecordUrl: String
+  edanUnitCode: String
   idObject: Int!
   idSystemObject: Int!
   identifiers: [IngestIdentifier!]!
@@ -903,6 +912,7 @@ type GetSystemObjectDetailsResult {
   objectVersions: [SystemObjectVersion!]!
   project: [RepositoryPath!]
   publishBlocker: String
+  publishControlVisible: Boolean
   publishable: Boolean!
   publishedEnum: Int!
   publishedState: String!
@@ -910,6 +920,7 @@ type GetSystemObjectDetailsResult {
   sourceObjects: [RelatedObject!]!
   subTitle: String
   subject: [RepositoryPath!]
+  subjectUnitMismatch: Boolean
   thumbnail: String
   unit: [RepositoryPath!]
 }
@@ -1589,6 +1600,7 @@ type NavigationResultEntry {
   metadata: [String!]!
   name: String!
   objectType: Int!
+  retired: Boolean
 }
 
 type ObjectPropertyResult {
@@ -1837,6 +1849,7 @@ input SearchIngestionSubjectsInput {
 
 type SearchIngestionSubjectsResult {
   SubjectUnitIdentifier: [SubjectUnitIdentifier!]!
+  error: String
 }
 
 type SourceObjectIdentifier {
@@ -2172,6 +2185,7 @@ type UploadAssetResult {
   error: String
   idAssetVersions: [Int!]
   status: UploadStatus!
+  warnings: Int
 }
 
 enum UploadStatus {
@@ -2265,7 +2279,9 @@ type WorkflowListResult {
   JobRun: JobRun
   Owner: User
   ProjectName: String
+  ReportMimeType: String
   State: String
+  Summary: String
   Type: String
   UserInitiator: User
   Workflow: Workflow

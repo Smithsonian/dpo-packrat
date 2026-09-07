@@ -41,6 +41,9 @@ export const useStyles = makeStyles(({ palette }) => ({
         // need to specify top radius in table container AND MuiToolbar override
         borderRadius: '5px',
         border: '1px solid #e0e0e0',
+        // include the 1px border in the width so it doesn't overflow the tab panel by 2px
+        // (which otherwise triggers a perpetual horizontal scrollbar even when it fits)
+        boxSizing: 'border-box',
         width: '100%',
         minWidth: '400px'
     },

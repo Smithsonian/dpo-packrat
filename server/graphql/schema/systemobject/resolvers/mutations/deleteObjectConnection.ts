@@ -7,6 +7,8 @@ import { RelatedObjectType } from '../../../../../types/graphql';
 import * as COMMON from '@dpo-packrat/common';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
 
 export default async function deleteObjectConnection(_: Parent, args: MutationDeleteObjectConnectionArgs): Promise<DeleteObjectConnectionResult> {
     const { input: { idSystemObjectMaster, objectTypeMaster, idSystemObjectDerived, objectTypeDerived } } = args;
@@ -40,6 +42,12 @@ export default async function deleteObjectConnection(_: Parent, args: MutationDe
                 const { success, error } = await DBAPI.SystemObjectXref.deleteIfAllowed(xref.idSystemObjectXref);
                 if (success) {
                     RK.logInfo(RK.LogSection.eGQL,'delete object connection success',undefined,{ xref },'GraphQL.SystemObject.ObjectConnection');
+                    // Record the removed parent->child relationship (keyed to the parent/master object).
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionRelationshipDelete,
+                        idSystemObject: idSystemObjectMaster,
+                        payload: { master: idSystemObjectMaster, masterType: objectTypeMaster, derived: idSystemObjectDerived, derivedType: objectTypeDerived },
+                    });
                 } else {
                     RK.logError(RK.LogSection.eGQL,'delete object connection failed',`unable to delete SystemObjectXref: ${error}`,{ xref },'GraphQL.SystemObject.ObjectConnection');
                     result = { success: false, details: `unable to delete SystemObjectXref: ${error}`  };

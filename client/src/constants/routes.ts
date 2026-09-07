@@ -72,6 +72,7 @@ export const ADMIN_ROUTES_TYPE = {
     CREATESUBJECT: 'subjects/create',
     TOOLS: 'tools',
     CONTACTS: 'contacts',
+    METRICS: 'metrics',
 };
 
 export const ADMIN_ROUTE = {

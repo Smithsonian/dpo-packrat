@@ -7,13 +7,13 @@
  *
  * This component renders the metadata fields specific to model asset.
  */
-import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip, IconButton, Collapse, Input, Chip } from '@material-ui/core';
+import { Box, makeStyles, Typography, Table, TableBody, TableCell, TableContainer, TableRow, Paper, Select, MenuItem, Tooltip, IconButton, Collapse } from '@material-ui/core';
 import React, { useState, useEffect } from 'react';
 import { AssetIdentifiers, DateInputField, ReadOnlyRow, TextArea } from '../../../../../components';
 import { StateIdentifier, StateRelatedObject, useSubjectStore, useMetadataStore, useVocabularyStore, useRepositoryStore, FieldErrors } from '../../../../../store';
 import { MetadataType } from '../../../../../store/metadata';
 import { GetModelConstellationForAssetVersionDocument, RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
-import { eSystemObjectType, eVocabularySetID, eVocabularyID } from '@dpo-packrat/common';
+import { eSystemObjectType, eVocabularySetID, eVocabularyID, CustomDownloadTypes, CustomDownloadTypeLabels } from '@dpo-packrat/common';
 import ObjectSelectModal from './ObjectSelectModal';
 import RelatedObjectsList from './RelatedObjectsList';
 import ObjectMeshTable from './ObjectMeshTable';
@@ -24,6 +24,8 @@ import { useStyles as useTableStyles } from '../../../../Repository/components/D
 import { errorFieldStyling } from '../Photogrammetry';
 import SubtitleControl from '../Control/SubtitleControl';
 import { enableSceneGenerateCheck } from '../../../../../store/utils';
+import VocabularyToggle from '../../../../../components/controls/VocabularyToggle';
+import { parseVocabIDs } from '../../../../../utils/repository';
 import clsx from 'clsx';
 import lodash from 'lodash';
 import { toast } from 'react-toastify';
@@ -293,30 +295,6 @@ function Model(props: ModelProps): React.ReactElement {
         updateMetadataField(metadataIndex, name, value, MetadataType.model);
     };
 
-    const setModelVariantField = (event) => {
-        const  { value, name } = event.target;
-        // make sure we got an array as value
-        if(!Array.isArray(value))
-            return console.error('did not receive array', value);
-
-        // convert array into JSON array and feed to metadata update
-        const arrayString = JSON.stringify(value);
-        updateMetadataField(metadataIndex, name, arrayString, MetadataType.model);
-    };
-    const getSelectedIDsFromJSON = (value: string): number[] => {
-        // used to extract array from JSON
-        try {
-            const data = JSON.parse(value);
-            if(Array.isArray(data) === false)
-                throw new Error(`[PACKRAT:ERROR] value is not an array. (${data})`);
-            return data.sort();
-        } catch(error) {
-            console.log(`[PACKRAT:ERROR] invalid JSON stored in property. (${value})`);
-        }
-
-        console.log(`[PACKRAT:ERROR] cannot get selected IDs for Model Variant. Unsupported value. (${value})`);
-        return [];
-    };
     const isMasterModel = (): boolean => {
         const masterId = getVocabularyId(eVocabularyID.eModelPurposeMaster);
         return masterId !== null && model.purpose === masterId;
@@ -614,8 +592,9 @@ function Model(props: ModelProps): React.ReactElement {
                                                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                                                         disabled={ingestionLoading}
                                                     >
-                                                        <MenuItem value='watertight'>Watertight</MenuItem>
-                                                        <MenuItem value='other'>Other</MenuItem>
+                                                        {CustomDownloadTypes.map(t => (
+                                                            <MenuItem key={t} value={t}>{CustomDownloadTypeLabels[t] ?? t}</MenuItem>
+                                                        ))}
                                                     </Select>
                                                 </TableCell>
                                             </TableRow>
@@ -628,33 +607,13 @@ function Model(props: ModelProps): React.ReactElement {
                                                     </Tooltip>
                                                 </TableCell>
                                                 <TableCell className={tableClasses.tableCell}>
-                                                    <Select
-                                                        multiple
-                                                        value={getSelectedIDsFromJSON(model.Variant)}
-                                                        name='Variant'
-                                                        onChange={setModelVariantField}
-                                                        disableUnderline
-                                                        className={clsx(tableClasses.select, classes.fieldSizing, classes.chipSelect)}
-                                                        input={<Input id='select-multiple-chip' />}
-                                                        renderValue={(selected) => {
-                                                            // get our entries and cycle through what's selected drawing as Chips,
-                                                            // and pulling the name from the entries.
-                                                            const entries = getEntries(eVocabularySetID.eModelVariant);
-                                                            return (<div className={classes.chips}>
-                                                                {(selected as number[]).map((value) => {
-                                                                    const entry = entries.find(entry => entry.idVocabulary === value);
-                                                                    return (<Chip key={value} label={entry ? entry.Term : value} className={classes.chip} />);
-                                                                })}
-                                                            </div>);
-                                                        }}
+                                                    <VocabularyToggle
+                                                        value={parseVocabIDs(model.Variant)}
+                                                        entries={getEntries(eVocabularySetID.eModelVariant)}
+                                                        onChange={(ids) => updateMetadataField(metadataIndex, 'Variant', JSON.stringify(ids), MetadataType.model)}
                                                         disabled={ingestionLoading}
-                                                    >
-                                                        { getEntries(eVocabularySetID.eModelVariant)
-                                                            .map(({ idVocabulary, Term }, index) =>
-                                                                <MenuItem key={index} value={idVocabulary}>
-                                                                    {Term}
-                                                                </MenuItem>)}
-                                                    </Select>
+                                                        error={fieldErrors?.model?.Variant || false}
+                                                    />
                                                 </TableCell>
                                             </TableRow>
                                         }

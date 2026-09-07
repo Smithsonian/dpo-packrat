@@ -24,7 +24,9 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         dateCreatedFrom,
         dateCreatedTo,
         rows,
-        cursorMark
+        cursorMark,
+        start,
+        showRetired
     } = args.input;
     const navigation: INavigation | null = await NavigationFactory.getInstance();
 
@@ -57,7 +59,9 @@ export default async function getObjectChildren(_: Parent, args: QueryGetObjectC
         dateCreatedFrom: H.Helpers.safeDate(dateCreatedFrom),   // convert ISO representation to Date
         dateCreatedTo: H.Helpers.safeDate(dateCreatedTo),       // convert ISO representation to Date
         rows,
-        cursorMark
+        cursorMark,
+        start: start ?? undefined,
+        showRetired: showRetired ?? undefined
     };
 
     // Enforce authorization on the filter

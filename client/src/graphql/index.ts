@@ -6,6 +6,7 @@
  */
 import { ApolloClient, InMemoryCache, NormalizedCacheObject, OperationVariables, MutationOptions, FetchResult, QueryOptions, ApolloQueryResult, ApolloClientOptions, from, DefaultContext } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
+import { setTraceId } from '../utils/traceRegistry';
 import { createUploadLink } from 'apollo-upload-client';
 import { apolloFetch, uploadFailureMessage } from './utils';
 import { DocumentNode } from 'graphql';
@@ -13,29 +14,54 @@ import { ROUTES } from '../constants';
 import { authenticationFailureMessage } from '@dpo-packrat/common';
 import API from '../api';
 
+function newTraceId(): string {
+    return (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') ? crypto.randomUUID() : '';
+}
+
+// Register the request's trace id against each top-level result object so toastError can
+// show/log the same id the server logged, without mutating Apollo's (possibly frozen) data.
+function registerTrace(result: any, traceId: string): void {
+    const data = result?.data;
+    if (!data || typeof data !== 'object' || !traceId)
+        return;
+    for (const value of Object.values(data))
+        if (value && typeof value === 'object')
+            setTraceId(value, traceId);
+}
+
 class PRApolloClient extends ApolloClient<NormalizedCacheObject> {
     constructor(options: ApolloClientOptions<NormalizedCacheObject>) { // eslint-disable-line @typescript-eslint/no-useless-constructor
         super(options);
     }
 
     async query<T = any, TVariables = OperationVariables>(options: QueryOptions<TVariables>): Promise<ApolloQueryResult<T>> {
+        const traceId: string = newTraceId();
+        const opts: QueryOptions<TVariables> = traceId
+            ? { ...options, context: { ...(options.context as any), headers: { ...((options.context as any)?.headers ?? {}), 'x-trace-id': traceId } } }
+            : options;
         let retValue: any;
         try {
-            retValue = await super.query(options);
+            retValue = await super.query(opts);
         } catch (error) {
             this.handleException(error);
         }
+        registerTrace(retValue, traceId);
         return retValue;
     }
 
     async mutate<T = any, TVariables = OperationVariables, TContext = DefaultContext>(options: MutationOptions<T, TVariables, TContext>): Promise<FetchResult<T>> {
         // console.log('PRApolloClient.mutate');
+        const traceId: string = newTraceId();
+        const opts: MutationOptions<T, TVariables, TContext> = traceId
+            ? { ...options, context: { ...(options.context as any), headers: { ...((options.context as any)?.headers ?? {}), 'x-trace-id': traceId } } as TContext }
+            : options;
         let retValue: any;
         try {
-            retValue = await super.mutate(options);
+            retValue = await super.mutate(opts);
         } catch (error) {
             this.handleException(error);
         }
+        registerTrace(retValue, traceId);
         return retValue;
     }
 

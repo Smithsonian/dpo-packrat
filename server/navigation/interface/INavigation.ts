@@ -19,6 +19,8 @@ export type NavigationFilter = {
     dateCreatedTo: Date | null;             // Date Created filter
     rows: number;                           // max result row count; a value of 0 means "all"
     cursorMark: string;                     // a non-empty value indicates a cursor position through a set of result values, used to request the next set of values
+    start?: number;                         // offset (Solr start) for numbered root-level pagination; used instead of cursorMark for root-level queries (idRoots empty)
+    showRetired?: boolean;                  // when true, include retired objects; otherwise retired objects are hidden (default)
 };
 
 export type NavigationResultEntry = {
@@ -27,6 +29,7 @@ export type NavigationResultEntry = {
     objectType: COMMON.eSystemObjectType;          // system object type of the entry (eProject, eUnit, eSubject, eItem, eCaptureData, etc.)
     idObject: number;                       // database ID of the object (e.g. Project.idProject, Unit.idUnit, Subject.idSubject, etc.)
     metadata: string[];                     // array of metadata values, in the order of NavigationResult.metadataColumns, matching the order of NavigationFilter.metadataColumns
+    retired?: boolean;                      // true when the object is retired; used to visually mark retired rows in the tree
 };
 
 export type NavigationResult = {
@@ -35,6 +38,7 @@ export type NavigationResult = {
     entries: NavigationResultEntry[];
     metadataColumns: COMMON.eMetadata[];
     cursorMark?: string | null;             // when provided, additional results are available by requesting another navigation, using this returned value for the NavigationFilter.cursorMark
+    total?: number | null;                  // total matching row count (Solr numFound), used to compute the number of numbered root pages
 };
 
 export type MetadataFilter = {

@@ -31,9 +31,11 @@ import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { LoadingButton } from '../../../../components';
 import IdentifierList from '../../../../components/shared/IdentifierList';
-import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore } from '../../../../store';
+import { useUploadStore, useVocabularyStore, useRepositoryStore, useIdentifierStore, useDetailTabStore, ModelDetailsType, SceneDetailsType, useObjectMetadataStore, eObjectMetadataType, useUserStore, useDetailsEditStore, useNavHistoryStore } from '../../../../store';
+import { getDetailsUrlForObject } from '../../../../utils/repository';
 import {
     ActorDetailFieldsInput,
     AssetDetailFieldsInput,
@@ -73,8 +75,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     container: {
         display: 'flex',
         flex: 1,
-        width: 'fit-content',
+        minHeight: 0,
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
         flexDirection: 'column',
+        overflow: 'auto',
         padding: 20,
         paddingBottom: 0,
         paddingRight: 0,
@@ -84,12 +90,12 @@ const useStyles = makeStyles(({ palette, breakpoints }) => ({
     },
     content: {
         display: 'flex',
-        flex: 1,
+        flexShrink: 0,
+        boxSizing: 'border-box',
         flexDirection: 'column',
         padding: 20,
         marginBottom: 20,
         borderRadius: 10,
-        overflowY: 'auto',
         backgroundColor: palette.primary.light,
         [breakpoints.down('lg')]: {
             padding: 10
@@ -171,6 +177,46 @@ type SceneGeneParameters = {
     decimationPasses: number
 };
 
+// Publishes the details view's unsaved state to the shared store so navigation
+// guards (Header, side nav, internal links) can prompt before edits are lost,
+// and warns on hard reload/close via beforeunload while edits are pending.
+function DetailsEditGuard({ dirty }: { dirty: boolean }): null {
+    const setDetailsDirty = useDetailsEditStore(state => state.setDetailsDirty);
+
+    useEffect(() => {
+        setDetailsDirty(dirty);
+    }, [dirty, setDetailsDirty]);
+
+    useEffect(() => {
+        const handler = (event: BeforeUnloadEvent): void => {
+            if (useDetailsEditStore.getState().isDetailsDirty) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handler);
+        return () => {
+            window.removeEventListener('beforeunload', handler);
+            setDetailsDirty(false);
+        };
+    }, [setDetailsDirty]);
+
+    return null;
+}
+
+// Records the current object into the navigation-history trail (the "how you got
+// here" path shown as breadcrumbs). Keyed on the object id so each hop reconciles
+// the trail (append, or truncate-to-visited on Back/forward).
+function NavTrailRecorder({ idSystemObject, objectType, name }: { idSystemObject: number; objectType: number; name: string }): null {
+    const visit = useNavHistoryStore(state => state.visit);
+
+    useEffect(() => {
+        visit({ idSystemObject, objectType, name, url: getDetailsUrlForObject(idSystemObject) });
+    }, [idSystemObject, objectType, name, visit]);
+
+    return null;
+}
+
 function DetailsView(): React.ReactElement {
     const classes = useStyles();
     const params = useParams<DetailsParams>();
@@ -234,9 +280,19 @@ function DetailsView(): React.ReactElement {
         state.getDetail,
         state.getDetailsViewFieldErrors
     ]);
-    const hasUnsavedDetails = useDetailTabStore(s => s.hasUnsavedDetails);
+    const [hasUnsavedDetails, setHasUnsavedDetails] = useDetailTabStore(s => [s.hasUnsavedDetails, s.setHasUnsavedDetails]);
     const [getAllMetadataEntries, areMetadataUpdated, metadataControl, metadataDisplay, validateMetadataFields, initializeMetadata, resetMetadata] = useObjectMetadataStore(state => [state.getAllMetadataEntries, state.areMetadataUpdated, state.metadataControl, state.metadataDisplay, state.validateMetadataFields, state.initializeMetadata, state.resetMetadata]);
     const [resetSpecialPending] = useUploadStore(state => [state.resetSpecialPending]);
+
+    // The shared unsaved-details flag lives in a single global store slot set by the
+    // active detail tab, so it can leak from one object to the next when a tab unmounts
+    // without clearing it (e.g. after browser Back, which the leave guard cannot
+    // intercept). Reset it whenever the viewed object changes so a freshly-loaded object
+    // starts clean; the mounted tab re-asserts it only on a real edit.
+    useEffect(() => {
+        setHasUnsavedDetails(false);
+        return () => setHasUnsavedDetails(false);
+    }, [idSystemObject, setHasUnsavedDetails]);
 
     const objectDetailsData = data;
     const fetchDetailTabDataAndSetState = async () => {
@@ -405,6 +461,7 @@ function DetailsView(): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        publishControlVisible,
         isDraft,
         thumbnail,
         unit,
@@ -419,11 +476,16 @@ function DetailsView(): React.ReactElement {
         objectVersions,
         metadata,
         licenseInheritance = null,
+        edanRecordUrl,
+        edanUnitCode,
+        subjectUnitMismatch,
     } = data.getSystemObjectDetails;
-    const disabled: boolean = !allowed;
+
+    const isAdmin = user?.isAdmin ?? false;
+    // Editing a Subject is admin-only for the moment; non-admins get a read-only view.
+    const disabled: boolean = !allowed || (objectType === eSystemObjectType.eSubject && !isAdmin);
 
     // Hide retire checkbox for Subject, Unit, Project if user is not admin
-    const isAdmin = user?.isAdmin ?? false;
     const adminOnlyRetireTypes = [eSystemObjectType.eSubject, eSystemObjectType.eUnit, eSystemObjectType.eProject];
     const hideRetired = !isAdmin && adminOnlyRetireTypes.includes(objectType);
 
@@ -442,8 +504,7 @@ function DetailsView(): React.ReactElement {
                 setUpdatedIdentifiers(false);
                 toast.success('Identifier removed');
             } else {
-                const message = result?.data?.deleteIdentifier?.message || 'Error when removing identifier';
-                toast.error(message);
+                toastError(result?.data?.deleteIdentifier, 'Error when removing identifier');
             }
         } else {
             removeTargetIdentifier(0, id);
@@ -812,8 +873,7 @@ function DetailsView(): React.ReactElement {
             } else
                 throw new Error(data?.updateObjectDetails?.message ?? '');
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed to save updated data${message}`);
+            toastError(error, 'Failed to save updated data');
             return false;
         } finally {
             setIsUpdatingData(false);
@@ -843,15 +903,15 @@ function DetailsView(): React.ReactElement {
         if(response.success === false) {
 
             // get our message from our first response
-            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+            const responseMessage: string | undefined = response.data?.[0]?.message;
+            const responseDetail: string | undefined = response.data?.[0]?.detail;
 
             // if the job is running then handle differently
-            if(responseMessage.includes('already running')) {
+            if(responseMessage?.includes('already running')) {
                 console.log(`[Packrat - WARN] cannot generate downloads. (${responseMessage})`);
                 toast.warn('Not generating downloads. Job already running. Please wait for it to finish.');
             } else {
-                console.log(`[Packrat - ERROR] cannot generate downloads. (${responseMessage})`);
-                toast.error('Cannot generate downloads. Check the report.');
+                toastError({ message: responseMessage, detail: responseDetail, traceId: response.traceId }, 'Cannot generate downloads. Check the report.');
             }
 
             // update our button state
@@ -895,15 +955,15 @@ function DetailsView(): React.ReactElement {
         if(response.success === false) {
 
             // get our message from our first response
-            const responseMessage: string = response.data?.[0]?.message ?? 'undefined';
+            const responseMessage: string | undefined = response.data?.[0]?.message;
+            const responseDetail: string | undefined = response.data?.[0]?.detail;
 
             // if the job is running then handle differently
-            if(responseMessage.includes('already running')) {
+            if(responseMessage?.includes('already running')) {
                 console.log(`[Packrat - WARN] cannot generate scene. (${responseMessage})`);
                 toast.warn('Not generating scene. Job already running. Please wait for it to finish.');
             } else {
-                console.log(`[Packrat - ERROR] cannot generate scene. (${responseMessage})`);
-                toast.error('Cannot generate scene. Check the report.');
+                toastError({ message: responseMessage, detail: responseDetail, traceId: response.traceId }, 'Cannot generate scene. Check the report.');
             }
 
             console.log(idSystemObject,parameters,sceneGenParameters);
@@ -980,6 +1040,15 @@ function DetailsView(): React.ReactElement {
                         messageText={notice.messageText}
                     />
                 )}
+                {isAdmin && subjectUnitMismatch && (
+                    <NoticeBanner
+                        state='warning'
+                        title='Editing outside your Unit'
+                        messageText='This Subject belongs to a Unit you are not assigned to. You can still edit it, but confirm this is intentional.'
+                    />
+                )}
+                <DetailsEditGuard dirty={hasAnyUnsaved} />
+                <NavTrailRecorder idSystemObject={idSystemObject} objectType={objectType} name={detailsResponse.name ?? ''} />
                 {hasAnyUnsaved && (
                     <Box className={classes.unsavedNotice}>
                         Unsaved changes — press <strong>Update</strong> to apply.
@@ -991,7 +1060,6 @@ function DetailsView(): React.ReactElement {
                     name={details.name}
                     disabled={disabled || immutableNameTypes.has(objectType)}
                     objectType={objectType}
-                    path={objectAncestors}
                     onNameUpdate={onNameUpdate}
                 />
 
@@ -1006,11 +1074,20 @@ function DetailsView(): React.ReactElement {
                         publishedState={publishedState}
                         publishedEnum={publishedEnum}
                         publishable={publishable}
+                        publishControlVisible={publishControlVisible ?? true}
                         isDraft={isDraft}
+                        isAdmin={isAdmin}
+                        edanRecordUrl={edanRecordUrl}
+                        edanUnitCode={edanUnitCode}
                         retired={withDefaultValueBoolean(details.retired, false)}
                         hideRetired={hideRetired}
                         objectType={objectType}
                         onRetiredUpdate={onRetiredUpdate}
+                        onRetireComplete={() => {
+                            refetch();
+                            fetchDetailTabDataAndSetState();
+                            setRefreshTick(t => t + 1);
+                        }}
                         onLicenseUpdate={onLicenseUpdate}
                         onPublishUpdate={onPublishUpdate}
                         onLicenseChange={onDetailUpdate}
@@ -1211,7 +1288,7 @@ function DetailsView(): React.ReactElement {
                 )}
                 {(uploadReferences && uploadReferences.idSOAttachment) && <SpecialUploadList uploadType={eIngestionMode.eAttach} onUploaderClose={onUploaderReset} idSOAttachment={uploadReferences?.idSOAttachment} idSO={idSystemObject} />}
 
-                <Box display='flex' flex={1} padding={2}>
+                <Box display='flex' padding={2}>
                     <DetailsThumbnail
                         thumbnail={thumbnail}
                         idSystemObject={idSystemObject}

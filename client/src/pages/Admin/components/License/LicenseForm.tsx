@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParams, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { DebounceInput } from 'react-debounce-input';
 import { GetLicenseDocument } from '../../../../types/graphql';
 import { apolloClient } from '../../../../graphql/index';
@@ -197,7 +198,7 @@ function LicenseForm(): React.ReactElement {
                 throw new Error('Update request returned success: false');
             }
         } catch (error) {
-            toast.error(`Failed to update license: error ${error}`);
+            toastError(error, 'Failed to update license');
         }
     };
 
@@ -220,7 +221,7 @@ function LicenseForm(): React.ReactElement {
                 throw new Error('Create request returned success: false');
             }
         } catch (error) {
-            toast.error(`Failed to create license: error ${error}`);
+            toastError(error, 'Failed to create license');
         }
     };
 

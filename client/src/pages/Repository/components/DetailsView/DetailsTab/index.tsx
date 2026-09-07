@@ -66,6 +66,24 @@ const useStyles = makeStyles(({ palette }) => ({
     tabpanel: {
         backgroundColor: '#fff',
         backgroundImage: 'linear-gradient(rgba(0, 121, 196, 0.15), rgba(0, 121, 196, 0.15))',
+        // fixed-width tab content (e.g. the status table) scrolls horizontally within the panel
+        // on narrow viewports rather than spilling past the blue background.
+        overflowX: 'auto',
+        scrollbarColor: `${palette.primary.main} #fff`,
+        scrollbarWidth: 'thin',
+        '&::-webkit-scrollbar': {
+            height: 10,
+        },
+        '&::-webkit-scrollbar-track': {
+            backgroundColor: '#fff',
+        },
+        '&::-webkit-scrollbar-thumb': {
+            backgroundColor: palette.primary.main,
+            borderRadius: 5,
+        },
+        '&::-webkit-scrollbar-button': {
+            backgroundColor: palette.primary.main,
+        },
     },
     assetOwner: {
         display: 'flex',
@@ -462,7 +480,7 @@ function DetailsTab(props: DetailsTabParams): React.ReactElement {
     }
 
     return (
-        <Box display='flex' flex={1} flexDirection='column' mt={2} style={{ width: '41rem' }}>
+        <Box display='flex' flex={1} flexDirection='column' mt={2} style={{ width: '100%', minWidth: 0 }}>
             <Tabs value={tab} classes={{ root: classes.tab }} indicatorColor='primary' textColor='inherit' onChange={handleTabChange} aria-label='detailsTab'>
                 {tabs.map((tab: string, index: number) => (
                     <StyledTab key={index} label={tab} aria-label={tab} />
@@ -480,7 +498,7 @@ function TabPanel(props: any): React.ReactElement {
     return (
         <div role='tabpanel' hidden={value !== index} aria-label='repository detail tabs' aria-labelledby={`tab-${index}`} {...rest}>
             {value === index && (
-                <Box p={1} className={classes.tabpanel} minHeight='fit-content' minWidth='50vw' width='auto'>
+                <Box p={1} className={classes.tabpanel} minHeight='fit-content'>
                     {children}
                 </Box>
             )}

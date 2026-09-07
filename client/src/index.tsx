@@ -13,7 +13,7 @@ import { ThemeProvider, Box } from '@material-ui/core';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { Slide, toast, ToastContainer } from 'react-toastify';
+import { Slide, toast, ToastContainer, ToastContent, ToastOptions, Id } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { EnvBanner, ErrorBoundary, Loader, ServiceStatusBanner } from './components';
 import { ROUTES } from './constants';
@@ -30,17 +30,40 @@ import Header from './components/shared/Header';
 import SidePanel from './pages/Home/components/SidePanel';
 import { makeStyles } from '@material-ui/core/styles';
 
+// Error toasts stay on screen until the user dismisses them; success/info/warn keep the container's
+// autoClose timeout. Patch the shared toast singleton once here so every call site inherits this
+// without change. A per-call autoClose still overrides the default.
+const showError: (content: ToastContent, options?: ToastOptions) => Id = toast.error.bind(toast);
+toast.error = ((content: ToastContent, options?: ToastOptions): Id =>
+    showError(content, { autoClose: false, ...options })) as typeof toast.error;
+
 const useStyles = makeStyles(() => ({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        flex: 1,
-        width: 'fit-content',
+        height: '100%',
+        minHeight: 0,
         minWidth: '100%'
     },
     content: {
         display: 'flex',
-        flex: 1
+        flex: 1,
+        minHeight: 0,
+        overflow: 'hidden'
+    },
+    scrollRegion: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        overflow: 'auto'
+    },
+    noticeSlot: {
+        // Mount point for page-level content notices; pinned to the top of the
+        // scroll region while the content beneath it scrolls.
+        position: 'sticky',
+        top: 0,
+        zIndex: 1
     }
 }));
 
@@ -89,7 +112,10 @@ function AppRouter(): React.ReactElement {
                     <Header />
                     <Box className={classes.content}>
                         <SidePanel isExpanded={sideBarExpanded} onToggle={onToggle} />
-                        <Home />
+                        <Box className={classes.scrollRegion}>
+                            <Box className={classes.noticeSlot} />
+                            <Home />
+                        </Box>
                     </Box>
                 </Box>
             </AliveScope>

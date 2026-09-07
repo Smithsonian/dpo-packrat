@@ -5,6 +5,7 @@ import * as COL from '../../collections/interface/';
 import * as H from '../../utils/helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
+import { SubjectHelpers } from '../../utils/subjectHelpers';
 
 /** This class is used to create and update EDANMDM records, translating Packrat Subject data and metadata into the EdanMDMContent format required for EDANMDM records
  * TODO: pass data contextual data into response routine
@@ -31,7 +32,7 @@ export class PublishSubject {
         this.idSystemObject = idSystemObject;
     }
 
-    async publish(ICol: COL.ICollection): Promise<H.IOResults> {
+    async publish(ICol: COL.ICollection, ePublishedStateIntended: COMMON.ePublishedState = COMMON.ePublishedState.ePublished): Promise<H.IOResults> {
         let res: H.IOResults = await this.analyze();
         if (!res.success)
             return res;
@@ -40,17 +41,31 @@ export class PublishSubject {
         if (!res.success)
             return res;
 
-        this.edanRecord = await ICol.createEdanMDM(this.edanMDM, 0, true);
+        const { status, publicSearch } = PublishSubject.computeEdanSearchFlags(ePublishedStateIntended);
+        this.edanRecord = await ICol.createEdanMDM(this.edanMDM, status, publicSearch);
         if (!this.edanRecord) {
             RK.logError(RK.LogSection.eCOLL,'publish failed','cannot create EDAN MDM record',{ edanMDM: this.edanMDM },'Publish.Subject');
             return this.returnResults(false, 'Edan publishing failed');
         }
 
-        // update SystemObjectVersion.PublishedState
-        res = await this.updatePublishedState(COMMON.ePublishedState.ePublished);
+        // update SystemObjectVersion.PublishedState to the intended state
+        res = await this.updatePublishedState(ePublishedStateIntended);
         if (!res.success)
             return res;
         return this.returnResults(true);
+    }
+
+    /** Map a published state to EDANMDM search flags, mirroring PublishScene.computeEdanSearchFlags
+     * without the scene-only `downloads` flag (EDANMDM records have no download derivatives).
+     * "Unpublish" deactivates the record (status 1, not searchable); it does not delete it. */
+    private static computeEdanSearchFlags(eState: COMMON.ePublishedState): { status: number, publicSearch: boolean } {
+        switch (eState) {
+            case COMMON.ePublishedState.ePublished:     return { status: 0, publicSearch: true };
+            case COMMON.ePublishedState.eAPIOnly:       return { status: 0, publicSearch: false };
+            case COMMON.ePublishedState.eInternal:      return { status: 1, publicSearch: false };
+            case COMMON.ePublishedState.eNotPublished:  return { status: 1, publicSearch: false };
+            default:                                    return { status: 0, publicSearch: true };
+        }
     }
 
     private async analyze(): Promise<H.IOResults> {
@@ -119,6 +134,14 @@ export class PublishSubject {
             if (nonRepeating && values.length > 1)
                 RK.logError(RK.LogSection.eCOLL,'publish failed','encountered non-repeating element wih multiple value',{ metadataName, metadataList },'Publish.Subject');
         }
+
+        // Identity fields come from first-class sources, not metadata: record_ID from the EDAN
+        // Record ID Identifier, unit_code/data_source from the Subject's Unit. These override
+        // any 'record id'/'unit' metadata read above so a stale copy cannot mistarget the upsert.
+        const target = await SubjectHelpers.computeTargetRecord(this.idSystemObject);
+        this.edanMDM.descriptiveNonRepeating.record_ID = target.recordId;
+        this.edanMDM.descriptiveNonRepeating.unit_code = target.unitCode;
+        this.edanMDM.descriptiveNonRepeating.data_source = target.dataSource;
 
         if (!this.edanMDM.descriptiveNonRepeating.title.label)
             return this.returnResults(false, 'descriptiveNonRepeating.title.label missing');

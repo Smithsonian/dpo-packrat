@@ -9,6 +9,7 @@ import { RotationOriginInput, RotationQuaternionInput } from '../../../Repositor
 import { getUnitsList, getUnitFromEdanAbbreviation, createLocation, createSubjectWithIdentifiers } from '../../hooks/useAdminView';
 import * as yup from 'yup';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { eVocabularySetID } from '@dpo-packrat/common';
 import AssetIdentifiers from '../../../../components/shared/AssetIdentifiers';
 import { useNavigate } from 'react-router-dom';
@@ -27,7 +28,7 @@ const useStyles = makeStyles(({ palette }) => ({
         flex: 1,
         flexDirection: 'column',
         overflow: 'auto',
-        maxHeight: 'calc(100vh - 60px - var(--status-banner-height, 0px))'
+        minHeight: 0
     },
     content: {
         display: 'flex',
@@ -289,21 +290,18 @@ function SubjectForm(): React.ReactElement {
             // console.log('createSubjectsWithIdentifiersInput', createSubjectWithIdentifiersInput);
 
             const {
-                data: {
-                    createSubjectWithIdentifiers: { success, message }
-                }
+                data: { createSubjectWithIdentifiers: createResult }
             } = await createSubjectWithIdentifiers(createSubjectWithIdentifiersInput);
-            if (success) {
+            if (createResult.success) {
                 toast.success('Subject Successfully Created!');
                 reset();
                 resetMetadata();
                 navigate('/admin/subjects');
             } else {
-                toast.error(`Failed To Create Subject: ${message}`);
+                toastError(createResult, 'Failed To Create Subject');
             }
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed To Create Subject${message}`);
+            toastError(error, 'Failed To Create Subject');
         }
     };
 

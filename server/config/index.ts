@@ -130,6 +130,20 @@ export type ConfigType = {
         /** Upload-time package/asset-type compatibility check. 'off' disables it; 'warn' logs mismatches
          *  without blocking (rollout/observation); 'enforce' rejects mismatched uploads. */
         packageValidationMode: 'off' | 'warn' | 'enforce';
+        /** When true, a scene publish whose EDAN title comes back with an unresolved subject (leading ':')
+         *  is logged as a warning instead of failing the publish. For local/dev testing against EDAN dev,
+         *  where the subject's EDAN record cannot be resolved. Off in production, where the strict check
+         *  guards against publishing a record with a broken title. */
+        edanAllowUnresolvedSubject: boolean;
+        /** Unit abbreviations (upper-case) whose Subjects may have their EDAN published state changed.
+         *  Subject publishing is additionally admin-only. Restricts the control while the set of EDAN
+         *  records a subject publish can modify is confirmed with EDAN owners. */
+        subjectPublishUnitAllowlist: string[];
+        /** EDAN file_quality / category token applied to supplementary-file downloads (Project Files /
+         *  Documentation) when building the published package. PLACEHOLDER: empty by default. Until EDAN
+         *  owners confirm the token, these downloads are ingested but omitted from the EDAN package (a
+         *  warning is logged), so no unconfirmed tag is ever sent to EDAN. */
+        edanSupplementalDownloadCategory: string;
     },
     environment: {
         type: ENVIRONMENT_TYPE;
@@ -223,10 +237,21 @@ export const Config: ConfigType = {
             [eAuditType.eActionAccessRevoke]:       AuditTier.PROTECT,
             [eAuditType.eActionUpload]:             AuditTier.PROTECT,
             [eAuditType.eActionIngestFailed]:       AuditTier.PROTECT,
+            // INVARIANT: any eAuditType read back via Audit.fetchLast* to reconstruct current UI
+            // state (e.g. QA sign-offs surfaced in the scene status table) MUST be PROTECT so the
+            // row is never pruned or skeletonized out from under the status calc.
+            [eAuditType.eActionApproveARModels]:       AuditTier.PROTECT,
+            [eAuditType.eActionApproveDownloadModels]: AuditTier.PROTECT,
+            [eAuditType.eActionSVXUnitsFixed]:         AuditTier.PROTECT,
             // TIER_STANDARD - CRUD on meaningful business entities (routed at the entity level via logOnlyObjectTypes)
             [eAuditType.eDBCreate]:                 AuditTier.STANDARD,
             [eAuditType.eDBUpdate]:                 AuditTier.STANDARD,
             [eAuditType.eDBDelete]:                 AuditTier.STANDARD,
+            // Object-graph relationship changes made from the UX — skeleton kept forever so the
+            // "who linked/unlinked what and when" fact survives even after payload pruning.
+            [eAuditType.eActionRelationshipCreate]: AuditTier.STANDARD,
+            [eAuditType.eActionRelationshipDelete]: AuditTier.STANDARD,
+            [eAuditType.eActionDownloadTagBackfill]: AuditTier.STANDARD,
             // TIER_TRANSIENT - ownership-relevant but not forensic
             [eAuditType.eSolrRebuild]:              AuditTier.TRANSIENT,
             [eAuditType.eGenDownloads]:             AuditTier.TRANSIENT,
@@ -314,6 +339,15 @@ export const Config: ConfigType = {
             const raw: string = (process.env.PACKRAT_INGEST_VALIDATION_MODE ?? '').trim().toLowerCase();
             return (raw === 'warn' || raw === 'enforce') ? raw : 'off';
         })(),
+        edanAllowUnresolvedSubject: ((): boolean => {
+            const normalized: string = (process.env.PACKRAT_EDAN_ALLOW_UNRESOLVED_SUBJECT ?? '').trim().toLowerCase();
+            return normalized === 'true' || normalized === '1';
+        })(),
+        subjectPublishUnitAllowlist: ((): string[] =>
+            (process.env.PACKRAT_SUBJECT_PUBLISH_UNITS ?? 'OCIO,DPO,ODI')
+                .split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+        )(),
+        edanSupplementalDownloadCategory: (process.env.PACKRAT_EDAN_SUPPLEMENTAL_DOWNLOAD_CATEGORY ?? '').trim(),
     },
     environment: {
         type: (process.env.NODE_ENV && process.env.NODE_ENV=='production') ? ENVIRONMENT_TYPE.PRODUCTION : ENVIRONMENT_TYPE.DEVELOPMENT,
@@ -359,6 +393,22 @@ export const Config: ConfigType = {
         type: WORKFLOW_TYPE.PACKRAT,
     }
 };
+
+/**
+ * Resolves the set of user IDs treated as DPO staff for reporting. Reads a comma-separated
+ * override from PACKRAT_DPO_USER_IDS; when unset or empty, defaults to the union of the
+ * admin and tools user lists (representative of DPO staff at this time). Everyone else is
+ * treated as non-DPO by the metrics endpoints.
+ */
+export function getDPOUserIDs(): number[] {
+    const raw: string | undefined = process.env.PACKRAT_DPO_USER_IDS;
+    if (raw && raw.trim().length > 0) {
+        const ids: number[] = raw.split(',').map(s => parseInt(s.trim(), 10)).filter(n => Number.isInteger(n) && n > 0);
+        if (ids.length > 0)
+            return [...new Set(ids)];
+    }
+    return [...new Set([...Config.auth.users.admin, ...Config.auth.users.tools])];
+}
 
 function parseEnvDays(raw: string | undefined, fallback: number): number {
     if (raw === undefined) return fallback;

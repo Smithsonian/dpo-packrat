@@ -18,6 +18,8 @@ import { ViewableProps } from '../../../../../types/repository';
 import { getDetailsUrlForObject, getTermForSystemObjectType } from '../../../../../utils/repository';
 import { sharedButtonProps, sharedLabelProps } from '../../../../../utils/shared';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
+import { copyTraceId } from '../../../../../utils/traceRegistry';
 import { eSystemObjectType } from '@dpo-packrat/common';
 import { HelpOutline } from '@material-ui/icons';
 
@@ -205,17 +207,20 @@ function Item(props: ItemProps): React.ReactElement {
             const result = window.confirm('Are you sure you wish to remove this relationship?');
             if (!result) return;
             const {
-                data: {
-                    deleteObjectConnection: { details, success }
-                }
+                data: { deleteObjectConnection }
             } =
                 type.toString() === 'Source'
                     ? await onRemoveConnection(idSystemObject, objectType, currentObject, systemObjectType)
                     : await onRemoveConnection(currentObject, systemObjectType, idSystemObject, objectType);
+            const { details, success } = deleteObjectConnection;
             if (success) {
                 toast.success(details);
             } else {
-                toast.error(details);
+                // deleteObjectConnection carries its reason in `details`, not `message`;
+                // shape it for the helper and carry the trace id across.
+                const errorSource = { message: details };
+                copyTraceId(deleteObjectConnection, errorSource);
+                toastError(errorSource, 'Failed to remove relationship');
             }
         };
     } else if (onRemove) {

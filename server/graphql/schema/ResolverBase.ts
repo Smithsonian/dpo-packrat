@@ -1,6 +1,7 @@
 import * as WF from '../../workflow/interface';
 import * as REP from '../../report/interface';
 import * as H from '../../utils/helpers';
+import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
 export interface IWorkflowHelper extends H.IOResults {
@@ -9,9 +10,24 @@ export interface IWorkflowHelper extends H.IOResults {
     workflowReport?: REP.IReport | null | undefined;
 }
 
+/** Reduce a legacy HTML-ish report line to plain text: drop tags, decode the few common entities,
+ * collapse whitespace. Keeps the structured JSON body free of markup (and of its XSS surface). */
+function stripReportHtml(content: string): string {
+    return content
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, '\'')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/[ \t]+/g, ' ')
+        .trim();
+}
+
 export class ResolverBase {
     protected workflowHelper: IWorkflowHelper | undefined = undefined;
-    private buffer: string = '';
+    private buffer: COMMON.IWorkflowReportEvent[] = [];
 
     protected async appendToWFReport(content: string, log?: boolean | undefined, error?: boolean | undefined): Promise<H.IOResults> {
         if (log && log===true) {
@@ -24,14 +40,24 @@ export class ResolverBase {
         if (this.workflowHelper && !this.workflowHelper.workflowReport)
             this.workflowHelper.workflowReport = await REP.ReportFactory.getReport();
 
-        const seperator: string = (this.buffer) ? '<br/>\n' : '';
+        const event: COMMON.IWorkflowReportEvent = {
+            ts: new Date().toISOString(),
+            phase: 'ingest',
+            code: COMMON.WorkflowReportCode.IngestNote,
+            level: (error === true) ? 'error' : 'info',
+            msg: stripReportHtml(content)
+        };
+
         if (!(this?.workflowHelper?.workflowReport)) {
-            this.buffer += seperator + content;
+            this.buffer.push(event);
             RK.logDebug(RK.LogSection.eGQL,'append to WorkflowReport deferred','no active WorkflowReport yet, buffering content',{ ...this.workflowHelper },'GraphQL.Resolver');
             return { success: true };
         }
-        const ret: H.IOResults = await this.workflowHelper.workflowReport.append(this.buffer + seperator + content);
-        this.buffer = '';
-        return ret;
+
+        for (const buffered of this.buffer)
+            await RK.reportEvent(buffered, this.workflowHelper.workflowReport);
+        this.buffer = [];
+        const result = await RK.reportEvent(event, this.workflowHelper.workflowReport);
+        return { success: result.success, error: result.success ? undefined : result.message };
     }
 }

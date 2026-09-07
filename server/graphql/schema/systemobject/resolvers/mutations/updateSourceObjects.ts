@@ -5,6 +5,8 @@ import { RecordKeeper as RK } from '../../../../../records/recordKeeper';
 import { isValidParentChildRelationship } from '../../../ingestion/resolvers/mutations/ingestData';
 import { Authorization, AUTH_ERROR } from '../../../../../auth/Authorization';
 import { withAuditTransaction } from '../../../../../audit/withAuditTransaction';
+import { AuditFactory } from '../../../../../audit/interface/AuditFactory';
+import { eAuditType } from '../../../../../db/api/ObjectType';
 
 export default async function updateSourceObjects(_: Parent, args: MutationUpdateSourceObjectsArgs): Promise<UpdateSourceObjectsResult> {
     const { input } = args;
@@ -43,6 +45,13 @@ export default async function updateSourceObjects(_: Parent, args: MutationUpdat
                         RK.logError(RK.LogSection.eGQL,'update source objects failed','failed to wire SystemObjectXref',{ wireSourceToDerived },'GraphQL.SystemObject.SourceObject');
                         continue;
                     }
+
+                    // Record the new parent->child relationship (keyed to the object being edited).
+                    await AuditFactory.emitSemantic({
+                        action: eAuditType.eActionRelationshipCreate,
+                        idSystemObject: SO.idSystemObject,
+                        payload: { via: 'sourceObjects', master: newlySelected.idSystemObject, masterType: newlySelected.objectType, derived: SO.idSystemObject, derivedType: ChildObjectType },
+                    });
                 }
             } else {
                 RK.logError(RK.LogSection.eGQL,'update source objects failed',`failed to fetch system object ${idSystemObject}`,{},'GraphQL.SystemObject.SourceObject');

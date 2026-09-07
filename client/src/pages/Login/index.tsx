@@ -10,6 +10,7 @@ import { TextField } from 'formik-material-ui';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { toastError } from '../../utils/toastError';
 
 import LoginBackground from '../../assets/images/login-background.png';
 import { LoadingButton } from '../../components';
@@ -113,17 +114,16 @@ function Login(): React.ReactElement {
         const { email, password } = values;
 
         try {
-            const { success, message } = await login(email, password);
+            const loginResult = await login(email, password);
 
-            if (success) {
+            if (loginResult.success) {
                 toast.success('Welcome to Packrat');
                 navigate(redirectPath ?? ROUTES.HOME);
             } else {
-                toast.error(message);
+                toastError(loginResult, 'Login failed');
             }
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Login failed${message}`);
+            toastError(error, 'Login failed');
         }
     };
 

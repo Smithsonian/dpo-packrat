@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types */
 import { JobCook } from './JobCook';
+import { collectInspectionWarnings, CookScanFinding } from './CookReportScan';
 import { CookRecipe } from './CookRecipe';
 import { Config } from '../../../config';
 
@@ -299,7 +300,13 @@ export class JobCookSIPackratInspectOutput implements H.IOResults {
         const JCOutput: JobCookSIPackratInspectOutput = await JobCookSIPackratInspectOutput.extractWorker(output, fileName, dateCreated);
         const report: REP.IReport | null = await REP.ReportFactory.getReport();
         if (report)
-            report.append(`Cook si-packrat-inspect ${JCOutput.success ? 'succeeded' : 'failed: ' + JCOutput.error}`);
+            await RK.reportEvent({
+                ts: new Date().toISOString(),
+                phase: 'cook',
+                code: COMMON.WorkflowReportCode.InspectNote,
+                level: JCOutput.success ? 'info' : 'error',
+                msg: `Cook si-packrat-inspect ${JCOutput.success ? 'succeeded' : 'failed: ' + JCOutput.error}`
+            }, report);
         return JCOutput;
     }
 
@@ -771,8 +778,12 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         const zipRes: H.IOResults = await ZS.load();
         if (!zipRes.success) {
-            RK.logError(RK.LogSection.eJOB,'test for zip failed',`unable to load zip for AssetVersion: ${zipRes.error}`,{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            return false;
+            // The zip can't be read locally (e.g. an unsupported compression method). Fail hard rather than
+            // returning quietly — otherwise the job proceeds to Cook, which fails with a generic "invalid or
+            // corrupt" and hides the real, actionable reason. The thrown message is recorded as the failure.
+            const error: string = zipRes.error ?? `unable to load zip ${assetVersion.FileName}`;
+            RK.logError(RK.LogSection.eJOB,'test for zip failed',`unable to load zip for AssetVersion: ${error}`,{ fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+            throw new Error(error);
         }
 
         // grab our list of files in the ZIP and cycle through each streaming them in
@@ -780,6 +791,20 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         const files: string[] = await ZS.getJustFiles(null);
         const RSRs: STORE.ReadStreamResult[] = [];
         RK.logDebug(RK.LogSection.eJOB,'test for zip','processing files in zip',{ files, idAssetVersions: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+
+        // Our own pre-Cook inspection: verify each texture an .mtl references exists in the package with
+        // EXACT case. Filenames are case-sensitive on the (Linux) server, so a reference differing only by
+        // case would silently drop the texture from the generated derivatives. Block here — before the Cook
+        // round-trip — so the failure surfaces on the inspect workflow rather than after generation.
+        const texIssues = await this.collectMtlTextureIssues(ZS, files);
+        if (texIssues.missing.length > 0)
+            RK.logWarning(RK.LogSection.eJOB,'test for zip','model references textures not present in the package',{ missing: texIssues.missing, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+        if (texIssues.caseMismatch.length > 0) {
+            const detail: string = texIssues.caseMismatch.map(o => `'${o.ref}' (present as '${o.actual}')`).join('; ');
+            const message: string = `Model texture case mismatch — filenames are case-sensitive on the server: ${detail}. Fix the .mtl reference or the file name so they match exactly, then re-upload.`;
+            RK.logError(RK.LogSection.eJOB,'test for zip failed',message,{ caseMismatch: texIssues.caseMismatch, fileName: assetVersion.FileName, idAssetVersion: assetVersion.idAssetVersion, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
+            throw new Error(message);
+        }
 
         for (const file of files) {
             // figure out our type based on the file's extension
@@ -842,6 +867,62 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         return false;
     }
 
+    // Parse the package's .mtl files for texture map references and compare each against the packaged
+    // files by exact case. Returns case mismatches (a same-name file exists under a different case — a
+    // Linux-only break we block on) and fully-missing references (no case variant — surfaced as a warning).
+    private async collectMtlTextureIssues(ZS: IZip, files: string[]):
+    Promise<{ caseMismatch: { ref: string; actual: string; mtl: string }[]; missing: { ref: string; mtl: string }[] }> {
+
+        const IMAGE_EXT: Set<string> = new Set(['.jpg', '.jpeg', '.png', '.tif', '.tiff', '.bmp', '.tga', '.gif', '.exr', '.hdr', '.webp']);
+        const MAP_KEYS: Set<string> = new Set(['map_kd', 'map_ka', 'map_ks', 'map_ns', 'map_d', 'map_bump', 'bump',
+            'disp', 'decal', 'refl', 'norm', 'map_pr', 'map_pm', 'map_ps', 'map_ke']);
+        const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
+
+        const exact: Set<string> = new Set<string>();
+        const lowerToActual: Map<string, string> = new Map<string, string>();
+        for (const f of files) {
+            const b: string = baseName(f);
+            exact.add(b);
+            if (!lowerToActual.has(b.toLowerCase()))
+                lowerToActual.set(b.toLowerCase(), b);
+        }
+
+        const caseMismatch: { ref: string; actual: string; mtl: string }[] = [];
+        const missing: { ref: string; mtl: string }[] = [];
+        for (const f of files) {
+            if (path.extname(f).toLowerCase() !== '.mtl')
+                continue;
+            const stream: NodeJS.ReadableStream | null = await ZS.streamContent(f);
+            if (!stream)
+                continue;
+            const text: string = await new Promise<string>((resolve) => {
+                const chunks: Buffer[] = [];
+                stream.on('data', (c: Buffer) => chunks.push(Buffer.from(c)));
+                stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+                stream.on('error', () => resolve(''));
+            });
+            for (const rawLine of text.split(/\r?\n/)) {
+                const line: string = rawLine.trim();
+                if (!line || line.startsWith('#'))
+                    continue;
+                const tokens: string[] = line.split(/\s+/);
+                if (!MAP_KEYS.has(tokens[0].toLowerCase()))
+                    continue;
+                const ref: string = baseName(tokens[tokens.length - 1]); // filename is the last token (after any -o/-s/-bm options)
+                if (!IMAGE_EXT.has(path.extname(ref).toLowerCase()))
+                    continue;                                  // last token isn't an image (bare/option line) — skip
+                if (exact.has(ref))
+                    continue;                                  // exact-case match — fine
+                const actual: string | undefined = lowerToActual.get(ref.toLowerCase());
+                if (actual)
+                    caseMismatch.push({ ref, actual, mtl: baseName(f) });
+                else
+                    missing.push({ ref, mtl: baseName(f) });
+            }
+        }
+        return { caseMismatch, missing };
+    }
+
     private async fetchZip(assetVersion: DBAPI.AssetVersion): Promise<IZip | null> {
 
         const RSR: STORE.ReadStreamResult = await STORE.AssetStorageAdapter.readAssetVersionByID(assetVersion.idAssetVersion);
@@ -880,11 +961,26 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         }
     }
 
+    // Report an inspection outcome as a coded event (invalid → error-tinted). RK error logging is
+    // handled at each call site, so this only sets the event level, not another RK.logError.
+    private async reportInspect(msg: string, invalid: boolean): Promise<void> {
+        await this.appendToReportAndLog(msg, undefined, {
+            code: invalid ? COMMON.WorkflowReportCode.InspectInvalid : COMMON.WorkflowReportCode.InspectNote,
+            level: invalid ? 'error' : 'info'
+        });
+    }
+
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        // Surface the inspected file so the workflow list shows what was fed to inspect, even before
+        // any object exists to link to.
+        return { input: this.parameters?.sourceMeshFile };
+    }
+
     protected async verifyRequest(): Promise<JobIOResults> {
         const superResult: JobIOResults = await super.verifyRequest();
         if(superResult.success===false) {
             RK.logError(RK.LogSection.eJOB,'verify request failed',`request is invalid: ${superResult.error}`,{ sourceMeshFile: this.parameters.sourceMeshFile, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog(`[CookJob:Inspection] request is invalid. ${superResult.error} (${this.parameters.sourceMeshFile})`);
+            this.reportInspect(`[CookJob:Inspection] request is invalid. ${superResult.error} (${this.parameters.sourceMeshFile})`, true);
             return superResult;
         }
 
@@ -897,7 +993,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
 
         // we're good to continue
         RK.logDebug(RK.LogSection.eJOB,'verify request success','request is valid. sending to Cook...',{ sourceMeshFile: this.parameters.sourceMeshFile, jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-        this.appendToReportAndLog(`[CookJob:Inspection] request is valid. sending to Cook... (${this.parameters.sourceMeshFile})`);
+        this.reportInspect(`[CookJob:Inspection] request is valid. sending to Cook... (${this.parameters.sourceMeshFile})`, false);
         return { success: true, allowRetry: false };
     }
 
@@ -911,37 +1007,22 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // does not consolidate the log messages.
         if(!cookJobReport.steps['inspect-mesh'] || !cookJobReport.steps['inspect-mesh'].log) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: missing inspect-mesh and/or log objects',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects');
+            this.reportInspect('[CookJob:Inspection] response is invalid. missing inspect-mesh and/or log objects', true);
             return { success: false, error: 'missing log objects in Cook report', allowRetry: false };
         }
         const logs = cookJobReport.steps['inspect-mesh'].log;
 
-        // make sure our base/super routine doesn't have anything to report
+        // The base pass scans the Cook report and emits a ranked CookError event with a friendly
+        // message for an errored job (including the Blender/MeshSmith tool-termination cases), so
+        // surface that result here without re-deriving the reason.
         const superResult: JobIOResults = await super.verifyResponse(cookJobReport);
-        if(superResult.success===false) {
-            // check for known issues and improve error message returned
-            if(superResult.error?.includes('Tool Blender: terminated with code: 1')===true) {
-                if(logContains(logs,'Error: Unsupported file type: .zip')===true)
-                    superResult.error = 'Zip package is invalid/corrupt.';
-                else
-                    superResult.error = 'Unknown Blender error. Check report.';
-            }
-            if(superResult.error?.includes('Tool MeshSmith: terminated with code: 1')===true) {
-                if(logContains(logs,'Invalid vertex index')===true)
-                    superResult.error = 'Invalid mesh. Missing vertices/faces.';
-                else
-                    superResult.error = 'Unknown MeshSmith error. Check report.';
-            }
-
-            RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${superResult.error}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog(`[CookJob:Inspection] response is invalid. ${superResult.error}`);
+        if(superResult.success===false)
             return superResult;
-        }
 
         // check for ZIP processing errors
         if(logContains(logs,'Error: Unsupported file type: .zip')===true) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Zip package incomplete or corrupt.',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Zip package incomplete or corrupt.', true);
             return { success: false, error: 'Zip package incomplete or corrupt.', allowRetry: false };
         }
 
@@ -957,7 +1038,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             if(errors.length>0) {
                 const errorMsg = errors.join(' | ');
                 RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${errorMsg}`,{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-                this.appendToReportAndLog(`[CookJob:Inspection] response is invalid: ${errorMsg}`);
+                this.reportInspect(`[CookJob:Inspection] response is invalid: ${errorMsg}`, true);
                 return { success: false, error: errorMsg, allowRetry: false };
             }
         }
@@ -965,7 +1046,7 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // get our geometry results
         if (!inspectionRoot?.meshes) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Missing meshes in inspection result.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Missing meshes in inspection result.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Missing meshes in inspection result.', true);
             return { success: false, error: 'Missing meshes in Cook report', allowRetry: false };
         }
 
@@ -973,19 +1054,19 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         const sizeSum = inspectionRoot.scene.geometry.size.reduce((acc, num) => acc + num, 0);
         if(sizeSum <= 0) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh size is zero.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh size is zero.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Mesh size is zero.', true);
             return { success: false, error: 'Invalid mesh. Size is zero.', allowRetry: false };
         }
 
         // check for invalid geometry counts
         if(inspectionRoot.scene.statistics.numFaces<=0 || inspectionRoot.scene.statistics.numVertices<=0 || inspectionRoot.scene.statistics.numEdges<=0 || inspectionRoot.scene.statistics.numTriangles<=0 || logContains(logs,'Invalid vertex index')===true) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh missing vertices and/or faces.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.');
+            this.reportInspect('[CookJob:Inspection] response is invalid. Mesh missing vertices and/or faces.', true);
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
         if(logContains(logs,'Invalid vertex index')===true) {
             RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh size is zero.',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.PackratInspect');
-            this.appendToReportAndLog('[CookJob:Inspection] response is invalid: Missing vertices/faces.');
+            this.reportInspect('[CookJob:Inspection] response is invalid: Missing vertices/faces.', true);
             return { success: false, error: 'Invalid mesh. Missing vertices/faces.', allowRetry: false };
         }
 
@@ -994,10 +1075,16 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
             // NOTE: just looking at first mesh. multi-model inspection will need special handling
             if(inspectionRoot.meshes[0].statistics.hasTexCoords===false) {
                 RK.logError(RK.LogSection.eJOB,'verify response failed','response is invalid: Mesh missing UVs for included texture.',{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, ...inspectionRoot.scene.statistics },'Job.PackratInspect');
-                this.appendToReportAndLog('[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.');
+                this.reportInspect('[CookJob:Inspection] response is invalid. Mesh missing UVs for included texture.', true);
                 return { success: false, error: 'Invalid mesh. Missing UVs for included texture.', allowRetry: false };
             }
         }
+
+        // Non-blocking advisories: likely mistakes that still ingest, surfaced as CookWarning so a
+        // user sees them without the job failing.
+        const warnings: CookScanFinding[] = collectInspectionWarnings(inspectionRoot);
+        for (const warning of warnings)
+            await this.appendToReportAndLog(warning.message, undefined, { code: warning.code, level: warning.level });
 
         // we have success
         await this.recordSuccess(JSON.stringify(cookJobReport));

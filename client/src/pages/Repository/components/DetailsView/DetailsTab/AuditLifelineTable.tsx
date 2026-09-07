@@ -417,7 +417,7 @@ function AuditLifelineTable(props: AuditLifelineTableProps): React.ReactElement 
     }
 
     return (
-        <Box style={{ minWidth: '620px' }}>
+        <Box style={{ minWidth: '620px', maxWidth: '100%', overflowX: 'auto' }}>
             <table className={clsx(classes.container, classes.fixedTable)}>
                 <thead>
                     <tr style={{ borderBottom: '1px solid grey' }}>

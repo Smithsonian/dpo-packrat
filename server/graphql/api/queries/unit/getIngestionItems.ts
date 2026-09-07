@@ -10,6 +10,7 @@ const getIngestionItems = gql`
                 idProject
                 ProjectName
             }
+            message
         }
     }
 `;

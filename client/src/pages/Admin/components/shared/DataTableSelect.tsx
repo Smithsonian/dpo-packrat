@@ -259,6 +259,12 @@ function DataTableSelectInner<T extends DBReference>(
 
     }, [resetSelection]);
 
+    // when the shown row count changes (e.g. a "Show" filter toggles the data set), return to the first
+    // page so the view is never stranded on an empty page past the new end.
+    useEffect(() => {
+        setPage(0);
+    }, [data.length]);
+
     // expose a small imperative API
     useImperativeHandle(ref, () => ({
         closeAll: () => setExpandedRow(-1),
@@ -397,10 +403,12 @@ function DataTableSelectInner<T extends DBReference>(
                                                             column.key !== 'id' && (
                                                                 <Tooltip
                                                                     key={column.key}
-                                                                    title={resolveProperty(row, column.key)}
+                                                                    title={column.render ? '' : resolveProperty(row, column.key)}
+                                                                    disableHoverListener={!!column.render}
                                                                 >
                                                                     <TableCell
                                                                         align={column.align ?? 'center'}
+                                                                        onClick={column.render ? handleElementClick : undefined}
                                                                         style={{
                                                                             whiteSpace: 'nowrap',
                                                                             textOverflow: 'ellipsis',
@@ -409,7 +417,7 @@ function DataTableSelectInner<T extends DBReference>(
                                                                             color: `${ expandable && expandedRow === row.id ? 'white' : 'black' }`
                                                                         }}
                                                                     >
-                                                                        {column.link ? (() => {
+                                                                        {column.render ? column.render(row) : column.link ? (() => {
                                                                             const link = resolveProperty(row, `${column.key}_link`);
                                                                             const displayText = resolveProperty(row, column.key);
                                                                             return link.includes('#') ? (

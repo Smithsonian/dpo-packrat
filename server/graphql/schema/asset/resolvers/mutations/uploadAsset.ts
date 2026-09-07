@@ -101,12 +101,27 @@ class UploadAssetWorker extends ResolverBase {
             await this.appendToWFReport('<b>Upload succeeded</b>');
             RK.logInfo(RK.LogSection.eGQL,'asset upload success',undefined,{ file: this.apolloFile.filename, ...UAR },'GraphQL.Upload.AssetWorker');
         } else {
-            await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
+            // error=true so this is recorded as an error-level event: it drives the report summary's error
+            // tally + first-error message, which the workflow list's Error column reads for this job-less
+            // workflow (no JobRun to carry the error).
+            await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`, false, true);
             RK.logError(RK.LogSection.eGQL,'asset upload failed',UAR.error ?? 'unknown error',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
         }
 
         if (this.workflowHelper?.workflow)
             await this.workflowHelper.workflow.updateStatus(success ? COMMON.eWorkflowJobRunStatus.eDone : COMMON.eWorkflowJobRunStatus.eError);
+
+        // Record the uploaded file on the workflow summary so the workflow list's Object column shows
+        // what was uploaded (the upload workflow runs no Cook job, so it has no summary otherwise).
+        if (this.workflowHelper?.workflowReport) {
+            const uploadedName: string = (this.apolloFile.filename ?? '').split(/[\\/]/).pop() ?? '';
+            if (uploadedName)
+                await RK.reportSetSummary({ input: uploadedName }, this.workflowHelper.workflowReport);
+        }
+
+        // Surface any non-blocking warnings this upload's inspect emitted so the client can nudge the
+        // user to the Workflow report. Read from the request scope, not another job's report.
+        UAR.warnings = this.LS?.reportWarningCount ?? 0;
 
         return UAR;
     }

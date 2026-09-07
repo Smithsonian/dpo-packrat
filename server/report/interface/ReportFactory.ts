@@ -26,8 +26,8 @@ export class ReportFactory {
             else {
                 workflowReport = new DBAPI.WorkflowReport({
                     idWorkflow,
-                    MimeType: 'text/html',
-                    Data: '',
+                    MimeType: 'application/json',
+                    Data: '[]',
                     idWorkflowReport: 0,
                     Name: ''
                 });

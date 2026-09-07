@@ -183,7 +183,12 @@ type GetSystemObjectDetailsResult {
     publishedEnum: Int!
     publishable: Boolean!
     publishBlocker: String
+    publishControlVisible: Boolean
     isDraft: Boolean!
+    edanRecordId: String
+    edanRecordUrl: String
+    edanUnitCode: String
+    subjectUnitMismatch: Boolean
     thumbnail: String
     identifiers: [IngestIdentifier!]!
     objectAncestors: [[RepositoryPath!]!]!

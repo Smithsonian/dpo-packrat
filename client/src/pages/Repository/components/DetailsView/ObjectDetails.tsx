@@ -4,22 +4,23 @@
  *
  * This component renders object details for the Repository Details UI.
  */
-import { Box, Checkbox, Typography, Select, MenuItem, Tooltip, Divider } from '@material-ui/core';
-import { withStyles, makeStyles, createStyles } from '@material-ui/core/styles';
-import React, { useEffect, useState } from 'react';
+import { Box, Button, Typography, Select, MenuItem, Tooltip, Divider } from '@material-ui/core';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
+import React, { useEffect, useRef, useState } from 'react';
 import { NewTabLink } from '../../../../components';
 import { GetSystemObjectDetailsResult, RepositoryPath, License, ObjectPropertyResult, Unit } from '../../../../types/graphql';
-import { getDetailsUrlForObject, getUpdatedCheckboxProps, isFieldUpdated } from '../../../../utils/repository';
-import { withDefaultValueBoolean } from '../../../../utils/shared';
+import { getDetailsUrlForObject } from '../../../../utils/repository';
 import { useLicenseStore, useDetailTabStore } from '../../../../store';
 import { clearLicenseAssignment, assignLicense, publish } from '../../hooks/useDetailsView';
 import { getTermForSystemObjectType } from '../../../../utils/repository';
 import { LoadingButton } from '../../../../components';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../utils/toastError';
 import { eSystemObjectType, ePublishedState } from '@dpo-packrat/common';
 import { ToolTip } from '../../../../components';
 import { HelpOutline } from '@material-ui/icons';
 import { getUnitsList } from '../../../Admin/hooks/useAdminView';
+import RetireActionModal from './RetireActionModal';
 
 const useStyles = makeStyles(({ palette }) => createStyles({
     detail: {
@@ -93,16 +94,6 @@ const useObjectDetailsStyles = makeStyles(({ breakpoints, palette }) => ({
     }
 }));
 
-const CheckboxNoPadding = withStyles({
-    root: {
-        border: '0px',
-        padding: '0px',
-        height: 10,
-        width: 10,
-        paddingLeft: 3
-    }
-})(Checkbox);
-
 interface ObjectDetailsProps {
     unit?: RepositoryPath[] | null;
     project?: RepositoryPath[] | null;
@@ -113,12 +104,17 @@ interface ObjectDetailsProps {
     publishedState: string;
     publishedEnum: number;
     publishable: boolean;
+    publishControlVisible?: boolean;
     isDraft?: boolean;
+    isAdmin?: boolean;
+    edanRecordUrl?: string | null;
+    edanUnitCode?: string | null;
     retired: boolean;
     hideRetired?: boolean;
     objectType?: number;
     originalFields?: GetSystemObjectDetailsResult;
     onRetiredUpdate?: (event: React.ChangeEvent<HTMLInputElement>, checked: boolean) => void;
+    onRetireComplete?: () => void;
     onLicenseUpdate?: (event) => void;
     onPublishUpdate?: () => void;
     onLicenseChange?: () => void;
@@ -140,13 +136,16 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
         publishedState,
         publishedEnum,
         publishable,
+        publishControlVisible = true,
         isDraft,
+        isAdmin,
+        edanRecordUrl,
+        edanUnitCode,
         retired,
         hideRetired,
         objectType,
         disabled,
-        originalFields,
-        onRetiredUpdate,
+        onRetireComplete,
         onLicenseUpdate,
         onPublishUpdate,
         idSystemObject,
@@ -158,8 +157,9 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     } = props;
     const [licenseList, setLicenseList] = useState<License[]>([]);
     const [loading, setLoading] = useState(false);
+    const [retireModalOpen, setRetireModalOpen] = useState(false);
+    const retireChangedRef = useRef(false);
     const [unitList, setUnitList] = useState<Unit[]>([]);
-    const isRetiredUpdated: boolean = isFieldUpdated({ retired }, originalFields, 'retired');
     const getEntries = useLicenseStore(state => state.getEntries);
     const [ProjectDetails, updateDetailField] = useDetailTabStore(state => [state.ProjectDetails, state.updateDetailField]);
     const classes = useObjectDetailsStyles(props);
@@ -209,7 +209,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             toast.success(`License assignment successfully cleared${message ? ': ' + message : ''}`);
             onLicenseChange?.();
         } else {
-            toast.error(`License assignment failure: ${data?.clearLicenseAssignment?.message}`);
+            toastError(data?.clearLicenseAssignment, 'License assignment failure');
         }
 
         setLoading(false);
@@ -225,7 +225,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                 toast.success(`License assignment successfully assigned${message ? ': ' + message : ''}`);
                 onLicenseChange?.();
             } else
-                toast.error(`License assignment failure: ${data?.assignLicense?.message}`);
+                toastError(data?.assignLicense, 'License assignment failure');
         }
 
         setLoading(false);
@@ -235,7 +235,6 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
     const onAPIOnly = async () => { onPublishWorker(ePublishedState.eAPIOnly, 'Publish as Public (Unlisted)'); };
     const onUnpublish = async () => { onPublishWorker(ePublishedState.eNotPublished, 'Unpublish'); };
     const onInternal = async () => { onPublishWorker(ePublishedState.eInternal, 'Publish as Internal'); };
-    const onSyncToEdan = async () => { onPublishWorker(ePublishedState.ePublished, 'Sync to Edan'); };
 
     const onPublishWorker = async (eState: number, action: string) => {
         setLoading(true);
@@ -254,7 +253,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
             toast.success(`${action} succeeded`);
             onPublishUpdate?.();
         } else
-            toast.error(`${action} failed: ${data?.publish?.message}`);
+            toastError(data?.publish, `${action} failed`);
 
         setLoading(false);
     };
@@ -306,7 +305,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                                     <LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public</LoadingButton>
                                     <LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public (Unlisted)</LoadingButton>
                                     <LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
-                                    {(isDraft || publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                                    {(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
                                 </Box>
                             </Box>
                         }
@@ -314,15 +313,39 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                 </>
             )}
             {(objectType === eSystemObjectType.eSubject) && (
-                <Detail
-                    label='Edan Sync State'
-                    valueComponent={
-                        <Box className={classes.inheritedLicense}>
-                            <Typography className={classes.value}>{publishedState}</Typography>
-                            &nbsp;<LoadingButton onClick={onSyncToEdan} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Sync to Edan</LoadingButton>
-                        </Box>
-                    }
-                />
+                <>
+                    <Divider className={classes.sectionDivider} />
+                    <Detail
+                        label='EDAN Publish State'
+                        valueComponent={
+                            <Box display='flex' flexDirection='column' width='100%'>
+                                <Box className={classes.inheritedLicense}>
+                                    <Typography className={classes.value}>{publishedState}</Typography>
+                                    &nbsp;<Tooltip arrow title={<ToolTip text={subjectPublishButtonNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
+                                </Box>
+                                <Box className={classes.inheritedLicense}>
+                                    <Typography className={classes.value}>
+                                        {edanRecordUrl
+                                            ? `Target EDAN record: ${edanRecordUrl}${edanUnitCode ? ` (${edanUnitCode})` : ''}`
+                                            : 'No EDAN Record ID — add one before publishing.'}
+                                    </Typography>
+                                </Box>
+                                {isAdmin && publishControlVisible ? (
+                                    <Box className={classes.buttonRow}>
+                                        <LoadingButton onClick={onPublish} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public</LoadingButton>
+                                        <LoadingButton onClick={onAPIOnly} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Public (Unlisted)</LoadingButton>
+                                        <LoadingButton onClick={onInternal} className={classes.loadingBtn} loading={loading} disabled={!publishable}>Internal</LoadingButton>
+                                        {(publishedEnum !== ePublishedState.eNotPublished) && (<LoadingButton onClick={onUnpublish} className={classes.loadingBtn} loading={loading}>Unpublish</LoadingButton>)}
+                                    </Box>
+                                ) : (
+                                    <Typography className={classes.value} style={{ fontStyle: 'italic', opacity: 0.7 }}>
+                                        Publishing controls are limited to administrators for select units while EDAN record handling is confirmed.
+                                    </Typography>
+                                )}
+                            </Box>
+                        }
+                    />
+                </>
             )}
             {(objectType === eSystemObjectType.eScene) && <Divider className={classes.sectionDivider} />}
             {licenseSource ? (
@@ -335,7 +358,7 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                                     <Typography className={classes.value}>{licenseList.find(lic => lic.idLicense === license)?.Name}</Typography>
                                 </Box>
                                 <Typography className={classes.value}>{' inherited from '}</Typography>
-                                <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`} target='_blank'>
+                                <NewTabLink className={classes.link} to={`/repository/details/${licenseSource.idSystemObject}`}>
                                     <Typography>{`${getTermForSystemObjectType(licenseSource.objectType)} ${licenseSource.name}`}</Typography>
                                 </NewTabLink>
                                 &nbsp;<Tooltip arrow title={ <ToolTip text={licenseNotes} />}><HelpOutline fontSize='small' style={{ alignSelf: 'center', cursor: 'pointer' }} /></Tooltip>
@@ -378,18 +401,35 @@ function ObjectDetails(props: ObjectDetailsProps): React.ReactElement {
                     <Divider className={classes.sectionDivider} />
                     <Detail
                         label='Retired'
-                        name='retired'
                         valueComponent={
-                            <CheckboxNoPadding
-                                id='retired'
-                                name='retired'
-                                disabled={disabled}
-                                checked={withDefaultValueBoolean(retired, false)}
-                                onChange={onRetiredUpdate}
-                                {...getUpdatedCheckboxProps(isRetiredUpdated)}
-                                color='primary'
-                            />
+                            <Box className={classes.buttonRow}>
+                                <Typography className={classes.value}>{retired ? 'Yes' : 'No'}</Typography>
+                                <Button
+                                    size='small'
+                                    variant='contained'
+                                    color='primary'
+                                    style={{ color: '#fff' }}
+                                    disabled={disabled}
+                                    onClick={() => setRetireModalOpen(true)}
+                                >
+                                    {retired ? 'Reinstate' : 'Retire'}
+                                </Button>
+                            </Box>
                         }
+                    />
+                    <Divider className={classes.sectionDivider} />
+                    <RetireActionModal
+                        open={retireModalOpen}
+                        idSystemObject={idSystemObject}
+                        retire={!retired}
+                        onComplete={() => { retireChangedRef.current = true; }}
+                        onClose={() => {
+                            setRetireModalOpen(false);
+                            if (retireChangedRef.current) {
+                                retireChangedRef.current = false;
+                                onRetireComplete?.();
+                            }
+                        }}
                     />
                 </>
             )}
@@ -450,6 +490,15 @@ Public (Unlisted): transmits the scene package to EDAN, but the record is not se
 Internal: transmits the scene package to EDAN, but access is restricted to users behind the Smithsonian firewall.
 .
 Unpublish: marks the EDAN package as inactive and not searchable.`;
+
+const subjectPublishButtonNotes =
+`Public: creates or updates this subject's EDANMDM record on EDAN and marks it searchable on si.edu.
+.
+Public (Unlisted): creates or updates the EDANMDM record but leaves it not searchable; it is reachable only via direct URL.
+.
+Internal: keeps the EDANMDM record inactive to the public (Smithsonian-internal only).
+.
+Unpublish: marks the EDANMDM record as inactive and not searchable. It is not deleted.`;
 
 export const scenePublishRequirementsNotes =
 `In order to publish a scene to EDAN, the following criteria must be met:

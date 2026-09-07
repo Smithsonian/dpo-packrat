@@ -53,11 +53,18 @@ function SearchList(props: SearchListProps): React.ReactElement {
     const [searchSubject, { data, called, loading, error }] = useLazyQuery(SearchIngestionSubjectsDocument, { fetchPolicy: 'no-cache' });
 
     const [subjects, setSubjects] = useState<StateSubject[]>([]);
+    const [edanError, setEdanError] = useState<string | null>(null);
 
     useEffect(() => {
         if (data && called && !loading && !error) {
             const { searchIngestionSubjects } = data;
-            const { SubjectUnitIdentifier: foundSubjectUnitIdentifier } = searchIngestionSubjects;
+            const { SubjectUnitIdentifier: foundSubjectUnitIdentifier, error: searchError } = searchIngestionSubjects;
+
+            // An EDAN outage/error is reported on the result so it can be distinguished from an
+            // empty (but successful) search. Surface it rather than silently showing "no results".
+            setEdanError(searchError ?? null);
+            if (searchError)
+                toast.error(searchError);
 
             const searchedSubjectUnitIdentifier = foundSubjectUnitIdentifier.map((subjectUnitIdentifier: SubjectUnitIdentifier) => parseSubjectUnitIdentifierToState(subjectUnitIdentifier));
             setSubjects([...searchedSubjectUnitIdentifier]);
@@ -83,6 +90,14 @@ function SearchList(props: SearchListProps): React.ReactElement {
     let content: React.ReactNode = null;
     if (subjects.length) {
         content = <SubjectList subjects={subjects} selected={false} emptyLabel='No subjects found' />;
+    } else if (called && !loading && !error && edanError) {
+        content = (
+            <Box display='flex' justifyContent='center' py={2}>
+                <Typography variant='body2' style={{ color: '#a00', fontStyle: 'italic' }}>
+                    {edanError}
+                </Typography>
+            </Box>
+        );
     } else if (called && !loading && !error) {
         content = (
             <Box display='flex' justifyContent='center' py={2}>

@@ -14,7 +14,13 @@ const getSystemObjectDetails = gql`
             publishedState
             publishedEnum
             publishable
+            publishBlocker
+            publishControlVisible
             isDraft
+            edanRecordId
+            edanRecordUrl
+            edanUnitCode
+            subjectUnitMismatch
             thumbnail
             identifiers {
                 identifier

@@ -26,28 +26,50 @@ export default async function assignLicense(_: Parent, args: MutationAssignLicen
     if (!LicenseNew)
         return { success: false, message: 'There was an error fetching the license for assignment. Please try again.' };
 
-    // Wrap the DB-mutating section so the LicenseAssignment writes and the
-    // semantic audit row commit atomically. PublishScene.handleSceneUpdates
-    // (Cook workflow trigger) runs AFTER commit so it never extends the lock
-    // window.
-    const dbResult = await withAuditTransaction(async () => {
-        const assignmentSuccess = await DBAPI.LicenseManager.setAssignment(idSystemObject, LicenseNew);
-        if (!assignmentSuccess)
-            return { ok: false, message: 'Error assigning license' };
+    // Wrap only the LicenseAssignment writes and the semantic audit row so they commit atomically.
+    // The LicenseCache maintenance (a descendant-graph traversal that can be very large for a Subject
+    // or higher object) is deliberately kept OUT of the transaction and run post-commit — inside the
+    // tx it blew the statement timeout and, because the cache is not transactional, left a phantom
+    // assignment behind after the rollback. PublishScene.handleSceneUpdates (Cook trigger) likewise
+    // runs post-commit.
+    let cacheResolver: DBAPI.LicenseResolver | undefined = undefined;
+    let dbResult: { ok: boolean; message?: string };
+    try {
+        dbResult = await withAuditTransaction(async () => {
+            const dbWrite = await DBAPI.LicenseManager.setAssignmentDBWrites(idSystemObject, LicenseNew);
+            if (!dbWrite.success)
+                return { ok: false, message: 'Error assigning license' };
+            cacheResolver = dbWrite.resolver;
 
-        await AuditFactory.emitSemantic({
-            action: eAuditType.eActionAssignLicense,
-            idSystemObject,
-            payload: {
-                before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
-                after:  { idLicense: LicenseNew.idLicense, Name: LicenseNew.Name, RestrictLevel: LicenseNew.RestrictLevel },
-            },
+            await AuditFactory.emitSemantic({
+                action: eAuditType.eActionAssignLicense,
+                idSystemObject,
+                payload: {
+                    before: LicenseOld ? { idLicense: LicenseOld.idLicense, Name: LicenseOld.Name, RestrictLevel: LicenseOld.RestrictLevel } : null,
+                    after:  { idLicense: LicenseNew.idLicense, Name: LicenseNew.Name, RestrictLevel: LicenseNew.RestrictLevel },
+                },
+            });
+            return { ok: true };
         });
-        return { ok: true };
-    });
+    } catch (error) {
+        // The transaction threw and rolled back: nothing was persisted. The cache was not mutated in
+        // the tx, but drop this object's entry defensively so no stale value can be read. Raw error
+        // text is kept server-side only.
+        RK.logError(RK.LogSection.eGQL,'assign license failed','transaction failed',{ ...args.input, error: error instanceof Error ? error.message : String(error) },'GraphQL.License');
+        await CACHE.LicenseCache.invalidateResolver(idSystemObject);
+        return { success: false, message: 'There was an error assigning the license. Please try again.' };
+    }
 
-    if (!dbResult.ok)
-        return { success: false, message: dbResult.message };
+    if (!dbResult.ok) {
+        await CACHE.LicenseCache.invalidateResolver(idSystemObject);
+        return { success: false, message: dbResult.message ?? 'Error assigning license' };
+    }
+
+    // Post-commit: maintain the license cache now that the assignment is durably persisted. The
+    // descendant traversal runs outside the lock window; a failure here is non-fatal (the cache is
+    // rebuildable) and drops to a targeted invalidation.
+    if (!await DBAPI.LicenseManager.maintainCacheAfterSet(idSystemObject, cacheResolver))
+        await CACHE.LicenseCache.invalidateResolver(idSystemObject);
 
     // If this is a scene, handle license changes (post-commit):
     const oID: DBAPI.ObjectIDAndType | undefined = await CACHE.SystemObjectCache.getObjectFromSystem(idSystemObject);

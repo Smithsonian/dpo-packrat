@@ -390,6 +390,7 @@ export class VocabularyCache {
 
                 case COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation: {
                     switch (vocabulary.Term) {
+                        case 'None':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationNone; break;
                         case 'Fluid-preserved':                 eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFluidPreserved; break;
                         case 'Dry':                             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationDry; break;
                         case 'Stained':                         eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationStained; break;

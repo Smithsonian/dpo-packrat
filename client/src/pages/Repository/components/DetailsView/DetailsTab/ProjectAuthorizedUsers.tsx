@@ -7,6 +7,7 @@ import IconButton from '@material-ui/core/IconButton';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { Alert } from '@material-ui/lab';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../../../utils/toastError';
 import { useUserStore } from '../../../../../store';
 import API from '../../../../../api';
 
@@ -111,7 +112,7 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
                 setAuthorizedUsers(users);
                 setSavedUserIds(users.map((u: AuthUser) => u.idUser));
             } else {
-                toast.error('Failed to load project authorization data');
+                toastError(projectResult, 'Failed to load project authorization data');
             }
 
             if (usersResult?.success && usersResult.data) {
@@ -177,7 +178,7 @@ function ProjectAuthorizedUsers({ idProject }: ProjectAuthorizedUsersProps): Rea
             setSavedIsRestricted(isRestricted);
             setSavedUserIds(authorizedUsers.map(u => u.idUser));
         } else {
-            toast.error(`Failed to update: ${result?.message}`);
+            toastError(result, 'Failed to update');
         }
 
         setSaving(false);

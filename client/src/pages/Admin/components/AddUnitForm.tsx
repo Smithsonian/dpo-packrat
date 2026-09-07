@@ -6,6 +6,7 @@ import { makeStyles, createStyles } from '@material-ui/core/styles';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { toastError } from '../../../utils/toastError';
 import { CreateUnitDocument } from '../../../types/graphql';
 import { apolloClient } from '../../../graphql/index';
 import { toTitleCase } from '../../../constants/helperfunctions';
@@ -163,8 +164,7 @@ function AddUnitForm(): React.ReactElement {
                 throw new Error('Create request returned success: false');
             }
         } catch (error) {
-            const message: string = (error instanceof Error) ? `: ${error.message}` : '';
-            toast.error(`Failed to create object${message}`);
+            toastError(error, 'Failed to create object');
         } finally {
             if (newUnitSystemObjectId) {
                 navigate(`/repository/details/${newUnitSystemObjectId}`);

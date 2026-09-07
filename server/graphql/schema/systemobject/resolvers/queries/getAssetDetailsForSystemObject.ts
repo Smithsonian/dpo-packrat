@@ -49,7 +49,18 @@ export default async function getAssetDetailsForSystemObject(_: Parent, args: Qu
         eGridType = eAssetGridType.eScene;
         columns = AssetGridDetailScene.getColumns();
         await extractMetadata(idSystemObject, AssetGridDetailScene.getMetadataColumnNames(), metadataMetaMap);
-        await extractSceneAttachmentMetadata(SO.idScene, metadataMetaMap);
+        // Derivative models (downloads / AR / web-display) are separate SystemObjects linked to the scene
+        // via ModelSceneXref; their asset versions are not always bound into the scene's own
+        // SystemObjectVersion. Include them here so the grid is a complete overview of every asset
+        // associated with the scene, deduped against the versions already bound to the scene version.
+        const modelAssetVersions: DBAPI.AssetVersion[] = await extractSceneAttachmentMetadata(SO.idScene, metadataMetaMap);
+        const seenAssetVersions: Set<number> = new Set<number>(assetVersions.map(av => av.idAssetVersion));
+        for (const av of modelAssetVersions) {
+            if (!seenAssetVersions.has(av.idAssetVersion)) {
+                assetVersions.push(av);
+                seenAssetVersions.add(av.idAssetVersion);
+            }
+        }
     }
 
     let assetDetailPreferred: AssetGridDetailBase | null = null;
@@ -169,12 +180,15 @@ async function extractMetadata(idSystemObject: number, metadataColumns: string[]
     return true;
 }
 
-async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: Map<number, Map<string, string>>): Promise<boolean> {
+async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: Map<number, Map<string, string>>): Promise<DBAPI.AssetVersion[]> {
+    // Also returns the derivative-model asset versions collected here so the caller can include them
+    // as grid rows (not just apply metadata to rows that already exist).
+    const modelAssetVersions: DBAPI.AssetVersion[] = [];
     const MSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(idScene);
     // LOG.info(`getAssetDetailsForSystemObject MSXs ${H.Helpers.JSONStringify(MSXs)}`, LOG.LS.eGQL);
     if (!MSXs) {
         RK.logError(RK.LogSection.eGQL,'extract scene attachment metadata failed',`failed to fetch ModelSceneXref for scene ${idScene}`,{},'GraphQL.Schema.SystemObject');
-        return false;
+        return modelAssetVersions;
     }
 
     for (const MSX of MSXs) {
@@ -189,6 +203,7 @@ async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: 
             continue;
 
         for (const assetVersion of assetVersions) {
+            modelAssetVersions.push(assetVersion);
             const SOIAV: DBAPI.SystemObjectInfo | undefined = await CACHE.SystemObjectCache.getSystemFromAssetVersion(assetVersion);
             if (!SOIAV) {
                 RK.logError(RK.LogSection.eGQL,'extract scene attachment metadata failed','failed to fetch system object info for asset version',{ assetVersion },'GraphQL.Schema.SystemObject');
@@ -225,7 +240,7 @@ async function extractSceneAttachmentMetadata(idScene: number, metadataMetaMap: 
             // LOG.info(`getAssetDetailsForSystemObject metadataMap[${SOIAV.idSystemObject}]=${H.Helpers.JSONStringify(metadataMap)}`, LOG.LS.eGQL);
         }
     }
-    return true;
+    return modelAssetVersions;
 }
 
 function round(num: number): string {

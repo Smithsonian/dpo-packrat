@@ -8,9 +8,13 @@ import { Request, Response } from 'express';
 import { Config, ENVIRONMENT_TYPE } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 import * as CACHE from '../../../cache';
-import { buildProjectSceneDef, SceneSummary } from './project';
+import { buildProjectSceneDef, SceneSummary, COOK_MATERIAL_FIX_DATE } from './project';
 import { SceneHelpers, EdanRecordIdResult } from '../../../utils/sceneHelpers';
 import { Authorization, AUTH_ERROR } from '../../../auth/Authorization';
+import { AuditFactory } from '../../../audit/interface/AuditFactory';
+// Shared, audit-based publication-state derivation — the single source of truth the details header
+// uses. Reused here so the scene status table can't diverge from it (was the legacy version-chain).
+import { derivePublishedState, parsePublishedStateFromAudit, isPublishedState, PublishedStateVersion } from '../../../graphql/schema/systemobject/resolvers/queries/getSystemObjectDetails';
 
 //#region Types and Definitions
 
@@ -26,11 +30,12 @@ type ProjectResponse = {
 type FieldStatus = {
     name: string,
     status: string,
-    level: 'pass' | 'fail' | 'warn' | 'critical',
-    notes: string
+    level: 'pass' | 'fail' | 'warn' | 'critical' | 'info',
+    notes: string,
+    approvable?: boolean   // true when a reviewer may record a QC sign-off on this row (AR / Download derivatives that are present but not yet Verified)
 };
 
-const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
+const formatEdanResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string): FieldStatus => {
     return { name, status, level, notes };
 };
 const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
@@ -99,6 +104,20 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         return;
     }
 
+    // Retiring a scene cascades to its derivative models, which the summary then omits (they are
+    // excluded from publishing). Rather than reporting the derivatives as failing/Missing, a retired
+    // scene reframes those rows as a neutral "present but retired" state.
+    const sceneRetired: boolean = systemObject.Retired === true;
+
+    // a scene must be linked to a parent Item (Media Group) to resolve its subject/project
+    // ancestry; orphaned scenes (often legacy) cannot produce a QC summary. Detect this here so
+    // the client receives a specific, actionable message instead of a generic build failure.
+    const parentItems: DBAPI.Item[] | null = await DBAPI.Item.fetchMasterFromScenes([scene.idScene]);
+    if(!parentItems || parentItems.length===0) {
+        res.status(200).send(JSON.stringify(generateResponse(false,`Scene is not linked to a parent Item (Media Group); cannot compute QC status (idScene: ${scene.idScene}).`)));
+        return;
+    }
+
     // get our status for the scene
     const profileKey: string = 'calc_status_'+H.Helpers.randomSlug();
     RK.profile(profileKey,RK.LogSection.eHTTP,'calculating scene status',{ name: scene.Name, idScene: scene.idScene, idSystemObject });
@@ -110,8 +129,17 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     RK.profileEnd(profileKey);
 
     // helpers for determining state
-    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical', notes: string): FieldStatus => {
-        return { name, status, level, notes };
+    const formatResultField = (name: string, status: string, level: 'pass' | 'fail' | 'warn' | 'critical' | 'info', notes: string, approvable?: boolean): FieldStatus => {
+        return { name, status, level, notes, approvable };
+    };
+    // Neutral (info-level) row for a retired scene: present derivatives read as "Found (retired)",
+    // absent ones as "None", and rows without a presence signal as "Retired" -- never a red failure.
+    const retiredRow = (name: string, present?: boolean): FieldStatus => {
+        if (present === true)
+            return { name, status: 'Found (retired)', level: 'info', notes: 'Present but retired; excluded from publishing.' };
+        if (present === false)
+            return { name, status: 'None', level: 'info', notes: 'Scene is retired; nothing to evaluate.' };
+        return { name, status: 'Retired', level: 'info', notes: 'Not evaluated while the scene is retired.' };
     };
     const getReviewedStatus = async (isReviewed: boolean): Promise<FieldStatus> => {
         const name = 'Is Reviewed';
@@ -130,76 +158,60 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
 
     //#region publish
     const getPublishedStatus = async (): Promise<FieldStatus> => {
+        // Authoritative current publication state: the newest publish/unpublish audit event (matching
+        // getSystemObjectDetails). The SystemObjectVersion chain answers "was it ever published?" not
+        // "is it published now?" (an unpublish no-ops on an already-unpublished latest version), so it
+        // is only the legacy fallback when no audit event exists.
+        const publicationEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestPublicationEvent(idSystemObject);
+        const eventState: COMMON.ePublishedState | null = publicationEvent ? parsePublishedStateFromAudit(publicationEvent.Data) : null;
+        const useAudit: boolean = eventState !== null;
 
-        // get all system object versions which represent changes to the
-        // scene. We do this to get the earliest and current states of the scene
-        const sceneSOVs: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
-        if(!sceneSOVs || sceneSOVs.length===0) {
+        const latestSOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(idSystemObject);
+        if (!latestSOV) {
             RK.logError(RK.LogSection.eHTTP,'get published status failed','cannot get SystemObjectVersion for scene',{ ...scene },'HTTP.Route.ObjectStatus');
             return formatResultField('Published','Error','critical',`cannot get version for scene: ${idSystemObject}`);
         }
+        const latest: PublishedStateVersion = { idSystemObjectVersion: latestSOV.idSystemObjectVersion, published: latestSOV.publishedStateEnum(), dateCreated: latestSOV.DateCreated };
 
-        // Sort by idSystemObjectVersion descending (newest/highest ID first)
-        // This matches how fetchLatestFromSystemObject determines the "latest" version
-        const sorted = [...sceneSOVs].sort((a, b) =>
-            b.idSystemObjectVersion - a.idSystemObjectVersion
-        );
+        // Only the legacy fallback consults the full version chain.
+        let allVersions: PublishedStateVersion[] = [];
+        if (!useAudit) {
+            const versions: DBAPI.SystemObjectVersion[] | null = await DBAPI.SystemObjectVersion.fetchFromSystemObject(idSystemObject);
+            allVersions = (versions ?? []).map(v => ({ idSystemObjectVersion: v.idSystemObjectVersion, published: v.publishedStateEnum(), dateCreated: v.DateCreated }));
+        }
 
-        // get our latest (highest ID) and find if any version is published
-        const latest = sorted[0];
-        const isPublished = (s: COMMON.ePublishedState) =>
-            s === COMMON.ePublishedState.ePublished ||
-            s === COMMON.ePublishedState.eAPIOnly ||
-            s === COMMON.ePublishedState.eInternal;
-        const lastPublished = sorted.find(v => isPublished(v.PublishedState)) ?? null;
+        // A license change after the last publish is draft drift (mirrors the header's config-drift).
+        let lastConfigChangeWhen: Date | null = null;
+        if (useAudit) {
+            const licenseEvent: DBAPI.Audit | null = await DBAPI.Audit.fetchLatestEventOfTypes(idSystemObject,
+                [DBAPI.eAuditType.eActionAssignLicense, DBAPI.eAuditType.eActionClearLicense, DBAPI.eAuditType.eActionLicenseUpdate]);
+            lastConfigChangeWhen = licenseEvent ? licenseEvent.AuditDate : null;
+        }
 
-        // No published versions at all
-        if (!lastPublished)
-            return formatResultField('Published','Unpublished','pass','Scene is not currently published');
-
-        // Compare version IDs to determine if we have unpublished changes (draft)
-        const latestId = latest.idSystemObjectVersion;
-        const lastPubId = lastPublished.idSystemObjectVersion;
+        const { publishedEnum, isDraft } = derivePublishedState(eventState,
+            useAudit && publicationEvent ? publicationEvent.AuditDate : null, latest, allVersions, lastConfigChangeWhen);
 
         const mapStateToStatus = (s: COMMON.ePublishedState): { status: string, notes: string } => {
             switch (s) {
-                case COMMON.ePublishedState.eNotPublished:
-                    return { status: 'Not Published', notes: 'Scene is not published.' };
                 case COMMON.ePublishedState.eAPIOnly:
-                    return { status: 'Public (Unlisted)', notes: 'Scene was published via <b>Public (Unlisted)</b>. Accessible publicly via the url, but <b><u>IS NOT</u></b> searchable via 3d.si.edu.' };
+                    return { status: 'Public (Unlisted)', notes: 'Scene is published via <b>Public (Unlisted)</b>. Accessible publicly via the url, but <b><u>IS NOT</u></b> searchable via 3d.si.edu.' };
                 case COMMON.ePublishedState.ePublished:
-                    return { status: 'Public', notes: 'Scene was published via <b>Public</b>. Accessible publicly via the url and searchable on 3d.si.edu.' };
+                    return { status: 'Public', notes: 'Scene is published via <b>Public</b>. Accessible publicly via the url and searchable on 3d.si.edu.' };
                 case COMMON.ePublishedState.eInternal:
-                    return { status: 'Internal', notes: 'Scene was published via <b>Internal</b>. Only accessible to those behind the Smithsonian firewall.' };
+                    return { status: 'Internal', notes: 'Scene is published via <b>Internal</b>. Only accessible to those behind the Smithsonian firewall.' };
                 default:
                     return { status: 'Unknown', notes: `Unknown published state: ${s}` };
             }
         };
-        // If the latest version is the last published one (same ID means current version is published)
-        if (latestId === lastPubId && isPublished(latest.PublishedState)) {
-            const { status, notes } = mapStateToStatus(latest.PublishedState);
-            return formatResultField('Published',status,'pass',notes);
-        }
 
-        // If the latest version ID is greater than the last published version ID and the latest
-        // is not published, then we have unpublished changes (a draft)
-        if (latestId > lastPubId && !isPublished(latest.PublishedState)) {
-            const prior = mapStateToStatus(lastPublished.PublishedState);
-            const d: Date = lastPublished.DateCreated instanceof Date
-                ? lastPublished.DateCreated
-                : new Date(String(lastPublished.DateCreated));
-            const priorDateTime: string = isNaN(d.getTime())
-                ? String(lastPublished.DateCreated)
-                : `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)} UTC`;
-            const draftNotes: string =
-                'Latest scene changes have not been published. Previously published as '
-                + `<b>'${prior.status}'</b> on ${priorDateTime}.`;
-            return formatResultField('Published','Draft','warn',draftNotes);
-        }
+        // 'Unpublished' (not 'Not Published') keeps the downstream includes('Unpublished') checks working.
+        if (!isPublishedState(publishedEnum))
+            return formatResultField('Published','Unpublished','pass','Scene is not currently published.');
 
-        // Otherwise, the latest is not newer than the last published (or ties but latest isn't published),
-        // so the last published remains the effective status (not a draft).
-        const { status, notes } = mapStateToStatus(lastPublished.PublishedState);
+        const { status, notes } = mapStateToStatus(publishedEnum);
+        if (isDraft)
+            return formatResultField('Published','Draft','warn',
+                `Currently published as <b>'${status}'</b>, but the latest scene changes have not been republished.`);
         return formatResultField('Published',status,'pass',notes);
     };
     const publishedStatus: FieldStatus = await getPublishedStatus();
@@ -321,12 +333,43 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         else
             return { name, status: 'Error', level: 'fail', notes: `${count}/${expected} datasets found. unexpected relationships` };
     };
-    const getModelARStatus = (status: string, licenseAllows: boolean): FieldStatus => {
+    const formatApprovalDate = (d: Date): string => {
+        const date: Date = d instanceof Date ? d : new Date(String(d));
+        return isNaN(date.getTime()) ? String(d) : date.toISOString().slice(0, 10);
+    };
+    // Newest asset-version date across a derivative set (or null when empty), used to decide whether
+    // an approval still covers the current derivatives.
+    const latestDerivativeDate = (items: { dateModified: Date }[]): Date | null => {
+        let latest: Date | null = null;
+        for (const it of items) {
+            const d: Date = it.dateModified instanceof Date ? it.dateModified : new Date(String(it.dateModified));
+            if (!isNaN(d.getTime()) && (latest === null || d.getTime() > latest.getTime()))
+                latest = d;
+        }
+        return latest;
+    };
+    // An approval is honored only while it is at least as new as the newest derivative asset version.
+    // Regenerating a derivative after the sign-off makes the approval stale, reverting the row to the
+    // non-blocking "not yet approved" state until a reviewer approves again.
+    const isApprovalCurrent = (approvalDate: Date, latestDerivative: Date | null): boolean => {
+        if (latestDerivative === null)
+            return true;
+        const a: Date = approvalDate instanceof Date ? approvalDate : new Date(String(approvalDate));
+        return !isNaN(a.getTime()) && a.getTime() >= latestDerivative.getTime();
+    };
+    const getModelARStatus = async (status: string, licenseAllows: boolean, latestDerivative: Date | null): Promise<FieldStatus> => {
         const name = 'Models: AR';
 
         switch(status) {
-            case 'Good':
-                return { name, status: 'Found', level: 'pass', notes: 'all AR models found' };
+            case 'Good': {
+                // AR derivatives are present. Treat as pending QC until a reviewer signs off:
+                // a current approval audit row clears it to a neutral "Verified"; otherwise it stays a
+                // "Not yet approved" warning that still offers the approve action.
+                const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveARModels);
+                if (approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                    return { name, status: 'Verified', level: 'pass', notes: `Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}` };
+                return { name, status: 'Found', level: 'warn', notes: 'all AR models found. Not yet approved — verify to record QC sign-off.', approvable: true };
+            }
             case 'Missing: WebAR':
                 return { name, status, level: 'fail', notes: 'WebXR models are generated with the scene. Try regenerating it from the source model page' };
             case 'Missing: NativeAR':
@@ -334,8 +377,15 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             case 'Missing: All':
                 return { name, status, level: (licenseAllows)?'fail':'warn', notes: 'no AR models found. Regenerate the scene and generate downloads' };
             default: {
-                if (status.startsWith('Error:'))
-                    return { name, status: 'Outdated', level: 'warn', notes: `AR model may have material issues. Consider regenerating. (${status})` };
+                if (status.startsWith('Error:')) {
+                    // Date-driven Outdated flag. A current approval audit row clears it to a neutral
+                    // "Verified" state — no asset mutation. A stale approval (older than a regenerated
+                    // derivative) or non-date failures fall through and are not cleared.
+                    const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveARModels);
+                    if (approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                        return { name, status: 'Verified', level: 'pass', notes: `Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}` };
+                    return { name, status: 'Outdated', level: 'warn', notes: `AR model may have material issues. Consider regenerating. (${status})`, approvable: true };
+                }
                 return { name, status: 'Error', level: 'critical', notes: `unexpected AR model status: ${status}` };
             }
         }
@@ -348,15 +398,21 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
         else
             return formatResultField(name,'Missing','fail',`${count}/${expected} base models found`);
     };
-    const getModelDownloadsStatus = ( status: string, count: number, expected: number, licenseAllows: boolean): FieldStatus => {
+    const getModelDownloadsStatus = async ( status: string, count: number, expected: number, licenseAllows: boolean, latestDerivative: Date | null): Promise<FieldStatus> => {
         const name = 'Download Models';
         const expectedCount = expected > 0 ? expected : 6;
 
         if(status === 'Good') {
-            if(licenseAllows===true)
-                return formatResultField(name,'Found','pass','all generated downloads found for scene and will be published');
-            else
-                return formatResultField(name,'Found','warn','license does not allow for downloads. they <b><u>WILL NOT</u></b> be published.');
+            if(licenseAllows===true) {
+                // Downloads are present and will publish. Treat as pending QC until a reviewer signs
+                // off: a current approval audit row clears it to "Verified"; otherwise it stays a
+                // "Not yet approved" warning that still offers the approve action.
+                const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveDownloadModels);
+                if(approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                    return formatResultField(name,'Verified','pass',`Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}`);
+                return formatResultField(name,'Found','warn','all generated downloads found for scene and will be published. Not yet approved — verify to record QC sign-off.',true);
+            } else
+                return formatResultField(name,'Found','info','downloads exist but the license does not use them, so they <b><u>will not</u></b> be published. No action needed.');
         } else if(status === 'Missing') {
             // downloads are actually missing (count < 6)
             if(licenseAllows===true)
@@ -364,11 +420,16 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             else
                 return formatResultField(name,'Missing','warn',`downloads not found (${count}/${expectedCount}). consider generating them.`);
         } else if(status === 'Error') {
-            // downloads exist but may have material issues (created before June 14, 2024 Cook fix)
+            // downloads exist but may have material issues (created before June 14, 2024 Cook fix).
+            // A current approval audit row clears the date flag to a neutral "Verified" state; a stale
+            // approval (older than a regenerated download) falls through to the warning.
+            const approval = await DBAPI.Audit.fetchLastApproval(idSystemObject, DBAPI.eAuditType.eActionApproveDownloadModels);
+            if(approval && isApprovalCurrent(approval.AuditDate, latestDerivative))
+                return formatResultField(name,'Verified','pass',`Verified by ${approval.Name} on ${formatApprovalDate(approval.AuditDate)}`);
             if(licenseAllows===true)
-                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`);
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have material issues. consider regenerating.`,true);
             else
-                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`);
+                return formatResultField(name,'Outdated','warn',`downloads found (${count}/${expectedCount}) but may have issues. license does not allow publishing.`,true);
         } else {
             // fallback for unexpected status values
             if(licenseAllows===true)
@@ -411,10 +472,66 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
     const edanUUIDStatus: FieldStatus = getEdanUUIDStatus(scene.EdanUUID ?? null, publishedStatus.status);
     //#endregion
 
+    //#region scale (display-unit validity)
+    const computeSceneScaleStatus = async (): Promise<{ status: FieldStatus; raw: any }> => {
+        const name = 'Scene Scale';
+        const e = await SceneHelpers.evaluateSceneScale(idSystemObject);
+        if (e.state === 'no_scene')
+            return { status: formatResultField(name, 'Not Evaluated', 'info', `scene scale not evaluated: ${e.detail ?? 'no scene data'}`),
+                raw: { bboxState: 'absent' } };
+        if (e.state === 'invalid_bbox')
+            return { status: formatResultField(name, 'Invalid Bounds', 'warn',
+                `bounding box ${e.detail} for model '${e.modelName ?? '?'}' — scene scale cannot be evaluated; the scene may need to be regenerated or re-ingested`),
+            raw: { bboxState: e.detail, currentUnits: e.currentUnits, multiModel: e.multiModel } };
+        if (e.state === 'no_bbox')
+            return { status: formatResultField(name, 'Not Evaluated', 'info', 'scene scale not evaluated — no bounding box yet; pose the scene in Voyager to generate one'),
+                raw: { bboxState: 'absent', currentUnits: e.currentUnits, multiModel: e.multiModel } };
+
+        const raw = { bboxState: 'valid', currentUnits: e.currentUnits, modelUnits: e.modelUnits, realMeters: e.realMeters,
+            intendedUnits: e.intendedUnits, multiModel: e.multiModel, canFix: e.canFix,
+            bboxMinMeters: e.bboxMinMeters, bboxMaxMeters: e.bboxMaxMeters, bboxSizeMeters: e.bboxSizeMeters };
+        const sizeVec: string = Array.isArray(e.bboxSizeMeters)
+            ? e.bboxSizeMeters.map(v => v >= 1 ? v.toFixed(2) : Number(v.toPrecision(2)).toString()).join(' × ')
+            : '';
+        if (e.state === 'ok') {
+            const okNote: string = sizeVec
+                ? `display units (${e.currentUnits}) are plausible for the geometry (bbox ${sizeVec} m)`
+                : `display units (${e.currentUnits}) are plausible for the geometry`;
+            return { status: formatResultField(name, 'Good', 'pass', okNote), raw };
+        }
+
+        const rm: number = e.realMeters ?? 0;
+        const sizeStr: string = rm >= 1 ? `${rm.toFixed(2)} m` : rm >= 0.01 ? `${(rm * 100).toFixed(1)} cm` : `${(rm * 1000).toFixed(2)} mm`;
+        const baseNote = `display units are '${e.currentUnits ?? 'unset'}' but the geometry (~${sizeStr}) suggests '${e.intendedUnits}'`;
+        const note = e.canFix ? baseNote : `${baseNote}. Multi-model scene (multiple source models): inline fix not supported.`;
+        return { status: formatResultField(name, 'Unit Mismatch', 'warn', note), raw };
+    };
+    const scaleResult = await computeSceneScaleStatus();
+    //#endregion
+
+    // For a retired scene, determine which derivative kinds exist (retired or not) so the reframed rows
+    // can read "Found (retired)" vs "None". Uses ModelSceneXref usage/name directly, since the summary
+    // omits the (cascade-retired) models.
+    let hasBaseModels = false, hasDownloadModels = false, hasARModels = false;
+    if (sceneRetired) {
+        const retiredMSXs: DBAPI.ModelSceneXref[] | null = await DBAPI.ModelSceneXref.fetchFromScene(scene.idScene);
+        for (const msx of retiredMSXs ?? []) {
+            const usage: string = msx.Usage ?? '';
+            const quality: string = (msx.Quality ?? '').toLowerCase();
+            if (usage.includes('Web3D'))
+                hasBaseModels = true;
+            if (msx.isDownloadable())
+                hasDownloadModels = true;
+            if (usage === 'App3D' || usage === 'iOSApp3D' || (usage.includes('Web3D') && quality === 'ar'))
+                hasARModels = true;
+        }
+    }
+
     // return object structure
     const result = {
         idSystemObject: systemObject.idSystemObject,
         idScene: systemObject.idScene,
+        retired: sceneRetired,
 
         publishedUrl:
             getPublishedUrl(publishedStatus.status),
@@ -434,17 +551,23 @@ export async function getObjectStatus(req: Request, res: Response): Promise<void
             subjectCount: edanResult.subjectCount,
         },
         scale:
-            formatResultField('Scene Scale','Good','pass','Scene scale aligns with units chosen'),
+            scaleResult.status,
+        scaleRaw:
+            scaleResult.raw,
         thumbnails:
             await getThumbnailsStatus(),
         baseModels:
-            getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
+            sceneRetired ? retiredRow('Models: Base', hasBaseModels)
+                : getModelBaseStatus(sceneSummary.derivatives.models.status,sceneSummary.derivatives.models.items.length,sceneSummary.derivatives.models.expected ?? -1),
         downloads:
-            getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status)),
+            sceneRetired ? retiredRow('Download Models', hasDownloadModels)
+                : await getModelDownloadsStatus(sceneSummary.derivatives.downloads.status,sceneSummary.derivatives.downloads.items.length,sceneSummary.derivatives.downloads.expected ?? -1,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.downloads.items)),
         arModels:
-            getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status)),
+            sceneRetired ? retiredRow('Models: AR', hasARModels)
+                : await getModelARStatus(sceneSummary.derivatives.ar.status,doesLicenseAllowDownloads(licenseStatus.status),latestDerivativeDate(sceneSummary.derivatives.ar.items)),
         captureData:
-            getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
+            sceneRetired ? retiredRow('Capture Data')
+                : getCaptureDataStatus(sceneSummary.sources.captureData.items.length,sceneSummary.sources.captureData.expected ?? -1)
     };
 
     // return success
@@ -534,6 +657,90 @@ export async function patchObject(req: Request, res: Response): Promise<void> {
                             subjectCount: edanResult.subjectCount,
                         }
                     })));
+                    return;
+                }
+                case 'approveARModels':
+                case 'approveDownloadModels': {
+                    const isAR: boolean = key === 'approveARModels';
+                    const action: DBAPI.eAuditType = isAR
+                        ? DBAPI.eAuditType.eActionApproveARModels
+                        : DBAPI.eAuditType.eActionApproveDownloadModels;
+
+                    // optional free-text reason: client sends { [field]: { reason } }, but a bare
+                    // string is also accepted
+                    const rawValue = fields[key];
+                    const reason: string | undefined = (rawValue && typeof rawValue === 'object' && typeof rawValue.reason === 'string')
+                        ? (rawValue.reason.trim() || undefined)
+                        : (typeof rawValue === 'string' ? (rawValue.trim() || undefined) : undefined);
+
+                    // snapshot the currently date-flagged derivatives so the audit row records
+                    // exactly what was approved (forensics); honoring itself is presence-only
+                    const sceneSummary: SceneSummary | null = await buildProjectSceneDef(scene, null);
+                    const derivativeItems = sceneSummary
+                        ? (isAR ? sceneSummary.derivatives.ar.items : sceneSummary.derivatives.downloads.items)
+                        : [];
+                    const approvedModels = derivativeItems
+                        .filter(item => item.dateModified < COOK_MATERIAL_FIX_DATE)
+                        .map(item => ({ idSystemObject: item.id, name: item.name, dateModified: item.dateModified }));
+
+                    const emitted: boolean = await AuditFactory.emitSemantic({
+                        action,
+                        target: { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                        idSystemObject,
+                        payload: { reason, cutoff: COOK_MATERIAL_FIX_DATE, approvedModels },
+                    });
+                    if(!emitted) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: failed to record approval')));
+                        return;
+                    }
+
+                    RK.logInfo(RK.LogSection.eHTTP,'patch object',`approved ${isAR ? 'AR models':'download models'} for scene ${idSystemObject}`,
+                        { idSystemObject, action, approvedCount: approvedModels.length, reason },'HTTP.Object.PatchObject',true);
+                    res.status(200).send(JSON.stringify(generateResponse(true,'Approved',{
+                        field: isAR ? 'arModels' : 'downloads',
+                        approvedCount: approvedModels.length,
+                    })));
+                    return;
+                }
+                case 'units': {
+                    const newValue = fields[key];
+                    if(typeof newValue !== 'string' || newValue.trim().length === 0) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: units must be a non-empty string')));
+                        return;
+                    }
+                    const units: string = newValue.trim().toLowerCase();
+                    const validUnits: string[] = ['mm','cm','m','km','in','ft','yd','mi'];
+                    if(!validUnits.includes(units)) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: invalid unit '${units}'`)));
+                        return;
+                    }
+
+                    // Match the status message and the bulk op: the inline fix rewrites one scene-level
+                    // display unit, so it is only meaningful for a single-source scene. Refuse when the
+                    // scene has multiple source (master) models rather than silently applying it.
+                    if(await SceneHelpers.getSceneSourceModelCount(idSystemObject) > 1) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,'patchObject: inline unit fix is not supported for multi-model scenes (multiple source models)')));
+                        return;
+                    }
+
+                    // rewrite scenes[].units in the SVX as a new asset version
+                    const patchResult = await SceneHelpers.patchSvxUnits(idSystemObject, scene, units, idUser);
+                    if(!patchResult.success) {
+                        res.status(200).send(JSON.stringify(generateResponse(false,`patchObject: ${patchResult.error}`)));
+                        return;
+                    }
+
+                    // audit the change (before/after units + new asset version)
+                    await AuditFactory.emitSemantic({
+                        action: DBAPI.eAuditType.eActionSVXUnitsFixed,
+                        target: { idObject: scene.idScene, eObjectType: COMMON.eSystemObjectType.eScene },
+                        idSystemObject,
+                        payload: { before: { units: patchResult.oldUnits }, after: { units: patchResult.newUnits }, idAssetVersion: patchResult.idAssetVersion },
+                    });
+
+                    RK.logInfo(RK.LogSection.eHTTP,'patch object',`fixed scene units ${patchResult.oldUnits} -> ${patchResult.newUnits} for scene ${idSystemObject}`,
+                        { idSystemObject, oldUnits: patchResult.oldUnits, newUnits: patchResult.newUnits },'HTTP.Object.PatchObject',true);
+                    res.status(200).send(JSON.stringify(generateResponse(true,'Updated',{ field: 'scale', oldUnits: patchResult.oldUnits, newUnits: patchResult.newUnits })));
                     return;
                 }
                 default:

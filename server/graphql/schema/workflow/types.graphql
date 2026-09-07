@@ -87,6 +87,8 @@ type WorkflowListResult {
     DateLast: DateTime
     Error: String
     ProjectName: String
+    Summary: String
+    ReportMimeType: String
     UserInitiator: User
     Owner: User
     Workflow: Workflow

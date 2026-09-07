@@ -7,7 +7,9 @@ import * as REP from '../../../report/interface';
 import { Config } from '../../../config';
 import * as H from '../../../utils/helpers';
 import * as COOKRES from '../../../job/impl/Cook/CookResource';
+import { scanCookReport, CookScanResult, CookScanFinding } from './CookReportScan';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import * as COMMON from '@dpo-packrat/common';
 
 import { Actor } from '../../../audit/Actor';
 import { withActor } from '../../../audit/resolveActor';
@@ -36,6 +38,7 @@ type CookIOResults = H.IOResults & {
 class JobCookConfiguration {
     clientId: string;
     jobName: string;
+    recipeName: string;
     recipeId: string;
     jobId: string;
     cookServerURLs: string[];
@@ -43,6 +46,7 @@ class JobCookConfiguration {
 
     constructor(clientId: string, jobName: string, recipeId: string, jobId: string | null, dbJobRun: DBAPI.JobRun, serverURL: string[] | null) {
         this.clientId = clientId;
+        this.recipeName = jobName;
         this.jobName = `${jobName}: ${dbJobRun.idJobRun}`;
         this.recipeId = recipeId;
         this.jobId = jobId || uuidv4(); // create a new JobID if we haven't provided one
@@ -86,6 +90,7 @@ export abstract class JobCook<T> extends JobPackrat {
 
     // TODO: additional error reporting out to generated report
 
+    protected reportPhase: COMMON.WorkflowReportPhase = 'cook';
     private _configuration: JobCookConfiguration;
     protected _idAssetVersions: number[] | null;
     protected _skipCleanup: boolean = false;
@@ -150,7 +155,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // TODO: debug mode outputting all considered resources and the one chosen
         const bestFit: COOKRES.CookResourceInfo = cookResources.resources[this._configuration.cookServerURLIndex];
         const reportMsg: string = `Matched ${cookResources.resources.length} Cook resources. The best fit is ${COOKRES.getResourceInfoString(bestFit,job)}`;
-        this.appendToReportAndLog(reportMsg);
+        this.appendToReportAndLog(reportMsg, undefined, { code: COMMON.WorkflowReportCode.CookMatched, data: { matched: cookResources.resources.length, cookServer: bestFit.name, recipe: job } });
 
         // return success
         this._initialized = true;
@@ -301,8 +306,22 @@ export abstract class JobCook<T> extends JobPackrat {
         let res: CookIOResults = { success: false, allowRetry: true, connectFailure: false, otherCookError: false };
 
         try {
-            // get our parameters
-            const sceneParams = await this.getParameters();
+            // get our parameters. A setup failure here (e.g. an unreadable/unsupported zip) must abort with
+            // its own message and never reach Cook — otherwise Cook fails with a generic error that hides the
+            // real, actionable reason. Record the failure and return non-retryable.
+            let sceneParams: T;
+            try {
+                sceneParams = await this.getParameters();
+            } catch (paramError) {
+                const message: string = H.Helpers.getErrorString(paramError);
+                RK.logError(RK.LogSection.eJOB,'start job worker failed',`parameter setup failed: ${message}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.Cook');
+                await this.recordFailure(message, message);
+                res = { success: false, error: message, allowRetry: false, connectFailure: false, otherCookError: false };
+                return res;
+            }
+
+            // write an initial report summary now that domain context is available (refined at start/terminal)
+            await this.writeReportSummary();
 
             // Create job via POST to /job
             let requestUrl: string = this.CookServerURL() + 'job';
@@ -515,9 +534,22 @@ export abstract class JobCook<T> extends JobPackrat {
     }
 
     protected async verifyResponse(cookJobReport: any): Promise<JobIOResults> {
-        // verify the response received from Cook, checking the report and job details
+        // Surface Cook's own failure signals as ranked, coded report events for every recipe, so the
+        // reason is highlighted rather than buried in the raw report body. Recipe subclasses layer
+        // their own structured checks on top of this shared pass.
+        const scan: CookScanResult = scanCookReport(cookJobReport);
+        for (const finding of scan.errors)
+            await this.appendToReportAndLog(finding.message, true, { code: finding.code, level: finding.level });
+        // Non-blocking advisories (e.g. a missing texture Cook worked around) surfaced for every
+        // recipe; a warning does not fail the job. The inspect subclass reaches this via super.
+        for (const finding of scan.warnings)
+            await this.appendToReportAndLog(finding.message, undefined, { code: finding.code, level: finding.level });
+
         if(cookJobReport['state']==='error') {
-            return { success: false, allowRetry: false, error: cookJobReport['error'] };
+            const error: string = scan.errors.length > 0
+                ? scan.errors.map((f: CookScanFinding) => f.message).join(' | ')
+                : (cookJobReport['error'] ?? 'Cook error');
+            return { success: false, allowRetry: false, error };
         }
 
         // we made it here so the job appears successful
@@ -884,6 +916,34 @@ export abstract class JobCook<T> extends JobPackrat {
         );
     }
 
+    //#region report summary
+    /** Subclasses provide domain-specific summary fields; merged with the base Cook fields below. */
+    protected reportSummaryContext(): Partial<COMMON.IWorkflowReportSummary> {
+        return {};
+    }
+
+    /** Write the compact, table-driving report summary. Progressive: called at start and terminal, so
+     * later writes refine fields (e.g. an ingested scene) that were not yet known at start. */
+    protected async writeReportSummary(): Promise<void> {
+        if (!this._report)
+            return;
+        const summary: COMMON.IWorkflowReportSummary = {
+            cookServer: this.CookServerURL(),
+            cookJobId: this._configuration.jobId,
+            recipe: this._configuration.recipeName,
+            ...this.reportSummaryContext(),
+        };
+        await RK.reportSetSummary(summary, this._report);
+    }
+    //#endregion
+
+    protected async recordStart(idJob: string): Promise<boolean> {
+        const updated: boolean = await super.recordStart(idJob);
+        if (updated)
+            await this.writeReportSummary();
+        return updated;
+    }
+
     protected async recordSuccess(output: string): Promise<boolean> {
 
         // make sure underlying job has updated
@@ -892,6 +952,7 @@ export abstract class JobCook<T> extends JobPackrat {
         // if it did update that means we had success and finished job specific cleanup
         // so it should be safe to remove the cook resources used
         if(updated) {
+            await this.writeReportSummary();
             if (this._skipCleanup) {
                 RK.logInfo(RK.LogSection.eJOB, 'Cook cleanup skipped', 'skipJobCleanup flag is set', { ...this._configuration }, 'Job.Cook');
             } else {

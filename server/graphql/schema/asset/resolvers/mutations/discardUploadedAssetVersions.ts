@@ -13,25 +13,27 @@ export default async function discardUploadedAssetVersions(
 ): Promise<DiscardUploadedAssetVersionsResult | void> {
     const ctx = Authorization.getContext();
     if (!ctx || (!ctx.isAdmin && ctx.authorizedUnitIds.length === 0))
-        return { success: false };
+        return { success: false, message: 'You do not have permission to discard uploaded files.' };
 
     const { idAssetVersions } = args.input;
 
-    let success: boolean = true;
+    let failed: number = 0;
     for (const idAssetVersion of idAssetVersions) {
         const assetVersion: DBAPI.AssetVersion | null = await DBAPI.AssetVersion.fetch(idAssetVersion);
         if (!assetVersion) {
             RK.logError(RK.LogSection.eGQL,'discard upload asset versions failed',`Unable to fetch asset version with id ${idAssetVersion}`,{ ...args.input },'GraphQL.Asset');
-            success = false;
+            failed++;
             continue;
         }
 
         const ASR: STORE.AssetStorageResult = await STORE.AssetStorageAdapter.discardAssetVersion(assetVersion);
         if (!ASR.success) {
             RK.logError(RK.LogSection.eGQL,'discard upload asset versions failed',`failed to discard asset version: ${ASR.error}`,{ assetVersion, ...args.input },'GraphQL.Asset');
-            success = false;
+            failed++;
             continue;
         }
     }
-    return { success };
+    if (failed > 0)
+        return { success: false, message: `Could not discard ${failed} of ${idAssetVersions.length} selected file(s).` };
+    return { success: true };
 }

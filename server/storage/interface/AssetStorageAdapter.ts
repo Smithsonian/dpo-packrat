@@ -485,6 +485,12 @@ export class AssetStorageAdapter {
         }
         IAR.systemObjectVersion = SOV;
 
+        // A scene version must include its current derivative-model assets (downloads / AR / web-display
+        // models linked via ModelSceneXref). cloneObjectAndXrefs only carries forward what its clone source
+        // held -- and starts from an empty set when assetsUnzipped -- so re-bind the current derivative set
+        // here. No-op for non-scene system objects.
+        await SceneHelpers.ensureSceneDerivativeBindings(ingestAssetInput.idSystemObject, SOV.idSystemObjectVersion);
+
         if (doNotUpdateParentVersion !== true) {
             // Complex system object version patch up step here
             // Scenes own Models, Models own Assets; those assets are *also* part of the scene's system object version
@@ -496,6 +502,8 @@ export class AssetStorageAdapter {
                         const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(idSystemObject, null, Comment, assetVersionOverrideMap, IAR.assetsUnzipped);
                         if (!SOV)
                             RK.logError(RK.LogSection.eSTR,'ingest asset failed','failed to create new SystemObjectVersion',{ ...context },'AssetStorageAdapter');
+                        else
+                            await SceneHelpers.ensureSceneDerivativeBindings(idSystemObject, SOV.idSystemObjectVersion);
                     }
                 }
             } else

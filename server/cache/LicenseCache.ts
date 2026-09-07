@@ -86,21 +86,24 @@ export class LicenseCache {
 
     private async clearAssignmentInternal(idSystemObject: number): Promise<boolean> {
         // LOG.info(`LicenseCache.clearAssignmentInternal(${idSystemObject})`, LOG.LS.eCACHE);
-        // Compute object graph of descendants; remove assignment from each
-        const OGD: DBAPI.ObjectGraphDatabase = new DBAPI.ObjectGraphDatabase();
-        const OG: DBAPI.ObjectGraph = new DBAPI.ObjectGraph(idSystemObject, DBAPI.eObjectGraphMode.eDescendents, 32, OGD); /* istanbul ignore if */
-        if (!await OG.fetch()) {
-            RK.logError(RK.LogSection.eCACHE,'clear assignment failed','unable to fetch object graph',{ idSystemObject },'Cache.License');
-            return false;
-        }
+        // Gather the descendant idSystemObject set and drop each one's cached resolver so it recomputes
+        // its inherited license on the next read. The lightweight xref traversal has parity with
+        // ObjectGraph(eDescendents) without the per-node 13-table join that made this heavy.
+        const descendants: Set<number> = await DBAPI.SystemObjectXref.fetchDescendentIDs(idSystemObject, 32);
 
-        for (const idSODescendant of OGD.objectMap.keys()) {
+        for (const idSODescendant of descendants) {
             // LOG.info(`LicenseCache.clearAssignmentInternal(${idSystemObject}) cleared ${idSODescendant}`, LOG.LS.eCACHE);
             this.licenseResolverMap.delete(idSODescendant);
         }
 
         RK.logDebug(RK.LogSection.eCACHE,'clear assignment success',undefined,{ idSystemObject },'Cache.License');
         return true;
+    }
+
+    /** Drops only this object's cached resolver (no descendant traversal). Used on a failure/rollback
+     * path to defensively discard a single potentially-stale entry without the descendant walk. */
+    private invalidateResolverInternal(idSystemObject: number): void {
+        this.licenseResolverMap.delete(idSystemObject);
     }
 
     private async setAssignmentInternal(idSystemObject: number, licenseResolver: DBAPI.LicenseResolver): Promise<boolean> {
@@ -141,6 +144,12 @@ export class LicenseCache {
 
     static async clearAssignment(idSystemObject: number): Promise<boolean> {
         return await (await this.getInstance()).clearAssignmentInternal(idSystemObject);
+    }
+
+    /** Drops a single object's cached resolver without touching descendants. Safe, cheap failure-path
+     * cleanup — the entry recomputes from the DB on the next read. */
+    static async invalidateResolver(idSystemObject: number): Promise<void> {
+        (await this.getInstance()).invalidateResolverInternal(idSystemObject);
     }
 
     static async setAssignment(idSystemObject: number, licenseResolver: DBAPI.LicenseResolver): Promise<boolean> {

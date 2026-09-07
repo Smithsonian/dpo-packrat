@@ -4,6 +4,7 @@
 import create, { GetState, SetState } from 'zustand';
 import { MetadataInput, Metadata } from '../types/graphql';
 import { toast } from 'react-toastify';
+import { toastError } from '../utils/toastError';
 import { deleteMetadata } from '../pages/Repository/hooks/useDetailsView';
 import lodash from 'lodash';
 
@@ -178,8 +179,7 @@ export const useObjectMetadataStore = create<ObjectMetadataStore>((set: SetState
                 if (displayIndex > -1)
                     set({ metadataDisplay: [...metadataDisplay.slice(0, displayIndex), ...metadataDisplay.slice(displayIndex + 1)] });
             } else {
-                const message = result.data.deleteMetadata.message || `An error occurred when deleting metadata with id ${id}`;
-                toast.error(message);
+                toastError(result.data.deleteMetadata, `An error occurred when deleting metadata with id ${id}`);
             }
         } else {
             set({ metadataControl: [...metadataControl.slice(0, index), ...metadataControl.slice(index + 1)] });
