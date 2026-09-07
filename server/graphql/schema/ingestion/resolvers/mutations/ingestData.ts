@@ -1701,6 +1701,18 @@ class IngestDataWorker extends ResolverBase {
         if (sceneDB === null)
             sceneDB = sceneConstellation.Scene;
 
+        // Scene-package reference case check (runs for BOTH new ingests and updates): a derivative or
+        // thumbnail the SVX names is present in the package only under a different case. Filenames are
+        // case-sensitive on the (Linux) server, so it would fail to resolve/serve — block, regardless of
+        // validation mode, so the issue surfaces at ingest rather than as a broken published scene.
+        if (sceneConstellation.PackageReferenceIssues.length > 0) {
+            const detail: string = sceneConstellation.PackageReferenceIssues.map(o => `${o.kind} '${o.ref}' (present as '${o.actual}')`).join('; ');
+            const message: string = `Scene package reference case mismatch — filenames are case-sensitive on the server: ${detail}. Fix the SVX reference or the file name so they match exactly, then re-upload.`;
+            RK.logError(RK.LogSection.eGQL,'create scene objects failed',message,{ idScene: sceneDB.idScene, issues: sceneConstellation.PackageReferenceIssues },'GraphQL.Ingestion.Data');
+            await this.appendToWFReport(message, true, true);
+            return { success: false };
+        }
+
         // Re-upload basename guard, tied to PACKRAT_INGEST_VALIDATION_MODE. Multi-model scenes are often
         // uploaded (not Packrat-generated) with non-traditional naming; a re-upload whose scene document
         // (.svx.json) carries a different basename than the existing scene's assets would orphan them.
