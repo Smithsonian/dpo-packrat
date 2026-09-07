@@ -48,6 +48,7 @@ export interface IWorkflowReportSummary {
     recipe?: string;
     warnings?: number;                      // running count of warn-level events, for a list indicator
     errors?: number;                        // running count of error-level events
+    error?: string;                         // first error message, for the list Error column when there is no JobRun
 }
 
 /** Stable string codes for events. New codes append here; renderers key off these. */
@@ -69,6 +70,7 @@ export const WorkflowReportCode = {
     CookWarning: 'cook.warning',
     InspectNote: 'inspect.note',
     InspectInvalid: 'inspect.invalid',
+    UploadError: 'upload.error',
     SceneNote: 'scene.note',
     SceneIngested: 'scene.ingested',
     ModelNote: 'model.note',

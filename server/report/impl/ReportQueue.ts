@@ -29,8 +29,14 @@ export class ReportQueue {
                 const summary: COMMON.IWorkflowReportSummary = ReportFormat.parseSummary(wr.Name);
                 if (event.level === 'warn')
                     summary.warnings = (summary.warnings ?? 0) + 1;
-                else
+                else {
                     summary.errors = (summary.errors ?? 0) + 1;
+                    // Capture the first error's headline so the workflow-list Error column has something to
+                    // show for a job-less workflow (e.g. an upload validation failure, which has no JobRun).
+                    // Keep it short — first line, capped — so the summary still fits WorkflowReport.Name.
+                    if (!summary.error && event.msg)
+                        summary.error = event.msg.split('\n')[0].slice(0, 240);
+                }
                 wr.Name = ReportFormat.serializeSummary(summary);
             }
         });
@@ -48,6 +54,8 @@ export class ReportQueue {
                 merged.warnings = existing.warnings;
             if (merged.errors === undefined && existing.errors !== undefined)
                 merged.errors = existing.errors;
+            if (merged.error === undefined && existing.error !== undefined)
+                merged.error = existing.error;
             wr.Name = ReportFormat.serializeSummary(merged);
         });
     }

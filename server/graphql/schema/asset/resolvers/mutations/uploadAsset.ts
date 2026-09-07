@@ -101,7 +101,10 @@ class UploadAssetWorker extends ResolverBase {
             await this.appendToWFReport('<b>Upload succeeded</b>');
             RK.logInfo(RK.LogSection.eGQL,'asset upload success',undefined,{ file: this.apolloFile.filename, ...UAR },'GraphQL.Upload.AssetWorker');
         } else {
-            await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`);
+            // error=true so this is recorded as an error-level event: it drives the report summary's error
+            // tally + first-error message, which the workflow list's Error column reads for this job-less
+            // workflow (no JobRun to carry the error).
+            await this.appendToWFReport(`<b>Upload failed</b>: ${UAR.error}`, false, true);
             RK.logError(RK.LogSection.eGQL,'asset upload failed',UAR.error ?? 'unknown error',{ file: this.apolloFile.filename },'GraphQL.Upload.AssetWorker');
         }
 

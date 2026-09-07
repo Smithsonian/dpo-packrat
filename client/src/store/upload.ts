@@ -454,9 +454,14 @@ export const useUploadStore = create<UploadStore>((set: SetState<UploadStore>, g
                     const failedEvent: UploadFailedEvent = { id, message: error || 'Unknown error' };
                     UploadEvents.dispatch(UploadEventType.FAILED, failedEvent);
 
-                    // Reshaping the result to { message } drops the trace id the Apollo wrapper
-                    // registered on `uploadAsset`; carry it over so the toast shows the server trace.
-                    const failedResult = { message: error };
+                    // A server error may carry a headline and an expanded detail (e.g. affected files),
+                    // separated by a blank line — split so the toast shows the headline and tucks the
+                    // detail into its "Details" disclosure. Reshaping to { message } drops the trace id the
+                    // Apollo wrapper registered on `uploadAsset`; carry it over so the toast shows it.
+                    const [headline, ...detailParts] = (error ?? '').split('\n\n');
+                    const failedResult: { message?: string | null; detail?: string } = detailParts.length > 0
+                        ? { message: headline, detail: detailParts.join('\n\n') }
+                        : { message: error };
                     copyTraceId(uploadAsset, failedResult);
                     toastError(failedResult, `Upload failed for ${file.name}`);
                 } else if (status === UploadStatus.Noauth) {

@@ -3,12 +3,10 @@ import * as STORE from '../../../storage/interface';
 import * as CACHE from '../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { IZip } from '../../../utils/IZip';
-import { SvxReader, SvxNonModelAsset } from '../../../utils/parser/svxReader';
+import { SvxReader, SvxNonModelAsset, ScenePackageReferenceIssue, detectSvxReferenceCaseMismatches } from '../../../utils/parser/svxReader';
 import * as path from 'path';
 import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
-
-export type ScenePackageReferenceIssue = { ref: string; actual: string; kind: 'model' | 'asset' };
 
 export class SceneConstellation {
     Scene: Scene | null;
@@ -243,50 +241,15 @@ export class SceneConstellation {
             }
             // LOG.info(`SceneConstellation.fetchFromAssetVersion scene=${H.Helpers.JSONStringify(scene)}\nmodelSceneXrefs=${H.Helpers.JSONStringify(modelSceneXrefs)}\nnonModelAssets=${H.Helpers.JSONStringify(nonModelAssets)}`, LOG.LS.eDB);
             const sceneConstellation: SceneConstellation = new SceneConstellation(scene, modelSceneXrefs, nonModelAssets);
+            // Backstop for the ingest path: the primary block is at upload validation (WorkflowUpload).
             if (zip)
-                sceneConstellation.PackageReferenceIssues = await SceneConstellation.detectReferenceCaseMismatches(zip, modelSceneXrefs, nonModelAssets);
+                sceneConstellation.PackageReferenceIssues = detectSvxReferenceCaseMismatches(await zip.getJustFiles(null),
+                    (modelSceneXrefs ?? []).map(m => m.Name), (nonModelAssets ?? []).map(n => n.uri));
             return sceneConstellation;
         } finally {
             if (zip)
                 await zip.close();
         }
-    }
-
-    // Compare each SVX reference (derivative models by MSX.Name, non-model assets by NMA.uri) against the
-    // package's actual filenames by EXACT case. A reference whose file exists only under a different case is
-    // a case mismatch (blocks ingest). A reference absent from the package entirely is NOT flagged — on an
-    // update it is a legitimate existing/DB asset, not a packaged one.
-    private static async detectReferenceCaseMismatches(zip: IZip, modelSceneXrefs: ModelSceneXref[] | null,
-        nonModelAssets: SvxNonModelAsset[] | null): Promise<ScenePackageReferenceIssue[]> {
-
-        const entries: string[] = await zip.getJustFiles(null);
-        const baseName = (p: string): string => p.split(/[\\/]/).pop() ?? p;
-        const exact: Set<string> = new Set<string>();
-        const lowerToActual: Map<string, string> = new Map<string, string>();
-        for (const e of entries) {
-            const b: string = baseName(e);
-            exact.add(b);
-            if (!lowerToActual.has(b.toLowerCase()))
-                lowerToActual.set(b.toLowerCase(), b);
-        }
-
-        const issues: ScenePackageReferenceIssue[] = [];
-        const check = (ref: string | null | undefined, kind: 'model' | 'asset'): void => {
-            if (!ref)
-                return;
-            const b: string = baseName(ref);
-            if (exact.has(b))
-                return;                                    // exact-case match in the package — fine
-            const actual: string | undefined = lowerToActual.get(b.toLowerCase());
-            if (actual)
-                issues.push({ ref: b, actual, kind });     // present only under a different case — the bug
-            // absent entirely → existing/DB asset (update) or external; not flagged here
-        };
-        for (const MSX of modelSceneXrefs ?? [])
-            check(MSX.Name, 'model');
-        for (const NMA of nonModelAssets ?? [])
-            check(NMA.uri, 'asset');
-        return issues;
     }
 
     static async fetchFileFromZip(zip: IZip, isBagit: boolean, filter: string | null, directory: string | undefined): Promise<string[] | null> {
