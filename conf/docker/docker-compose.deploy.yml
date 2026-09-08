@@ -50,7 +50,7 @@ services:
             dockerfile: ./conf/docker/server-dev.Dockerfile
             target: server
         ports:
-            - $PACKRAT_SERVER_PORT:4000
+            - $PACKRAT_SERVER_PORT:$PACKRAT_SERVER_PORT
         # Inject the whole env file so every PACKRAT_* variable (and any added later) reaches the
         # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
         # deploy.sh selected (dev=staging | prod | inspect); deploy.sh only starts packrat-server-$ENV, so
@@ -78,7 +78,7 @@ services:
             dockerfile: ./conf/docker/server-prod.Dockerfile
             target: server
         ports:
-            - $PACKRAT_SERVER_PORT:4000
+            - $PACKRAT_SERVER_PORT:$PACKRAT_SERVER_PORT
         # Inject the whole env file so every PACKRAT_* variable (and any added later) reaches the
         # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
         # deploy.sh selected (dev=staging | prod | inspect); deploy.sh only starts packrat-server-$ENV, so
@@ -106,7 +106,7 @@ services:
             dockerfile: ./conf/docker/server-inspect.Dockerfile
             target: server
         ports:
-            - $PACKRAT_SERVER_PORT:4000
+            - $PACKRAT_SERVER_PORT:$PACKRAT_SERVER_PORT
             - 9229:9230
         # Inject the whole env file so every PACKRAT_* variable (and any added later) reaches the
         # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
