@@ -62,10 +62,12 @@ function enumeratePeriodsWithEnds(lo: Date, hi: Date, granularity: MetricsGranul
 }
 
 export type MetricsTotals = {
-    /** Ingested asset-version rows (every preserved file/version) in the window. */
+    /** Ingested asset-version rows (every preserved file/version) in the window — preservation-event / work volume. */
     assetVersions: number;
-    /** Distinct repository objects (SystemObjects) that received an ingested asset version. */
+    /** Distinct repository objects (SystemObjects) that received an ingested asset version (created or updated). */
     repositoryObjects: number;
+    /** Distinct repository objects whose earliest ingested asset version falls in the window (newly created). */
+    objectsCreated: number;
     /** Total bytes of ingested asset versions (full OCFL footprint, all versions). */
     storageBytes: number;
     /** Subset of storageBytes contributed by non-DPO users. */
@@ -126,6 +128,30 @@ export class Metrics {
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB, 'metrics storage totals failed', H.Helpers.getErrorString(error), { lo, hi }, 'DB.Metrics');
             return zero;
+        }
+    }
+
+    /**
+     * Distinct repository objects newly created in a window: those whose earliest ingested asset version
+     * (across all time) falls within [lo, hi]. Objects with any ingested version before `lo` are treated as
+     * pre-existing (an update, not a creation). objectsUpdated is derived by the caller as repositoryObjects - objectsCreated.
+     */
+    static async fetchObjectsCreated(lo: Date, hi: Date): Promise<number> {
+        try {
+            const rows: { objectsCreated: number | bigint }[] = await DBC.DBConnection.prisma.$queryRaw<{ objectsCreated: number | bigint }[]>(Prisma.sql`
+                SELECT COUNT(*) AS objectsCreated
+                FROM (
+                    SELECT A.idSystemObject
+                    FROM AssetVersion AS AV
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.Ingested = 1 AND A.idSystemObject IS NOT NULL
+                    GROUP BY A.idSystemObject
+                    HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
+                ) AS t`);
+            return rows[0] ? Number(rows[0].objectsCreated) : 0;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB, 'metrics objects created failed', H.Helpers.getErrorString(error), { lo, hi }, 'DB.Metrics');
+            return 0;
         }
     }
 
@@ -202,14 +228,16 @@ export class Metrics {
 
     /** All summary totals for a window, assembled from the individual aggregate queries. */
     static async fetchTotals(lo: Date, hi: Date, dpoUserIDs: number[]): Promise<MetricsTotals> {
-        const [storage, activeNonDPOUsers, scenes, scenesPublishedCurrent] = await Promise.all([
+        const [storage, objectsCreated, activeNonDPOUsers, scenes, scenesPublishedCurrent] = await Promise.all([
             Metrics.fetchStorageTotals(lo, hi, dpoUserIDs),
+            Metrics.fetchObjectsCreated(lo, hi),
             Metrics.fetchActiveNonDPOUsers(lo, hi, dpoUserIDs),
             Metrics.fetchScenesPublished(lo, hi),
             Metrics.fetchScenesCurrentlyPublished(hi),
         ]);
         return {
             ...storage,
+            objectsCreated,
             activeNonDPOUsers,
             scenePublishEvents: scenes.events,
             scenesPublished: scenes.distinctScenes,
@@ -224,7 +252,7 @@ export class Metrics {
         const point = (period: string): MetricsSeriesPoint => {
             let p: MetricsSeriesPoint | undefined = points.get(period);
             if (!p) {
-                p = { period, assetVersions: 0, repositoryObjects: 0, storageBytes: 0, storageBytesNonDPO: 0, activeNonDPOUsers: 0, scenePublishEvents: 0, scenesPublished: 0, scenesPublishedCurrent: 0 };
+                p = { period, assetVersions: 0, repositoryObjects: 0, objectsCreated: 0, storageBytes: 0, storageBytesNonDPO: 0, activeNonDPOUsers: 0, scenePublishEvents: 0, scenesPublished: 0, scenesPublishedCurrent: 0 };
                 points.set(period, p);
             }
             return p;
@@ -252,6 +280,23 @@ export class Metrics {
                 p.storageBytes = Number(r.storageBytes);
                 p.storageBytesNonDPO = Number(r.storageBytesNonDPO);
             }
+
+            // Objects created per period: bucket each object by its earliest-ever ingested version, keeping only
+            // those whose first version lands in the window. Objects touched but created earlier fall out here
+            // (they remain in repositoryObjects), so repositoryObjects - objectsCreated is the per-period updated count.
+            const createdRows = await DBC.DBConnection.prisma.$queryRaw<{ period: string; objectsCreated: number | bigint }[]>(Prisma.sql`
+                SELECT DATE_FORMAT(t.firstDate, ${fmt}) AS period, COUNT(*) AS objectsCreated
+                FROM (
+                    SELECT A.idSystemObject AS idSystemObject, MIN(AV.DateCreated) AS firstDate
+                    FROM AssetVersion AS AV
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.Ingested = 1 AND A.idSystemObject IS NOT NULL
+                    GROUP BY A.idSystemObject
+                    HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
+                ) AS t
+                GROUP BY period`);
+            for (const r of createdRows)
+                point(r.period).objectsCreated = Number(r.objectsCreated);
 
             const eventRows = await DBC.DBConnection.prisma.$queryRaw<{ period: string; events: number | bigint }[]>(Prisma.sql`
                 SELECT DATE_FORMAT(SOV.DateCreated, ${fmt}) AS period, COUNT(*) AS events
