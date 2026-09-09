@@ -309,12 +309,21 @@ function DetailsThumbnail(props: DetailsThumbnailProps): React.ReactElement {
             {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) && rootExplorerLink.length > 0 && documentLink.length > 0 && (
                 <React.Fragment>
                     { showVoyagerExplorer && (
-                        <voyager-explorer
-                            id='Voyager-Explorer'
-                            root={rootExplorerLink}
-                            document={encodeURIComponent(documentLink)}
-                            style={{ width: '100%', height: '500px', display: 'block', position: 'relative' }}
-                        />
+                        // Fixed-height, clipped wrapper: Voyager's globally-injected CSS inflates the
+                        // <voyager-explorer> host past its inline height, leaving an unrendered gap below
+                        // the canvas and trapping page scroll. The wrapper pins the layout height so the
+                        // page stays scrollable and no deadzone appears below the viewer.
+                        <Box
+                            id='Voyager-Explorer-Container'
+                            style={{ width: '100%', height: '500px', overflow: 'hidden', position: 'relative' }}
+                        >
+                            <voyager-explorer
+                                id='Voyager-Explorer'
+                                root={rootExplorerLink}
+                                document={encodeURIComponent(documentLink)}
+                                style={{ width: '100%', height: '100%', display: 'block', position: 'relative' }}
+                            />
+                        </Box>
                     )}
                     <Button
                         className={classes.editButton}
