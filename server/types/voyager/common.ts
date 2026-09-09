@@ -29,12 +29,11 @@ export type Vector3 = number[];
 export type Vector4 = number[];
 export type Matrix4 = number[];
 export type Quaternion = Vector4;
-export type QuaternionTuple = [ x: number, y: number, z: number, w: number ];
 export type ColorRGB = Vector3;
 export type ColorRGBA = Vector4;
 
-export type TLanguageType = "EN" | "ES" | "DE" | "NL" | "JA" | "FR" | "IT" | "HAW";
-export enum ELanguageType { EN, ES, DE, NL, JA, FR, IT, HAW }
+export type TLanguageType = "EN" | "ES" | "DE" | "NL" | "JA" | "FR" | "IT" | "HAW" | "AR" | "TA";
+export enum ELanguageType { EN, ES, DE, NL, JA, FR, IT, HAW, AR, TA }
 export enum ELanguageStringType {
     EN = 'English',
     ES = 'Spanish (Español)',
@@ -45,5 +44,6 @@ export enum ELanguageStringType {
     IT = 'Italian (Italiano)',
     HAW = 'Hawaiian (ʻŌlelo Hawaiʻi)',
     AR = 'Arabic (العربية)',
+    TA = 'Tamil (தமிழ்)'
 }
 export const DEFAULT_LANGUAGE = "EN";
