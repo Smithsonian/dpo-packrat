@@ -1030,7 +1030,7 @@ function DetailsView(): React.ReactElement {
         || nameChanged || retiredChanged || licenseChanged || subtitleChanged;
 
     return (
-        <Box className={classes.container}>
+        <Box id='DetailsScrollContainer' className={classes.container}>
             <Box className={classes.content}>
                 {notice?.show && (
                     <NoticeBanner
@@ -1126,7 +1126,19 @@ function DetailsView(): React.ReactElement {
                     {(objectType === eSystemObjectType.eScene || objectType === eSystemObjectType.eModel) &&
                         <LoadingButton className={classes.updateButton}
                             loading={false}
-                            onClick={() => document.getElementById('Voyager-Explorer')?.scrollIntoView()}
+                            onClick={() => {
+                                // Scroll only the details container to the viewer. scrollIntoView() walks every
+                                // scrollable ancestor including the window/body, which normally doesn't scroll —
+                                // forcing it exposes an empty deadzone below the page. Scrolling the container
+                                // directly clamps to its own content, so no gap appears.
+                                const el = document.getElementById('Voyager-Explorer-Container') ?? document.getElementById('Voyager-Explorer');
+                                const scroller = document.getElementById('DetailsScrollContainer');
+                                if (el && scroller) {
+                                    const top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+                                    scroller.scrollTo({ top, behavior: 'smooth' });
+                                } else
+                                    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                            }}
                             style={{ marginLeft: 5 }}
                         >View</LoadingButton>}
 
