@@ -32,7 +32,12 @@ function toTB(bytes: number): number {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function shapeTotals(t: MetricsTotals): any {
     return {
-        objectsPreserved: { assetVersions: t.assetVersions, repositoryObjects: t.repositoryObjects },
+        objectsPreserved: {
+            assetVersions: t.assetVersions,                                         // preservation events (work volume, counts re-ingests)
+            repositoryObjects: t.repositoryObjects,                                 // distinct objects touched (created or updated)
+            created: t.objectsCreated,                                              // newly created objects (first version in window)
+            updated: Math.max(0, t.repositoryObjects - t.objectsCreated),           // pre-existing objects revised in window
+        },
         storage: {
             bytes: t.storageBytes,
             terabytes: toTB(t.storageBytes),
@@ -50,6 +55,8 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
         period: p.period,
         assetVersions: p.assetVersions,
         repositoryObjects: p.repositoryObjects,
+        objectsCreated: p.objectsCreated,
+        objectsUpdated: Math.max(0, p.repositoryObjects - p.objectsCreated),
         storageBytes: p.storageBytes,
         storageTerabytes: toTB(p.storageBytes),
         storageBytesNonDPO: p.storageBytesNonDPO,

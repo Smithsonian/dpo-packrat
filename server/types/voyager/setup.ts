@@ -25,7 +25,6 @@ import { ELanguageType, TLanguageType } from "./common";
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 export type TShaderMode = "Default" | "Clay" | "XRay" | "Normals" | "Wireframe";
 export enum EShaderMode { Default, Clay, XRay, Normals, Wireframe }
 
@@ -40,6 +39,9 @@ export enum EReaderPosition { Overlay, Left, Right }
 
 export type TSliceAxis = "X" | "Y" | "Z";
 export enum ESliceAxis { X, Y, Z }
+
+export type TMarkerStyle = "Pin" | "Ring";
+export enum EMarkerStyle { Pin, Ring }
 
 export interface ISetup
 {
@@ -161,6 +163,7 @@ export interface IAudio
 export interface ITape
 {
     enabled: boolean;
+    markerStyle?: TMarkerStyle;
     startPosition?: number[];
     startDirection?: number[];
     endPosition?: number[];

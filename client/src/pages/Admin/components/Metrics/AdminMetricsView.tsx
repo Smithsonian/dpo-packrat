@@ -12,7 +12,7 @@ import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcr
 type Granularity = 'day' | 'week' | 'month' | 'year';
 
 type Totals = {
-    objectsPreserved: { assetVersions: number; repositoryObjects: number };
+    objectsPreserved: { assetVersions: number; repositoryObjects: number; created: number; updated: number };
     storage: { bytes: number; terabytes: number; bytesNonDPO: number; terabytesNonDPO: number };
     activeNonDPOUsers: number;
     scenes: { publishEvents: number; distinctScenes: number; currentlyPublished: number };
@@ -22,6 +22,8 @@ type SeriesPoint = {
     period: string;
     assetVersions: number;
     repositoryObjects: number;
+    objectsCreated: number;
+    objectsUpdated: number;
     storageBytes: number;
     storageTerabytes: number;
     storageBytesNonDPO: number;
@@ -125,6 +127,10 @@ const NUM = (n: number): string => n.toLocaleString();
 
 // Plain-English explanations shown on hover so the metric titles make sense to end users.
 const TT = {
+    objectsCreated: 'New repository objects whose first-ever ingested version falls in this range — a growth view of net-new entities entering the repository.',
+    objectsUpdated: 'Pre-existing repository objects (created before this range) that received a new ingested version in the range. Add to Objects Created for the total distinct objects touched.',
+    objectsTouched: 'Distinct repository objects (models, scenes, capture data, etc.) that received ingested content in the range, whether newly created or updated. Counts each object once.',
+    events: 'Preservation events: every ingested file version in the range, counting re-ingests and regenerated derivatives. A work-volume view — one object can contribute many events.',
     objects: 'Distinct repository objects (models, scenes, capture data, etc.) that received ingested content. Many file versions can roll up into one object.',
     assetVersions: 'Every preserved file version ingested. Each re-ingest of a file adds another version.',
     data: 'Total size of ingested file versions (full storage footprint across all versions).',
@@ -263,8 +269,8 @@ function AdminMetricsView(): React.ReactElement {
     };
     const downloadCSV = (): void => {
         if (!data?.series) return;
-        const header = ['period', 'assetVersions', 'repositoryObjects', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
-        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
+        const header = ['period', 'assetVersions', 'repositoryObjects', 'objectsCreated', 'objectsUpdated', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
+        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.objectsCreated, p.objectsUpdated, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
         triggerDownload([header.join(','), ...lines].join('\n'), `packrat-metrics_${start}_${end}.csv`, 'text/csv');
     };
 
@@ -324,7 +330,9 @@ function AdminMetricsView(): React.ReactElement {
 
                         <div className={classes.sectionTitle}>Selected Range</div>
                         <Box className={classes.tileRow}>
-                            <Tile label='Objects Preserved' value={NUM(data.summary.objectsPreserved.repositoryObjects)} sub={`${NUM(data.summary.objectsPreserved.assetVersions)} asset versions`} info={TT.objects} />
+                            <Tile label='Objects Created' value={NUM(data.summary.objectsPreserved.created)} sub='net-new entities' info={TT.objectsCreated} />
+                            <Tile label='Objects Updated' value={NUM(data.summary.objectsPreserved.updated)} sub='existing objects revised' info={TT.objectsUpdated} />
+                            <Tile label='Preservation Events' value={NUM(data.summary.objectsPreserved.assetVersions)} sub='file versions ingested' info={TT.events} />
                             <Tile label='Data Preserved' value={formatBytes(data.summary.storage.bytes)} info={TT.data} />
                             <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.summary.storage.bytesNonDPO)} info={TT.dataNonDPO} />
                             <Tile label='Active non-DPO Users' value={NUM(data.summary.activeNonDPOUsers)} info={TT.activeUsers} />
@@ -333,7 +341,8 @@ function AdminMetricsView(): React.ReactElement {
 
                         <div className={classes.sectionTitle}>Cumulative (through end date)</div>
                         <Box className={classes.tileRow}>
-                            <Tile label='Objects Preserved' value={NUM(data.cumulative.objectsPreserved.repositoryObjects)} sub={`${NUM(data.cumulative.objectsPreserved.assetVersions)} asset versions`} info={TT.objects} />
+                            <Tile label='Objects (total)' value={NUM(data.cumulative.objectsPreserved.repositoryObjects)} info={TT.objectsTouched} />
+                            <Tile label='Preservation Events (total)' value={NUM(data.cumulative.objectsPreserved.assetVersions)} sub='file versions ingested' info={TT.events} />
                             <Tile label='Data Preserved' value={formatBytes(data.cumulative.storage.bytes)} info={TT.data} />
                             <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.cumulative.storage.bytesNonDPO)} info={TT.dataNonDPO} />
                             <Tile label='Scenes Published (total)' value={NUM(data.cumulative.scenes.currentlyPublished)} info={TT.scenesCurrent} />
@@ -345,8 +354,16 @@ function AdminMetricsView(): React.ReactElement {
                             <BarChart points={series} getValue={p => p.storageBytes} color='#2B7DE9' format={formatBytes} />
                         </Box>
                         <Box className={classes.chartCard}>
-                            <ChartTitle title='Objects preserved per period' info={TT.objects} />
-                            <BarChart points={series} getValue={p => p.repositoryObjects} color='#37A66B' />
+                            <ChartTitle title='Objects created per period' info={TT.objectsCreated} />
+                            <BarChart points={series} getValue={p => p.objectsCreated} color='#37A66B' />
+                        </Box>
+                        <Box className={classes.chartCard}>
+                            <ChartTitle title='Objects updated per period' info={TT.objectsUpdated} />
+                            <BarChart points={series} getValue={p => p.objectsUpdated} color='#2FA0A0' />
+                        </Box>
+                        <Box className={classes.chartCard}>
+                            <ChartTitle title='Preservation events per period' info={TT.events} />
+                            <BarChart points={series} getValue={p => p.assetVersions} color='#C58A2E' />
                         </Box>
                         <Box className={classes.chartCard}>
                             <ChartTitle title='Scenes published/updated per period' info={TT.scenesRange} />
