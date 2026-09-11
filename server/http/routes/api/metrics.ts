@@ -3,7 +3,7 @@ import { ASL, LocalStore } from '../../../utils/localStore';
 import { isAuthenticated } from '../../auth';
 import { Config, getDPOUserIDs } from '../../../config';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
-import { MetricsGranularity, MetricsTotals, MetricsSeriesPoint } from '../../../db/api/Metrics';
+import { MetricsGranularity, MetricsTotals, MetricsSeriesPoint, MetricsObjectTypeBreakdown } from '../../../db/api/Metrics';
 import { Request, Response } from 'express';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +29,16 @@ function toTB(bytes: number): number {
     return Math.round((bytes / BYTES_PER_TB) * 10000) / 10000;
 }
 
+/** Per-type updated counts, derived as touched (repositoryObjects) minus created for each repository-object type. */
+function updatedByType(touched: MetricsObjectTypeBreakdown, created: MetricsObjectTypeBreakdown): MetricsObjectTypeBreakdown {
+    return {
+        model: Math.max(0, touched.model - created.model),
+        scene: Math.max(0, touched.scene - created.scene),
+        captureData: Math.max(0, touched.captureData - created.captureData),
+        other: Math.max(0, touched.other - created.other),
+    };
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function shapeTotals(t: MetricsTotals): any {
     return {
@@ -37,6 +47,11 @@ function shapeTotals(t: MetricsTotals): any {
             repositoryObjects: t.repositoryObjects,                                 // distinct objects touched (created or updated)
             created: t.objectsCreated,                                              // newly created objects (first version in window)
             updated: Math.max(0, t.repositoryObjects - t.objectsCreated),           // pre-existing objects revised in window
+            byType: {
+                touched: t.repositoryObjectsByType,                                 // repositoryObjects split by type
+                created: t.objectsCreatedByType,                                    // created split by type
+                updated: updatedByType(t.repositoryObjectsByType, t.objectsCreatedByType),
+            },
         },
         storage: {
             bytes: t.storageBytes,
@@ -57,6 +72,8 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
         repositoryObjects: p.repositoryObjects,
         objectsCreated: p.objectsCreated,
         objectsUpdated: Math.max(0, p.repositoryObjects - p.objectsCreated),
+        objectsCreatedByType: p.objectsCreatedByType,
+        objectsUpdatedByType: updatedByType(p.repositoryObjectsByType, p.objectsCreatedByType),
         storageBytes: p.storageBytes,
         storageTerabytes: toTB(p.storageBytes),
         storageBytesNonDPO: p.storageBytesNonDPO,

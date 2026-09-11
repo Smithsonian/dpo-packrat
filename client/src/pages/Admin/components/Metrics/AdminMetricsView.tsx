@@ -11,8 +11,16 @@ import GenericBreadcrumbsView from '../../../../components/shared/GenericBreadcr
 
 type Granularity = 'day' | 'week' | 'month' | 'year';
 
+type TypeBreakdown = { model: number; scene: number; captureData: number; other: number };
+
 type Totals = {
-    objectsPreserved: { assetVersions: number; repositoryObjects: number; created: number; updated: number };
+    objectsPreserved: {
+        assetVersions: number;
+        repositoryObjects: number;
+        created: number;
+        updated: number;
+        byType: { touched: TypeBreakdown; created: TypeBreakdown; updated: TypeBreakdown };
+    };
     storage: { bytes: number; terabytes: number; bytesNonDPO: number; terabytesNonDPO: number };
     activeNonDPOUsers: number;
     scenes: { publishEvents: number; distinctScenes: number; currentlyPublished: number };
@@ -24,6 +32,8 @@ type SeriesPoint = {
     repositoryObjects: number;
     objectsCreated: number;
     objectsUpdated: number;
+    objectsCreatedByType: TypeBreakdown;
+    objectsUpdatedByType: TypeBreakdown;
     storageBytes: number;
     storageTerabytes: number;
     storageBytesNonDPO: number;
@@ -125,6 +135,21 @@ function quarterStart(d: Date): Date {
 
 const NUM = (n: number): string => n.toLocaleString();
 
+// One-line type breakdown (Models / Scenes / Capture Data / Other) for the created/updated tooltips.
+function breakdownLine(b: TypeBreakdown): string {
+    return `Models ${NUM(b.model)} · Scenes ${NUM(b.scene)} · Capture Data ${NUM(b.captureData)} · Other ${NUM(b.other)}`;
+}
+
+// Tooltip body pairing a metric description with its per-type breakdown.
+function breakdownInfo(description: string, b: TypeBreakdown): React.ReactNode {
+    return (
+        <React.Fragment>
+            {description}
+            <div style={{ marginTop: 6 }}><b>By type:</b> {breakdownLine(b)}</div>
+        </React.Fragment>
+    );
+}
+
 // Plain-English explanations shown on hover so the metric titles make sense to end users.
 const TT = {
     objectsCreated: 'New repository objects whose first-ever ingested version falls in this range — a growth view of net-new entities entering the repository.',
@@ -192,7 +217,7 @@ function BarChart({ points, getValue, color, format }: { points: SeriesPoint[]; 
     );
 }
 
-function Tile({ label, value, sub, info }: { label: string; value: string; sub?: string; info?: string }): React.ReactElement {
+function Tile({ label, value, sub, info }: { label: string; value: string; sub?: string; info?: React.ReactNode }): React.ReactElement {
     const classes = useStyles();
     const labelEl = info
         ? <Tooltip title={info} arrow><span className={classes.infoLabel}>{label}</span></Tooltip>
@@ -269,8 +294,8 @@ function AdminMetricsView(): React.ReactElement {
     };
     const downloadCSV = (): void => {
         if (!data?.series) return;
-        const header = ['period', 'assetVersions', 'repositoryObjects', 'objectsCreated', 'objectsUpdated', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
-        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.objectsCreated, p.objectsUpdated, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
+        const header = ['period', 'assetVersions', 'repositoryObjects', 'objectsCreated', 'objectsCreatedModel', 'objectsCreatedScene', 'objectsCreatedCaptureData', 'objectsCreatedOther', 'objectsUpdated', 'objectsUpdatedModel', 'objectsUpdatedScene', 'objectsUpdatedCaptureData', 'objectsUpdatedOther', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
+        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.objectsCreated, p.objectsCreatedByType.model, p.objectsCreatedByType.scene, p.objectsCreatedByType.captureData, p.objectsCreatedByType.other, p.objectsUpdated, p.objectsUpdatedByType.model, p.objectsUpdatedByType.scene, p.objectsUpdatedByType.captureData, p.objectsUpdatedByType.other, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
         triggerDownload([header.join(','), ...lines].join('\n'), `packrat-metrics_${start}_${end}.csv`, 'text/csv');
     };
 
@@ -330,8 +355,8 @@ function AdminMetricsView(): React.ReactElement {
 
                         <div className={classes.sectionTitle}>Selected Range</div>
                         <Box className={classes.tileRow}>
-                            <Tile label='Objects Created' value={NUM(data.summary.objectsPreserved.created)} sub='net-new entities' info={TT.objectsCreated} />
-                            <Tile label='Objects Updated' value={NUM(data.summary.objectsPreserved.updated)} sub='existing objects revised' info={TT.objectsUpdated} />
+                            <Tile label='Objects Created' value={NUM(data.summary.objectsPreserved.created)} sub='net-new entities' info={breakdownInfo(TT.objectsCreated, data.summary.objectsPreserved.byType.created)} />
+                            <Tile label='Objects Updated' value={NUM(data.summary.objectsPreserved.updated)} sub='existing objects revised' info={breakdownInfo(TT.objectsUpdated, data.summary.objectsPreserved.byType.updated)} />
                             <Tile label='Preservation Events' value={NUM(data.summary.objectsPreserved.assetVersions)} sub='file versions ingested' info={TT.events} />
                             <Tile label='Data Preserved' value={formatBytes(data.summary.storage.bytes)} info={TT.data} />
                             <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.summary.storage.bytesNonDPO)} info={TT.dataNonDPO} />
