@@ -46,8 +46,10 @@ type SeriesPoint = {
     scenesPublishedCurrent: number;
 };
 
+type ProjectOption = { idProject: number; Name: string };
+
 type MetricsData = {
-    range: { start: string; end: string; granularity: Granularity };
+    range: { start: string; end: string; granularity: Granularity; project: number | null };
     dpo: { userIDs: number[]; count: number };
     summary: Totals;
     cumulative: Totals;
@@ -256,13 +258,15 @@ function AdminMetricsView(): React.ReactElement {
     const [start, setStart] = useState<string>(fmtDate(quarterStart(today)));
     const [end, setEnd] = useState<string>(fmtDate(today));
     const [granularity, setGranularity] = useState<Granularity>('month');
+    const [project, setProject] = useState<number>(0); // 0 => All Projects (unfiltered)
+    const [projects, setProjects] = useState<ProjectOption[]>([]);
     const [data, setData] = useState<MetricsData | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
 
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
-            const result: RequestResponse = await API.getMetrics(start, end, true, granularity);
+            const result: RequestResponse = await API.getMetrics(start, end, true, granularity, project > 0 ? project : undefined);
             if (!result?.success) {
                 toast.error(result?.message ?? 'Failed to load metrics');
                 return;
@@ -273,9 +277,22 @@ function AdminMetricsView(): React.ReactElement {
         } finally {
             setLoading(false);
         }
-    }, [start, end, granularity]);
+    }, [start, end, granularity, project]);
 
     useEffect(() => { if (isAuthorized) fetchData(); /* initial load */ }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        if (!isAuthorized) return;
+        (async () => {
+            try {
+                const result: RequestResponse = await API.getProjects();
+                if (result?.success && Array.isArray(result.data))
+                    setProjects((result.data as ProjectOption[]).slice().sort((a, b) => a.Name.localeCompare(b.Name)));
+            } catch (error) {
+                // non-fatal: the filter simply stays on All Projects
+            }
+        })();
+    }, [isAuthorized]);
 
     const applyPreset = (kind: 'thisQ' | 'lastQ' | 'ytd' | 'last12'): void => {
         const now = new Date();
@@ -344,6 +361,13 @@ function AdminMetricsView(): React.ReactElement {
                             <MenuItem value='year'>Year</MenuItem>
                         </Select>
                     </div>
+                    <div className={classes.field}>
+                        <span className={classes.fieldLabel}>Project</span>
+                        <Select value={project} onChange={e => setProject(Number(e.target.value))} variant='outlined' style={{ height: 40, minWidth: 200, maxWidth: 320 }}>
+                            <MenuItem value={0}>All Projects</MenuItem>
+                            {projects.map(p => <MenuItem key={p.idProject} value={p.idProject}>{p.Name}</MenuItem>)}
+                        </Select>
+                    </div>
                     <Button variant='contained' color='primary' onClick={fetchData} disabled={loading}>{loading ? 'Loading…' : 'Run'}</Button>
                     <Button variant='outlined' onClick={downloadCSV} disabled={!data?.series}>CSV</Button>
                     <Button variant='outlined' onClick={downloadJSON} disabled={!data}>JSON</Button>
@@ -354,6 +378,7 @@ function AdminMetricsView(): React.ReactElement {
                         <div className={classes.dpoNote}>
                             Range {new Date(data.range.start).toLocaleDateString()} – {new Date(data.range.end).toLocaleDateString()} ·
                             {' '}Non-DPO = users outside the DPO set ({data.dpo.count} DPO user{data.dpo.count === 1 ? '' : 's'}).
+                            {data.range.project ? ' · Scoped to the selected project; active-user counts remain global and per-project storage will not sum to the all-projects total.' : ''}
                         </div>
 
                         <div className={classes.sectionTitle}>Selected Range</div>

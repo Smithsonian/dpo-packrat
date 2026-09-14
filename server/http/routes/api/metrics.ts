@@ -88,7 +88,7 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
 }
 
 /**
- * GET /api/metrics?start=YYYY-MM-DD&end=YYYY-MM-DD[&series=1][&granularity=month]
+ * GET /api/metrics?start=YYYY-MM-DD&end=YYYY-MM-DD[&series=1][&granularity=month][&project=<idProject>]
  *
  * Preservation reporting for the given inclusive date range (server-local time):
  *   - objects preserved (ingested asset versions + distinct repository objects)
@@ -98,7 +98,8 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
  *
  * Returns `summary` (delta within the range) and `cumulative` (all-time through `end`).
  * With `series=1`, also returns a per-period array (granularity: day|week|month|year, default month)
- * suitable for plotting. Admin/tools only.
+ * suitable for plotting. With `project=<idProject>`, object, storage, and scene metrics are scoped to objects
+ * belonging to that project (via the Project -> Item -> object tree); active-user counts remain global. Admin/tools only.
  */
 export async function getMetrics(req: Request, res: Response): Promise<void> {
     if (!isAuthenticated(req)) {
@@ -138,18 +139,23 @@ export async function getMetrics(req: Request, res: Response): Promise<void> {
     const granularity: MetricsGranularity = (GRANULARITIES as string[]).includes(granularityRaw)
         ? granularityRaw as MetricsGranularity : 'month';
 
+    // Optional project filter. Absent, non-numeric, or non-positive (e.g. 'all') => null => all-projects (unfiltered) view.
+    const projectRaw: string = String(req.query.project ?? '');
+    const projectParsed: number = parseInt(projectRaw, 10);
+    const idProject: number | null = Number.isInteger(projectParsed) && projectParsed > 0 ? projectParsed : null;
+
     try {
         const dpoUserIDs: number[] = getDPOUserIDs();
         const epoch = new Date(0);
 
         const [rangeTotals, cumulativeTotals, series] = await Promise.all([
-            DBAPI.Metrics.fetchTotals(start, end, dpoUserIDs),
-            DBAPI.Metrics.fetchTotals(epoch, end, dpoUserIDs),
-            wantSeries ? DBAPI.Metrics.fetchSeries(start, end, dpoUserIDs, granularity) : Promise.resolve(null),
+            DBAPI.Metrics.fetchTotals(start, end, dpoUserIDs, idProject),
+            DBAPI.Metrics.fetchTotals(epoch, end, dpoUserIDs, idProject),
+            wantSeries ? DBAPI.Metrics.fetchSeries(start, end, dpoUserIDs, granularity, idProject) : Promise.resolve(null),
         ]);
 
         respond(res, true, undefined, {
-            range: { start: start.toISOString(), end: end.toISOString(), granularity },
+            range: { start: start.toISOString(), end: end.toISOString(), granularity, project: idProject },
             dpo: { userIDs: dpoUserIDs, count: dpoUserIDs.length },
             summary: shapeTotals(rangeTotals),
             cumulative: shapeTotals(cumulativeTotals),
