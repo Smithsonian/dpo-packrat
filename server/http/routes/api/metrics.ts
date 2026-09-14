@@ -53,6 +53,7 @@ function shapeTotals(t: MetricsTotals): any {
                 updated: updatedByType(t.repositoryObjectsByType, t.objectsCreatedByType),
             },
         },
+        subjectsWithCaptureCreated: t.subjectsWithCaptureCreated,                    // distinct subjects with newly-created capture data
         storage: {
             bytes: t.storageBytes,
             terabytes: toTB(t.storageBytes),
@@ -74,6 +75,7 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
         objectsUpdated: Math.max(0, p.repositoryObjects - p.objectsCreated),
         objectsCreatedByType: p.objectsCreatedByType,
         objectsUpdatedByType: updatedByType(p.repositoryObjectsByType, p.objectsCreatedByType),
+        subjectsWithCaptureCreated: p.subjectsWithCaptureCreated,
         storageBytes: p.storageBytes,
         storageTerabytes: toTB(p.storageBytes),
         storageBytesNonDPO: p.storageBytesNonDPO,

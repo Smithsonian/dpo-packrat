@@ -24,6 +24,7 @@ type Totals = {
     storage: { bytes: number; terabytes: number; bytesNonDPO: number; terabytesNonDPO: number };
     activeNonDPOUsers: number;
     scenes: { publishEvents: number; distinctScenes: number; currentlyPublished: number };
+    subjectsWithCaptureCreated: number;
 };
 
 type SeriesPoint = {
@@ -34,6 +35,7 @@ type SeriesPoint = {
     objectsUpdated: number;
     objectsCreatedByType: TypeBreakdown;
     objectsUpdatedByType: TypeBreakdown;
+    subjectsWithCaptureCreated: number;
     storageBytes: number;
     storageTerabytes: number;
     storageBytesNonDPO: number;
@@ -155,6 +157,7 @@ const TT = {
     objectsCreated: 'New repository objects whose first-ever ingested version falls in this range — a growth view of net-new entities entering the repository.',
     objectsUpdated: 'Pre-existing repository objects (created before this range) that received a new ingested version in the range. Add to Objects Created for the total distinct objects touched.',
     objectsTouched: 'Distinct repository objects (models, scenes, capture data, etc.) that received ingested content in the range, whether newly created or updated. Counts each object once.',
+    subjectsWithCapture: 'Distinct subjects that gained a newly-created capture dataset in this range (capture data whose first-ever ingested version falls in the range). Counts each subject once, even with multiple new datasets.',
     events: 'Preservation events: every ingested file version in the range, counting re-ingests and regenerated derivatives. A work-volume view — one object can contribute many events.',
     objects: 'Distinct repository objects (models, scenes, capture data, etc.) that received ingested content. Many file versions can roll up into one object.',
     assetVersions: 'Every preserved file version ingested. Each re-ingest of a file adds another version.',
@@ -294,8 +297,8 @@ function AdminMetricsView(): React.ReactElement {
     };
     const downloadCSV = (): void => {
         if (!data?.series) return;
-        const header = ['period', 'assetVersions', 'repositoryObjects', 'objectsCreated', 'objectsCreatedModel', 'objectsCreatedScene', 'objectsCreatedCaptureData', 'objectsCreatedOther', 'objectsUpdated', 'objectsUpdatedModel', 'objectsUpdatedScene', 'objectsUpdatedCaptureData', 'objectsUpdatedOther', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
-        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.objectsCreated, p.objectsCreatedByType.model, p.objectsCreatedByType.scene, p.objectsCreatedByType.captureData, p.objectsCreatedByType.other, p.objectsUpdated, p.objectsUpdatedByType.model, p.objectsUpdatedByType.scene, p.objectsUpdatedByType.captureData, p.objectsUpdatedByType.other, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
+        const header = ['period', 'assetVersions', 'repositoryObjects', 'objectsCreated', 'objectsCreatedModel', 'objectsCreatedScene', 'objectsCreatedCaptureData', 'objectsCreatedOther', 'objectsUpdated', 'objectsUpdatedModel', 'objectsUpdatedScene', 'objectsUpdatedCaptureData', 'objectsUpdatedOther', 'subjectsWithCaptureCreated', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
+        const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.objectsCreated, p.objectsCreatedByType.model, p.objectsCreatedByType.scene, p.objectsCreatedByType.captureData, p.objectsCreatedByType.other, p.objectsUpdated, p.objectsUpdatedByType.model, p.objectsUpdatedByType.scene, p.objectsUpdatedByType.captureData, p.objectsUpdatedByType.other, p.subjectsWithCaptureCreated, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
         triggerDownload([header.join(','), ...lines].join('\n'), `packrat-metrics_${start}_${end}.csv`, 'text/csv');
     };
 
@@ -357,6 +360,7 @@ function AdminMetricsView(): React.ReactElement {
                         <Box className={classes.tileRow}>
                             <Tile label='Objects Created' value={NUM(data.summary.objectsPreserved.created)} sub='net-new entities' info={breakdownInfo(TT.objectsCreated, data.summary.objectsPreserved.byType.created)} />
                             <Tile label='Objects Updated' value={NUM(data.summary.objectsPreserved.updated)} sub='existing objects revised' info={breakdownInfo(TT.objectsUpdated, data.summary.objectsPreserved.byType.updated)} />
+                            <Tile label='Subjects w/ New Capture Data' value={NUM(data.summary.subjectsWithCaptureCreated)} sub='distinct subjects' info={TT.subjectsWithCapture} />
                             <Tile label='Preservation Events' value={NUM(data.summary.objectsPreserved.assetVersions)} sub='file versions ingested' info={TT.events} />
                             <Tile label='Data Preserved' value={formatBytes(data.summary.storage.bytes)} info={TT.data} />
                             <Tile label='Data Preserved (non-DPO)' value={formatBytes(data.summary.storage.bytesNonDPO)} info={TT.dataNonDPO} />
@@ -385,6 +389,10 @@ function AdminMetricsView(): React.ReactElement {
                         <Box className={classes.chartCard}>
                             <ChartTitle title='Objects updated per period' info={TT.objectsUpdated} />
                             <BarChart points={series} getValue={p => p.objectsUpdated} color='#2FA0A0' />
+                        </Box>
+                        <Box className={classes.chartCard}>
+                            <ChartTitle title='Subjects w/ new capture data per period' info={TT.subjectsWithCapture} />
+                            <BarChart points={series} getValue={p => p.subjectsWithCaptureCreated} color='#3C8DBC' />
                         </Box>
                         <Box className={classes.chartCard}>
                             <ChartTitle title='Preservation events per period' info={TT.events} />
