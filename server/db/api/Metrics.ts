@@ -145,6 +145,9 @@ function projectMemberFilter(column: Prisma.Sql, idProject: number | null): Pris
  * Metrics — aggregate reporting queries for on-demand / quarterly preservation stats.
  * All windows are inclusive of [lo, hi]; cumulative-to-date is expressed by passing lo = epoch.
  * "non-DPO" is any user whose idUser is not in dpoUserIDs (resolved from config by the caller).
+ * Distinct-object, subject, and scene counts exclude retired SystemObjects (SO.Retired = 1) so they match
+ * what the repository shows; asset-version counts and storage bytes remain over all ingested versions
+ * (raw preservation footprint, including versions of objects later retired).
  */
 export class Metrics {
     /** Asset-version counts, distinct repository objects, and storage bytes (total + non-DPO) for a window. */
@@ -156,11 +159,12 @@ export class Metrics {
                 : Prisma.sql`COALESCE(SUM(AV.StorageSize), 0)`;
             const rows: WindowRow[] = await DBC.DBConnection.prisma.$queryRaw<WindowRow[]>(Prisma.sql`
                 SELECT COUNT(*) AS assetVersions,
-                       COUNT(DISTINCT A.idSystemObject) AS repositoryObjects,
+                       COUNT(DISTINCT CASE WHEN SO.Retired = 0 THEN A.idSystemObject END) AS repositoryObjects,
                        COALESCE(SUM(AV.StorageSize), 0) AS storageBytes,
                        ${nonDPOSum} AS storageBytesNonDPO
                 FROM AssetVersion AS AV
                 JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                LEFT JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject)
                 WHERE AV.Ingested = 1
                   AND AV.DateCreated BETWEEN ${lo} AND ${hi}
                   ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}`);
@@ -192,6 +196,7 @@ export class Metrics {
                     SELECT A.idSystemObject
                     FROM AssetVersion AS AV
                     JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject AND SO.Retired = 0)
                     WHERE AV.Ingested = 1 AND A.idSystemObject IS NOT NULL
                       ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}
                     GROUP BY A.idSystemObject
@@ -214,7 +219,7 @@ export class Metrics {
                        COUNT(DISTINCT CASE WHEN SO.idModel IS NULL AND SO.idScene IS NULL AND SO.idCaptureData IS NULL THEN A.idSystemObject END) AS other
                 FROM AssetVersion AS AV
                 JOIN Asset AS A ON (AV.idAsset = A.idAsset)
-                JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject)
+                JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject AND SO.Retired = 0)
                 WHERE AV.Ingested = 1
                   AND AV.DateCreated BETWEEN ${lo} AND ${hi}
                   ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}`);
@@ -243,7 +248,7 @@ export class Metrics {
                     GROUP BY A.idSystemObject
                     HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
                 ) AS t
-                JOIN SystemObject AS SO ON (SO.idSystemObject = t.idSystemObject)`);
+                JOIN SystemObject AS SO ON (SO.idSystemObject = t.idSystemObject AND SO.Retired = 0)`);
             const r = rows[0];
             return r ? { model: Number(r.model), scene: Number(r.scene), captureData: Number(r.captureData), other: Number(r.other) } : zeroBreakdown();
         } catch (error) /* istanbul ignore next */ {
@@ -269,11 +274,11 @@ export class Metrics {
                     GROUP BY A.idSystemObject
                     HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
                 ) AS t
-                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject = t.idSystemObject AND cdSO.idCaptureData IS NOT NULL)
+                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject = t.idSystemObject AND cdSO.idCaptureData IS NOT NULL AND cdSO.Retired = 0)
                 JOIN SystemObjectXref AS soxCD ON (soxCD.idSystemObjectDerived = cdSO.idSystemObject)
-                JOIN SystemObject AS soItem ON (soItem.idSystemObject = soxCD.idSystemObjectMaster AND soItem.idItem IS NOT NULL)
+                JOIN SystemObject AS soItem ON (soItem.idSystemObject = soxCD.idSystemObjectMaster AND soItem.idItem IS NOT NULL AND soItem.Retired = 0)
                 JOIN SystemObjectXref AS soxItem ON (soxItem.idSystemObjectDerived = soItem.idSystemObject)
-                JOIN SystemObject AS soSubject ON (soSubject.idSystemObject = soxItem.idSystemObjectMaster AND soSubject.idSubject IS NOT NULL)`);
+                JOIN SystemObject AS soSubject ON (soSubject.idSystemObject = soxItem.idSystemObjectMaster AND soSubject.idSubject IS NOT NULL AND soSubject.Retired = 0)`);
             return rows[0] ? Number(rows[0].subjects) : 0;
         } catch (error) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eDB, 'metrics subjects with capture created failed', H.Helpers.getErrorString(error), { lo, hi }, 'DB.Metrics');
@@ -313,6 +318,7 @@ export class Metrics {
                     FROM SystemObjectVersion AS SOV
                     JOIN SystemObject AS SO ON (SOV.idSystemObject = SO.idSystemObject)
                     WHERE SO.idScene IS NOT NULL
+                      AND SO.Retired = 0
                       AND SOV.PublishedState > ${PUBLISHED_STATE_MIN}
                       AND SOV.DateCreated BETWEEN ${lo} AND ${hi}
                       ${projectMemberFilter(Prisma.sql`SO.idSystemObject`, idProject)}`),
@@ -322,6 +328,7 @@ export class Metrics {
                     JOIN SystemObjectVersion AS SOV ON (SOV.idSystemObjectVersion =
                         (SELECT MAX(SOV2.idSystemObjectVersion) FROM SystemObjectVersion AS SOV2 WHERE SOV2.idSystemObject = SO.idSystemObject))
                     WHERE SO.idScene IS NOT NULL
+                      AND SO.Retired = 0
                       AND SOV.PublishedState > ${PUBLISHED_STATE_MIN}
                       AND SOV.DateCreated BETWEEN ${lo} AND ${hi}
                       ${projectMemberFilter(Prisma.sql`SO.idSystemObject`, idProject)}`),
@@ -346,6 +353,7 @@ export class Metrics {
                     (SELECT MAX(SOV2.idSystemObjectVersion) FROM SystemObjectVersion AS SOV2
                      WHERE SOV2.idSystemObject = SO.idSystemObject AND SOV2.DateCreated <= ${asOf}))
                 WHERE SO.idScene IS NOT NULL
+                  AND SO.Retired = 0
                   AND SOV.PublishedState > ${PUBLISHED_STATE_MIN}
                   ${projectMemberFilter(Prisma.sql`SO.idSystemObject`, idProject)}`);
             return rows[0] ? Number(rows[0].distinctScenes) : 0;
@@ -400,11 +408,12 @@ export class Metrics {
             const storageRows = await DBC.DBConnection.prisma.$queryRaw<(WindowRow & { period: string })[]>(Prisma.sql`
                 SELECT DATE_FORMAT(AV.DateCreated, ${fmt}) AS period,
                        COUNT(*) AS assetVersions,
-                       COUNT(DISTINCT A.idSystemObject) AS repositoryObjects,
+                       COUNT(DISTINCT CASE WHEN SO.Retired = 0 THEN A.idSystemObject END) AS repositoryObjects,
                        COALESCE(SUM(AV.StorageSize), 0) AS storageBytes,
                        ${nonDPOSum} AS storageBytesNonDPO
                 FROM AssetVersion AS AV
                 JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                LEFT JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject)
                 WHERE AV.Ingested = 1
                   AND AV.DateCreated BETWEEN ${lo} AND ${hi}
                   ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}
@@ -426,6 +435,7 @@ export class Metrics {
                     SELECT A.idSystemObject AS idSystemObject, MIN(AV.DateCreated) AS firstDate
                     FROM AssetVersion AS AV
                     JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject AND SO.Retired = 0)
                     WHERE AV.Ingested = 1 AND A.idSystemObject IS NOT NULL
                       ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}
                     GROUP BY A.idSystemObject
@@ -444,7 +454,7 @@ export class Metrics {
                        COUNT(DISTINCT CASE WHEN SO.idModel IS NULL AND SO.idScene IS NULL AND SO.idCaptureData IS NULL THEN A.idSystemObject END) AS other
                 FROM AssetVersion AS AV
                 JOIN Asset AS A ON (AV.idAsset = A.idAsset)
-                JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject)
+                JOIN SystemObject AS SO ON (SO.idSystemObject = A.idSystemObject AND SO.Retired = 0)
                 WHERE AV.Ingested = 1
                   AND AV.DateCreated BETWEEN ${lo} AND ${hi}
                   ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}
@@ -468,7 +478,7 @@ export class Metrics {
                     GROUP BY A.idSystemObject
                     HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
                 ) AS t
-                JOIN SystemObject AS SO ON (SO.idSystemObject = t.idSystemObject)
+                JOIN SystemObject AS SO ON (SO.idSystemObject = t.idSystemObject AND SO.Retired = 0)
                 GROUP BY period`);
             for (const r of createdTypeRows)
                 point(r.period).objectsCreatedByType = { model: Number(r.model), scene: Number(r.scene), captureData: Number(r.captureData), other: Number(r.other) };
@@ -485,11 +495,11 @@ export class Metrics {
                     GROUP BY A.idSystemObject
                     HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
                 ) AS t
-                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject = t.idSystemObject AND cdSO.idCaptureData IS NOT NULL)
+                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject = t.idSystemObject AND cdSO.idCaptureData IS NOT NULL AND cdSO.Retired = 0)
                 JOIN SystemObjectXref AS soxCD ON (soxCD.idSystemObjectDerived = cdSO.idSystemObject)
-                JOIN SystemObject AS soItem ON (soItem.idSystemObject = soxCD.idSystemObjectMaster AND soItem.idItem IS NOT NULL)
+                JOIN SystemObject AS soItem ON (soItem.idSystemObject = soxCD.idSystemObjectMaster AND soItem.idItem IS NOT NULL AND soItem.Retired = 0)
                 JOIN SystemObjectXref AS soxItem ON (soxItem.idSystemObjectDerived = soItem.idSystemObject)
-                JOIN SystemObject AS soSubject ON (soSubject.idSystemObject = soxItem.idSystemObjectMaster AND soSubject.idSubject IS NOT NULL)
+                JOIN SystemObject AS soSubject ON (soSubject.idSystemObject = soxItem.idSystemObjectMaster AND soSubject.idSubject IS NOT NULL AND soSubject.Retired = 0)
                 GROUP BY period`);
             for (const r of subjectCaptureRows)
                 point(r.period).subjectsWithCaptureCreated = Number(r.subjects);
@@ -499,6 +509,7 @@ export class Metrics {
                 FROM SystemObjectVersion AS SOV
                 JOIN SystemObject AS SO ON (SOV.idSystemObject = SO.idSystemObject)
                 WHERE SO.idScene IS NOT NULL
+                  AND SO.Retired = 0
                   AND SOV.PublishedState > ${PUBLISHED_STATE_MIN}
                   AND SOV.DateCreated BETWEEN ${lo} AND ${hi}
                   ${projectMemberFilter(Prisma.sql`SO.idSystemObject`, idProject)}
@@ -512,6 +523,7 @@ export class Metrics {
                 JOIN SystemObjectVersion AS SOV ON (SOV.idSystemObjectVersion =
                     (SELECT MAX(SOV2.idSystemObjectVersion) FROM SystemObjectVersion AS SOV2 WHERE SOV2.idSystemObject = SO.idSystemObject))
                 WHERE SO.idScene IS NOT NULL
+                  AND SO.Retired = 0
                   AND SOV.PublishedState > ${PUBLISHED_STATE_MIN}
                   AND SOV.DateCreated BETWEEN ${lo} AND ${hi}
                   ${projectMemberFilter(Prisma.sql`SO.idSystemObject`, idProject)}
@@ -540,6 +552,7 @@ export class Metrics {
                 FROM SystemObjectVersion AS SOV
                 JOIN SystemObject AS SO ON (SOV.idSystemObject = SO.idSystemObject)
                 WHERE SO.idScene IS NOT NULL
+                  AND SO.Retired = 0
                   AND SOV.DateCreated <= ${hi}
                   ${projectMemberFilter(Prisma.sql`SO.idSystemObject`, idProject)}
                 ORDER BY SO.idScene, SOV.idSystemObjectVersion`);
