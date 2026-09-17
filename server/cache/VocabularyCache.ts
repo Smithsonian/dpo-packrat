@@ -378,6 +378,7 @@ export class VocabularyCache {
                         case 'Source Side':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide; break;
                         case 'Detector Side':                   eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide; break;
                         case 'Both':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth; break;
+                        case 'Collimator':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationCollimator; break;
                     }
                 } break;
 
@@ -385,6 +386,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Micrometer':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer; break;
                         case 'Millimeter':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter; break;
+                        case 'Nanometer':                       eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitNanometer; break;
                     }
                 } break;
 

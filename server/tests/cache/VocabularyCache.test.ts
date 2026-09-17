@@ -335,8 +335,10 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide:  testVocabulary(vocabulary, 'Source Side'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide: testVocabulary(vocabulary, 'Detector Side'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth:        testVocabulary(vocabulary, 'Both'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationCollimator:  testVocabulary(vocabulary, 'Collimator'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer:   testVocabulary(vocabulary, 'Micrometer'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter:   testVocabulary(vocabulary, 'Millimeter'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitNanometer:    testVocabulary(vocabulary, 'Nanometer'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationFluidPreserved: testVocabulary(vocabulary, 'Fluid-preserved'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationDry:    testVocabulary(vocabulary, 'Dry'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationStained: testVocabulary(vocabulary, 'Stained'); break;

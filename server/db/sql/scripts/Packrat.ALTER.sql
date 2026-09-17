@@ -965,3 +965,11 @@ UPDATE VocabularySet SET Name = 'CaptureDataPhoto.LightSourceType'         WHERE
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.BackgroundRemovalMethod' WHERE Name = 'CaptureData.BackgroundRemovalMethod';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.ClusterType'             WHERE Name = 'CaptureData.ClusterType';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetUse'              WHERE Name = 'CaptureData.DatasetUse';
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: Nanometer voxel unit + Collimator filter (Eric)
+-- Additive vocabulary in existing sets 35 (FilterLocation) and 36 (VoxelSizeUnit).
+-- Re-runnable: NOT EXISTS skips rows already present.
+-- ============================================================
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 5, 'Collimator' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Collimator');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 3, 'Nanometer'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Nanometer');
