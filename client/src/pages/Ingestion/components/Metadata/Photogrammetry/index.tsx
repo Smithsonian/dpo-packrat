@@ -187,6 +187,10 @@ function Photogrammetry(props: PhotogrammetryProps): React.ReactElement {
         }
 
         updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.photogrammetry);
+        // Dataset Use only applies to a Photogrammetry Image Set; clear it when the
+        // dataset type is anything else so a hidden value is not ingested.
+        if (name === 'datasetType' && idFieldValue !== getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet))
+            updateMetadataField(metadataIndex, 'datasetUse', '[]', MetadataType.photogrammetry);
     };
 
     const setDateField = (name: string, value?: string | null): void => {

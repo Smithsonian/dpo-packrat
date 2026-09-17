@@ -181,6 +181,13 @@ function Volume(props: VolumeProps): React.ReactElement {
         const { name, value } = event.target;
         const idValue = value ? Number(value) : null;
         if (name) updateMetadataField(metadataIndex, name, idValue, MetadataType.volume);
+        // Stain Substance only applies to a Stained preparation; clear it when the
+        // preparation is anything else so a hidden value is not ingested.
+        if (name === 'specimenPreparation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation).find(e => e.idVocabulary === idValue)?.Term;
+            if (term !== 'Stained')
+                updateMetadataField(metadataIndex, 'stainSubstance', null, MetadataType.volume);
+        }
     };
     const setDateField = (_date: unknown, value?: string | null): void => {
         if (value) updateMetadataField(metadataIndex, 'dateCaptured', new Date(value), MetadataType.volume);
@@ -302,6 +309,9 @@ function Volume(props: VolumeProps): React.ReactElement {
         </TableRow>
     );
 
+    const specimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
+    const isStained: boolean = specimenPrepEntries.find(e => e.idVocabulary === volume.specimenPreparation)?.Term === 'Stained';
+
     return (
         <Box className={classes.container}>
             <Box className={classes.ingestContainer} style={{ padding: '10px', paddingBottom: '0' }}>
@@ -397,6 +407,7 @@ function Volume(props: VolumeProps): React.ReactElement {
                             {renderNumberRow('voltageKV', 'Voltage (kV)', false, false, 'any')}
                             {renderNumberRow('amperageUA', 'Amperage (µA)', false, false, 'any')}
                             {renderSelectRow('specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, 'Specimen Preparation', false, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
+                            {isStained && renderSelectRow('stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, 'Stain Substance', false, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false)}
 
                             {renderNumberRow('voxelSizeX', 'Voxel Size X', true, false, 'any')}

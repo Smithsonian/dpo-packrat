@@ -845,6 +845,7 @@ model Vocabulary {
   CaptureDataVolume_CaptureDataVolume_idVFilterLocationToVocabulary        CaptureDataVolume[]         @relation("CaptureDataVolume_idVFilterLocationToVocabulary")
   CaptureDataVolume_CaptureDataVolume_idVVoxelSizeUnitToVocabulary         CaptureDataVolume[]         @relation("CaptureDataVolume_idVVoxelSizeUnitToVocabulary")
   CaptureDataVolume_CaptureDataVolume_idVSpecimenPreparationToVocabulary   CaptureDataVolume[]         @relation("CaptureDataVolume_idVSpecimenPreparationToVocabulary")
+  CaptureDataVolume_CaptureDataVolume_idVStainSubstanceToVocabulary        CaptureDataVolume[]         @relation("CaptureDataVolume_idVStainSubstanceToVocabulary")
   Identifier                                                               Identifier[]
   Job                                                                      Job[]
   Metadata                                                                 Metadata[]
@@ -1022,6 +1023,7 @@ model CaptureDataVolume {
   VoltageKV                                                       Float?
   AmperageUA                                                      Float?
   idVSpecimenPreparation                                          Int?
+  idVStainSubstance                                               Int?
   VoxelSizeX                                                      Float
   VoxelSizeY                                                      Float
   VoxelSizeZ                                                      Float
@@ -1040,6 +1042,7 @@ model CaptureDataVolume {
   Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary      Vocabulary? @relation("CaptureDataVolume_idVFilterLocationToVocabulary", fields: [idVFilterLocation], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v4")
   Vocabulary_CaptureDataVolume_idVVoxelSizeUnitToVocabulary       Vocabulary  @relation("CaptureDataVolume_idVVoxelSizeUnitToVocabulary", fields: [idVVoxelSizeUnit], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v5")
   Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary Vocabulary? @relation("CaptureDataVolume_idVSpecimenPreparationToVocabulary", fields: [idVSpecimenPreparation], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v6")
+  Vocabulary_CaptureDataVolume_idVStainSubstanceToVocabulary      Vocabulary? @relation("CaptureDataVolume_idVStainSubstanceToVocabulary", fields: [idVStainSubstance], references: [idVocabulary], onDelete: NoAction, onUpdate: NoAction, map: "fk_capturedatavolume_v7")
 
   @@index([idVModality], map: "fk_capturedatavolume_v1")
   @@index([idVScanType], map: "fk_capturedatavolume_v2")
@@ -1047,6 +1050,7 @@ model CaptureDataVolume {
   @@index([idVFilterLocation], map: "fk_capturedatavolume_v4")
   @@index([idVVoxelSizeUnit], map: "fk_capturedatavolume_v5")
   @@index([idVSpecimenPreparation], map: "fk_capturedatavolume_v6")
+  @@index([idVStainSubstance], map: "fk_capturedatavolume_v7")
 }
 
 enum ObjectProperty_PropertyType {

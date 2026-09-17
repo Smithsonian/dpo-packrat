@@ -203,6 +203,7 @@ export type VolumeFields = {
     voltageKV: number | null;
     amperageUA: number | null;
     specimenPreparation: number | null;
+    stainSubstance: number | null;
     voxelSizeX: number | null;
     voxelSizeY: number | null;
     voxelSizeZ: number | null;

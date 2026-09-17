@@ -169,7 +169,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const CDD_VOLUME_FIELDS: string[] = [
         'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
-        'specimenPreparation', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
+        'specimenPreparation', 'stainSubstance', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
         'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
         'filterLocation',
     ];
@@ -220,6 +220,15 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
         updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
+        // Clear dependent sub-fields when their controlling field no longer enables
+        // them, so a hidden value is not persisted on update.
+        if (name === 'specimenPreparation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation).find(e => e.idVocabulary === idFieldValue)?.Term;
+            if (term !== 'Stained')
+                updateDetailField(eSystemObjectType.eCaptureData, 'stainSubstance', null);
+        }
+        if (name === 'datasetType' && idFieldValue !== getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet))
+            updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', '[]');
     };
 
     const setFloatField = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
@@ -235,6 +244,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
     const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
+    const cdSpecimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
+    const cdIsStained: boolean = cdSpecimenPrepEntries.find(e => e.idVocabulary === CaptureDataDetails.specimenPreparation)?.Term === 'Stained';
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
@@ -379,6 +390,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeNumberRow('File Count', 'fileCount', undefined, true)}
                                 {renderVolumeNumberRow('Slice Count', 'sliceCount', undefined, true)}
                                 {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
+                                {cdIsStained && renderVolumeSelectRow('Stain Substance', 'stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, true, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             </TableBody>
                         </Table>
                     </TableContainer>

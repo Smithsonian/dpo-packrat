@@ -347,6 +347,9 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive:   testVocabulary(vocabulary, 'Live'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther:  testVocabulary(vocabulary, 'Other'); break;
                     case COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationNone:   testVocabulary(vocabulary, 'None'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceIodine:        testVocabulary(vocabulary, 'Iodine-based stains'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceHeteropolyacid: testVocabulary(vocabulary, 'Heteropolyacid stains'); break;
+                    case COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceOsmium:        testVocabulary(vocabulary, 'Osmium-based stains'); break;
 
                     case COMMON.eVocabularyID.eNone: expect(vocabulary).toBeFalsy(); break;
                     default: expect(`Untested COMMON.eVocabularyID enum ${COMMON.eVocabularyID[eVocabID]}`).toBeFalsy(); break;
@@ -424,6 +427,7 @@ function vocabularyCacheTestWorker(eMode: eCacheTestMode): void {
                     case COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation:
                     case COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit:
                     case COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation:
+                    case COMMON.eVocabularySetID.eCaptureDataVolumeStainSubstance:
                         expect(vocabularySet).toBeTruthy();
                         /* istanbul ignore else */
                         if (vocabularySet) {

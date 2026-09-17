@@ -65,6 +65,7 @@ type CaptureDataVolume {
     VoltageKV: Float
     AmperageUA: Float
     idVSpecimenPreparation: Int
+    idVStainSubstance: Int
     VoxelSizeX: Float!
     VoxelSizeY: Float!
     VoxelSizeZ: Float!
@@ -83,4 +84,5 @@ type CaptureDataVolume {
     VVoxelSizeUnit: Vocabulary
     VFilterLocation: Vocabulary
     VSpecimenPreparation: Vocabulary
+    VStainSubstance: Vocabulary
 }

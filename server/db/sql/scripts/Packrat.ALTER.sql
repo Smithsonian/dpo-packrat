@@ -973,3 +973,17 @@ UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetUse'              WHERE
 -- ============================================================
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 5, 'Collimator' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Collimator');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 3, 'Nanometer'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Nanometer');
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: stain substance sublist (Eric)
+-- New set 38 CaptureDataVolume.StainSubstance + nullable idVStainSubstance FK on
+-- CaptureDataVolume, surfaced only when SpecimenPreparation is 'Stained'. Column
+-- and index adds are re-runnable; the FK add applies once per environment.
+-- ============================================================
+INSERT IGNORE INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (38, 'CaptureDataVolume.StainSubstance', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 38, 1, 'Iodine-based stains'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=38 AND Term='Iodine-based stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 38, 2, 'Heteropolyacid stains' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=38 AND Term='Heteropolyacid stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 38, 3, 'Osmium-based stains'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=38 AND Term='Osmium-based stains');
+ALTER TABLE CaptureDataVolume ADD COLUMN IF NOT EXISTS idVStainSubstance INT NULL;
+ALTER TABLE CaptureDataVolume ADD INDEX IF NOT EXISTS fk_capturedatavolume_v7 (idVStainSubstance);
+ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v7 FOREIGN KEY (idVStainSubstance) REFERENCES Vocabulary(idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;

@@ -71,6 +71,7 @@ type CaptureDataDetailFields {
     voltageKV: Float
     amperageUA: Float
     specimenPreparation: Int
+    stainSubstance: Int
     voxelSizeX: Float
     voxelSizeY: Float
     voxelSizeZ: Float

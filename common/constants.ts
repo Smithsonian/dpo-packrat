@@ -47,6 +47,7 @@ export enum eVocabularySetID {
     eCaptureDataVolumeFilterLocation,
     eCaptureDataVolumeVoxelSizeUnit,
     eCaptureDataVolumeSpecimenPreparation,
+    eCaptureDataVolumeStainSubstance,
     eNone = -1
 }
 
@@ -274,6 +275,9 @@ export enum eVocabularyID {
     eCaptureDataVolumeSpecimenPreparationLive,
     eCaptureDataVolumeSpecimenPreparationOther,
     eCaptureDataVolumeSpecimenPreparationNone,
+    eCaptureDataVolumeStainSubstanceIodine,
+    eCaptureDataVolumeStainSubstanceHeteropolyacid,
+    eCaptureDataVolumeStainSubstanceOsmium,
     eNone = -1
 }
 

@@ -95,6 +95,7 @@ export class VocabularyCache {
                 case 'CaptureDataVolume.FilterLocation':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation; break;
                 case 'CaptureDataVolume.VoxelSizeUnit':         eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit; break;
                 case 'CaptureDataVolume.SpecimenPreparation':   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation; break;
+                case 'CaptureDataVolume.StainSubstance':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeStainSubstance; break;
             }
 
             /* istanbul ignore else */
@@ -400,6 +401,14 @@ export class VocabularyCache {
                         case 'Embedded':                        eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded; break;
                         case 'Live':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive; break;
                         case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeStainSubstance: {
+                    switch (vocabulary.Term) {
+                        case 'Iodine-based stains':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceIodine; break;
+                        case 'Heteropolyacid stains':           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceHeteropolyacid; break;
+                        case 'Osmium-based stains':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceOsmium; break;
                     }
                 } break;
 

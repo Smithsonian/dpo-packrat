@@ -1051,6 +1051,7 @@ class IngestDataWorker extends ResolverBase {
         if (!isPosIntOrEmpty(volume.bitDepth)) return 'Bit Depth must be a positive integer';
         if (volume.filterLocation !== null && volume.filterLocation !== undefined && !isPos(volume.filterLocation)) return 'Filter Location is invalid';
         if (volume.specimenPreparation !== null && volume.specimenPreparation !== undefined && !isPos(volume.specimenPreparation)) return 'Specimen Preparation is invalid';
+        if (volume.stainSubstance !== null && volume.stainSubstance !== undefined && !isPos(volume.stainSubstance)) return 'Stain Substance is invalid';
         return null;
     }
 
@@ -1175,6 +1176,7 @@ class IngestDataWorker extends ResolverBase {
             volumeDB.VoltageKV = volume.voltageKV ?? null;
             volumeDB.AmperageUA = volume.amperageUA ?? null;
             volumeDB.idVSpecimenPreparation = volume.specimenPreparation ?? null;
+            volumeDB.idVStainSubstance = volume.stainSubstance ?? null;
             volumeDB.VoxelSizeX = volume.voxelSizeX;
             volumeDB.VoxelSizeY = volume.voxelSizeY;
             volumeDB.VoxelSizeZ = volume.voxelSizeZ;
@@ -1197,6 +1199,7 @@ class IngestDataWorker extends ResolverBase {
                 VoltageKV: volume.voltageKV ?? null,
                 AmperageUA: volume.amperageUA ?? null,
                 idVSpecimenPreparation: volume.specimenPreparation ?? null,
+                idVStainSubstance: volume.stainSubstance ?? null,
                 VoxelSizeX: volume.voxelSizeX,
                 VoxelSizeY: volume.voxelSizeY,
                 VoxelSizeZ: volume.voxelSizeZ,
