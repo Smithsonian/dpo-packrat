@@ -192,6 +192,7 @@ type CaptureDataDetailFields {
   dimensionsZ: Int
   fileCount: Int
   filterLocation: Int
+  filterMaterial: Int
   focusType: Int
   folders: [IngestFolder!]!
   isValidData: Boolean
@@ -232,6 +233,7 @@ input CaptureDataDetailFieldsInput {
   dimensionsZ: Int
   fileCount: Int
   filterLocation: Int
+  filterMaterial: Int
   focusType: Int
   folders: [IngestFolderInput!]!
   isValidData: Boolean
@@ -305,6 +307,7 @@ type CaptureDataVolume {
   SliceCount: Int
   VContentType: Vocabulary
   VFilterLocation: Vocabulary
+  VFilterMaterial: Vocabulary
   VModality: Vocabulary
   VScanType: Vocabulary
   VSpecimenPreparation: Vocabulary
@@ -318,6 +321,7 @@ type CaptureDataVolume {
   idCaptureDataVolume: Int!
   idVContentType: Int!
   idVFilterLocation: Int
+  idVFilterMaterial: Int
   idVModality: Int!
   idVScanType: Int!
   idVSpecimenPreparation: Int
@@ -1255,6 +1259,7 @@ input IngestVolumeInput {
   directory: String!
   fileCount: Int!
   filterLocation: Int
+  filterMaterial: Int
   idAsset: Int
   idAssetVersion: Int!
   identifiers: [IngestIdentifierInput!]!

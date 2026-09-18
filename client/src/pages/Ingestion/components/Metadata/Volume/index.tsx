@@ -188,6 +188,13 @@ function Volume(props: VolumeProps): React.ReactElement {
             if (term !== 'Stained')
                 updateMetadataField(metadataIndex, 'stainSubstance', null, MetadataType.volume);
         }
+        // Filter Material only applies when a filter is present; clear it when the
+        // filter location is None or unset so a hidden value is not ingested.
+        if (name === 'filterLocation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === idValue)?.Term;
+            if (!term || term === 'None')
+                updateMetadataField(metadataIndex, 'filterMaterial', null, MetadataType.volume);
+        }
     };
     const setDateField = (_date: unknown, value?: string | null): void => {
         if (value) updateMetadataField(metadataIndex, 'dateCaptured', new Date(value), MetadataType.volume);
@@ -311,6 +318,8 @@ function Volume(props: VolumeProps): React.ReactElement {
 
     const specimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
     const isStained: boolean = specimenPrepEntries.find(e => e.idVocabulary === volume.specimenPreparation)?.Term === 'Stained';
+    const filterLocationTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === volume.filterLocation)?.Term;
+    const showFilterMaterial: boolean = !!filterLocationTerm && filterLocationTerm !== 'None';
 
     return (
         <Box className={classes.container}>
@@ -409,6 +418,7 @@ function Volume(props: VolumeProps): React.ReactElement {
                             {renderSelectRow('specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, 'Specimen Preparation', false, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
                             {isStained && renderSelectRow('stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, 'Stain Substance', false, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false)}
+                            {showFilterMaterial && renderSelectRow('filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, 'Filter Material', false)}
 
                             {renderNumberRow('voxelSizeX', 'Voxel Size X', true, false, 'any')}
                             {renderNumberRow('voxelSizeY', 'Voxel Size Y', true, false, 'any')}

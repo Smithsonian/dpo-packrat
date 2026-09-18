@@ -48,6 +48,7 @@ export enum eVocabularySetID {
     eCaptureDataVolumeVoxelSizeUnit,
     eCaptureDataVolumeSpecimenPreparation,
     eCaptureDataVolumeStainSubstance,
+    eCaptureDataVolumeFilterMaterial,
     eNone = -1
 }
 
@@ -278,6 +279,9 @@ export enum eVocabularyID {
     eCaptureDataVolumeStainSubstanceIodine,
     eCaptureDataVolumeStainSubstanceHeteropolyacid,
     eCaptureDataVolumeStainSubstanceOsmium,
+    eCaptureDataVolumeFilterMaterialZinc,
+    eCaptureDataVolumeFilterMaterialIron,
+    eCaptureDataVolumeFilterMaterialCombo,
     eNone = -1
 }
 

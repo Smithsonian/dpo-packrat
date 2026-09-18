@@ -15,6 +15,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     AmperageUA!: number | null;
     idVSpecimenPreparation!: number | null;
     idVStainSubstance!: number | null;
+    idVFilterMaterial!: number | null;
     VoxelSizeX!: number;
     VoxelSizeY!: number;
     VoxelSizeZ!: number;
@@ -35,6 +36,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     AmperageUAOrig!: number | null;
     idVSpecimenPreparationOrig!: number | null;
     idVStainSubstanceOrig!: number | null;
+    idVFilterMaterialOrig!: number | null;
     VoxelSizeXOrig!: number;
     VoxelSizeYOrig!: number;
     VoxelSizeZOrig!: number;
@@ -54,7 +56,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     protected updateCachedValues(): void {
         this.snapshotTrackedFields([
             'idVModality', 'idVScanType', 'idVContentType',
-            'ScannerMakeModel', 'VoltageKV', 'AmperageUA', 'idVSpecimenPreparation', 'idVStainSubstance',
+            'ScannerMakeModel', 'VoltageKV', 'AmperageUA', 'idVSpecimenPreparation', 'idVStainSubstance', 'idVFilterMaterial',
             'VoxelSizeX', 'VoxelSizeY', 'VoxelSizeZ', 'idVVoxelSizeUnit',
             'DimensionsX', 'DimensionsY', 'DimensionsZ', 'BitDepth',
             'FileCount', 'SliceCount', 'idVFilterLocation',
@@ -67,14 +69,14 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     protected async createWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idVModality, idVScanType, idVContentType,
-                ScannerMakeModel, VoltageKV, AmperageUA, idVSpecimenPreparation, idVStainSubstance,
+                ScannerMakeModel, VoltageKV, AmperageUA, idVSpecimenPreparation, idVStainSubstance, idVFilterMaterial,
                 VoxelSizeX, VoxelSizeY, VoxelSizeZ, idVVoxelSizeUnit,
                 DimensionsX, DimensionsY, DimensionsZ, BitDepth,
                 FileCount, SliceCount, idVFilterLocation } = this;
             ({ idCaptureDataVolume: this.idCaptureDataVolume, idCaptureData: this.idCaptureData,
                 idVModality: this.idVModality, idVScanType: this.idVScanType, idVContentType: this.idVContentType,
                 ScannerMakeModel: this.ScannerMakeModel, VoltageKV: this.VoltageKV,
-                AmperageUA: this.AmperageUA, idVSpecimenPreparation: this.idVSpecimenPreparation, idVStainSubstance: this.idVStainSubstance,
+                AmperageUA: this.AmperageUA, idVSpecimenPreparation: this.idVSpecimenPreparation, idVStainSubstance: this.idVStainSubstance, idVFilterMaterial: this.idVFilterMaterial,
                 VoxelSizeX: this.VoxelSizeX, VoxelSizeY: this.VoxelSizeY, VoxelSizeZ: this.VoxelSizeZ,
                 idVVoxelSizeUnit: this.idVVoxelSizeUnit,
                 DimensionsX: this.DimensionsX, DimensionsY: this.DimensionsY, DimensionsZ: this.DimensionsZ,
@@ -90,6 +92,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
                         Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary:         idVFilterLocation ? { connect: { idVocabulary: idVFilterLocation }, } : undefined,
                         Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary:    idVSpecimenPreparation ? { connect: { idVocabulary: idVSpecimenPreparation }, } : undefined,
                         Vocabulary_CaptureDataVolume_idVStainSubstanceToVocabulary:         idVStainSubstance ? { connect: { idVocabulary: idVStainSubstance }, } : undefined,
+                        Vocabulary_CaptureDataVolume_idVFilterMaterialToVocabulary:         idVFilterMaterial ? { connect: { idVocabulary: idVFilterMaterial }, } : undefined,
                         ScannerMakeModel, VoltageKV, AmperageUA,
                         VoxelSizeX, VoxelSizeY, VoxelSizeZ,
                         DimensionsX, DimensionsY, DimensionsZ,
@@ -106,7 +109,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
     protected async updateWorker(): Promise<boolean> {
         try {
             const { idCaptureData, idCaptureDataVolume, idVModality, idVScanType, idVContentType,
-                ScannerMakeModel, VoltageKV, AmperageUA, idVSpecimenPreparation, idVStainSubstance,
+                ScannerMakeModel, VoltageKV, AmperageUA, idVSpecimenPreparation, idVStainSubstance, idVFilterMaterial,
                 VoxelSizeX, VoxelSizeY, VoxelSizeZ, idVVoxelSizeUnit,
                 DimensionsX, DimensionsY, DimensionsZ, BitDepth,
                 FileCount, SliceCount, idVFilterLocation } = this;
@@ -121,6 +124,7 @@ export class CaptureDataVolume extends DBC.DBObject<CaptureDataVolumeBase> imple
                     Vocabulary_CaptureDataVolume_idVFilterLocationToVocabulary:         idVFilterLocation ? { connect: { idVocabulary: idVFilterLocation }, } : { disconnect: true, },
                     Vocabulary_CaptureDataVolume_idVSpecimenPreparationToVocabulary:    idVSpecimenPreparation ? { connect: { idVocabulary: idVSpecimenPreparation }, } : { disconnect: true, },
                     Vocabulary_CaptureDataVolume_idVStainSubstanceToVocabulary:         idVStainSubstance ? { connect: { idVocabulary: idVStainSubstance }, } : { disconnect: true, },
+                    Vocabulary_CaptureDataVolume_idVFilterMaterialToVocabulary:         idVFilterMaterial ? { connect: { idVocabulary: idVFilterMaterial }, } : { disconnect: true, },
                     ScannerMakeModel, VoltageKV, AmperageUA,
                     VoxelSizeX, VoxelSizeY, VoxelSizeZ,
                     DimensionsX, DimensionsY, DimensionsZ,

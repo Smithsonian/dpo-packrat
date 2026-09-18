@@ -300,6 +300,11 @@ INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (38, 1, 'Iodine
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (38, 2, 'Heteropolyacid stains');
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (38, 3, 'Osmium-based stains');
 
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (39, 'CaptureDataVolume.FilterMaterial', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (39, 1, 'Zinc');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (39, 2, 'Iron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (39, 3, 'Combo');
+
 -- MetadataSource: Volumetric — moved out of inline position (set 18 SortOrder 3)
 INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (18, 3, 'Volumetric');
 

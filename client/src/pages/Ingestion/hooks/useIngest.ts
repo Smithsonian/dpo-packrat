@@ -313,7 +313,7 @@ function useIngest(): UseIngest {
                     const {
                         name, description, dateCaptured, systemCreated,
                         modality, scanType, contentType,
-                        scannerMakeModel, voltageKV, amperageUA, specimenPreparation, stainSubstance,
+                        scannerMakeModel, voltageKV, amperageUA, specimenPreparation, stainSubstance, filterMaterial,
                         voxelSizeX, voxelSizeY, voxelSizeZ, voxelSizeUnit,
                         dimensionsX, dimensionsY, dimensionsZ, bitDepth,
                         fileCount, sliceCount, filterLocation,
@@ -335,6 +335,7 @@ function useIngest(): UseIngest {
                         amperageUA,
                         specimenPreparation: specimenPreparation ?? null,
                         stainSubstance: stainSubstance ?? null,
+                        filterMaterial: filterMaterial ?? null,
                         voxelSizeX: nonNullValue<number>('voxelSizeX', voxelSizeX),
                         voxelSizeY: nonNullValue<number>('voxelSizeY', voxelSizeY),
                         voxelSizeZ: nonNullValue<number>('voxelSizeZ', voxelSizeZ),

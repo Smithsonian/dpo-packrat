@@ -1052,6 +1052,7 @@ class IngestDataWorker extends ResolverBase {
         if (volume.filterLocation !== null && volume.filterLocation !== undefined && !isPos(volume.filterLocation)) return 'Filter Location is invalid';
         if (volume.specimenPreparation !== null && volume.specimenPreparation !== undefined && !isPos(volume.specimenPreparation)) return 'Specimen Preparation is invalid';
         if (volume.stainSubstance !== null && volume.stainSubstance !== undefined && !isPos(volume.stainSubstance)) return 'Stain Substance is invalid';
+        if (volume.filterMaterial !== null && volume.filterMaterial !== undefined && !isPos(volume.filterMaterial)) return 'Filter Material is invalid';
         return null;
     }
 
@@ -1177,6 +1178,7 @@ class IngestDataWorker extends ResolverBase {
             volumeDB.AmperageUA = volume.amperageUA ?? null;
             volumeDB.idVSpecimenPreparation = volume.specimenPreparation ?? null;
             volumeDB.idVStainSubstance = volume.stainSubstance ?? null;
+            volumeDB.idVFilterMaterial = volume.filterMaterial ?? null;
             volumeDB.VoxelSizeX = volume.voxelSizeX;
             volumeDB.VoxelSizeY = volume.voxelSizeY;
             volumeDB.VoxelSizeZ = volume.voxelSizeZ;
@@ -1200,6 +1202,7 @@ class IngestDataWorker extends ResolverBase {
                 AmperageUA: volume.amperageUA ?? null,
                 idVSpecimenPreparation: volume.specimenPreparation ?? null,
                 idVStainSubstance: volume.stainSubstance ?? null,
+                idVFilterMaterial: volume.filterMaterial ?? null,
                 VoxelSizeX: volume.voxelSizeX,
                 VoxelSizeY: volume.voxelSizeY,
                 VoxelSizeZ: volume.voxelSizeZ,

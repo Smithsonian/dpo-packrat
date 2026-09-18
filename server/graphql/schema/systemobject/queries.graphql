@@ -72,6 +72,7 @@ type CaptureDataDetailFields {
     amperageUA: Float
     specimenPreparation: Int
     stainSubstance: Int
+    filterMaterial: Int
     voxelSizeX: Float
     voxelSizeY: Float
     voxelSizeZ: Float

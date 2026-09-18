@@ -204,6 +204,7 @@ export type VolumeFields = {
     amperageUA: number | null;
     specimenPreparation: number | null;
     stainSubstance: number | null;
+    filterMaterial: number | null;
     voxelSizeX: number | null;
     voxelSizeY: number | null;
     voxelSizeZ: number | null;

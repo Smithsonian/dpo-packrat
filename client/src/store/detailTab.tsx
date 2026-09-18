@@ -176,6 +176,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
         amperageUA: null,
         specimenPreparation: null,
         stainSubstance: null,
+        filterMaterial: null,
         voxelSizeX: null,
         voxelSizeY: null,
         voxelSizeZ: null,
@@ -542,6 +543,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
                 amperageUA,
                 specimenPreparation,
                 stainSubstance,
+                filterMaterial,
                 voxelSizeX,
                 voxelSizeY,
                 voxelSizeZ,
@@ -585,6 +587,7 @@ export const useDetailTabStore = create<DetailTabStore>((set: SetState<DetailTab
             updateDetailField(eSystemObjectType.eCaptureData, 'amperageUA', amperageUA);
             updateDetailField(eSystemObjectType.eCaptureData, 'specimenPreparation', specimenPreparation);
             updateDetailField(eSystemObjectType.eCaptureData, 'stainSubstance', stainSubstance);
+            updateDetailField(eSystemObjectType.eCaptureData, 'filterMaterial', filterMaterial);
             updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeX', voxelSizeX);
             updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeY', voxelSizeY);
             updateDetailField(eSystemObjectType.eCaptureData, 'voxelSizeZ', voxelSizeZ);

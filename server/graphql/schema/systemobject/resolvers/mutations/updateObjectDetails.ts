@@ -314,6 +314,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         amperageUA,
                         specimenPreparation,
                         stainSubstance,
+                        filterMaterial,
                         voxelSizeX,
                         voxelSizeY,
                         voxelSizeZ,
@@ -391,6 +392,7 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             CDV.AmperageUA = maybe<number>(amperageUA);
                             CDV.idVSpecimenPreparation = maybe<number>(specimenPreparation);
                             CDV.idVStainSubstance = maybe<number>(stainSubstance);
+                            CDV.idVFilterMaterial = maybe<number>(filterMaterial);
                             CDV.DimensionsX = maybe<number>(dimensionsX);
                             CDV.DimensionsY = maybe<number>(dimensionsY);
                             CDV.BitDepth = maybe<number>(bitDepth);

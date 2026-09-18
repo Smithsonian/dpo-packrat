@@ -796,6 +796,7 @@ function DetailsView(): React.ReactElement {
                     sliceCount,
                     filterLocation,
                     stainSubstance,
+                    filterMaterial,
                 } = CaptureDataDetails;
 
                 updatedData.CaptureData = {
@@ -835,6 +836,7 @@ function DetailsView(): React.ReactElement {
                     sliceCount,
                     filterLocation,
                     stainSubstance,
+                    filterMaterial,
                 };
             }
 

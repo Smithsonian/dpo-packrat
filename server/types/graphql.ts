@@ -225,6 +225,7 @@ export type CaptureDataDetailFields = {
   dimensionsZ?: Maybe<Scalars['Int']>;
   fileCount?: Maybe<Scalars['Int']>;
   filterLocation?: Maybe<Scalars['Int']>;
+  filterMaterial?: Maybe<Scalars['Int']>;
   focusType?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
   isValidData?: Maybe<Scalars['Boolean']>;
@@ -265,6 +266,7 @@ export type CaptureDataDetailFieldsInput = {
   dimensionsZ?: InputMaybe<Scalars['Int']>;
   fileCount?: InputMaybe<Scalars['Int']>;
   filterLocation?: InputMaybe<Scalars['Int']>;
+  filterMaterial?: InputMaybe<Scalars['Int']>;
   focusType?: InputMaybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
   isValidData?: InputMaybe<Scalars['Boolean']>;
@@ -342,6 +344,7 @@ export type CaptureDataVolume = {
   SliceCount?: Maybe<Scalars['Int']>;
   VContentType?: Maybe<Vocabulary>;
   VFilterLocation?: Maybe<Vocabulary>;
+  VFilterMaterial?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
   VScanType?: Maybe<Vocabulary>;
   VSpecimenPreparation?: Maybe<Vocabulary>;
@@ -355,6 +358,7 @@ export type CaptureDataVolume = {
   idCaptureDataVolume: Scalars['Int'];
   idVContentType: Scalars['Int'];
   idVFilterLocation?: Maybe<Scalars['Int']>;
+  idVFilterMaterial?: Maybe<Scalars['Int']>;
   idVModality: Scalars['Int'];
   idVScanType: Scalars['Int'];
   idVSpecimenPreparation?: Maybe<Scalars['Int']>;
@@ -1364,6 +1368,7 @@ export type IngestVolumeInput = {
   directory: Scalars['String'];
   fileCount: Scalars['Int'];
   filterLocation?: InputMaybe<Scalars['Int']>;
+  filterMaterial?: InputMaybe<Scalars['Int']>;
   idAsset?: InputMaybe<Scalars['Int']>;
   idAssetVersion: Scalars['Int'];
   identifiers: Array<IngestIdentifierInput>;

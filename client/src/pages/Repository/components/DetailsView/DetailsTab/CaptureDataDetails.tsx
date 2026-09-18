@@ -171,7 +171,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
         'specimenPreparation', 'stainSubstance', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
         'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
-        'filterLocation',
+        'filterLocation', 'filterMaterial',
     ];
     const CDD_PHOTO_FIELDS: string[] = [
         'itemPositionType', 'itemPositionFieldId', 'itemArrangementFieldId',
@@ -227,6 +227,11 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
             if (term !== 'Stained')
                 updateDetailField(eSystemObjectType.eCaptureData, 'stainSubstance', null);
         }
+        if (name === 'filterLocation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === idFieldValue)?.Term;
+            if (!term || term === 'None')
+                updateDetailField(eSystemObjectType.eCaptureData, 'filterMaterial', null);
+        }
         if (name === 'datasetType' && idFieldValue !== getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet))
             updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', '[]');
     };
@@ -246,6 +251,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
     const cdSpecimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
     const cdIsStained: boolean = cdSpecimenPrepEntries.find(e => e.idVocabulary === CaptureDataDetails.specimenPreparation)?.Term === 'Stained';
+    const cdFilterLocationTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === CaptureDataDetails.filterLocation)?.Term;
+    const cdShowFilterMaterial: boolean = !!cdFilterLocationTerm && cdFilterLocationTerm !== 'None';
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
@@ -379,6 +386,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any')}
                                 {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any')}
                                 {renderVolumeSelectRow('Filter Location', 'filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, true)}
+                                {cdShowFilterMaterial && renderVolumeSelectRow('Filter Material', 'filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, true)}
                                 {renderVolumeSelectRow('Voxel Size Unit', 'voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, false)}
                                 {renderVolumeNumberRow('Voxel Size X', 'voxelSizeX', 'any')}
                                 {renderVolumeNumberRow('Voxel Size Y', 'voxelSizeY', 'any')}
