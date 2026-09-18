@@ -715,6 +715,26 @@ export class VocabularyCache {
         return (await this.getInstance()).isVocabularyInSetInternal(eVocabEnum, eVocabSetEnum);
     }
 
+    /**
+     * True when the given CaptureDataVolume modality id is an X-ray modality
+     * (Medical CT, Micro CT, Nano CT, Synchrotron). MRI is not X-ray. Voltage and
+     * amperage are X-ray tube parameters, so callers require them only for these.
+     */
+    static async isVolumeXrayModality(idVModality: number | null | undefined): Promise<boolean> {
+        if (idVModality === null || idVModality === undefined)
+            return false;
+        const xrayEnums: COMMON.eVocabularyID[] = [
+            COMMON.eVocabularyID.eCaptureDataVolumeModalityMedicalCT,
+            COMMON.eVocabularyID.eCaptureDataVolumeModalityMicroCT,
+            COMMON.eVocabularyID.eCaptureDataVolumeModalityNanoCT,
+            COMMON.eVocabularyID.eCaptureDataVolumeModalitySynchrotron,
+        ];
+        for (const eVocab of xrayEnums)
+            if (await VocabularyCache.vocabularyEnumToId(eVocab) === idVModality)
+                return true;
+        return false;
+    }
+
     static mapModelAssetType(fileName: string): COMMON.eVocabularyID | undefined {
         // does this file have an extension recognizable as geometry?
         const eModelType: COMMON.eVocabularyID | undefined = VocabularyCache.mapModelFileByExtensionID(fileName);

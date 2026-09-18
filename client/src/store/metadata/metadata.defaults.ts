@@ -13,6 +13,19 @@ import { useVocabularyStore } from '../vocabulary';
 const isModelPurpose = (purpose: number, eVocab: eVocabularyID): boolean =>
     purpose === useVocabularyStore.getState().getVocabularyId(eVocab);
 
+// voltage/amperage are X-ray tube parameters, required for X-ray modalities (Medical/Micro/Nano CT,
+// Synchrotron) and optional for MRI; resolve the modality vocabulary ids at validation time
+const XRAY_MODALITY_ENUMS: eVocabularyID[] = [
+    eVocabularyID.eCaptureDataVolumeModalityMedicalCT,
+    eVocabularyID.eCaptureDataVolumeModalityMicroCT,
+    eVocabularyID.eCaptureDataVolumeModalityNanoCT,
+    eVocabularyID.eCaptureDataVolumeModalitySynchrotron,
+];
+const isXrayModality = (modality: number): boolean => {
+    const getId = useVocabularyStore.getState().getVocabularyId;
+    return XRAY_MODALITY_ENUMS.some(eVocab => modality === getId(eVocab));
+};
+
 const MAX_INTEGER = 2147483647;
 
 const identifierWhenSelectedValidation = {
@@ -388,8 +401,14 @@ export const volumeFieldsSchemaUpdate = yup.object().shape({
     scanType: yup.number().typeError('Please select a scan type').required('Please select a scan type'),
     contentType: yup.number().typeError('Please select a content type').required('Please select a content type'),
     scannerMakeModel: yup.string(),
-    voltageKV: yup.number().nullable(true).typeError('Voltage must be a number').positive('Voltage must be positive'),
-    amperageUA: yup.number().nullable(true).typeError('Amperage must be a number').positive('Amperage must be positive'),
+    voltageKV: yup.number().nullable(true).typeError('Voltage must be a number').positive('Voltage must be positive').when('modality', {
+        is: (modality: number) => isXrayModality(modality),
+        then: yup.number().typeError('Voltage is required for X-ray modalities').required('Voltage is required for X-ray modalities').positive('Voltage must be positive'),
+    }),
+    amperageUA: yup.number().nullable(true).typeError('Amperage must be a number').positive('Amperage must be positive').when('modality', {
+        is: (modality: number) => isXrayModality(modality),
+        then: yup.number().typeError('Amperage is required for X-ray modalities').required('Amperage is required for X-ray modalities').positive('Amperage must be positive'),
+    }),
     specimenPreparation: yup.number().nullable(true),
     stainSubstance: yup.number().nullable(true),
     filterMaterial: yup.number().nullable(true),

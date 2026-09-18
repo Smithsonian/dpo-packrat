@@ -1034,7 +1034,7 @@ class IngestDataWorker extends ResolverBase {
     // inventory facts (fileCount, sliceCount, contentType, dimensionsZ) are NOT
     // checked here — they are system-derived from inspection, not user input.
     // This defends direct GraphQL calls that bypass the client's Yup validation.
-    private validateVolumeUserFields(volume: IngestVolumeInput): string | null {
+    private async validateVolumeUserFields(volume: IngestVolumeInput): Promise<string | null> {
         const isPos = (n: number | null | undefined): boolean => typeof n === 'number' && n > 0;
         const isNonNegOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (typeof n === 'number' && n >= 0);
         const isPosIntOrEmpty = (n: number | null | undefined): boolean => n === null || n === undefined || (Number.isInteger(n) && (n as number) > 0);
@@ -1053,6 +1053,12 @@ class IngestDataWorker extends ResolverBase {
         if (volume.specimenPreparation !== null && volume.specimenPreparation !== undefined && !isPos(volume.specimenPreparation)) return 'Specimen Preparation is invalid';
         if (volume.stainSubstance !== null && volume.stainSubstance !== undefined && !isPos(volume.stainSubstance)) return 'Stain Substance is invalid';
         if (volume.filterMaterial !== null && volume.filterMaterial !== undefined && !isPos(volume.filterMaterial)) return 'Filter Material is invalid';
+        // Voltage/amperage are X-ray tube parameters: required for X-ray modalities
+        // (Medical/Micro/Nano CT, Synchrotron); MRI has no tube so they stay optional.
+        if (await CACHE.VocabularyCache.isVolumeXrayModality(volume.modality)) {
+            if (volume.voltageKV === null || volume.voltageKV === undefined) return 'Voltage (kV) is required for X-ray modalities';
+            if (volume.amperageUA === null || volume.amperageUA === undefined) return 'Amperage (µA) is required for X-ray modalities';
+        }
         return null;
     }
 
@@ -1089,7 +1095,7 @@ class IngestDataWorker extends ResolverBase {
         }
 
         // Validate user-supplied fields against sane ranges.
-        const volumeFieldError: string | null = this.validateVolumeUserFields(volume);
+        const volumeFieldError: string | null = await this.validateVolumeUserFields(volume);
         if (volumeFieldError) {
             RK.logError(RK.LogSection.eGQL,'create volume objects failed',volumeFieldError,{ volume },'GraphQL.Ingestion.Data');
             await this.appendToWFReport(`Cannot ingest volumetric data: ${volumeFieldError}`, true);

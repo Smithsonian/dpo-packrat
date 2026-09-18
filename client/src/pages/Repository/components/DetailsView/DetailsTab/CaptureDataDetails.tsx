@@ -253,6 +253,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
     const cdIsStained: boolean = cdSpecimenPrepEntries.find(e => e.idVocabulary === CaptureDataDetails.specimenPreparation)?.Term === 'Stained';
     const cdFilterLocationTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === CaptureDataDetails.filterLocation)?.Term;
     const cdShowFilterMaterial: boolean = !!cdFilterLocationTerm && cdFilterLocationTerm !== 'None';
+    const cdModalityTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeModality).find(e => e.idVocabulary === CaptureDataDetails.modality)?.Term;
+    const cdXrayModality: boolean = !!cdModalityTerm && ['Medical CT', 'Micro CT', 'Nano CT', 'Synchrotron'].includes(cdModalityTerm);
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
@@ -383,8 +385,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeSelectRow('Scan Type', 'scanType', eVocabularySetID.eCaptureDataVolumeScanType, false)}
                                 {renderVolumeSelectRow('Content Type', 'contentType', eVocabularySetID.eCaptureDataVolumeContentType, false, undefined, true)}
                                 {renderVolumeTextRow('Scanner Make/Model', 'scannerMakeModel')}
-                                {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any')}
-                                {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any')}
+                                {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any', false, cdXrayModality)}
+                                {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any', false, cdXrayModality)}
                                 {renderVolumeSelectRow('Filter Location', 'filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, true)}
                                 {cdShowFilterMaterial && renderVolumeSelectRow('Filter Material', 'filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, true)}
                                 {renderVolumeSelectRow('Voxel Size Unit', 'voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, false)}
@@ -638,12 +640,12 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         );
     }
 
-    function renderVolumeNumberRow(label: string, fieldName: string, step?: string, readOnly: boolean = false): JSX.Element {
+    function renderVolumeNumberRow(label: string, fieldName: string, step?: string, readOnly: boolean = false, required: boolean = false): JSX.Element {
         const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
         return (
             <TableRow className={classes.tableRow} key={fieldName}>
                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
-                    <Typography className={classes.labelText}>{label}</Typography>
+                    <Typography className={classes.labelText}>{label}{required && '*'}</Typography>
                 </TableCell>
                 <TableCell className={clsx(classes.tableCell, classes.valueText)}>
                     <DebounceInput

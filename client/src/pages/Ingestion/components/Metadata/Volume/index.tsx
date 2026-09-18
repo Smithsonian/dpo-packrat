@@ -320,6 +320,8 @@ function Volume(props: VolumeProps): React.ReactElement {
     const isStained: boolean = specimenPrepEntries.find(e => e.idVocabulary === volume.specimenPreparation)?.Term === 'Stained';
     const filterLocationTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === volume.filterLocation)?.Term;
     const showFilterMaterial: boolean = !!filterLocationTerm && filterLocationTerm !== 'None';
+    const modalityTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeModality).find(e => e.idVocabulary === volume.modality)?.Term;
+    const xrayModality: boolean = !!modalityTerm && ['Medical CT', 'Micro CT', 'Nano CT', 'Synchrotron'].includes(modalityTerm);
 
     return (
         <Box className={classes.container}>
@@ -413,8 +415,8 @@ function Volume(props: VolumeProps): React.ReactElement {
                     <Table className={tableClasses.table}>
                         <TableBody>
                             {renderTextRow('scannerMakeModel', 'Scanner Make/Model')}
-                            {renderNumberRow('voltageKV', 'Voltage (kV)', false, false, 'any')}
-                            {renderNumberRow('amperageUA', 'Amperage (µA)', false, false, 'any')}
+                            {renderNumberRow('voltageKV', 'Voltage (kV)', xrayModality, false, 'any')}
+                            {renderNumberRow('amperageUA', 'Amperage (µA)', xrayModality, false, 'any')}
                             {renderSelectRow('specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, 'Specimen Preparation', false, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
                             {isStained && renderSelectRow('stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, 'Stain Substance', false, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false)}
