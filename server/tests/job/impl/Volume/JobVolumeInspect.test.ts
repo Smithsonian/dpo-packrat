@@ -14,6 +14,7 @@ import { PcaSidecarParser } from '../../../../job/impl/Volume/sidecar/pca';
 import { PcrSidecarParser } from '../../../../job/impl/Volume/sidecar/pcr';
 import { parseSidecars } from '../../../../job/impl/Volume/sidecar';
 import { DicomInspector } from '../../../../job/impl/Volume/dicom/DicomInspector';
+import { makeDicomInstance } from '../../../fixtures/volume/generate';
 
 const FIXTURE_DIR: string = path.resolve(__dirname, '../../../fixtures/volume');
 
@@ -101,6 +102,14 @@ describe('JobVolumeInspect — DICOM inspector', () => {
         expect(inspect.sliceThicknessMM).toBeCloseTo(0.025, 6);
         expect(inspect.manufacturer).toBe('PackratTest');
         expect(inspect.manufacturerModelName).toBe('SyntheticCT-1');
+    });
+
+    test('DicomInspector reads NumberOfFrames from an enhanced/multiframe instance', async () => {
+        const dcmPath: string = path.join(tempStaging, 'multiframe.dcm');
+        await fs.writeFile(dcmPath, makeDicomInstance({ numberOfFrames: 8 }));
+        const inspect = await DicomInspector.inspectFile(dcmPath);
+        expect(inspect.frameCount).toBe(8);
+        expect(inspect.rows).toBe(16);
     });
 });
 
@@ -208,6 +217,16 @@ describe('JobVolumeInspect — fatal failure paths', () => {
         const zipPath: string = await stageFixture('volume-test-pca-mismatch.zip');
         // The .pca declares more slices than the ZIP holds — a data-integrity conflict, now fatal.
         await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/integrity check failed/i);
+    });
+
+    test('Enhanced/multiframe DICOM (NumberOfFrames > 1) is rejected', async () => {
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+        zip.file('volume.dcm', makeDicomInstance({ numberOfFrames: 16 }));
+        const outBuf: Buffer = await zip.generateAsync({ type: 'nodebuffer' });
+        const zipPath: string = path.join(tempStaging, 'dicom-multiframe.zip');
+        await fs.writeFile(zipPath, outBuf);
+        await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/multiframe DICOM is not yet supported/i);
     });
 });
 
