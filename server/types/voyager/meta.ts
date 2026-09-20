@@ -112,6 +112,7 @@ export interface IAction
     audioId?: string;
     annotationId?: string;
     actionAnnoId?: string;
+    stateId?: string;
     actionTargetId?: string;
     animation?: string;
     style?: TActionPlayStyle;
@@ -121,8 +122,8 @@ export interface IAction
     enabled?: boolean;
 }
 
-export type TActionType = "PlayAnimation" | "PlayAudio" | "ShowAnnotation" | "HideAnnotation" | "ToggleAnnotation" | "EnableAction" | "DisableAction";
-export enum EActionType { PlayAnimation, PlayAudio, ShowAnnotation, HideAnnotation, ToggleAnnotation, EnableAction, DisableAction }
+export type TActionType = "PlayAnimation" | "PlayAudio" | "ShowAnnotation" | "HideAnnotation" | "ToggleAnnotation" | "StateChange" | "EnableAction" | "DisableAction";
+export enum EActionType { PlayAnimation, PlayAudio, ShowAnnotation, HideAnnotation, ToggleAnnotation, StateChange, EnableAction, DisableAction }
 
 export type TActionTrigger = "OnClick" | "OnLoad" | "OnAnnotation" | "OnTourStep" | "OnActionEnd" | "OnActionBegin";
 export enum EActionTrigger { OnClick, OnLoad, OnAnnotation, OnTourStep, OnActionEnd, OnActionBegin }
