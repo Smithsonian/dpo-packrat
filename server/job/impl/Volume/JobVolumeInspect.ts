@@ -315,14 +315,15 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
             await validateImageStackSlices(zip, sliceEntries, headerData, stagingDir, warnings);
         }
 
-        // Stage 5: cross-check + companion file tagging.
-        //   - Slice count: a sidecar's declared count (the .pcr's reconstructed Volume_SizeZ) is
-        //     a reliable integrity signal — a mismatch means slices are missing or extra, so it
-        //     fails the inspection rather than being silently tolerated.
-        //   - Dimensions: ROI crops and detector binning legitimately change these, so a
-        //     sidecar-vs-header dimension difference stays a warning and the header value is used.
+        // Stage 5: cross-check + companion file tagging. The ZIP's own contents are authoritative,
+        // so a sidecar difference is a warning, not a failure:
+        //   - Slice count: a difference is expected for raw/projection datasets (projection count
+        //     differs from reconstructed slice count) or a partial/ROI export; for a reconstructed
+        //     stack it can indicate missing slices, so the message asks the user to verify. Genuinely
+        //     missing slices inside a contiguous stack are still caught fatally by the gap check above.
+        //   - Dimensions: ROI crops and detector binning legitimately change these; the header wins.
         if (sidecarResult.declaredSliceCount !== undefined && sidecarResult.declaredSliceCount !== sliceCount)
-            integrityErrors.push(`Sidecar declares ${sidecarResult.declaredSliceCount} slices but the archive contains ${sliceCount}`);
+            warnings.push(`Slice count mismatch: the scan sidecar declares ${sidecarResult.declaredSliceCount} slice(s) but the archive contains ${sliceCount} slice file(s). The archive contents were used (they are authoritative). A difference is expected for raw/projection datasets (projection count differs from reconstructed slice count) or a partial/ROI export; for a reconstructed stack it can mean slices are missing — verify the slice count before ingesting.`);
         if (sidecarResult.declaredDimensionsX !== undefined && headerData.dimensionsX !== undefined
             && sidecarResult.declaredDimensionsX !== headerData.dimensionsX)
             warnings.push(`Sidecar declares dimensionsX=${sidecarResult.declaredDimensionsX} but header reports ${headerData.dimensionsX} (using ${headerData.dimensionsX})`);

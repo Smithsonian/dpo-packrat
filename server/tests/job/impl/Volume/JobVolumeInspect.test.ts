@@ -213,12 +213,6 @@ describe('JobVolumeInspect — fatal failure paths', () => {
         await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/Stage 1/);
     });
 
-    test('Cross-check mismatch: a sidecar slice count that contradicts the ZIP fails inspection', async () => {
-        const zipPath: string = await stageFixture('volume-test-pca-mismatch.zip');
-        // The .pca declares more slices than the ZIP holds — a data-integrity conflict, now fatal.
-        await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/integrity check failed/i);
-    });
-
     test('Enhanced/multiframe DICOM (NumberOfFrames > 1) is rejected', async () => {
         const JSZip = (await import('jszip')).default;
         const zip = new JSZip();
@@ -230,21 +224,33 @@ describe('JobVolumeInspect — fatal failure paths', () => {
     });
 });
 
-describe('JobVolumeInspect — integrity conflicts are fatal', () => {
-    test('PCR declared slice count that differs from the actual count fails inspection', async () => {
+describe('JobVolumeInspect — slice-count mismatch is a non-fatal warning', () => {
+    test('a .pca declaring more slices than the ZIP holds warns but succeeds (ZIP authoritative)', async () => {
+        const zipPath: string = await stageFixture('volume-test-pca-mismatch.zip');
+        const md: VolumeExtractedMetadata = await inspectVolumeZip(zipPath, tempStaging);
+        expect(md.sliceCount).toBe(4);                       // ZIP contents are authoritative
+        expect(md.warnings.some(w => /^Slice count mismatch/i.test(w))).toBe(true);
+    });
+
+    test('a .pcr reconstructed slice count that differs from the ZIP warns but succeeds', async () => {
         const JSZip = (await import('jszip')).default;
         const fss = await import('fs');
         const dicomZipBuf: Buffer = fss.readFileSync(path.join(FIXTURE_DIR, 'volume-test-dicom.zip'));
         const zip = await JSZip.loadAsync(dicomZipBuf);
-        // 4 DICOM slices in the ZIP, but the .pcr declares 2023 reconstructed slices.
+        // 4 DICOM slices in the ZIP, but the .pcr declares 2023 reconstructed slices — expected for
+        // raw/projection data or a partial export, so this warns rather than failing.
         zip.file('scan.pcr', '[VolumeData]\nVolume_SizeX=16\nVolume_SizeY=16\nVolume_SizeZ=2023\nVoxelSizeRec=0.1\n');
         const outBuf: Buffer = await zip.generateAsync({ type: 'nodebuffer' });
         const zipPath: string = path.join(tempStaging, 'dicom-pcr-count-mismatch.zip');
         await fs.writeFile(zipPath, outBuf);
 
-        await expect(inspectVolumeZip(zipPath, tempStaging)).rejects.toThrow(/integrity check failed/i);
+        const md: VolumeExtractedMetadata = await inspectVolumeZip(zipPath, tempStaging);
+        expect(md.sliceCount).toBe(4);
+        expect(md.warnings.some(w => /^Slice count mismatch/i.test(w))).toBe(true);
     });
+});
 
+describe('JobVolumeInspect — missing slices are fatal', () => {
     test('a gap in the slice sequence (missing slice) fails inspection', async () => {
         const JSZip = (await import('jszip')).default;
         const fss = await import('fs');

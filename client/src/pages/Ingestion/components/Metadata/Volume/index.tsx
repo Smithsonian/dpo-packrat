@@ -30,6 +30,7 @@ import ObjectSelectModal from '../Model/ObjectSelectModal';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { makeStyles } from '@material-ui/core/styles';
 import API from '../../../../../api';
+import { toastWarning } from '../../../../../utils/toastError';
 import { parseFileId } from '../../../../../store/utils';
 import { RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
 import { apolloClient } from '../../../../../graphql/index';
@@ -110,6 +111,16 @@ function Volume(props: VolumeProps): React.ReactElement {
             // so the user knows the sidecar's voxel/voltage/scanner values are not contributing.
             if (Array.isArray(m.warnings) && m.warnings.some((w: string) => /^sidecar parsing error/i.test(w)))
                 toast.warn('Sidecar metadata could not be read — fields are pre-filled from the scan headers only. Please review.');
+
+            // The archive's slice count differs from a sidecar's declared count. The ZIP is
+            // authoritative; surface the inspection's full explanation in the toast Details so the
+            // user can confirm the count (benign for raw/projection or partial exports; for a
+            // reconstructed stack it may mean missing slices).
+            const sliceMismatch: string | undefined = Array.isArray(m.warnings)
+                ? m.warnings.find((w: string) => /^Slice count mismatch/i.test(w))
+                : undefined;
+            if (sliceMismatch)
+                toastWarning('Slice count differs from the scan sidecar — please review before ingesting.', sliceMismatch);
 
             if (m.fileCount !== undefined) updateMetadataField(metadataIndex, 'fileCount', m.fileCount, MetadataType.volume);
             if (m.sliceCount !== undefined) updateMetadataField(metadataIndex, 'sliceCount', m.sliceCount, MetadataType.volume);
