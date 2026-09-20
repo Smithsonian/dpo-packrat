@@ -1081,6 +1081,13 @@ class IngestDataWorker extends ResolverBase {
         }
         const meta: VOL.VolumeExtractedMetadata = inspection.metadata;
 
+        // Surface every inspection warning (e.g. slice-count mismatch, sidecar parse errors) in
+        // the workflow report so they are visible on the Workflow page, not only in the ingest UI.
+        // Non-fatal: the ingest proceeds; the warnings are advisory.
+        if (Array.isArray(meta.warnings))
+            for (const warning of meta.warnings)
+                await this.appendToWFReport(`Volumetric inspection warning: ${warning}`, false, false, 'warn');
+
         // Content type is determined by the ZIP bytes, not the user. Map the
         // inspected content type to its vocabulary id; a successful inspection is
         // always IMAGE_STACK or DICOM (OTHER fails inspection upstream).

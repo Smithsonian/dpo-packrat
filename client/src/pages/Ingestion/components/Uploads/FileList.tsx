@@ -17,6 +17,7 @@ interface FileListProps {
     references?: UploadReferences;
     uploadType?: eIngestionMode;
     idSystemObject?: number;
+    warningsByFileId?: Record<string, string[]>;
 }
 
 interface NewAnimatePresenceProps extends Omit<AnimatePresenceProps, 'children'> {
@@ -32,7 +33,7 @@ export function AnimatedComponent({ children }: { children: React.ReactNode }): 
 function FileList(props: FileListProps): React.ReactElement {
     const { selectFile } = useUploadStore();
     const { getEntries } = useVocabularyStore();
-    const { files, uploadPendingList, references, idSystemObject } = props;
+    const { files, uploadPendingList, references, idSystemObject, warningsByFileId } = props;
     const { startUpload, retryUpload, retrySpecialUpload, cancelUpload, cancelSpecialUpload, removeUpload, removeSpecialPending, changeAssetType } = useUploadStore();
     const onChangeType = (id: FileId, assetType: number): void => changeAssetType(id, assetType);
 
@@ -95,6 +96,7 @@ function FileList(props: FileListProps): React.ReactElement {
                     references={references}
                     uploadPendingList={uploadPendingList}
                     idSystemObject={idSystemObject}
+                    warnings={warningsByFileId?.[id]}
                 />
             </AnimatedComponent>
         );

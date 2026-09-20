@@ -54,6 +54,7 @@ function shapeTotals(t: MetricsTotals): any {
             },
         },
         subjectsWithCaptureCreated: t.subjectsWithCaptureCreated,                    // distinct subjects with newly-created capture data
+        mediaGroupsWithCaptureCreated: t.mediaGroupsWithCaptureCreated,              // distinct media groups (items) with newly-created capture data
         storage: {
             bytes: t.storageBytes,
             terabytes: toTB(t.storageBytes),
@@ -76,6 +77,7 @@ function shapeSeriesPoint(p: MetricsSeriesPoint): any {
         objectsCreatedByType: p.objectsCreatedByType,
         objectsUpdatedByType: updatedByType(p.repositoryObjectsByType, p.objectsCreatedByType),
         subjectsWithCaptureCreated: p.subjectsWithCaptureCreated,
+        mediaGroupsWithCaptureCreated: p.mediaGroupsWithCaptureCreated,
         storageBytes: p.storageBytes,
         storageTerabytes: toTB(p.storageBytes),
         storageBytesNonDPO: p.storageBytesNonDPO,

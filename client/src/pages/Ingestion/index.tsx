@@ -9,7 +9,7 @@
 import { Box } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React, { useEffect, useState } from 'react';
-import { Route, Routes, Navigate } from 'react-router';
+import { Route, Routes, Navigate, useLocation } from 'react-router';
 import { INGESTION_PARAMS_TYPE, INGESTION_ROUTE,resolveRoute, INGESTION_ROUTES_TYPE, resolveSubRoute, HOME_ROUTES } from '../../constants';
 import { useMetadataStore } from '../../store';
 import { IngestionSidebarMenu, IngestionSidebarOption } from './components/IngestionSidebar';
@@ -28,8 +28,13 @@ const useStyles = makeStyles(() => ({
 
 function Ingestion(): React.ReactElement {
     const classes = useStyles();
+    const location = useLocation();
     const { metadatas } = useMetadataStore();
     const { ingestionReset } = useIngest();
+
+    // The step sidebar only applies once past the Uploads entry screen; on Uploads it
+    // has no navigable steps and can surface leftover metadata from a prior ingest.
+    const onUploads = location.pathname.includes(INGESTION_ROUTE.ROUTES.UPLOADS);
 
     const [options, setOptions] = useState<IngestionSidebarOption[]>([]);
     // check metadata. if every entry is update (idAsset) or attachment (idSOAttachment) then we want to skip the subject/item step
@@ -66,10 +71,17 @@ function Ingestion(): React.ReactElement {
         ingestionReset(true);
     }, []);
 
+    // On the Uploads entry screen, clear subject/item/metadata state so nothing carries
+    // over from a prior ingest. The uploaded-files list is preserved for re-selection.
+    useEffect(() => {
+        if (onUploads)
+            ingestionReset();
+    }, [onUploads]);
+
     // Menu routes for the second sidebar in Ingestion
     return (
         <Box className={classes.container}>
-            <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />
+            {!onUploads && <IngestionSidebarMenu title='INGESTION' paramIdentifier={INGESTION_PARAMS_TYPE.STEP} options={options} />}
             <Routes>
                 <Route path={resolveRoute(INGESTION_ROUTES_TYPE.UPLOADS)} element={<Uploads />} />
                 <Route path={resolveRoute(INGESTION_ROUTES_TYPE.SUBJECT_MEDIA_GROUP)} element={<SubjectItem />} />

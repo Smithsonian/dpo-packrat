@@ -387,6 +387,8 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeTextRow('Scanner Make/Model', 'scannerMakeModel')}
                                 {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any', false, cdXrayModality)}
                                 {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any', false, cdXrayModality)}
+                                {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
+                                {cdIsStained && renderVolumeSelectRow('Stain Substance', 'stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, true, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                                 {renderVolumeSelectRow('Filter Location', 'filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, true)}
                                 {cdShowFilterMaterial && renderVolumeSelectRow('Filter Material', 'filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, true)}
                                 {renderVolumeSelectRow('Voxel Size Unit', 'voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, false)}
@@ -399,8 +401,6 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeNumberRow('Bit Depth', 'bitDepth')}
                                 {renderVolumeNumberRow('File Count', 'fileCount', undefined, true)}
                                 {renderVolumeNumberRow('Slice Count', 'sliceCount', undefined, true)}
-                                {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
-                                {cdIsStained && renderVolumeSelectRow('Stain Substance', 'stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, true, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             </TableBody>
                         </Table>
                     </TableContainer>
@@ -613,7 +613,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     function renderVolumeSelectRow(label: string, fieldName: string, vocabSet: eVocabularySetID, optional: boolean, tooltip?: string, readOnly: boolean = false): JSX.Element {
         const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
-        const entries = optional
+        // Sets that carry their own 'None' term need no extra placeholder; the field stays
+        // blank until a term is chosen. Other optional sets keep a nullable placeholder.
+        const showPlaceholder: boolean = optional && !getEntries(vocabSet).some(e => e.Term === 'None');
+        const entries = showPlaceholder
             ? getNullableSelectEntries(getEntries(vocabSet), 'idVocabulary', 'Term')
             : getEntries(vocabSet).map(e => ({ value: e.idVocabulary, label: e.Term }));
         const labelNode = <Typography className={classes.labelText}>{label}</Typography>;
@@ -625,7 +628,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                 <TableCell className={classes.tableCell}>
                     <Select
                         disabled={disabled || readOnly}
-                        value={value ?? (optional ? -1 : '')}
+                        value={value ?? (showPlaceholder ? -1 : '')}
                         name={fieldName}
                         onChange={setIdField}
                         disableUnderline

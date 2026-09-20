@@ -33,6 +33,7 @@ import * as H from '../../../utils/helpers';
 import { ZipFile } from '../../../utils/zipFile';
 import { MetadataExtractor } from '../../../metadata/MetadataExtractor';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import * as COMMON from '@dpo-packrat/common';
 
 import { JobVolumeInspectParameters } from './JobVolumeInspectParameters';
 import { VolumeContentType, VolumeExtractedMetadata } from './JobVolumeInspectOutput';
@@ -134,6 +135,11 @@ export class JobVolumeInspect extends JobPackrat {
 
         try {
             const metadata: VolumeExtractedMetadata = await this.runInspection();
+            // Surface inspection warnings on this job's workflow report as warn-level events, so they
+            // appear on the Workflow page (report body + the list "Warn" column) at inspection time.
+            if (Array.isArray(metadata.warnings))
+                for (const warning of metadata.warnings)
+                    await this.appendToReportAndLog(`Volume inspection warning: ${warning}`, undefined, { code: COMMON.WorkflowReportCode.JobWarning, level: 'warn' });
             await this.recordSuccess(JSON.stringify(metadata));
             return { success: true };
         } catch (err) {
