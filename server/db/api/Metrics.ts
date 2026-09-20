@@ -88,6 +88,8 @@ export type MetricsTotals = {
     objectsCreatedByType: MetricsObjectTypeBreakdown;
     /** Distinct subjects with a capture dataset newly created (earliest ingested version) in the window. */
     subjectsWithCaptureCreated: number;
+    /** Distinct media groups (items) with a capture dataset newly created (earliest ingested version) in the window. */
+    mediaGroupsWithCaptureCreated: number;
     /** Total bytes of ingested asset versions (full OCFL footprint, all versions). */
     storageBytes: number;
     /** Subset of storageBytes contributed by non-DPO users. */
@@ -286,6 +288,33 @@ export class Metrics {
         }
     }
 
+    /**
+     * Distinct media groups (items) with a capture dataset newly created in a window: capture data whose earliest
+     * ingested asset version falls in [lo, hi], walked up the SystemObjectXref chain CaptureData -> Item.
+     */
+    static async fetchMediaGroupsWithCaptureCreated(lo: Date, hi: Date, idProject: number | null = null): Promise<number> {
+        try {
+            const rows = await DBC.DBConnection.prisma.$queryRaw<{ mediaGroups: number | bigint }[]>(Prisma.sql`
+                SELECT COUNT(DISTINCT soItem.idItem) AS mediaGroups
+                FROM (
+                    SELECT A.idSystemObject AS idSystemObject
+                    FROM AssetVersion AS AV
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.Ingested = 1 AND A.idSystemObject IS NOT NULL
+                      ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}
+                    GROUP BY A.idSystemObject
+                    HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
+                ) AS t
+                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject = t.idSystemObject AND cdSO.idCaptureData IS NOT NULL AND cdSO.Retired = 0)
+                JOIN SystemObjectXref AS soxCD ON (soxCD.idSystemObjectDerived = cdSO.idSystemObject)
+                JOIN SystemObject AS soItem ON (soItem.idSystemObject = soxCD.idSystemObjectMaster AND soItem.idItem IS NOT NULL AND soItem.Retired = 0)`);
+            return rows[0] ? Number(rows[0].mediaGroups) : 0;
+        } catch (error) /* istanbul ignore next */ {
+            RK.logError(RK.LogSection.eDB, 'metrics media groups with capture created failed', H.Helpers.getErrorString(error), { lo, hi }, 'DB.Metrics');
+            return 0;
+        }
+    }
+
     /** Distinct non-DPO users with any audited activity in a window. */
     static async fetchActiveNonDPOUsers(lo: Date, hi: Date, dpoUserIDs: number[]): Promise<number> {
         try {
@@ -365,12 +394,13 @@ export class Metrics {
 
     /** All summary totals for a window, assembled from the individual aggregate queries. */
     static async fetchTotals(lo: Date, hi: Date, dpoUserIDs: number[], idProject: number | null = null): Promise<MetricsTotals> {
-        const [storage, objectsCreated, repositoryObjectsByType, objectsCreatedByType, subjectsWithCaptureCreated, activeNonDPOUsers, scenes, scenesPublishedCurrent] = await Promise.all([
+        const [storage, objectsCreated, repositoryObjectsByType, objectsCreatedByType, subjectsWithCaptureCreated, mediaGroupsWithCaptureCreated, activeNonDPOUsers, scenes, scenesPublishedCurrent] = await Promise.all([
             Metrics.fetchStorageTotals(lo, hi, dpoUserIDs, idProject),
             Metrics.fetchObjectsCreated(lo, hi, idProject),
             Metrics.fetchRepositoryObjectsByType(lo, hi, idProject),
             Metrics.fetchObjectsCreatedByType(lo, hi, idProject),
             Metrics.fetchSubjectsWithCaptureCreated(lo, hi, idProject),
+            Metrics.fetchMediaGroupsWithCaptureCreated(lo, hi, idProject),
             Metrics.fetchActiveNonDPOUsers(lo, hi, dpoUserIDs),
             Metrics.fetchScenesPublished(lo, hi, idProject),
             Metrics.fetchScenesCurrentlyPublished(hi, idProject),
@@ -381,6 +411,7 @@ export class Metrics {
             repositoryObjectsByType,
             objectsCreatedByType,
             subjectsWithCaptureCreated,
+            mediaGroupsWithCaptureCreated,
             activeNonDPOUsers,
             scenePublishEvents: scenes.events,
             scenesPublished: scenes.distinctScenes,
@@ -395,7 +426,7 @@ export class Metrics {
         const point = (period: string): MetricsSeriesPoint => {
             let p: MetricsSeriesPoint | undefined = points.get(period);
             if (!p) {
-                p = { period, assetVersions: 0, repositoryObjects: 0, repositoryObjectsByType: zeroBreakdown(), objectsCreated: 0, objectsCreatedByType: zeroBreakdown(), subjectsWithCaptureCreated: 0, storageBytes: 0, storageBytesNonDPO: 0, activeNonDPOUsers: 0, scenePublishEvents: 0, scenesPublished: 0, scenesPublishedCurrent: 0 };
+                p = { period, assetVersions: 0, repositoryObjects: 0, repositoryObjectsByType: zeroBreakdown(), objectsCreated: 0, objectsCreatedByType: zeroBreakdown(), subjectsWithCaptureCreated: 0, mediaGroupsWithCaptureCreated: 0, storageBytes: 0, storageBytesNonDPO: 0, activeNonDPOUsers: 0, scenePublishEvents: 0, scenesPublished: 0, scenesPublishedCurrent: 0 };
                 points.set(period, p);
             }
             return p;
@@ -503,6 +534,25 @@ export class Metrics {
                 GROUP BY period`);
             for (const r of subjectCaptureRows)
                 point(r.period).subjectsWithCaptureCreated = Number(r.subjects);
+
+            // Distinct media groups (items) with newly-created capture data per period, bucketed by the capture data's earliest ingested version.
+            const mediaGroupCaptureRows = await DBC.DBConnection.prisma.$queryRaw<{ period: string; mediaGroups: number | bigint }[]>(Prisma.sql`
+                SELECT DATE_FORMAT(t.firstDate, ${fmt}) AS period, COUNT(DISTINCT soItem.idItem) AS mediaGroups
+                FROM (
+                    SELECT A.idSystemObject AS idSystemObject, MIN(AV.DateCreated) AS firstDate
+                    FROM AssetVersion AS AV
+                    JOIN Asset AS A ON (AV.idAsset = A.idAsset)
+                    WHERE AV.Ingested = 1 AND A.idSystemObject IS NOT NULL
+                      ${projectMemberFilter(Prisma.sql`A.idSystemObject`, idProject)}
+                    GROUP BY A.idSystemObject
+                    HAVING MIN(AV.DateCreated) BETWEEN ${lo} AND ${hi}
+                ) AS t
+                JOIN SystemObject AS cdSO ON (cdSO.idSystemObject = t.idSystemObject AND cdSO.idCaptureData IS NOT NULL AND cdSO.Retired = 0)
+                JOIN SystemObjectXref AS soxCD ON (soxCD.idSystemObjectDerived = cdSO.idSystemObject)
+                JOIN SystemObject AS soItem ON (soItem.idSystemObject = soxCD.idSystemObjectMaster AND soItem.idItem IS NOT NULL AND soItem.Retired = 0)
+                GROUP BY period`);
+            for (const r of mediaGroupCaptureRows)
+                point(r.period).mediaGroupsWithCaptureCreated = Number(r.mediaGroups);
 
             const eventRows = await DBC.DBConnection.prisma.$queryRaw<{ period: string; events: number | bigint }[]>(Prisma.sql`
                 SELECT DATE_FORMAT(SOV.DateCreated, ${fmt}) AS period, COUNT(*) AS events
