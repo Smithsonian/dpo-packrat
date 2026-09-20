@@ -95,6 +95,8 @@ export class VocabularyCache {
                 case 'CaptureDataVolume.FilterLocation':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeFilterLocation; break;
                 case 'CaptureDataVolume.VoxelSizeUnit':         eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit; break;
                 case 'CaptureDataVolume.SpecimenPreparation':   eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeSpecimenPreparation; break;
+                case 'CaptureDataVolume.StainSubstance':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeStainSubstance; break;
+                case 'CaptureDataVolume.FilterMaterial':        eVocabSetEnum = COMMON.eVocabularySetID.eCaptureDataVolumeFilterMaterial; break;
             }
 
             /* istanbul ignore else */
@@ -378,6 +380,7 @@ export class VocabularyCache {
                         case 'Source Side':                     eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationSourceSide; break;
                         case 'Detector Side':                   eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationDetectorSide; break;
                         case 'Both':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationBoth; break;
+                        case 'Collimator':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterLocationCollimator; break;
                     }
                 } break;
 
@@ -385,6 +388,7 @@ export class VocabularyCache {
                     switch (vocabulary.Term) {
                         case 'Micrometer':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMicrometer; break;
                         case 'Millimeter':                      eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitMillimeter; break;
+                        case 'Nanometer':                       eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeVoxelSizeUnitNanometer; break;
                     }
                 } break;
 
@@ -398,6 +402,22 @@ export class VocabularyCache {
                         case 'Embedded':                        eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationEmbedded; break;
                         case 'Live':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationLive; break;
                         case 'Other':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeSpecimenPreparationOther; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeStainSubstance: {
+                    switch (vocabulary.Term) {
+                        case 'Iodine-based stains':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceIodine; break;
+                        case 'Heteropolyacid stains':           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceHeteropolyacid; break;
+                        case 'Osmium-based stains':             eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeStainSubstanceOsmium; break;
+                    }
+                } break;
+
+                case COMMON.eVocabularySetID.eCaptureDataVolumeFilterMaterial: {
+                    switch (vocabulary.Term) {
+                        case 'Zinc':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterMaterialZinc; break;
+                        case 'Iron':                            eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterMaterialIron; break;
+                        case 'Combo':                           eVocabEnum = COMMON.eVocabularyID.eCaptureDataVolumeFilterMaterialCombo; break;
                     }
                 } break;
 
@@ -693,6 +713,26 @@ export class VocabularyCache {
     /** fetches the VocabularySet.idVocabularySet for a given vocabulary set enum */
     static async isVocabularyInSet(eVocabEnum: COMMON.eVocabularyID, eVocabSetEnum: COMMON.eVocabularySetID): Promise<boolean> {
         return (await this.getInstance()).isVocabularyInSetInternal(eVocabEnum, eVocabSetEnum);
+    }
+
+    /**
+     * True when the given CaptureDataVolume modality id is an X-ray modality
+     * (Medical CT, Micro CT, Nano CT, Synchrotron). MRI is not X-ray. Voltage and
+     * amperage are X-ray tube parameters, so callers require them only for these.
+     */
+    static async isVolumeXrayModality(idVModality: number | null | undefined): Promise<boolean> {
+        if (idVModality === null || idVModality === undefined)
+            return false;
+        const xrayEnums: COMMON.eVocabularyID[] = [
+            COMMON.eVocabularyID.eCaptureDataVolumeModalityMedicalCT,
+            COMMON.eVocabularyID.eCaptureDataVolumeModalityMicroCT,
+            COMMON.eVocabularyID.eCaptureDataVolumeModalityNanoCT,
+            COMMON.eVocabularyID.eCaptureDataVolumeModalitySynchrotron,
+        ];
+        for (const eVocab of xrayEnums)
+            if (await VocabularyCache.vocabularyEnumToId(eVocab) === idVModality)
+                return true;
+        return false;
     }
 
     static mapModelAssetType(fileName: string): COMMON.eVocabularyID | undefined {

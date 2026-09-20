@@ -192,6 +192,7 @@ type CaptureDataDetailFields {
   dimensionsZ: Int
   fileCount: Int
   filterLocation: Int
+  filterMaterial: Int
   focusType: Int
   folders: [IngestFolder!]!
   isValidData: Boolean
@@ -204,6 +205,7 @@ type CaptureDataDetailFields {
   scannerMakeModel: String
   sliceCount: Int
   specimenPreparation: Int
+  stainSubstance: Int
   systemCreated: Boolean
   voltageKV: Float
   voxelSizeUnit: Int
@@ -231,6 +233,7 @@ input CaptureDataDetailFieldsInput {
   dimensionsZ: Int
   fileCount: Int
   filterLocation: Int
+  filterMaterial: Int
   focusType: Int
   folders: [IngestFolderInput!]!
   isValidData: Boolean
@@ -243,6 +246,7 @@ input CaptureDataDetailFieldsInput {
   scannerMakeModel: String
   sliceCount: Int
   specimenPreparation: Int
+  stainSubstance: Int
   systemCreated: Boolean
   voltageKV: Float
   voxelSizeUnit: Int
@@ -303,9 +307,11 @@ type CaptureDataVolume {
   SliceCount: Int
   VContentType: Vocabulary
   VFilterLocation: Vocabulary
+  VFilterMaterial: Vocabulary
   VModality: Vocabulary
   VScanType: Vocabulary
   VSpecimenPreparation: Vocabulary
+  VStainSubstance: Vocabulary
   VVoxelSizeUnit: Vocabulary
   VoltageKV: Float
   VoxelSizeX: Float!
@@ -315,9 +321,11 @@ type CaptureDataVolume {
   idCaptureDataVolume: Int!
   idVContentType: Int!
   idVFilterLocation: Int
+  idVFilterMaterial: Int
   idVModality: Int!
   idVScanType: Int!
   idVSpecimenPreparation: Int
+  idVStainSubstance: Int
   idVVoxelSizeUnit: Int!
 }
 
@@ -1251,6 +1259,7 @@ input IngestVolumeInput {
   directory: String!
   fileCount: Int!
   filterLocation: Int
+  filterMaterial: Int
   idAsset: Int
   idAssetVersion: Int!
   identifiers: [IngestIdentifierInput!]!
@@ -1261,6 +1270,7 @@ input IngestVolumeInput {
   sliceCount: Int
   sourceObjects: [RelatedObjectInput!]!
   specimenPreparation: Int
+  stainSubstance: Int
   systemCreated: Boolean!
   updateNotes: String
   voltageKV: Float

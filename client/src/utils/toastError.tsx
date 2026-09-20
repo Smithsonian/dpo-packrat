@@ -135,4 +135,38 @@ export function toastError(source: unknown, fallback: string, options?: ToastOpt
     toast.error(content, { closeOnClick: false, ...options });
 }
 
+/**
+ * toastWarning
+ *
+ * A warning-level toast that mirrors toastError's UX: a concise headline plus an optional
+ * expandable "Details" disclosure carrying the full human-readable reason (e.g. why a value
+ * looks off and what to check). Use for non-fatal conditions the user should review — the
+ * inspection surfaces its full explanation as the detail, and the headline stays short.
+ */
+export function toastWarning(headline: string, detail?: string, options?: ToastOptions): void {
+    const reason: string = (detail ?? '').trim();
+    const showDetails: boolean = reason.length > 0 && reason !== headline;
+
+    if (!showDetails) {
+        toast.warn(headline, options);
+        return;
+    }
+
+    const copyPayload = `${headline}\n\n${reason}`;
+    const content = (
+        <div>
+            <span>{headline}</span>
+            <CopyButton text={copyPayload} />
+            <details style={{ marginTop: 4 }}>
+                <summary style={{ cursor: 'pointer', fontSize: '0.85em' }}>Details</summary>
+                <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.8em', marginTop: 4 }}>{reason}</div>
+            </details>
+        </div>
+    );
+
+    // closeOnClick disabled so the user can expand Details without dismissing; autoClose off so a
+    // review-worthy warning is not missed. A caller-supplied option still wins.
+    toast.warn(content, { closeOnClick: false, autoClose: false, ...options });
+}
+
 export default toastError;

@@ -286,6 +286,13 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
         // Stage 4: header sampling
         const headerData: HeaderSampleData = await sampleHeader(zip, sliceEntries, contentType, stagingDir, warnings);
 
+        // Enhanced/multiframe DICOM packs the whole volume into a single instance; our slice
+        // inventory counts instances, so such a file would under-report slice and Z-depth counts.
+        // Reject with a clear message until a dedicated multiframe inspector is added — at which
+        // point this gate becomes the branch that routes DICOM to it instead of failing.
+        if (contentType === 'DICOM' && headerData.frameCount !== undefined && headerData.frameCount > 1)
+            throw new Error(`Enhanced/multiframe DICOM is not yet supported (sampled instance reports ${headerData.frameCount} frames). Please provide a single-frame DICOM series with one instance per slice.`);
+
         // Stage 4b: per-slice header validation (image-stack only). DICOM
         // instances are skipped — DICOM transfer-syntax variance is too broad
         // to validate cheaply, and the cross-checks with sidecar + first-slice
@@ -308,14 +315,15 @@ export async function inspectVolumeZip(zipPath: string, stagingDir: string): Pro
             await validateImageStackSlices(zip, sliceEntries, headerData, stagingDir, warnings);
         }
 
-        // Stage 5: cross-check + companion file tagging.
-        //   - Slice count: a sidecar's declared count (the .pcr's reconstructed Volume_SizeZ) is
-        //     a reliable integrity signal — a mismatch means slices are missing or extra, so it
-        //     fails the inspection rather than being silently tolerated.
-        //   - Dimensions: ROI crops and detector binning legitimately change these, so a
-        //     sidecar-vs-header dimension difference stays a warning and the header value is used.
+        // Stage 5: cross-check + companion file tagging. The ZIP's own contents are authoritative,
+        // so a sidecar difference is a warning, not a failure:
+        //   - Slice count: a difference is expected for raw/projection datasets (projection count
+        //     differs from reconstructed slice count) or a partial/ROI export; for a reconstructed
+        //     stack it can indicate missing slices, so the message asks the user to verify. Genuinely
+        //     missing slices inside a contiguous stack are still caught fatally by the gap check above.
+        //   - Dimensions: ROI crops and detector binning legitimately change these; the header wins.
         if (sidecarResult.declaredSliceCount !== undefined && sidecarResult.declaredSliceCount !== sliceCount)
-            integrityErrors.push(`Sidecar declares ${sidecarResult.declaredSliceCount} slices but the archive contains ${sliceCount}`);
+            warnings.push(`Slice count mismatch: the scan sidecar declares ${sidecarResult.declaredSliceCount} slice(s) but the archive contains ${sliceCount} slice file(s). The archive contents were used (they are authoritative). A difference is expected for raw/projection datasets (projection count differs from reconstructed slice count) or a partial/ROI export; for a reconstructed stack it can mean slices are missing — verify the slice count before ingesting.`);
         if (sidecarResult.declaredDimensionsX !== undefined && headerData.dimensionsX !== undefined
             && sidecarResult.declaredDimensionsX !== headerData.dimensionsX)
             warnings.push(`Sidecar declares dimensionsX=${sidecarResult.declaredDimensionsX} but header reports ${headerData.dimensionsX} (using ${headerData.dimensionsX})`);
@@ -441,11 +449,12 @@ interface HeaderSampleData {
     voxelSizeX?: number;
     voxelSizeY?: number;
     voxelSizeZ?: number;
-    voxelSizeUnit?: 'Micrometer' | 'Millimeter';
+    voxelSizeUnit?: 'Micrometer' | 'Millimeter' | 'Nanometer';
     voltageKV?: number;
     amperageUA?: number;
     scannerMakeModel?: string;
     modality?: string;
+    frameCount?: number;
 }
 
 /**
@@ -564,13 +573,16 @@ async function sampleDicom(filePath: string, warnings: string[]): Promise<Header
     if (dicom.rows !== undefined) data.dimensionsY = dicom.rows;
     if (dicom.bitsAllocated !== undefined) data.bitDepth = dicom.bitsAllocated;
 
-    // DICOM PixelSpacing is in mm by convention; SliceThickness in mm too.
-    if (dicom.pixelSpacingRow !== undefined || dicom.pixelSpacingColumn !== undefined || dicom.sliceThicknessMM !== undefined) {
+    // DICOM PixelSpacing is in mm by convention; SliceThickness/SpacingBetweenSlices in mm too.
+    if (dicom.pixelSpacingRow !== undefined || dicom.pixelSpacingColumn !== undefined || dicom.sliceThicknessMM !== undefined || dicom.spacingBetweenSlicesMM !== undefined) {
         data.voxelSizeUnit = 'Millimeter';
         data.voxelSizeY = dicom.pixelSpacingRow;
         data.voxelSizeX = dicom.pixelSpacingColumn;
-        data.voxelSizeZ = dicom.sliceThicknessMM;
+        // Inter-slice spacing (0018,0088) is the true Z voxel pitch for a stack; fall back to
+        // slice thickness (0018,0050) when the scanner did not record spacing.
+        data.voxelSizeZ = dicom.spacingBetweenSlicesMM ?? dicom.sliceThicknessMM;
     }
+    if (dicom.frameCount !== undefined) data.frameCount = dicom.frameCount;
     if (dicom.voltageKV !== undefined) data.voltageKV = dicom.voltageKV;
     if (dicom.tubeCurrentMA !== undefined) data.amperageUA = dicom.tubeCurrentMA * 1000;     // mA → µA
 

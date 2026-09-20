@@ -255,6 +255,8 @@ async function getCaptureDataDetailFields(idCaptureData: number): Promise<Captur
                 voltageKV: CaptureDataVolume.VoltageKV,
                 amperageUA: CaptureDataVolume.AmperageUA,
                 specimenPreparation: CaptureDataVolume.idVSpecimenPreparation,
+                stainSubstance: CaptureDataVolume.idVStainSubstance,
+                filterMaterial: CaptureDataVolume.idVFilterMaterial,
                 voxelSizeX: CaptureDataVolume.VoxelSizeX,
                 voxelSizeY: CaptureDataVolume.VoxelSizeY,
                 voxelSizeZ: CaptureDataVolume.VoxelSizeZ,

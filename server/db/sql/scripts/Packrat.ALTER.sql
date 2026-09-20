@@ -965,3 +965,39 @@ UPDATE VocabularySet SET Name = 'CaptureDataPhoto.LightSourceType'         WHERE
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.BackgroundRemovalMethod' WHERE Name = 'CaptureData.BackgroundRemovalMethod';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.ClusterType'             WHERE Name = 'CaptureData.ClusterType';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetUse'              WHERE Name = 'CaptureData.DatasetUse';
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: Nanometer voxel unit + Collimator filter (Eric)
+-- Additive vocabulary in existing sets 35 (FilterLocation) and 36 (VoxelSizeUnit).
+-- Re-runnable: NOT EXISTS skips rows already present.
+-- ============================================================
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 35, 5, 'Collimator' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=35 AND Term='Collimator');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 36, 3, 'Nanometer'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=36 AND Term='Nanometer');
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: stain substance sublist (Eric)
+-- New set 38 CaptureDataVolume.StainSubstance + nullable idVStainSubstance FK on
+-- CaptureDataVolume, surfaced only when SpecimenPreparation is 'Stained'. Column
+-- and index adds are re-runnable; the FK add applies once per environment.
+-- ============================================================
+INSERT IGNORE INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (38, 'CaptureDataVolume.StainSubstance', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 38, 1, 'Iodine-based stains'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=38 AND Term='Iodine-based stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 38, 2, 'Heteropolyacid stains' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=38 AND Term='Heteropolyacid stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 38, 3, 'Osmium-based stains'   FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=38 AND Term='Osmium-based stains');
+ALTER TABLE CaptureDataVolume ADD COLUMN IF NOT EXISTS idVStainSubstance INT NULL;
+ALTER TABLE CaptureDataVolume ADD INDEX IF NOT EXISTS fk_capturedatavolume_v7 (idVStainSubstance);
+ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v7 FOREIGN KEY (idVStainSubstance) REFERENCES Vocabulary(idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: filter material sublist (Eric)
+-- New set 39 CaptureDataVolume.FilterMaterial + nullable idVFilterMaterial FK on
+-- CaptureDataVolume, surfaced only when FilterLocation is not 'None'. Column and
+-- index adds are re-runnable; the FK add applies once per environment.
+-- ============================================================
+INSERT IGNORE INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (39, 'CaptureDataVolume.FilterMaterial', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 39, 1, 'Zinc'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=39 AND Term='Zinc');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 39, 2, 'Iron'  FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=39 AND Term='Iron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT 39, 3, 'Combo' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM Vocabulary WHERE idVocabularySet=39 AND Term='Combo');
+ALTER TABLE CaptureDataVolume ADD COLUMN IF NOT EXISTS idVFilterMaterial INT NULL;
+ALTER TABLE CaptureDataVolume ADD INDEX IF NOT EXISTS fk_capturedatavolume_v8 (idVFilterMaterial);
+ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v8 FOREIGN KEY (idVFilterMaterial) REFERENCES Vocabulary(idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;

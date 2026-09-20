@@ -169,9 +169,9 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const CDD_VOLUME_FIELDS: string[] = [
         'modality', 'scanType', 'contentType', 'scannerMakeModel', 'voltageKV', 'amperageUA',
-        'specimenPreparation', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
+        'specimenPreparation', 'stainSubstance', 'voxelSizeX', 'voxelSizeY', 'voxelSizeZ', 'voxelSizeUnit',
         'dimensionsX', 'dimensionsY', 'dimensionsZ', 'bitDepth', 'fileCount', 'sliceCount',
-        'filterLocation',
+        'filterLocation', 'filterMaterial',
     ];
     const CDD_PHOTO_FIELDS: string[] = [
         'itemPositionType', 'itemPositionFieldId', 'itemArrangementFieldId',
@@ -220,6 +220,20 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
             idFieldValue = Number.parseInt(value, 10);
         }
         updateDetailField(eSystemObjectType.eCaptureData, name, idFieldValue);
+        // Clear dependent sub-fields when their controlling field no longer enables
+        // them, so a hidden value is not persisted on update.
+        if (name === 'specimenPreparation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation).find(e => e.idVocabulary === idFieldValue)?.Term;
+            if (term !== 'Stained')
+                updateDetailField(eSystemObjectType.eCaptureData, 'stainSubstance', null);
+        }
+        if (name === 'filterLocation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === idFieldValue)?.Term;
+            if (!term || term === 'None')
+                updateDetailField(eSystemObjectType.eCaptureData, 'filterMaterial', null);
+        }
+        if (name === 'datasetType' && idFieldValue !== getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet))
+            updateDetailField(eSystemObjectType.eCaptureData, 'datasetUse', '[]');
     };
 
     const setFloatField = ({ target }: React.ChangeEvent<HTMLInputElement>): void => {
@@ -235,6 +249,12 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
 
     const captureMethod = cdMethods.find(method => method.idVocabulary === captureMethodidVocabulary);
     const isVolumetric: boolean = captureMethodidVocabulary === getVocabularyId(eVocabularyID.eCaptureDataCaptureMethodVolumetric);
+    const cdSpecimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
+    const cdIsStained: boolean = cdSpecimenPrepEntries.find(e => e.idVocabulary === CaptureDataDetails.specimenPreparation)?.Term === 'Stained';
+    const cdFilterLocationTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === CaptureDataDetails.filterLocation)?.Term;
+    const cdShowFilterMaterial: boolean = !!cdFilterLocationTerm && cdFilterLocationTerm !== 'None';
+    const cdModalityTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeModality).find(e => e.idVocabulary === CaptureDataDetails.modality)?.Term;
+    const cdXrayModality: boolean = !!cdModalityTerm && ['Medical CT', 'Micro CT', 'Nano CT', 'Synchrotron'].includes(cdModalityTerm);
 
     const cdDetailsDate = new Date(CaptureDataDetails.dateCaptured as string);
     const cdDataDate = new Date(captureDataData?.dateCaptured as string);
@@ -365,9 +385,10 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeSelectRow('Scan Type', 'scanType', eVocabularySetID.eCaptureDataVolumeScanType, false)}
                                 {renderVolumeSelectRow('Content Type', 'contentType', eVocabularySetID.eCaptureDataVolumeContentType, false, undefined, true)}
                                 {renderVolumeTextRow('Scanner Make/Model', 'scannerMakeModel')}
-                                {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any')}
-                                {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any')}
+                                {renderVolumeNumberRow('Voltage (kV)', 'voltageKV', 'any', false, cdXrayModality)}
+                                {renderVolumeNumberRow('Amperage (µA)', 'amperageUA', 'any', false, cdXrayModality)}
                                 {renderVolumeSelectRow('Filter Location', 'filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, true)}
+                                {cdShowFilterMaterial && renderVolumeSelectRow('Filter Material', 'filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, true)}
                                 {renderVolumeSelectRow('Voxel Size Unit', 'voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, false)}
                                 {renderVolumeNumberRow('Voxel Size X', 'voxelSizeX', 'any')}
                                 {renderVolumeNumberRow('Voxel Size Y', 'voxelSizeY', 'any')}
@@ -379,6 +400,7 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
                                 {renderVolumeNumberRow('File Count', 'fileCount', undefined, true)}
                                 {renderVolumeNumberRow('Slice Count', 'sliceCount', undefined, true)}
                                 {renderVolumeSelectRow('Specimen Preparation', 'specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, true, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
+                                {cdIsStained && renderVolumeSelectRow('Stain Substance', 'stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, true, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             </TableBody>
                         </Table>
                     </TableContainer>
@@ -618,12 +640,12 @@ function CaptureDataDetails(props: DetailComponentProps): React.ReactElement {
         );
     }
 
-    function renderVolumeNumberRow(label: string, fieldName: string, step?: string, readOnly: boolean = false): JSX.Element {
+    function renderVolumeNumberRow(label: string, fieldName: string, step?: string, readOnly: boolean = false, required: boolean = false): JSX.Element {
         const value = (CaptureDataDetails as Record<string, unknown>)[fieldName] as number | null | undefined;
         return (
             <TableRow className={classes.tableRow} key={fieldName}>
                 <TableCell className={clsx(classes.tableCell, classes.fieldLabel)}>
-                    <Typography className={classes.labelText}>{label}</Typography>
+                    <Typography className={classes.labelText}>{label}{required && '*'}</Typography>
                 </TableCell>
                 <TableCell className={clsx(classes.tableCell, classes.valueText)}>
                     <DebounceInput

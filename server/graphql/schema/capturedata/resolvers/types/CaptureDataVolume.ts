@@ -25,6 +25,12 @@ const CaptureDataVolume = {
     },
     VSpecimenPreparation: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
         return await DBAPI.Vocabulary.fetch(parent.idVSpecimenPreparation);
+    },
+    VStainSubstance: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVStainSubstance);
+    },
+    VFilterMaterial: async (parent: Parent): Promise<DBAPI.Vocabulary | null> => {
+        return await DBAPI.Vocabulary.fetch(parent.idVFilterMaterial);
     }
 };
 

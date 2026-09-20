@@ -305,14 +305,16 @@ function Model(props: ModelProps): React.ReactElement {
         return downloadId !== null && model.purpose === downloadId;
     };
 
-    // dedicated Purpose handler so changing purpose clears a stale downloadType (the generic
-    // setIdField does not); wired to the Purpose <Select> below
+    // dedicated Purpose handler so changing purpose clears a stale downloadType or Variant (the
+    // generic setIdField does not); wired to the Purpose <Select> below
     const setPurposeField = ({ target }): void => {
         const { name, value } = target;
         const idFieldValue: number | null = value ? Number.parseInt(value, 10) : null;
         updateMetadataField(metadataIndex, name, idFieldValue, MetadataType.model);
         if (idFieldValue !== getVocabularyId(eVocabularyID.eModelPurposeDownload))
             updateMetadataField(metadataIndex, 'downloadType', null, MetadataType.model);
+        if (idFieldValue !== getVocabularyId(eVocabularyID.eModelPurposeMaster))
+            updateMetadataField(metadataIndex, 'Variant', '[]', MetadataType.model);
     };
 
     const openSourceObjectModal = async () => {

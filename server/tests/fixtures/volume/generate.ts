@@ -130,8 +130,12 @@ function pad(n: number, width: number): string {
 // Encodes only the tags we read in DicomInspector.
 // -------------------------------------------------------------------
 
-function makeDicomInstance(): Buffer {
-    // Build dataset (Explicit VR LE)
+export function makeDicomInstance(opts: { numberOfFrames?: number } = {}): Buffer {
+    // Build dataset (Explicit VR LE). Tags MUST be in ascending (group,element) order.
+    // NumberOfFrames (0028,0008) precedes Rows (0028,0010); present only for multiframe fixtures.
+    const numberOfFramesTag: Buffer[] = opts.numberOfFrames !== undefined
+        ? [encodeShortVR(0x0028, 0x0008, 'IS', strBytes(String(opts.numberOfFrames)))]
+        : [];
     const datasetParts: Buffer[] = [
         encodeShortVR(0x0008, 0x0060, 'CS', strBytes(DICOM_MODALITY)),
         encodeShortVR(0x0008, 0x0070, 'LO', strBytes(DICOM_MANUFACTURER)),
@@ -139,6 +143,7 @@ function makeDicomInstance(): Buffer {
         encodeShortVR(0x0018, 0x0050, 'DS', strBytes(formatNumber(DICOM_SLICE_THICKNESS_MM))),
         encodeShortVR(0x0018, 0x0060, 'DS', strBytes(formatNumber(DICOM_VOLTAGE_KV))),
         encodeShortVR(0x0018, 0x1151, 'IS', strBytes(String(DICOM_TUBE_CURRENT_MA))),
+        ...numberOfFramesTag,
         encodeShortVR(0x0028, 0x0010, 'US', uint16Bytes(SLICE_HEIGHT)),                   // Rows
         encodeShortVR(0x0028, 0x0011, 'US', uint16Bytes(SLICE_WIDTH)),                    // Columns
         encodeShortVR(0x0028, 0x0030, 'DS', strBytes(`${formatNumber(DICOM_PIXEL_SPACING_MM)}\\${formatNumber(DICOM_PIXEL_SPACING_MM)}`)),
@@ -200,7 +205,11 @@ function uint16Bytes(n: number): Buffer { const b = Buffer.alloc(2); b.writeUInt
 function uint32Bytes(n: number): Buffer { const b = Buffer.alloc(4); b.writeUInt32LE(n >>> 0, 0); return b; }
 function formatNumber(n: number): string { return n.toFixed(6).replace(/\.?0+$/, ''); }
 
-main().catch(err => {
-    console.error('Fixture generation failed:', err);
-    process.exit(1);
-});
+// Only generate fixtures when run directly (yarn ts-node ...); importing this module for its
+// exported encoders (e.g. from tests) must not write files.
+if (require.main === module) {
+    main().catch(err => {
+        console.error('Fixture generation failed:', err);
+        process.exit(1);
+    });
+}

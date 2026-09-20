@@ -30,6 +30,7 @@ import ObjectSelectModal from '../Model/ObjectSelectModal';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { makeStyles } from '@material-ui/core/styles';
 import API from '../../../../../api';
+import { toastWarning } from '../../../../../utils/toastError';
 import { parseFileId } from '../../../../../store/utils';
 import { RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
 import { apolloClient } from '../../../../../graphql/index';
@@ -111,6 +112,16 @@ function Volume(props: VolumeProps): React.ReactElement {
             if (Array.isArray(m.warnings) && m.warnings.some((w: string) => /^sidecar parsing error/i.test(w)))
                 toast.warn('Sidecar metadata could not be read — fields are pre-filled from the scan headers only. Please review.');
 
+            // The archive's slice count differs from a sidecar's declared count. The ZIP is
+            // authoritative; surface the inspection's full explanation in the toast Details so the
+            // user can confirm the count (benign for raw/projection or partial exports; for a
+            // reconstructed stack it may mean missing slices).
+            const sliceMismatch: string | undefined = Array.isArray(m.warnings)
+                ? m.warnings.find((w: string) => /^Slice count mismatch/i.test(w))
+                : undefined;
+            if (sliceMismatch)
+                toastWarning('Slice count differs from the scan sidecar — please review before ingesting.', sliceMismatch);
+
             if (m.fileCount !== undefined) updateMetadataField(metadataIndex, 'fileCount', m.fileCount, MetadataType.volume);
             if (m.sliceCount !== undefined) updateMetadataField(metadataIndex, 'sliceCount', m.sliceCount, MetadataType.volume);
             if (m.dimensionsX !== undefined) updateMetadataField(metadataIndex, 'dimensionsX', m.dimensionsX, MetadataType.volume);
@@ -181,6 +192,20 @@ function Volume(props: VolumeProps): React.ReactElement {
         const { name, value } = event.target;
         const idValue = value ? Number(value) : null;
         if (name) updateMetadataField(metadataIndex, name, idValue, MetadataType.volume);
+        // Stain Substance only applies to a Stained preparation; clear it when the
+        // preparation is anything else so a hidden value is not ingested.
+        if (name === 'specimenPreparation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation).find(e => e.idVocabulary === idValue)?.Term;
+            if (term !== 'Stained')
+                updateMetadataField(metadataIndex, 'stainSubstance', null, MetadataType.volume);
+        }
+        // Filter Material only applies when a filter is present; clear it when the
+        // filter location is None or unset so a hidden value is not ingested.
+        if (name === 'filterLocation') {
+            const term = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === idValue)?.Term;
+            if (!term || term === 'None')
+                updateMetadataField(metadataIndex, 'filterMaterial', null, MetadataType.volume);
+        }
     };
     const setDateField = (_date: unknown, value?: string | null): void => {
         if (value) updateMetadataField(metadataIndex, 'dateCaptured', new Date(value), MetadataType.volume);
@@ -302,6 +327,13 @@ function Volume(props: VolumeProps): React.ReactElement {
         </TableRow>
     );
 
+    const specimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
+    const isStained: boolean = specimenPrepEntries.find(e => e.idVocabulary === volume.specimenPreparation)?.Term === 'Stained';
+    const filterLocationTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeFilterLocation).find(e => e.idVocabulary === volume.filterLocation)?.Term;
+    const showFilterMaterial: boolean = !!filterLocationTerm && filterLocationTerm !== 'None';
+    const modalityTerm: string | undefined = getEntries(eVocabularySetID.eCaptureDataVolumeModality).find(e => e.idVocabulary === volume.modality)?.Term;
+    const xrayModality: boolean = !!modalityTerm && ['Medical CT', 'Micro CT', 'Nano CT', 'Synchrotron'].includes(modalityTerm);
+
     return (
         <Box className={classes.container}>
             <Box className={classes.ingestContainer} style={{ padding: '10px', paddingBottom: '0' }}>
@@ -394,10 +426,12 @@ function Volume(props: VolumeProps): React.ReactElement {
                     <Table className={tableClasses.table}>
                         <TableBody>
                             {renderTextRow('scannerMakeModel', 'Scanner Make/Model')}
-                            {renderNumberRow('voltageKV', 'Voltage (kV)', false, false, 'any')}
-                            {renderNumberRow('amperageUA', 'Amperage (µA)', false, false, 'any')}
+                            {renderNumberRow('voltageKV', 'Voltage (kV)', xrayModality, false, 'any')}
+                            {renderNumberRow('amperageUA', 'Amperage (µA)', xrayModality, false, 'any')}
                             {renderSelectRow('specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, 'Specimen Preparation', false, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
+                            {isStained && renderSelectRow('stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, 'Stain Substance', false, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
                             {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false)}
+                            {showFilterMaterial && renderSelectRow('filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, 'Filter Material', false)}
 
                             {renderNumberRow('voxelSizeX', 'Voxel Size X', true, false, 'any')}
                             {renderNumberRow('voxelSizeY', 'Voxel Size Y', true, false, 'any')}
