@@ -313,6 +313,8 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                         voltageKV,
                         amperageUA,
                         specimenPreparation,
+                        stainSubstance,
+                        filterMaterial,
                         voxelSizeX,
                         voxelSizeY,
                         voxelSizeZ,
@@ -389,10 +391,20 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             CDV.VoltageKV = maybe<number>(voltageKV);
                             CDV.AmperageUA = maybe<number>(amperageUA);
                             CDV.idVSpecimenPreparation = maybe<number>(specimenPreparation);
+                            CDV.idVStainSubstance = maybe<number>(stainSubstance);
+                            CDV.idVFilterMaterial = maybe<number>(filterMaterial);
                             CDV.DimensionsX = maybe<number>(dimensionsX);
                             CDV.DimensionsY = maybe<number>(dimensionsY);
                             CDV.BitDepth = maybe<number>(bitDepth);
                             CDV.idVFilterLocation = maybe<number>(filterLocation);
+                            // Voltage/amperage are X-ray tube parameters: required for X-ray
+                            // modalities (Medical/Micro/Nano CT, Synchrotron); MRI stays exempt.
+                            if (await CACHE.VocabularyCache.isVolumeXrayModality(CDV.idVModality)) {
+                                if (CDV.VoltageKV === null || CDV.VoltageKV === undefined)
+                                    return sendResult(false,'Voltage (kV) is required for X-ray modalities');
+                                if (CDV.AmperageUA === null || CDV.AmperageUA === undefined)
+                                    return sendResult(false,'Amperage (µA) is required for X-ray modalities');
+                            }
                             if (!await CDV.update())
                                 return sendResult(false,'update object details failed',`Unable to update CaptureDataVolume with id ${CDV.idCaptureData}; update failed`);
                         }

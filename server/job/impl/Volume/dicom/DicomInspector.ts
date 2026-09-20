@@ -23,6 +23,8 @@ export interface DicomInspectResult {
     pixelSpacingRow?: number;         // (0028,0030)[0]
     pixelSpacingColumn?: number;      // (0028,0030)[1]
     sliceThicknessMM?: number;        // (0018,0050)
+    spacingBetweenSlicesMM?: number;  // (0018,0088) — inter-slice pitch, the true Z voxel size for a stack
+    frameCount?: number;              // (0028,0008) NumberOfFrames; >1 ⇒ enhanced/multiframe instance
     voltageKV?: number;               // (0018,0060)
     tubeCurrentMA?: number;           // (0018,1151) — milliamps
     manufacturer?: string;            // (0008,0070)
@@ -63,6 +65,14 @@ export class DicomInspector {
 
         const sliceTh: number | undefined = dataSet.floatString('x00180050');
         if (sliceTh !== undefined) result.sliceThicknessMM = sliceTh;
+
+        const spacing: number | undefined = dataSet.floatString('x00180088');
+        if (spacing !== undefined) result.spacingBetweenSlicesMM = spacing;
+
+        // NumberOfFrames is absent on classic single-frame instances and present (>1) on
+        // enhanced/multiframe instances that pack the whole volume into one file.
+        const frames: number | undefined = dataSet.intString('x00280008');
+        if (frames !== undefined) result.frameCount = frames;
 
         const kvp: number | undefined = dataSet.floatString('x00180060');
         if (kvp !== undefined) result.voltageKV = kvp;

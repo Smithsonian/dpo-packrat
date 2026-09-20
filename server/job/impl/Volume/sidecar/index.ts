@@ -22,7 +22,7 @@ export interface SidecarParseResult {
     voxelSizeX?: number;
     voxelSizeY?: number;
     voxelSizeZ?: number;
-    voxelSizeUnit?: 'Micrometer' | 'Millimeter';
+    voxelSizeUnit?: 'Micrometer' | 'Millimeter' | 'Nanometer';
     voltageKV?: number;
     amperageUA?: number;
     scannerMakeModel?: string;

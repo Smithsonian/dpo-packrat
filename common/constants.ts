@@ -47,6 +47,8 @@ export enum eVocabularySetID {
     eCaptureDataVolumeFilterLocation,
     eCaptureDataVolumeVoxelSizeUnit,
     eCaptureDataVolumeSpecimenPreparation,
+    eCaptureDataVolumeStainSubstance,
+    eCaptureDataVolumeFilterMaterial,
     eNone = -1
 }
 
@@ -262,8 +264,10 @@ export enum eVocabularyID {
     eCaptureDataVolumeFilterLocationSourceSide,
     eCaptureDataVolumeFilterLocationDetectorSide,
     eCaptureDataVolumeFilterLocationBoth,
+    eCaptureDataVolumeFilterLocationCollimator,
     eCaptureDataVolumeVoxelSizeUnitMicrometer,
     eCaptureDataVolumeVoxelSizeUnitMillimeter,
+    eCaptureDataVolumeVoxelSizeUnitNanometer,
     eCaptureDataVolumeSpecimenPreparationFluidPreserved,
     eCaptureDataVolumeSpecimenPreparationDry,
     eCaptureDataVolumeSpecimenPreparationStained,
@@ -272,6 +276,12 @@ export enum eVocabularyID {
     eCaptureDataVolumeSpecimenPreparationLive,
     eCaptureDataVolumeSpecimenPreparationOther,
     eCaptureDataVolumeSpecimenPreparationNone,
+    eCaptureDataVolumeStainSubstanceIodine,
+    eCaptureDataVolumeStainSubstanceHeteropolyacid,
+    eCaptureDataVolumeStainSubstanceOsmium,
+    eCaptureDataVolumeFilterMaterialZinc,
+    eCaptureDataVolumeFilterMaterialIron,
+    eCaptureDataVolumeFilterMaterialCombo,
     eNone = -1
 }
 

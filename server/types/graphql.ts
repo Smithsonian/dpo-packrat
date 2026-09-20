@@ -225,6 +225,7 @@ export type CaptureDataDetailFields = {
   dimensionsZ?: Maybe<Scalars['Int']>;
   fileCount?: Maybe<Scalars['Int']>;
   filterLocation?: Maybe<Scalars['Int']>;
+  filterMaterial?: Maybe<Scalars['Int']>;
   focusType?: Maybe<Scalars['Int']>;
   folders: Array<IngestFolder>;
   isValidData?: Maybe<Scalars['Boolean']>;
@@ -237,6 +238,7 @@ export type CaptureDataDetailFields = {
   scannerMakeModel?: Maybe<Scalars['String']>;
   sliceCount?: Maybe<Scalars['Int']>;
   specimenPreparation?: Maybe<Scalars['Int']>;
+  stainSubstance?: Maybe<Scalars['Int']>;
   systemCreated?: Maybe<Scalars['Boolean']>;
   voltageKV?: Maybe<Scalars['Float']>;
   voxelSizeUnit?: Maybe<Scalars['Int']>;
@@ -264,6 +266,7 @@ export type CaptureDataDetailFieldsInput = {
   dimensionsZ?: InputMaybe<Scalars['Int']>;
   fileCount?: InputMaybe<Scalars['Int']>;
   filterLocation?: InputMaybe<Scalars['Int']>;
+  filterMaterial?: InputMaybe<Scalars['Int']>;
   focusType?: InputMaybe<Scalars['Int']>;
   folders: Array<IngestFolderInput>;
   isValidData?: InputMaybe<Scalars['Boolean']>;
@@ -276,6 +279,7 @@ export type CaptureDataDetailFieldsInput = {
   scannerMakeModel?: InputMaybe<Scalars['String']>;
   sliceCount?: InputMaybe<Scalars['Int']>;
   specimenPreparation?: InputMaybe<Scalars['Int']>;
+  stainSubstance?: InputMaybe<Scalars['Int']>;
   systemCreated?: InputMaybe<Scalars['Boolean']>;
   voltageKV?: InputMaybe<Scalars['Float']>;
   voxelSizeUnit?: InputMaybe<Scalars['Int']>;
@@ -340,9 +344,11 @@ export type CaptureDataVolume = {
   SliceCount?: Maybe<Scalars['Int']>;
   VContentType?: Maybe<Vocabulary>;
   VFilterLocation?: Maybe<Vocabulary>;
+  VFilterMaterial?: Maybe<Vocabulary>;
   VModality?: Maybe<Vocabulary>;
   VScanType?: Maybe<Vocabulary>;
   VSpecimenPreparation?: Maybe<Vocabulary>;
+  VStainSubstance?: Maybe<Vocabulary>;
   VVoxelSizeUnit?: Maybe<Vocabulary>;
   VoltageKV?: Maybe<Scalars['Float']>;
   VoxelSizeX: Scalars['Float'];
@@ -352,9 +358,11 @@ export type CaptureDataVolume = {
   idCaptureDataVolume: Scalars['Int'];
   idVContentType: Scalars['Int'];
   idVFilterLocation?: Maybe<Scalars['Int']>;
+  idVFilterMaterial?: Maybe<Scalars['Int']>;
   idVModality: Scalars['Int'];
   idVScanType: Scalars['Int'];
   idVSpecimenPreparation?: Maybe<Scalars['Int']>;
+  idVStainSubstance?: Maybe<Scalars['Int']>;
   idVVoxelSizeUnit: Scalars['Int'];
 };
 
@@ -1360,6 +1368,7 @@ export type IngestVolumeInput = {
   directory: Scalars['String'];
   fileCount: Scalars['Int'];
   filterLocation?: InputMaybe<Scalars['Int']>;
+  filterMaterial?: InputMaybe<Scalars['Int']>;
   idAsset?: InputMaybe<Scalars['Int']>;
   idAssetVersion: Scalars['Int'];
   identifiers: Array<IngestIdentifierInput>;
@@ -1370,6 +1379,7 @@ export type IngestVolumeInput = {
   sliceCount?: InputMaybe<Scalars['Int']>;
   sourceObjects: Array<RelatedObjectInput>;
   specimenPreparation?: InputMaybe<Scalars['Int']>;
+  stainSubstance?: InputMaybe<Scalars['Int']>;
   systemCreated: Scalars['Boolean'];
   updateNotes?: InputMaybe<Scalars['String']>;
   voltageKV?: InputMaybe<Scalars['Float']>;

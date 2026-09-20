@@ -465,11 +465,17 @@ export class Logger {
 
     // build our log entry structure/object
     private static getLogEntry(level: LogLevel, message: string, reason: string,  data: any | undefined, audit: boolean, context: { section: LogSection, caller?: string, idUser?: number, idRequest?: number, traceId?: string | null, correlationId?: string | null }): LogEntry {
+        // data is always represented as an object: scalar and array values are
+        // wrapped so downstream consumers and log schema inference see one shape
+        let dataObj = data;
+        if (data !== undefined && data !== null && (typeof data !== 'object' || Array.isArray(data)))
+            dataObj = { value: data };
+
         // create our data structure wrapping in reason if it exists
         const hasReason = reason && reason.trim().length > 0;
         const combinedData = hasReason
-            ? { reason, ...(data ?? {}) }
-            : data;
+            ? { reason, ...(dataObj ?? {}) }
+            : dataObj;
 
         const entry: LogEntry = {
             timestamp: new Date().toISOString(),

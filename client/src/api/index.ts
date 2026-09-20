@@ -133,12 +133,14 @@ export default class API {
     }
 
     // preservation metrics for an inclusive date range; pass series=true for per-period plot data
-    static async getMetrics(start: string, end: string, series: boolean = false, granularity: 'day' | 'week' | 'month' | 'year' = 'month'): Promise<RequestResponse> {
+    static async getMetrics(start: string, end: string, series: boolean = false, granularity: 'day' | 'week' | 'month' | 'year' = 'month', idProject?: number): Promise<RequestResponse> {
         const params = new URLSearchParams({ start, end });
         if (series) {
             params.set('series', '1');
             params.set('granularity', granularity);
         }
+        if (idProject && idProject > 0)
+            params.set('project', String(idProject));
         return this.request(`api/metrics?${params.toString()}`, { method: 'GET' });
     }
 

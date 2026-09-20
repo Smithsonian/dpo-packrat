@@ -189,7 +189,7 @@ export class UsageMonitor {
         if (this.verboseSamples) {
             if (++this.verboseCount >= this.verboseSamples) {
                 this.verboseCount = 0;
-                RK.logPerformance(RK.LogSection.eSYS,'system usage stats',undefined,this.emitInfo(),'UsageMonitor');
+                RK.logPerformance(RK.LogSection.eSYS,`system usage stats: ${this.emitInfo()}`,undefined,this.emitData(),'UsageMonitor');
             }
         }
     }
@@ -206,15 +206,26 @@ export class UsageMonitor {
         return `${this.OS.emitInfo()}${mem}`;
     }
 
+    emitData(): { cpuCount: number, cpuBusyPct: number, memPct?: number, memUsedMB?: number, memTotalMB?: number } {
+        const data: { cpuCount: number, cpuBusyPct: number, memPct?: number, memUsedMB?: number, memTotalMB?: number } = {
+            cpuCount: this.OS.CPUs.length,
+            cpuBusyPct: Number((this.OS.busyPerc * 100).toFixed(2))
+        };
+        if (this.monitorMem) {
+            data.memPct = Number((this.rssMem * 100 / this.totalMem).toFixed(2));
+            data.memUsedMB = Math.round(this.rssMem / 1024 / 1024);
+            data.memTotalMB = Math.round(this.totalMem / 1024 / 1024);
+        }
+        return data;
+    }
+
     alert(emitCPUAlert: boolean, emitMemAlert: boolean): void {
         this.cpuAlertCount = 0;
         this.memAlertCount = 0;
         if (emitCPUAlert)
-            RK.logWarning(RK.LogSection.eSYS,'utilization exceeded',`${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples`,this.emitInfo(),'UsageMonitor');
-            // LOG.error(`UsageMonitor exceeded ${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
+            RK.logWarning(RK.LogSection.eSYS,'utilization exceeded',`${this.cpuAlertThreshold}% CPU utilization for ${this.cpuAlertAlarm} consecutive samples`,this.emitData(),'UsageMonitor');
         if (emitMemAlert)
-            RK.logWarning(RK.LogSection.eSYS,'utilization exceeded',`${this.memAlertThreshold}% Memory utilization for ${this.memAlertAlarm} consecutive samples`,this.emitInfo(),'UsageMonitor');
-            // LOG.error(`UsageMonitor exceeded ${this.memAlertThreshold}% Mem utilization for ${this.memAlertAlarm} consecutive samples: ${this.emitInfo()}`, LOG.LS.eSYS);
+            RK.logWarning(RK.LogSection.eSYS,'utilization exceeded',`${this.memAlertThreshold}% Memory utilization for ${this.memAlertAlarm} consecutive samples`,this.emitData(),'UsageMonitor');
     }
 }
 

@@ -78,6 +78,8 @@ export const useVocabularyStore = create<VocabularyStore>((set: SetState<Vocabul
                     eVocabularySetID.eCaptureDataVolumeFilterLocation,
                     eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit,
                     eVocabularySetID.eCaptureDataVolumeSpecimenPreparation,
+                    eVocabularySetID.eCaptureDataVolumeStainSubstance,
+                    eVocabularySetID.eCaptureDataVolumeFilterMaterial,
                 ]
             }
         };

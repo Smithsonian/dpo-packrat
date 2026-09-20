@@ -191,6 +191,8 @@ export interface ISnapshots
         duration: number;
         threshold: number;
         values: any[];
+        title?: string;
+        paths?: string[];
     }[];
 }
 

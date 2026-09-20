@@ -17,7 +17,7 @@ import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 export type VolumeContentType = 'IMAGE_STACK' | 'DICOM' | 'OTHER';
-export type VolumeSizeUnit = 'Micrometer' | 'Millimeter';
+export type VolumeSizeUnit = 'Micrometer' | 'Millimeter' | 'Nanometer';
 
 export interface VolumeExtractedMetadata {
     // Hard inventory facts (always present)

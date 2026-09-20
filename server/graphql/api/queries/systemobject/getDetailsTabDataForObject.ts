@@ -55,6 +55,8 @@ const getDetailsTabDataForObject = gql`
                 voltageKV
                 amperageUA
                 specimenPreparation
+                stainSubstance
+                filterMaterial
                 voxelSizeX
                 voxelSizeY
                 voxelSizeZ

@@ -312,6 +312,22 @@ UPDATE Vocabulary SET SortOrder = 10 WHERE idVocabularySet = 20 AND Term = 'Capt
 UPDATE Vocabulary SET SortOrder = 9 WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Other';
 UPDATE Vocabulary SET SortOrder = 8 WHERE idVocabularySet = 20 AND Term = 'Capture Data Set: Volumetric';
 
+-- New volumetric vocabulary is seeded here, after the existing terms, so pre-existing
+-- rows keep their idVocabulary; SortOrder places each term within its dropdown. New terms
+-- added to existing sets (35 FilterLocation, 36 VoxelSizeUnit) and two new sets.
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (35, 5, 'Collimator');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (36, 3, 'Nanometer');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (38, 'CaptureDataVolume.StainSubstance', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (38, 1, 'Iodine-based stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (38, 2, 'Heteropolyacid stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (38, 3, 'Osmium-based stains');
+
+INSERT INTO VocabularySet (idVocabularySet, Name, SystemMaintained) VALUES (39, 'CaptureDataVolume.FilterMaterial', 1);
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (39, 1, 'Zinc');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (39, 2, 'Iron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) VALUES (39, 3, 'Combo');
+
 SELECT idVocabulary INTO @idVocabARK FROM Vocabulary WHERE Term = 'ARK' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 SELECT idVocabulary INTO @idVocabEdanRecordID FROM Vocabulary WHERE Term = 'Edan Record ID' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');
 SELECT idVocabulary INTO @idVocabAccessionNumber FROM Vocabulary WHERE Term = 'Accession Number' AND idVocabularySet = (SELECT idVocabularySet FROM VocabularySet WHERE NAME = 'Identifier.IdentifierType');

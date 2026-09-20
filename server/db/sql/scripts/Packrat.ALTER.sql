@@ -965,3 +965,44 @@ UPDATE VocabularySet SET Name = 'CaptureDataPhoto.LightSourceType'         WHERE
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.BackgroundRemovalMethod' WHERE Name = 'CaptureData.BackgroundRemovalMethod';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.ClusterType'             WHERE Name = 'CaptureData.ClusterType';
 UPDATE VocabularySet SET Name = 'CaptureDataPhoto.DatasetUse'              WHERE Name = 'CaptureData.DatasetUse';
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: Nanometer voxel unit + Collimator filter (Eric)
+-- Additive vocabulary in the existing FilterLocation and VoxelSizeUnit sets. The
+-- parent set is resolved by Name so it works regardless of its idVocabularySet in
+-- this environment. Re-runnable: NOT EXISTS skips rows already present.
+-- ============================================================
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 5, 'Collimator' FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.FilterLocation' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Collimator');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 3, 'Nanometer'  FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.VoxelSizeUnit' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Nanometer');
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: stain substance sublist (Eric)
+-- New CaptureDataVolume.StainSubstance set + nullable idVStainSubstance FK on
+-- CaptureDataVolume, surfaced only when SpecimenPreparation is 'Stained'. The set
+-- id is auto-assigned and the set is resolved by Name; the FK stores idVocabulary
+-- term rows, so nothing depends on a specific idVocabularySet. Set/term inserts are
+-- re-runnable; the FK add applies once per environment.
+-- ============================================================
+INSERT INTO VocabularySet (Name, SystemMaintained) SELECT 'CaptureDataVolume.StainSubstance', 1 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM VocabularySet WHERE Name='CaptureDataVolume.StainSubstance');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 1, 'Iodine-based stains'   FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.StainSubstance' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Iodine-based stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 2, 'Heteropolyacid stains' FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.StainSubstance' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Heteropolyacid stains');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 3, 'Osmium-based stains'   FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.StainSubstance' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Osmium-based stains');
+ALTER TABLE CaptureDataVolume ADD COLUMN IF NOT EXISTS idVStainSubstance INT NULL;
+ALTER TABLE CaptureDataVolume ADD INDEX IF NOT EXISTS fk_capturedatavolume_v7 (idVStainSubstance);
+ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v7 FOREIGN KEY (idVStainSubstance) REFERENCES Vocabulary(idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ============================================================
+-- 2026-09-10 Volumetric metadata: filter material sublist (Eric)
+-- New CaptureDataVolume.FilterMaterial set + nullable idVFilterMaterial FK on
+-- CaptureDataVolume, surfaced only when FilterLocation is not 'None'. The set id is
+-- auto-assigned and the set is resolved by Name; the FK stores idVocabulary term
+-- rows, so nothing depends on a specific idVocabularySet. Set/term inserts are
+-- re-runnable; the FK add applies once per environment.
+-- ============================================================
+INSERT INTO VocabularySet (Name, SystemMaintained) SELECT 'CaptureDataVolume.FilterMaterial', 1 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM VocabularySet WHERE Name='CaptureDataVolume.FilterMaterial');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 1, 'Zinc'  FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.FilterMaterial' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Zinc');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 2, 'Iron'  FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.FilterMaterial' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Iron');
+INSERT INTO Vocabulary (idVocabularySet, SortOrder, Term) SELECT vs.idVocabularySet, 3, 'Combo' FROM VocabularySet vs WHERE vs.Name='CaptureDataVolume.FilterMaterial' AND NOT EXISTS (SELECT 1 FROM Vocabulary v WHERE v.idVocabularySet=vs.idVocabularySet AND v.Term='Combo');
+ALTER TABLE CaptureDataVolume ADD COLUMN IF NOT EXISTS idVFilterMaterial INT NULL;
+ALTER TABLE CaptureDataVolume ADD INDEX IF NOT EXISTS fk_capturedatavolume_v8 (idVFilterMaterial);
+ALTER TABLE CaptureDataVolume ADD CONSTRAINT fk_capturedatavolume_v8 FOREIGN KEY (idVFilterMaterial) REFERENCES Vocabulary(idVocabulary) ON DELETE NO ACTION ON UPDATE NO ACTION;

@@ -29,7 +29,7 @@ export class ResolverBase {
     protected workflowHelper: IWorkflowHelper | undefined = undefined;
     private buffer: COMMON.IWorkflowReportEvent[] = [];
 
-    protected async appendToWFReport(content: string, log?: boolean | undefined, error?: boolean | undefined): Promise<H.IOResults> {
+    protected async appendToWFReport(content: string, log?: boolean | undefined, error?: boolean | undefined, level?: COMMON.WorkflowReportLevel): Promise<H.IOResults> {
         if (log && log===true) {
             if (error && error==true)
                 RK.logError(RK.LogSection.eGQL,'append to WorkflowReport',`called from other function: ${content}`,{},'GraphQL.Resolver');
@@ -44,7 +44,7 @@ export class ResolverBase {
             ts: new Date().toISOString(),
             phase: 'ingest',
             code: COMMON.WorkflowReportCode.IngestNote,
-            level: (error === true) ? 'error' : 'info',
+            level: level ?? ((error === true) ? 'error' : 'info'),
             msg: stripReportHtml(content)
         };
 
