@@ -6,7 +6,8 @@
  *
  * This component renders file list item used in FileListItem component.
  */
-import { Box, MenuItem, Select, Typography } from '@material-ui/core';
+import { Box, MenuItem, Select, Tooltip, Typography } from '@material-ui/core';
+import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
 import { green, grey, red } from '@material-ui/core/colors';
 import { fade, makeStyles, createStyles } from '@material-ui/core/styles';
 import { motion } from 'framer-motion';
@@ -157,6 +158,7 @@ interface FileListItemProps {
     idSOAttachment?: number;
     uploadPendingList: boolean | undefined;
     updateContext: string | undefined;
+    warnings?: string[];
     onSelect: (id: FileId, selected: boolean) => void;
     onUpload: (id: FileId) => void;
     onCancel: (id: FileId) => void;
@@ -186,6 +188,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
         idSOAttachment,
         idSystemObject,
         updateContext,
+        warnings,
         onChangeType,
         onUpload,
         onCancel,
@@ -198,6 +201,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     } = props;
     const classes = useStyles(props);
     const volumetricIngestEnabled = useServiceStatusStore(state => state.features.volumetricIngest);
+    const hasWarnings: boolean = Array.isArray(warnings) && warnings.length > 0;
     const upload = () => {
         onUpload(id);
     };
@@ -317,13 +321,17 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
     }
 
     return (
-        <motion.div className={classes.container} variants={variants} initial='hidden' animate='visible' whileTap={{ scale: complete ? 0.98 : 1 }}>
+        <motion.div className={classes.container} style={hasWarnings ? { borderColor: '#e0a800', borderWidth: 2 } : undefined} variants={variants} initial='hidden' animate='visible' whileTap={{ scale: complete ? 0.98 : 1 }}>
             <Box className={classes.item} onClick={select}>
                 <Box className={classes.details}>
-                    <Box>
+                    <Box display='flex' alignItems='center'>
                         <Typography className={classes.name} variant='caption'>
                             {name}
                         </Typography>
+                        {hasWarnings &&
+                            <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{(warnings as string[]).join('\n\n')}</span>} arrow placement='top-start'>
+                                <WarningRoundedIcon style={{ fontSize: 18, color: '#b58105', marginLeft: 6, zIndex: 20 }} />
+                            </Tooltip>}
                     </Box>
                     {(updateContext &&
                         <Box>
@@ -357,7 +365,7 @@ function FileListItem(props: FileListItemProps): React.ReactElement {
                 </Box>
                 <Box className={classes.options}>{options}</Box>
             </Box>
-            <Box className={classes.progress} />
+            <Box className={classes.progress} style={hasWarnings ? { backgroundColor: '#fff3cd' } : undefined} />
         </motion.div>
     );
 }

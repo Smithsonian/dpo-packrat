@@ -7,7 +7,8 @@
  */
 import { useQuery } from '@apollo/client';
 import { Box, Typography } from '@material-ui/core';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import API from '../../../../api';
 import { FieldType } from '../../../../components';
 import { parseAssetVersionToState, useUploadStore } from '../../../../store';
 import { GetUploadedAssetVersionDocument } from '../../../../types/graphql';
@@ -58,6 +59,51 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
 
     const { completed, loadCompleted } = useUploadStore();
     const { data, loading, error, refetch } = useQuery(GetUploadedAssetVersionDocument, { fetchPolicy: 'network-only' });
+
+    // Inspection warnings per completed file (keyed by IngestionFile.id === String(idAssetVersion)).
+    // Inspection runs asynchronously after upload, so we poll until each volumetric (.zip) item's
+    // result is available, then tint its row and show a warning icon (see FileListItem).
+    const [warningsByFileId, setWarningsByFileId] = useState<Record<string, string[]>>({});
+    const resolvedRef = useRef<Set<string>>(new Set());
+    const attemptsRef = useRef<Map<string, number>>(new Map());
+
+    useEffect(() => {
+        let cancelled = false;
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const MAX_ATTEMPTS = 15;      // ~30s at 2s/poll; then give up (non-volumetric zip or failed inspection)
+        const isPending = (f: { id: string; name: string }): boolean => /\.zip$/i.test(f.name) && !resolvedRef.current.has(f.id);
+
+        async function poll(): Promise<void> {
+            const pending = completed.filter(isPending);
+            if (pending.length === 0) return;
+
+            for (const f of pending) {
+                const attempts: number = (attemptsRef.current.get(f.id) ?? 0) + 1;
+                attemptsRef.current.set(f.id, attempts);
+                try {
+                    const res = await API.getVolumetricInspectionResults(Number(f.id));
+                    if (res.success && res.data) {
+                        // Inspection finished — record any warnings and stop polling this item.
+                        resolvedRef.current.add(f.id);
+                        const w: string[] = Array.isArray(res.data.warnings) ? res.data.warnings : [];
+                        if (w.length && !cancelled)
+                            setWarningsByFileId(prev => ({ ...prev, [f.id]: w }));
+                    }
+                    // res.data === null → inspection not finished yet; retry on the next tick.
+                } catch {
+                    // transient error; retry on the next tick
+                }
+                if (attempts >= MAX_ATTEMPTS)
+                    resolvedRef.current.add(f.id);
+            }
+
+            if (!cancelled && completed.some(isPending))
+                timer = setTimeout(poll, 2000);
+        }
+
+        poll();
+        return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    }, [completed]);
 
     useEffect(() => {
         if (!loading && !error) {
@@ -113,7 +159,7 @@ function UploadCompleteList(props: UploadListCompleteProps): React.ReactElement 
                         No files available.
                     </Typography>
                 )}
-                <FileList files={completed} />
+                <FileList files={completed} warningsByFileId={warningsByFileId} />
             </React.Fragment>
         );
     }

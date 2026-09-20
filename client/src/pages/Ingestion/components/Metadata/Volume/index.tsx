@@ -20,7 +20,6 @@
  */
 import { Box, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableRow, Tooltip, Typography } from '@material-ui/core';
 import { DebounceInput } from 'react-debounce-input';
-import { toast } from 'react-toastify';
 import React, { useEffect, useRef, useState } from 'react';
 import { AssetIdentifiers, DateInputField } from '../../../../../components';
 import { MetadataType, StateIdentifier, useMetadataStore, useRepositoryStore, useSubjectStore, useVocabularyStore } from '../../../../../store';
@@ -30,7 +29,7 @@ import ObjectSelectModal from '../Model/ObjectSelectModal';
 import { useStyles as useTableStyles } from '../../../../Repository/components/DetailsView/DetailsTab/CaptureDataDetails';
 import { makeStyles } from '@material-ui/core/styles';
 import API from '../../../../../api';
-import { toastWarning } from '../../../../../utils/toastError';
+import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
 import { parseFileId } from '../../../../../store/utils';
 import { RelatedObjectType, GetSubjectDocument } from '../../../../../types/graphql';
 import { apolloClient } from '../../../../../graphql/index';
@@ -67,6 +66,13 @@ const useStyles = makeStyles(({ palette }) => ({
     },
 }));
 
+// Maps an inspection warning to the metadata field it concerns, so it can be shown as an icon
+// next to that field. Warnings that match no rule are shown in a general indicator above the
+// fields. Add a rule here to bind a new warning kind to its field.
+const WARNING_FIELD_RULES: { field: string; test: RegExp }[] = [
+    { field: 'sliceCount', test: /^Slice count mismatch/i },
+];
+
 function Volume(props: VolumeProps): React.ReactElement {
     const { metadataIndex, ingestionLoading } = props;
     const classes = useStyles();
@@ -78,6 +84,10 @@ function Volume(props: VolumeProps): React.ReactElement {
     const [setDefaultIngestionFilters, closeRepositoryBrowser, resetRepositoryBrowserRoot] = useRepositoryStore(state => [state.setDefaultIngestionFilters, state.closeRepositoryBrowser, state.resetRepositoryBrowserRoot]);
     const [modalOpen, setModalOpen] = useState(false);
     const [objectRelationship, setObjectRelationship] = useState<RelatedObjectType>(RelatedObjectType.Source);
+    // Inspection warnings surfaced inline: those bound to a field (via WARNING_FIELD_RULES) show as
+    // an icon next to it; the rest show in a general indicator above the fields.
+    const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({});
+    const [generalWarnings, setGeneralWarnings] = useState<string[]>([]);
 
     const metadata = metadatas[metadataIndex];
     const volume = metadata.volume;
@@ -106,27 +116,28 @@ function Volume(props: VolumeProps): React.ReactElement {
 
             const m = result.data;
 
-            // The inspection records this warning when a sidecar (.pca/.pcr) was present but could
-            // not be parsed; the form is then pre-filled from the scan headers alone. Surface that
-            // so the user knows the sidecar's voxel/voltage/scanner values are not contributing.
-            if (Array.isArray(m.warnings) && m.warnings.some((w: string) => /^sidecar parsing error/i.test(w)))
-                toast.warn('Sidecar metadata could not be read — fields are pre-filled from the scan headers only. Please review.');
-
-            // The archive's slice count differs from a sidecar's declared count. The ZIP is
-            // authoritative; surface the inspection's full explanation in the toast Details so the
-            // user can confirm the count (benign for raw/projection or partial exports; for a
-            // reconstructed stack it may mean missing slices).
-            const sliceMismatch: string | undefined = Array.isArray(m.warnings)
-                ? m.warnings.find((w: string) => /^Slice count mismatch/i.test(w))
-                : undefined;
-            if (sliceMismatch)
-                toastWarning('Slice count differs from the scan sidecar — please review before ingesting.', sliceMismatch);
+            // Categorize inspection warnings for inline display: field-bound warnings become an
+            // icon next to their field, the rest become a general indicator above the fields.
+            const nextFieldWarnings: Record<string, string> = {};
+            const nextGeneralWarnings: string[] = [];
+            if (Array.isArray(m.warnings)) {
+                for (const w of m.warnings as string[]) {
+                    const rule = WARNING_FIELD_RULES.find(r => r.test.test(w));
+                    if (rule)
+                        nextFieldWarnings[rule.field] = nextFieldWarnings[rule.field] ? `${nextFieldWarnings[rule.field]}\n\n${w}` : w;
+                    else
+                        nextGeneralWarnings.push(w);
+                }
+            }
+            setFieldWarnings(nextFieldWarnings);
+            setGeneralWarnings(nextGeneralWarnings);
 
             if (m.fileCount !== undefined) updateMetadataField(metadataIndex, 'fileCount', m.fileCount, MetadataType.volume);
             if (m.sliceCount !== undefined) updateMetadataField(metadataIndex, 'sliceCount', m.sliceCount, MetadataType.volume);
             if (m.dimensionsX !== undefined) updateMetadataField(metadataIndex, 'dimensionsX', m.dimensionsX, MetadataType.volume);
             if (m.dimensionsY !== undefined) updateMetadataField(metadataIndex, 'dimensionsY', m.dimensionsY, MetadataType.volume);
-            if (m.dimensionsZ !== undefined) updateMetadataField(metadataIndex, 'dimensionsZ', m.dimensionsZ, MetadataType.volume);
+            const dimensionsZResolved = m.dimensionsZ ?? m.sliceCount;   // mirrors ingest: falls back to slice count when depth absent from headers
+            if (dimensionsZResolved !== undefined) updateMetadataField(metadataIndex, 'dimensionsZ', dimensionsZResolved, MetadataType.volume);
             if (m.bitDepth !== undefined) updateMetadataField(metadataIndex, 'bitDepth', m.bitDepth, MetadataType.volume);
             if (m.voxelSizeX !== undefined) updateMetadataField(metadataIndex, 'voxelSizeX', m.voxelSizeX, MetadataType.volume);
             if (m.voxelSizeY !== undefined) updateMetadataField(metadataIndex, 'voxelSizeY', m.voxelSizeY, MetadataType.volume);
@@ -286,46 +297,59 @@ function Volume(props: VolumeProps): React.ReactElement {
         );
     };
 
-    const renderNumberRow = (name: keyof typeof volume, label: string, required: boolean, readOnly: boolean = false, step?: string): JSX.Element => (
-        <TableRow className={tableClasses.tableRow}>
-            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                <Typography className={tableClasses.labelText}>{label}{required && '*'}{readOnly && ' (from inspection)'}</Typography>
-            </TableCell>
-            <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
-                <DebounceInput
-                    element='input'
-                    type='number'
-                    name={name as string}
-                    value={volume[name] === null ? '' : (volume[name] as number)}
-                    onChange={setNumberField}
-                    debounceTimeout={400}
-                    disabled={ingestionLoading || readOnly}
-                    className={clsx(tableClasses.input, classes.fieldSizing)}
-                    {...(step ? { step } : {})}
-                />
-            </TableCell>
-        </TableRow>
-    );
+    const renderNumberRow = (name: keyof typeof volume, label: string, required: boolean, readOnly: boolean = false, step?: string, warning?: string, tooltip?: string): JSX.Element => {
+        const labelNode = <Typography className={tableClasses.labelText}>{label}{required && '*'}</Typography>;
+        return (
+            <TableRow className={tableClasses.tableRow}>
+                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                    <Box display='flex' alignItems='center'>
+                        {tooltip ? <Tooltip title={tooltip} arrow placement='top-start'>{labelNode}</Tooltip> : labelNode}
+                        {warning &&
+                        <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{warning}</span>} arrow placement='top-start'>
+                            <WarningRoundedIcon style={{ fontSize: 18, color: '#b58105', marginLeft: 4, cursor: 'default' }} />
+                        </Tooltip>}
+                    </Box>
+                </TableCell>
+                <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                    <DebounceInput
+                        element='input'
+                        type='number'
+                        name={name as string}
+                        value={volume[name] === null ? '' : (volume[name] as number)}
+                        onChange={setNumberField}
+                        debounceTimeout={400}
+                        disabled={ingestionLoading || readOnly}
+                        className={clsx(tableClasses.input, classes.fieldSizing)}
+                        style={readOnly ? { backgroundColor: '#e8e8e8', color: '#555' } : undefined}
+                        {...(step ? { step } : {})}
+                    />
+                </TableCell>
+            </TableRow>
+        );
+    };
 
-    const renderTextRow = (name: keyof typeof volume, label: string, required: boolean = false): JSX.Element => (
-        <TableRow className={tableClasses.tableRow}>
-            <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
-                <Typography className={tableClasses.labelText}>{label}{required && '*'}</Typography>
-            </TableCell>
-            <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
-                <DebounceInput
-                    element='input'
-                    type='string'
-                    name={name as string}
-                    value={(volume[name] as string) ?? ''}
-                    onChange={setField}
-                    debounceTimeout={400}
-                    disabled={ingestionLoading}
-                    className={clsx(tableClasses.input, classes.fieldSizing)}
-                />
-            </TableCell>
-        </TableRow>
-    );
+    const renderTextRow = (name: keyof typeof volume, label: string, required: boolean = false, tooltip?: string): JSX.Element => {
+        const labelNode = <Typography className={tableClasses.labelText}>{label}{required && '*'}</Typography>;
+        return (
+            <TableRow className={tableClasses.tableRow}>
+                <TableCell className={clsx(tableClasses.tableCell, classes.fieldLabel)}>
+                    {tooltip ? <Tooltip title={tooltip} arrow placement='top-start'>{labelNode}</Tooltip> : labelNode}
+                </TableCell>
+                <TableCell className={clsx(tableClasses.tableCell, tableClasses.valueText)}>
+                    <DebounceInput
+                        element='input'
+                        type='string'
+                        name={name as string}
+                        value={(volume[name] as string) ?? ''}
+                        onChange={setField}
+                        debounceTimeout={400}
+                        disabled={ingestionLoading}
+                        className={clsx(tableClasses.input, classes.fieldSizing)}
+                    />
+                </TableCell>
+            </TableRow>
+        );
+    };
 
     const specimenPrepEntries = getEntries(eVocabularySetID.eCaptureDataVolumeSpecimenPreparation);
     const isStained: boolean = specimenPrepEntries.find(e => e.idVocabulary === volume.specimenPreparation)?.Term === 'Stained';
@@ -413,9 +437,9 @@ function Volume(props: VolumeProps): React.ReactElement {
                                 </TableCell>
                             </TableRow>
 
-                            {renderSelectRow('modality', eVocabularySetID.eCaptureDataVolumeModality, 'Modality', true)}
-                            {renderSelectRow('scanType', eVocabularySetID.eCaptureDataVolumeScanType, 'Scan Type', true)}
-                            {renderSelectRow('contentType', eVocabularySetID.eCaptureDataVolumeContentType, 'Content Type', true)}
+                            {renderSelectRow('modality', eVocabularySetID.eCaptureDataVolumeModality, 'Modality', true, 'The scanning technology used (e.g., Micro CT, Medical CT, Nano CT, Synchrotron, MRI).')}
+                            {renderSelectRow('scanType', eVocabularySetID.eCaptureDataVolumeScanType, 'Scan Type', true, 'Whether the archive holds raw projection images or a reconstructed volume.')}
+                            {renderSelectRow('contentType', eVocabularySetID.eCaptureDataVolumeContentType, 'Content Type', true, 'Archive data format — DICOM series or image stack. Detected during inspection.')}
                         </TableBody>
                     </Table>
                 </TableContainer>
@@ -425,26 +449,37 @@ function Volume(props: VolumeProps): React.ReactElement {
                 <TableContainer component={Paper} className={tableClasses.captureMethodTableContainer} elevation={0} style={{ paddingTop: '10px', width: '100%' }}>
                     <Table className={tableClasses.table}>
                         <TableBody>
-                            {renderTextRow('scannerMakeModel', 'Scanner Make/Model')}
-                            {renderNumberRow('voltageKV', 'Voltage (kV)', xrayModality, false, 'any')}
-                            {renderNumberRow('amperageUA', 'Amperage (µA)', xrayModality, false, 'any')}
+                            {generalWarnings.length > 0 &&
+                                <TableRow className={tableClasses.tableRow}>
+                                    <TableCell className={tableClasses.tableCell} colSpan={2}>
+                                        <Box display='flex' alignItems='center'>
+                                            <WarningRoundedIcon style={{ fontSize: 18, color: '#b58105', marginRight: 6 }} />
+                                            <Tooltip title={<span style={{ whiteSpace: 'pre-line' }}>{generalWarnings.join('\n\n')}</span>} arrow placement='top-start'>
+                                                <Typography variant='caption' style={{ color: '#b58105', cursor: 'default' }}>Inspection warnings — hover for details</Typography>
+                                            </Tooltip>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>}
+                            {renderTextRow('scannerMakeModel', 'Scanner Make/Model', false, 'Manufacturer and model of the scanner used for the capture.')}
+                            {renderNumberRow('voltageKV', 'Voltage (kV)', xrayModality, false, 'any', undefined, 'X-ray tube voltage, in kilovolts. Required for X-ray modalities.')}
+                            {renderNumberRow('amperageUA', 'Amperage (µA)', xrayModality, false, 'any', undefined, 'X-ray tube current, in microamps. Required for X-ray modalities.')}
                             {renderSelectRow('specimenPreparation', eVocabularySetID.eCaptureDataVolumeSpecimenPreparation, 'Specimen Preparation', false, 'Use the Description field above to enter additional details (stain, concentration, fixative, embedding medium, etc.).')}
                             {isStained && renderSelectRow('stainSubstance', eVocabularySetID.eCaptureDataVolumeStainSubstance, 'Stain Substance', false, 'Iodine-based: Lugol\'s iodine (I₂KI / IKI), alcoholic iodine (I₂E, I₂M). Heteropolyacid: phosphotungstic acid (PTA), phosphomolybdic acid (PMA). Osmium-based: osmium tetroxide (OsO₄).')}
-                            {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false)}
-                            {showFilterMaterial && renderSelectRow('filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, 'Filter Material', false)}
+                            {renderSelectRow('filterLocation', eVocabularySetID.eCaptureDataVolumeFilterLocation, 'Filter Location', false, 'Where the beam filter sits in the beam path (source side, detector side, both, or collimator).')}
+                            {showFilterMaterial && renderSelectRow('filterMaterial', eVocabularySetID.eCaptureDataVolumeFilterMaterial, 'Filter Material', false, 'Material of the beam filter (e.g., Zinc, Iron, or a combination).')}
 
-                            {renderNumberRow('voxelSizeX', 'Voxel Size X', true, false, 'any')}
-                            {renderNumberRow('voxelSizeY', 'Voxel Size Y', true, false, 'any')}
-                            {renderNumberRow('voxelSizeZ', 'Voxel Size Z', true, false, 'any')}
-                            {renderSelectRow('voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, 'Voxel Size Unit', true)}
+                            {renderNumberRow('voxelSizeX', 'Voxel Size X', true, false, 'any', undefined, 'Physical size of one voxel along the X axis, in the selected unit.')}
+                            {renderNumberRow('voxelSizeY', 'Voxel Size Y', true, false, 'any', undefined, 'Physical size of one voxel along the Y axis, in the selected unit.')}
+                            {renderNumberRow('voxelSizeZ', 'Voxel Size Z', true, false, 'any', undefined, 'Physical size of one voxel along the Z axis (slice pitch), in the selected unit.')}
+                            {renderSelectRow('voxelSizeUnit', eVocabularySetID.eCaptureDataVolumeVoxelSizeUnit, 'Voxel Size Unit', true, 'Unit for the voxel size values (micrometer, millimeter, or nanometer).')}
 
-                            {renderNumberRow('dimensionsX', 'Dimensions X', false)}
-                            {renderNumberRow('dimensionsY', 'Dimensions Y', false)}
-                            {renderNumberRow('dimensionsZ', 'Dimensions Z', false)}
-                            {renderNumberRow('bitDepth', 'Bit Depth', false)}
+                            {renderNumberRow('dimensionsX', 'Dimensions X', false, false, undefined, undefined, 'Number of voxels along the X axis.')}
+                            {renderNumberRow('dimensionsY', 'Dimensions Y', false, false, undefined, undefined, 'Number of voxels along the Y axis.')}
+                            {renderNumberRow('dimensionsZ', 'Dimensions Z', false, true, undefined, undefined, 'Number of voxels along the Z axis (number of slices). Derived from inspection and not editable.')}
+                            {renderNumberRow('bitDepth', 'Bit Depth', false, false, undefined, undefined, 'Bits stored per voxel (e.g., 8 or 16).')}
 
-                            {renderNumberRow('fileCount', 'File Count', true, true)}
-                            {renderNumberRow('sliceCount', 'Slice Count', false, true)}
+                            {renderNumberRow('fileCount', 'File Count', true, true, undefined, undefined, 'Number of files in the archive. Derived from inspection and not editable.')}
+                            {renderNumberRow('sliceCount', 'Slice Count', false, true, undefined, fieldWarnings['sliceCount'], 'Number of image slices in the volume. Derived from inspection and not editable.')}
                         </TableBody>
                     </Table>
                 </TableContainer>

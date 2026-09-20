@@ -401,9 +401,9 @@ export default async function updateObjectDetails(_: Parent, args: MutationUpdat
                             // modalities (Medical/Micro/Nano CT, Synchrotron); MRI stays exempt.
                             if (await CACHE.VocabularyCache.isVolumeXrayModality(CDV.idVModality)) {
                                 if (CDV.VoltageKV === null || CDV.VoltageKV === undefined)
-                                    return sendResult(false,'update object details failed','Voltage (kV) is required for X-ray modalities');
+                                    return sendResult(false,'Voltage (kV) is required for X-ray modalities');
                                 if (CDV.AmperageUA === null || CDV.AmperageUA === undefined)
-                                    return sendResult(false,'update object details failed','Amperage (µA) is required for X-ray modalities');
+                                    return sendResult(false,'Amperage (µA) is required for X-ray modalities');
                             }
                             if (!await CDV.update())
                                 return sendResult(false,'update object details failed',`Unable to update CaptureDataVolume with id ${CDV.idCaptureData}; update failed`);
