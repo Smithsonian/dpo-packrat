@@ -276,7 +276,7 @@ function Volume(props: VolumeProps): React.ReactElement {
                         className={clsx(tableClasses.select, classes.fieldSizing)}
                         SelectDisplayProps={{ style: { paddingLeft: '10px', borderRadius: '5px' } }}
                     >
-                        {!required && <MenuItem value=''><em>—</em></MenuItem>}
+                        {!required && !getEntries(vocabSet).some(e => e.Term === 'None') && <MenuItem value=''><em>—</em></MenuItem>}
                         {getEntries(vocabSet).map(({ idVocabulary, Term }, i) => (
                             <MenuItem key={i} value={idVocabulary}>{Term}</MenuItem>
                         ))}
