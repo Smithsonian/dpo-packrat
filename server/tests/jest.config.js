@@ -3,7 +3,9 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     testTimeout: 60000,
-    silent: true,
+    // Default runs are quiet; `yarn test:diag` sets PACKRAT_TEST_VERBOSE=1 to
+    // surface console/log output while investigating a category.
+    silent: process.env.PACKRAT_TEST_VERBOSE !== '1',
     // collectCoverage: true,
     testMatch: [
         // The complete test suite, on one line, to aid in quick commenting out

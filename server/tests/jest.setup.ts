@@ -3,6 +3,13 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 import { NavigationFactory } from '../navigation/interface/NavigationFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Actor } from '../audit/Actor';
+import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE } from './logGate';
+
+// Install the log honesty gate at module load — before any test emits — so
+// error/critical logs raised during import or in a test are captured. See
+// logGate.ts. Each test file runs in its own module registry, so the gate and
+// its capture buffer are fresh per file.
+installLogGate();
 
 // Establish a LocalStore carrying a system Actor for every test so DB CRUD
 // audit emits (DBObject.create/update/delete) can attribute their rows.
@@ -35,5 +42,14 @@ afterEach(async () => {
 
 afterAll(async () => {
     NavigationFactory.cleanup();
+    await RK.drainAllQueues();
     await RK.shutdown();
+
+    // Honesty gate: after the file's logs have flushed, either seed the ratchet
+    // baseline (write mode) or fail the file on any error/critical emitted by a
+    // caller not in the baseline.
+    if (BASELINE_WRITE_MODE)
+        mergeCapturedIntoBaseline();
+    else
+        assertNoUnexpectedLogs(expect.getState().testPath ?? 'unknown');
 });

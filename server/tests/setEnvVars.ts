@@ -22,16 +22,20 @@ if (!process.env.PACKRAT_SMTP_HOST)
 if (!process.env.PACKRAT_NAVIGATION_TYPE)
     process.env.PACKRAT_NAVIGATION_TYPE = 'db';
 
-// Storage, EDAN staging, and logs are pinned to a disposable sandbox under the
-// OS temp directory — never the repository's ./var/Storage roots. These
-// assignments are unconditional so an externally-set (dev/prod) value cannot
-// leak through. teardown.ts removes the sandbox after the run.
+// Storage and EDAN staging are pinned to a disposable sandbox under the OS temp
+// directory — never the repository's ./var/Storage roots. These assignments are
+// unconditional so an externally-set (dev/prod) value cannot leak through.
+// teardown.ts removes this sandbox after the run.
 const TEST_STORAGE_ROOT: string = path.join(os.tmpdir(), 'packrat-test');
 process.env.PACKRAT_OCFL_STORAGE_ROOT = path.join(TEST_STORAGE_ROOT, 'Repository');
 process.env.PACKRAT_OCFL_STAGING_ROOT = path.join(TEST_STORAGE_ROOT, 'Staging');
 process.env.PACKRAT_EDAN_STAGING_ROOT = path.join(TEST_STORAGE_ROOT, 'StagingEdan');
 process.env.PACKRAT_EDAN_RESOURCES_HOTFOLDER = path.join(TEST_STORAGE_ROOT, 'StagingEdan');
-process.env.PACKRAT_LOG_ROOT = path.join(TEST_STORAGE_ROOT, 'logs');
+
+// Logs live in a SEPARATE temp directory that teardown does NOT delete, so a
+// run's log output survives for inspection. Still under os.tmpdir() to satisfy
+// the sandbox guardrail. Path is stable across runs (winston segments by date).
+process.env.PACKRAT_LOG_ROOT = path.join(os.tmpdir(), 'packrat-test-logs');
 
 // The database is pinned to an isolated "Packrat_test" schema, derived from the
 // configured connection so it reuses the same host/credentials but never the
