@@ -298,6 +298,11 @@ export class Logger {
     public static async shutdown(): Promise<void> {
         Logger.state = LoggerState.CLOSING;
 
+        // Stop the metrics sampling loop. It runs `while (metricsIsRunning)` with
+        // an awaited timer, so leaving this true keeps a live timer on the event
+        // loop after shutdown and prevents the process from exiting cleanly.
+        Logger.metricsIsRunning = false;
+
         if (Logger.logger) {
             for (const transport of Logger.logger.transports) {
                 if (typeof transport.close === 'function') {

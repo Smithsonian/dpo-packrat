@@ -116,8 +116,10 @@ export class HttpServer {
         }
         RK.logInfo(RK.LogSection.eSYS,'system started: Middleware and Routes',undefined,undefined,'HttpServer');
 
-        // start usage monitoring
-        if (monitorCPU) {
+        // start usage monitoring. Skipped under NODE_ENV=test: the monitor holds
+        // a 1s sampling setInterval that is never stopped, which would keep jest
+        // from exiting (the same reason the retention job below is test-guarded).
+        if (monitorCPU && process.env.NODE_ENV !== 'test') {
             const monitor: UsageMonitor = new UsageMonitor(1000, 90, 10, monitorMem, 90, 10, monitorVerboseSamples); // sample every second, alert if > 90% for more than 10 samples in a row, monitorVerboseSamples -> verbose logging, when != 0, every monitorVerboseSamples samples
             monitor.start();
             RK.logInfo(RK.LogSection.eSYS,'system started: Usage Monitoring',undefined,{ frequency: 1000, samples: monitorVerboseSamples },'HttpServer');

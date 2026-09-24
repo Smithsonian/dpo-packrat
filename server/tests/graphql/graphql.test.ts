@@ -25,6 +25,7 @@ import getContentsForAssetVersionsTest from './queries/asset/getContentsForAsset
 import getSubjectsForUnitTest from './queries/unit/getSubjectsForUnit.test';
 import getItemsForSubjectTest from './queries/unit/getItemsForSubject.test';
 import getAssetVersionsDetailsTest from './queries/asset/getAssetVersionsDetails.test';
+import getUploadedAssetVersionTest from './queries/asset/getUploadedAssetVersion.test';
 import getProjectDocumentationTest from './queries/unit/getProjectDocumentation.test';
 import getIntermediaryFileTest from './queries/scene/getIntermediaryFile.test';
 import getSourceObjectIdentiferTest from './queries/systemobject/getSourceObjectIdentifer.test';
@@ -72,6 +73,7 @@ describe('GraphQL Test Suite', () => {
     getSubjectsForUnitTest(utils);
     getItemsForSubjectTest(utils);
     getAssetVersionsDetailsTest(utils);
+    getUploadedAssetVersionTest(utils);
     getProjectDocumentationTest(utils);
     getIntermediaryFileTest(utils);
     getSourceObjectIdentiferTest(utils);

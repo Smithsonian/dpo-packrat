@@ -3,6 +3,7 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 import { NavigationFactory } from '../navigation/interface/NavigationFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Actor } from '../audit/Actor';
+import * as DBC from '../db/connection';
 import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE } from './logGate';
 
 // Install the log honesty gate at module load — before any test emits — so
@@ -44,6 +45,10 @@ afterAll(async () => {
     NavigationFactory.cleanup();
     await RK.drainAllQueues();
     await RK.shutdown();
+    // Disconnect Prisma in this worker. globalTeardown runs in a separate
+    // process, so without this the worker's connection stays open and keeps the
+    // process alive (the reason the suite needed --forceExit).
+    await DBC.DBConnection.disconnect();
 
     // Honesty gate: after the file's logs have flushed, either seed the ratchet
     // baseline (write mode) or fail the file on any error/critical emitted by a
