@@ -46,6 +46,14 @@ afterAll(async done => {
     done();
 });
 */
+// The Cook and workflow suites below require a LIVE Cook server
+// (PACKRAT_COOK_SERVER_URL) and on-disk model fixtures. They are opt-in so they
+// show as skipped by default rather than passing vacuously when those
+// prerequisites are absent. Enable with PACKRAT_TEST_COOK=1 in an environment
+// that can reach Cook and has the model fixtures.
+const cookTestsEnabled: boolean = process.env.PACKRAT_TEST_COOK === '1';
+const describeCook = cookTestsEnabled ? describe : describe.skip;
+
 describe('JobNS Init', () => {
     test('JobFactory.getInstance', async () => {
         jest.setTimeout(testTimeout);
@@ -66,7 +74,7 @@ describe('JobNS Init', () => {
     });
 });
 
-describe('JobNS Cook Test Setup', () => {
+describeCook('JobNS Cook Test Setup', () => {
     jest.setTimeout(testTimeout);
     for (let nSet = 0; nSet < jobSets; nSet++) {
         testCookImplicit('fbx-with-support', COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -101,7 +109,7 @@ describe('JobNS Cook Test Setup', () => {
     });
 });
 
-describe('JobNS IWorkflow Test Setup', () => {
+describeCook('JobNS IWorkflow Test Setup', () => {
     jest.setTimeout(testTimeout);
     for (let nSet = 0; nSet < workflowSets; nSet++) {
         testWorkflow('fbx-with-support', COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularyID.eJobJobTypeCookSIPackratInspect);
@@ -131,7 +139,7 @@ describe('JobNS IWorkflow Test Setup', () => {
     }
 });
 
-describe('JobNS Cook Test Completion', () => {
+describeCook('JobNS Cook Test Completion', () => {
     test('IJob.Cook Job Completion', async() => {
         jest.setTimeout(testTimeout);
         const jobFinalizationList: Promise<H.IOResults>[] = [];
@@ -163,7 +171,7 @@ describe('JobNS Cook Test Completion', () => {
     });
 });
 
-describe('JobNS IWorkflow Completion', () => {
+describeCook('JobNS IWorkflow Completion', () => {
     test('JobNS IWorkflow Completion', async() => {
         jest.setTimeout(testTimeout);
         const wfFinalizationList: Promise<H.IOResults>[] = [];
