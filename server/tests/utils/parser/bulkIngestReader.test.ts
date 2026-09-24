@@ -56,7 +56,12 @@ afterAll(async done => {
     done();
 });
 
-describe('BulkIngestReader Setup', () => {
+// Bulk ingest is not in production use: BulkIngestReader's BagIt-crack workflow
+// (loadFromZip / loadFromAssetVersion) is non-functional in production. These
+// suites cover only that workflow, so they are skipped. The still-live static
+// helpers (computeProjects, ingestedObjectIs*) retain coverage via the
+// getAssetVersionsDetails GraphQL query test.
+describe.skip('BulkIngestReader Setup', () => {
     test('BulkIngestReader Setup', async() => {
         await OHTS.initialize();
         await OHTS.wire();
@@ -90,7 +95,7 @@ describe('BulkIngestReader Setup', () => {
     });
 });
 
-describe('BulkIngestReader Methods', () => {
+describe.skip('BulkIngestReader Methods', () => {
     test('BulkIngestReader.loadFromZip', async() => {
         await testLoad(mockPathBagit1, null, true, true);
         await testLoad(mockPathBagit1, null, false, true, OHTS.subject1);

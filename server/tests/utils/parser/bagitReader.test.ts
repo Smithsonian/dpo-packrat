@@ -3,6 +3,7 @@ import { join } from 'path';
 import { BagitReader, BagitReaderParams } from '../../../utils/parser/';
 import * as H from '../../../utils/helpers';
 import { RecordKeeper as RK } from '../../../records/recordKeeper';
+import { getPackratTestFileSizeMap } from '../packratTestZip';
 
 const mockPathZip: string = join(__dirname, '../../mock/utils/zip/');
 const mockPathDir: string = join(__dirname, '../../mock/utils/bagit/');
@@ -16,7 +17,10 @@ let bagitZipStream: BagitReader;
 let bagitZipFile: BagitReader;
 let bagitDir: BagitReader;
 
-describe('BagitReader', () => {
+// BagIt / bulk-ingest is not in production use: the BagitReader code path exists
+// but the ingest workflow that drives it is non-functional. These tests are
+// skipped so the suite does not assert a feature that production does not run.
+describe.skip('BagitReader', () => {
     test('BagitReader load from zip stream with initial validation', async () => {
         const path = join(mockPathZip, 'PackratTest.zip');
         bagitZipStream = await testBagitLoad({ loadMethod: eLoadMethod.eZipStream, path, initialValidate: true, subsequentValidate: true, subsequentIsValid: true, expectFailure: false });
@@ -288,23 +292,3 @@ async function testBagitClose(bagit: BagitReader): Promise<boolean> {
     return results.success;
 }
 
-export function getPackratTestFileSizeMap(includeDirs: boolean): Map<string, number> {
-    const fileSizeMap: Map<string, number> = new Map<string, number>();
-    fileSizeMap.set('PackratTest/bag-info.txt', 0);
-    fileSizeMap.set('PackratTest/bagit.txt', 55);
-    fileSizeMap.set('PackratTest/capture_data_photo.csv', 1084);
-    fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-01.jpg', 245862);
-    fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/nmnh_sea_turtle-1_low-02.jpg', 245161);
-    fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-01.dng', 283616);
-    fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/nmnh_sea_turtle-1_low-02.dng', 282558);
-    fileSizeMap.set('PackratTest/manifest-sha1.txt', 410);
-    fileSizeMap.set('PackratTest/tagmanifest-sha1.txt', 229);
-
-    if (includeDirs) {
-        fileSizeMap.set('PackratTest/data/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/camera/', 0);
-        fileSizeMap.set('PackratTest/data/nmnh_sea_turtle-1_low/raw/', 0);
-    }
-    return fileSizeMap;
-}

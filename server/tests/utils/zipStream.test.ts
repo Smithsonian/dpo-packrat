@@ -3,7 +3,7 @@ import * as path from 'path';
 import { ZipStream } from '../../utils/zipStream';
 import * as H from '../../utils/helpers';
 import { RecordKeeper as RK  } from '../../records/recordKeeper';
-import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
+import { getPackratTestFileSizeMap } from './packratTestZip';
 
 const mockPath: string = path.join(__dirname, '../mock/utils/zip/');
 /*
