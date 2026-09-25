@@ -56,19 +56,17 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
         });
 
         test('Cache: SystemObjectCache Methods ' + description, async () => {
+            // Deterministic stride sampling: examine up to 100 objects spread
+            // evenly across the full set, so the same objects are exercised on
+            // every run (Math.random() sampling made coverage non-reproducible).
             const soFetchCount: number = systemObjectAll.length;
-            for (let test = 0; test < 100; test++) {
-                const lookup: number = Math.floor(Math.random() * soFetchCount);
-                const SOExamine: DBAPI.SystemObject = systemObjectAll[lookup];
-                await testSystemObject(SOExamine);
+            const sampleTarget: number = Math.min(100, soFetchCount);
+            const step: number = Math.max(1, Math.floor(soFetchCount / sampleTarget));
+            let examined: number = 0;
+            for (let i = 0; i < soFetchCount && examined < sampleTarget; i += step, examined++) {
+                await testSystemObject(systemObjectAll[i]);
             }
-
-            /*
-            jest.setTimeout(600000);
-            for (const SOExamine of systemObjectAll) {
-                await testSystemObject(SOExamine);
-            }
-            */
+            expect(examined).toBeGreaterThan(0);
         });
 
         test('Cache: SystemObjectCache.getSystemFromObjectIDInternal ' + description, async () => {
