@@ -4,6 +4,9 @@ import { Actor } from '../../audit/Actor';
 import { withActor } from '../../audit/resolveActor';
 import * as DBC from '../../db/connection';
 import { SystemObjectInvalidation } from '../../cache/SystemObjectInvalidation';
+import rollbackSystemObjectVersion from '../../graphql/schema/systemobject/resolvers/mutations/rollbackSystemObjectVersion';
+import { MutationRollbackSystemObjectVersionArgs } from '../../types/graphql';
+import { Parent } from '../../types/resolvers';
 
 /**
  * Verifies that resolver-layer mutations route their audit writes through
@@ -93,18 +96,22 @@ describe('Resolver-layer withAuditTransaction wraps', () => {
 });
 
 describe('Reason enforcement on rollback', () => {
-    // The rollback resolvers reject empty rollbackNotes before opening a tx.
-    // We exercise that surface here without running the full GraphQL resolver
-    // (the body has many storage dependencies); a focused test on the input
-    // guard is sufficient.
+    // Invoke the REAL rollbackSystemObjectVersion resolver: its rollbackNotes
+    // guard returns before any DB/auth work, so these cases are hermetic and
+    // exercise the actual product guard (not a copy of it).
+    const call = (rollbackNotes: string | null | undefined) =>
+        rollbackSystemObjectVersion(
+            null as unknown as Parent,
+            { input: { idSystemObjectVersion: 1, rollbackNotes, time: null } } as unknown as MutationRollbackSystemObjectVersionArgs);
 
-    test('rollbackNotes enforcement: empty string is rejected', () => {
-        const checkValid = (notes: string | null | undefined): boolean =>
-            !!notes && notes.trim().length > 0;
-        expect(checkValid('')).toBe(false);
-        expect(checkValid('   ')).toBe(false);
-        expect(checkValid(null)).toBe(false);
-        expect(checkValid(undefined)).toBe(false);
-        expect(checkValid('rollback because of bug 123')).toBe(true);
+    test('rollbackNotes enforcement: empty string is rejected', async () => {
+        expect(await call('')).toMatchObject({ success: false, message: 'rollbackNotes is required' });
+    });
+    test('rollbackNotes enforcement: whitespace-only is rejected', async () => {
+        expect(await call('   ')).toMatchObject({ success: false, message: 'rollbackNotes is required' });
+    });
+    test('rollbackNotes enforcement: null and undefined are rejected', async () => {
+        expect(await call(null)).toMatchObject({ success: false, message: 'rollbackNotes is required' });
+        expect(await call(undefined)).toMatchObject({ success: false, message: 'rollbackNotes is required' });
     });
 });

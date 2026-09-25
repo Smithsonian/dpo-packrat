@@ -43,9 +43,9 @@ import * as fs from 'fs';
  *
  * Only used on failure — the successful path does not log this payload.
  */
-type IngestPartialStatePhase = 'init' | 'pre-storage' | 'storage' | 'post-storage' | 'workflow' | 'audit';
+export type IngestPartialStatePhase = 'init' | 'pre-storage' | 'storage' | 'post-storage' | 'workflow' | 'audit';
 
-type IngestPartialState = {
+export type IngestPartialState = {
     phase: IngestPartialStatePhase;
     idSubjects: number[];
     idItems: number[];
@@ -60,6 +60,47 @@ type IngestPartialState = {
 };
 
 const PARTIAL_STATE_SENTINEL = 'INGEST_PARTIAL_STATE_FAILURE';
+
+/**
+ * Build the structured cleanup payload emitted (via logCritical and a semantic
+ * audit row) when ingest fails partway. Pure: derives everything from the
+ * captured partial state so it can be unit-tested without the resolver wiring.
+ */
+export function buildPartialStateFailurePayload(partialState: IngestPartialState, reason: string, error: unknown | null, idUser: number | null): Record<string, unknown> {
+    const phase = partialState.phase;
+    return {
+        sentinel: PARTIAL_STATE_SENTINEL,
+        phase,
+        reason,
+        errorMessage: error instanceof Error ? error.message : (error ? String(error) : undefined),
+        errorStack: error instanceof Error ? error.stack : undefined,
+        recoveryHint: recoveryHintForPhase(phase),
+        correlationId: partialState.correlationId,
+        durationMs: Date.now() - partialState.startedMs,
+        idUser,
+        // Counts at the top level for dashboards; arrays for cleanup tooling
+        counts: {
+            subjects: partialState.idSubjects.length,
+            items: partialState.idItems.length,
+            projects: partialState.idProjects.length,
+            captureDatas: partialState.idCaptureDatas.length,
+            models: partialState.idModels.length,
+            scenes: partialState.idScenes.length,
+            others: partialState.idOthers.length,
+            assetVersionsStaged: partialState.idAssetVersionsStaged.length,
+        },
+        ids: {
+            idSubjects: partialState.idSubjects,
+            idItems: partialState.idItems,
+            idProjects: partialState.idProjects,
+            idCaptureDatas: partialState.idCaptureDatas,
+            idModels: partialState.idModels,
+            idScenes: partialState.idScenes,
+            idOthers: partialState.idOthers,
+            idAssetVersionsStaged: partialState.idAssetVersionsStaged,
+        },
+    };
+}
 
 /** Per-phase recovery guidance — pure text, consumed by humans and dashboards. */
 function recoveryHintForPhase(phase: IngestPartialStatePhase): string {
@@ -185,39 +226,7 @@ class IngestDataWorker extends ResolverBase {
      * correlationId on every row ties them together in the audit lifeline.
      */
     private async recordPartialStateFailure(reason: string, error: unknown | null): Promise<void> {
-        const phase = this.partialState.phase;
-        const payload = {
-            sentinel: PARTIAL_STATE_SENTINEL,
-            phase,
-            reason,
-            errorMessage: error instanceof Error ? error.message : (error ? String(error) : undefined),
-            errorStack: error instanceof Error ? error.stack : undefined,
-            recoveryHint: recoveryHintForPhase(phase),
-            correlationId: this.partialState.correlationId,
-            durationMs: Date.now() - this.partialState.startedMs,
-            idUser: this.user?.idUser ?? null,
-            // Counts at the top level for dashboards; arrays for cleanup tooling
-            counts: {
-                subjects: this.partialState.idSubjects.length,
-                items: this.partialState.idItems.length,
-                projects: this.partialState.idProjects.length,
-                captureDatas: this.partialState.idCaptureDatas.length,
-                models: this.partialState.idModels.length,
-                scenes: this.partialState.idScenes.length,
-                others: this.partialState.idOthers.length,
-                assetVersionsStaged: this.partialState.idAssetVersionsStaged.length,
-            },
-            ids: {
-                idSubjects: this.partialState.idSubjects,
-                idItems: this.partialState.idItems,
-                idProjects: this.partialState.idProjects,
-                idCaptureDatas: this.partialState.idCaptureDatas,
-                idModels: this.partialState.idModels,
-                idScenes: this.partialState.idScenes,
-                idOthers: this.partialState.idOthers,
-                idAssetVersionsStaged: this.partialState.idAssetVersionsStaged,
-            },
-        };
+        const payload = buildPartialStateFailurePayload(this.partialState, reason, error, this.user?.idUser ?? null);
         RK.logCritical(RK.LogSection.eHTTP, PARTIAL_STATE_SENTINEL, reason, payload, 'GraphQL.Ingestion.Data');
 
         // Persist the same payload as an audit row so the failure is queryable
@@ -238,7 +247,7 @@ class IngestDataWorker extends ResolverBase {
             // original failure return.
             RK.logError(RK.LogSection.eAUDIT, 'ingest-failure audit row failed to emit',
                 auditErr instanceof Error ? auditErr.message : String(auditErr),
-                { phase, reason }, 'GraphQL.Ingestion.Data');
+                { phase: this.partialState.phase, reason }, 'GraphQL.Ingestion.Data');
         }
     }
 

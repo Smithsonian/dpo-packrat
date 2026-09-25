@@ -15,7 +15,7 @@ import { withAuditTransaction } from '../../../audit/withAuditTransaction';
 
 const SRC = 'HTTP.Route.Authorization';
 
-async function auditAuthChange(
+export async function auditAuthChange(
     idAdminUser: number | null,
     type: eAuditType.eActionAccessGrant | eAuditType.eActionAccessRevoke,
     data: Record<string, unknown>

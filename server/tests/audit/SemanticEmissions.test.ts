@@ -8,6 +8,7 @@ import * as DBAPI from '../../db';
 import * as CACHE from '../../cache';
 import { SystemObjectInvalidation } from '../../cache/SystemObjectInvalidation';
 import { ASL, LocalStore } from '../../utils/localStore';
+import { auditAuthChange } from '../../http/routes/api/authorization';
 
 /**
  * Coverage for the 13 semantic AuditType emissions wired into the codebase.
@@ -195,32 +196,30 @@ describe('Scene QC transitions emit semantic rows', () => {
 });
 
 describe('Access auditAuthChange uses semantic AuditType', () => {
-    // Direct test that the helper delegates to AuditFactory.emit with the new
-    // action codes, by exercising it via a lightweight mirror of the helper.
-    let emitSpy: jest.SpyInstance;
+    // Exercise the REAL auditAuthChange helper (from the authorization route),
+    // which routes access grant/revoke through emitSemantic and picks the actor:
+    // the admin user when known, else a system fallback so the row still writes.
+    let emitSemanticSpy: jest.SpyInstance;
 
     beforeEach(() => {
-        emitSpy = jest.spyOn(AuditFactory, 'emit').mockResolvedValue(true);
+        emitSemanticSpy = jest.spyOn(AuditFactory, 'emitSemantic').mockResolvedValue(true);
     });
     afterEach(() => jest.restoreAllMocks());
 
-    test('eActionAccessGrant emit shape', async () => {
-        await AuditFactory.emit({
-            action: eAuditType.eActionAccessGrant,
-            actor: Actor.user(7),
-            payload: { surface: 'setUserUnits', idUser: 11, idUnit: 2 },
-        });
-        expect(emitSpy).toHaveBeenCalledTimes(1);
-        expect(emitSpy.mock.calls[0][0].action).toBe(eAuditType.eActionAccessGrant);
+    test('grant with a known admin user attributes the actor + action + payload', async () => {
+        await auditAuthChange(11, eAuditType.eActionAccessGrant, { surface: 'setUserUnits', idUser: 11, idUnit: 2 });
+        expect(emitSemanticSpy).toHaveBeenCalledTimes(1);
+        const args = emitSemanticSpy.mock.calls[0][0];
+        expect(args.action).toBe(eAuditType.eActionAccessGrant);
+        expect(args.actor).toEqual(Actor.user(11));
+        expect(args.payload).toEqual({ surface: 'setUserUnits', idUser: 11, idUnit: 2 });
     });
 
-    test('eActionAccessRevoke emit shape', async () => {
-        await AuditFactory.emit({
-            action: eAuditType.eActionAccessRevoke,
-            actor: Actor.user(7),
-            payload: { surface: 'setUnitAuth', idUser: 12, idUnit: 3 },
-        });
-        expect(emitSpy.mock.calls[0][0].action).toBe(eAuditType.eActionAccessRevoke);
+    test('revoke without an admin user falls back to a system actor', async () => {
+        await auditAuthChange(null, eAuditType.eActionAccessRevoke, { surface: 'setUnitAuth', idUser: 12, idUnit: 3 });
+        const args = emitSemanticSpy.mock.calls[0][0];
+        expect(args.action).toBe(eAuditType.eActionAccessRevoke);
+        expect(args.actor).toEqual(Actor.system('AuthorizationAPI'));
     });
 });
 
