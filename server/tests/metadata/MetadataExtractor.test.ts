@@ -141,14 +141,24 @@ function validateImageMetadata(extractor: META.MetadataExtractor, fileName: stri
     retValue = validationImageMetadataField(extractor, fileName, 'FNumber') && retValue;
     retValue = validationImageMetadataField(extractor, fileName, 'ImageHeight') && retValue;
     retValue = validationImageMetadataField(extractor, fileName, 'ImageWidth') && retValue;
+
+    // Dimensions must be positive numbers, not merely present — catches an
+    // extractor that returns 0/NaN/empty for a real image.
+    for (const dim of ['ImageHeight', 'ImageWidth']) {
+        const value: number = Number(extractor.metadata.get(dim));
+        expect(Number.isFinite(value) && value > 0).toBe(true);
+    }
     return retValue;
 }
 
 function validationImageMetadataField(extractor: META.MetadataExtractor, fileName: string, field: string): boolean {
-    if (extractor.metadata.has(field))
+    // Assert the field is present AND carries a non-empty value, not just that
+    // the key exists (a present-but-empty value is a silent extraction failure).
+    const value: unknown = extractor.metadata.get(field);
+    if (value !== undefined && value !== null && String(value).trim().length > 0)
         return true;
 
-    RK.logError(RK.LogSection.eTEST,'validation image metadata field',`Metadata extraction for ${fileName} missing expected field ${field}`,{},'Tests.Metadata');
+    RK.logError(RK.LogSection.eTEST,'validation image metadata field',`Metadata extraction for ${fileName} missing or empty expected field ${field}`,{},'Tests.Metadata');
     return false;
 }
 
