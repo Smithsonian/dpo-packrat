@@ -34,11 +34,28 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
         const origError: any = err.extensions?.exception || err.originalError || err;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stack = origError?.stack || (err as any)?.stack || '(no stack)';
+
+        // Client-side errors (auth, validation, bad input, parse) are not server
+        // faults — record them at debug so they neither read as server errors nor
+        // add error-log noise. Genuine server failures still log at error.
+        const code: unknown = err.extensions?.code;
+        if (typeof code === 'string' && CLIENT_ERROR_CODES.has(code)) {
+            RK.logDebug(RK.LogSection.eGQL,'Apollo client error',`${code}: ${H.Helpers.getErrorString(err)}`,{},'GraphQL.Apollo.ServerOptions');
+            return err;
+        }
+
         RK.logError(RK.LogSection.eGQL,'Apollo server failed',`format error: ${H.Helpers.getErrorString(err)}`,{},'GraphQL.Apollo.ServerOptions');
         RK.logError(RK.LogSection.eGQL,'Apollo server failed (stack)',`${stack}`,{},'GraphQL.Apollo.ServerOptions');
         return err;
     }
 };
+
+// Apollo error codes that indicate a client-side problem, not a server fault.
+const CLIENT_ERROR_CODES: Set<string> = new Set<string>([
+    'UNAUTHENTICATED', 'FORBIDDEN', 'BAD_USER_INPUT',
+    'GRAPHQL_VALIDATION_FAILED', 'GRAPHQL_PARSE_FAILED',
+    'PERSISTED_QUERY_NOT_FOUND', 'PERSISTED_QUERY_NOT_SUPPORTED',
+]);
 
 function computeGQLQuery(req: Request): string | null {
     // extract first line of query string

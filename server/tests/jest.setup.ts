@@ -4,7 +4,14 @@ import { NavigationFactory } from '../navigation/interface/NavigationFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Actor } from '../audit/Actor';
 import * as DBC from '../db/connection';
+import { Logger } from '../records/logger/log';
 import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE } from './logGate';
+
+// In tests the logger's environment resolves to DEVELOPMENT, which adds a winston
+// console transport that floods stdout (and bypasses jest's `silent`). Keep run
+// output clean by default — logs still go to the file and the in-memory gate.
+// `yarn test:diag` (PACKRAT_TEST_VERBOSE=1) keeps the console for debugging.
+const TEST_VERBOSE: boolean = process.env.PACKRAT_TEST_VERBOSE === '1';
 
 // Install the log honesty gate at module load — before any test emits — so
 // error/critical logs raised during import or in a test are captured. See
@@ -35,6 +42,8 @@ beforeEach(async () => {
     ASL.enterWith(testLS);
     // initialize our logger for all tests
     await RK.initialize(RK.SubSystem.LOGGER);
+    if (!TEST_VERBOSE)
+        Logger.suppressConsole();
 });
 
 afterEach(async () => {

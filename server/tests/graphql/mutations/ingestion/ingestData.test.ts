@@ -20,6 +20,7 @@ import * as CACHE from '../../../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { Asset, AssetVersion } from '@prisma/client';
 import * as DBAPI from '../../../../db';
+import * as COL from '../../../../collections/interface';
 
 const ingestDataTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
@@ -44,7 +45,17 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
 
     describe('Mutation: ingestData', () => {
         jest.setTimeout(60000);
+        // Restore only this spy (not restoreAllMocks — the aggregator's shared
+        // admin-context mock must survive across tests).
+        let edanSpy: jest.SpyInstance;
+        afterEach(() => edanSpy?.mockRestore());
+
         test('should work with valid input', async done => {
+            // Mock the EDAN collection query so the subject search is hermetic
+            // (no live EDAN / Unauthorized noise); the DB path still runs.
+            edanSpy = jest.spyOn(COL.CollectionFactory.getInstance(), 'queryCollection')
+                .mockResolvedValue({ records: [], rowCount: 0 });
+
             const vocabularySetArgs: CreateVocabularySetInput = createVocabularySetInput();
             const { VocabularySet } = await graphQLApi.createVocabularySet(vocabularySetArgs);
             expect(VocabularySet).toBeTruthy();

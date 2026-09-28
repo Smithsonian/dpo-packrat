@@ -323,6 +323,20 @@ export class Logger {
         Logger.state = LoggerState.OFFLINE;
     }
 
+    /**
+     * Remove the console transport (keeping the file transport). Used by the test
+     * harness to keep run output clean: logs are still written to file and seen by
+     * the in-memory gate, they just don't flood stdout. No-op if not configured or
+     * no console transport is present.
+     */
+    public static suppressConsole(): void {
+        if (!Logger.logger)
+            return;
+        const consoleTransport = Logger.logger.transports.find(t => t instanceof transports.Console);
+        if (consoleTransport)
+            Logger.logger.remove(consoleTransport);
+    }
+
     public static setDebugMode(value: boolean): void {
         Logger.debugMode = value;
     }

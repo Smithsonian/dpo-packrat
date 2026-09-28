@@ -89,7 +89,18 @@ jobs:
       - name: Install E2E dependencies
         run: cd e2e && yarn install --frozen-lockfile --network-timeout 600000 && cd ..
 
-      # Run tests using test DB
+      # Run tests using test DB.
+      #
+      # `yarn test` enforces the log honesty gate (server/tests/logGate.ts +
+      # logBaseline.json): a test file fails if it emits an error/critical log from
+      # a caller not in the baseline allowlist. If CI trips the gate on a new
+      # caller, the jest output names the unexpected caller(s); either fix the code
+      # path or, if it is a known/benign emitter, add the caller to
+      # server/tests/logBaseline.json (re-seed with `yarn test:logbaseline`).
+      #
+      # Live-service suites (EDAN, Cook) are opt-in and stay skipped here because
+      # PACKRAT_TEST_EDAN / PACKRAT_TEST_COOK are intentionally unset — CI runs the
+      # hermetic + local-DB tiers only, with no external-network dependency.
       - name: Run Tests
         run: yarn test
         env:
@@ -99,6 +110,16 @@ jobs:
           PACKRAT_EDAN_APPID: ${{ secrets.PACKRAT_EDAN_APPID }}
           PACKRAT_EDAN_AUTH_KEY: ${{ secrets.PACKRAT_EDAN_AUTH_KEY }}
           PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat_test
+
+      # Preserve the surviving test log (written under the OS temp dir by
+      # setEnvVars.ts) so a gate trip or failure can be inspected from the run.
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: /tmp/packrat-test-logs
+          if-no-files-found: ignore
 
   build:
     # Only run this step on pull_request or push to specified branches (PR merge counts as push too)

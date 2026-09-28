@@ -54,8 +54,10 @@ export default async function getSystemObjectDetails(_: Parent, args: QueryGetSy
     const identifiers = await getIngestIdentifiers(idSystemObject);
 
     if (!oID) {
+        // Caller-supplied idSystemObject that doesn't resolve — a client not-found,
+        // not a server fault. Warn (still thrown to the caller), don't error.
         const message: string = `No object ID found for ID: ${idSystemObject}`;
-        RK.logError(RK.LogSection.eGQL,'get details failed',message,{ input },'GraphQL.SystemObject.Details');
+        RK.logWarning(RK.LogSection.eGQL,'get details',message,{ input },'GraphQL.SystemObject.Details');
         throw new Error(message);
     }
 
