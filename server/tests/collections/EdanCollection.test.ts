@@ -40,7 +40,14 @@ const yyyymmdd: string = now.toISOString().split('T')[0];
 const slug: string = (Math.random().toString(16) + '0000000').substr(2, 12);
 let idCounter: number = 0;
 
-describe('Collections: EdanCollection', () => {
+// This suite queries the live EDAN service (and its scrape modes write to local
+// d:\Work\SI paths). Off-network it hangs on 180s timeouts, so it is opt-in and
+// skipped by default; the hermetic retry-parsing tests live in
+// EdanCollectionRetry.test.ts. Enable with PACKRAT_TEST_EDAN=1 on-network.
+const edanTestsEnabled: boolean = process.env.PACKRAT_TEST_EDAN === '1';
+const describeEdan = edanTestsEnabled ? describe : describe.skip;
+
+describeEdan('Collections: EdanCollection', () => {
     jest.setTimeout(180000);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
 

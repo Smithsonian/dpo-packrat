@@ -254,9 +254,13 @@ describe('OCFL Object', () => {
         const fileLocationExplicit: string = ocflObject.fileLocationExplicit(fileName1, 1);
         expect(fileLocationExplicit).toEqual(path.join(objectRoot, versionContentPartialPath, fileName1));
 
-        // LOG.info(`ocflObject = ${H.Helpers.JSONStringify(ocflObject)}`, LOG.LS.eTEST);
+        // Head version after the full add/update/rename/purge/reinstate sequence
+        // exercised by the tests above. OCFL versions are strictly ordered, so
+        // this is deterministic; if a versioning operation is added or removed
+        // above, update this count.
+        const EXPECTED_HEAD_VERSION: number = 19;
         const headVersion: number = ocflObject.headVersion();
-        expect(headVersion).toEqual(19);
+        expect(headVersion).toEqual(EXPECTED_HEAD_VERSION);
     });
 
     test('OCFL Object.validate', async () => {
