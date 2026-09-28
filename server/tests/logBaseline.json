@@ -13,6 +13,7 @@
         "DB.SystemObject.Xref",
         "DB.Workflow",
         "DB.Workflow.Constellation",
+        "GraphQL.Apollo.ServerOptions",
         "GraphQL.Asset",
         "GraphQL.Ingestion.Data",
         "GraphQL.SystemObject.Details",
