@@ -10,9 +10,7 @@ export default async function getModelConstellationForAssetVersion(_: Parent, ar
 
     const JCOutput: JobCookSIPackratInspectOutput | null = await JobCookSIPackratInspectOutput.extractFromAssetVersion(idAssetVersion);
     if (!JCOutput || !JCOutput.success) {
-        // No inspect output for this asset version (e.g. an id with no Cook data) —
-        // an expected empty result for the caller, not a server fault. Warn, don't error.
-        RK.logWarning(RK.LogSection.eGQL,'get model constellation for asset version',`no job output: ${JCOutput ? JCOutput.error : 'unknown error'}`,{ ...args.input },'GraphQL.Asset');
+        RK.logError(RK.LogSection.eGQL,'get model constellation for asset version failed',`failed extracting job output: ${JCOutput ? JCOutput.error : 'unknown error'}`,{ ...args.input },'GraphQL.Asset');
         return { idAssetVersion };
     }
 

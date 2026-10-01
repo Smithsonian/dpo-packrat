@@ -38,6 +38,25 @@ const BASELINE_PATH: string = path.join(__dirname, 'logBaseline.json');
 const captured: CapturedLog[] = [];
 let installed: boolean = false;
 
+// Callers a test in THIS file has declared it deliberately triggers (a negative
+// test replicating an error case). Accumulated per file (each test file gets a
+// fresh module registry). Preferred over the global baseline: it keeps the
+// expected error local to the file that owns it, so the same caller erroring in
+// an UNRELATED file still trips the gate. Application log levels stay honest —
+// a failed action still logs `error`; the test just declares it as expected.
+const declaredExpected: Set<string> = new Set<string>();
+
+/**
+ * Declare that the current test file intentionally triggers error/critical logs
+ * from these caller(s) (e.g. a negative test that asserts a failure path). The
+ * gate treats them as expected for this file, without adding them to the global
+ * baseline. Call it in the test (or its setup) alongside asserting the failure.
+ */
+export function expectLogErrors(...callers: string[]): void {
+    for (const caller of callers)
+        declaredExpected.add(caller);
+}
+
 // Enabled only when seeding/re-seeding the ratchet baseline.
 export const BASELINE_WRITE_MODE: boolean = process.env.PACKRAT_TEST_LOG_BASELINE_WRITE === '1';
 
@@ -114,7 +133,12 @@ export function assertNoUnexpectedLogs(testFile: string): void {
     if (baseline.enabled !== true)
         return; // gate inert until the baseline is seeded and explicitly enabled
 
+    // Allowed = the global ratchet baseline PLUS any callers this file declared
+    // via expectLogErrors() (file-local expected errors).
     const allowed: Set<string> = new Set(baseline.allowedCallers);
+    for (const caller of declaredExpected)
+        allowed.add(caller);
+
     const unexpected: CapturedLog[] = captured.filter(e => !allowed.has(keyOf(e)));
     if (unexpected.length === 0)
         return;
@@ -123,8 +147,9 @@ export function assertNoUnexpectedLogs(testFile: string): void {
     const distinct: string = Array.from(new Set(unexpected.map(e => keyOf(e)))).sort().join(', ');
     throw new Error(
         `[log-honesty-gate] ${unexpected.length} unexpected error/critical log(s) emitted in ${testFile}:\n${detail}\n\n` +
-        'If a log is expected (e.g. a negative-path test), assert on it in the test itself; ' +
-        'if it is a known emitter, re-seed the ratchet baseline with `yarn test:logbaseline`.\n' +
+        'If this is a negative-path test deliberately triggering the error, declare it with ' +
+        'expectLogErrors(caller) from tests/logGate and assert the failure; ' +
+        'a genuinely-cross-cutting/benign emitter can go in the ratchet baseline (`yarn test:logbaseline`).\n' +
         `Unexpected caller keys: ${distinct}`
     );
 }

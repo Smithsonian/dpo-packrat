@@ -13,8 +13,7 @@ export default async function getContentsForAssetVersions(_: Parent, args: Query
         if (assetVersion)
             result.push(await AssetStorageAdapter.getAssetVersionContents(assetVersion));
         else
-            // Not a server fault — a caller-supplied id that doesn't resolve. Warn, don't error.
-            RK.logWarning(RK.LogSection.eGQL,'get contents for asset versions',`unable to load AssetVersion from ID ${idAssetVersion}`,{},'GraphQL.Asset');
+            RK.logError(RK.LogSection.eGQL,'get contents for asset versions failed',`unable to load AssetVersion from ID ${idAssetVersion}`,{},'GraphQL.Asset');
     }
 
     // LOG.info(`GraphQL getContentsForAssetVersions(${JSON.stringify(idAssetVersions)}) = ${JSON.stringify(result)}`, LOG.LS.eGQL);

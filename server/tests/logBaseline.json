@@ -12,7 +12,6 @@
         "DB.SystemObject.Xref",
         "DB.Workflow",
         "DB.Workflow.Constellation",
-        "GraphQL.Ingestion.Data",
         "HTTP.ErrorHandler",
         "HttpServer",
         "Job.PackratInspect.Output",

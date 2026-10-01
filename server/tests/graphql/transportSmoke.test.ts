@@ -2,6 +2,7 @@ import { HttpServer } from '../../http';
 import request from 'supertest';
 import { Express } from 'express';
 import * as DBAPI from '../../db';
+import { expectLogErrors } from '../logGate';
 
 // Real-Apollo transport smoke. The resolver suites call GraphQLApi directly with
 // a mocked admin context; these POST GraphQL over HTTP through the Apollo/Express
@@ -79,6 +80,9 @@ describe('GraphQL transport + auth gate (real Apollo over HTTP)', () => {
         // eslint-disable-next-line @typescript-eslint/no-var-requires
         const authModule = require('../../http/auth');
         const spy = jest.spyOn(authModule, 'isAuthenticated').mockReturnValue(false);
+        // Apollo's formatError logs the rejected (unauthenticated) operation at
+        // error — expected for this negative test.
+        expectLogErrors('GraphQL.Apollo.ServerOptions');
         try {
             const res = await request(app).post('/graphql').send({ query: GATED_QUERY });
             expect(res.body.errors).toBeTruthy();
