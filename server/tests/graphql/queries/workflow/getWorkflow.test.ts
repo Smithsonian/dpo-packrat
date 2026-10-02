@@ -10,18 +10,11 @@ const getWorkflowTest = (utils: TestSuiteUtils): void => {
     });
 
     describe('Query: getWorkflow', () => {
-        test('should work with valid input', async () => {
-            const input: GetWorkflowInput = {
-                idWorkflow: 0
-            };
-
+        test('returns null for a non-existent id', async () => {
+            // Workflow has no fetchAll; assert the deterministic not-found contract.
+            const input: GetWorkflowInput = { idWorkflow: 0 };
             const { Workflow }: GetWorkflowResult = await graphQLApi.getWorkflow(input);
-
-            if (Workflow) {
-                expect(Workflow.idWorkflow).toBe(0);
-            } else {
-                expect(Workflow).toBe(null);
-            }
+            expect(Workflow).toBeNull();
         });
     });
 };

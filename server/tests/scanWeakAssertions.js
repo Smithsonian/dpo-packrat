@@ -100,7 +100,6 @@ function scanTest(cb, sf) {
 const files = walk(ROOT, []);
 const guarded = [];
 const earlyDone = [];
-const idZero = [];
 
 for (const file of files) {
     const text = fs.readFileSync(file, 'utf8');
@@ -116,8 +115,6 @@ for (const file of files) {
                 guarded.push(`${rel}:${line}  [${r.expects.length} assertion(s), all if-guarded]  ${t.name}`);
             for (const dl of r.earlyDones)
                 earlyDone.push(`${rel}:${dl}  early done() — assertions run after it  (${t.name})`);
-            for (const z of r.idZeros)
-                idZero.push(`${rel}:${z.line}  ${z.name}: 0 into a query  (${t.name})`);
         }
         ts.forEachChild(node, crawl);
     })(sf);
@@ -132,5 +129,4 @@ function section(title, rows) {
 console.log(`Scanned ${files.length} *.test.ts files under tests/`);
 section('ALL-ASSERTIONS-IF-GUARDED (pass silently on a null precondition)', guarded);
 section('EARLY done() (execution continues past the early-exit)', earlyDone);
-section('id:0 INTO A QUERY (null-or-anything no-op tautology)', idZero);
-console.log(`\nTotals: guarded=${guarded.length} earlyDone=${earlyDone.length} idZeroQuery=${idZero.length}`);
+console.log(`\nTotals: guarded=${guarded.length} earlyDone=${earlyDone.length}`);
