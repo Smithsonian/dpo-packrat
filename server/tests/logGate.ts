@@ -153,3 +153,80 @@ export function assertNoUnexpectedLogs(testFile: string): void {
         `Unexpected caller keys: ${distinct}`
     );
 }
+
+// ---------------------------------------------------------------------------
+// Assertion-count gate (report-only).
+//
+// Companion to the log-honesty gate: a test that emits no error is not enough —
+// a test that asserts nothing is a false-green. This counts expect() invocations
+// per file (and per test, so vacuous cases inside the graphql aggregator — whose
+// sub-suites share one file — are still caught) and appends a durable JSONL
+// inventory under PACKRAT_LOG_ROOT. It NEVER fails a run yet: enforcement is a
+// later flip, mirroring the log gate's seed-then-enable ratchet.
+// ---------------------------------------------------------------------------
+
+let assertionCalls: number = 0;
+let lastAssertionSnapshot: number = 0;
+const zeroAssertionTests: string[] = [];
+let counterInstalled: boolean = false;
+
+// Wrap the global expect so every call bumps a per-file counter. All of expect's
+// static members (any, objectContaining, getState, extend, not, …) are preserved
+// so matcher behavior is unchanged, and jest's own assertion accounting
+// (expect.assertions/hasAssertions) still runs inside the delegated call.
+export function installAssertionCounter(): void {
+    if (counterInstalled)
+        return;
+    counterInstalled = true;
+    const g: { expect?: unknown } = global as unknown as { expect?: unknown };
+    const original: unknown = g.expect;
+    if (typeof original !== 'function' || (original as { __packratCounted?: boolean }).__packratCounted)
+        return;
+    const orig: (...a: unknown[]) => unknown = original as (...a: unknown[]) => unknown;
+    function wrapper(...args: unknown[]): unknown {
+        assertionCalls++;
+        return orig(...args);
+    }
+    const descriptors: { [k: string]: PropertyDescriptor } = Object.getOwnPropertyDescriptors(orig);
+    for (const key of ['length', 'name', 'prototype', 'arguments', 'caller'])
+        delete descriptors[key];
+    Object.defineProperties(wrapper, descriptors);
+    (wrapper as { __packratCounted?: boolean }).__packratCounted = true;
+    g.expect = wrapper;
+}
+
+// Called in afterEach: decide whether the just-finished test asserted anything.
+// Prefer jest's own per-test assertion counter (expect.getState().assertionCalls,
+// which jest resets per test) — it is authoritative and, unlike a cross-test
+// delta on our cumulative wrapper count, is not thrown off by tests whose emitted
+// assertions settle on a microtask after the boundary. Fall back to the wrapper
+// delta only when jest's counter is unavailable.
+export function noteTestAssertionBoundary(testName: string, jestAssertionCalls: number | null): void {
+    const asserted: boolean = jestAssertionCalls !== null
+        ? jestAssertionCalls > 0
+        : assertionCalls > lastAssertionSnapshot;
+    if (!asserted)
+        zeroAssertionTests.push(testName.length > 0 ? testName : '<unnamed test>');
+    lastAssertionSnapshot = assertionCalls;
+}
+
+// Called in afterAll: append this file's assertion coverage to the run inventory
+// (globalSetup.ts truncates it once per run). Report-only — never throws.
+export function reportAssertionCoverage(testFile: string): void {
+    try {
+        const root: string | undefined = process.env.PACKRAT_LOG_ROOT;
+        if (!root)
+            return;
+        const record: Record<string, unknown> = {
+            file: testFile,
+            assertionCalls,
+            vacuousFile: assertionCalls === 0,
+            zeroAssertionTestCount: zeroAssertionTests.length,
+            zeroAssertionTests
+        };
+        fs.mkdirSync(root, { recursive: true });
+        fs.appendFileSync(path.join(root, 'assertion-gate.jsonl'), JSON.stringify(record) + '\n', 'utf8');
+    } catch {
+        // report-only: never interfere with the run
+    }
+}

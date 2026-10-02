@@ -5,7 +5,8 @@ import { ASL, LocalStore } from '../utils/localStore';
 import { Actor } from '../audit/Actor';
 import * as DBC from '../db/connection';
 import { Logger } from '../records/logger/log';
-import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE } from './logGate';
+import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE,
+    installAssertionCounter, noteTestAssertionBoundary, reportAssertionCoverage } from './logGate';
 
 // In tests the logger's environment resolves to DEVELOPMENT, which adds a winston
 // console transport that floods stdout (and bypasses jest's `silent`). Keep run
@@ -18,6 +19,11 @@ const TEST_VERBOSE: boolean = process.env.PACKRAT_TEST_VERBOSE === '1';
 // logGate.ts. Each test file runs in its own module registry, so the gate and
 // its capture buffer are fresh per file.
 installLogGate();
+
+// Install the report-only assertion-count gate (TR-0.8). Wraps the global expect
+// to count assertions per file/test; writes a vacuous-test inventory in afterAll.
+// Never fails the run — enforcement is a later flip.
+installAssertionCounter();
 
 // Establish a LocalStore carrying a system Actor for every test so DB CRUD
 // audit emits (DBObject.create/update/delete) can attribute their rows.
@@ -47,6 +53,10 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+    // Record whether the just-finished test made any assertion (report-only gate).
+    const st: { currentTestName?: string; assertionCalls?: number } = expect.getState();
+    const jestCalls: number | null = typeof st.assertionCalls === 'number' ? st.assertionCalls : null;
+    noteTestAssertionBoundary(st.currentTestName ?? '', jestCalls);
     await RK.drainAllQueues();
 });
 
@@ -58,6 +68,10 @@ afterAll(async () => {
     // process, so without this the worker's connection stays open and keeps the
     // process alive (the reason the suite needed --forceExit).
     await DBC.DBConnection.disconnect();
+
+    // Assertion-count gate (report-only): append this file's coverage to the run
+    // inventory BEFORE the log gate, which may throw when enabled.
+    reportAssertionCoverage(expect.getState().testPath ?? 'unknown');
 
     // Honesty gate: after the file's logs have flushed, either seed the ratchet
     // baseline (write mode) or fail the file on any error/critical emitted by a

@@ -55,5 +55,6 @@ module.exports = {
     setupFiles: ['<rootDir>/tests/setEnvVars.ts'],
     setupFilesAfterEnv: ['<rootDir>/tests/jest.setup.ts'],
     moduleNameMapper: { '^axios$': require.resolve('axios'), },
+    globalSetup: '<rootDir>/tests/globalSetup.ts',
     globalTeardown: '<rootDir>/tests/teardown.ts'
 };
