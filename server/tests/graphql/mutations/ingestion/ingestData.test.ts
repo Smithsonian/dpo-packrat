@@ -91,7 +91,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         const { SubjectUnitIdentifier } = await graphQLApi.searchIngestionSubjects(searchInput);
                         expect(SubjectUnitIdentifier).toBeTruthy();
 
-                        if (!SubjectUnitIdentifier.length) done();
+                        expect(SubjectUnitIdentifier.length).toBeGreaterThan(0);
 
                         const { idSubject, SubjectName, IdentifierPublic, IdentifierCollection, UnitAbbreviation } = SubjectUnitIdentifier[0];
 
@@ -110,7 +110,7 @@ const ingestDataTest = (utils: TestSuiteUtils): void => {
                         const { IngestionItem } = await graphQLApi.getIngestionItems(ingestionItemsInput);
                         expect(IngestionItem).toBeTruthy();
 
-                        if (!IngestionItem || !IngestionItem.length) done();
+                        expect(IngestionItem?.length ?? 0).toBeGreaterThan(0);
 
 
                         const project: IngestProjectInput = {

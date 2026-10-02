@@ -123,6 +123,10 @@ function systemObjectCacheTestClearFlush(): void {
         test('Cache: SystemObjectCache.clear and SystemObjectCache.flush', async () => {
             await SystemObjectCache.clear();
             await SystemObjectCache.flush();
+            // Cache must stay functional after clear+flush: a non-existent object
+            // resolves to undefined rather than throwing or returning a stale entry.
+            expect(await SystemObjectCache.getObjectFromSystem(1000000000)).toBeFalsy();
+            expect(await SystemObjectCache.getSystemFromObjectID({ idObject: 1000000000, eObjectType: COMMON.eSystemObjectType.eItem })).toBeFalsy();
         });
     });
 }
