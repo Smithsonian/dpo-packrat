@@ -37,6 +37,11 @@ jobs:
       - name: Check for lint errors
         run: yarn lint
 
+      # Weak-assertion gate (TR-0.8): fails on a test whose assertions are all
+      # if-guarded (silent-skip) or that has an early done(). Static — no DB/network.
+      - name: Check for weak-assertion tests
+        run: node server/tests/scanWeakAssertions.js
+
   test:
     runs-on: ubuntu-latest
     services:

@@ -403,6 +403,8 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: Update Identifier with Subject', async() => {
+        expect(systemObjectSubject).toBeTruthy();
+        expect(identifierSubjectHookup).toBeTruthy();
         if (systemObjectSubject && identifierSubjectHookup) {
             identifierSubjectHookup.idSystemObject = systemObjectSubject.idSystemObject;
             expect(await identifierSubjectHookup.update()).toBeTruthy();
@@ -1385,6 +1387,8 @@ describe('DB Creation Test Suite', () => {
     });
 
     test('DB Creation: ModelAsset', async () => {
+        expect(assetThumbnail).toBeTruthy();
+        expect(assetVersion).toBeTruthy();
         if (assetThumbnail && assetVersion) {
             expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, true, null)).toBeTruthy();
             expect(new DBAPI.ModelAsset(assetThumbnail, assetVersion, false, ['diffuse', 'emmisive'])).toBeTruthy();
@@ -1716,6 +1720,8 @@ describe('DB Creation Test Suite', () => {
         });
 
         // Wire restricted project to unit so fetchUnrestrictedByUnits can verify exclusion
+        expect(projectRestricted).toBeTruthy();
+        expect(unit).toBeTruthy();
         if (projectRestricted && unit) {
             const xref = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(unit, projectRestricted);
             expect(xref).toBeTruthy();
@@ -3123,6 +3129,7 @@ describe('DB Fetch By ID Test Suite', () => {
     test('DB Fetch Subject: Subject.populateIdentifierSubjectMap', async () => {
         const identifierSubjectMap: Map<string, { idSubject: number, idSystemObject: number, idUnit: number }> = new Map<string, { idSubject: number, idSystemObject: number, idUnit: number }>();
 
+        expect(identifierSubjectHookup).toBeTruthy();
         if (identifierSubjectHookup) {
             identifierSubjectMap.set(identifierSubjectHookup.IdentifierValue, { idSubject: 0, idSystemObject: 0, idUnit: 0 });
             expect(await DBAPI.Subject.populateIdentifierSubjectMap(identifierSubjectMap)).toBeTruthy();
@@ -4989,6 +4996,8 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Fetch Special: CaptureDataVolume.fetchFromCaptureData', async () => {
         // 1:1 via UNIQUE(idCaptureData) — returns single record, not array.
+        expect(captureData).toBeTruthy();
+        expect(captureDataVolume).toBeTruthy();
         if (captureData && captureDataVolume) {
             const fetched: DBAPI.CaptureDataVolume | null = await DBAPI.CaptureDataVolume.fetchFromCaptureData(captureData.idCaptureData);
             expect(fetched).toBeTruthy();
@@ -5735,6 +5744,8 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: UserAuthorization.fetchUnitsForUser', async () => {
+        expect(userActive).toBeTruthy();
+        expect(unit).toBeTruthy();
         if (userActive && unit) {
             const unitIds: number[] = await DBAPI.UserAuthorization.fetchUnitsForUser(userActive.idUser);
             expect(unitIds).toContain(unit.idUnit);
@@ -5742,6 +5753,8 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: UserAuthorization.fetchProjectsForUser', async () => {
+        expect(userActive).toBeTruthy();
+        expect(projectRestricted).toBeTruthy();
         if (userActive && projectRestricted) {
             const projectIds: number[] = await DBAPI.UserAuthorization.fetchProjectsForUser(userActive.idUser);
             expect(projectIds).toContain(projectRestricted.idProject);
@@ -5759,6 +5772,8 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: Project.fetchUnrestrictedByUnits', async () => {
+        expect(unit).toBeTruthy();
+        expect(project).toBeTruthy();
         if (unit && project) {
             const projects: DBAPI.Project[] = await DBAPI.Project.fetchUnrestrictedByUnits([unit.idUnit]);
             expect(projects).toEqual(expect.arrayContaining([project]));
@@ -5774,6 +5789,8 @@ describe('DB Fetch Special Test Suite', () => {
     });
 
     test('DB Fetch Special: Project.fetchWithUserAuthorization', async () => {
+        expect(userActive).toBeTruthy();
+        expect(projectRestricted).toBeTruthy();
         if (userActive && projectRestricted) {
             const projects: DBAPI.Project[] = await DBAPI.Project.fetchWithUserAuthorization(userActive.idUser);
             expect(projects.map(p => p.idProject)).toContain(projectRestricted.idProject);
@@ -6030,6 +6047,8 @@ describe('DB Fetch Special Test Suite', () => {
 
     test('DB Fetch Special: User.fetchUserList', async () => {
         let userFetchArray: DBAPI.User[] | null = null;
+        expect(userActive).toBeTruthy();
+        expect(userInactive).toBeTruthy();
         if (userActive && userInactive) {
             userFetchArray = await DBAPI.User.fetchUserList('test', DBAPI.eUserStatus.eAll);
             expect(userFetchArray).toBeTruthy();
@@ -7404,6 +7423,7 @@ describe('DB Update Test Suite', () => {
     });
 
     test('DB Update: SystemObject.retireObject', async () => {
+        expect(systemObjectItem).toBeTruthy();
         if (systemObjectItem) {
             expect(systemObjectItem.Retired).toBeFalsy();
             expect(await systemObjectItem.retireObject()).toBeTruthy();
@@ -7419,6 +7439,7 @@ describe('DB Update Test Suite', () => {
     });
 
     test('DB Update: SystemObject.reinstateObject', async () => {
+        expect(systemObjectItem).toBeTruthy();
         if (systemObjectItem) {
             expect(systemObjectItem.Retired).toBeTruthy();
             expect(await systemObjectItem.reinstateObject()).toBeTruthy();
@@ -7434,6 +7455,8 @@ describe('DB Update Test Suite', () => {
     });
 
     test('DB Update: SystemObject.retireSystemObject', async () => {
+        expect(systemObjectItem).toBeTruthy();
+        expect(item).toBeTruthy();
         if (systemObjectItem && item) {
             expect(systemObjectItem.Retired).toBeFalsy();
             expect(await DBAPI.SystemObject.retireSystemObject(item)).toBeTruthy();
@@ -7447,6 +7470,8 @@ describe('DB Update Test Suite', () => {
     });
 
     test('DB Update: SystemObject.reinstateSystemObject', async () => {
+        expect(systemObjectItem).toBeTruthy();
+        expect(item).toBeTruthy();
         if (systemObjectItem && item) {
             expect(systemObjectItem.Retired).toBeTruthy();
             expect(await DBAPI.SystemObject.reinstateSystemObject(item)).toBeTruthy();
@@ -7957,6 +7982,7 @@ describe('DB Update Test Suite', () => {
 // *******************************************************************
 describe('DB Delete Test', () => {
     test('DB Delete: Identifier.delete', async () => {
+        expect(identifierNull).toBeTruthy();
         if (identifierNull) {
             expect(await identifierNull.delete()).toBeTruthy();
 
@@ -8015,6 +8041,7 @@ describe('DB Delete Test', () => {
     });
 
     test('DB Delete: ModelSceneXref', async () => {
+        expect(modelSceneXrefNull).toBeTruthy();
         if (modelSceneXrefNull) {
             expect(await modelSceneXrefNull.delete()).toBeTruthy();
 
@@ -8067,6 +8094,7 @@ describe('DB Delete Test', () => {
     });
 
     test('DB Delete: Metadata.delete', async () => {
+        expect(metadataNull).toBeTruthy();
         if (metadataNull) {
             expect(await metadataNull.delete()).toBeTruthy();
 

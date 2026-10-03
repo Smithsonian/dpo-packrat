@@ -211,7 +211,7 @@ export function noteTestAssertionBoundary(testName: string, jestAssertionCalls: 
 }
 
 // Called in afterAll: append this file's assertion coverage to the run inventory
-// (globalSetup.ts truncates it once per run). Report-only — never throws.
+// (globalSetup.ts truncates it once per run). Never throws (report side only).
 export function reportAssertionCoverage(testFile: string): void {
     try {
         const root: string | undefined = process.env.PACKRAT_LOG_ROOT;
@@ -227,6 +227,30 @@ export function reportAssertionCoverage(testFile: string): void {
         fs.mkdirSync(root, { recursive: true });
         fs.appendFileSync(path.join(root, 'assertion-gate.jsonl'), JSON.stringify(record) + '\n', 'utf8');
     } catch {
-        // report-only: never interfere with the run
+        // reporting must never interfere with the run
     }
+}
+
+// Enforcement (TR-0.8): fail a file that contains a test which made zero
+// assertions. Enabled now that the backlog is at zero. A test that genuinely
+// asserts nothing through jest's expect() (e.g. it asserts only via supertest's
+// request(...).expect(status)) must add an explicit expect(...) or, if truly
+// assertion-free by design, be listed in ASSERTION_GATE_ALLOWED below.
+const ASSERTION_GATE_ENFORCE: boolean = process.env.PACKRAT_TEST_ASSERTION_GATE !== '0';
+const ASSERTION_GATE_ALLOWED: Set<string> = new Set<string>([]);
+
+export function assertNoZeroAssertionTests(testFile: string): void {
+    if (!ASSERTION_GATE_ENFORCE)
+        return;
+    const offenders: string[] = zeroAssertionTests.filter(t => !ASSERTION_GATE_ALLOWED.has(t));
+    if (offenders.length === 0)
+        return;
+    throw new Error(
+        `[assertion-count-gate] ${offenders.length} test(s) made zero assertions in ${testFile}:\n` +
+        offenders.map(t => `  - ${t}`).join('\n') +
+        '\n\nEvery test must assert product behavior (a broken feature must turn it red). Add an ' +
+        'expect(...) that would fail on regression, or — only for a genuinely assertion-free case — ' +
+        'add the test name to ASSERTION_GATE_ALLOWED in tests/logGate.ts. Set ' +
+        'PACKRAT_TEST_ASSERTION_GATE=0 to disable temporarily.'
+    );
 }

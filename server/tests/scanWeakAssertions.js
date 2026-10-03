@@ -141,3 +141,12 @@ console.log(`Scanned ${files.length} *.test.ts files under tests/`);
 section('ALL-ASSERTIONS-IF-GUARDED (pass silently on a null precondition)', guarded);
 section('EARLY done() (execution continues past the early-exit)', earlyDone);
 console.log(`\nTotals: guarded=${guarded.length} earlyDone=${earlyDone.length}`);
+
+// Enforcement (TR-0.8): non-zero exit on any finding so CI fails on a new weak
+// test. Both categories are at zero today; keep them there.
+if (guarded.length > 0 || earlyDone.length > 0) {
+    console.error('\nFAIL: weak-assertion test(s) present. Assert a value that would fail on ' +
+        'regression (not just truthiness behind an if-guard), or fix the early done(). See ' +
+        'PLAN_TESTING_RELIABILITY.md TR-0.8.');
+    process.exit(1);
+}

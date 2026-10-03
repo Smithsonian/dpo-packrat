@@ -6,7 +6,7 @@ import { Actor } from '../audit/Actor';
 import * as DBC from '../db/connection';
 import { Logger } from '../records/logger/log';
 import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE,
-    installAssertionCounter, noteTestAssertionBoundary, reportAssertionCoverage } from './logGate';
+    installAssertionCounter, noteTestAssertionBoundary, reportAssertionCoverage, assertNoZeroAssertionTests } from './logGate';
 
 // In tests the logger's environment resolves to DEVELOPMENT, which adds a winston
 // console transport that floods stdout (and bypasses jest's `silent`). Keep run
@@ -69,15 +69,18 @@ afterAll(async () => {
     // process alive (the reason the suite needed --forceExit).
     await DBC.DBConnection.disconnect();
 
-    // Assertion-count gate (report-only): append this file's coverage to the run
-    // inventory BEFORE the log gate, which may throw when enabled.
-    reportAssertionCoverage(expect.getState().testPath ?? 'unknown');
+    // Assertion-count gate: append this file's coverage to the run inventory
+    // before any gate throws.
+    const testPath: string = expect.getState().testPath ?? 'unknown';
+    reportAssertionCoverage(testPath);
 
-    // Honesty gate: after the file's logs have flushed, either seed the ratchet
-    // baseline (write mode) or fail the file on any error/critical emitted by a
-    // caller not in the baseline.
-    if (BASELINE_WRITE_MODE)
+    // Honesty gate + assertion-count gate: after the file's logs have flushed,
+    // either seed the ratchet baseline (write mode, no enforcement) or fail the
+    // file on a zero-assertion test / an error-critical from a non-baselined caller.
+    if (BASELINE_WRITE_MODE) {
         mergeCapturedIntoBaseline();
-    else
-        assertNoUnexpectedLogs(expect.getState().testPath ?? 'unknown');
+    } else {
+        assertNoZeroAssertionTests(testPath);
+        assertNoUnexpectedLogs(testPath);
+    }
 });
