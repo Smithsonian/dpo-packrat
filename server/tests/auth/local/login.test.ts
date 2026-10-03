@@ -85,6 +85,7 @@ describe('Auth implementation: local login', () => {
             password: null
         };
 
+        expect(httpServer).toBeTruthy();
         if (httpServer) {
             const response = await request(httpServer.app).post('/auth/login').send(authBody).expect(500);
             expect(response.accepted).toBe(false);

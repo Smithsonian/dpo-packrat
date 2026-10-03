@@ -16,6 +16,7 @@ const getProjectDocumentationTest = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const projectInput = createProjectInput();
             const { Project } = await graphQLApi.createProject(projectInput);
+            expect(Project).toBeTruthy();
 
             if (Project) {
                 const { idProjectDocumentation } = await UTIL.createProjectDocumentationTest({

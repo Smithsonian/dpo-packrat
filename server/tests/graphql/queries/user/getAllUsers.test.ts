@@ -23,10 +23,9 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
             };
             const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
             const { User } = users;
-            // This should always return true when running the graphql.test suite because getUser.test.ts creates a user
-            if (User) {
-                expect(User.length).toBeGreaterThanOrEqual(1);
-            }
+            // The seed carries multiple users, and prior sub-tests create more.
+            expect(User).toBeTruthy();
+            expect(User.length).toBeGreaterThanOrEqual(1);
         });
 
         test('should return active users', async () => {
@@ -73,20 +72,18 @@ const getAllUsersTest = (utils: TestSuiteUtils): void => {
             };
 
             const user = new DBAPI.User(userArgs);
-            if (await user.create()) {
-                const input: GetAllUsersInput = {
-                    search: randomEmail,
-                    active: User_Status.EAll
-                };
+            const created = await user.create();
+            expect(created).toBe(true);
 
-                const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
-                const { User } = users;
-                if (User) {
-                    expect(User.length).toEqual(1);
-                    expect(User[0].EmailAddress).toEqual(randomEmail);
-                }
+            const input: GetAllUsersInput = {
+                search: randomEmail,
+                active: User_Status.EAll
+            };
 
-            }
+            const users: GetAllUsersResult = await graphQLApi.getAllUsers(input);
+            const { User } = users;
+            expect(User.length).toEqual(1);
+            expect(User[0].EmailAddress).toEqual(randomEmail);
         });
     });
 };

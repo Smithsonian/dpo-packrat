@@ -77,12 +77,23 @@ function scanTest(cb, sf) {
         })(node);
     }
 
+    let hasCoveringIfElse = false;
+    function subtreeHasExpect(n) {
+        let found = false;
+        (function w(x) { if (found) return; if (isExpectCall(x)) { found = true; return; } ts.forEachChild(x, w); })(n);
+        return found;
+    }
+
     function visit(node, inIf) {
         if (isExpectCall(node)) expects.push({ guarded: inIf, pos: node.getStart(sf) });
         if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'done')
             dones.push({ line: lineOf(node, sf), pos: node.getStart(sf) });
-        if (isQueryCall(node))
-            for (const a of node.arguments) if (ts.isObjectLiteralExpression(a)) scanObjForIdZero(a);
+        // An if/else that asserts in BOTH branches always reaches an assertion, so it
+        // is not a silent-skip (distinguishes `if (c) expect(a) else expect(b)` from
+        // the vacuous `if (c) { expect(a) }` with no else).
+        if (ts.isIfStatement(node) && node.elseStatement &&
+            subtreeHasExpect(node.thenStatement) && subtreeHasExpect(node.elseStatement))
+            hasCoveringIfElse = true;
         ts.forEachChild(node, child => {
             const childInIf = inIf || (ts.isIfStatement(node) && (child === node.thenStatement || child === node.elseStatement));
             visit(child, childInIf);
@@ -94,7 +105,7 @@ function scanTest(cb, sf) {
     // order — i.e. calling it did not actually stop the test. A terminal done()
     // (nothing asserts after it) is legitimate callback-style completion.
     const earlyDones = dones.filter(d => expects.some(e => e.pos > d.pos)).map(d => d.line);
-    return { expects, earlyDones, idZeros };
+    return { expects, earlyDones, hasCoveringIfElse };
 }
 
 const files = walk(ROOT, []);
@@ -111,7 +122,7 @@ for (const file of files) {
         if (t) {
             const r = scanTest(t.cb, sf);
             const line = lineOf(node, sf);
-            if (r.expects.length > 0 && r.expects.every(e => e.guarded))
+            if (r.expects.length > 0 && r.expects.every(e => e.guarded) && !r.hasCoveringIfElse)
                 guarded.push(`${rel}:${line}  [${r.expects.length} assertion(s), all if-guarded]  ${t.name}`);
             for (const dl of r.earlyDones)
                 earlyDone.push(`${rel}:${dl}  early done() — assertions run after it  (${t.name})`);
