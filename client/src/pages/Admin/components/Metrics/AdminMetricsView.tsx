@@ -265,6 +265,10 @@ function AdminMetricsView(): React.ReactElement {
     const [projects, setProjects] = useState<ProjectOption[]>([]);
     const [data, setData] = useState<MetricsData | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
+    // The start/end actually sent for the currently-displayed data. Drives the header label and export
+    // filename so they always reflect the run, not input boxes edited since (which may not have been re-run).
+    const [ranStart, setRanStart] = useState<string>('');
+    const [ranEnd, setRanEnd] = useState<string>('');
 
     const fetchData = useCallback(async () => {
         try {
@@ -275,14 +279,14 @@ function AdminMetricsView(): React.ReactElement {
                 return;
             }
             setData(result.data as MetricsData);
+            setRanStart(start);
+            setRanEnd(end);
         } catch (error) {
             toast.error('Failed to load metrics');
         } finally {
             setLoading(false);
         }
     }, [start, end, granularity, project]);
-
-    useEffect(() => { if (isAuthorized) fetchData(); /* initial load */ }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (!isAuthorized) return;
@@ -300,9 +304,10 @@ function AdminMetricsView(): React.ReactElement {
     const applyPreset = (kind: 'thisQ' | 'lastQ' | 'ytd' | 'last12'): void => {
         const now = new Date();
         if (kind === 'thisQ') { setStart(fmtDate(quarterStart(now))); setEnd(fmtDate(now)); } else if (kind === 'lastQ') {
-            const qs = quarterStart(now);
-            const lastQEnd = new Date(qs.getTime() - 86400000);
-            setStart(fmtDate(quarterStart(lastQEnd))); setEnd(fmtDate(lastQEnd));
+            const qs = quarterStart(now);                                    // first day of the current calendar quarter
+            const lastStart = new Date(qs.getFullYear(), qs.getMonth() - 3, 1); // first day of the previous calendar quarter
+            const lastEnd = new Date(qs.getFullYear(), qs.getMonth(), 0);       // last day of the previous calendar quarter
+            setStart(fmtDate(lastStart)); setEnd(fmtDate(lastEnd));
         } else if (kind === 'ytd') { setStart(`${now.getFullYear()}-01-01`); setEnd(fmtDate(now)); } else if (kind === 'last12') {
             const from = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
             setStart(fmtDate(from)); setEnd(fmtDate(now));
@@ -313,13 +318,13 @@ function AdminMetricsView(): React.ReactElement {
         if (!data) return;
         // Omit the DPO user-ID list from the exported report; keep only the aggregate count.
         const exportData = { ...data, dpo: { count: data.dpo.count } };
-        triggerDownload(JSON.stringify(exportData, null, 2), `packrat-metrics_${start}_${end}.json`, 'application/json');
+        triggerDownload(JSON.stringify(exportData, null, 2), `packrat-metrics_${ranStart}_${ranEnd}.json`, 'application/json');
     };
     const downloadCSV = (): void => {
         if (!data?.series) return;
         const header = ['period', 'assetVersions', 'repositoryObjects', 'objectsCreated', 'objectsCreatedModel', 'objectsCreatedScene', 'objectsCreatedCaptureData', 'objectsCreatedOther', 'objectsUpdated', 'objectsUpdatedModel', 'objectsUpdatedScene', 'objectsUpdatedCaptureData', 'objectsUpdatedOther', 'subjectsWithCaptureCreated', 'mediaGroupsWithCaptureCreated', 'storageBytes', 'storageBytesNonDPO', 'storageTerabytes', 'storageTerabytesNonDPO', 'activeNonDPOUsers', 'scenePublishEvents', 'scenesPublished', 'scenesPublishedCurrent'];
         const lines = data.series.map(p => [p.period, p.assetVersions, p.repositoryObjects, p.objectsCreated, p.objectsCreatedByType.model, p.objectsCreatedByType.scene, p.objectsCreatedByType.captureData, p.objectsCreatedByType.other, p.objectsUpdated, p.objectsUpdatedByType.model, p.objectsUpdatedByType.scene, p.objectsUpdatedByType.captureData, p.objectsUpdatedByType.other, p.subjectsWithCaptureCreated, p.mediaGroupsWithCaptureCreated, p.storageBytes, p.storageBytesNonDPO, p.storageTerabytes, p.storageTerabytesNonDPO, p.activeNonDPOUsers, p.scenePublishEvents, p.scenesPublished, p.scenesPublishedCurrent].join(','));
-        triggerDownload([header.join(','), ...lines].join('\n'), `packrat-metrics_${start}_${end}.csv`, 'text/csv');
+        triggerDownload([header.join(','), ...lines].join('\n'), `packrat-metrics_${ranStart}_${ranEnd}.csv`, 'text/csv');
     };
 
     if (!isAuthorized)
@@ -371,15 +376,21 @@ function AdminMetricsView(): React.ReactElement {
                             {projects.map(p => <MenuItem key={p.idProject} value={p.idProject}>{p.Name}</MenuItem>)}
                         </Select>
                     </div>
-                    <Button variant='contained' color='primary' onClick={fetchData} disabled={loading}>{loading ? 'Loading…' : 'Run'}</Button>
+                    <Button variant='contained' color='primary' onClick={fetchData} disabled={loading} style={{ color: '#FFFFFF' }}>{loading ? 'Loading…' : 'Run'}</Button>
                     <Button variant='outlined' onClick={downloadCSV} disabled={!data?.series}>CSV</Button>
                     <Button variant='outlined' onClick={downloadJSON} disabled={!data}>JSON</Button>
                 </Box>
 
+                {!data && !loading && (
+                    <Typography style={{ fontSize: '0.85rem', color: '#7A8Aa0', marginTop: 8 }}>
+                        Set a date range (or pick a preset) and click Run to load metrics.
+                    </Typography>
+                )}
+
                 {data && (
                     <>
                         <div className={classes.dpoNote}>
-                            Range {new Date(data.range.start).toLocaleDateString()} – {new Date(data.range.end).toLocaleDateString()} ·
+                            Range {ranStart} – {ranEnd} ·
                             {' '}Non-DPO = users outside the DPO set ({data.dpo.count} DPO user{data.dpo.count === 1 ? '' : 's'}).
                             {data.range.project ? ' · Scoped to the selected project; active-user counts remain global and per-project storage will not sum to the all-projects total.' : ''}
                         </div>
