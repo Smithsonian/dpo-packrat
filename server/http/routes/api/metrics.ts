@@ -15,11 +15,14 @@ const BYTES_PER_TB = 1_000_000_000_000; // decimal TB (10^12), matches storage-v
 const GRANULARITIES: MetricsGranularity[] = ['day', 'week', 'month', 'year'];
 const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-/** Parses a start/end param. Date-only values are widened to the day's start or end in server-local time. */
+/**
+ * Parses a start/end param. Date-only values are widened to the day's start or end in UTC, so the queried
+ * window matches the calendar date entered regardless of server timezone (DateCreated is stored/compared as UTC).
+ */
 function parseDate(raw: string, endOfDay: boolean): Date | null {
     if (DATE_ONLY_RE.test(raw)) {
         const [y, m, d] = raw.split('-').map(n => parseInt(n, 10));
-        return endOfDay ? new Date(y, m - 1, d, 23, 59, 59, 999) : new Date(y, m - 1, d, 0, 0, 0, 0);
+        return endOfDay ? new Date(Date.UTC(y, m - 1, d, 23, 59, 59, 999)) : new Date(Date.UTC(y, m - 1, d, 0, 0, 0, 0));
     }
     const parsed: Date = new Date(raw);
     return Number.isNaN(parsed.getTime()) ? null : parsed;

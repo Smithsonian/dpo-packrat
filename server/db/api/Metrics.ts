@@ -16,7 +16,7 @@ const GRANULARITY_FORMAT: Record<MetricsGranularity, string> = {
 
 /** ISO-8601 week key (year-Www) matching MySQL DATE_FORMAT('%x-W%v'): weeks start Monday, week 1 holds the year's first Thursday. */
 function isoWeekKey(d: Date): string {
-    const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
     const day = (date.getUTCDay() + 6) % 7;                  // Mon=0 .. Sun=6
     date.setUTCDate(date.getUTCDate() - day + 3);            // Thursday of this week
     const isoYear = date.getUTCFullYear();
@@ -29,9 +29,9 @@ function isoWeekKey(d: Date): string {
 
 /** Period bucket key for a date, matching the MySQL DATE_FORMAT mask for the granularity. */
 function periodKey(d: Date, granularity: MetricsGranularity): string {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
     switch (granularity) {
         case 'day':   return `${y}-${m}-${day}`;
         case 'week':  return isoWeekKey(d);
@@ -49,14 +49,14 @@ function enumeratePeriodsWithEnds(lo: Date, hi: Date, granularity: MetricsGranul
     const keys: string[] = [];
     const ends: Date[] = [];
     const idx: Map<string, number> = new Map();
-    const cur = new Date(lo.getFullYear(), lo.getMonth(), lo.getDate());
-    const end = new Date(hi.getFullYear(), hi.getMonth(), hi.getDate());
+    const cur = new Date(Date.UTC(lo.getUTCFullYear(), lo.getUTCMonth(), lo.getUTCDate()));
+    const end = new Date(Date.UTC(hi.getUTCFullYear(), hi.getUTCMonth(), hi.getUTCDate()));
     while (cur.getTime() <= end.getTime()) {
         const k: string = periodKey(cur, granularity);
-        const dayEnd: Date = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), 23, 59, 59, 999);
+        const dayEnd: Date = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate(), 23, 59, 59, 999));
         if (!idx.has(k)) { idx.set(k, keys.length); keys.push(k); ends.push(dayEnd); } else
             ends[idx.get(k) as number] = dayEnd;
-        cur.setDate(cur.getDate() + 1);
+        cur.setUTCDate(cur.getUTCDate() + 1);
     }
     return { keys, ends };
 }
