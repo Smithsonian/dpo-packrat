@@ -45,6 +45,7 @@ let idCounter: number = 0;
 // skipped by default; the hermetic retry-parsing tests live in
 // EdanCollectionRetry.test.ts. Enable with PACKRAT_TEST_EDAN=1 on-network.
 const edanTestsEnabled: boolean = process.env.PACKRAT_TEST_EDAN === '1';
+// SKIP_REASON: live EDAN network; opt-in via PACKRAT_TEST_EDAN=1 (off by default to stay hermetic).
 const describeEdan = edanTestsEnabled ? describe : describe.skip;
 
 describeEdan('Collections: EdanCollection', () => {

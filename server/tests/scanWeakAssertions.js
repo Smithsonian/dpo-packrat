@@ -111,11 +111,20 @@ function scanTest(cb, sf) {
 const files = walk(ROOT, []);
 const guarded = [];
 const earlyDone = [];
+const unreasonedSkips = [];
+
+// A skipped describe/test must state WHY, via a SKIP_REASON comment (TR-0.8c) — a
+// silent skip is invisible coverage loss. Covers literal `.skip`, the x-prefixed
+// forms, `.todo`, and the `cond ? describe : describe.skip` opt-in gate form.
+const SKIP_RE = /(?:\b(?:describe|test|it|fdescribe|fit)\.skip\b)|(?:\bx(?:describe|it|test)\s*\()|(?:\b(?:test|it)\.todo\b)/;
 
 for (const file of files) {
     const text = fs.readFileSync(file, 'utf8');
     const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
     const rel = path.relative(ROOT, file).replace(/\\/g, '/');
+
+    if (SKIP_RE.test(text) && !/SKIP_REASON/.test(text))
+        unreasonedSkips.push(`${rel}  (skipped test/suite without a SKIP_REASON comment)`);
 
     (function crawl(node) {
         const t = testCallback(node);
@@ -140,13 +149,14 @@ function section(title, rows) {
 console.log(`Scanned ${files.length} *.test.ts files under tests/`);
 section('ALL-ASSERTIONS-IF-GUARDED (pass silently on a null precondition)', guarded);
 section('EARLY done() (execution continues past the early-exit)', earlyDone);
-console.log(`\nTotals: guarded=${guarded.length} earlyDone=${earlyDone.length}`);
+section('SKIP WITHOUT A REASON (add a SKIP_REASON comment)', unreasonedSkips);
+console.log(`\nTotals: guarded=${guarded.length} earlyDone=${earlyDone.length} unreasonedSkips=${unreasonedSkips.length}`);
 
 // Enforcement (TR-0.8): non-zero exit on any finding so CI fails on a new weak
-// test. Both categories are at zero today; keep them there.
-if (guarded.length > 0 || earlyDone.length > 0) {
-    console.error('\nFAIL: weak-assertion test(s) present. Assert a value that would fail on ' +
-        'regression (not just truthiness behind an if-guard), or fix the early done(). See ' +
-        'PLAN_TESTING_RELIABILITY.md TR-0.8.');
+// test or an undocumented skip. All categories are at zero today; keep them there.
+if (guarded.length > 0 || earlyDone.length > 0 || unreasonedSkips.length > 0) {
+    console.error('\nFAIL: weak-assertion or unexplained-skip test(s) present. Assert a value that ' +
+        'would fail on regression (not just truthiness behind an if-guard), fix the early done(), or ' +
+        'add a SKIP_REASON comment explaining any skip. See PLAN_TESTING_RELIABILITY.md TR-0.8.');
     process.exit(1);
 }

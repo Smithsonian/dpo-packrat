@@ -17,7 +17,7 @@ let bagitZipStream: BagitReader;
 let bagitZipFile: BagitReader;
 let bagitDir: BagitReader;
 
-// BagIt / bulk-ingest is not in production use: the BagitReader code path exists
+// SKIP_REASON: BagIt / bulk-ingest is not in production use: the BagitReader code path exists
 // but the ingest workflow that drives it is non-functional. These tests are
 // skipped so the suite does not assert a feature that production does not run.
 describe.skip('BagitReader', () => {

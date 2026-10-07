@@ -56,7 +56,7 @@ afterAll(async done => {
     done();
 });
 
-// Bulk ingest is not in production use: BulkIngestReader's BagIt-crack workflow
+// SKIP_REASON: Bulk ingest is not in production use: BulkIngestReader's BagIt-crack workflow
 // (loadFromZip / loadFromAssetVersion) is non-functional in production. These
 // suites cover only that workflow, so they are skipped. The still-live static
 // helpers (computeProjects, ingestedObjectIs*) retain coverage via the

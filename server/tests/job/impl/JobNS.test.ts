@@ -52,6 +52,7 @@ afterAll(async done => {
 // prerequisites are absent. Enable with PACKRAT_TEST_COOK=1 in an environment
 // that can reach Cook and has the model fixtures.
 const cookTestsEnabled: boolean = process.env.PACKRAT_TEST_COOK === '1';
+// SKIP_REASON: live Cook server + on-disk model fixtures; opt-in via PACKRAT_TEST_COOK=1.
 const describeCook = cookTestsEnabled ? describe : describe.skip;
 
 describe('JobNS Init', () => {

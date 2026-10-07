@@ -18,6 +18,7 @@ afterAll(async done => {
 // DB regression. The DB-only fetch/search tests always run and are what guard
 // the SubjectUnitIdentifier DB path. Enable EDAN tests with PACKRAT_TEST_EDAN=1.
 const edanTestsEnabled: boolean = process.env.PACKRAT_TEST_EDAN === '1';
+// SKIP_REASON: live EDAN network; opt-in via PACKRAT_TEST_EDAN=1 (the DB-only path always runs).
 const testEdan = edanTestsEnabled ? test : test.skip;
 
 describe('DB Composite SubjectUnitIdentifier Test', () => {
