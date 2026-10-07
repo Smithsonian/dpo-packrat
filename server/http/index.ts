@@ -74,6 +74,9 @@ const debugRequests: boolean = true;
 export class HttpServer {
     public app: Express = express();
     private WDSV: WebDAVServer | null = null;
+    // Stored so HttpServer.shutdown() can stop the started ApolloServer in tests;
+    // otherwise its handle keeps jest from exiting without --forceExit.
+    private apolloServer: ApolloServer | null = null;
     private static _singleton: HttpServer | null = null;
 
     static async getInstance(): Promise<HttpServer | null> {
@@ -82,6 +85,22 @@ export class HttpServer {
             await HttpServer._singleton.HttpServer();
         }
         return HttpServer._singleton;
+    }
+
+    // Stop the booted ApolloServer and drop the singleton so a test file that
+    // started the server via getInstance() exits cleanly — call it in the suite's
+    // afterAll. This is what lets the suite run without jest --forceExit. Idempotent;
+    // safe if the server was never started.
+    static async shutdown(): Promise<void> {
+        const inst: HttpServer | null = HttpServer._singleton;
+        if (!inst)
+            return;
+        try {
+            await inst.apolloServer?.stop();
+        } catch { /* best-effort during teardown */ }
+        inst.apolloServer = null;
+        inst.WDSV = null;
+        HttpServer._singleton = null;
     }
 
     private async HttpServer(): Promise<boolean> {
@@ -125,24 +144,30 @@ export class HttpServer {
             RK.logInfo(RK.LogSection.eSYS,'system started: Usage Monitoring',undefined,{ frequency: 1000, samples: monitorVerboseSamples },'HttpServer');
         }
 
-        // NOTIFY: initialize email
-        const notifyEmailResult: IOResults = await RK.initialize(RK.SubSystem.NOTIFY_EMAIL);
-        if(notifyEmailResult.success===false)
-            RK.logError(RK.LogSection.eSYS,'system failed: Email Notifications',notifyEmailResult.message,notifyEmailResult.data,'HttpServer');
+        // NOTIFY subsystems (email + Slack) create clients/transports that can hold
+        // open sockets; skip them under NODE_ENV=test so jest exits cleanly without
+        // --forceExit (same rationale as the UsageMonitor / retention-job guards
+        // above). Tests do not exercise notifications.
+        if (process.env.NODE_ENV !== 'test') {
+            // NOTIFY: initialize email
+            const notifyEmailResult: IOResults = await RK.initialize(RK.SubSystem.NOTIFY_EMAIL);
+            if(notifyEmailResult.success===false)
+                RK.logError(RK.LogSection.eSYS,'system failed: Email Notifications',notifyEmailResult.message,notifyEmailResult.data,'HttpServer');
 
-        // NOTIFY: set our email groups, pulling from the database
-        RK.setEmailsForGroup(RK.NotifyGroup.ALL, await User.fetchEmailsByIDs() ?? []);
-        RK.setEmailsForGroup(RK.NotifyGroup.ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
-        RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyEmailResult.data,'HttpServer');
+            // NOTIFY: set our email groups, pulling from the database
+            RK.setEmailsForGroup(RK.NotifyGroup.ALL, await User.fetchEmailsByIDs() ?? []);
+            RK.setEmailsForGroup(RK.NotifyGroup.ADMIN, await User.fetchEmailsByIDs(Config.auth.users.admin) ?? []);
+            RK.logInfo(RK.LogSection.eSYS,'system started: Email Notifications',undefined,notifyEmailResult.data,'HttpServer');
 
-        // NOTIFY: initialize Slack
-        const notifySlackResult: IOResults = await RK.initialize(RK.SubSystem.NOTIFY_SLACK);
-        if(notifySlackResult.success===false)
-            RK.logError(RK.LogSection.eSYS,'system failed: Slack Notifications',notifySlackResult.message,notifySlackResult.data,'HttpServer');
+            // NOTIFY: initialize Slack
+            const notifySlackResult: IOResults = await RK.initialize(RK.SubSystem.NOTIFY_SLACK);
+            if(notifySlackResult.success===false)
+                RK.logError(RK.LogSection.eSYS,'system failed: Slack Notifications',notifySlackResult.message,notifySlackResult.data,'HttpServer');
 
-        // NOTIFY: set our slack ID groups, pulling from the database
-        RK.setSlackIDsForGroup(RK.NotifyGroup.ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
-        RK.logInfo(RK.LogSection.eSYS,'system started: Slack Notifications',undefined,notifySlackResult.data,'HttpServer');
+            // NOTIFY: set our slack ID groups, pulling from the database
+            RK.setSlackIDsForGroup(RK.NotifyGroup.ADMIN, await User.fetchSlackByIDs(Config.auth.users.admin) ?? []);
+            RK.logInfo(RK.LogSection.eSYS,'system started: Slack Notifications',undefined,notifySlackResult.data,'HttpServer');
+        }
 
         // Audit tier-coverage self-check: log loudly if any eAuditType is missing
         // from Config.audit.actionTiers. Missing entries fall back to
@@ -213,10 +238,11 @@ export class HttpServer {
             debug: true,
         }));
 
-        // start our ApolloServer
-        const server = new ApolloServer(ApolloServerOptions);
-        await server.start();
-        server.applyMiddleware({ app: this.app, cors: false });
+        // start our ApolloServer (stored on the instance so HttpServer.shutdown()
+        // can stop it during test teardown — see the apolloServer field comment)
+        this.apolloServer = new ApolloServer(ApolloServerOptions);
+        await this.apolloServer.start();
+        this.apolloServer.applyMiddleware({ app: this.app, cors: false });
 
         // utility endpoints
         this.app.get('/heartbeat', heartbeat);

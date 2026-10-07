@@ -39,6 +39,10 @@ describe('GraphQL transport + auth gate (real Apollo over HTTP)', () => {
         app = httpServer.app;
     });
 
+    afterAll(async () => {
+        await HttpServer.shutdown();
+    });
+
     async function createTestUser(): Promise<DBAPI.User> {
         // Local auth treats password === email, so a fresh active user can log in
         // through the real /auth/login route.

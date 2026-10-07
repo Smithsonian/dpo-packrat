@@ -5,6 +5,10 @@ import * as DBAPI from '../../../db';
 describe('Auth implementation: local login', () => {
     let httpServer: HttpServer | null = null;
 
+    afterAll(async () => {
+        await HttpServer.shutdown();
+    });
+
     test('initialize', async () => {
         httpServer = await HttpServer.getInstance();
         expect(httpServer).toBeTruthy();

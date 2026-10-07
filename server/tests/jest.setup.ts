@@ -69,6 +69,21 @@ afterAll(async () => {
     // process alive (the reason the suite needed --forceExit).
     await DBC.DBConnection.disconnect();
 
+    // End the persistent exiftool-vendored child process (a stay_open batch process
+    // the image extractor spawns); otherwise it keeps the worker alive and the run
+    // needs --forceExit. Only files that initialized it pay the cost; a later file
+    // re-spawns lazily via the extractor's own retry. Loaded dynamically (as in prod).
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const em = require('../metadata/ExtractorImageExiftool');
+        const cls = em && em.ExtractorImageExiftool;
+        if (cls && cls.exiftoolInit === true) {
+            await cls.exiftool.end();
+            cls.exiftool = new cls.exiftool.constructor();
+            cls.exiftoolInit = false;
+        }
+    } catch { /* extractor not loaded in this file */ }
+
     // Assertion-count gate: append this file's coverage to the run inventory
     // before any gate throws.
     const testPath: string = expect.getState().testPath ?? 'unknown';
