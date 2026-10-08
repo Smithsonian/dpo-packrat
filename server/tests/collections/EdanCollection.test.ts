@@ -48,6 +48,17 @@ const edanTestsEnabled: boolean = process.env.PACKRAT_TEST_EDAN === '1';
 // SKIP_REASON: live EDAN network; opt-in via PACKRAT_TEST_EDAN=1 (off by default to stay hermetic).
 const describeEdan = edanTestsEnabled ? describe : describe.skip;
 
+// EDAN WRITE tests create REAL records on the dev 3D API (createEdanMDM /
+// createEdan3DPackage). Gated SEPARATELY from the read-only queries so the general
+// `yarn test:live` lane (which sets only PACKRAT_TEST_EDAN + PACKRAT_TEST_COOK)
+// never writes to EDAN. Records are clearly named (`Packrat Test Subject
+// dpo_3d_test_<date>-…`) so they can be identified and removed on the dev EDAN
+// server; the 3D-package source zip is overridable via PACKRAT_TEST_EDAN_PACKAGE_URL
+// so a small, clearly-named scene can be used.
+// SKIP_REASON: creates real records on dev EDAN; opt-in via PACKRAT_TEST_EDAN_WRITE=1.
+const edanWriteEnabled: boolean = process.env.PACKRAT_TEST_EDAN_WRITE === '1';
+const describeEdanWrite = edanWriteEnabled ? describe : describe.skip;
+
 describeEdan('Collections: EdanCollection', () => {
     jest.setTimeout(180000);
     const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
@@ -121,6 +132,15 @@ describeEdan('Collections: EdanCollection', () => {
             });
             break;
     }
+});
+
+// Opt-in EDAN writes (PACKRAT_TEST_EDAN_WRITE=1): one clearly-named MDM record and
+// one small 3D package on the dev 3D API, for identifying/removing on dev EDAN.
+describeEdanWrite('Collections: EdanCollection (EDAN writes — dev 3D API)', () => {
+    jest.setTimeout(180000);
+    const ICol: COL.ICollection = COL.CollectionFactory.getInstance();
+    executeTestCreateMDM(ICol);
+    executeTestCreateEdan3DPackage(ICol);
 });
 
 
@@ -250,7 +270,10 @@ function executeTestCreateMDM(ICol: COL.ICollection): void {
     let edanmdmClone: COL.EdanMDMContent = edanmdm;
     let status: number = 0;
     let publicSearch: boolean = true;
-    for (let testCase: number = 0; testCase <= 8; testCase++) {
+    // One record by default to keep dev-EDAN writes small; the field-mapping variants
+    // (cases 1-8) remain available by raising this bound when specifically testing them.
+    const lastCase: number = 0;
+    for (let testCase: number = 0; testCase <= lastCase; testCase++) {
         const recordId: string = nextID();
         edanmdmClone = L.cloneDeep(edanmdmClone);
         edanmdmClone.descriptiveNonRepeating.title.content = 'Packrat Test Subject ' + recordId;
@@ -319,17 +342,21 @@ function nextID(): string {
 
 // #region Create EDAN 3D Package
 function executeTestCreateEdan3DPackage(ICol: COL.ICollection): void {
-    // executeTestCreateEdan3DPackageWorker(ICol, 'file:///' + mockScenePath.replace(/\\/g, '/'), 'scene.svx.json');
-    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///si-3ddigi-staging/upload/ff607e3c-3d88-4422-a246-3976aa4839dc.zip', 'scene.svx.json');
-    // executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///si-3ddigi-staging/upload/fbcc6998-41a8-41cf-af57-81a82098f3ca.zip', 'scene.svx.json');
-    executeTestCreateEdan3DPackageWorker(ICol, 'nfs:///si-3ddigi-staging/upload/f550015a-7e43-435b-90dc-e7c1367bc5fb.zip', 'scene.svx.json');
+    // Source zip for the dev-EDAN 3D package. Override with a SMALL, clearly-named
+    // test scene via PACKRAT_TEST_EDAN_PACKAGE_URL so the created package is easy to
+    // identify and remove on the dev EDAN server.
+    const packageUrl: string = process.env.PACKRAT_TEST_EDAN_PACKAGE_URL
+        ?? 'nfs:///si-3ddigi-staging/upload/f550015a-7e43-435b-90dc-e7c1367bc5fb.zip';
+    executeTestCreateEdan3DPackageWorker(ICol, packageUrl, 'scene.svx.json');
 }
 
 function executeTestCreateEdan3DPackageWorker(ICol: COL.ICollection, path: string, scene: string): void {
     test(`Collections: EdanCollection.createEdan3DPackage ${path}, ${scene}`, async () => {
         const edanRecord: COL.EdanRecord | null = await ICol.createEdan3DPackage(path);
         expect(edanRecord).toBeTruthy();
-        RK.logInfo(RK.LogSection.eTEST,'create 3D package','created record',{ edanRecord },'Tests.Collections.EDAN');
+        // Surface the created identifier plainly: this is a REAL dev-EDAN record that
+        // must be removed manually on the dev 3D API after the run.
+        RK.logInfo(RK.LogSection.eTEST,'create 3D package','created dev-EDAN record (manual cleanup required)',{ id: edanRecord?.url ?? edanRecord?.id, source: path, edanRecord },'Tests.Collections.EDAN');
 
         // if (edanRecord)
         //     expect(edanRecord.content).toMatch(path);
