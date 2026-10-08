@@ -41,6 +41,7 @@
     "generate:prisma": "npx prisma generate --schema=./db/prisma/schema.prisma",
     "postinstall": "cd .. && yarn generate:server:prisma && cd server",
     "test": "cross-env NODE_OPTIONS=\"--openssl-legacy-provider --max-old-space-size=8192\" jest --runInBand --config tests/jest.config.js",
+    "test:live": "cross-env PACKRAT_TEST_COOK=1 PACKRAT_TEST_EDAN=1 NODE_OPTIONS=\"--openssl-legacy-provider --max-old-space-size=8192\" jest --runInBand --config tests/jest.config.js",
     "test:scan": "node tests/scanWeakAssertions.js",
     "test:parity": "cross-env NODE_OPTIONS=\"--openssl-legacy-provider --max-old-space-size=8192\" jest --runInBand --config tests/parity.jest.config.js",
     "test:parity:bless": "cross-env PACKRAT_PARITY_BLESS=1 NODE_OPTIONS=\"--openssl-legacy-provider --max-old-space-size=8192\" jest --runInBand --config tests/parity.jest.config.js",

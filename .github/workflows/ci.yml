@@ -116,14 +116,14 @@ jobs:
           PACKRAT_EDAN_AUTH_KEY: ${{ secrets.PACKRAT_EDAN_AUTH_KEY }}
           PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat_test
 
-      # Preserve the surviving test log (written under the OS temp dir by
+      # Preserve the surviving test log (written under server/var/test/logs by
       # setEnvVars.ts) so a gate trip or failure can be inspected from the run.
       - name: Upload test logs
         if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: test-logs
-          path: /tmp/packrat-test-logs
+          path: server/var/test/logs
           if-no-files-found: ignore
 
   build:

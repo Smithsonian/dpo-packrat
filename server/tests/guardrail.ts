@@ -12,7 +12,9 @@ const PROTECTED_DB_NAMES: string[] = ['PackratProduction', 'PackratStaging', 'Pa
 // a *_test schema happened to exist there.
 const LOCAL_DB_HOSTS: string[] = ['localhost', '127.0.0.1', '::1', 'host.docker.internal', 'packrat-db'];
 
-// Every storage/log root must resolve inside the OS temp sandbox.
+// Every storage/log root must resolve to a disposable test location: under the OS
+// temp dir, or inside a directory named "test" (the default <server>/var/test
+// sandbox). Never the real repository storage tree (var/Storage).
 const SANDBOX_PATH_VARS: string[] = [
     'PACKRAT_OCFL_STORAGE_ROOT',
     'PACKRAT_OCFL_STAGING_ROOT',
@@ -20,6 +22,25 @@ const SANDBOX_PATH_VARS: string[] = [
     'PACKRAT_EDAN_RESOURCES_HOTFOLDER',
     'PACKRAT_LOG_ROOT',
 ];
+
+// True if the resolved path sits under the real repository storage tree
+// (…/var/Storage/…) — the one location the destructive suite must never touch.
+function isRealStoragePath(resolved: string): boolean {
+    const segs: string[] = resolved.split(path.sep);
+    for (let i = 0; i + 1 < segs.length; i++)
+        if (segs[i] === 'var' && segs[i + 1] === 'Storage')
+            return true;
+    return false;
+}
+
+// True if the resolved path is a disposable test location: under the OS temp dir,
+// or inside a directory named "test" (case-insensitive). A real server storage
+// root (an absolute path with neither property) is therefore rejected.
+function isDisposableTestPath(resolved: string): boolean {
+    if (resolved.startsWith(path.resolve(os.tmpdir())))
+        return true;
+    return resolved.split(path.sep).some(s => s.toLowerCase() === 'test');
+}
 
 function databaseName(databaseURL: string): string | null {
     try {
@@ -57,11 +78,14 @@ export function assertTestSandbox(): void {
     if (!dbHost || !LOCAL_DB_HOSTS.includes(dbHost))
         throw new Error(`[test-guardrail] database host "${dbHost}" is not a local test host (${LOCAL_DB_HOSTS.join(', ')}); refusing to run tests. Point tests at a LOCAL database, never a shared/prod server.`);
 
-    const sandbox: string = path.resolve(os.tmpdir());
     for (const key of SANDBOX_PATH_VARS) {
         const value: string = process.env[key] ?? '';
+        if (value.length === 0)
+            throw new Error(`[test-guardrail] ${key} is empty; refusing to run tests.`);
         const resolved: string = path.resolve(value);
-        if (value.length === 0 || !resolved.startsWith(sandbox))
-            throw new Error(`[test-guardrail] ${key}="${value}" is not under the temp sandbox (${sandbox}); refusing to run tests.`);
+        if (isRealStoragePath(resolved))
+            throw new Error(`[test-guardrail] ${key}="${value}" points at the real repository storage (var/Storage); refusing to run tests.`);
+        if (!isDisposableTestPath(resolved))
+            throw new Error(`[test-guardrail] ${key}="${value}" is not a disposable test sandbox (must be under the OS temp dir or inside a "test" directory); refusing to run tests.`);
     }
 }

@@ -1,15 +1,16 @@
-import * as os from 'os';
-import * as path from 'path';
 import * as fs from 'fs';
 import * as H from '../utils/helpers';
 import * as DBC from '../db/connection';
-
-const TEST_STORAGE_ROOT: string = path.join(os.tmpdir(), 'packrat-test');
+import { sandboxPaths } from './sandboxPaths';
 
 export async function teardown(): Promise<void> {
     await DBC.DBConnection.disconnect();
     await H.Helpers.sleep(1000);
-    fs.rmSync(TEST_STORAGE_ROOT, { recursive: true, force: true });
+    // Remove the storage sandboxes but KEEP the logs subdir so a run's output
+    // survives for inspection (CI uploads it on failure).
+    const SB = sandboxPaths();
+    for (const dir of [SB.repository, SB.staging, SB.edanStaging])
+        fs.rmSync(dir, { recursive: true, force: true });
 }
 
 module.exports = teardown;
