@@ -1,12 +1,20 @@
 /* eslint-disable */
-// Static companion to the report-only assertion-count gate (TR-0.8).
+// Static companion to the assertion-count gate (TR-0.8). ENFORCING: exits
+// non-zero (fails CI) on any finding — wired into the lint job.
 //
-// The assertion-count gate catches tests that assert NOTHING. It cannot catch
-// tests that assert something meaningless — the far larger class flagged in the
-// testing audit: `id: 0` no-op queries that accept null-or-anything, and happy
-// paths whose only assertions sit inside `if (x) {…}` guards so a null
-// precondition passes silently. Those all call expect(), so a count gate is
-// blind to them. This AST pass flags them for human review. Report-only.
+// The assertion-count gate catches tests that assert NOTHING. This AST pass
+// catches tests that assert something meaningless in ways a count gate is blind
+// to (every case still calls expect()):
+//   - ALL-ASSERTIONS-IF-GUARDED: a happy path whose only assertions sit inside
+//     `if (x) {…}` guards, so a null precondition passes silently.
+//   - EARLY done(): a done() with assertions still after it in source order.
+//   - SKIP WITHOUT A REASON: a .skip/.todo/x-form/opt-in-gate skip with no
+//     SKIP_REASON comment (silent skips are invisible coverage loss).
+//
+// NOT gated here: `id: 0` no-op queries. A lookup by id 0 is a LEGITIMATE
+// negative test (e.g. tests/db/nullZeroId.test.ts asserts fetch(0) === null), so
+// flagging it produces mostly false positives. The real id:0 tautologies were
+// fixed by hand instead of gated.
 //
 // Usage:  node tests/scanWeakAssertions.js
 // Scans server/tests/**/*.test.ts (incl. the graphql aggregator sub-modules that
@@ -38,15 +46,6 @@ function isExpectCall(n) {
     return ts.isCallExpression(n) && ts.isIdentifier(n.expression) && n.expression.text === 'expect';
 }
 
-// A read/query-style call whose id:0 argument is a genuine lookup (not a
-// pre-insert create placeholder, where id:0 is correct).
-function isQueryCall(node) {
-    if (!ts.isCallExpression(node)) return false;
-    const e = node.expression;
-    const nm = ts.isIdentifier(e) ? e.text : (ts.isPropertyAccessExpression(e) ? e.name.text : null);
-    return !!nm && /^(get|search|are|fetch)/.test(nm);
-}
-
 // test(...) / it(...) / fit(...) / test.only(...) — NOT .skip/.todo (they don't run).
 function testCallback(n) {
     if (!ts.isCallExpression(n)) return null;
@@ -64,18 +63,6 @@ function testCallback(n) {
 function scanTest(cb, sf) {
     const expects = [];   // { guarded, pos }
     const dones = [];     // { line, pos }
-    const idZeros = [];   // { line, name }  — only inside query-style calls
-
-    function scanObjForIdZero(node) {
-        (function w(n) {
-            if (ts.isPropertyAssignment(n) && (ts.isIdentifier(n.name) || ts.isStringLiteral(n.name))) {
-                const nm = n.name.text, init = n.initializer;
-                if (/^id/i.test(nm) && init && init.kind === ts.SyntaxKind.NumericLiteral && init.text === '0')
-                    idZeros.push({ line: lineOf(n, sf), name: nm });
-            }
-            ts.forEachChild(n, w);
-        })(node);
-    }
 
     let hasCoveringIfElse = false;
     function subtreeHasExpect(n) {

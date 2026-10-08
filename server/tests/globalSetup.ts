@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-// Runs once before the whole suite (jest globalSetup). Clears the report-only
+// Runs once before the whole suite (jest globalSetup). Clears the
 // assertion-gate inventory that logGate.reportAssertionCoverage appends to per
 // file, so each run starts fresh. The path is pinned to os.tmpdir()/packrat-test-logs
 // to match setEnvVars.ts, which sets PACKRAT_LOG_ROOT there UNCONDITIONALLY: reading

@@ -20,9 +20,10 @@ const TEST_VERBOSE: boolean = process.env.PACKRAT_TEST_VERBOSE === '1';
 // its capture buffer are fresh per file.
 installLogGate();
 
-// Install the report-only assertion-count gate (TR-0.8). Wraps the global expect
-// to count assertions per file/test; writes a vacuous-test inventory in afterAll.
-// Never fails the run — enforcement is a later flip.
+// Install the assertion-count gate (TR-0.8). Wraps the global expect to count
+// assertions per file/test and writes a vacuous-test inventory in afterAll. It is
+// ENFORCING: afterAll fails the file on any zero-assertion test (unless
+// PACKRAT_TEST_ASSERTION_GATE=0). See assertNoZeroAssertionTests in logGate.ts.
 installAssertionCounter();
 
 // Establish a LocalStore carrying a system Actor for every test so DB CRUD
@@ -53,7 +54,8 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-    // Record whether the just-finished test made any assertion (report-only gate).
+    // Record whether the just-finished test made any assertion (the enforcing
+    // assertion-count gate fails the file in afterAll if any test asserted nothing).
     const st: { currentTestName?: string; assertionCalls?: number } = expect.getState();
     const jestCalls: number | null = typeof st.assertionCalls === 'number' ? st.assertionCalls : null;
     noteTestAssertionBoundary(st.currentTestName ?? '', jestCalls);

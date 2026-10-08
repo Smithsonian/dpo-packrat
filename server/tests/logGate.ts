@@ -24,6 +24,19 @@ export interface CapturedLog {
     message: string;
 }
 
+// One tolerated error/critical emitter. `level` optional: when set, only that
+// severity from this caller is tolerated (so a NEW critical from a caller
+// allowlisted only for error still trips the gate); when omitted, any severity
+// from the caller is tolerated (grandfathered — tighten by re-seeding). `reason`
+// is required (assertNoUnexpectedLogs fails on an entry without one) so every
+// tolerated emitter is justified and reviewable in the baseline diff.
+interface AllowedEntry {
+    caller: string;
+    level?: 'error' | 'crit';
+    reason: string;
+    ticket?: string;
+}
+
 interface Baseline {
     note?: string;
     // Enforcement switch. Ships false so the gate is inert until the baseline has
@@ -31,7 +44,36 @@ interface Baseline {
     // same commit as the seeded allowlist — to make the gate fail on unexpected
     // error/critical logs. This prevents a surprise-red run before seeding.
     enabled?: boolean;
-    allowedCallers: string[];
+    allowed: AllowedEntry[];
+    // Back-compat: older baselines used a flat string array. Read only if `allowed`
+    // is absent, and migrated to `allowed` in memory.
+    allowedCallers?: string[];
+}
+
+const DEFAULT_NOTE: string =
+    'Allowlist for the test log honesty gate. Each entry is a known error/critical emitter that does not fail ' +
+    'the run. Every entry MUST carry a non-empty "reason". "level" is optional (when set, only that severity is ' +
+    'tolerated). Prefer scoping a negative test to its file via expectLogErrors() over a global entry. Shrink ' +
+    'toward empty. Re-seed with `yarn test:logbaseline`, then fill in each new reason before committing.';
+
+// Collapse the allow list to caller -> tolerated severities. 'any' means every
+// severity from that caller is tolerated (a level-less/grandfathered entry).
+type LevelMatch = 'any' | Set<'error' | 'crit'>;
+function buildAllowedMap(entries: AllowedEntry[]): Map<string, LevelMatch> {
+    const map: Map<string, LevelMatch> = new Map<string, LevelMatch>();
+    for (const a of entries) {
+        if (!a.level) {
+            map.set(a.caller, 'any');
+            continue;
+        }
+        const cur: LevelMatch | undefined = map.get(a.caller);
+        if (cur === 'any')
+            continue;
+        const set: Set<'error' | 'crit'> = cur ?? new Set<'error' | 'crit'>();
+        set.add(a.level);
+        map.set(a.caller, set);
+    }
+    return map;
 }
 
 const BASELINE_PATH: string = path.join(__dirname, 'logBaseline.json');
@@ -105,64 +147,107 @@ export function getCaptured(): CapturedLog[] {
 function loadBaseline(): Baseline {
     try {
         const parsed: Baseline = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8'));
-        return Array.isArray(parsed.allowedCallers) ? parsed : { allowedCallers: [] };
+        if (Array.isArray(parsed.allowed))
+            return parsed;
+        // Migrate an older flat-string baseline to the object form in memory.
+        if (Array.isArray(parsed.allowedCallers))
+            return { ...parsed, allowed: parsed.allowedCallers.map((c: string) => ({ caller: c, reason: 'legacy: migrated from allowedCallers; add a justification.' })) };
+        return { allowed: [] };
     } catch {
-        return { allowedCallers: [] };
+        return { allowed: [] };
     }
 }
 
-// Ratchet seeding: merge this file's emission keys into the checked-in allowlist.
+// Ratchet seeding: union this file's emissions into the checked-in allowlist.
 // Runs serially (--runInBand) so read-modify-write of the shared file is safe.
+// Existing entries (including grandfathered, level-less ones) are preserved so the
+// per-file merges accumulate; a NEW emitter is added level-specific with an empty
+// reason for a human to fill in before committing. Reasons are carried over by
+// caller so a re-seed never wipes an existing justification.
 export function mergeCapturedIntoBaseline(): void {
     const baseline: Baseline = loadBaseline();
-    const set: Set<string> = new Set(baseline.allowedCallers);
-    for (const entry of captured)
-        set.add(keyOf(entry));
+    const entries: AllowedEntry[] = baseline.allowed.slice();
+
+    const coveredAny: Set<string> = new Set<string>();          // caller tolerated at any level
+    const coveredLevel: Set<string> = new Set<string>();        // `${caller}|${level}`
+    const reasonByCaller: Map<string, string> = new Map<string, string>();
+    for (const a of entries) {
+        if (a.reason && !reasonByCaller.has(a.caller)) reasonByCaller.set(a.caller, a.reason);
+        if (!a.level) coveredAny.add(a.caller);
+        else coveredLevel.add(`${a.caller}|${a.level}`);
+    }
+    for (const e of captured) {
+        const caller: string = keyOf(e);
+        if (coveredAny.has(caller) || coveredLevel.has(`${caller}|${e.level}`))
+            continue;
+        coveredLevel.add(`${caller}|${e.level}`);
+        entries.push({ caller, level: e.level, reason: reasonByCaller.get(caller) ?? '' });
+    }
+    entries.sort((x, y) => x.caller === y.caller ? (x.level ?? '').localeCompare(y.level ?? '') : x.caller.localeCompare(y.caller));
+
     const next: Baseline = {
-        note: baseline.note ?? 'Ratchet allowlist for the test log honesty gate. Each entry is a known error/critical emitter (by caller) that does not fail the run. Shrink toward empty as each test category is cleaned (see PLAN_TESTING_RELIABILITY.md TR-0.2). Do not add entries without justification; re-seed with `yarn test:logbaseline`.',
+        note: baseline.note ?? DEFAULT_NOTE,
         enabled: baseline.enabled ?? false,
-        allowedCallers: Array.from(set).sort()
+        allowed: entries
     };
     fs.writeFileSync(BASELINE_PATH, JSON.stringify(next, null, 4) + '\n', 'utf8');
 }
 
 // Honesty gate: throw (failing the test file) when an error/critical was emitted
-// whose caller is not in the ratchet baseline.
+// whose (caller, level) is not tolerated by the baseline or declared for this file.
 export function assertNoUnexpectedLogs(testFile: string): void {
     const baseline: Baseline = loadBaseline();
     if (baseline.enabled !== true)
         return; // gate inert until the baseline is seeded and explicitly enabled
 
-    // Allowed = the global ratchet baseline PLUS any callers this file declared
-    // via expectLogErrors() (file-local expected errors).
-    const allowed: Set<string> = new Set(baseline.allowedCallers);
-    for (const caller of declaredExpected)
-        allowed.add(caller);
+    // Every allowlist entry must be justified, so each tolerated emitter is
+    // reviewable in the baseline diff.
+    const unjustified: AllowedEntry[] = baseline.allowed.filter(a => !a.reason || a.reason.trim().length === 0);
+    if (unjustified.length > 0)
+        throw new Error(
+            `[log-honesty-gate] ${unjustified.length} allowlist entr(y/ies) in logBaseline.json have no "reason": ` +
+            `${Array.from(new Set(unjustified.map(a => a.caller))).sort().join(', ')}. Add a justification for each ` +
+            'tolerated emitter (why it logs error/critical and why that is acceptable), or remove the entry.'
+        );
 
-    const unexpected: CapturedLog[] = captured.filter(e => !allowed.has(keyOf(e)));
+    // Allowed = the global ratchet allowlist (by caller + optional level) PLUS any
+    // callers this file declared via expectLogErrors() (file-local, any level).
+    const allowedMap: Map<string, LevelMatch> = buildAllowedMap(baseline.allowed);
+    const isAllowed = (e: CapturedLog): boolean => {
+        const k: string = keyOf(e);
+        if (declaredExpected.has(k))
+            return true;
+        const lv: LevelMatch | undefined = allowedMap.get(k);
+        if (lv === undefined)
+            return false;
+        return lv === 'any' || lv.has(e.level);
+    };
+
+    const unexpected: CapturedLog[] = captured.filter(e => !isAllowed(e));
     if (unexpected.length === 0)
         return;
 
     const detail: string = unexpected.map(e => `  [${e.level}] ${keyOf(e)} :: ${e.message}`).join('\n');
-    const distinct: string = Array.from(new Set(unexpected.map(e => keyOf(e)))).sort().join(', ');
+    const distinct: string = Array.from(new Set(unexpected.map(e => `${keyOf(e)} (${e.level})`))).sort().join(', ');
     throw new Error(
         `[log-honesty-gate] ${unexpected.length} unexpected error/critical log(s) emitted in ${testFile}:\n${detail}\n\n` +
         'If this is a negative-path test deliberately triggering the error, declare it with ' +
         'expectLogErrors(caller) from tests/logGate and assert the failure; ' +
         'a genuinely-cross-cutting/benign emitter can go in the ratchet baseline (`yarn test:logbaseline`).\n' +
-        `Unexpected caller keys: ${distinct}`
+        `Unexpected caller/level keys: ${distinct}`
     );
 }
 
 // ---------------------------------------------------------------------------
-// Assertion-count gate (report-only).
+// Assertion-count gate (ENFORCING).
 //
 // Companion to the log-honesty gate: a test that emits no error is not enough —
 // a test that asserts nothing is a false-green. This counts expect() invocations
 // per file (and per test, so vacuous cases inside the graphql aggregator — whose
 // sub-suites share one file — are still caught) and appends a durable JSONL
-// inventory under PACKRAT_LOG_ROOT. It NEVER fails a run yet: enforcement is a
-// later flip, mirroring the log gate's seed-then-enable ratchet.
+// inventory under PACKRAT_LOG_ROOT. assertNoZeroAssertionTests (below) fails the
+// file on any zero-assertion test, unless PACKRAT_TEST_ASSERTION_GATE=0. The JSONL
+// inventory is always written regardless of enforcement.
 // ---------------------------------------------------------------------------
 
 let assertionCalls: number = 0;

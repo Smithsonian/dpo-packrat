@@ -92,7 +92,7 @@ export class RecordKeeper {
 
             const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
             if(emailResults.success===false) {
-                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'Recordkeeper');
+                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'RecordKeeper');
                 RecordKeeper.systemConfig.notifyEmail = false;
                 return emailResults;
             }
@@ -116,7 +116,7 @@ export class RecordKeeper {
 
             const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,Config.slack.channels,targetRate);
             if(slackResults.success===false) {
-                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'Recordkeeper');
+                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'RecordKeeper');
                 RecordKeeper.systemConfig.notifySlack = false;
                 return slackResults;
             }
