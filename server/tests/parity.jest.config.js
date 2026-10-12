@@ -1,4 +1,4 @@
-// Parity lane (TR-15a): golden-record baselines for migration cutover validation.
+// Parity lane: golden-record baselines for migration cutover validation.
 // Reuses the standard test harness (sandbox env, log/assertion gates, teardown)
 // but only runs tests/parity/**. Invoked via `yarn test:parity` (assert) and
 // `yarn test:parity:bless` (PACKRAT_PARITY_BLESS=1, write baselines).

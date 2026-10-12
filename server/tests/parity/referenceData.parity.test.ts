@@ -3,7 +3,7 @@ import * as CACHE from '../../cache';
 import * as COMMON from '@dpo-packrat/common';
 import { parityCheck } from './parityHarness';
 
-// Parity surface: enum-addressable reference-data contracts (TR-15a).
+// Parity surface: enum-addressable reference-data contracts.
 // The eVocabularyID -> Vocabulary and eLicense -> License mappings drive ingest,
 // publish flags, Solr facets, and EDAN payloads, and MUST be identical on the
 // migrated server. Captured through the caches BY ENUM, which resolve only to

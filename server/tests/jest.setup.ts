@@ -20,7 +20,7 @@ const TEST_VERBOSE: boolean = process.env.PACKRAT_TEST_VERBOSE === '1';
 // its capture buffer are fresh per file.
 installLogGate();
 
-// Install the assertion-count gate (TR-0.8). Wraps the global expect to count
+// Install the assertion-count gate. Wraps the global expect to count
 // assertions per file/test and writes a vacuous-test inventory in afterAll. It is
 // ENFORCING: afterAll fails the file on any zero-assertion test (unless
 // PACKRAT_TEST_ASSERTION_GATE=0). See assertNoZeroAssertionTests in logGate.ts.

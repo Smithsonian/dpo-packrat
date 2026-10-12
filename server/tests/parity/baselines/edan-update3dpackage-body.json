@@ -1,0 +1,38 @@
+{
+  "content": {
+    "document": {
+      "asset": {
+        "copyright": "",
+        "generator": "parity",
+        "version": "1.0"
+      }
+    },
+    "media_usage": {
+      "access": "CC0",
+      "codes": "",
+      "text": "Usage conditions apply"
+    },
+    "resources": [
+      {
+        "attributes": [
+          {
+            "FILE_TYPE": "zip",
+            "MODEL_FILE_TYPE": "obj",
+            "UNITS": "mm"
+          }
+        ],
+        "category": "Full_resolution",
+        "filename": "parity-full.zip",
+        "name": "Parity Test Object",
+        "title": "Parity Test Object (Full resolution 3D mesh, obj, scale in mm)",
+        "type": "3D mesh",
+        "url": "https://3d-api.si.edu/content/document/3d_package:PARITY_PACKAGE/resources/parity-full.zip"
+      }
+    ]
+  },
+  "publicSearch": true,
+  "status": 3,
+  "title": "Parity Title",
+  "type": "3d_package",
+  "url": "edanmdm:parity_test_record"
+}

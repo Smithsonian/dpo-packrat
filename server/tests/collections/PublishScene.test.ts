@@ -3,7 +3,7 @@ import { PublishScene } from '../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 import { expectLogErrors } from '../logGate';
 
-// Hermetic coverage for the publish decision logic (TR-13): the EDAN search-flag
+// Hermetic coverage for the publish decision logic: the EDAN search-flag
 // matrix per ePublishedState (with license-gated downloads) and the
 // SystemObjectVersion published-state write. Both are exercised on a PublishScene
 // instance directly (no DB, no EDAN, no storage).

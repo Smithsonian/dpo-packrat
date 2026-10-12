@@ -1,0 +1,24 @@
+{
+  "digestAlgorithm": "sha512",
+  "head": "v1",
+  "id": "<id>",
+  "manifest": {
+    "v1/content/0=metadata.json": "<volatile-digest>",
+    "v1/content/Model_Test.obj": "947794f44324a2f43fde6b0f36cdc5caefc42805c85de002ff0f262291ae930544fafcd8b397f82d576c8648fc20d626e407d1cc84b8a8134792e23713d94c4c"
+  },
+  "type": "https://ocfl.io/1.0/spec/#inventory",
+  "versions": {
+    "v1": {
+      "created": "<date>",
+      "message": "Ingesting asset Model_Test.obj",
+      "state": {
+        "0=metadata.json": "<volatile-digest>",
+        "Model_Test.obj": "947794f44324a2f43fde6b0f36cdc5caefc42805c85de002ff0f262291ae930544fafcd8b397f82d576c8648fc20d626e407d1cc84b8a8134792e23713d94c4c"
+      },
+      "user": {
+        "address": "<redacted>",
+        "name": "<redacted>"
+      }
+    }
+  }
+}

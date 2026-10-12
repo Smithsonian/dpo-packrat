@@ -316,7 +316,7 @@ export function reportAssertionCoverage(testFile: string): void {
     }
 }
 
-// Enforcement (TR-0.8): fail a file that contains a test which made zero
+// Enforcement: fail a file that contains a test which made zero
 // assertions. Enabled now that the backlog is at zero. A test that genuinely
 // asserts nothing through jest's expect() (e.g. it asserts only via supertest's
 // request(...).expect(status)) must add an explicit expect(...) or, if truly

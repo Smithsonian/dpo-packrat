@@ -1,0 +1,41 @@
+{
+  "content": {
+    "descriptiveNonRepeating": {
+      "data_source": "Smithsonian Parity Test",
+      "online_media": {
+        "media": [],
+        "mediaCount": "0"
+      },
+      "record_ID": "parity_test_record",
+      "title": {
+        "content": "Parity Test Object",
+        "label": "Title"
+      },
+      "title_sort": "PARITY TEST OBJECT",
+      "unit_code": "DPO"
+    },
+    "freetext": {
+      "dataSource": [
+        {
+          "content": "Smithsonian Parity Test",
+          "label": "Data Source"
+        }
+      ],
+      "identifier": [
+        {
+          "content": "ark:/65665/parity-test",
+          "label": "ARK"
+        }
+      ]
+    },
+    "indexedStructured": {
+      "object_type": [
+        "3D Model"
+      ]
+    }
+  },
+  "publicSearch": true,
+  "status": 3,
+  "type": "edanmdm",
+  "url": "edanmdm:parity_test_record"
+}

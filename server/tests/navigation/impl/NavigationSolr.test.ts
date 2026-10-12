@@ -4,7 +4,7 @@ import { NavigationFilter, MetadataFilter } from '../../../navigation/interface'
 import * as COMMON from '@dpo-packrat/common';
 import { expectLogErrors } from '../../logGate';
 
-// Hermetic coverage for the Solr-backed search path (TR-14). The solr-client
+// Hermetic coverage for the Solr-backed search path. The solr-client
 // Query builds offline; only Client.search() reaches the network, so mocking it
 // exercises (a) the query the resolver constructs for each filter dimension, and
 // (b) the parsing of a Solr response into navigation/metadata entries — with no

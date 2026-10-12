@@ -5,7 +5,7 @@ import * as COMMON from '@dpo-packrat/common';
 import { expectLogErrors } from '../logGate';
 
 // Hermetic coverage for the Cook-output validation gate that guards the
-// post-Cook persist/OCFL-write path (TR-12). verifyIncomingCookData decides
+// post-Cook persist/OCFL-write path. verifyIncomingCookData decides
 // whether a si-generate-downloads Cook response is complete and consistent
 // before its files are ingested; a regression here would let a bad/renamed
 // download set through (or reject a good one) — a migration-parity risk.

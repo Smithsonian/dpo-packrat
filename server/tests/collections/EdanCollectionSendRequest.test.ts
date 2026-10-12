@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-var-requires */
-// Hermetic coverage for the throttle-aware retry loop in EdanCollection.sendRequest
-// (TR-13). node-fetch is mocked for responses; setTimeout is stubbed to fire
+// Hermetic coverage for the throttle-aware retry loop in EdanCollection.sendRequest.
+// node-fetch is mocked for responses; setTimeout is stubbed to fire
 // immediately (and capture the requested wait) so the backoff never runs in real
 // time. Retryable statuses (401/408/429/503) retry with backoff / Retry-After;
 // non-retryable statuses and eventual success return immediately.

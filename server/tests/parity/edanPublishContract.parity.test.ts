@@ -3,7 +3,7 @@ import { PublishScene } from '../../collections/impl/PublishScene';
 import * as COMMON from '@dpo-packrat/common';
 import { parityCheck } from './parityHarness';
 
-// Parity surface: the EDAN publish flag matrix (TR-15a). computeEdanSearchFlags
+// Parity surface: the EDAN publish flag matrix. computeEdanSearchFlags
 // maps (published state x license restrict level) -> { status, publicSearch,
 // downloads } — the contract that decides how a scene appears on/off the 3D site
 // and whether downloads are offered. It is pure (no DB/EDAN/storage), so it is
