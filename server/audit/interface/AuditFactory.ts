@@ -49,6 +49,31 @@ export type EmitSemanticArgs = Omit<EmitArgs, 'actor'> & { actor?: Actor };
  * side effects via SystemObjectInvalidation.
  */
 export class AuditFactory {
+    // Test-only ambient Actor. In NODE_ENV==='test' only, audit rows are attributed
+    // to this Actor when none reached LocalStore — jest's ASL.enterWith does not
+    // reliably survive the async hops Prisma's $transaction introduces, so a CRUD
+    // mutation's store can arrive without its Actor. Never consulted outside tests,
+    // so production actor resolution is unchanged. Seeded by the test harness.
+    private static testFallbackActor: Actor | undefined = undefined;
+
+    static setTestFallbackActor(actor: Actor | undefined): void {
+        AuditFactory.testFallbackActor = actor;
+    }
+
+    // Resolve the Actor for a LocalStore-driven emit: the store's Actor if present,
+    // else the test ambient Actor (test env only), else a warn + system:Unknown so
+    // the row still lands and the gap stays searchable.
+    private static resolveStoreActor(actor: Actor | undefined, warnLabel: string, warnPayload: Record<string, unknown>): Actor {
+        if (actor)
+            return actor;
+        if (process.env.NODE_ENV === 'test' && AuditFactory.testFallbackActor)
+            return AuditFactory.testFallbackActor;
+        RK.logWarning(RK.LogSection.eAUDIT, warnLabel,
+            'no Actor on LocalStore; substituting system:Unknown — entry-point should establish an Actor',
+            warnPayload, 'Audit.Factory');
+        return Actor.system('Unknown');
+    }
+
     /**
      * Write an audit row.
      *
@@ -207,13 +232,9 @@ export class AuditFactory {
         // Fall back to system:Unknown when no Actor can be resolved from
         // LocalStore — keeps the row intact and searchable rather than
         // dropping the emit when the entry-point didn't establish an Actor.
-        let actor: Actor | undefined = args.actor ?? ASL.getStore()?.getActor();
-        if (!actor) {
-            RK.logWarning(RK.LogSection.eAUDIT, 'emitSemantic fallback actor used',
-                'no Actor on LocalStore; substituting system:Unknown — entry-point should establish an Actor',
-                { action: args.action, target: args.target }, 'Audit.Factory');
-            actor = Actor.system('Unknown');
-        }
+        const actor: Actor = AuditFactory.resolveStoreActor(
+            args.actor ?? ASL.getStore()?.getActor(),
+            'emitSemantic fallback actor used', { action: args.action, target: args.target });
         return AuditFactory.emit({ ...args, actor });
     }
 
@@ -385,18 +406,11 @@ export class AuditFactory {
      */
     static async audit(obj: any, oID: ObjectIDAndType, key: eEventKey): Promise<boolean> {
         const LS = ASL.getStore();
-        // Fall back to system:Unknown when no Actor can be resolved — keeps the
-        // audit row intact rather than dropping it when LocalStore is missing
-        // (e.g. test scopes where ASL.enterWith() didn't propagate across an
-        // async boundary). Production HTTP middleware / withActor always set
-        // an Actor so this branch should never fire in production paths.
-        let actor: Actor | undefined = LS?.getActor();
-        if (!actor) {
-            RK.logWarning(RK.LogSection.eAUDIT, 'audit fallback actor used',
-                'no Actor on LocalStore; substituting system:Unknown — entry-point should establish an Actor',
-                { oID, key }, 'Audit.Factory');
-            actor = Actor.system('Unknown');
-        }
+        // Resolve the Actor from LocalStore. In tests the harness-seeded ambient
+        // Actor stands in when ASL.enterWith() didn't propagate across an async
+        // boundary; in production HTTP middleware / withActor always set an Actor,
+        // so the system:Unknown branch should never fire there.
+        const actor: Actor = AuditFactory.resolveStoreActor(LS?.getActor(), 'audit fallback actor used', { oID, key });
 
         return AuditFactory.emit({
             action: AuditFactory.keyToAuditType(key),

@@ -50,12 +50,18 @@ describe('AuditFactory.emitSemantic', () => {
     });
 
     test('falls back to system:Unknown actor when none on LocalStore', async () => {
-        // Run inside a fresh, actor-less LocalStore so the global jest.setup
-        // testLS doesn't satisfy the resolution path.
-        await ASL.run(new LocalStore(true, null), async () => {
-            const ok = await AuditFactory.emitSemantic({ action: eAuditType.eActionPublish });
-            expect(ok).toBe(true);
-        });
+        // Verify the real production fallback, so disable the harness's test ambient
+        // Actor for this case; run inside a fresh, actor-less LocalStore so the global
+        // jest.setup testLS doesn't satisfy the resolution path either.
+        AuditFactory.setTestFallbackActor(undefined);
+        try {
+            await ASL.run(new LocalStore(true, null), async () => {
+                const ok = await AuditFactory.emitSemantic({ action: eAuditType.eActionPublish });
+                expect(ok).toBe(true);
+            });
+        } finally {
+            AuditFactory.setTestFallbackActor(Actor.system('JestTest'));
+        }
         expect(emitSpy).toHaveBeenCalledTimes(1);
         const args = emitSpy.mock.calls[0][0];
         expect(args.actor).toEqual(Actor.system('Unknown'));

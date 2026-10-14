@@ -3,6 +3,7 @@ import { RecordKeeper as RK } from '../records/recordKeeper';
 import { NavigationFactory } from '../navigation/interface/NavigationFactory';
 import { ASL, LocalStore } from '../utils/localStore';
 import { Actor } from '../audit/Actor';
+import { AuditFactory } from '../audit/interface/AuditFactory';
 import * as DBC from '../db/connection';
 import { Logger } from '../records/logger/log';
 import { installLogGate, assertNoUnexpectedLogs, mergeCapturedIntoBaseline, BASELINE_WRITE_MODE,
@@ -42,6 +43,9 @@ testLS.correlationId = 'jest-test-correlation';
 beforeAll(() => {
     testLS.actor = Actor.system('JestTest');
     ASL.enterWith(testLS);
+    // Attribute audit rows to the test Actor even when enterWith's store is lost
+    // across the async hops Prisma's $transaction introduces (test env only).
+    AuditFactory.setTestFallbackActor(Actor.system('JestTest'));
 });
 
 beforeEach(async () => {

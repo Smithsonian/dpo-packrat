@@ -133,12 +133,18 @@ describe('AuditFactory.audit legacy shim resolves actor from LocalStore', () => 
     });
 
     test('falls back to system:Unknown actor when no actor on the LocalStore', async () => {
-        // Run inside a fresh, actor-less LocalStore so the global jest.setup
-        // testLS doesn't satisfy the resolution path.
-        await ASL.run(new LocalStore(true, null), async () => {
-            const ok = await AuditFactory.audit({}, { idObject: 1, eObjectType: COMMON.eSystemObjectType.eScene }, eEventKey.eDBUpdate);
-            expect(ok).toBe(true);
-        });
+        // Verify the real production fallback, so disable the harness's test
+        // ambient Actor for this case; run inside a fresh, actor-less LocalStore so
+        // the global jest.setup testLS doesn't satisfy the resolution path either.
+        AuditFactory.setTestFallbackActor(undefined);
+        try {
+            await ASL.run(new LocalStore(true, null), async () => {
+                const ok = await AuditFactory.audit({}, { idObject: 1, eObjectType: COMMON.eSystemObjectType.eScene }, eEventKey.eDBUpdate);
+                expect(ok).toBe(true);
+            });
+        } finally {
+            AuditFactory.setTestFallbackActor(Actor.system('JestTest'));
+        }
         expect(createSpy).toHaveBeenCalledTimes(1);
         const data = createSpy.mock.calls[0][0].data;
         expect(data.SystemActor).toBe('Unknown');
