@@ -194,8 +194,10 @@ export class Logger {
                 Logger.rateManager = new RateManager<LogEntry>(rmConfig);
             }
         } else if(Logger.rateManager) {
-            // if we don't want a rate manager but have one, clean it up
-            // Logger.rateManager.stopRateManager();
+            // Switching the rate manager off: stop its processing and metrics loops and
+            // clear its queue before dropping the reference, otherwise the orphaned
+            // instance keeps its timers running and holds the event loop open.
+            Logger.rateManager.cleanup();
             Logger.rateManager = null;
         }
 
