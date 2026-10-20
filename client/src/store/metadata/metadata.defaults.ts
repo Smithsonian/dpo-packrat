@@ -26,6 +26,12 @@ const isXrayModality = (modality: number): boolean => {
     return XRAY_MODALITY_ENUMS.some(eVocab => modality === getId(eVocab));
 };
 
+// Dataset Use only applies to a Photogrammetry Image Set; other dataset types (e.g.
+// Color Card Image Set) hide the field and carry an empty '[]' value. Resolve the
+// vocabulary id at validation time so the requirement is skipped for those types.
+const isPhotogrammetryImageSet = (datasetType: number): boolean =>
+    datasetType === useVocabularyStore.getState().getVocabularyId(eVocabularyID.eCaptureDataDatasetTypePhotogrammetryImageSet);
+
 const MAX_INTEGER = 2147483647;
 
 const identifierWhenSelectedValidation = {
@@ -153,7 +159,8 @@ export const photogrammetryFieldsSchemaUpdate = yup.object().shape({
     datasetUse: yup
         .string()
         .typeError('Must select at least one Dataset Use')
-        .test('not-empty-or-brackets', 'Must select at least one Dataset Use', value => {
+        .test('not-empty-or-brackets', 'Must select at least one Dataset Use', function (value) {
+            if (!isPhotogrammetryImageSet(this.parent.datasetType)) return true;
             return (value !== '') && (value !== '[]'); // indices into Vocabulary: alignment, reconstruction, texture generation
         }),
 });

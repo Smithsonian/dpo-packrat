@@ -129,6 +129,7 @@ JTConfig
 
 ### Environment Setup Scripts ###
 *.bat
+server/test.env.sh
 
 ### GitHub Secrets File ###
 .github/workflows/.secrets
