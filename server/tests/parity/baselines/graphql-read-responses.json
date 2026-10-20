@@ -1,0 +1,1198 @@
+{
+  "assetDetailsModel": {
+    "assetDetailRows": [
+      {
+        "assetType": "ARK",
+        "dateCreated": "<date>",
+        "filePath": "<path>",
+        "hash": "OA Test",
+        "idAsset": "<id>",
+        "idAssetVersion": "<id>",
+        "idSystemObject": "<id>",
+        "link": {
+          "icon": 1,
+          "label": null,
+          "origin": 2,
+          "path": "<path>"
+        },
+        "name": {
+          "icon": null,
+          "label": "OA Test assetVersion2",
+          "origin": 1,
+          "path": "<path>"
+        },
+        "retired": false,
+        "size": "500",
+        "version": 1
+      },
+      {
+        "assetType": "ARK",
+        "dateCreated": "<date>",
+        "filePath": "<path>",
+        "hash": "OA Test",
+        "idAsset": "<id>",
+        "idAssetVersion": "<id>",
+        "idSystemObject": "<id>",
+        "link": {
+          "icon": 1,
+          "label": null,
+          "origin": 2,
+          "path": "<path>"
+        },
+        "name": {
+          "icon": null,
+          "label": "OA Test assetVersion3",
+          "origin": 1,
+          "path": "<path>"
+        },
+        "retired": false,
+        "size": "500",
+        "version": 1
+      },
+      {
+        "assetType": "ARK",
+        "dateCreated": "<date>",
+        "filePath": "<path>",
+        "hash": "OA Test",
+        "idAsset": "<id>",
+        "idAssetVersion": "<id>",
+        "idSystemObject": "<id>",
+        "link": {
+          "icon": 1,
+          "label": null,
+          "origin": 2,
+          "path": "<path>"
+        },
+        "name": {
+          "icon": null,
+          "label": "OA Test assetVersion4",
+          "origin": 1,
+          "path": "<path>"
+        },
+        "retired": false,
+        "size": "500",
+        "version": 1
+      },
+      {
+        "assetType": "ARK",
+        "dateCreated": "<date>",
+        "filePath": "<path>",
+        "hash": "OA Test",
+        "idAsset": "<id>",
+        "idAssetVersion": "<id>",
+        "idSystemObject": "<id>",
+        "link": {
+          "icon": 1,
+          "label": null,
+          "origin": 2,
+          "path": "<path>"
+        },
+        "name": {
+          "icon": null,
+          "label": "OA Test assetVersionT4",
+          "origin": 1,
+          "path": "<path>"
+        },
+        "retired": false,
+        "size": "500",
+        "version": 1
+      }
+    ],
+    "columns": [
+      {
+        "colAlign": "center",
+        "colDisplay": true,
+        "colLabel": "Asset Type",
+        "colName": "assetType",
+        "colType": 0
+      },
+      {
+        "colAlign": "center",
+        "colDisplay": true,
+        "colLabel": "Date Created",
+        "colName": "dateCreated",
+        "colType": 4
+      },
+      {
+        "colAlign": "center",
+        "colDisplay": true,
+        "colLabel": "Hash",
+        "colName": "hash",
+        "colType": 6
+      },
+      {
+        "colAlign": "center",
+        "colDisplay": true,
+        "colLabel": "Link",
+        "colName": "link",
+        "colType": 3
+      },
+      {
+        "colAlign": "center",
+        "colDisplay": true,
+        "colLabel": "Size",
+        "colName": "size",
+        "colType": 5
+      },
+      {
+        "colAlign": "center",
+        "colDisplay": true,
+        "colLabel": "Version",
+        "colName": "version",
+        "colType": 1
+      },
+      {
+        "colAlign": "left",
+        "colDisplay": true,
+        "colLabel": "Name",
+        "colName": "name",
+        "colType": 3
+      },
+      {
+        "colAlign": "left",
+        "colDisplay": true,
+        "colLabel": "Path",
+        "colName": "filePath",
+        "colType": 0
+      }
+    ]
+  },
+  "detailsItem": {
+    "allowed": true,
+    "allowedReason": null,
+    "asset": null,
+    "assetOwner": null,
+    "derivedObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test captureData1",
+        "objectType": 5,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model1",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model2",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model3",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model4",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test scene1",
+        "objectType": 7,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test",
+        "objectType": 5,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "edanRecordId": null,
+    "edanRecordUrl": null,
+    "edanUnitCode": null,
+    "idObject": "<id>",
+    "idSystemObject": "<id>",
+    "identifiers": [],
+    "isDraft": false,
+    "item": null,
+    "license": {
+      "Description": "Restricted, Not Publishable",
+      "Name": "Restricted, Not Publishable",
+      "RestrictLevel": 1000,
+      "idLicense": "<id>"
+    },
+    "licenseInheritance": "<id>",
+    "metadata": [],
+    "name": "OA Test item1",
+    "objectAncestors": [
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test item1",
+          "objectType": 4
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test project1",
+          "objectType": 2
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test subject1",
+          "objectType": 3
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test unit1",
+          "objectType": 1
+        }
+      ]
+    ],
+    "objectProperties": [],
+    "objectType": 4,
+    "objectVersions": [],
+    "project": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test project1",
+        "objectType": 2
+      }
+    ],
+    "publishBlocker": null,
+    "publishControlVisible": true,
+    "publishable": false,
+    "publishedEnum": 0,
+    "publishedState": "Not Published",
+    "retired": false,
+    "sourceObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": "<id>",
+        "name": "OA Test subject1",
+        "objectType": 3,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test project1",
+        "objectType": 2,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "subTitle": "",
+    "subject": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test subject1",
+        "objectType": 3
+      }
+    ],
+    "subjectUnitMismatch": false,
+    "thumbnail": null,
+    "unit": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test unit1",
+        "objectType": 1
+      }
+    ]
+  },
+  "detailsModel": {
+    "allowed": true,
+    "allowedReason": null,
+    "asset": null,
+    "assetOwner": null,
+    "derivedObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model2",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model3",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model4",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test scene1",
+        "objectType": 7,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "edanRecordId": null,
+    "edanRecordUrl": null,
+    "edanUnitCode": null,
+    "idObject": "<id>",
+    "idSystemObject": "<id>",
+    "identifiers": [],
+    "isDraft": false,
+    "item": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test item1",
+        "objectType": 4
+      }
+    ],
+    "license": {
+      "Description": "Restricted, Not Publishable",
+      "Name": "Restricted, Not Publishable",
+      "RestrictLevel": 1000,
+      "idLicense": "<id>"
+    },
+    "licenseInheritance": "<id>",
+    "metadata": [],
+    "name": "OA Test model1",
+    "objectAncestors": [
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test captureData1",
+          "objectType": 5
+        },
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test",
+          "objectType": 5
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test item1",
+          "objectType": 4
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test model1",
+          "objectType": 6
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test project1",
+          "objectType": 2
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test subject1",
+          "objectType": 3
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test unit1",
+          "objectType": 1
+        }
+      ]
+    ],
+    "objectProperties": [],
+    "objectType": 6,
+    "objectVersions": [],
+    "project": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test project1",
+        "objectType": 2
+      }
+    ],
+    "publishBlocker": null,
+    "publishControlVisible": true,
+    "publishable": false,
+    "publishedEnum": 0,
+    "publishedState": "Not Published",
+    "retired": false,
+    "sourceObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test captureData1",
+        "objectType": 5,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test item1",
+        "objectType": 4,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test",
+        "objectType": 5,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "subTitle": "",
+    "subject": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test subject1",
+        "objectType": 3
+      }
+    ],
+    "subjectUnitMismatch": false,
+    "thumbnail": null,
+    "unit": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test unit1",
+        "objectType": 1
+      }
+    ]
+  },
+  "detailsScene": {
+    "allowed": true,
+    "allowedReason": null,
+    "asset": null,
+    "assetOwner": null,
+    "derivedObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model2",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model3",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model4",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "edanRecordId": null,
+    "edanRecordUrl": null,
+    "edanUnitCode": null,
+    "idObject": "<id>",
+    "idSystemObject": "<id>",
+    "identifiers": [],
+    "isDraft": false,
+    "item": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test item1",
+        "objectType": 4
+      }
+    ],
+    "license": {
+      "Description": "Restricted, Not Publishable",
+      "Name": "Restricted, Not Publishable",
+      "RestrictLevel": 1000,
+      "idLicense": "<id>"
+    },
+    "licenseInheritance": "<id>",
+    "metadata": [],
+    "name": "OA Test scene1",
+    "objectAncestors": [
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test captureData1",
+          "objectType": 5
+        },
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test model1",
+          "objectType": 6
+        },
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test",
+          "objectType": 5
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test item1",
+          "objectType": 4
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test project1",
+          "objectType": 2
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test scene1",
+          "objectType": 7
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test subject1",
+          "objectType": 3
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test unit1",
+          "objectType": 1
+        }
+      ]
+    ],
+    "objectProperties": [],
+    "objectType": 7,
+    "objectVersions": [],
+    "project": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test project1",
+        "objectType": 2
+      }
+    ],
+    "publishBlocker": "License not defined or does not allow publishing | EDAN Record ID: No EDAN Record ID found in SVX or DB",
+    "publishControlVisible": true,
+    "publishable": false,
+    "publishedEnum": 0,
+    "publishedState": "Not Published",
+    "retired": false,
+    "sourceObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test item1",
+        "objectType": 4,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test model1",
+        "objectType": 6,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "subTitle": "",
+    "subject": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test subject1",
+        "objectType": 3
+      }
+    ],
+    "subjectUnitMismatch": false,
+    "thumbnail": null,
+    "unit": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test unit1",
+        "objectType": 1
+      }
+    ]
+  },
+  "detailsSubject": {
+    "allowed": true,
+    "allowedReason": null,
+    "asset": null,
+    "assetOwner": null,
+    "derivedObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test item1",
+        "objectType": 4,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test item2",
+        "objectType": 4,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "edanRecordId": null,
+    "edanRecordUrl": null,
+    "edanUnitCode": "DPO",
+    "idObject": "<id>",
+    "idSystemObject": "<id>",
+    "identifiers": [
+      {
+        "idIdentifier": "<id>",
+        "identifier": "<id>",
+        "identifierType": "<id>"
+      }
+    ],
+    "isDraft": false,
+    "item": null,
+    "license": {
+      "Description": "SI ToU, Publishable w/ Downloads",
+      "Name": "SI ToU, Publishable w/ Downloads",
+      "RestrictLevel": 20,
+      "idLicense": "<id>"
+    },
+    "licenseInheritance": null,
+    "metadata": [],
+    "name": "OA Test subject1",
+    "objectAncestors": [
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test subject1",
+          "objectType": 3
+        }
+      ],
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test unit1",
+          "objectType": 1
+        }
+      ]
+    ],
+    "objectProperties": [],
+    "objectType": 3,
+    "objectVersions": [],
+    "project": null,
+    "publishBlocker": "No EDAN Record ID",
+    "publishControlVisible": true,
+    "publishable": false,
+    "publishedEnum": 0,
+    "publishedState": "Not Published",
+    "retired": false,
+    "sourceObjects": [],
+    "subTitle": null,
+    "subject": null,
+    "subjectUnitMismatch": true,
+    "thumbnail": null,
+    "unit": [
+      {
+        "idSystemObject": "<id>",
+        "name": "OA Test unit1",
+        "objectType": 1
+      }
+    ]
+  },
+  "detailsTabItem": {
+    "Actor": null,
+    "Asset": null,
+    "AssetVersion": null,
+    "CaptureData": null,
+    "IntermediaryFile": null,
+    "Item": {
+      "EntireSubject": true
+    },
+    "Model": null,
+    "Project": null,
+    "ProjectDocumentation": null,
+    "Scene": null,
+    "Stakeholder": null,
+    "Subject": null,
+    "Unit": null
+  },
+  "detailsTabModel": {
+    "Actor": null,
+    "Asset": null,
+    "AssetVersion": null,
+    "CaptureData": null,
+    "IntermediaryFile": null,
+    "Item": null,
+    "Model": {
+      "Model": {
+        "CountAnimations": 0,
+        "CountCameras": 0,
+        "CountEmbeddedTextures": 0,
+        "CountFaces": 0,
+        "CountLights": 0,
+        "CountLinkedTextures": 0,
+        "CountMaterials": 0,
+        "CountMeshes": 0,
+        "CountTriangles": 0,
+        "CountVertices": 0,
+        "DateCreated": "<date>",
+        "FileEncoding": "BINARY",
+        "IsDracoCompressed": false,
+        "Name": "OA Test model1",
+        "Variant": "[]",
+        "idModel": "<id>",
+        "idVCreationMethod": "<id>",
+        "idVFileType": "<id>",
+        "idVModality": "<id>",
+        "idVPurpose": "<id>",
+        "idVUnits": "<id>"
+      },
+      "ModelAssets": [
+        {
+          "AssetName": "OA Test assetVersion2",
+          "AssetType": "Model"
+        },
+        {
+          "AssetName": "OA Test assetVersion3",
+          "AssetType": "Model"
+        },
+        {
+          "AssetName": "OA Test assetVersion4",
+          "AssetType": "Model"
+        },
+        {
+          "AssetName": "OA Test assetVersionT4",
+          "AssetType": "Model"
+        }
+      ],
+      "ModelMaterialChannels": null,
+      "ModelMaterials": null,
+      "ModelObjectModelMaterialXref": null,
+      "ModelObjects": []
+    },
+    "Project": null,
+    "ProjectDocumentation": null,
+    "Scene": null,
+    "Stakeholder": null,
+    "Subject": null,
+    "Unit": null
+  },
+  "detailsUnit": {
+    "allowed": true,
+    "allowedReason": null,
+    "asset": null,
+    "assetOwner": null,
+    "derivedObjects": [
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test stakeholder1",
+        "objectType": 13,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      },
+      {
+        "idSystemObject": "<id>",
+        "identifier": null,
+        "name": "OA Test stakeholder2",
+        "objectType": 13,
+        "retired": false,
+        "type": "",
+        "variant": ""
+      }
+    ],
+    "edanRecordId": null,
+    "edanRecordUrl": null,
+    "edanUnitCode": null,
+    "idObject": "<id>",
+    "idSystemObject": "<id>",
+    "identifiers": [],
+    "isDraft": false,
+    "item": null,
+    "license": {
+      "Description": "CC0, Publishable w/ Downloads",
+      "Name": "CC0, Publishable w/ Downloads",
+      "RestrictLevel": 10,
+      "idLicense": "<id>"
+    },
+    "licenseInheritance": null,
+    "metadata": [],
+    "name": "OA Test unit1",
+    "objectAncestors": [
+      [
+        {
+          "idSystemObject": "<id>",
+          "name": "OA Test unit1",
+          "objectType": 1
+        }
+      ]
+    ],
+    "objectProperties": [],
+    "objectType": 1,
+    "objectVersions": [],
+    "project": null,
+    "publishBlocker": null,
+    "publishControlVisible": true,
+    "publishable": false,
+    "publishedEnum": 0,
+    "publishedState": "Not Published",
+    "retired": false,
+    "sourceObjects": [],
+    "subTitle": null,
+    "subject": null,
+    "subjectUnitMismatch": false,
+    "thumbnail": null,
+    "unit": null
+  },
+  "license": {
+    "License": {
+      "Description": "CC0, Publishable w/ Downloads",
+      "Name": "CC0, Publishable w/ Downloads",
+      "RestrictLevel": 10,
+      "idLicense": "<id>"
+    }
+  },
+  "objectsForItem": {
+    "CaptureData": [],
+    "IntermediaryFile": [],
+    "Model": [],
+    "ProjectDocumentation": [],
+    "Scene": []
+  },
+  "projectDocumentation": {
+    "ProjectDocumentation": {
+      "idProjectDocumentation": "<id>"
+    }
+  },
+  "subjectsForUnit": {
+    "Subject": [
+      {
+        "Name": "OA Test subject1",
+        "idSubject": "<id>"
+      },
+      {
+        "Name": "OA Test subject2",
+        "idSubject": "<id>"
+      }
+    ]
+  },
+  "unit": {
+    "Unit": {
+      "idUnit": "<id>"
+    }
+  },
+  "vocabularyEntries": {
+    "VocabularyEntries": [
+      {
+        "Vocabulary": [
+          {
+            "Term": "Accession #",
+            "eVocabID": 3,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Accession Number",
+            "eVocabID": 4,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Archives Collection Number",
+            "eVocabID": 5,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "ARK",
+            "eVocabID": null,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Bank Charter Number",
+            "eVocabID": 6,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Barcode",
+            "eVocabID": 7,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Call Number",
+            "eVocabID": 8,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Catalog ID",
+            "eVocabID": 9,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Catalog Number",
+            "eVocabID": 10,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Collector/Donor Number",
+            "eVocabID": 11,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Control Number",
+            "eVocabID": 12,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Design Patent Number",
+            "eVocabID": 13,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Designer Number",
+            "eVocabID": 14,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "DOI",
+            "eVocabID": 1,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Edan Record ID",
+            "eVocabID": 2,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Field Identifier",
+            "eVocabID": 15,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "GUID",
+            "eVocabID": 16,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "ID Number",
+            "eVocabID": 17,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Identifier",
+            "eVocabID": 18,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Image ID",
+            "eVocabID": 19,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Image Number",
+            "eVocabID": 20,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Inventory Number",
+            "eVocabID": 21,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "ISBN",
+            "eVocabID": 22,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "ISSN",
+            "eVocabID": 23,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Label Number",
+            "eVocabID": 24,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "License Number",
+            "eVocabID": 25,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Local Number",
+            "eVocabID": 26,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Maker Number",
+            "eVocabID": 27,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Model Number",
+            "eVocabID": 28,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Nonaccession Number",
+            "eVocabID": 29,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Object Number",
+            "eVocabID": 30,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Original Object Identifier",
+            "eVocabID": 31,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Other Numbers",
+            "eVocabID": 32,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Patent Number",
+            "eVocabID": 33,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Plate Letters",
+            "eVocabID": 34,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Plate Number",
+            "eVocabID": 35,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Publisher Number",
+            "eVocabID": 36,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Record ID",
+            "eVocabID": 37,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Record Number",
+            "eVocabID": 38,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Serial Number",
+            "eVocabID": 39,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Series Standard Number",
+            "eVocabID": 40,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Standard Number",
+            "eVocabID": 41,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "USNM Number",
+            "eVocabID": 42,
+            "idVocabulary": "<id>"
+          }
+        ],
+        "eVocabSetID": 15
+      },
+      {
+        "Vocabulary": [
+          {
+            "Term": "Laser Line",
+            "eVocabID": 66,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Photogrammetry",
+            "eVocabID": 63,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Spherical Laser",
+            "eVocabID": 67,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Structured Light",
+            "eVocabID": 65,
+            "idVocabulary": "<id>"
+          },
+          {
+            "Term": "Volumetric",
+            "eVocabID": 64,
+            "idVocabulary": "<id>"
+          }
+        ],
+        "eVocabSetID": 0
+      }
+    ]
+  }
+}

@@ -60,8 +60,13 @@ export class RecordKeeper {
             // get our log path from the config
             const logPath: string = path.resolve(Config.log.root ? Config.log.root : /* istanbul ignore next */ './var/logs');
 
-            // our default Logger configuration options
-            const useRateManager: boolean = true;           // do we manage our log output for greater consistency
+            // Log output is rate-managed in real environments for consistent throughput.
+            // Under Jest the throttled drain dominates teardown (afterEach/afterAll wait
+            // for the queue to empty), so tests log synchronously — unless a throughput
+            // test opts back in via PACKRAT_TEST_LOG_RATE_MANAGER=1 to exercise the manager.
+            const useRateManager: boolean = Config.environment.isJest
+                ? process.env.PACKRAT_TEST_LOG_RATE_MANAGER === '1'
+                : true;
             targetRate = Config.log.targetRate;             // 100-500/sec
             burstRate = targetRate * 2;
             burstThreshold = burstRate;
@@ -92,7 +97,7 @@ export class RecordKeeper {
 
             const emailResults = NOTIFY.configureEmail(Config.environment.type,targetRate,burstRate,burstThreshold);
             if(emailResults.success===false) {
-                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'Recordkeeper');
+                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Email notifications failed: ${emailResults.message}`, { environment, ...emailResults.data }, 'RecordKeeper');
                 RecordKeeper.systemConfig.notifyEmail = false;
                 return emailResults;
             }
@@ -116,7 +121,7 @@ export class RecordKeeper {
 
             const slackResults = NOTIFY.configureSlack(environment,Config.slack.apiKey,Config.slack.channels,targetRate);
             if(slackResults.success===false) {
-                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'Recordkeeper');
+                RecordKeeper.logError(RecordKeeper.LogSection.eSYS, 'system config failed', `Slack notifications failed: ${slackResults.message}`, { environment, ...slackResults.data }, 'RecordKeeper');
                 RecordKeeper.systemConfig.notifySlack = false;
                 return slackResults;
             }

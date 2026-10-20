@@ -10,18 +10,12 @@ const getSceneTest = (utils: TestSuiteUtils): void => {
     });
 
     describe('Query: getScene', () => {
-        test('should work with valid input', async () => {
-            const input: GetSceneInput = {
-                idScene: 0
-            };
-
+        test('returns null for a non-existent id', async () => {
+            // Positive retrieval needs a scene fixture with backing files (record
+            // building logs Utils.Scene errors without them); assert not-found here.
+            const input: GetSceneInput = { idScene: 0 };
             const { Scene }: GetSceneResult = await graphQLApi.getScene(input);
-
-            if (Scene) {
-                expect(Scene.idScene).toBe(0);
-            } else {
-                expect(Scene).toBe(null);
-            }
+            expect(Scene).toBeNull();
         });
     });
 };

@@ -5,6 +5,10 @@ import * as DBAPI from '../../../db';
 describe('Auth implementation: local login', () => {
     let httpServer: HttpServer | null = null;
 
+    afterAll(async () => {
+        await HttpServer.shutdown();
+    });
+
     test('initialize', async () => {
         httpServer = await HttpServer.getInstance();
         expect(httpServer).toBeTruthy();
@@ -85,6 +89,7 @@ describe('Auth implementation: local login', () => {
             password: null
         };
 
+        expect(httpServer).toBeTruthy();
         if (httpServer) {
             const response = await request(httpServer.app).post('/auth/login').send(authBody).expect(500);
             expect(response.accepted).toBe(false);

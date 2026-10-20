@@ -2,7 +2,7 @@ import fs from 'fs';
 import { join } from 'path';
 import { ZipFile } from '../../utils/zipFile';
 import * as H from '../../utils/helpers';
-import { getPackratTestFileSizeMap } from './parser/bagitReader.test';
+import { getPackratTestFileSizeMap } from './packratTestZip';
 
 const mockPath: string = join(__dirname, '../mock/utils/zip/');
 /*

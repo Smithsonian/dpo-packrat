@@ -17,17 +17,21 @@ const getItemForSubjectTest = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const unitInput = createUnitInput();
             const { Unit } = await graphQLApi.createUnit(unitInput);
+            expect(Unit).toBeTruthy();
 
             if (Unit) {
                 const subjectInput = createSubjectInput(Unit.idUnit);
                 const { Subject } = await graphQLApi.createSubject(subjectInput);
+                expect(Subject).toBeTruthy();
 
                 if (Subject) {
                     const input = {
                         idSubject: Subject.idSubject
                     };
                     const { Item } = await graphQLApi.getItemsForSubject(input);
-                    expect(Item).toBeTruthy();
+                    // A newly-created subject has no items yet.
+                    expect(Array.isArray(Item)).toBe(true);
+                    expect(Item.length).toBe(0);
                 }
             }
         });

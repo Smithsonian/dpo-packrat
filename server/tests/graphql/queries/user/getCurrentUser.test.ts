@@ -27,18 +27,17 @@ const getCurrentUser = (utils: TestSuiteUtils): void => {
             };
 
             const user = new DBAPI.User(userArgs);
-            if (await user.create()) {
-                const context: Context = {
-                    user,
-                    isAuthenticated: true
-                };
+            const created = await user.create();
+            expect(created).toBe(true);
 
-                const { User }: GetUserResult = await graphQLApi.getCurrentUser(context);
+            const context: Context = {
+                user,
+                isAuthenticated: true
+            };
 
-                if (User) {
-                    expect(User.idUser).toBe(user.idUser);
-                }
-            }
+            const { User }: GetUserResult = await graphQLApi.getCurrentUser(context);
+            expect(User).toBeTruthy();
+            expect(User?.idUser).toBe(user.idUser);
         });
 
         test('should return null with unauthenticated context', async () => {
@@ -56,16 +55,16 @@ const getCurrentUser = (utils: TestSuiteUtils): void => {
             };
 
             const user = new DBAPI.User(userArgs);
-            if (await user.create()) {
-                const context: Context = {
-                    user: undefined,
-                    isAuthenticated: false
-                };
+            const created = await user.create();
+            expect(created).toBe(true);
 
-                const { User }: GetUserResult = await graphQLApi.getCurrentUser(context);
+            const context: Context = {
+                user: undefined,
+                isAuthenticated: false
+            };
 
-                expect(User).toBe(null);
-            }
+            const { User }: GetUserResult = await graphQLApi.getCurrentUser(context);
+            expect(User).toBeNull();
         });
     });
 };

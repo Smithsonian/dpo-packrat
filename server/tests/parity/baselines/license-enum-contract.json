@@ -1,0 +1,26 @@
+[
+  {
+    "Name": "Restricted, Not Publishable",
+    "RestrictLevel": 1000,
+    "enum": "eRestricted",
+    "idLicense": 4
+  },
+  {
+    "Name": "CC0, Publishable w/ Downloads",
+    "RestrictLevel": 10,
+    "enum": "eViewDownloadCC0",
+    "idLicense": 1
+  },
+  {
+    "Name": "SI ToU, Publishable w/ Downloads",
+    "RestrictLevel": 20,
+    "enum": "eViewDownloadRestriction",
+    "idLicense": 2
+  },
+  {
+    "Name": "SI ToU, Publishable Only",
+    "RestrictLevel": 30,
+    "enum": "eViewOnly",
+    "idLicense": 3
+  }
+]

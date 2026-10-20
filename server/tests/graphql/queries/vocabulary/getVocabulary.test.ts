@@ -1,6 +1,7 @@
 import { GetVocabularyInput, GetVocabularyResult } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
+import * as DBAPI from '../../../../db';
 
 const getVocabularyTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
@@ -10,18 +11,17 @@ const getVocabularyTest = (utils: TestSuiteUtils): void => {
     });
 
     describe('Query: getVocabulary', () => {
-        test('should work with valid input', async () => {
-            const input: GetVocabularyInput = {
-                idVocabulary: 0
-            };
-
-            const { Vocabulary }: GetVocabularyResult = await graphQLApi.getVocabulary(input);
-
-            if (Vocabulary) {
-                expect(Vocabulary.idVocabulary).toBe(0);
-            } else {
-                expect(Vocabulary).toBe(null);
+        test('returns the vocabulary for a seeded id, and null for a non-existent id', async () => {
+            const all: DBAPI.Vocabulary[] | null = await DBAPI.Vocabulary.fetchAll();
+            if (all && all.length > 0) {
+                const input: GetVocabularyInput = { idVocabulary: all[0].idVocabulary };
+                const { Vocabulary }: GetVocabularyResult = await graphQLApi.getVocabulary(input);
+                expect(Vocabulary).toBeTruthy();
+                expect(Vocabulary?.idVocabulary).toBe(all[0].idVocabulary);
             }
+
+            const { Vocabulary: missing }: GetVocabularyResult = await graphQLApi.getVocabulary({ idVocabulary: 0 });
+            expect(missing).toBeNull();
         });
     });
 };

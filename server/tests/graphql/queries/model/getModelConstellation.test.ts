@@ -17,11 +17,8 @@ const getModelConstellationTest = (utils: TestSuiteUtils): void => {
 
             const { ModelConstellation }: GetModelConstellationResult = await graphQLApi.getModelConstellation(input);
 
-            if (ModelConstellation) {
-                expect(ModelConstellation.Model).toBeFalsy();
-            } else {
-                expect(ModelConstellation).toBe(null);
-            }
+            // A non-existent model yields no constellation (null) or one with no Model.
+            expect(ModelConstellation?.Model ?? null).toBeNull();
         });
     });
 };

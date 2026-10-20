@@ -1,6 +1,13 @@
 import { RecordKeeper as RK } from '../../records/recordKeeper';
 
-describe('Utils: Email', () => {
+// SKIP_REASON: live SMTP. This test initializes the email subsystem and sends to
+// smtp.si.edu, which opens a socket that is never closed — it blocks a clean jest
+// exit (the reason the suite needed --forceExit) and is off-network in CI (where it
+// "passed" by string-matching a DNS error). Opt-in only via PACKRAT_TEST_EMAIL=1.
+// (Audit A2: de-network/mock this path; the hardcoded-SMTP path may be dead.)
+const EMAIL_TESTS: boolean = process.env.PACKRAT_TEST_EMAIL === '1';
+
+(EMAIL_TESTS ? describe : describe.skip)('Utils: Email', () => {
     testSend();
 });
 

@@ -64,6 +64,16 @@ module.exports = {
     },
     overrides: [
         {
+            // Test code legitimately leans on non-null assertions (setup-guaranteed
+            // objects) and `any` (mock/prototype plumbing, walking arbitrary JSON),
+            // so these two type-strictness rules do not apply under server/tests.
+            files: ['server/tests/**/*.ts'],
+            rules: {
+                '@typescript-eslint/no-non-null-assertion': 'off',
+                '@typescript-eslint/no-explicit-any': 'off',
+            },
+        },
+        {
             // All audit writes must go through AuditFactory.emit(). Direct
             // prisma.audit.create / createMany calls bypass actor resolution,
             // tier policy, and idSystemObject population.

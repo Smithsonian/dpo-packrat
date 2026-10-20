@@ -1,0 +1,65 @@
+# Golden-record parity gate (TR-15 / TR-16).
+#
+# Runs the committed parity baselines (tests/parity/baselines/*) against a FRESH
+# Packrat_test seed and fails on any divergence. This is the migration cutover
+# instrument: capture on the current server (yarn test:parity:bless), commit, and
+# this job proves the outputs still match. It also catches an unblessed change to
+# the seed (Packrat.DATA.sql) or the publish-flag logic.
+#
+# Decoupled from the PR gate on purpose: it is a drift / pre-cutover check, so it
+# runs nightly and on demand rather than blocking every PR. A failure means either
+# a real regression or an intended change that needs a re-bless + commit of the
+# baselines.
+name: Parity Gate
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # nightly ~06:00 UTC
+  workflow_dispatch: {}    # manual / pre-cutover run
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:10.5
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: Packrat_test
+        ports:
+          - "3306:3306"
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup test DB
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test -e 'CREATE DATABASE IF NOT EXISTS Packrat_test'
+
+      - name: Setup test DB Schema
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat_test < server/db/sql/scripts/Packrat.SCHEMA.sql
+
+      - name: Setup test DB Proc
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat_test < server/db/sql/scripts/Packrat.PROC.sql
+
+      - name: Setup test DB Data
+        run: |
+          { echo 'SET autocommit=0; SET unique_checks=0; SET foreign_key_checks=0;'; cat server/db/sql/scripts/Packrat.DATA.sql; echo 'COMMIT;'; } | mysql -h 127.0.0.1 -P 3306 -u root --password=test --database=Packrat_test
+
+      - name: Setup node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.9.0
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile --network-timeout 600000
+
+      # Diff the current server's deterministic outputs against the committed
+      # baselines. A mismatch fails the job; re-bless with
+      # `cd server && yarn test:parity:bless` (and, for DB catalogs, a fresh seed)
+      # only when the change is intended, then commit tests/parity/baselines/.
+      - name: Run parity gate
+        run: yarn workspace @dpo-packrat/server test:parity
+        env:
+          PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat_test

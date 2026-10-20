@@ -194,8 +194,10 @@ export class Logger {
                 Logger.rateManager = new RateManager<LogEntry>(rmConfig);
             }
         } else if(Logger.rateManager) {
-            // if we don't want a rate manager but have one, clean it up
-            // Logger.rateManager.stopRateManager();
+            // Switching the rate manager off: stop its processing and metrics loops and
+            // clear its queue before dropping the reference, otherwise the orphaned
+            // instance keeps its timers running and holds the event loop open.
+            Logger.rateManager.cleanup();
             Logger.rateManager = null;
         }
 
@@ -298,6 +300,11 @@ export class Logger {
     public static async shutdown(): Promise<void> {
         Logger.state = LoggerState.CLOSING;
 
+        // Stop the metrics sampling loop. It runs `while (metricsIsRunning)` with
+        // an awaited timer, so leaving this true keeps a live timer on the event
+        // loop after shutdown and prevents the process from exiting cleanly.
+        Logger.metricsIsRunning = false;
+
         if (Logger.logger) {
             for (const transport of Logger.logger.transports) {
                 if (typeof transport.close === 'function') {
@@ -316,6 +323,20 @@ export class Logger {
         (Logger.transportMonitor) && clearTimeout(Logger.transportMonitor);
 
         Logger.state = LoggerState.OFFLINE;
+    }
+
+    /**
+     * Remove the console transport (keeping the file transport). Used by the test
+     * harness to keep run output clean: logs are still written to file and seen by
+     * the in-memory gate, they just don't flood stdout. No-op if not configured or
+     * no console transport is present.
+     */
+    public static suppressConsole(): void {
+        if (!Logger.logger)
+            return;
+        const consoleTransport = Logger.logger.transports.find(t => t instanceof transports.Console);
+        if (consoleTransport)
+            Logger.logger.remove(consoleTransport);
     }
 
     public static setDebugMode(value: boolean): void {

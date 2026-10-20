@@ -1,0 +1,1152 @@
+[
+  {
+    "Term": "Attachment",
+    "enum": "eAssetAssetTypeAttachment",
+    "idVocabulary": 141
+  },
+  {
+    "Term": "Bulk Ingestion",
+    "enum": "eAssetAssetTypeBulkIngestion",
+    "idVocabulary": 126
+  },
+  {
+    "Term": "Capture Data File",
+    "enum": "eAssetAssetTypeCaptureDataFile",
+    "idVocabulary": 134
+  },
+  {
+    "Term": "Capture Data Set: Dicom",
+    "enum": "eAssetAssetTypeCaptureDataSetDicom",
+    "idVocabulary": 129
+  },
+  {
+    "Term": "Capture Data Set: Diconde",
+    "enum": "eAssetAssetTypeCaptureDataSetDiconde",
+    "idVocabulary": 128
+  },
+  {
+    "Term": "Capture Data Set: Laser Line",
+    "enum": "eAssetAssetTypeCaptureDataSetLaserLine",
+    "idVocabulary": 130
+  },
+  {
+    "Term": "Capture Data Set: Other",
+    "enum": "eAssetAssetTypeCaptureDataSetOther",
+    "idVocabulary": 133
+  },
+  {
+    "Term": "Capture Data Set: Photogrammetry",
+    "enum": "eAssetAssetTypeCaptureDataSetPhotogrammetry",
+    "idVocabulary": 127
+  },
+  {
+    "Term": "Capture Data Set: Spherical Laser",
+    "enum": "eAssetAssetTypeCaptureDataSetSphericalLaser",
+    "idVocabulary": 131
+  },
+  {
+    "Term": "Capture Data Set: Structured Light",
+    "enum": "eAssetAssetTypeCaptureDataSetStructuredLight",
+    "idVocabulary": 132
+  },
+  {
+    "Term": "Capture Data Set: Volumetric",
+    "enum": "eAssetAssetTypeCaptureDataSetVolumetric",
+    "idVocabulary": 241
+  },
+  {
+    "Term": "Intermediary File",
+    "enum": "eAssetAssetTypeIntermediaryFile",
+    "idVocabulary": 140
+  },
+  {
+    "Term": "Model",
+    "enum": "eAssetAssetTypeModel",
+    "idVocabulary": 135
+  },
+  {
+    "Term": "Model Geometry File",
+    "enum": "eAssetAssetTypeModelGeometryFile",
+    "idVocabulary": 136
+  },
+  {
+    "Term": "Model UV Map File",
+    "enum": "eAssetAssetTypeModelUVMapFile",
+    "idVocabulary": 137
+  },
+  {
+    "Term": "Other",
+    "enum": "eAssetAssetTypeOther",
+    "idVocabulary": 142
+  },
+  {
+    "Term": "Project Documentation",
+    "enum": "eAssetAssetTypeProjectDocumentation",
+    "idVocabulary": 139
+  },
+  {
+    "Term": "Scene",
+    "enum": "eAssetAssetTypeScene",
+    "idVocabulary": 138
+  },
+  {
+    "Term": "Laser Line",
+    "enum": "eCaptureDataCaptureMethodLaserLine",
+    "idVocabulary": 4
+  },
+  {
+    "Term": "Photogrammetry",
+    "enum": "eCaptureDataCaptureMethodPhotogrammetry",
+    "idVocabulary": 1
+  },
+  {
+    "Term": "Spherical Laser",
+    "enum": "eCaptureDataCaptureMethodSphericalLaser",
+    "idVocabulary": 5
+  },
+  {
+    "Term": "Structured Light",
+    "enum": "eCaptureDataCaptureMethodStructuredLight",
+    "idVocabulary": 3
+  },
+  {
+    "Term": "Volumetric",
+    "enum": "eCaptureDataCaptureMethodVolumetric",
+    "idVocabulary": 2
+  },
+  {
+    "Term": "Background Removal Image Set",
+    "enum": "eCaptureDataDatasetTypeBackgroundRemovalImageSet",
+    "idVocabulary": 9
+  },
+  {
+    "Term": "Calibration Dataset",
+    "enum": "eCaptureDataDatasetTypeCalibrationDataset",
+    "idVocabulary": 10
+  },
+  {
+    "Term": "Color Card Image Set",
+    "enum": "eCaptureDataDatasetTypeColorCardImageSet",
+    "idVocabulary": 8
+  },
+  {
+    "Term": "Grey Card Image Set",
+    "enum": "eCaptureDataDatasetTypeGreyCardImageSet",
+    "idVocabulary": 7
+  },
+  {
+    "Term": "Photogrammetry Image Set",
+    "enum": "eCaptureDataDatasetTypePhotogrammetryImageSet",
+    "idVocabulary": 6
+  },
+  {
+    "Term": "Alignment",
+    "enum": "eCaptureDataDatasetUseAlignment",
+    "idVocabulary": 209
+  },
+  {
+    "Term": "Reconstruction",
+    "enum": "eCaptureDataDatasetUseReconstruction",
+    "idVocabulary": 210
+  },
+  {
+    "Term": "Texture Generation",
+    "enum": "eCaptureDataDatasetUseTextureGeneration",
+    "idVocabulary": 211
+  },
+  {
+    "Term": "From Camera",
+    "enum": "eCaptureDataFileVariantTypeFromCamera",
+    "idVocabulary": 31
+  },
+  {
+    "Term": "Masks",
+    "enum": "eCaptureDataFileVariantTypeMasks",
+    "idVocabulary": 208
+  },
+  {
+    "Term": "Processed",
+    "enum": "eCaptureDataFileVariantTypeProcessed",
+    "idVocabulary": 30
+  },
+  {
+    "Term": "Raw",
+    "enum": "eCaptureDataFileVariantTypeRaw",
+    "idVocabulary": 29
+  },
+  {
+    "Term": "DICOM",
+    "enum": "eCaptureDataVolumeContentTypeDICOM",
+    "idVocabulary": 224
+  },
+  {
+    "Term": "Image Stack",
+    "enum": "eCaptureDataVolumeContentTypeImageStack",
+    "idVocabulary": 223
+  },
+  {
+    "Term": "Other",
+    "enum": "eCaptureDataVolumeContentTypeOther",
+    "idVocabulary": 225
+  },
+  {
+    "Term": "Both",
+    "enum": "eCaptureDataVolumeFilterLocationBoth",
+    "idVocabulary": 229
+  },
+  {
+    "Term": "Collimator",
+    "enum": "eCaptureDataVolumeFilterLocationCollimator",
+    "idVocabulary": 242
+  },
+  {
+    "Term": "Detector Side",
+    "enum": "eCaptureDataVolumeFilterLocationDetectorSide",
+    "idVocabulary": 228
+  },
+  {
+    "Term": "None",
+    "enum": "eCaptureDataVolumeFilterLocationNone",
+    "idVocabulary": 226
+  },
+  {
+    "Term": "Source Side",
+    "enum": "eCaptureDataVolumeFilterLocationSourceSide",
+    "idVocabulary": 227
+  },
+  {
+    "Term": "Combo",
+    "enum": "eCaptureDataVolumeFilterMaterialCombo",
+    "idVocabulary": 249
+  },
+  {
+    "Term": "Iron",
+    "enum": "eCaptureDataVolumeFilterMaterialIron",
+    "idVocabulary": 248
+  },
+  {
+    "Term": "Zinc",
+    "enum": "eCaptureDataVolumeFilterMaterialZinc",
+    "idVocabulary": 247
+  },
+  {
+    "Term": "MRI",
+    "enum": "eCaptureDataVolumeModalityMRI",
+    "idVocabulary": 220
+  },
+  {
+    "Term": "Medical CT",
+    "enum": "eCaptureDataVolumeModalityMedicalCT",
+    "idVocabulary": 216
+  },
+  {
+    "Term": "Micro CT",
+    "enum": "eCaptureDataVolumeModalityMicroCT",
+    "idVocabulary": 217
+  },
+  {
+    "Term": "Nano CT",
+    "enum": "eCaptureDataVolumeModalityNanoCT",
+    "idVocabulary": 218
+  },
+  {
+    "Term": "Synchrotron",
+    "enum": "eCaptureDataVolumeModalitySynchrotron",
+    "idVocabulary": 219
+  },
+  {
+    "Term": "Raw",
+    "enum": "eCaptureDataVolumeScanTypeRaw",
+    "idVocabulary": 221
+  },
+  {
+    "Term": "Reconstructed",
+    "enum": "eCaptureDataVolumeScanTypeReconstructed",
+    "idVocabulary": 222
+  },
+  {
+    "Term": "Dry",
+    "enum": "eCaptureDataVolumeSpecimenPreparationDry",
+    "idVocabulary": 234
+  },
+  {
+    "Term": "Embedded",
+    "enum": "eCaptureDataVolumeSpecimenPreparationEmbedded",
+    "idVocabulary": 237
+  },
+  {
+    "Term": "Fluid-preserved",
+    "enum": "eCaptureDataVolumeSpecimenPreparationFluidPreserved",
+    "idVocabulary": 233
+  },
+  {
+    "Term": "Frozen",
+    "enum": "eCaptureDataVolumeSpecimenPreparationFrozen",
+    "idVocabulary": 236
+  },
+  {
+    "Term": "Live",
+    "enum": "eCaptureDataVolumeSpecimenPreparationLive",
+    "idVocabulary": 238
+  },
+  {
+    "Term": "None",
+    "enum": "eCaptureDataVolumeSpecimenPreparationNone",
+    "idVocabulary": 232
+  },
+  {
+    "Term": "Other",
+    "enum": "eCaptureDataVolumeSpecimenPreparationOther",
+    "idVocabulary": 239
+  },
+  {
+    "Term": "Stained",
+    "enum": "eCaptureDataVolumeSpecimenPreparationStained",
+    "idVocabulary": 235
+  },
+  {
+    "Term": "Heteropolyacid stains",
+    "enum": "eCaptureDataVolumeStainSubstanceHeteropolyacid",
+    "idVocabulary": 245
+  },
+  {
+    "Term": "Iodine-based stains",
+    "enum": "eCaptureDataVolumeStainSubstanceIodine",
+    "idVocabulary": 244
+  },
+  {
+    "Term": "Osmium-based stains",
+    "enum": "eCaptureDataVolumeStainSubstanceOsmium",
+    "idVocabulary": 246
+  },
+  {
+    "Term": "Micrometer",
+    "enum": "eCaptureDataVolumeVoxelSizeUnitMicrometer",
+    "idVocabulary": 230
+  },
+  {
+    "Term": "Millimeter",
+    "enum": "eCaptureDataVolumeVoxelSizeUnitMillimeter",
+    "idVocabulary": 231
+  },
+  {
+    "Term": "Nanometer",
+    "enum": "eCaptureDataVolumeVoxelSizeUnitNanometer",
+    "idVocabulary": 243
+  },
+  {
+    "Term": "glb",
+    "enum": "eEdan3DResourceAttributeFileTypeglb",
+    "idVocabulary": 180
+  },
+  {
+    "Term": "usdz",
+    "enum": "eEdan3DResourceAttributeFileTypeusdz",
+    "idVocabulary": 181
+  },
+  {
+    "Term": "zip",
+    "enum": "eEdan3DResourceAttributeFileTypezip",
+    "idVocabulary": 179
+  },
+  {
+    "Term": "glb",
+    "enum": "eEdan3DResourceAttributeModelFileTypeglb",
+    "idVocabulary": 175
+  },
+  {
+    "Term": "gltf",
+    "enum": "eEdan3DResourceAttributeModelFileTypegltf",
+    "idVocabulary": 177
+  },
+  {
+    "Term": "obj",
+    "enum": "eEdan3DResourceAttributeModelFileTypeobj",
+    "idVocabulary": 172
+  },
+  {
+    "Term": "ply",
+    "enum": "eEdan3DResourceAttributeModelFileTypeply",
+    "idVocabulary": 173
+  },
+  {
+    "Term": "stl",
+    "enum": "eEdan3DResourceAttributeModelFileTypestl",
+    "idVocabulary": 174
+  },
+  {
+    "Term": "usdz",
+    "enum": "eEdan3DResourceAttributeModelFileTypeusdz",
+    "idVocabulary": 178
+  },
+  {
+    "Term": "x3d",
+    "enum": "eEdan3DResourceAttributeModelFileTypex3d",
+    "idVocabulary": 176
+  },
+  {
+    "Term": "cm",
+    "enum": "eEdan3DResourceAttributeUnitscm",
+    "idVocabulary": 165
+  },
+  {
+    "Term": "ft",
+    "enum": "eEdan3DResourceAttributeUnitsft",
+    "idVocabulary": 169
+  },
+  {
+    "Term": "in",
+    "enum": "eEdan3DResourceAttributeUnitsin",
+    "idVocabulary": 168
+  },
+  {
+    "Term": "km",
+    "enum": "eEdan3DResourceAttributeUnitskm",
+    "idVocabulary": 167
+  },
+  {
+    "Term": "m",
+    "enum": "eEdan3DResourceAttributeUnitsm",
+    "idVocabulary": 166
+  },
+  {
+    "Term": "mi",
+    "enum": "eEdan3DResourceAttributeUnitsmi",
+    "idVocabulary": 171
+  },
+  {
+    "Term": "mm",
+    "enum": "eEdan3DResourceAttributeUnitsmm",
+    "idVocabulary": 164
+  },
+  {
+    "Term": "yd",
+    "enum": "eEdan3DResourceAttributeUnitsyd",
+    "idVocabulary": 170
+  },
+  {
+    "Term": "Full resolution",
+    "enum": "eEdan3DResourceCategoryFullresolution",
+    "idVocabulary": 184
+  },
+  {
+    "Term": "Low resolution",
+    "enum": "eEdan3DResourceCategoryLowresolution",
+    "idVocabulary": 186
+  },
+  {
+    "Term": "Medium resolution",
+    "enum": "eEdan3DResourceCategoryMediumresolution",
+    "idVocabulary": 185
+  },
+  {
+    "Term": "Watertight",
+    "enum": "eEdan3DResourceCategoryWatertight",
+    "idVocabulary": 187
+  },
+  {
+    "Term": "iOS AR model",
+    "enum": "eEdan3DResourceCategoryiOSARmodel",
+    "idVocabulary": 188
+  },
+  {
+    "Term": "3d mesh",
+    "enum": "eEdan3DResourceType3dmesh",
+    "idVocabulary": 182
+  },
+  {
+    "Term": "CAD model",
+    "enum": "eEdan3DResourceTypeCADmodel",
+    "idVocabulary": 183
+  },
+  {
+    "Term": "Data Source (FT)",
+    "enum": "eEdanMDMFieldsDataSourceFT",
+    "idVocabulary": 200
+  },
+  {
+    "Term": "Date",
+    "enum": "eEdanMDMFieldsDate",
+    "idVocabulary": 196
+  },
+  {
+    "Term": "Date (FT)",
+    "enum": "eEdanMDMFieldsDateFT",
+    "idVocabulary": 201
+  },
+  {
+    "Term": "Identifier (FT)",
+    "enum": "eEdanMDMFieldsIdentifierFT",
+    "idVocabulary": 199
+  },
+  {
+    "Term": "Label",
+    "enum": "eEdanMDMFieldsLabel",
+    "idVocabulary": 189
+  },
+  {
+    "Term": "License",
+    "enum": "eEdanMDMFieldsLicense",
+    "idVocabulary": 193
+  },
+  {
+    "Term": "License Text",
+    "enum": "eEdanMDMFieldsLicenseText",
+    "idVocabulary": 194
+  },
+  {
+    "Term": "Name (FT)",
+    "enum": "eEdanMDMFieldsNameFT",
+    "idVocabulary": 202
+  },
+  {
+    "Term": "Notes (FT)",
+    "enum": "eEdanMDMFieldsNotesFT",
+    "idVocabulary": 206
+  },
+  {
+    "Term": "Object Rights (FT)",
+    "enum": "eEdanMDMFieldsObjectRightsFT",
+    "idVocabulary": 203
+  },
+  {
+    "Term": "Object Type",
+    "enum": "eEdanMDMFieldsObjectType",
+    "idVocabulary": 195
+  },
+  {
+    "Term": "Physical Description (FT)",
+    "enum": "eEdanMDMFieldsPhysicalDescriptionFT",
+    "idVocabulary": 207
+  },
+  {
+    "Term": "Place",
+    "enum": "eEdanMDMFieldsPlace",
+    "idVocabulary": 197
+  },
+  {
+    "Term": "Place (FT)",
+    "enum": "eEdanMDMFieldsPlaceFT",
+    "idVocabulary": 204
+  },
+  {
+    "Term": "Record ID",
+    "enum": "eEdanMDMFieldsRecordID",
+    "idVocabulary": 191
+  },
+  {
+    "Term": "Taxonomic Name (FT)",
+    "enum": "eEdanMDMFieldsTaxonomicNameFT",
+    "idVocabulary": 205
+  },
+  {
+    "Term": "Title",
+    "enum": "eEdanMDMFieldsTitle",
+    "idVocabulary": 190
+  },
+  {
+    "Term": "Topic",
+    "enum": "eEdanMDMFieldsTopic",
+    "idVocabulary": 198
+  },
+  {
+    "Term": "Unit",
+    "enum": "eEdanMDMFieldsUnit",
+    "idVocabulary": 192
+  },
+  {
+    "Term": "ARK",
+    "enum": "eIdentifierIdentifierTypeARK",
+    "idVocabulary": 80
+  },
+  {
+    "Term": "Accession #",
+    "enum": "eIdentifierIdentifierTypeAccession",
+    "idVocabulary": 83
+  },
+  {
+    "Term": "Accession Number",
+    "enum": "eIdentifierIdentifierTypeAccessionNumber",
+    "idVocabulary": 84
+  },
+  {
+    "Term": "Archives Collection Number",
+    "enum": "eIdentifierIdentifierTypeArchivesCollectionNumber",
+    "idVocabulary": 85
+  },
+  {
+    "Term": "Bank Charter Number",
+    "enum": "eIdentifierIdentifierTypeBankCharterNumber",
+    "idVocabulary": 86
+  },
+  {
+    "Term": "Barcode",
+    "enum": "eIdentifierIdentifierTypeBarcode",
+    "idVocabulary": 87
+  },
+  {
+    "Term": "Call Number",
+    "enum": "eIdentifierIdentifierTypeCallNumber",
+    "idVocabulary": 88
+  },
+  {
+    "Term": "Catalog ID",
+    "enum": "eIdentifierIdentifierTypeCatalogID",
+    "idVocabulary": 89
+  },
+  {
+    "Term": "Catalog Number",
+    "enum": "eIdentifierIdentifierTypeCatalogNumber",
+    "idVocabulary": 90
+  },
+  {
+    "Term": "Collector/Donor Number",
+    "enum": "eIdentifierIdentifierTypeCollectorDonorNumber",
+    "idVocabulary": 91
+  },
+  {
+    "Term": "Control Number",
+    "enum": "eIdentifierIdentifierTypeControlNumber",
+    "idVocabulary": 92
+  },
+  {
+    "Term": "DOI",
+    "enum": "eIdentifierIdentifierTypeDOI",
+    "idVocabulary": 81
+  },
+  {
+    "Term": "Design Patent Number",
+    "enum": "eIdentifierIdentifierTypeDesignPatentNumber",
+    "idVocabulary": 93
+  },
+  {
+    "Term": "Designer Number",
+    "enum": "eIdentifierIdentifierTypeDesignerNumber",
+    "idVocabulary": 94
+  },
+  {
+    "Term": "Edan Record ID",
+    "enum": "eIdentifierIdentifierTypeEdanRecordID",
+    "idVocabulary": 82
+  },
+  {
+    "Term": "Field Identifier",
+    "enum": "eIdentifierIdentifierTypeFieldIdentifier",
+    "idVocabulary": 95
+  },
+  {
+    "Term": "GUID",
+    "enum": "eIdentifierIdentifierTypeGUID",
+    "idVocabulary": 96
+  },
+  {
+    "Term": "ID Number",
+    "enum": "eIdentifierIdentifierTypeIDNumber",
+    "idVocabulary": 97
+  },
+  {
+    "Term": "ISBN",
+    "enum": "eIdentifierIdentifierTypeISBN",
+    "idVocabulary": 102
+  },
+  {
+    "Term": "ISSN",
+    "enum": "eIdentifierIdentifierTypeISSN",
+    "idVocabulary": 103
+  },
+  {
+    "Term": "Identifier",
+    "enum": "eIdentifierIdentifierTypeIdentifier",
+    "idVocabulary": 98
+  },
+  {
+    "Term": "Image ID",
+    "enum": "eIdentifierIdentifierTypeImageID",
+    "idVocabulary": 99
+  },
+  {
+    "Term": "Image Number",
+    "enum": "eIdentifierIdentifierTypeImageNumber",
+    "idVocabulary": 100
+  },
+  {
+    "Term": "Inventory Number",
+    "enum": "eIdentifierIdentifierTypeInventoryNumber",
+    "idVocabulary": 101
+  },
+  {
+    "Term": "Label Number",
+    "enum": "eIdentifierIdentifierTypeLabelNumber",
+    "idVocabulary": 104
+  },
+  {
+    "Term": "License Number",
+    "enum": "eIdentifierIdentifierTypeLicenseNumber",
+    "idVocabulary": 105
+  },
+  {
+    "Term": "Local Number",
+    "enum": "eIdentifierIdentifierTypeLocalNumber",
+    "idVocabulary": 106
+  },
+  {
+    "Term": "Maker Number",
+    "enum": "eIdentifierIdentifierTypeMakerNumber",
+    "idVocabulary": 107
+  },
+  {
+    "Term": "Model Number",
+    "enum": "eIdentifierIdentifierTypeModelNumber",
+    "idVocabulary": 108
+  },
+  {
+    "Term": "Nonaccession Number",
+    "enum": "eIdentifierIdentifierTypeNonaccessionNumber",
+    "idVocabulary": 109
+  },
+  {
+    "Term": "Object Number",
+    "enum": "eIdentifierIdentifierTypeObjectNumber",
+    "idVocabulary": 110
+  },
+  {
+    "Term": "Original Object Identifier",
+    "enum": "eIdentifierIdentifierTypeOriginalObjectIdentifier",
+    "idVocabulary": 111
+  },
+  {
+    "Term": "Other Numbers",
+    "enum": "eIdentifierIdentifierTypeOtherNumbers",
+    "idVocabulary": 112
+  },
+  {
+    "Term": "Patent Number",
+    "enum": "eIdentifierIdentifierTypePatentNumber",
+    "idVocabulary": 113
+  },
+  {
+    "Term": "Plate Letters",
+    "enum": "eIdentifierIdentifierTypePlateLetters",
+    "idVocabulary": 114
+  },
+  {
+    "Term": "Plate Number",
+    "enum": "eIdentifierIdentifierTypePlateNumber",
+    "idVocabulary": 115
+  },
+  {
+    "Term": "Publisher Number",
+    "enum": "eIdentifierIdentifierTypePublisherNumber",
+    "idVocabulary": 116
+  },
+  {
+    "Term": "Record ID",
+    "enum": "eIdentifierIdentifierTypeRecordID",
+    "idVocabulary": 117
+  },
+  {
+    "Term": "Record Number",
+    "enum": "eIdentifierIdentifierTypeRecordNumber",
+    "idVocabulary": 118
+  },
+  {
+    "Term": "Serial Number",
+    "enum": "eIdentifierIdentifierTypeSerialNumber",
+    "idVocabulary": 119
+  },
+  {
+    "Term": "Series Standard Number",
+    "enum": "eIdentifierIdentifierTypeSeriesStandardNumber",
+    "idVocabulary": 120
+  },
+  {
+    "Term": "Standard Number",
+    "enum": "eIdentifierIdentifierTypeStandardNumber",
+    "idVocabulary": 121
+  },
+  {
+    "Term": "USNM Number",
+    "enum": "eIdentifierIdentifierTypeUSNMNumber",
+    "idVocabulary": 122
+  },
+  {
+    "Term": "Cook: bake",
+    "enum": "eJobJobTypeCookBake",
+    "idVocabulary": 143
+  },
+  {
+    "Term": "Cook: decimate",
+    "enum": "eJobJobTypeCookDecimate",
+    "idVocabulary": 145
+  },
+  {
+    "Term": "Cook: decimate-unwrap",
+    "enum": "eJobJobTypeCookDecimateUnwrap",
+    "idVocabulary": 144
+  },
+  {
+    "Term": "Cook: generate-usdz",
+    "enum": "eJobJobTypeCookGenerateUsdz",
+    "idVocabulary": 146
+  },
+  {
+    "Term": "Cook: generate-web-gltf",
+    "enum": "eJobJobTypeCookGenerateWebGltf",
+    "idVocabulary": 147
+  },
+  {
+    "Term": "Cook: inspect-mesh",
+    "enum": "eJobJobTypeCookInspectMesh",
+    "idVocabulary": 148
+  },
+  {
+    "Term": "Cook: si-ar-backfill-fix",
+    "enum": "eJobJobTypeCookSIArBackfillFix",
+    "idVocabulary": 149
+  },
+  {
+    "Term": "Cook: si-generate-downloads",
+    "enum": "eJobJobTypeCookSIGenerateDownloads",
+    "idVocabulary": 150
+  },
+  {
+    "Term": "Cook: si-orient-model-to-svx",
+    "enum": "eJobJobTypeCookSIOrientModelToSvx",
+    "idVocabulary": 151
+  },
+  {
+    "Term": "Cook: si-packrat-inspect",
+    "enum": "eJobJobTypeCookSIPackratInspect",
+    "idVocabulary": 152
+  },
+  {
+    "Term": "Cook: si-voyager-asset",
+    "enum": "eJobJobTypeCookSIVoyagerAsset",
+    "idVocabulary": 153
+  },
+  {
+    "Term": "Cook: si-voyager-scene",
+    "enum": "eJobJobTypeCookSIVoyagerScene",
+    "idVocabulary": 154
+  },
+  {
+    "Term": "Cook: unwrap",
+    "enum": "eJobJobTypeCookUnwrap",
+    "idVocabulary": 155
+  },
+  {
+    "Term": "Volume Inspect",
+    "enum": "eJobJobTypeVolumeInspect",
+    "idVocabulary": 214
+  },
+  {
+    "Term": "Bulk Ingestion",
+    "enum": "eMetadataMetadataSourceBulkIngestion",
+    "idVocabulary": 125
+  },
+  {
+    "Term": "Image",
+    "enum": "eMetadataMetadataSourceImage",
+    "idVocabulary": 163
+  },
+  {
+    "Term": "Volumetric",
+    "enum": "eMetadataMetadataSourceVolumetric",
+    "idVocabulary": 240
+  },
+  {
+    "Term": "CAD",
+    "enum": "eModelCreationMethodCAD",
+    "idVocabulary": 33
+  },
+  {
+    "Term": "Scan To Mesh",
+    "enum": "eModelCreationMethodScanToMesh",
+    "idVocabulary": 32
+  },
+  {
+    "Term": "3ds - 3D Studio",
+    "enum": "eModelFileType3ds",
+    "idVocabulary": 62
+  },
+  {
+    "Term": "dae - COLLADA",
+    "enum": "eModelFileTypedae",
+    "idVocabulary": 59
+  },
+  {
+    "Term": "fbx - Filmbox",
+    "enum": "eModelFileTypefbx",
+    "idVocabulary": 60
+  },
+  {
+    "Term": "glb - GL Transmission Format Binary",
+    "enum": "eModelFileTypeglb",
+    "idVocabulary": 53
+  },
+  {
+    "Term": "gltf - GL Transmission Format",
+    "enum": "eModelFileTypegltf",
+    "idVocabulary": 54
+  },
+  {
+    "Term": "ma - Maya",
+    "enum": "eModelFileTypema",
+    "idVocabulary": 61
+  },
+  {
+    "Term": "obj - Alias Wavefront Object",
+    "enum": "eModelFileTypeobj",
+    "idVocabulary": 50
+  },
+  {
+    "Term": "ply - Stanford Polygon File Format",
+    "enum": "eModelFileTypeply",
+    "idVocabulary": 51
+  },
+  {
+    "Term": "pts",
+    "enum": "eModelFileTypepts",
+    "idVocabulary": 64
+  },
+  {
+    "Term": "ptx",
+    "enum": "eModelFileTypeptx",
+    "idVocabulary": 63
+  },
+  {
+    "Term": "stl - StereoLithography",
+    "enum": "eModelFileTypestl",
+    "idVocabulary": 52
+  },
+  {
+    "Term": "usd - Universal Scene Description",
+    "enum": "eModelFileTypeusd",
+    "idVocabulary": 55
+  },
+  {
+    "Term": "usdz - Universal Scene Description (zipped)",
+    "enum": "eModelFileTypeusdz",
+    "idVocabulary": 56
+  },
+  {
+    "Term": "wrl - VRML",
+    "enum": "eModelFileTypewrl",
+    "idVocabulary": 58
+  },
+  {
+    "Term": "x3d",
+    "enum": "eModelFileTypex3d",
+    "idVocabulary": 57
+  },
+  {
+    "Term": "Ambient",
+    "enum": "eModelMaterialChannelMaterialTypeAmbient",
+    "idVocabulary": 67
+  },
+  {
+    "Term": "Bump",
+    "enum": "eModelMaterialChannelMaterialTypeBump",
+    "idVocabulary": 69
+  },
+  {
+    "Term": "Diffuse",
+    "enum": "eModelMaterialChannelMaterialTypeDiffuse",
+    "idVocabulary": 65
+  },
+  {
+    "Term": "Displacement",
+    "enum": "eModelMaterialChannelMaterialTypeDisplacement",
+    "idVocabulary": 73
+  },
+  {
+    "Term": "Emissive",
+    "enum": "eModelMaterialChannelMaterialTypeEmissive",
+    "idVocabulary": 68
+  },
+  {
+    "Term": "Glossiness",
+    "enum": "eModelMaterialChannelMaterialTypeGlossiness",
+    "idVocabulary": 71
+  },
+  {
+    "Term": "Metalness",
+    "enum": "eModelMaterialChannelMaterialTypeMetalness",
+    "idVocabulary": 76
+  },
+  {
+    "Term": "None",
+    "enum": "eModelMaterialChannelMaterialTypeNone",
+    "idVocabulary": 78
+  },
+  {
+    "Term": "Normal",
+    "enum": "eModelMaterialChannelMaterialTypeNormal",
+    "idVocabulary": 70
+  },
+  {
+    "Term": "Occlusion",
+    "enum": "eModelMaterialChannelMaterialTypeOcclusion",
+    "idVocabulary": 74
+  },
+  {
+    "Term": "Opacity",
+    "enum": "eModelMaterialChannelMaterialTypeOpacity",
+    "idVocabulary": 72
+  },
+  {
+    "Term": "Reflection",
+    "enum": "eModelMaterialChannelMaterialTypeReflection",
+    "idVocabulary": 75
+  },
+  {
+    "Term": "Roughness",
+    "enum": "eModelMaterialChannelMaterialTypeRoughness",
+    "idVocabulary": 77
+  },
+  {
+    "Term": "Specular",
+    "enum": "eModelMaterialChannelMaterialTypeSpecular",
+    "idVocabulary": 66
+  },
+  {
+    "Term": "Unknown",
+    "enum": "eModelMaterialChannelMaterialTypeUnknown",
+    "idVocabulary": 79
+  },
+  {
+    "Term": "Mesh",
+    "enum": "eModelModalityMesh",
+    "idVocabulary": 35
+  },
+  {
+    "Term": "Point Cloud",
+    "enum": "eModelModalityPointCloud",
+    "idVocabulary": 34
+  },
+  {
+    "Term": "Download",
+    "enum": "eModelPurposeDownload",
+    "idVocabulary": 48
+  },
+  {
+    "Term": "Intermediate Processing Step",
+    "enum": "eModelPurposeIntermediateProcessingStep",
+    "idVocabulary": 49
+  },
+  {
+    "Term": "Master",
+    "enum": "eModelPurposeMaster",
+    "idVocabulary": 46
+  },
+  {
+    "Term": "Voyager Scene Model",
+    "enum": "eModelPurposeVoyagerSceneModel",
+    "idVocabulary": 47
+  },
+  {
+    "Term": "Astronomical Unit",
+    "enum": "eModelUnitsAstronomicalUnit",
+    "idVocabulary": 45
+  },
+  {
+    "Term": "Centimeter",
+    "enum": "eModelUnitsCentimeter",
+    "idVocabulary": 38
+  },
+  {
+    "Term": "Foot",
+    "enum": "eModelUnitsFoot",
+    "idVocabulary": 42
+  },
+  {
+    "Term": "Inch",
+    "enum": "eModelUnitsInch",
+    "idVocabulary": 41
+  },
+  {
+    "Term": "Kilometer",
+    "enum": "eModelUnitsKilometer",
+    "idVocabulary": 40
+  },
+  {
+    "Term": "Meter",
+    "enum": "eModelUnitsMeter",
+    "idVocabulary": 39
+  },
+  {
+    "Term": "Micrometer",
+    "enum": "eModelUnitsMicrometer",
+    "idVocabulary": 36
+  },
+  {
+    "Term": "Mile",
+    "enum": "eModelUnitsMile",
+    "idVocabulary": 44
+  },
+  {
+    "Term": "Millimeter",
+    "enum": "eModelUnitsMillimeter",
+    "idVocabulary": 37
+  },
+  {
+    "Term": "Yard",
+    "enum": "eModelUnitsYard",
+    "idVocabulary": 43
+  },
+  {
+    "Term": "Presentation",
+    "enum": "eModelVariantPresentation",
+    "idVocabulary": 213
+  },
+  {
+    "Term": "Raw Clean",
+    "enum": "eModelVariantRawClean",
+    "idVocabulary": 212
+  },
+  {
+    "Term": null,
+    "enum": "eNone",
+    "idVocabulary": null
+  },
+  {
+    "Term": "Ingestion: Ingest Object",
+    "enum": "eWorkflowEventIngestionIngestObject",
+    "idVocabulary": 159
+  },
+  {
+    "Term": "Ingestion: Upload Asset Version",
+    "enum": "eWorkflowEventIngestionUploadAssetVersion",
+    "idVocabulary": 158
+  },
+  {
+    "Term": "Start",
+    "enum": "eWorkflowStepTypeStart",
+    "idVocabulary": 157
+  },
+  {
+    "Term": "Audit Retention",
+    "enum": "eWorkflowTypeAuditRetention",
+    "idVocabulary": 162
+  },
+  {
+    "Term": "Cook Job",
+    "enum": "eWorkflowTypeCookJob",
+    "idVocabulary": 156
+  },
+  {
+    "Term": "Ingestion",
+    "enum": "eWorkflowTypeIngestion",
+    "idVocabulary": 160
+  },
+  {
+    "Term": "Job",
+    "enum": "eWorkflowTypeJob",
+    "idVocabulary": 215
+  },
+  {
+    "Term": "Upload",
+    "enum": "eWorkflowTypeUpload",
+    "idVocabulary": 161
+  }
+]

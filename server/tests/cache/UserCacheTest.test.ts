@@ -63,6 +63,16 @@ function userCacheTestClearFlush(): void {
         test('Cache: UserCache.clear and UserCache.flush', async () => {
             await UserCache.clear();
             await UserCache.flush();
+            // After clear+flush the cache must transparently repopulate on next read.
+            const userAll: DBAPI.User[] | null = await DBAPI.User.fetchUserList('', DBAPI.eUserStatus.eAll);
+            expect(userAll).toBeTruthy();
+            expect(userAll ? userAll.length : 0).toBeGreaterThan(0);
+            if (userAll && userAll.length > 0) {
+                const userInCache: DBAPI.User | undefined = await UserCache.getUser(userAll[0].idUser);
+                expect(userInCache).toBeTruthy();
+                if (userInCache)
+                    expect(userAll[0]).toMatchObject(userInCache);
+            }
         });
     });
 }

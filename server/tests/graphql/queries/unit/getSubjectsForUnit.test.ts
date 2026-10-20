@@ -17,6 +17,7 @@ const getSubjectsForUnitTest = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const unitInput = createUnitInput();
             const { Unit } = await graphQLApi.createUnit(unitInput);
+            expect(Unit).toBeTruthy();
 
             if (Unit) {
                 const subjectInput = createSubjectInput(Unit.idUnit);

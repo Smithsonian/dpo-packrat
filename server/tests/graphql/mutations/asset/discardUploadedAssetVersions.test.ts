@@ -47,6 +47,7 @@ const discardUploadedAssetVersions = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const userInput = createUserInput();
             const { User } = await graphQLApi.createUser(userInput);
+            expect(User).toBeTruthy();
 
             if (User) {
                 const context: Context = {
@@ -59,6 +60,7 @@ const discardUploadedAssetVersions = (utils: TestSuiteUtils): void => {
                 const file = fs.createReadStream(path);
 
                 const Vocabulary = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
+                expect(Vocabulary).toBeTruthy();
                 if (Vocabulary) {
                     const { idVocabulary } = Vocabulary;
 
@@ -73,6 +75,7 @@ const discardUploadedAssetVersions = (utils: TestSuiteUtils): void => {
                     };
                     const { status, idAssetVersions } = await graphQLApi.uploadAsset(uploadAssetInput, context);
                     expect(status).toBe(UploadStatus.Complete);
+                    expect(idAssetVersions?.length ?? 0).toBeGreaterThan(0);
 
                     if (idAssetVersions) {
                         const discardInput: DiscardUploadedAssetVersionsInput = {

@@ -52,39 +52,44 @@ function systemObjectCacheTestWorker(eMode: eCacheTestMode): void {
             expect(SOFetch).toBeTruthy();
             expect(SOFetch ? SOFetch.length : /* istanbul ignore next */ 0).toBeGreaterThan(0);
             systemObjectAll = SOFetch || [];
-            // LOG.info(`Fetched SO: ${systemObjectAll.length}`, LOG.LS.eTEST);
+            // Tie the presence check to a row we created: the setup unit's SystemObject
+            // must appear in the full fetch, not merely "something exists".
+            const soUnit1: DBAPI.SystemObject | null = await OHTS.unit1!.fetchSystemObject();
+            expect(soUnit1).toBeTruthy();
+            expect(systemObjectAll.some(so => so.idSystemObject === soUnit1!.idSystemObject)).toBe(true);
         });
 
         test('Cache: SystemObjectCache Methods ' + description, async () => {
+            // Deterministic stride sampling: examine up to 100 objects spread
+            // evenly across the full set, so the same objects are exercised on
+            // every run (Math.random() sampling made coverage non-reproducible).
             const soFetchCount: number = systemObjectAll.length;
-            for (let test = 0; test < 100; test++) {
-                const lookup: number = Math.floor(Math.random() * soFetchCount);
-                const SOExamine: DBAPI.SystemObject = systemObjectAll[lookup];
-                await testSystemObject(SOExamine);
+            const sampleTarget: number = Math.min(100, soFetchCount);
+            const step: number = Math.max(1, Math.floor(soFetchCount / sampleTarget));
+            let examined: number = 0;
+            for (let i = 0; i < soFetchCount && examined < sampleTarget; i += step, examined++) {
+                await testSystemObject(systemObjectAll[i]);
             }
-
-            /*
-            jest.setTimeout(600000);
-            for (const SOExamine of systemObjectAll) {
-                await testSystemObject(SOExamine);
-            }
-            */
+            expect(examined).toBeGreaterThan(0);
         });
 
         test('Cache: SystemObjectCache.getSystemFromObjectIDInternal ' + description, async () => {
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eUnit });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eProject });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eSubject });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eItem });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eCaptureData });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eModel });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eScene });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eIntermediaryFile });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eProjectDocumentation });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eAsset });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eAssetVersion });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eActor });
-            await testObjectAndID({ idObject: 1, eObjectType: COMMON.eSystemObjectType.eStakeholder });
+            // Resolve the cache against the objects the setup created — one per type —
+            // reading each id back from the created row. Never a hardcoded id:1, which
+            // assumes a particular catalog and breaks on a freshly seeded database.
+            await testObjectAndID({ idObject: OHTS.unit1!.idUnit, eObjectType: COMMON.eSystemObjectType.eUnit });
+            await testObjectAndID({ idObject: OHTS.project1!.idProject, eObjectType: COMMON.eSystemObjectType.eProject });
+            await testObjectAndID({ idObject: OHTS.subject1!.idSubject, eObjectType: COMMON.eSystemObjectType.eSubject });
+            await testObjectAndID({ idObject: OHTS.item1!.idItem, eObjectType: COMMON.eSystemObjectType.eItem });
+            await testObjectAndID({ idObject: OHTS.captureData1!.idCaptureData, eObjectType: COMMON.eSystemObjectType.eCaptureData });
+            await testObjectAndID({ idObject: OHTS.model1!.idModel, eObjectType: COMMON.eSystemObjectType.eModel });
+            await testObjectAndID({ idObject: OHTS.scene1!.idScene, eObjectType: COMMON.eSystemObjectType.eScene });
+            await testObjectAndID({ idObject: OHTS.intermediaryFile1!.idIntermediaryFile, eObjectType: COMMON.eSystemObjectType.eIntermediaryFile });
+            await testObjectAndID({ idObject: OHTS.projectDocumentation1!.idProjectDocumentation, eObjectType: COMMON.eSystemObjectType.eProjectDocumentation });
+            await testObjectAndID({ idObject: OHTS.asset1!.idAsset, eObjectType: COMMON.eSystemObjectType.eAsset });
+            await testObjectAndID({ idObject: OHTS.assetVersion1a!.idAssetVersion, eObjectType: COMMON.eSystemObjectType.eAssetVersion });
+            await testObjectAndID({ idObject: OHTS.actor1!.idActor, eObjectType: COMMON.eSystemObjectType.eActor });
+            await testObjectAndID({ idObject: OHTS.stakeholder1!.idStakeholder, eObjectType: COMMON.eSystemObjectType.eStakeholder });
         });
 
         test('Cache: SystemObjectCache Cache Misses ' + description, async () => {
@@ -125,6 +130,10 @@ function systemObjectCacheTestClearFlush(): void {
         test('Cache: SystemObjectCache.clear and SystemObjectCache.flush', async () => {
             await SystemObjectCache.clear();
             await SystemObjectCache.flush();
+            // Cache must stay functional after clear+flush: a non-existent object
+            // resolves to undefined rather than throwing or returning a stale entry.
+            expect(await SystemObjectCache.getObjectFromSystem(1000000000)).toBeFalsy();
+            expect(await SystemObjectCache.getSystemFromObjectID({ idObject: 1000000000, eObjectType: COMMON.eSystemObjectType.eItem })).toBeFalsy();
         });
     });
 }

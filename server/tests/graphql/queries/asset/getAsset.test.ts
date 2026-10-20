@@ -1,6 +1,7 @@
 import { GetAssetInput, GetAssetResult } from '../../../../types/graphql';
 import GraphQLApi from '../../../../graphql';
 import TestSuiteUtils from '../../utils';
+import * as DBAPI from '../../../../db';
 
 const getAssetTest = (utils: TestSuiteUtils): void => {
     let graphQLApi: GraphQLApi;
@@ -10,18 +11,17 @@ const getAssetTest = (utils: TestSuiteUtils): void => {
     });
 
     describe('Query: getAsset', () => {
-        test('should work with valid input', async () => {
-            const input: GetAssetInput = {
-                idAsset: 0
-            };
-
-            const { Asset }: GetAssetResult = await graphQLApi.getAsset(input);
-
-            if (Asset) {
-                expect(Asset.idAsset).toBe(0);
-            } else {
-                expect(Asset).toBe(null);
+        test('returns the asset for a seeded id, and null for a non-existent id', async () => {
+            const all: DBAPI.Asset[] | null = await DBAPI.Asset.fetchAll();
+            if (all && all.length > 0) {
+                const input: GetAssetInput = { idAsset: all[0].idAsset };
+                const { Asset }: GetAssetResult = await graphQLApi.getAsset(input);
+                expect(Asset).toBeTruthy();
+                expect(Asset?.idAsset).toBe(all[0].idAsset);
             }
+
+            const { Asset: missing }: GetAssetResult = await graphQLApi.getAsset({ idAsset: 0 });
+            expect(missing).toBeNull();
         });
     });
 };
