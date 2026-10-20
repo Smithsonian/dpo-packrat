@@ -120,7 +120,7 @@ jobs:
       # setEnvVars.ts) so a gate trip or failure can be inspected from the run.
       - name: Upload test logs
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-logs
           path: server/var/test/logs

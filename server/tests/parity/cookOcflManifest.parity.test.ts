@@ -45,7 +45,7 @@ const COOK_OUTPUT: any = {
         usdz: 'DPO_Testing-100k-2048_std.usdz',
         webAssetGlbARCompressed: 'DPO_Testing-100k-2048_std_draco.glb',
         webAssetGlbLowUncompressed: 'DPO_Testing-150k-4096_std.glb',
-        scene_document: 'DPO_Testing.svx.json',
+        'scene_document': 'DPO_Testing.svx.json',
     } } } },
 };
 

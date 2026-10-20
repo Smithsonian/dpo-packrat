@@ -57,19 +57,19 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
 
     // --- DB-only fetch (always runs) ---------------------------------------------
 
-    test(`DB Composite SubjectUnitIdentifier.fetch '<seeded token>'`, async () => {
+    test('DB Composite SubjectUnitIdentifier.fetch \'<seeded token>\'', async () => {
         const results: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch(token, 10);
         expect(results).toBeTruthy();
         if (results)
             expect(results.length).toBeGreaterThan(0);
     });
 
-    test(`DB Composite SubjectUnitIdentifier.fetch '' (empty query)`, async () => {
+    test('DB Composite SubjectUnitIdentifier.fetch \'\' (empty query)', async () => {
         const results: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch('', 10);
         expect(results).toBeFalsy();
     });
 
-    test(`DB Composite SubjectUnitIdentifier.fetch SQL-injection string is handled`, async () => {
+    test('DB Composite SubjectUnitIdentifier.fetch SQL-injection string is handled', async () => {
         const results: DBAPI.SubjectUnitIdentifier[] | null = await DBAPI.SubjectUnitIdentifier.fetch('1 = 1; DROP Database Packrat', 10);
         expect(results).toBeTruthy();
         if (results)
@@ -78,17 +78,17 @@ describe('DB Composite SubjectUnitIdentifier Test', () => {
 
     // --- DB-only search (always runs) --------------------------------------------
 
-    searchCase(`search '' returns results`, () => ({ query: '' }), true);
-    searchCase(`search '<token>' returns the seeded subjects`, () => ({ query: token }), true);
-    searchCase(`search '<token>' scoped to the populated unit`, () => ({ query: token, idUnit: idUnitWith }), true);
-    searchCase(`search '<token>' scoped to the empty unit returns nothing`, () => ({ query: token, idUnit: idUnitWithout }), false);
-    searchCase(`search '<token>' with an invalid idUnit returns nothing`, () => ({ query: token, idUnit: -1 }), false);
-    searchCase(`search '<token>' page 1 of 100`, () => ({ query: token, idUnit: idUnitWith, page: 1, row: 100 }), true);
-    searchCase(`search '<token>' page 2 of 10 (second page populated)`, () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10 }), true);
-    searchCase(`search '<token>' sorted by default`, () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eDefault, sortDir: true }), true);
-    searchCase(`search '<token>' sorted by identifier value`, () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, sortDir: false }), true);
-    searchCase(`search '<token>' sorted by subject name`, () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, sortDir: true }), true);
-    searchCase(`search '<token>' sorted by unit abbreviation`, () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, sortDir: false }), true);
+    searchCase('search \'\' returns results', () => ({ query: '' }), true);
+    searchCase('search \'<token>\' returns the seeded subjects', () => ({ query: token }), true);
+    searchCase('search \'<token>\' scoped to the populated unit', () => ({ query: token, idUnit: idUnitWith }), true);
+    searchCase('search \'<token>\' scoped to the empty unit returns nothing', () => ({ query: token, idUnit: idUnitWithout }), false);
+    searchCase('search \'<token>\' with an invalid idUnit returns nothing', () => ({ query: token, idUnit: -1 }), false);
+    searchCase('search \'<token>\' page 1 of 100', () => ({ query: token, idUnit: idUnitWith, page: 1, row: 100 }), true);
+    searchCase('search \'<token>\' page 2 of 10 (second page populated)', () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10 }), true);
+    searchCase('search \'<token>\' sorted by default', () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eDefault, sortDir: true }), true);
+    searchCase('search \'<token>\' sorted by identifier value', () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eIdentifierValue, sortDir: false }), true);
+    searchCase('search \'<token>\' sorted by subject name', () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eSubjectName, sortDir: true }), true);
+    searchCase('search \'<token>\' sorted by unit abbreviation', () => ({ query: token, idUnit: idUnitWith, page: 2, row: 10, sortBy: COMMON.eSubjectUnitIdentifierSortColumns.eUnitAbbreviation, sortDir: false }), true);
 
     // --- live EDAN (opt-in; queries EDAN's holdings, not the local DB seed) -------
 
