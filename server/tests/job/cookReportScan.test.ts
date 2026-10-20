@@ -97,6 +97,22 @@ describe('Cook: CookReportScan.collectInspectionWarnings', () => {
         expect(warnings).toHaveLength(2);
     });
 
+    test('a material Cook flagged with an error warns (non-blocking, not fatal)', () => {
+        const erroredMaterial = { name: 'Material', error: 'cannot read from MTL file', channels: [] };
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true }, [erroredMaterial]));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].code).toBe(COMMON.WorkflowReportCode.CookWarning);
+        expect(warnings[0].level).toBe('warn');
+        expect(warnings[0].message).toMatch(/could not be resolved/i);
+    });
+
+    test('an errored material is not also flagged for a missing diffuse channel', () => {
+        const erroredMaterial = { name: 'Material', error: 'cannot read from MTL file', channels: [{ type: 'roughness', value: '1.0' }] };
+        const warnings = collectInspectionWarnings(withMesh({ hasNormals: true }, [erroredMaterial]));
+        expect(warnings).toHaveLength(1);
+        expect(warnings[0].message).toMatch(/could not be resolved/i);
+    });
+
     test('a missing/garbage inspection root yields no warnings', () => {
         expect(collectInspectionWarnings(null)).toHaveLength(0);
         expect(collectInspectionWarnings({})).toHaveLength(0);

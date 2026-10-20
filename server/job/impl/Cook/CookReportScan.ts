@@ -155,7 +155,7 @@ function pushWarning(warnings: CookScanFinding[], message: string): void {
 // prevent ingest, so they are surfaced as CookWarning rather than failing the job. Kept pure and
 // separate from the verify path so it is unit-testable. Only the first mesh is examined, matching
 // the existing single-mesh convention in the inspector.
-interface InspectionMaterial { name?: string; channels?: Array<{ type?: string }> }
+interface InspectionMaterial { name?: string; error?: string; channels?: Array<{ type?: string }> }
 
 export function collectInspectionWarnings(inspectionRoot: unknown): CookScanFinding[] {
     const warnings: CookScanFinding[] = [];
@@ -179,6 +179,15 @@ export function collectInspectionWarnings(inspectionRoot: unknown): CookScanFind
     // not flagged, so a legitimately untextured, solid-colour model does not trip this.
     const materials: InspectionMaterial[] = Array.isArray(root.scene?.materials) ? (root.scene as { materials: InspectionMaterial[] }).materials : [];
     for (const material of materials) {
+        // A material Cook flagged with an explicit error (e.g. an unresolved/missing .mtl library, or
+        // a usemtl that matched no definition) is advisory, not fatal: the geometry still ingests
+        // without it, so the model is allowed through and the user is told. Reported in place of the
+        // no-diffuse advisory, which an errored material would otherwise also trip.
+        if (typeof material?.error === 'string' && material.error.length > 0) {
+            pushWarning(warnings, `Material "${material?.name ?? 'unnamed'}" could not be resolved (${material.error}); the model ingests without it.`);
+            continue;
+        }
+
         const hasDiffuse: boolean = Array.isArray(material?.channels)
             && material.channels.some(c => typeof c?.type === 'string' && c.type.toLowerCase() === 'diffuse');
         if (!hasDiffuse)
