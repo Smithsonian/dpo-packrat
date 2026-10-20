@@ -23,6 +23,7 @@
         { "caller": "OCFL.Root", "level": "error", "reason": "OCFL corruption-case tests deliberately trigger storage-root validation errors." },
         { "caller": "RecordKeeper", "level": "error", "reason": "RK notify/email/slack init logs errors when notification services are not configured in the test environment." },
         { "caller": "RecordKeeper.getEmailsFromGroup", "level": "error", "reason": "RK email-group resolution logs errors when notification groups are unset in the test environment." },
+        { "caller": "RecordKeeper.sendEmail", "level": "error", "reason": "RK notification email send logs an error when SMTP is not configured in the test environment; reached incidentally via workflow/ingestion/job paths that notify." },
         { "caller": "Types.Voyager", "level": "error", "reason": "Voyager/SVX type parsing tests run malformed scenes that log errors." },
         { "caller": "Utils.Helpers", "level": "error", "reason": "Helper utilities log errors on the malformed/negative inputs their tests exercise." },
         { "caller": "Utils.SVX.Extraction", "level": "error", "reason": "SVX extraction tests run malformed scene fixtures that log errors." },
