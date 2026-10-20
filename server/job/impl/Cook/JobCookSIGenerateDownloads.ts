@@ -2,6 +2,7 @@
 import { JobCook } from './JobCook';
 import { CookRecipe } from './CookRecipe';
 import { findBasenameOffenders, BasenameOffender, cookDownloadTagForTypeKey, cookModelAutomationTagForTypeKey } from './CookOutputContract';
+import { inspectObjPackage, objPackageNeedsMtl, parseObjMaterialRefs, classifyPackageTextures, buildMinimalMtl } from './CookObjPackage';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
@@ -19,6 +20,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // scene speecific
 import { SvxReader } from '../../../utils/parser';
+import { ZipStream } from '../../../utils/zipStream';
 import { SceneHelpers } from '../../../utils/sceneHelpers';
 import { JobCookSIVoyagerSceneParameterHelper } from './JobCookSIVoyagerScene';
 
@@ -576,9 +578,18 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
         }
 
+        // If Cook returned an OBJ package that ships textures but no material library, fabricate a
+        // minimal .mtl so the stored (and later published) package is internally valid. The model is
+        // still allowed through (the inspect treats unresolved materials as advisory); the user is
+        // warned so the underlying source-model gap is not lost.
+        const mtlFix = await this.ensureObjPackageHasMtl(RSR, fileItem.fileName);
+        if (mtlFix.fabricated)
+            await this.appendToReportAndLog(`${this.name()} fabricated a minimal material library for ${fileItem.fileName} (package was missing its .mtl): ${mtlFix.detail}`,
+                undefined, { code: COMMON.WorkflowReportCode.CookWarning, level: 'warn' });
+
         // ingest model assets, and associate them with the correct model
         const ISI: STORE.IngestStreamOrFileInput = {
-            readStream: RSR.readStream,
+            readStream: mtlFix.readStream,
             localFilePath: null,
             asset: Asset,
             FileName: fileItem.fileName,
@@ -707,6 +718,75 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         RK.profileEnd(profileKey);
 
         return { assetVersionOverrideMap, MSX, assetVersion };
+    }
+
+    // Repair a Cook OBJ download that ships textures but no material library. Returns a stream to
+    // ingest in place of the original: the corrected zip when a .mtl was fabricated, otherwise the
+    // original bytes unchanged. Only a .zip whose contents are an OBJ + image textures with no .mtl
+    // is touched; every other package (already has a .mtl, non-OBJ, non-zip) passes through as-is.
+    private async ensureObjPackageHasMtl(RSR: STORE.ReadStreamResult, fileName: string):
+    Promise<{ readStream: NodeJS.ReadableStream | null; fabricated: boolean; detail?: string }> {
+
+        if (!RSR.readStream || path.extname(fileName).toLowerCase() !== '.zip')
+            return { readStream: RSR.readStream, fabricated: false };
+
+        // Buffer the download once so the original bytes can be re-emitted untouched when no repair
+        // is needed (avoids recompressing a healthy package).
+        const buffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+        if (!buffer) {
+            RK.logWarning(RK.LogSection.eJOB,'ensure obj mtl','unable to read download stream for material check; passing through',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName },'Job.GenerateDownloads');
+            return { readStream: RSR.readStream, fabricated: false };
+        }
+        const passthrough = (): { readStream: NodeJS.ReadableStream; fabricated: boolean } => ({ readStream: Readable.from(buffer), fabricated: false });
+
+        const zip: ZipStream = new ZipStream(Readable.from(buffer));
+        const loadRes: H.IOResults = await zip.load();
+        if (!loadRes.success)
+            return passthrough();
+
+        const files: string[] = await zip.getJustFiles(null);
+        const shape = inspectObjPackage(files);
+        if (!objPackageNeedsMtl(shape) || !shape.objFile)
+            return passthrough();
+
+        // read the obj to discover its mtllib/usemtl references
+        const objStream: NodeJS.ReadableStream | null = await zip.streamContent(shape.objFile);
+        const objBuffer: Buffer | null = objStream ? await H.Helpers.readFileFromStream(objStream) : null;
+        const objText: string = objBuffer ? objBuffer.toString('utf8') : '';
+        const refs = parseObjMaterialRefs(objText);
+
+        const objBaseName: string = path.basename(shape.objFile, path.extname(shape.objFile));
+        const objDir: string = path.dirname(shape.objFile);
+        const mtlName: string = refs.mtllib ?? `${objBaseName}.mtl`;
+        const materialName: string = refs.usemtl ?? 'material_0';
+        const { diffuse, normal } = classifyPackageTextures(shape.images);
+        const mtlContent: string = buildMinimalMtl(materialName, diffuse, normal);
+
+        // write the fabricated .mtl alongside the geometry (Cook packages are flat; honor a subdir if present)
+        const mtlPath: string = objDir && objDir !== '.' ? `${objDir}/${mtlName}` : mtlName;
+        const addMtl: H.IOResults = await zip.add(mtlPath, Readable.from(Buffer.from(mtlContent, 'utf8')));
+        if (!addMtl.success) {
+            RK.logError(RK.LogSection.eJOB,'ensure obj mtl failed','unable to add fabricated material library to package',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, mtlPath },'Job.GenerateDownloads');
+            return passthrough();
+        }
+
+        // if the obj never referenced a material library, inject the directive so the .mtl is loaded
+        if (!refs.mtllib && objText.length > 0) {
+            const patchedObj: string = `mtllib ${mtlName}\n${objText}`;
+            const addObj: H.IOResults = await zip.add(shape.objFile, Readable.from(Buffer.from(patchedObj, 'utf8')));
+            if (!addObj.success) {
+                RK.logError(RK.LogSection.eJOB,'ensure obj mtl failed','unable to inject mtllib into obj',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, objFile: shape.objFile },'Job.GenerateDownloads');
+                return passthrough();
+            }
+        }
+
+        const outStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
+        if (!outStream)
+            return passthrough();
+
+        const detail: string = `${mtlName}${diffuse ? `, diffuse=${diffuse}` : ''}${normal ? `, normal=${normal}` : ''}`;
+        RK.logWarning(RK.LogSection.eJOB,'ensure obj mtl','fabricated missing material library for OBJ package',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, mtlName, materialName, diffuse, normal },'Job.GenerateDownloads');
+        return { readStream: outStream, fabricated: true, detail };
     }
 
     private async createModel(Name: string, downloadType: string, modelSource: DBAPI.Model): Promise<DBAPI.Model> {
