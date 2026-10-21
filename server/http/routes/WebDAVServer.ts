@@ -332,7 +332,11 @@ class WebDAVFileSystem extends webdav.FileSystem {
                                 rootRes.addChild('articles');
                         } else {
                             RK.logDebug(RK.LogSection.eHTTP,'get property from resource','articles directory not yet created',{ path: pathS, propertyName },'HTTP.Route.WebDAV');
-                            callback(new Error(`${logPrefix} articles directory not found`));
+                            // Hand back the library's ResourceNotFound singleton (matched by
+                            // reference identity in RequestContext.defaultStatusCode) so PROPFIND
+                            // answers 404, not a generic 500. Voyager's exists() probe then reads
+                            // "not found" and fires MKCOL to create the articles directory.
+                            callback(webdav.Errors.ResourceNotFound);
                             return;
                         }
                     } else if (!allowMissing) {
