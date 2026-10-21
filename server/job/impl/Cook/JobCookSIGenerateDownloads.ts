@@ -711,8 +711,13 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 RK.logInfo(RK.LogSection.eJOB,'process model','extracted model metrics',{ model },'Job.GenerateDownloads');
                 await this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${model.Name}`);
             } else if (results.error) {
-                await this.logError('process model failed',`failed inspecting model: ${results.error}`,{ model });
-                return null;
+                // Inspection is advisory: failing to inspect or extract metrics for a generated
+                // download does not invalidate the download, so surface it as a warning and continue.
+                // The complete scene version is still formed; only genuine processing failures
+                // (ingest, scene parse/ingest) abort generation.
+                RK.logWarning(RK.LogSection.eJOB,'process model','model inspection did not complete; continuing without metrics',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, model: model.Name, error: results.error },'Job.GenerateDownloads');
+                await this.appendToReportAndLog(`${this.name()} could not inspect ${model.Name}; it is included without metrics: ${results.error}`,
+                    undefined, { code: COMMON.WorkflowReportCode.CookWarning, level: 'warn' });
             }
         }
         RK.profileEnd(profileKey);
