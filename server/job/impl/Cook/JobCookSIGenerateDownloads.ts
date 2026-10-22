@@ -1260,6 +1260,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
     // Record an undo for an object just created, so a later fatal error can compensate for it.
     private recordRollback(label: string, undo: () => Promise<void>): void {
+        if (!this.rollbackLedger)
+            this.rollbackLedger = [];
         this.rollbackLedger.push({ label, undo });
     }
 
@@ -1267,7 +1269,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     // versions are retired (reversible; they have no hard delete); link rows (SystemObjectXref,
     // ModelSceneXref) are deleted. Each undo is isolated so one failure does not stop the rest.
     private async rollbackCreatedObjects(reason: string): Promise<void> {
-        const count: number = this.rollbackLedger.length;
+        const count: number = this.rollbackLedger ? this.rollbackLedger.length : 0;
         if (count === 0)
             return;
 
