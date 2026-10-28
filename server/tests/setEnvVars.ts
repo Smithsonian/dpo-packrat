@@ -1,4 +1,4 @@
-import { assertTestSandbox } from './guardrail';
+import { assertTestSandbox, assertLiveTestsConfirmed } from './guardrail';
 import { sandboxRoot, sandboxPaths } from './sandboxPaths';
 
 process.env.NODE_ENV = 'test';
@@ -49,6 +49,10 @@ if (derivedDatabaseURL)
 
 // Refuse to run unless the database and storage targets are isolated sandboxes.
 assertTestSandbox();
+
+// Refuse the live lanes (Cook/EDAN) unless explicitly confirmed — they reach
+// real external services the sandbox cannot contain.
+assertLiveTestsConfirmed();
 
 function deriveTestDatabaseURL(baseURL?: string): string | undefined {
     if (!baseURL)
