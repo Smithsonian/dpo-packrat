@@ -50,7 +50,7 @@ const describeEdan = edanTestsEnabled ? describe : describe.skip;
 
 // EDAN WRITE tests create REAL records on the dev 3D API (createEdanMDM /
 // createEdan3DPackage). Gated SEPARATELY from the read-only queries so the general
-// `yarn test:live` lane (which sets only PACKRAT_TEST_EDAN + PACKRAT_TEST_COOK)
+// `yarn test:live:network` lane (which sets only PACKRAT_TEST_EDAN + PACKRAT_TEST_COOK)
 // never writes to EDAN. Records are clearly named (`Packrat Test Subject
 // dpo_3d_test_<date>-…`) so they can be identified and removed on the dev EDAN
 // server; the 3D-package source zip is overridable via PACKRAT_TEST_EDAN_PACKAGE_URL

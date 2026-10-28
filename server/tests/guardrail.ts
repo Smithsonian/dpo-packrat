@@ -89,3 +89,17 @@ export function assertTestSandbox(): void {
             throw new Error(`[test-guardrail] ${key}="${value}" is not a disposable test sandbox (must be under the OS temp dir or inside a "test" directory); refusing to run tests.`);
     }
 }
+
+// Live lanes (Cook/EDAN) reach REAL external services, which the sandbox
+// guardrail does not cover. Require a confirmation flag so live tests activate
+// only through the named `test:live:network` command (which sets it); a stray
+// PACKRAT_TEST_EDAN/COOK left in the environment during a normal run is refused
+// rather than silently contacting external services.
+export function assertLiveTestsConfirmed(): void {
+    const liveRequested: boolean =
+        process.env.PACKRAT_TEST_COOK === '1' ||
+        process.env.PACKRAT_TEST_EDAN === '1' ||
+        process.env.PACKRAT_TEST_EDAN_WRITE === '1';
+    if (liveRequested && process.env.PACKRAT_TEST_LIVE_CONFIRM !== '1')
+        throw new Error('[test-guardrail] live tests (Cook/EDAN) reach external services; set PACKRAT_TEST_LIVE_CONFIRM=1 to run them intentionally. Refusing to run.');
+}
