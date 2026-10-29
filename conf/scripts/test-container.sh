@@ -120,8 +120,17 @@ esac
 # Parity reads/writes its baselines in the checkout; bind-mount that one dir so a
 # bless lands on the host and an assert uses the committed baselines.
 MOUNTS=()
+PROV_ENV=()
 if [ "$MODE" != "suite" ]; then
     MOUNTS+=(-v "$REPO_ROOT/server/tests/parity/baselines:/app/server/tests/parity/baselines")
+    # Inject the REAL host context for the provenance sidecar. Inside the container
+    # the hostname/cwd/git would be the container's; these record where the operator
+    # actually ran it — the host, the checkout path (which distinguishes a production
+    # Code vs staging Code-Dev deployment), and the committed code.
+    PROV_ENV+=(-e PACKRAT_PARITY_HOST="$(hostname)")
+    PROV_ENV+=(-e PACKRAT_PARITY_PATH="$REPO_ROOT")
+    PROV_ENV+=(-e PACKRAT_PARITY_GIT="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)")
+    PROV_ENV+=(-e PACKRAT_PARITY_ENV="${PACKRAT_PARITY_ENV:-${NODE_ENV:-unknown}}")
 fi
 
 echo "[test-container] running '$YARN_SCRIPT' in $TEST_IMAGE..."
@@ -134,5 +143,6 @@ docker run --rm --network "container:$DB_CONTAINER" \
     -e PACKRAT_EDAN_AUTH_KEY="${PACKRAT_EDAN_AUTH_KEY:-testing1234}" \
     -e PACKRAT_SERVER_PORT="${PACKRAT_TEST_SERVER_PORT:-14000}" \
     "${MOUNTS[@]+"${MOUNTS[@]}"}" \
+    "${PROV_ENV[@]+"${PROV_ENV[@]}"}" \
     "$TEST_IMAGE" \
     sh -lc 'export PACKRAT_DATABASE_URL="mysql://root:$(node -e "process.stdout.write(encodeURIComponent(process.env.MYSQL_ROOT_PASSWORD||String()))")@127.0.0.1:3306/Packrat_test"; exec yarn "$0" "$@"' "$YARN_SCRIPT" "${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}"
