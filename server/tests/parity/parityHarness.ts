@@ -1,5 +1,7 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
+import { execSync } from 'child_process';
 
 // Golden-record parity harness. The migration cutover gate: capture the CURRENT
 // server's deterministic outputs as committed baselines, then re-run on the new
@@ -132,4 +134,80 @@ export function maskVolatile(data: unknown, opts: MaskOptions = {}): unknown {
         return value;
     };
     return walk(data);
+}
+
+// Provenance sidecar: records WHERE and from WHAT a baseline set was blessed so an
+// assert run can confirm it is comparing like-for-like. The baselines themselves are
+// stack-independent by design (seeded data, masked volatiles); this is the context
+// the surfaces deliberately strip out, kept alongside them for the operator.
+const PROVENANCE_FILE: string = path.join(BASELINE_DIR, '_provenance.json');
+
+export interface ParityProvenance {
+    blessedAt: string;      // ISO timestamp the baselines were written
+    system: string;         // hostname of the machine/container that ran the bless
+    environment: string;    // deployment environment (production/staging/development/test)
+    // filesystem path the run launched from — disambiguates e.g. a Code (production)
+    // vs Code-Dev (staging) checkout
+    runPath: string;
+    platform: string;       // os, arch and Node version of the runtime
+    gitCommit: string;      // checkout commit the baselines reflect ('unknown' if undetectable)
+}
+
+// The host-run scripts (test-container.sh parity modes) inject the real host values
+// via these env vars, since inside the container the hostname/cwd/git are the
+// container's, not the operator's. A bare host run (yarn test:parity) has no injected
+// values and falls back to the live os/process/git of the checkout it runs in.
+function resolveGitCommit(): string {
+    if (process.env.PACKRAT_PARITY_GIT)
+        return process.env.PACKRAT_PARITY_GIT;
+    try {
+        const sha: string = execSync('git rev-parse HEAD', { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+        return sha.length > 0 ? sha : 'unknown';
+    } catch {
+        return 'unknown';
+    }
+}
+
+function currentProvenance(): ParityProvenance {
+    return {
+        blessedAt: new Date().toISOString(),
+        system: process.env.PACKRAT_PARITY_HOST || os.hostname(),
+        environment: process.env.PACKRAT_PARITY_ENV || process.env.NODE_ENV || 'unknown',
+        runPath: process.env.PACKRAT_PARITY_PATH || process.cwd(),
+        platform: `${os.platform()} ${os.arch()} node-${process.version}`,
+        gitCommit: resolveGitCommit(),
+    };
+}
+
+// Write the provenance sidecar during a bless. Called once per bless run.
+export function writeParityProvenance(): void {
+    const prov: ParityProvenance = currentProvenance();
+    fs.mkdirSync(BASELINE_DIR, { recursive: true });
+    fs.writeFileSync(PROVENANCE_FILE, stableStringify(prov) + '\n', 'utf8');
+    // eslint-disable-next-line no-console
+    console.log(`[parity] blessed baselines  system=${prov.system}  env=${prov.environment}  path=${prov.runPath}  commit=${prov.gitCommit}`);
+}
+
+// Verify the provenance sidecar during an assert. Host/env/path/platform differences
+// are EXPECTED across a migration (that is what the parity lane validates) and only
+// inform. A git-commit mismatch means the two runs executed different code, so the
+// comparison is meaningless — fail fast rather than report a spurious pass/fail.
+export function checkParityProvenance(): void {
+    if (!fs.existsSync(PROVENANCE_FILE)) {
+        // eslint-disable-next-line no-console
+        console.warn('[parity] no provenance sidecar (_provenance.json); cannot confirm the baselines were blessed from a matching checkout. Re-bless to record it.');
+        return;
+    }
+    const blessed: ParityProvenance = JSON.parse(fs.readFileSync(PROVENANCE_FILE, 'utf8'));
+    const now: ParityProvenance = currentProvenance();
+    // eslint-disable-next-line no-console
+    console.log(
+        '[parity] asserting against blessed baselines:\n' +
+        `  blessed: system=${blessed.system} env=${blessed.environment} path=${blessed.runPath} platform=${blessed.platform} commit=${blessed.gitCommit} at=${blessed.blessedAt}\n` +
+        `  current: system=${now.system} env=${now.environment} path=${now.runPath} platform=${now.platform} commit=${now.gitCommit}`);
+
+    if (blessed.gitCommit !== 'unknown' && now.gitCommit !== 'unknown' && blessed.gitCommit !== now.gitCommit)
+        throw new Error(
+            `[parity] code mismatch: baselines were blessed from commit ${blessed.gitCommit} but this run is at ${now.gitCommit}. ` +
+            'Parity compares behavior with code held constant — re-bless from this checkout, or check out the blessed commit, before asserting.');
 }
