@@ -89,6 +89,16 @@ function licenseCacheTestClearFlush(): void {
         test('Cache: LicenseCache.clear and LicenseCache.flush', async () => {
             await LicenseCache.clear();
             await LicenseCache.flush();
+            // After clear+flush the cache must transparently repopulate on next read.
+            const licenseAll: DBAPI.License[] | null = await DBAPI.License.fetchAll();
+            expect(licenseAll).toBeTruthy();
+            expect(licenseAll ? licenseAll.length : 0).toBeGreaterThan(0);
+            if (licenseAll && licenseAll.length > 0) {
+                const licenseInCache: DBAPI.License | undefined = await LicenseCache.getLicense(licenseAll[0].idLicense);
+                expect(licenseInCache).toBeTruthy();
+                if (licenseInCache)
+                    expect(licenseAll[0]).toMatchObject(licenseInCache);
+            }
         });
     });
 }

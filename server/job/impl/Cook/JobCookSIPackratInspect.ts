@@ -1029,19 +1029,11 @@ export class JobCookSIPackratInspect extends JobCook<JobCookSIPackratInspectPara
         // get our 'root' for properties supporting legacy and modern inspection reports for stats
         const inspectionRoot: any = cookJobReport.steps?.['merged-reports'] ?? cookJobReport.steps?.['inspect-mesh']?.result?.inspection;
 
-        // check for missing material
-        if(inspectionRoot?.scene?.materials?.length>0) {
-            const errors: string[] = inspectionRoot.scene.materials
-                .filter(m => m.error)   // Keep only items that have an error
-                .map(m => 'material ' + m.error);     // extract the error
-
-            if(errors.length>0) {
-                const errorMsg = errors.join(' | ');
-                RK.logError(RK.LogSection.eJOB,'verify response failed',`response is invalid: ${errorMsg}`,{  jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, inspectionRoot },'Job.PackratInspect');
-                this.reportInspect(`[CookJob:Inspection] response is invalid: ${errorMsg}`, true);
-                return { success: false, error: errorMsg, allowRetry: false };
-            }
-        }
+        // A material Cook could not resolve (an unresolved/missing .mtl library, or a usemtl that
+        // matched no definition) is advisory, not fatal: the geometry still ingests and the user is
+        // told, so a source model without materials does not block ingest or download generation.
+        // The advisory is surfaced via collectInspectionWarnings below. A truly empty inspection —
+        // no mesh, zero size, no vertices/faces — is still caught by the fatal checks that follow.
 
         // get our geometry results
         if (!inspectionRoot?.meshes) {

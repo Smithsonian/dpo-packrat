@@ -16,6 +16,7 @@ const getUploadedAssetVersionTest = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const userInput = createUserInput();
             const { User } = await graphQLApi.createUser(userInput);
+            expect(User).toBeTruthy();
 
             if (User) {
                 const context: Context = {
@@ -23,7 +24,8 @@ const getUploadedAssetVersionTest = (utils: TestSuiteUtils): void => {
                     isAuthenticated: true
                 };
                 const { AssetVersion } = await graphQLApi.getUploadedAssetVersion(context);
-                expect(AssetVersion).toBeTruthy();
+                // A freshly-created user has no uploaded (staged) asset versions.
+                expect(Array.isArray(AssetVersion)).toBe(true);
             }
         });
     });

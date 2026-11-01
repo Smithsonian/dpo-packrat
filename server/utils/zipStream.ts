@@ -107,8 +107,11 @@ export class ZipStream implements IZip {
                 return this._zip.generateNodeStream({ streamFiles: true, compression: 'DEFLATE', compressionOptions: { level: 8 } }); // we seem to experience issues with zipFile uncompressing "level 9" compression, which perahsp corresponds to PKWare's DEFLATE64, per this article: https://github.com/thejoshwolfe/yauzl/issues/58
             else {
                 const ZO: JSZip.JSZipObject | null = this._zip.file(entry);
-                RK.logError(RK.LogSection.eSYS,'stream content failed','no zip object from entry',{ entry, files: this._files },'Utils.ZipStream');
-                return (ZO) ? ZO.nodeStream() : null;
+                if (!ZO) {
+                    RK.logError(RK.LogSection.eSYS,'stream content failed','no zip object from entry',{ entry, files: this._files },'Utils.ZipStream');
+                    return null;
+                }
+                return ZO.nodeStream();
             }
         } catch (err) /* istanbul ignore next */ {
             RK.logError(RK.LogSection.eSYS,'load failed',H.Helpers.getErrorString(err),{ entry, files: this._files },'Utils.ZipStream');

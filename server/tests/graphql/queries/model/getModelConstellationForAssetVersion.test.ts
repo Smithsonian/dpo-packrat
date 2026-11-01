@@ -17,11 +17,8 @@ const getModelConstellationForAssetVersionTest = (utils: TestSuiteUtils): void =
 
             const { ModelConstellation }: GetModelConstellationForAssetVersionResult = await graphQLApi.getModelConstellationForAssetVersion(input);
 
-            if (ModelConstellation) {
-                expect(ModelConstellation.Model).toBeFalsy();
-            } else {
-                expect(ModelConstellation).toBe(null);
-            }
+            // A non-existent asset version yields no constellation (null) or one with no Model.
+            expect(ModelConstellation?.Model ?? null).toBeNull();
         });
     });
 };

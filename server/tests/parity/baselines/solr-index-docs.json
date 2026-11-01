@@ -1,0 +1,446 @@
+{
+  "CaptureData": {
+    "CDCaptureMethod": "ARK",
+    "ChildrenCaptureMethods": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenDateCreated": "<date>",
+    "ChildrenObjectTypes": {
+      "add": [
+        "Capture Data"
+      ]
+    },
+    "CommonDateCreated": "<date>",
+    "CommonDescription": "OA Test",
+    "CommonIdentifier": [],
+    "CommonName": "OA Test captureData1",
+    "CommonOTNumber": 5,
+    "CommonObjectType": "Capture Data",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>"
+    ],
+    "HierarchyItem": [
+      "OA Test item1"
+    ],
+    "HierarchyItemID": [
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>"
+    ],
+    "HierarchyProject": [
+      "OA Test project1"
+    ],
+    "HierarchyProjectID": [
+      "<id>"
+    ],
+    "HierarchySubject": [
+      "OA Test subject1"
+    ],
+    "HierarchySubjectID": [
+      "<id>"
+    ],
+    "HierarchyUnit": [
+      "DPO"
+    ],
+    "HierarchyUnitID": [
+      "<id>"
+    ],
+    "id": "<id>"
+  },
+  "Item": {
+    "ChildrenObjectTypes": {
+      "add": [
+        "Item"
+      ]
+    },
+    "CommonIdentifier": [],
+    "CommonName": "OA Test item1",
+    "CommonOTNumber": 4,
+    "CommonObjectType": "Item",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>"
+    ],
+    "HierarchyItem": [
+      "OA Test item1"
+    ],
+    "HierarchyItemID": [
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyProject": [
+      "OA Test project1"
+    ],
+    "HierarchyProjectID": [
+      "<id>"
+    ],
+    "HierarchySubject": [
+      "OA Test subject1"
+    ],
+    "HierarchySubjectID": [
+      "<id>"
+    ],
+    "HierarchyUnit": [
+      "DPO"
+    ],
+    "HierarchyUnitID": [
+      "<id>"
+    ],
+    "ItemEntireSubject": true,
+    "id": "<id>"
+  },
+  "Model": {
+    "ChildrenDateCreated": "<date>",
+    "ChildrenModelFileTypes": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenModelPurposes": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenObjectTypes": {
+      "add": [
+        "Model"
+      ]
+    },
+    "CommonDateCreated": "<date>",
+    "CommonIdentifier": [],
+    "CommonName": "OA Test model1",
+    "CommonOTNumber": 6,
+    "CommonObjectType": "Model",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>"
+    ],
+    "HierarchyItem": [
+      "OA Test item1"
+    ],
+    "HierarchyItemID": [
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyProject": [
+      "OA Test project1"
+    ],
+    "HierarchyProjectID": [
+      "<id>"
+    ],
+    "HierarchySubject": [
+      "OA Test subject1"
+    ],
+    "HierarchySubjectID": [
+      "<id>"
+    ],
+    "HierarchyUnit": [
+      "DPO"
+    ],
+    "HierarchyUnitID": [
+      "<id>"
+    ],
+    "ModelCountAnimations": 0,
+    "ModelCountCameras": 0,
+    "ModelCountEmbeddedTextures": 0,
+    "ModelCountFaces": 0,
+    "ModelCountLights": 0,
+    "ModelCountLinkedTextures": 0,
+    "ModelCountMaterials": 0,
+    "ModelCountMeshes": 0,
+    "ModelCountTriangles": 0,
+    "ModelCountVertices": 0,
+    "ModelCreationMethod": "ARK",
+    "ModelFileEncoding": "BINARY",
+    "ModelFileType": "ARK",
+    "ModelIsDracoCompressed": false,
+    "ModelMaterialChannelAdditionalAttributes": [],
+    "ModelMaterialChannelPosition": [],
+    "ModelMaterialChannelType": [],
+    "ModelMaterialChannelTypeOther": [],
+    "ModelMaterialChannelUVMapEmbedded": [],
+    "ModelMaterialChannelValues": [],
+    "ModelMaterialChannelWidth": [],
+    "ModelMaterialName": [],
+    "ModelMaterialUVMapEdgeLength": [],
+    "ModelModality": "ARK",
+    "ModelObjectBoundingBoxP1X": [],
+    "ModelObjectBoundingBoxP1Y": [],
+    "ModelObjectBoundingBoxP1Z": [],
+    "ModelObjectBoundingBoxP2X": [],
+    "ModelObjectBoundingBoxP2Y": [],
+    "ModelObjectBoundingBoxP2Z": [],
+    "ModelObjectCountColorChannels": [],
+    "ModelObjectCountFaces": [],
+    "ModelObjectCountTextureCoordinateChannels": [],
+    "ModelObjectCountTriangles": [],
+    "ModelObjectCountVertices": [],
+    "ModelObjectHasBones": [],
+    "ModelObjectHasFaceNormals": [],
+    "ModelObjectHasTangents": [],
+    "ModelObjectHasTextureCoordinates": [],
+    "ModelObjectHasVertexColor": [],
+    "ModelObjectHasVertexNormals": [],
+    "ModelObjectIsTwoManifoldBounded": [],
+    "ModelObjectIsTwoManifoldUnbounded": [],
+    "ModelObjectIsWatertight": [],
+    "ModelObjectSelfIntersecting": [],
+    "ModelPurpose": "ARK",
+    "ModelUnits": "ARK",
+    "id": "<id>"
+  },
+  "Project": {
+    "ChildrenCaptureMethods": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenDateCreated": "<date>",
+    "ChildrenModelFileTypes": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenModelPurposes": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenObjectTypes": {
+      "add": [
+        "Actor",
+        "Asset",
+        "Asset Version",
+        "Capture Data",
+        "Item",
+        "Model",
+        "Project",
+        "Project Documentation",
+        "Scene",
+        "Stakeholder"
+      ]
+    },
+    "CommonDescription": "OA Test",
+    "CommonIdentifier": [],
+    "CommonName": "OA Test project1",
+    "CommonOTNumber": 2,
+    "CommonObjectType": "Project",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>"
+    ],
+    "HierarchyProject": [
+      "OA Test project1"
+    ],
+    "HierarchyProjectID": [
+      "<id>"
+    ],
+    "id": "<id>"
+  },
+  "Scene": {
+    "ChildrenObjectTypes": {
+      "add": [
+        "Scene"
+      ]
+    },
+    "CommonIdentifier": [],
+    "CommonName": "OA Test scene1",
+    "CommonOTNumber": 7,
+    "CommonObjectType": "Scene",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>"
+    ],
+    "HierarchyItem": [
+      "OA Test item1"
+    ],
+    "HierarchyItemID": [
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyProject": [
+      "OA Test project1"
+    ],
+    "HierarchyProjectID": [
+      "<id>"
+    ],
+    "HierarchySubject": [
+      "OA Test subject1"
+    ],
+    "HierarchySubjectID": [
+      "<id>"
+    ],
+    "HierarchyUnit": [
+      "DPO"
+    ],
+    "HierarchyUnitID": [
+      "<id>"
+    ],
+    "SceneApprovedForPublication": true,
+    "SceneCountCamera": 0,
+    "SceneCountLight": 0,
+    "SceneCountMeta": 0,
+    "SceneCountModel": 0,
+    "SceneCountNode": 0,
+    "SceneCountScene": 0,
+    "SceneCountSetup": 0,
+    "SceneCountTour": 0,
+    "SceneEdanUUID": null,
+    "ScenePosedAndQCd": true,
+    "id": "<id>"
+  },
+  "Subject": {
+    "ChildrenObjectTypes": {
+      "add": [
+        "Subject"
+      ]
+    },
+    "CommonIdentifier": [
+      "<id>"
+    ],
+    "CommonName": "OA Test subject1",
+    "CommonOTNumber": 3,
+    "CommonObjectType": "Subject",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>"
+    ],
+    "HierarchySubject": [
+      "OA Test subject1"
+    ],
+    "HierarchySubjectID": [
+      "<id>"
+    ],
+    "HierarchyUnit": [
+      "DPO"
+    ],
+    "HierarchyUnitID": [
+      "<id>"
+    ],
+    "SubjectIdentifierPreferred": "<id>",
+    "id": "<id>"
+  },
+  "Unit": {
+    "ChildrenCaptureMethods": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenDateCreated": "<date>",
+    "ChildrenModelFileTypes": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenModelPurposes": {
+      "add": [
+        "ARK"
+      ]
+    },
+    "ChildrenObjectTypes": {
+      "add": [
+        "Actor",
+        "Asset",
+        "Asset Version",
+        "Capture Data",
+        "Intermediary File",
+        "Item",
+        "Model",
+        "Scene",
+        "Stakeholder",
+        "Subject",
+        "Unit"
+      ]
+    },
+    "CommonIdentifier": [],
+    "CommonName": "OA Test unit1",
+    "CommonOTNumber": 1,
+    "CommonObjectType": "Unit",
+    "CommonRetired": false,
+    "CommonidObject": "<id>",
+    "HierarchyAncestorID": [
+      "<id>"
+    ],
+    "HierarchyChildrenID": [
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>",
+      "<id>"
+    ],
+    "HierarchyParentID": [
+      "<id>"
+    ],
+    "HierarchyUnit": [
+      "DPO"
+    ],
+    "HierarchyUnitID": [
+      "<id>"
+    ],
+    "UnitARKPrefix": "http://dpo/",
+    "UnitAbbreviation": "DPO",
+    "id": "<id>"
+  }
+}

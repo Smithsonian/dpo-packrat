@@ -37,6 +37,11 @@ jobs:
       - name: Check for lint errors
         run: yarn lint
 
+      # Weak-assertion gate (TR-0.8): fails on a test whose assertions are all
+      # if-guarded (silent-skip) or that has an early done(). Static — no DB/network.
+      - name: Check for weak-assertion tests
+        run: node server/tests/scanWeakAssertions.js
+
   test:
     runs-on: ubuntu-latest
     services:
@@ -45,7 +50,7 @@ jobs:
         image: mariadb:10.5
         env:
           MYSQL_ROOT_PASSWORD: test
-          MYSQL_DATABASE: Packrat
+          MYSQL_DATABASE: Packrat_test
         ports:
           - "3306:3306"
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=10s --health-retries=10
@@ -57,16 +62,17 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup test DB
-        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test -e 'CREATE DATABASE IF NOT EXISTS Packrat'
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test -e 'CREATE DATABASE IF NOT EXISTS Packrat_test'
 
       - name: Setup test DB Schema
-        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat < server/db/sql/scripts/Packrat.SCHEMA.sql
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat_test < server/db/sql/scripts/Packrat.SCHEMA.sql
 
       - name: Setup test DB Proc
-        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat < server/db/sql/scripts/Packrat.PROC.sql
+        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat_test < server/db/sql/scripts/Packrat.PROC.sql
 
       - name: Setup test DB Data
-        run: mysql -h 127.0.0.1 -v -P 3306 -u root --password=test --database=Packrat < server/db/sql/scripts/Packrat.DATA.sql
+        run: |
+          { echo 'SET autocommit=0; SET unique_checks=0; SET foreign_key_checks=0;'; cat server/db/sql/scripts/Packrat.DATA.sql; echo 'COMMIT;'; } | mysql -h 127.0.0.1 -P 3306 -u root --password=test --database=Packrat_test
 
       - name: Setup node version
         uses: actions/setup-node@v3
@@ -88,7 +94,18 @@ jobs:
       - name: Install E2E dependencies
         run: cd e2e && yarn install --frozen-lockfile --network-timeout 600000 && cd ..
 
-      # Run tests using test DB
+      # Run tests using test DB.
+      #
+      # `yarn test` enforces the log honesty gate (server/tests/logGate.ts +
+      # logBaseline.json): a test file fails if it emits an error/critical log from
+      # a caller not in the baseline allowlist. If CI trips the gate on a new
+      # caller, the jest output names the unexpected caller(s); either fix the code
+      # path or, if it is a known/benign emitter, add the caller to
+      # server/tests/logBaseline.json (re-seed with `yarn test:logbaseline`).
+      #
+      # Live-service suites (EDAN, Cook) are opt-in and stay skipped here because
+      # PACKRAT_TEST_EDAN / PACKRAT_TEST_COOK are intentionally unset — CI runs the
+      # hermetic + local-DB tiers only, with no external-network dependency.
       - name: Run Tests
         run: yarn test
         env:
@@ -97,7 +114,17 @@ jobs:
           # otherwise PACKRAT_EDAN_APPID falls back to the OCIO3D default and mismatches the key.
           PACKRAT_EDAN_APPID: ${{ secrets.PACKRAT_EDAN_APPID }}
           PACKRAT_EDAN_AUTH_KEY: ${{ secrets.PACKRAT_EDAN_AUTH_KEY }}
-          PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat
+          PACKRAT_DATABASE_URL: mysql://root:test@127.0.0.1:3306/Packrat_test
+
+      # Preserve the surviving test log (written under server/var/test/logs by
+      # setEnvVars.ts) so a gate trip or failure can be inspected from the run.
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-logs
+          path: server/var/test/logs
+          if-no-files-found: ignore
 
   build:
     # Only run this step on pull_request or push to specified branches (PR merge counts as push too)

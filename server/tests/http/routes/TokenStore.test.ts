@@ -77,7 +77,10 @@ describe('TokenStore', () => {
         });
 
         test('revoke is a no-op for unknown tokens', () => {
-            TokenStore.revoke('does-not-exist');
+            const sizeBefore = getTokensMap().size;
+            expect(() => TokenStore.revoke('does-not-exist')).not.toThrow();
+            expect(getTokensMap().size).toBe(sizeBefore);
+            expect(TokenStore.validate('does-not-exist')).toBeNull();
         });
 
         test('scope verification: token for scene A cannot be used for scene B', () => {

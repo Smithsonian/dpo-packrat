@@ -3,6 +3,7 @@ import * as CACHE from '../cache';
 import * as STORE from '../storage/interface';
 import * as META from '../metadata';
 import type * as COL from '../collections/interface/';
+import { CollectionFactory } from '../collections/interface';
 import * as H from './helpers';
 import * as COMMON from '@dpo-packrat/common';
 import { RecordKeeper as RK } from '../records/recordKeeper';
@@ -14,7 +15,7 @@ import { Readable } from 'stream';
 import * as path from 'path';
 
 export type EdanRecordIdResult = {
-    status: 'assigned' | 'assigned_multisubject' | 'mismatch' | 'missing_svx' | 'missing_db' | 'not_found' | 'no_subject' | 'invalid_multisubject' | 'missing_multisubject' | 'error';
+    status: 'assigned' | 'assigned_multisubject' | 'assigned_listmember' | 'mismatch' | 'missing_svx' | 'missing_db' | 'not_found' | 'no_subject' | 'invalid_multisubject' | 'missing_multisubject' | 'error';
     valid: boolean;
     svxEdanRecordId: string | null;
     dbEdanRecordId: string | null;
@@ -138,6 +139,11 @@ export class SceneHelpers {
                     svxEdanRecordId, dbEdanRecordId, subjectCount,
                     message: `EDAN Record ID assigned (${svxEdanRecordId})`
                 };
+            // A single-subject scene may point at an edanlists: aggregate that references the
+            // subject's edanmdm: record. Treat this as valid when EDAN confirms the DB record
+            // is a member of the list; an EDAN failure blocks rather than silently passes.
+            if (svxEdanRecordId.startsWith('edanlists:') && dbEdanRecordId.startsWith('edanmdm:'))
+                return SceneHelpers.verifyEdanListMembership(svxEdanRecordId, dbEdanRecordId, subjectCount);
             return fail('mismatch',
                 `SVX (${svxEdanRecordId}) does not match DB (${dbEdanRecordId})`,
                 svxEdanRecordId, dbEdanRecordId, subjectCount);
@@ -152,6 +158,36 @@ export class SceneHelpers {
                 svxEdanRecordId, null, subjectCount);
         return fail('not_found', 'No EDAN Record ID found in SVX or DB',
             null, null, subjectCount);
+    }
+
+    /** Confirms via EDAN that an edanlists: record contains the subject's edanmdm: record as a member.
+     *  A valid membership is 'assigned_listmember'; a list that omits the record is a 'mismatch';
+     *  an EDAN failure (unreachable, missing list, malformed content) is a blocking 'error'. */
+    private static async verifyEdanListMembership(svxEdanRecordId: string, dbEdanRecordId: string, subjectCount: number): Promise<EdanRecordIdResult> {
+        const fail = (status: EdanRecordIdResult['status'], message: string): EdanRecordIdResult =>
+            ({ status, valid: false, svxEdanRecordId, dbEdanRecordId, subjectCount, message });
+
+        const ICol: COL.ICollection = CollectionFactory.getInstance();
+        const listRecord: COL.EdanRecord | null = await ICol.fetchContent(svxEdanRecordId);
+        if (!listRecord)
+            return fail('error', `Cannot verify EDAN list membership; EDAN did not return (${svxEdanRecordId})`);
+
+        const items: unknown = listRecord.content?.items;
+        if (!Array.isArray(items))
+            return fail('error', `EDAN list (${svxEdanRecordId}) has no members to verify against (${dbEdanRecordId})`);
+
+        // Members may carry the edanmdm: scheme or appear bare; compare on the bare record id.
+        const bare = (value: string): string => value.startsWith('edanmdm:') ? value.substring('edanmdm:'.length) : value;
+        const target: string = bare(dbEdanRecordId);
+        const isMember: boolean = items.some(item => typeof item === 'string' && bare(item) === target);
+
+        if (isMember)
+            return {
+                status: 'assigned_listmember', valid: true,
+                svxEdanRecordId, dbEdanRecordId, subjectCount,
+                message: `EDAN Record ID assigned; DB record is a member of list (${svxEdanRecordId})`
+            };
+        return fail('mismatch', `SVX list (${svxEdanRecordId}) does not contain DB (${dbEdanRecordId})`);
     }
 
     /** Patches the edanRecordId in the SVX JSON's metas[].collection and ingests the updated file as a new asset version. */

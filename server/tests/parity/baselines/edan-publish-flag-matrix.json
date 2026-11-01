@@ -1,0 +1,170 @@
+[
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": null,
+    "state": "eNotPublished",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 0,
+    "state": "eNotPublished",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 10,
+    "state": "eNotPublished",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 20,
+    "state": "eNotPublished",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 30,
+    "state": "eNotPublished",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 40,
+    "state": "eNotPublished",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": null,
+    "state": "eAPIOnly",
+    "status": 0
+  },
+  {
+    "downloads": true,
+    "publicSearch": false,
+    "restrictLevel": 0,
+    "state": "eAPIOnly",
+    "status": 0
+  },
+  {
+    "downloads": true,
+    "publicSearch": false,
+    "restrictLevel": 10,
+    "state": "eAPIOnly",
+    "status": 0
+  },
+  {
+    "downloads": true,
+    "publicSearch": false,
+    "restrictLevel": 20,
+    "state": "eAPIOnly",
+    "status": 0
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 30,
+    "state": "eAPIOnly",
+    "status": 0
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 40,
+    "state": "eAPIOnly",
+    "status": 0
+  },
+  {
+    "downloads": false,
+    "publicSearch": true,
+    "restrictLevel": null,
+    "state": "ePublished",
+    "status": 0
+  },
+  {
+    "downloads": true,
+    "publicSearch": true,
+    "restrictLevel": 0,
+    "state": "ePublished",
+    "status": 0
+  },
+  {
+    "downloads": true,
+    "publicSearch": true,
+    "restrictLevel": 10,
+    "state": "ePublished",
+    "status": 0
+  },
+  {
+    "downloads": true,
+    "publicSearch": true,
+    "restrictLevel": 20,
+    "state": "ePublished",
+    "status": 0
+  },
+  {
+    "downloads": false,
+    "publicSearch": true,
+    "restrictLevel": 30,
+    "state": "ePublished",
+    "status": 0
+  },
+  {
+    "downloads": false,
+    "publicSearch": true,
+    "restrictLevel": 40,
+    "state": "ePublished",
+    "status": 0
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": null,
+    "state": "eInternal",
+    "status": 1
+  },
+  {
+    "downloads": true,
+    "publicSearch": false,
+    "restrictLevel": 0,
+    "state": "eInternal",
+    "status": 1
+  },
+  {
+    "downloads": true,
+    "publicSearch": false,
+    "restrictLevel": 10,
+    "state": "eInternal",
+    "status": 1
+  },
+  {
+    "downloads": true,
+    "publicSearch": false,
+    "restrictLevel": 20,
+    "state": "eInternal",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 30,
+    "state": "eInternal",
+    "status": 1
+  },
+  {
+    "downloads": false,
+    "publicSearch": false,
+    "restrictLevel": 40,
+    "state": "eInternal",
+    "status": 1
+  }
+]

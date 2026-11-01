@@ -26,6 +26,7 @@ describe('DB Composite ObjectGraph Setup', () => {
 describe('DB Composite ObjectGraph Ancestor', () => {
     test('DB Composite ObjectGraph Ancestor ProjectDocumentation', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.projectDocumentation1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -47,6 +48,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor CaptureData', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.captureData1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -71,6 +73,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Master Model', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -96,6 +99,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Scene', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.scene1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -122,6 +126,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Derived Model', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model2, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -148,6 +153,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor IntermediaryFile', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.intermediaryFile1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -172,6 +178,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Asset', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.asset1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -197,6 +204,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor AssetVersion', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.assetVersion1c, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -223,6 +231,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Actor 1', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.actor1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -248,6 +257,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Actor 2', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.actor2, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -273,6 +283,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Stakeholder', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.stakeholder1, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -295,6 +306,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 
     test('DB Composite ObjectGraph Ancestor Subject', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.subject4, DBAPI.eObjectGraphMode.eAncestors);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -318,6 +330,7 @@ describe('DB Composite ObjectGraph Ancestor', () => {
 describe('DB Composite ObjectGraph Descendent', () => {
     test('DB Composite ObjectGraph Descendent Unit', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.unit1, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -348,6 +361,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Project', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.project2, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -373,6 +387,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Subject', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.subject1, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -403,6 +418,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Item', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.item1, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -429,6 +445,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Capture Data', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.captureData1, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -454,6 +471,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Model Master', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model1, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -477,6 +495,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Model Derived', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model2, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -499,6 +518,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 
     test('DB Composite ObjectGraph Descendent Scene', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.scene1, DBAPI.eObjectGraphMode.eDescendents);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -524,6 +544,7 @@ describe('DB Composite ObjectGraph Descendent', () => {
 describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
     test('DB Composite ObjectGraph Descendent Unit Depth 1', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.unit1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -547,6 +568,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Project Depth 1', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.project1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -570,6 +592,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Subject Depth 1', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.subject1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -592,6 +615,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Item', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.item1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -616,6 +640,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Capture Data', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.captureData1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -639,6 +664,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Model Master', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -661,6 +687,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Model Derived', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.model2, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -682,6 +709,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 
     test('DB Composite ObjectGraph Descendent Scene', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.scene1, DBAPI.eObjectGraphMode.eDescendents, true, true, 1);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeFalsy();
@@ -706,6 +734,7 @@ describe('DB Composite ObjectGraph Descendent With Depth 1', () => {
 describe('DB Composite ObjectGraph All', () => {
     test('DB Composite ObjectGraph All Unit', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.unit1, DBAPI.eObjectGraphMode.eAll);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();
@@ -736,6 +765,7 @@ describe('DB Composite ObjectGraph All', () => {
 
     test('DB Composite ObjectGraph All Item', async () => {
         const OA: DBAPI.ObjectGraph | null = await ObjectGraphTestSetup.testObjectGraphFetch(OHTS.item1, DBAPI.eObjectGraphMode.eAll);
+        expect(OA).toBeTruthy(); // a null fetch is a regression, not a silent pass
         if (!OA)
             return;
         expect(OA.unit).toBeTruthy();

@@ -26,17 +26,13 @@ const getUserTest = (utils: TestSuiteUtils): void => {
             };
 
             const user = new DBAPI.User(userArgs);
-            if (await user.create()) {
-                const input: GetUserInput = {
-                    idUser: user.idUser
-                };
+            const created = await user.create();
+            expect(created).toBe(true);
 
-                const { User }: GetUserResult = await graphQLApi.getUser(input);
-
-                if (User) {
-                    expect(User.idUser).toBe(user.idUser);
-                }
-            }
+            const input: GetUserInput = { idUser: user.idUser };
+            const { User }: GetUserResult = await graphQLApi.getUser(input);
+            expect(User).toBeTruthy();
+            expect(User?.idUser).toBe(user.idUser);
         });
     });
 };

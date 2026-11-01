@@ -53,6 +53,8 @@ const getEdanRecordIdStatus = (r: EdanRecordIdResult): FieldStatus => {
             return formatEdanResultField(name, 'Missing for Multi-Subject', 'fail', r.message);
         case 'assigned':
             return formatEdanResultField(name, 'Assigned', 'pass', r.message);
+        case 'assigned_listmember':
+            return formatEdanResultField(name, 'Assigned (List Member)', 'pass', r.message);
         case 'mismatch':
             return formatEdanResultField(name, 'Mismatch', 'fail', r.message);
         case 'missing_svx':

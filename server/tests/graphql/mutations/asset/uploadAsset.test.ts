@@ -48,6 +48,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
         test('should work with valid input', async () => {
             const userInput = createUserInput();
             const { User } = await graphQLApi.createUser(userInput);
+            expect(User).toBeTruthy();
 
             if (User) {
                 const context: Context = {
@@ -60,6 +61,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                 const file = fs.createReadStream(path);
 
                 const Vocabulary = await CACHE.VocabularyCache.vocabularyByEnum(COMMON.eVocabularyID.eAssetAssetTypeOther);
+                expect(Vocabulary).toBeTruthy();
                 if (Vocabulary) {
                     const { idVocabulary } = Vocabulary;
 
@@ -72,8 +74,9 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                         },
                         type: idVocabulary
                     };
-                    const { status } = await graphQLApi.uploadAsset(uploadAssetInput, context);
+                    const { status, idAssetVersions } = await graphQLApi.uploadAsset(uploadAssetInput, context);
                     expect(status).toBe(UploadStatus.Complete);
+                    expect(idAssetVersions?.length ?? 0).toBeGreaterThan(0);
                 }
             }
         });
@@ -81,6 +84,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
         test('should fail with invalid input', async () => {
             const userInput = createUserInput();
             const { User } = await graphQLApi.createUser(userInput);
+            expect(User).toBeTruthy();
 
             if (User) {
                 const context: Context = {
@@ -89,6 +93,7 @@ const uploadAssetTest = (utils: TestSuiteUtils): void => {
                 };
 
                 const Vocabulary = await CACHE.VocabularyCache.vocabularySetEntriesByEnum(COMMON.eVocabularySetID.eAssetAssetType);
+                expect(Vocabulary).toBeTruthy();
 
                 if (Vocabulary) {
                     const [{ idVocabulary }] = Vocabulary;

@@ -1,0 +1,17 @@
+[
+  {
+    "FileName": "Box_Test_Txr.png",
+    "StorageHash": "85c80506abfafd1a88b63f3dbfd99e421684397a65b63d3aa22b9563bfbdef715a1402666dddc23c150438b494d943ecc1420e164127007c555b3e79b464d3e6",
+    "StorageSize": 42493
+  },
+  {
+    "FileName": "Model_Test.mtl",
+    "StorageHash": "1f8355c491a44d8b6040771f8566ae0d0474223c2eb106d77d1fd27215909c030c401469420c4293b143f09fdea7305d0641cea18821cb53d53205a87ebe5c14",
+    "StorageSize": 227
+  },
+  {
+    "FileName": "Model_Test.obj",
+    "StorageHash": "947794f44324a2f43fde6b0f36cdc5caefc42805c85de002ff0f262291ae930544fafcd8b397f82d576c8648fc20d626e407d1cc84b8a8134792e23713d94c4c",
+    "StorageSize": 1165
+  }
+]

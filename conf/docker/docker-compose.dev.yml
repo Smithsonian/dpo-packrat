@@ -104,6 +104,7 @@ services:
             - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
         volumes:
             - ../../server/db/sql:/app/
+            - packrat-db-data:/var/lib/mysql
 
     packrat-solr:
         container_name: packrat-solr
@@ -125,3 +126,6 @@ networks:
         ipam:
             config:
                 - subnet: 192.168.4.0/24
+
+volumes:
+    packrat-db-data:

@@ -1,0 +1,277 @@
+import * as DBAPI from '../../db';
+import * as DBC from '../../db/connection';
+
+// Null/zero-id fetch behavior: every DB-API fetch*/fetchFrom* returns null for a
+// 0, empty-string, or empty-array key, and a bare all-zero SystemObject rejects
+// create()/update(). Self-contained (no shared fixtures), so it lives in its own
+// file rather than the dbcreation monolith.
+describe('DB Null/Zero ID Test', () => {
+    test('DB Null/Zero ID Test', async () => {
+        expect(await DBAPI.AccessAction.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessAction.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.AccessContext.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessContextObject.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessContextObject.fetchFromAccessContext(0)).toBeNull();
+        expect(await DBAPI.AccessContextObject.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.AccessPolicy.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessPolicy.fetchFromAccessContext(0)).toBeNull();
+        expect(await DBAPI.AccessPolicy.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.AccessRole.fetch(0)).toBeNull();
+        expect(await DBAPI.AccessRole.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.AccessRoleAccessActionXref.fetch(0)).toBeNull();
+        expect(await DBAPI.Actor.fetch(0)).toBeNull();
+        expect(await DBAPI.Actor.fetchFromUnit(0)).toBeNull();
+        expect(await DBAPI.Asset.fetch(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchByStorageKey('')).toBeNull();
+        expect(await DBAPI.Asset.fetchFromAssetGroup(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Asset.fetchMatching(0, '', 0)).toBeNull();
+        expect(await DBAPI.AssetGroup.fetch(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetch(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromAsset(0, false)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromSystemObjectVersion(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchLatestFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchLatestFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFirstFromAsset(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.computeNextVersionNumber(0)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchFromUserByIngested(0, true, true)).toBeNull();
+        expect(await DBAPI.AssetVersion.fetchByAssetAndVersion(0, 1)).toBeNull();
+        expect(await DBAPI.Audit.fetch(0)).toBeNull();
+        expect(await DBAPI.Audit.fetchLastUser(0, DBAPI.eAuditType.eAuthLogin)).toBeNull();
+        expect(await DBAPI.Audit.fetchLastUser(-1, DBAPI.eAuditType.eUnknown)).toBeNull();
+        expect(await DBAPI.CaptureData.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureData.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.CaptureData.fetchFromCaptureDataPhoto(0)).toBeNull();
+        expect(await DBAPI.CaptureData.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.CaptureDataFile.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataFile.fetchFromCaptureData(0)).toBeNull();
+        expect(await DBAPI.CaptureDataFile.fetchFolderVariantMapFromCaptureData(0)).toBeNull();
+        expect(await DBAPI.CaptureDataGroup.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataGroup.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.CaptureDataGroupCaptureDataXref.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataPhoto.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataPhoto.fetchFromCaptureData(0)).toBeNull();
+        expect(await DBAPI.CaptureDataVolume.fetch(0)).toBeNull();
+        expect(await DBAPI.CaptureDataVolume.fetchFromCaptureData(0)).toBeNull();
+        expect(await DBC.CopyArray<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
+        expect(await DBC.CopyObject<DBAPI.SystemObject, DBAPI.SystemObject>(null, DBAPI.SystemObject)).toBeNull();
+        expect(await DBAPI.GeoLocation.fetch(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetch(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetchFromIdentifierValue('')).toBeNull();
+        expect(await DBAPI.Identifier.fetchFromSubjectPreferred(0)).toBeNull();
+        expect(await DBAPI.Identifier.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.IntermediaryFile.fetch(0)).toBeNull();
+        expect(await DBAPI.IntermediaryFile.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.Item.fetch(0)).toBeNull();
+        expect(await DBAPI.Item.fetchDerivedFromSubject(0)).toBeNull();
+        expect(await DBAPI.Item.fetchDerivedFromSubject(-1)).toBeNull();
+        expect(await DBAPI.Item.fetchDerivedFromSubjects([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromCaptureDatas([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromModels([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromScenes([])).toBeNull();
+        expect(await DBAPI.Item.fetchMasterFromIntermediaryFiles([])).toBeNull();
+        expect(await DBAPI.Item.fetchRelatedItemsAndProjects([])).toBeNull();
+        expect(await DBAPI.Job.fetch(0)).toBeNull();
+        expect(await DBAPI.Job.fetchByType(0)).toBeNull();
+        expect(await DBAPI.JobRun.fetch(0)).toBeNull();
+        expect(await DBAPI.JobRun.fetchMatching(0, 0, 0, true, null, undefined)).toBeNull();
+        expect(await DBAPI.License.fetch(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetch(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetchFromLicense(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.LicenseAssignment.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Metadata.fetch(0)).toBeNull();
+        expect(await DBAPI.Metadata.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.Metadata.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.Model.fetch(0)).toBeNull();
+        expect(await DBAPI.Model.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.Model.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.ModelConstellation.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterial.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterial.fetchFromModelObjects([])).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterial(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterials([])).toBeNull();
+        expect(await DBAPI.ModelMaterialChannel.fetchFromModelMaterialUVMap(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetchFromAsset(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelMaterialUVMap.fetchFromModels([])).toBeNull();
+        expect(await DBAPI.ModelObject.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelObject.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObject(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelObjects([])).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterial(0)).toBeNull();
+        expect(await DBAPI.ModelObjectModelMaterialXref.fetchFromModelMaterials([])).toBeNull();
+        expect(await DBAPI.ModelProcessingAction.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingAction.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingActionStep.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelProcessingActionStep.fetchFromModelProcessingAction(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetch(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromScene(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModel(0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelAndScene(0, -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelAndScene(-1, 0)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(0, -1, 'foo')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, 0, 'foo')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromModelSceneAndName(-1, -1, '')).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(0, 'foo', 'foo', 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, null, 'foo', 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', null, 'foo', -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', null, -1)).toBeNull();
+        expect(await DBAPI.ModelSceneXref.fetchFromSceneNameUsageQualityUVResolution(-1, 'foo', 'foo', 'foo', null)).toBeNull();
+        expect(await DBAPI.Project.fetch(0)).toBeNull();
+        expect(await DBAPI.Project.fetchRelatedToSubjects([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromStakeholders([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromProjectDocumentations([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromStakeholders([])).toBeNull();
+        expect(await DBAPI.Project.fetchMasterFromProjectDocumentations([])).toBeNull();
+        expect(await DBAPI.ProjectDocumentation.fetch(0)).toBeNull();
+        expect(await DBAPI.ProjectDocumentation.fetchFromProject(0)).toBeNull();
+        expect(await DBAPI.ProjectDocumentation.fetchDerivedFromProjects([])).toBeNull();
+        expect(await DBAPI.Scene.fetch(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchFromXref(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchByUUID('')).toBeNull();
+        expect(await DBAPI.Scene.fetchDerivedFromItems([])).toBeNull();
+        expect(await DBAPI.Scene.fetchChildrenScenes(0)).toBeNull();
+        expect(await DBAPI.Scene.fetchParentScenes(0)).toBeNull();
+        expect(await DBAPI.Sentinel.fetch(0)).toBeNull();
+        expect(await DBAPI.Stakeholder.fetch(0)).toBeNull();
+        expect(await DBAPI.Stakeholder.fetchDerivedFromProjects([])).toBeNull();
+        expect(await DBAPI.Subject.clearPreferredIdentifier(0)).toBeFalsy();
+        expect(await DBAPI.Subject.populateIdentifierSubjectMap(new Map<string, { idSubject: number, idSystemObject: number, idUnit: number }>())).toBeTruthy();
+        expect(await DBAPI.Subject.fetch(0)).toBeNull();
+        expect(await DBAPI.Subject.fetchFromUnit(0)).toBeNull();
+        expect(await DBAPI.Subject.fetchMasterFromItems([])).toBeNull();
+        expect(await DBAPI.Subject.fetchDerivedFromProjects([])).toBeNull();
+        expect(await DBAPI.SystemObject.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchDerivedFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchMasterFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchWorkflowStepFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromActorID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromAssetID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromAssetVersionID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromCaptureDataID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromIntermediaryFileID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromItemID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromModelID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromProjectID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromProjectDocumentationID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromSceneID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromStakeholderID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromSubjectID(0)).toBeNull();
+        expect(await DBAPI.SystemObject.fetchFromUnitID(0)).toBeNull();
+        expect(await DBAPI.SystemObjectActor.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectAsset.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectAssetVersion.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectCaptureData.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectIntermediaryFile.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectItem.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectModel.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectProject.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectProjectDocumentation.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectScene.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectStakeholder.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectSubject.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectUnit.fetch(0)).toBeNull();
+
+        expect(await DBAPI.SystemObjectActor.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectAsset.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectAssetVersion.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectCaptureData.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectIntermediaryFile.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectItem.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectModel.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectProject.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectProjectDocumentation.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectScene.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectStakeholder.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectSubject.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectUnit.fetch(-1)).toBeNull();
+        expect(await DBAPI.SystemObjectPairs.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectPairs.fetchDerivedFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObjectPairs.fetchMasterFromXref(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.fetchLatestFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(0, null, null, undefined)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromSystemObjectVersion(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchFromAssetVersion(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(0, -1)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestFromSystemObjectVersionAndAsset(-1, 0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchAssetVersionMap(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.fetchLatestAssetVersionMap(0)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(0, -1, -1)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(-1, 0, -1)).toBeNull();
+        expect(await DBAPI.SystemObjectVersionAssetVersionXref.addOrUpdate(-1, -1, 0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetch(0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetchXref(0, 1)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetchXref(1, 0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetchMasters(0)).toBeNull();
+        expect(await DBAPI.SystemObjectXref.fetchDerived(0)).toBeNull();
+        expect(await DBAPI.Unit.fetch(0)).toBeNull();
+        expect(await DBAPI.Unit.fetchMasterFromProjects([])).toBeNull();
+        expect(await DBAPI.Unit.fetchFromUnitEdanAbbreviation('')).toBeNull();
+        expect(await DBAPI.UnitEdan.fetch(0)).toBeNull();
+        expect(await DBAPI.UnitEdan.fetchFromUnit(0)).toBeNull();
+        expect(await DBAPI.UnitEdan.fetchFromAbbreviation('')).toBeNull();
+        expect(await DBAPI.UnitEdan.fetchFromName('')).toBeNull();
+        expect(await DBAPI.User.fetch(0)).toBeNull();
+        expect(await DBAPI.UserAuthorization.fetch(0)).toBeNull();
+        expect(await DBAPI.UserAuthorization.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.UserAuthorization.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationSystemObject.fetch(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationSystemObject.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationSystemObject.fetchFromSystemObject(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationUrl.fetch(0)).toBeNull();
+        expect(await DBAPI.UserPersonalizationUrl.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.Vocabulary.fetch(0)).toBeNull();
+        expect(await DBAPI.Vocabulary.fetchFromVocabularySet(0)).toBeNull();
+        expect(await DBAPI.VocabularySet.fetch(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetch(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromProject(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromWorkflowType(0)).toBeNull();
+        expect(await DBAPI.Workflow.fetchFromWorkflowSet(0)).toBeNull();
+        expect(await DBAPI.WorkflowConstellation.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowReport.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowReport.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowReport.fetchFromWorkflowSet(0)).toBeNull();
+        expect(await DBAPI.WorkflowSet.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowSet.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromUser(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStep.fetchFromJobRun(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetch(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflowStep(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(0)).toBeNull();
+        expect(await DBAPI.WorkflowStepSystemObjectXref.fetchFromWorkflow(-1)).toEqual([]);
+
+        const SO: DBAPI.SystemObject = new DBAPI.SystemObject({
+            idActor: 0,
+            idAsset: 0,
+            idAssetVersion: 0,
+            idCaptureData: 0,
+            idIntermediaryFile: 0,
+            idItem: 0,
+            idModel: 0,
+            idProject: 0,
+            idProjectDocumentation: 0,
+            idScene: 0,
+            idStakeholder: 0,
+            idSubject: 0,
+            idSystemObject: 0,
+            idUnit: 0,
+            Retired: false,
+        });
+
+        await expect(SO.create()).rejects.toThrow('DBAPI.SystemObject.create() should never be called');
+        await expect(SO.update()).rejects.toThrow('DBAPI.SystemObject.update() should never be called');
+    });
+});

@@ -2,6 +2,7 @@
 import { JobCook } from './JobCook';
 import { CookRecipe } from './CookRecipe';
 import { findBasenameOffenders, BasenameOffender, cookDownloadTagForTypeKey, cookModelAutomationTagForTypeKey } from './CookOutputContract';
+import { inspectObjPackage, objPackageNeedsMtl, parseObjMaterialRefs, classifyPackageTextures, buildMinimalMtl } from './CookObjPackage';
 import { Config } from '../../../config';
 
 import * as JOB from '../../interface';
@@ -19,6 +20,7 @@ import { RecordKeeper as RK } from '../../../records/recordKeeper';
 
 // scene speecific
 import { SvxReader } from '../../../utils/parser';
+import { ZipStream } from '../../../utils/zipStream';
 import { SceneHelpers } from '../../../utils/sceneHelpers';
 import { JobCookSIVoyagerSceneParameterHelper } from './JobCookSIVoyagerScene';
 
@@ -103,6 +105,11 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     private idModel: number | null;
     private cleanupCalled: boolean = false;
     private sceneParameterHelper: JobCookSIVoyagerSceneParameterHelper | null;
+
+    // Compensating-cleanup ledger: each entry undoes one object created while processing a download,
+    // recorded as it is created. On a genuine fatal error (before the scene version is committed) the
+    // entries run in reverse so a failed generation leaves no dangling download models/assets behind.
+    private rollbackLedger: Array<{ label: string; undo: () => Promise<void> }> = [];
 
     private static vocabVoyagerSceneModel: DBAPI.Vocabulary | undefined = undefined;
     private static vocabAssetTypeScene: DBAPI.Vocabulary | undefined = undefined;
@@ -294,18 +301,20 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
         }
 
-        // if we don't have a scene file, then we bail
-        // TODO: cleanup ingested models on failure
-        if(!svxSceneFile || svxSceneFile.success===false)
+        // if we don't have a scene file, then we bail — roll back any download models ingested so far
+        if(!svxSceneFile || svxSceneFile.success===false) {
+            await this.rollbackCreatedObjects('no scene file in Cook response');
             return this.logError('create system objects failed','failed processing of returned download files', { svxSceneFile });
+        }
 
-        // if we had errors processing models, then we bail
-        // TODO: rollback to previous versions of all models that were successful on failure (i.e. cleanup)
+        // if we had errors processing models, then we bail — roll back everything created this run so
+        // a genuine failure leaves no dangling download models/assets behind
         const hasValidModels: boolean = !modelFiles.some(obj => obj.success === false);
         if( hasValidModels === false) {
             const errors = `["${
                 modelFiles.filter(obj => obj.success === false).map(obj => obj.error).join('","')
             }"]`;
+            await this.rollbackCreatedObjects('a generated download model failed to process');
             return this.logError('create system objects failed','failed processing of returned download model files', { name: sceneSource.Name, idScene: sceneSource.idScene, errors });
         }
 
@@ -357,9 +366,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
 
         // process the scene file, ingesting it
         const result = await this.processSceneFile(modelSource, svxSceneFile, idUserCreator);
-        if(result.success===false)
+        if(result.success===false) {
+            await this.rollbackCreatedObjects('scene processing failed');
             return this.logError('create system objects failed',`failed to process svx scene: ${result.error}`,{});
-        else {
+        } else {
             RK.logInfo(RK.LogSection.eJOB,'process scene success','successful processing of svx scene',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFileName: svxSceneFile.fileName },'Job.GenerateDownloads');
             await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful processing of svx scene: ${svxSceneFile.fileName}`);
         }
@@ -368,8 +378,10 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         // Clone scene's systemObjectVersion, using the assetVersionOverrideMap populated with new/updated assets
         const SOV: DBAPI.SystemObjectVersion | null = await DBAPI.SystemObjectVersion.cloneObjectAndXrefs(sceneSystemObject.idSystemObject, null,
             'Created by Cook si-generate-downloads', assetVersionOverrideMap);
-        if (!SOV)
+        if (!SOV) {
+            await this.rollbackCreatedObjects('unable to clone scene SystemObjectVersion');
             return this.logError('create system objects failed','unable to clone SystemObjectVersion', { sceneSystemObject });
+        }
 
         // cycle through models and if there's an asset version link up
         for(const model of modelFiles) {
@@ -382,11 +394,16 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
             }
         }
 
-        // Add scene asset metadata for attachments
-        // LOG.info('JobCookSIGenerateDownloads.createSystemObjects calling PublishScene.extractSceneMetadata', LOG.LS.eJOB);
+        // Add scene asset metadata for attachments. By this point the scene version has been cloned
+        // and the download models linked into it, so the downloads are committed — a metadata failure
+        // does not make them dangling, so it is not rolled back.
         const metadataResult: H.IOResults = await PublishScene.extractSceneMetadata(sceneSystemObject.idSystemObject, LS?.idUser ?? null);
         if (!metadataResult.success)
             return this.logError('create system objects failed',`unable to persist scene attachment metadata: ${metadataResult.error}`,{});
+
+        // generation is committed (scene version cloned, models linked); discard the rollback ledger
+        // so the created objects are kept.
+        this.rollbackLedger = [];
 
         RK.logInfo(RK.LogSection.eJOB,'create system objects','successful generation of downloads', { jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, svxFileName: svxSceneFile.fileName },'Job.GenerateDownloads');
         await this.appendToReportAndLog(`JobCookSIGenerateDownloads successful generation of downloads: ${svxSceneFile.fileName}`);
@@ -529,6 +546,11 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         let modelSO: DBAPI.SystemObject | null = null;
         let Asset: DBAPI.Asset | null = null;
 
+        // whether this download reuses an existing model (regeneration) or creates a new one. Governs
+        // rollback scope: a newly-created model is retired whole; an existing model keeps its identity
+        // and only the new asset version added below is retired.
+        const modelPreexisted: boolean = model !== null;
+
         // if we found a matching model then we update it. otherwise, we create a new one
         if (model) {
             // if we already have a model, look for the asset that we are likely updating:
@@ -560,6 +582,8 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 await this.logError('process model failed','unable to create model',{ name });
                 return null;
             }
+            const createdModel: DBAPI.Model = model;
+            this.recordRollback(`retire model '${createdModel.Name}'`, () => this.retireCreatedObject(createdModel, `model '${createdModel.Name}'`));
 
             // link model as derived from the scene
             const SOX1: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(sceneSource, model);
@@ -567,6 +591,7 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 await this.logError('process model failed','unable to wire model to scene together',{ sceneSource, model });
                 return null;
             }
+            this.recordRollback(`unwire scene->model xref ${SOX1.idSystemObjectXref}`, async () => { await DBAPI.SystemObjectXref.deleteIfAllowed(SOX1.idSystemObjectXref); });
 
             // link model as derived from the master model
             const SOX2: DBAPI.SystemObjectXref | null = await DBAPI.SystemObjectXref.wireObjectsIfNeeded(modelSource, model);
@@ -574,11 +599,21 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 await this.logError('process model failed','unable to wire model to master model source',{ modelSource, model });
                 return null;
             }
+            this.recordRollback(`unwire masterModel->model xref ${SOX2.idSystemObjectXref}`, async () => { await DBAPI.SystemObjectXref.deleteIfAllowed(SOX2.idSystemObjectXref); });
         }
+
+        // If Cook returned an OBJ package that ships textures but no material library, fabricate a
+        // minimal .mtl so the stored (and later published) package is internally valid. The model is
+        // still allowed through (the inspect treats unresolved materials as advisory); the user is
+        // warned so the underlying source-model gap is not lost.
+        const mtlFix = await this.ensureObjPackageHasMtl(RSR, fileItem.fileName);
+        if (mtlFix.fabricated)
+            await this.appendToReportAndLog(`${this.name()} fabricated a minimal material library for ${fileItem.fileName} (package was missing its .mtl): ${mtlFix.detail}`,
+                undefined, { code: COMMON.WorkflowReportCode.CookWarning, level: 'warn' });
 
         // ingest model assets, and associate them with the correct model
         const ISI: STORE.IngestStreamOrFileInput = {
-            readStream: RSR.readStream,
+            readStream: mtlFix.readStream,
             localFilePath: null,
             asset: Asset,
             FileName: fileItem.fileName,
@@ -598,6 +633,23 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
         if (!IAR.success) {
             await this.logError('process model failed',`unable to ingest generated download model: ${IAR.error}`,{ ...fileItem });
             return null;
+        }
+
+        // record undo for each ingested asset version. For a newly-created model the asset itself is
+        // new, so retire the asset too; for an existing model only the new version is retired, leaving
+        // the model and its prior versions intact.
+        if (IAR.assetVersions) {
+            for (const ingestedAV of IAR.assetVersions) {
+                this.recordRollback(`retire asset version ${ingestedAV.idAssetVersion}`, () => this.retireCreatedObject(ingestedAV, `asset version ${ingestedAV.idAssetVersion}`));
+                if (!modelPreexisted) {
+                    const idAsset: number = ingestedAV.idAsset;
+                    this.recordRollback(`retire asset ${idAsset}`, async () => {
+                        const createdAsset: DBAPI.Asset | null = await DBAPI.Asset.fetch(idAsset);
+                        if (createdAsset)
+                            await this.retireCreatedObject(createdAsset, `asset ${idAsset}`);
+                    });
+                }
+            }
         }
 
         // check for multiple asset versions
@@ -681,9 +733,12 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 S2: MSXSource?.S2 ?? null,
             });
             MSXResult = await MSX.create();
+            if (MSXResult) {
+                const createdMSX: DBAPI.ModelSceneXref = MSX;
+                this.recordRollback(`delete ModelSceneXref ${createdMSX.idModelSceneXref}`, async () => { await createdMSX.delete(); });
+            }
         }
 
-        // TODO: if failed cleanup prior ingestion?
         if (MSXResult === false) {
             await this.logError('process model failed','cannot create/update ModelSceneXref',{ MSX });
             return null;
@@ -700,13 +755,87 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
                 RK.logInfo(RK.LogSection.eJOB,'process model','extracted model metrics',{ model },'Job.GenerateDownloads');
                 await this.appendToReportAndLog(`JobCookSIGenerateDownloads extracted model metrics for ${model.Name}`);
             } else if (results.error) {
-                await this.logError('process model failed',`failed inspecting model: ${results.error}`,{ model });
-                return null;
+                // Inspection is advisory: failing to inspect or extract metrics for a generated
+                // download does not invalidate the download, so surface it as a warning and continue.
+                // The complete scene version is still formed; only genuine processing failures
+                // (ingest, scene parse/ingest) abort generation.
+                RK.logWarning(RK.LogSection.eJOB,'process model','model inspection did not complete; continuing without metrics',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, model: model.Name, error: results.error },'Job.GenerateDownloads');
+                await this.appendToReportAndLog(`${this.name()} could not inspect ${model.Name}; it is included without metrics: ${results.error}`,
+                    undefined, { code: COMMON.WorkflowReportCode.CookWarning, level: 'warn' });
             }
         }
         RK.profileEnd(profileKey);
 
         return { assetVersionOverrideMap, MSX, assetVersion };
+    }
+
+    // Repair a Cook OBJ download that ships textures but no material library. Returns a stream to
+    // ingest in place of the original: the corrected zip when a .mtl was fabricated, otherwise the
+    // original bytes unchanged. Only a .zip whose contents are an OBJ + image textures with no .mtl
+    // is touched; every other package (already has a .mtl, non-OBJ, non-zip) passes through as-is.
+    private async ensureObjPackageHasMtl(RSR: STORE.ReadStreamResult, fileName: string):
+    Promise<{ readStream: NodeJS.ReadableStream | null; fabricated: boolean; detail?: string }> {
+
+        if (!RSR.readStream || path.extname(fileName).toLowerCase() !== '.zip')
+            return { readStream: RSR.readStream, fabricated: false };
+
+        // Buffer the download once so the original bytes can be re-emitted untouched when no repair
+        // is needed (avoids recompressing a healthy package).
+        const buffer: Buffer | null = await H.Helpers.readFileFromStream(RSR.readStream);
+        if (!buffer) {
+            RK.logWarning(RK.LogSection.eJOB,'ensure obj mtl','unable to read download stream for material check; passing through',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName },'Job.GenerateDownloads');
+            return { readStream: RSR.readStream, fabricated: false };
+        }
+        const passthrough = (): { readStream: NodeJS.ReadableStream; fabricated: boolean } => ({ readStream: Readable.from(buffer), fabricated: false });
+
+        const zip: ZipStream = new ZipStream(Readable.from(buffer));
+        const loadRes: H.IOResults = await zip.load();
+        if (!loadRes.success)
+            return passthrough();
+
+        const files: string[] = await zip.getJustFiles(null);
+        const shape = inspectObjPackage(files);
+        if (!objPackageNeedsMtl(shape) || !shape.objFile)
+            return passthrough();
+
+        // read the obj to discover its mtllib/usemtl references
+        const objStream: NodeJS.ReadableStream | null = await zip.streamContent(shape.objFile);
+        const objBuffer: Buffer | null = objStream ? await H.Helpers.readFileFromStream(objStream) : null;
+        const objText: string = objBuffer ? objBuffer.toString('utf8') : '';
+        const refs = parseObjMaterialRefs(objText);
+
+        const objBaseName: string = path.basename(shape.objFile, path.extname(shape.objFile));
+        const objDir: string = path.dirname(shape.objFile);
+        const mtlName: string = refs.mtllib ?? `${objBaseName}.mtl`;
+        const materialName: string = refs.usemtl ?? 'material_0';
+        const { diffuse, normal } = classifyPackageTextures(shape.images);
+        const mtlContent: string = buildMinimalMtl(materialName, diffuse, normal);
+
+        // write the fabricated .mtl alongside the geometry (Cook packages are flat; honor a subdir if present)
+        const mtlPath: string = objDir && objDir !== '.' ? `${objDir}/${mtlName}` : mtlName;
+        const addMtl: H.IOResults = await zip.add(mtlPath, Readable.from(Buffer.from(mtlContent, 'utf8')));
+        if (!addMtl.success) {
+            RK.logError(RK.LogSection.eJOB,'ensure obj mtl failed','unable to add fabricated material library to package',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, mtlPath },'Job.GenerateDownloads');
+            return passthrough();
+        }
+
+        // if the obj never referenced a material library, inject the directive so the .mtl is loaded
+        if (!refs.mtllib && objText.length > 0) {
+            const patchedObj: string = `mtllib ${mtlName}\n${objText}`;
+            const addObj: H.IOResults = await zip.add(shape.objFile, Readable.from(Buffer.from(patchedObj, 'utf8')));
+            if (!addObj.success) {
+                RK.logError(RK.LogSection.eJOB,'ensure obj mtl failed','unable to inject mtllib into obj',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, objFile: shape.objFile },'Job.GenerateDownloads');
+                return passthrough();
+            }
+        }
+
+        const outStream: NodeJS.ReadableStream | null = await zip.streamContent(null);
+        if (!outStream)
+            return passthrough();
+
+        const detail: string = `${mtlName}${diffuse ? `, diffuse=${diffuse}` : ''}${normal ? `, normal=${normal}` : ''}`;
+        RK.logWarning(RK.LogSection.eJOB,'ensure obj mtl','fabricated missing material library for OBJ package',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, fileName, mtlName, materialName, diffuse, normal },'Job.GenerateDownloads');
+        return { readStream: outStream, fabricated: true, detail };
     }
 
     private async createModel(Name: string, downloadType: string, modelSource: DBAPI.Model): Promise<DBAPI.Model> {
@@ -1128,6 +1257,42 @@ export class JobCookSIGenerateDownloads extends JobCook<JobCookSIGenerateDownloa
     //     // return result
     //     return svx.SvxExtraction.modelDetails;
     // }
+
+    // Record an undo for an object just created, so a later fatal error can compensate for it.
+    private recordRollback(label: string, undo: () => Promise<void>): void {
+        if (!this.rollbackLedger)
+            this.rollbackLedger = [];
+        this.rollbackLedger.push({ label, undo });
+    }
+
+    // Undo everything recorded, most-recent first (children before parents). Models and asset
+    // versions are retired (reversible; they have no hard delete); link rows (SystemObjectXref,
+    // ModelSceneXref) are deleted. Each undo is isolated so one failure does not stop the rest.
+    private async rollbackCreatedObjects(reason: string): Promise<void> {
+        const count: number = this.rollbackLedger ? this.rollbackLedger.length : 0;
+        if (count === 0)
+            return;
+
+        RK.logWarning(RK.LogSection.eJOB,'rollback','undoing objects created during failed download generation',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, count, reason },'Job.GenerateDownloads');
+        for (let i = this.rollbackLedger.length - 1; i >= 0; i--) {
+            const entry = this.rollbackLedger[i];
+            try {
+                await entry.undo();
+                RK.logDebug(RK.LogSection.eJOB,'rollback','undid created object',{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun, label: entry.label },'Job.GenerateDownloads');
+            } catch (err) {
+                RK.logError(RK.LogSection.eJOB,'rollback failed',`unable to undo ${entry.label}: ${H.Helpers.getErrorString(err)}`,{ jobName: this.name(), idJobRun: this._dbJobRun.idJobRun },'Job.GenerateDownloads');
+            }
+        }
+        this.rollbackLedger = [];
+        await this.appendToReportAndLog(`${this.name()} rolled back ${count} object(s) created before the failure to avoid dangling download assets`);
+    }
+
+    // Retire a created object's SystemObject (the project idiom for removing models/assets; retire is
+    // reversible and leaves an audit trail). Throws on failure so the ledger records it.
+    private async retireCreatedObject(SOBased: DBAPI.SystemObjectBased, label: string): Promise<void> {
+        if (!await DBAPI.SystemObject.retireSystemObject(SOBased))
+            throw new Error(`retire failed: ${label}`);
+    }
 
     private async logError(error: string, reason: string, data: any | undefined, addToReport: boolean = true): Promise<H.IOResults> {
 

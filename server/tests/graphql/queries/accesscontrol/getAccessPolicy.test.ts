@@ -17,11 +17,8 @@ const getAccessPolicyTest = (utils: TestSuiteUtils): void => {
 
             const { AccessPolicy }: GetAccessPolicyResult = await graphQLApi.getAccessPolicy(input);
 
-            if (AccessPolicy) {
-                expect(AccessPolicy.idAccessPolicy).toBe(0);
-            } else {
-                expect(AccessPolicy).toBe(null);
-            }
+            // AccessPolicy has no fetchAll; assert the deterministic not-found contract.
+            expect(AccessPolicy).toBeNull();
         });
     });
 };

@@ -908,6 +908,10 @@ function vocabularyCacheTestClearFlush(): void {
         test('Cache: VocabularyCache.clear and VocabularyCache.flush', async () => {
             await VocabularyCache.clear();
             await VocabularyCache.flush();
+            // After clear+flush the cache must repopulate: a known vocabulary/set pairing
+            // resolves true, a mismatched one false.
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eIdentifierIdentifierTypeARK, COMMON.eVocabularySetID.eIdentifierIdentifierType)).toBeTruthy();
+            expect(await VocabularyCache.isVocabularyInSet(COMMON.eVocabularyID.eWorkflowTypeCookJob, COMMON.eVocabularySetID.eNone)).toBeFalsy();
         });
     });
 }

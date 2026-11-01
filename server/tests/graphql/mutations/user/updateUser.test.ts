@@ -29,7 +29,9 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             const newTime = new Date();
             const user = await new DBAPI.User(userArgs);
 
-            if (await user.create()) {
+            const created = await user.create();
+            expect(created).toBe(true);
+            if (created) {
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
                     Name: randomStorageKey('updateUser'),
@@ -41,6 +43,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 };
 
                 const { User }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
+                expect(User).toBeTruthy();
                 if (User) {
                     expect(User?.Name).toEqual(updateUserInput.Name);
                     expect(User?.EmailAddress).toEqual(updateUserInput.EmailAddress);
@@ -67,7 +70,9 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
             const user = await new DBAPI.User(userArgs);
             const newTime = new Date();
 
-            if (await user.create()) {
+            const created = await user.create();
+            expect(created).toBe(true);
+            if (created) {
                 const updateUserInput: UpdateUserInput = {
                     idUser: user.idUser,
                     Name: randomStorageKey('disablinguser'),
@@ -79,6 +84,7 @@ const updateUserTest = (utils: TestSuiteUtils): void => {
                 };
 
                 const { User: updatedUser }: GetUserResult = await graphQLApi.updateUser(updateUserInput);
+                expect(updatedUser).toBeTruthy();
                 if (updatedUser) {
                     expect(updatedUser?.Active).toEqual(false);
                     expect(updatedUser?.Active).not.toBe(user?.Active);

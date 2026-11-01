@@ -64,6 +64,26 @@ describe('Bulk op: Republish Scenes', () => {
         expect(res.rowData.currentStatus).toBe(COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished));
     });
 
+    test('apply emits an audit payload carrying the before/after published-state diff', async () => {
+        stubScenes([{ idScene: 1, Name: 'Scene 1', EdanUUID: 'uuid-1', ApprovedForPublication: true, PosedAndQCd: true }],
+            () => COMMON.ePublishedState.eNotPublished);
+        jest.spyOn(COL.CollectionFactory, 'getInstance').mockReturnValue({ publish: jest.fn().mockResolvedValue({ success: true }) } as unknown as COL.ICollection);
+        const emit = jest.spyOn(AuditFactory, 'emitSemantic').mockResolvedValue(undefined as never);
+        jest.spyOn(AUDITTX, 'withAuditTransaction').mockImplementation(async (cb: () => Promise<unknown>) => cb());
+
+        await republishScenes.apply(1000, { targetState: String(COMMON.ePublishedState.ePublished) }, 5, {});
+
+        expect(emit).toHaveBeenCalledTimes(1);
+        const emitArgs = emit.mock.calls[0][0] as { action: DBAPI.eAuditType; idSystemObject: number; payload: unknown };
+        expect(emitArgs.action).toBe(DBAPI.eAuditType.eActionPublish);
+        expect(emitArgs.idSystemObject).toBe(1000);
+        expect(emitArgs.payload).toEqual({
+            before: { eState: COMMON.ePublishedState.eNotPublished, eStateName: COMMON.PublishedStateEnumToString(COMMON.ePublishedState.eNotPublished) },
+            after: { eState: COMMON.ePublishedState.ePublished, eStateName: COMMON.PublishedStateEnumToString(COMMON.ePublishedState.ePublished) },
+            via: 'bulkOperation',
+        });
+    });
+
     test('apply refuses a publish target for a QC-blocked scene without touching EDAN', async () => {
         stubScenes([{ idScene: 1, Name: 'Scene 1', EdanUUID: 'uuid-1', ApprovedForPublication: false, PosedAndQCd: true }],
             () => COMMON.ePublishedState.eNotPublished);

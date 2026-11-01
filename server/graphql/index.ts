@@ -34,8 +34,9 @@ const ApolloServerOptions: ApolloServerExpressConfig = {
         const origError: any = err.extensions?.exception || err.originalError || err;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stack = origError?.stack || (err as any)?.stack || '(no stack)';
-        RK.logError(RK.LogSection.eGQL,'Apollo server failed',`format error: ${H.Helpers.getErrorString(err)}`,{},'GraphQL.Apollo.ServerOptions');
-        RK.logError(RK.LogSection.eGQL,'Apollo server failed (stack)',`${stack}`,{},'GraphQL.Apollo.ServerOptions');
+        // A failed GraphQL operation is an error per our log levels; log it once
+        // (stack carried in data) rather than as two separate lines.
+        RK.logError(RK.LogSection.eGQL,'Apollo server failed',`format error: ${H.Helpers.getErrorString(err)}`,{ stack },'GraphQL.Apollo.ServerOptions');
         return err;
     }
 };

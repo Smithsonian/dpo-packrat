@@ -35,6 +35,13 @@ enum eHTTPMethod {
 }
 
 export class EdanCollection implements COL.ICollection {
+    constructor() {
+        // EDAN requests are signed with this key; refuse to construct without it so
+        // a misconfiguration surfaces here rather than on the first outbound call.
+        if (!Config.collection.edan.authKey)
+            throw new Error('PACKRAT_EDAN_AUTH_KEY was not provided');
+    }
+
     async queryCollection(query: string, rows: number, start: number, options: COL.CollectionQueryOptions | null): Promise<COL.CollectionQueryResults | null> {
         const records: COL.CollectionQueryResultRecord[] = [];
         const result: COL.CollectionQueryResults = {

@@ -341,9 +341,6 @@ describe('Utils: Helpers', () => {
 
     test('Utils: Helpers.removeFile', async () => {
         await H.Helpers.sleep(50);
-    });
-
-    test('Utils: Helpers.removeFile', async () => {
         let res: H.IOResults = await H.Helpers.removeFile(filePath);
         expect(res.success).toBeTruthy();
         res = await H.Helpers.removeFile(filePath2);

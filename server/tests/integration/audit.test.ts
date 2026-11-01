@@ -425,15 +425,21 @@ describe('Audit integration — actor resolution at entry points', () => {
         expect(row.idUser).toBe(88);
     });
 
-    test('invariant: no audit row may have BOTH idUser and SystemActor null', async () => {
+    test('invariant: an invalid actor falls back to system:Unknown, never a row with both idUser and SystemActor null', async () => {
         const bogus = { kind: 'user', idUser: undefined } as unknown as Actor;
         const ok = await AuditFactory.emit({
             action: eAuditType.eDBUpdate,
             actor: bogus,
             idSystemObject: 1,
         });
-        expect(ok).toBe(false);
-        expect(createSpy).not.toHaveBeenCalled();
+        // emit() substitutes Actor.system('Unknown') for an invalid actor so the
+        // row still lands rather than vanishing. The invariant holds because the
+        // fallback sets SystemActor, so idUser and SystemActor are never both null.
+        expect(ok).toBe(true);
+        expect(createSpy).toHaveBeenCalledTimes(1);
+        const row = rowFromCreateArgs(createSpy.mock.calls[0][0]);
+        expect(row.idUser).toBeNull();
+        expect(row.SystemActor).toBe('Unknown');
     });
 });
 
