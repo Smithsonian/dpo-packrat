@@ -32,6 +32,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 ENV_FILE="${PACKRAT_ENV_FILE:-$REPO_ROOT/.env.dev}"
+[ -f "$ENV_FILE" ] || ENV_FILE="$REPO_ROOT/.env.prod"
 DB_IMAGE="${PACKRAT_TEST_DB_IMAGE:-mariadb:10.5}"
 DB_CONTAINER="packrat-db-ctest"
 TEST_IMAGE="${PACKRAT_TEST_IMAGE:-}"
