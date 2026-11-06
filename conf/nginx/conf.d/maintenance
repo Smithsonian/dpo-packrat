@@ -1,0 +1,27 @@
+# Maintenance / fallback handling — included inside each server block.
+#
+# Planned maintenance: the presence of the flag file returns 503 to every
+# client except holders of the secret bypass cookie. Unplanned upstream
+# failures (app down, mid-deploy) fall through to the 502/504 error_page.
+# The bypass token is a secret; rotate it by editing this line + reloading.
+set $maint 0;
+if (-f /etc/nginx/maintenance.on) { set $maint 1; }
+if ($cookie_maint_bypass = "CHANGE_ME_BYPASS_TOKEN") { set $maint 0; }
+# Never 503 the maintenance pages themselves, or the error_page internal
+# redirect re-enters this check and loops back to nginx's default 503 page.
+if ($uri = "/maint-planned.html") { set $maint 0; }
+if ($uri = "/maint-unplanned.html") { set $maint 0; }
+if ($maint) { return 503; }
+
+error_page 503 /maint-planned.html;
+error_page 502 504 /maint-unplanned.html;
+
+location = /maint-planned.html {
+    root /usr/share/nginx/maintenance;
+    internal;
+}
+
+location = /maint-unplanned.html {
+    root /usr/share/nginx/maintenance;
+    internal;
+}
