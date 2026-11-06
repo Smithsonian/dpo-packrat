@@ -115,9 +115,10 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         volumes:
             - ../../server/config/solr/data/:/var/solr/data/
+            - packrat-solr-index:/var/solr/index
 
 networks:
     default:
@@ -129,3 +130,4 @@ networks:
 
 volumes:
     packrat-db-data:
+    packrat-solr-index:

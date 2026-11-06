@@ -157,9 +157,11 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-dev
+        volumes:
+            - packrat-solr-dev-index:/var/solr/index
             
     packrat-solr-prod:
         container_name: packrat-solr-prod
@@ -170,9 +172,11 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-prod
+        volumes:
+            - packrat-solr-prod-index:/var/solr/index
 
     packrat-solr-inspect:
         container_name: packrat-solr-inspect
@@ -183,10 +187,17 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-inspect
+        volumes:
+            - packrat-solr-inspect-index:/var/solr/index
             
+volumes:
+    packrat-solr-dev-index:
+    packrat-solr-prod-index:
+    packrat-solr-inspect-index:
+
 networks:
     default:
         driver: bridge
