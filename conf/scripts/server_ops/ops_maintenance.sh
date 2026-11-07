@@ -21,7 +21,7 @@ cmd="${1:-status}"
 
 case "$cmd" in
     on)
-        reason="${2:-We'll be back shortly. Thank you for your patience.}"
+        reason="${2:-We will be back shortly. Thank you for your patience.}"
         stamp="$(date '+%Y-%m-%d %H:%M %Z')"
         if [ -f "$TEMPLATE" ]; then
             sed -e "s#%%REASON%%#${reason}#g" -e "s#%%TIME%%#${stamp}#g" "$TEMPLATE" > "$SERVED"

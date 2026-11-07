@@ -21,6 +21,9 @@
 #   solr       - status | clear | reindex
 #   data       - clear | backup
 #   cert       - inspect | format | expiry
+#   hardware   - status | sensors | sel | raid
+#   network    - status | egress | links | routes
+#   health     - whole-system roll-up (pass an env to include the app stack)
 #
 # Examples:
 #   ./ops_menu.sh database prod backup /3ddigip01/Packrat/Backups/Database zip
@@ -59,6 +62,9 @@ DOMAINS=(
     "solr|ops_solr.sh|Solr status / clear / reindex"
     "data|ops_data.sh|Transient staging clear + repository rsync backup"
     "cert|ops_cert.sh|Certificate inspect / format / expiry"
+    "hardware|ops_hardware.sh|Hardware health: BMC / sensors / SEL / RAID"
+    "network|ops_network.sh|Network health: links / routes / egress / mounts"
+    "health|ops_health.sh|Whole-system health roll-up (Zabbix-independent)"
 )
 
 DOMAIN_OPS_database="drop rebuild prune backup optimize metrics"
@@ -69,6 +75,9 @@ DOMAIN_OPS_container="status start stop restart service reclaim pre-deploy"
 DOMAIN_OPS_solr="status clear reindex"
 DOMAIN_OPS_data="clear backup"
 DOMAIN_OPS_cert="inspect format expiry"
+DOMAIN_OPS_hardware="status sensors sel raid"
+DOMAIN_OPS_network="status egress links routes"
+DOMAIN_OPS_health="host prod staging"
 
 # Metrics expands to subops in Phase 5 (the rest are deferred). Rendered
 # explicitly under --list.
