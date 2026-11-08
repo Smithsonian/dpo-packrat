@@ -4,6 +4,10 @@ COPY --chown=solr:solr ./server/config/solr/data/packratMeta/ /var/solr/data/pac
 COPY --chown=solr:solr ./server/config/solr/etc/default/solr.in.sh /etc/default/solr.in.sh
 RUN chmod 755 /etc/default/solr.in.sh
 
+# SOLR_DATA_HOME (see solr.in.sh) holds the index/tlog. Pre-create it owned by solr so a
+# persistent volume mounted here is seeded with solr ownership on first creation.
+RUN mkdir -p /var/solr/index && chown solr:solr /var/solr/index
+
 # Solr 10's launcher defaults to SolrCloud mode and aborts without a ZooKeeper config.
 # Packrat runs a single standalone node, so force user-managed (standalone) mode. The
 # base image ENTRYPOINT is docker-entrypoint.sh, which forwards this CMD to

@@ -6,15 +6,17 @@
 # this job proves the outputs still match. It also catches an unblessed change to
 # the seed (Packrat.DATA.sql) or the publish-flag logic.
 #
-# Decoupled from the PR gate on purpose: it is a drift / pre-cutover check, so it
-# runs nightly and on demand rather than blocking every PR. A failure means either
-# a real regression or an intended change that needs a re-bless + commit of the
-# baselines.
+# Decoupled from the PR gate on purpose: it is a drift / pre-cutover check, not a
+# per-PR gate. It runs ON DEMAND only (no schedule): the baselines are pinned to the
+# commit they were blessed from, and master moves, so a scheduled run on HEAD can
+# never match the blessed commit — it would fail the provenance guard every time.
+# Run it deliberately at a known commit: re-bless on the target server
+# (`cd server && yarn test:parity:bless`), commit tests/parity/baselines/, then
+# dispatch this workflow. A failure means either a real regression or an intended
+# change that needs a re-bless + commit of the baselines.
 name: Parity Gate
 
 on:
-  schedule:
-    - cron: '0 6 * * *'   # nightly ~06:00 UTC
   workflow_dispatch: {}    # manual / pre-cutover run
 
 jobs:

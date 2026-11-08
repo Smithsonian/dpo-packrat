@@ -21,6 +21,9 @@
 #   solr       - status | clear | reindex
 #   data       - clear | backup
 #   cert       - inspect | format | expiry
+#   hardware   - status | sensors | sel | raid
+#   network    - status | egress | links | routes | bonds
+#   health     - whole-system roll-up (pass an env to include the app stack)
 #
 # Examples:
 #   ./ops_menu.sh database prod backup /3ddigip01/Packrat/Backups/Database zip
@@ -59,6 +62,9 @@ DOMAINS=(
     "solr|ops_solr.sh|Solr status / clear / reindex"
     "data|ops_data.sh|Transient staging clear + repository rsync backup"
     "cert|ops_cert.sh|Certificate inspect / format / expiry"
+    "hardware|ops_hardware.sh|Hardware health: BMC / sensors / SEL / RAID"
+    "network|ops_network.sh|Network health: links / routes / egress / mounts"
+    "health|ops_health.sh|Whole-system health roll-up (Zabbix-independent)"
 )
 
 DOMAIN_OPS_database="drop rebuild prune backup optimize metrics"
@@ -69,6 +75,9 @@ DOMAIN_OPS_container="status start stop restart service reclaim pre-deploy"
 DOMAIN_OPS_solr="status clear reindex"
 DOMAIN_OPS_data="clear backup"
 DOMAIN_OPS_cert="inspect format expiry"
+DOMAIN_OPS_hardware="status sensors sel raid"
+DOMAIN_OPS_network="status egress links routes bonds"
+DOMAIN_OPS_health="host prod staging"
 
 # Metrics expands to subops in Phase 5 (the rest are deferred). Rendered
 # explicitly under --list.
@@ -123,14 +132,19 @@ dispatch_domain() {
         return 1
     fi
     local path="$HERE/$script"
-    if [[ ! -x "$path" ]]; then
-        err "sibling script not executable or missing: $path"
+    if [[ ! -f "$path" ]]; then
+        err "sibling script missing: $path"
         return 1
     fi
     # CLI passthrough. Once exec runs, we don't come back - the child
     # emits its own print_summary, signals reach it directly, exit code
-    # is its own. Cron-friendly.
-    exec "$path" "$@"
+    # is its own. Cron-friendly. Prefer the exec bit, but fall back to
+    # `bash <script>` so a pulled-but-non-executable sibling still runs.
+    if [[ -x "$path" ]]; then
+        exec "$path" "$@"
+    else
+        exec bash "$path" "$@"
+    fi
 }
 
 # Run a domain script as a child (interactive menu path). Returns the
@@ -144,14 +158,20 @@ dispatch_domain_child() {
         return 1
     fi
     local path="$HERE/$script"
-    if [[ ! -x "$path" ]]; then
-        err "sibling script not executable or missing: $path"
+    if [[ ! -f "$path" ]]; then
+        err "sibling script missing: $path"
         return 1
     fi
     # OPS_INVOKED_FROM_DISPATCHER tells the child to exit with the raw
     # MENU_RC_QUIT instead of translating it to 0 - so we can detect
     # operator [Q] inside the domain and propagate the quit upward.
-    OPS_INVOKED_FROM_DISPATCHER=1 "$path" "$@"
+    # Fall back to `bash` when the +x bit is missing (a filesystem that
+    # doesn't track the mode).
+    if [[ -x "$path" ]]; then
+        OPS_INVOKED_FROM_DISPATCHER=1 "$path" "$@"
+    else
+        OPS_INVOKED_FROM_DISPATCHER=1 bash "$path" "$@"
+    fi
 }
 
 # ---------------------------------------------------------------------------
