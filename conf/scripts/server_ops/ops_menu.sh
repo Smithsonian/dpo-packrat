@@ -22,7 +22,7 @@
 #   data       - clear | backup
 #   cert       - inspect | format | expiry
 #   hardware   - status | sensors | sel | raid
-#   network    - status | egress | links | routes
+#   network    - status | egress | links | routes | bonds
 #   health     - whole-system roll-up (pass an env to include the app stack)
 #
 # Examples:
@@ -76,7 +76,7 @@ DOMAIN_OPS_solr="status clear reindex"
 DOMAIN_OPS_data="clear backup"
 DOMAIN_OPS_cert="inspect format expiry"
 DOMAIN_OPS_hardware="status sensors sel raid"
-DOMAIN_OPS_network="status egress links routes"
+DOMAIN_OPS_network="status egress links routes bonds"
 DOMAIN_OPS_health="host prod staging"
 
 # Metrics expands to subops in Phase 5 (the rest are deferred). Rendered

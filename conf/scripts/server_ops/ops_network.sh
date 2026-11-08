@@ -9,10 +9,11 @@
 #   ./ops_network.sh <op>             # non-interactive
 #
 # Subcommands:
-#   status     roll-up: NIC links + default routes + egress + NFS mounts (exit 0/1/2)
+#   status     roll-up: links + bonds + default routes + egress + NFS mounts (exit 0/1/2)
 #   egress     reachability to the integration endpoints ($HEALTH_EGRESS_TARGETS)
 #   links      NIC operstate (data NICs) + a brief `ip -br addr`
 #   routes     `ip route` table
+#   bonds      NIC bonding / redundancy state (/proc/net/bonding)
 #
 # Exit code (status): 0 OK, 1 WARN, 2 FAIL - suitable for cron/monitoring.
 # Egress targets / NFS mounts are overridable via the sibling .env
@@ -40,6 +41,7 @@ op_status() {
     banner "NETWORK HEALTH"
     hc_reset
     hc_check_links
+    hc_check_bonds
     hc_check_routes
     hc_check_egress
     hc_check_mounts
@@ -81,6 +83,19 @@ op_routes() {
     ip route
 }
 
+op_bonds() {
+    OPS_CURRENT_OP="bonds"
+    banner "NIC BONDS (redundancy)"
+    hc_reset
+    hc_check_bonds
+    echo ""
+    if ls /proc/net/bonding/* >/dev/null 2>&1; then
+        cat /proc/net/bonding/* 2>/dev/null
+    else
+        note "no bonds configured (set HEALTH_EXPECT_BONDS=1 to flag this as a gap)"
+    fi
+}
+
 # ---------------------------------------------------------------------------
 # Menu
 # ---------------------------------------------------------------------------
@@ -88,10 +103,11 @@ op_routes() {
 main_menu() {
     menu_clear
     banner "PACKRAT NETWORK OPS"
-    echo "[1] Status - links + routes + egress + mounts roll-up (read-only)"
+    echo "[1] Status - links + bonds + routes + egress + mounts roll-up (read-only)"
     echo "[2] Egress - reachability to Cook/EDAN/LDAP/SMTP/Slack"
     echo "[3] Links  - NIC operstate + addresses"
     echo "[4] Routes - routing table"
+    echo "[5] Bonds  - NIC bonding / redundancy state"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""
@@ -102,6 +118,7 @@ main_menu() {
         2) run_op op_egress || return "$MENU_RC_QUIT" ;;
         3) run_op op_links  || return "$MENU_RC_QUIT" ;;
         4) run_op op_routes || return "$MENU_RC_QUIT" ;;
+        5) run_op op_bonds  || return "$MENU_RC_QUIT" ;;
         [Bb]) return "$MENU_RC_BACK" ;;
         [Qq]) return "$MENU_RC_QUIT" ;;
         *) err "invalid choice" ;;
@@ -142,6 +159,7 @@ else
         egress) op_egress "$@"; rc=$? ;;
         links)  op_links  "$@"; rc=$? ;;
         routes) op_routes "$@"; rc=$? ;;
+        bonds)  op_bonds  "$@"; rc=$? ;;
         *)      err "unknown op: $OP"; rc=1 ;;
     esac
     case "$rc" in 0) status="OK" ;; 1) status="WARN" ;; *) status="FAIL" ;; esac

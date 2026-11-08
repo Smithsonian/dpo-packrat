@@ -30,6 +30,7 @@ HEALTH_DISK_FAIL_PCT="${HEALTH_DISK_FAIL_PCT:-90}"
 HEALTH_LOCAL_FS="${HEALTH_LOCAL_FS:-/ /var /staging /staging/docker /rdbms /data}"
 HEALTH_NFS_MOUNTS="${HEALTH_NFS_MOUNTS:-/3ddigip01 /data/Packrat/digitization}"
 HEALTH_LINK_IGNORE="${HEALTH_LINK_IGNORE:-}"   # NIC names to never flag as down (unused ports)
+HEALTH_EXPECT_BONDS="${HEALTH_EXPECT_BONDS:-}"  # non-empty => NIC bonds are expected (warn if absent)
 HEALTH_EGRESS_TARGETS="${HEALTH_EGRESS_TARGETS:-ldaps.si.edu:636 edan.si.edu:443 si-3dcook02.us.sinet.si.edu:8000 smtp.si.edu:25 slack.com:443}"
 HEALTH_SOLR_PORT="${HEALTH_SOLR_PORT:-${PACKRAT_SOLR_PORT:-8983}}"
 HEALTH_SERVER_PORT="${HEALTH_SERVER_PORT:-${PACKRAT_SERVER_PORT:-4000}}"
@@ -175,6 +176,53 @@ hc_check_links() {
         local extra=""
         [[ "$ignored" -gt 0 ]] && extra=" ($ignored unused/admin-down ignored)"
         hc_report LINKS PASS "all active NICs up${extra}"
+    fi
+}
+
+# NIC bonding / redundancy. With no bonds and HEALTH_EXPECT_BONDS unset this is a
+# SKIP; set HEALTH_EXPECT_BONDS=1 on hosts where redundancy is required so the
+# absence of bonds surfaces as a WARN. When bonds exist, each is checked: bond
+# device down = FAIL, a down slave (degraded redundancy) = WARN, else PASS.
+hc_check_bonds() {
+    local b bonds=() bstate slaves s sdown fail="" warn="" ok=0 total=0
+    shopt -s nullglob
+    for b in /sys/class/net/*/bonding; do
+        bonds+=("$(basename "$(dirname "$b")")")
+    done
+    if [[ ${#bonds[@]} -eq 0 ]]; then
+        if [[ -n "$HEALTH_EXPECT_BONDS" ]]; then
+            hc_report BONDS WARN "no bonds configured but expected (NIC redundancy absent)"
+        else
+            hc_report BONDS SKIP "no bonds configured (none expected)"
+        fi
+        return 0
+    fi
+    for b in "${bonds[@]}"; do
+        total=$((total+1))
+        bstate=$(cat "/sys/class/net/$b/operstate" 2>/dev/null || echo "?")
+        slaves=$(cat "/sys/class/net/$b/bonding/slaves" 2>/dev/null || true)
+        if [[ "$bstate" != "up" ]]; then
+            fail+="$b(down) "
+        elif [[ -z "$slaves" ]]; then
+            warn+="$b(no-slaves) "
+        else
+            sdown=""
+            for s in $slaves; do
+                [[ "$(cat "/sys/class/net/$s/operstate" 2>/dev/null)" == "up" ]] || sdown+="$s "
+            done
+            if [[ -n "$sdown" ]]; then
+                warn+="$b(degraded:${sdown% }) "
+            else
+                ok=$((ok+1))
+            fi
+        fi
+    done
+    if [[ -n "$fail" ]]; then
+        hc_report BONDS FAIL "bond(s) down: ${fail% }"
+    elif [[ -n "$warn" ]]; then
+        hc_report BONDS WARN "${warn% }"
+    else
+        hc_report BONDS PASS "$ok/$total bond(s) healthy"
     fi
 }
 

@@ -57,6 +57,7 @@ op_run() {
 
     echo ""; echo "== Network =="
     hc_check_links
+    hc_check_bonds
     hc_check_routes
     hc_check_egress
     hc_check_mounts
