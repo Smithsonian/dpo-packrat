@@ -29,6 +29,7 @@ HEALTH_DISK_WARN_PCT="${HEALTH_DISK_WARN_PCT:-80}"
 HEALTH_DISK_FAIL_PCT="${HEALTH_DISK_FAIL_PCT:-90}"
 HEALTH_LOCAL_FS="${HEALTH_LOCAL_FS:-/ /var /staging /staging/docker /rdbms /data}"
 HEALTH_NFS_MOUNTS="${HEALTH_NFS_MOUNTS:-/3ddigip01 /data/Packrat/digitization}"
+HEALTH_LINK_IGNORE="${HEALTH_LINK_IGNORE:-}"   # NIC names to never flag as down (unused ports)
 HEALTH_EGRESS_TARGETS="${HEALTH_EGRESS_TARGETS:-ldaps.si.edu:636 edan.si.edu:443 si-3dcook02.us.sinet.si.edu:8000 smtp.si.edu:25 slack.com:443}"
 HEALTH_SOLR_PORT="${HEALTH_SOLR_PORT:-${PACKRAT_SOLR_PORT:-8983}}"
 HEALTH_SERVER_PORT="${HEALTH_SERVER_PORT:-${PACKRAT_SERVER_PORT:-4000}}"
@@ -140,23 +141,40 @@ hc_check_raid() {
 # ---------------------------------------------------------------------------
 
 hc_check_links() {
-    local nic name st any=0 down=""
+    local nic name st carrier ign any=0 bad="" ignored=0
     shopt -s nullglob
     for nic in /sys/class/net/*; do
         name=$(basename "$nic")
         case "$name" in
             lo|docker*|veth*|br-*|virbr*|idrac|usb*) continue ;;
         esac
+        # Explicit ignore list (unused ports an operator has silenced).
+        for ign in $HEALTH_LINK_IGNORE; do
+            if [[ "$name" == "$ign" ]]; then ignored=$((ignored+1)); continue 2; fi
+        done
         [[ -r "$nic/operstate" ]] || continue
         any=1
         st=$(cat "$nic/operstate" 2>/dev/null || echo "?")
-        [[ "$st" == "up" ]] || down+="$name($st) "
+        if [[ "$st" == "up" ]]; then
+            continue
+        fi
+        # Down: distinguish a configured-but-linkless NIC (real problem) from an
+        # unused/admin-down port. `carrier` is only readable when admin-up, so an
+        # unreadable carrier means the port was never brought up -> not a fault.
+        carrier=$(cat "$nic/carrier" 2>/dev/null || true)
+        if [[ -n "$carrier" ]]; then
+            bad+="$name($st) "
+        else
+            ignored=$((ignored+1))
+        fi
     done
-    if [[ "$any" -eq 0 ]]; then hc_report LINKS SKIP "no data NICs found"; return 0; fi
-    if [[ -n "$down" ]]; then
-        hc_report LINKS WARN "not up: ${down% }"
+    if [[ "$any" -eq 0 && "$ignored" -eq 0 ]]; then hc_report LINKS SKIP "no data NICs found"; return 0; fi
+    if [[ -n "$bad" ]]; then
+        hc_report LINKS WARN "configured NIC(s) down: ${bad% }"
     else
-        hc_report LINKS PASS "all data NICs up"
+        local extra=""
+        [[ "$ignored" -gt 0 ]] && extra=" ($ignored unused/admin-down ignored)"
+        hc_report LINKS PASS "all active NICs up${extra}"
     fi
 }
 
