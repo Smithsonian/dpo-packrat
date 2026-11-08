@@ -132,14 +132,19 @@ dispatch_domain() {
         return 1
     fi
     local path="$HERE/$script"
-    if [[ ! -x "$path" ]]; then
-        err "sibling script not executable or missing: $path"
+    if [[ ! -f "$path" ]]; then
+        err "sibling script missing: $path"
         return 1
     fi
     # CLI passthrough. Once exec runs, we don't come back - the child
     # emits its own print_summary, signals reach it directly, exit code
-    # is its own. Cron-friendly.
-    exec "$path" "$@"
+    # is its own. Cron-friendly. Prefer the exec bit, but fall back to
+    # `bash <script>` so a pulled-but-non-executable sibling still runs.
+    if [[ -x "$path" ]]; then
+        exec "$path" "$@"
+    else
+        exec bash "$path" "$@"
+    fi
 }
 
 # Run a domain script as a child (interactive menu path). Returns the
@@ -153,14 +158,20 @@ dispatch_domain_child() {
         return 1
     fi
     local path="$HERE/$script"
-    if [[ ! -x "$path" ]]; then
-        err "sibling script not executable or missing: $path"
+    if [[ ! -f "$path" ]]; then
+        err "sibling script missing: $path"
         return 1
     fi
     # OPS_INVOKED_FROM_DISPATCHER tells the child to exit with the raw
     # MENU_RC_QUIT instead of translating it to 0 - so we can detect
     # operator [Q] inside the domain and propagate the quit upward.
-    OPS_INVOKED_FROM_DISPATCHER=1 "$path" "$@"
+    # Fall back to `bash` when the +x bit is missing (a filesystem that
+    # doesn't track the mode).
+    if [[ -x "$path" ]]; then
+        OPS_INVOKED_FROM_DISPATCHER=1 "$path" "$@"
+    else
+        OPS_INVOKED_FROM_DISPATCHER=1 bash "$path" "$@"
+    fi
 }
 
 # ---------------------------------------------------------------------------
