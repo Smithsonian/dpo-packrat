@@ -1,0 +1,50 @@
+# Staging canary — opt-in routing of packrat-test.si.edu to the new box.
+#
+# Included inside the 8443 (packrat-test.si.edu) server block ONLY. Lets a tester
+# route *their* session to the new box (si-3dpr02) while everyone else keeps using
+# old staging locally — no DNS change. Two gates, mirroring the maintenance pattern:
+#
+#   1. Flag file /etc/nginx/staging-canary.on — present only on the old box, so this
+#      snippet is inert everywhere else (no self-proxy loop on the new box).
+#   2. Secret cookie staging_canary=<TOKEN> — the per-session opt-in. Rotate/revoke
+#      by editing this token + reloading (or by deleting the flag file, no reload).
+#
+# Both must hold, so $to_newbox is 1 only when the flag exists AND the cookie matches.
+set $to_newbox 0;
+if (-f /etc/nginx/staging-canary.on) { set $to_newbox 1; }
+if ($cookie_staging_canary != "CHANGE_ME_CANARY_TOKEN") { set $to_newbox 0; }
+
+# Route the whole session to the new box without an `if`+`proxy_pass` (undefined
+# behavior): a server-level `return` trips an internal redirect to the named
+# location below, which proxies the raw request through untouched. The new box's
+# own nginx + app do all real routing (/, /server, /preview, maintenance, etc.).
+error_page 418 = @staging_newbox;
+if ($to_newbox) { return 418; }
+
+location @staging_newbox {
+    proxy_pass https://staging-newbox;
+
+    # New box presents its own packrat-test.si.edu cert; send matching SNI and skip
+    # verification while it is self-signed (real InCommon cert removes this later).
+    proxy_ssl_server_name on;
+    proxy_ssl_name packrat-test.si.edu;
+    proxy_ssl_verify off;
+
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # Carry websockets and large uploads across the extra hop (client_max_body_size 0
+    # is set http-wide; $connection_upgrade is mapped alongside the upstream).
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+
+    proxy_read_timeout 86400;
+    proxy_send_timeout 86400;
+    proxy_connect_timeout 86400;
+
+    proxy_request_buffering off;
+    proxy_buffering off;
+}
