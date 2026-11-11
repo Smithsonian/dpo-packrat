@@ -174,6 +174,18 @@ describe('Cook: CookReportScan.collectCookLogWarnings', () => {
         expect(warnings[0].message).toMatch(/material library \(\.mtl\) could not be read/i);
     });
 
+    test('an mtl-read log line is suppressed for si-voyager-scene (recipe does not consume the source .mtl)', () => {
+        const report = { state: 'done', recipe: { name: 'si-voyager-scene' },
+            steps: { 'inspect-mesh': { log: [{ level: 'debug', message: 'ERROR OBJ import: cannot read from MTL file: \'Model_Test.mtl\'' }] } } };
+        expect(collectCookLogWarnings(report)).toHaveLength(0);
+    });
+
+    test('an mtl-read log line is suppressed for si-generate-downloads (missing .mtl caught structurally)', () => {
+        const report = { state: 'done', recipe: { name: 'si-generate-downloads' },
+            steps: { 'inspect-mesh': { log: [{ level: 'debug', message: 'ERROR OBJ import: cannot read from MTL file: \'Model_Test.mtl\'' }] } } };
+        expect(collectCookLogWarnings(report)).toHaveLength(0);
+    });
+
     test('a non-object report is handled without throwing', () => {
         expect(collectCookLogWarnings(null)).toHaveLength(0);
         expect(collectCookLogWarnings('boom')).toHaveLength(0);
