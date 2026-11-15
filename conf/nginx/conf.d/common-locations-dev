@@ -8,10 +8,8 @@ location /preview {
 location /server {
     rewrite /server/(.*) /$1 break;
     proxy_pass http://server-dev;
-    proxy_set_header Host $host//server;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-        
+    proxy_set_header Host $host;
+
     # Increase timeouts for large file uploads
     proxy_read_timeout 86400;      # 24 hours
     proxy_send_timeout 86400;      # 24 hours
