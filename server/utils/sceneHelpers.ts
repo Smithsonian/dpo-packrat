@@ -168,7 +168,9 @@ export class SceneHelpers {
             ({ status, valid: false, svxEdanRecordId, dbEdanRecordId, subjectCount, message });
 
         const ICol: COL.ICollection = CollectionFactory.getInstance();
-        const listRecord: COL.EdanRecord | null = await ICol.fetchContent(svxEdanRecordId);
+        // A scheme-prefixed locator (edanlists:/edanmdm:) resolves through EDAN's url= parameter;
+        // the id= parameter is reserved for an opaque internal id/UUID. Pass the locator as url.
+        const listRecord: COL.EdanRecord | null = await ICol.fetchContent(undefined, svxEdanRecordId);
         if (!listRecord)
             return fail('error', `Cannot verify EDAN list membership; EDAN did not return (${svxEdanRecordId})`);
 

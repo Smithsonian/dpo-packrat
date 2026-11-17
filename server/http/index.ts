@@ -38,6 +38,7 @@ import { getUserUnits, setUserUnits, getUnitAuth, setUnitAuth, getProjectAuth, s
 import { getServiceStatus } from './routes/api/status';
 import { getMetrics } from './routes/api/metrics';
 import { edanCleanup } from './routes/api/edanCleanup';
+import { edanQuery } from './routes/api/edanQuery';
 import { createWebDAVToken } from './routes/api/scene';
 import { sceneByUUID } from './routes/api/sceneByUUID';
 import { getAuditLifeline } from './routes/api/auditLifeline';
@@ -320,6 +321,8 @@ export class HttpServer {
 
         this.app.get('/api/system/edan-cleanup', edanCleanup);      // admin/tools: preview EDAN resource-folder retention cleanup
         this.app.post('/api/system/edan-cleanup', edanCleanup);     // admin/tools: execute the cleanup
+
+        this.app.get('/api/system/edan-query', edanQuery);          // admin/tools: read-only EDAN search/content probe (raw response)
 
         this.app.get('/api/sandbox/play',play);
 
