@@ -21,14 +21,14 @@
 #   drop     [--yes]                               # staging only
 #   rebuild  [--yes]                               # staging only (DROP+SCHEMA+PROC+DATA)
 #   prune    [tier1|tier2|tier3|tier4|type:<id>:<days>]
-#   backup   [dest-dir] [zip|nozip]
+#   backup   [dest-dir] [zip|nozip] [--keep-days N]
 #   optimize <table> [tmpdir]
 #   metrics  <subop> [args...]
 #     size    [table] [--top N]                    # per-table footprint (default top 20)
 #     inspect <table>                              # combined size/bloat/payload/disk
 #
 # Examples:
-#   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip
+#   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip --keep-days 14
 #   ./ops_database.sh staging prune tier2
 #   ./ops_database.sh prod metrics size --top 10
 #   ./ops_database.sh prod metrics inspect Audit
@@ -60,6 +60,11 @@ init_traps
 # ---------------------------------------------------------------------------
 
 DEFAULT_BACKUP_DIR="${DEFAULT_BACKUP_DIR:-/3ddigip01/Packrat/Backups/Database}"
+
+# How many days of this DB's dumps to keep in the backup dir after a successful
+# run; older ones are pruned. Default 0 keeps everything (manual/interactive
+# backups never auto-delete); the daily cron opts in with `--keep-days N`.
+DEFAULT_BACKUP_KEEP_DAYS="${DEFAULT_BACKUP_KEEP_DAYS:-0}"
 
 # DELETE chunk size for op_prune. Big enough to make progress on a multi-
 # million-row Audit, small enough to avoid InnoDB lock-table blowups.
@@ -352,8 +357,26 @@ __prune_run() {
 
 op_backup() {
     OPS_CURRENT_OP="backup"
-    local dest_dir="${1:-}"
-    local zip_flag="${2:-}"
+    local dest_dir="" zip_flag="" keep_days="$DEFAULT_BACKUP_KEEP_DAYS"
+    while (( $# > 0 )); do
+        case "$1" in
+            --keep-days)
+                (( $# >= 2 )) || { err "--keep-days requires a value"; return 1; }
+                keep_days="$2"; shift 2; continue ;;
+            --keep-days=*) keep_days="${1#--keep-days=}" ;;
+            *)
+                if   [[ -z "$dest_dir" ]]; then dest_dir="$1"
+                elif [[ -z "$zip_flag" ]]; then zip_flag="$1"
+                else err "backup: unexpected arg '$1'"; return 1
+                fi
+                ;;
+        esac
+        shift
+    done
+    if ! [[ "$keep_days" =~ ^[0-9]+$ ]]; then
+        err "--keep-days must be a non-negative integer (got: '$keep_days')"
+        return 1
+    fi
 
     banner "BACKUP DATABASE ($ENV_LABEL / $DB_NAME)"
 
@@ -411,14 +434,41 @@ op_backup() {
     if (( rc == 0 )); then
         __tmp_files_forget "$sql_file"
         [[ -n "$zip_file" ]] && __tmp_files_forget "$zip_file"
+        (( keep_days > 0 )) && __backup_prune "$dest_dir" "$keep_days"
     fi
     return $rc
+}
+
+# Drop this DB's dumps older than $2 days from $1. Scoped to the current
+# ${DB_NAME}'s own .sql / .sql.zip files so sibling backups in a shared dir are
+# left untouched. Runs only after a successful dump, so a failed run never
+# erases the prior good copy.
+__backup_prune() {
+    local dir="$1" days="$2" removed=0 f
+    while IFS= read -r -d '' f; do
+        rm -f -- "$f" && removed=$(( removed + 1 ))
+    done < <(find "$dir" -maxdepth 1 -type f \
+                  \( -name "${DB_NAME}.*.sql" -o -name "${DB_NAME}.*.sql.zip" \) \
+                  -mtime +"$days" -print0 2>/dev/null)
+    echo "Retention: removed $removed dump(s) older than $days day(s) in $dir"
 }
 
 __backup_run() {
     local sql_file="$1"
     local zip_file="$2"
     local zip_flag="$3"
+
+    # When binary logging is active, stamp the dump with the binlog coordinate
+    # it was taken at (as a CHANGE MASTER comment) so it is a clean anchor for
+    # point-in-time recovery: restore this dump, then replay binlogs from that
+    # coordinate. --single-transaction keeps the coordinate consistent without
+    # a long global lock. Omitted where log_bin is off (e.g. staging).
+    local -a pitr=()
+    local log_bin
+    log_bin=$(mysql_exec "SELECT @@log_bin;" 2>/dev/null | tail -n 1)
+    if [[ "$log_bin" == "1" || "$log_bin" == "ON" ]]; then
+        pitr+=(--master-data=2)
+    fi
 
     echo "Writing dump to: $sql_file"
     local rc=0
@@ -428,8 +478,11 @@ __backup_run() {
         --user="$DB_USER" \
         --password="$DB_PASS" \
         --routines \
+        --triggers \
+        --events \
         --skip-lock-tables \
         --single-transaction \
+        "${pitr[@]}" \
         --result-file="$sql_file" \
         "$DB_NAME" || rc=$?
     if (( rc != 0 )); then
