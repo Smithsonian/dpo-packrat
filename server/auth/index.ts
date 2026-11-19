@@ -3,17 +3,19 @@ import { Authorization } from './Authorization';
 import AuthRouter from './AuthRouter';
 import session from 'express-session';
 import MemoryStore from 'memorystore';
+import { randomBytes } from 'crypto';
 import { Config } from '../config';
 import { httpAuthRequired } from '../http/auth';
 import { RecordKeeper as RK } from '../records/recordKeeper';
 
 const { PACKRAT_CLIENT_ENDPOINT, PACKRAT_SESSION_SECRET } = process.env;
 
-// Warn instead of throwing so the module can load during test teardown
-// (globalTeardown runs in a separate Node process without setupFiles).
-// In production, HttpServer.initialize() validates required env vars before startup.
+// PACKRAT_SESSION_SECRET is required in production (enforced by validateConfig at
+// server boot). Outside production, fall back to an ephemeral per-process random
+// secret so dev/test never depend on a committed value — sessions simply do not
+// survive a restart, which is acceptable for non-production.
 const clientEndpoint: string = PACKRAT_CLIENT_ENDPOINT || 'http://localhost:3000';
-const sessionSecret: string = PACKRAT_SESSION_SECRET || 'fallback-secret';
+const sessionSecret: string = PACKRAT_SESSION_SECRET || randomBytes(32).toString('hex');
 
 // for non-production deployments (where httpAuthRequired is false), allow requests from the Apollo GraphQL Studio:
 const authCorsConfig = {

@@ -7,6 +7,7 @@ import { Actor } from '../audit/Actor';
 import { JobAuditRetention } from '../job/impl/NS/JobAuditRetention';
 import { AuditFactory } from '../audit/interface/AuditFactory';
 import { Config } from '../config';
+import { validateConfig } from '../config/validateConfig';
 import * as H from '../utils/helpers';
 import { User } from '../db/api/User';
 import { UsageMonitor } from '../utils/osStats';
@@ -105,6 +106,18 @@ export class HttpServer {
     }
 
     private async HttpServer(): Promise<boolean> {
+        // Fail fast on missing or weak required configuration before bringing up any
+        // subsystem. Skipped under test/CI, which run with a deliberately minimal env.
+        if (!Config.environment.isJest && !Config.environment.isGitCI) {
+            const configErrors: string[] = validateConfig();
+            if (configErrors.length > 0) {
+                for (const configError of configErrors)
+                    RK.logFallback(RK.LogLevel.CRITICAL, RK.LogSection.eSYS, 'invalid configuration', configError, undefined, 'HttpServer');
+                RK.logFallback(RK.LogLevel.CRITICAL, RK.LogSection.eSYS, 'server failed', `refusing to start: ${configErrors.length} configuration error(s)`);
+                process.exit(1);
+            }
+        }
+
         // initialize logging and notification system
         const loggerResult: IOResults = await RK.initialize(RK.SubSystem.LOGGER);
         if(loggerResult.success===false) {
