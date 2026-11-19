@@ -470,6 +470,11 @@ __backup_run() {
         pitr+=(--master-data=2)
     fi
 
+    # Note: no --events. Packrat schedules jobs via node-schedule, not the MySQL
+    # Event Scheduler, so there are no events to dump — and --events queries
+    # mysql.event, which fails (rc=2) for a DB-scoped grant without the global
+    # EVENT privilege (e.g. packrat@localhost on prod). --routines + --triggers
+    # only touch the target schema, which the app's own grant already covers.
     echo "Writing dump to: $sql_file"
     local rc=0
     mysqldump \
@@ -479,7 +484,6 @@ __backup_run() {
         --password="$DB_PASS" \
         --routines \
         --triggers \
-        --events \
         --skip-lock-tables \
         --single-transaction \
         "${pitr[@]}" \
