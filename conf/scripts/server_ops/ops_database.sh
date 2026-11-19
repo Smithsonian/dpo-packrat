@@ -21,14 +21,14 @@
 #   drop     [--yes]                               # staging only
 #   rebuild  [--yes]                               # staging only (DROP+SCHEMA+PROC+DATA)
 #   prune    [tier1|tier2|tier3|tier4|type:<id>:<days>]
-#   backup   [dest-dir] [zip|nozip] [--keep-days N]
+#   backup   [dest-dir] [zip|nozip] [--keep-days N] [--keep-monthly N]
 #   optimize <table> [tmpdir]
 #   metrics  <subop> [args...]
 #     size    [table] [--top N]                    # per-table footprint (default top 20)
 #     inspect <table>                              # combined size/bloat/payload/disk
 #
 # Examples:
-#   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip --keep-days 14
+#   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip --keep-days 14 --keep-monthly 12
 #   ./ops_database.sh staging prune tier2
 #   ./ops_database.sh prod metrics size --top 10
 #   ./ops_database.sh prod metrics inspect Audit
@@ -61,10 +61,12 @@ init_traps
 
 DEFAULT_BACKUP_DIR="${DEFAULT_BACKUP_DIR:-/3ddigip01/Packrat/Backups/Database}"
 
-# How many days of this DB's dumps to keep in the backup dir after a successful
-# run; older ones are pruned. Default 0 keeps everything (manual/interactive
-# backups never auto-delete); the daily cron opts in with `--keep-days N`.
+# Retention after a successful run (grandfather-father-son). --keep-days keeps every
+# dump that recent; --keep-monthly additionally keeps one dump per calendar month
+# (the newest in each) for that many months. Both default 0 = keep everything, so
+# manual/interactive backups never auto-delete; the daily cron opts in with both.
 DEFAULT_BACKUP_KEEP_DAYS="${DEFAULT_BACKUP_KEEP_DAYS:-0}"
+DEFAULT_BACKUP_KEEP_MONTHS="${DEFAULT_BACKUP_KEEP_MONTHS:-0}"
 
 # DELETE chunk size for op_prune. Big enough to make progress on a multi-
 # million-row Audit, small enough to avoid InnoDB lock-table blowups.
@@ -357,13 +359,17 @@ __prune_run() {
 
 op_backup() {
     OPS_CURRENT_OP="backup"
-    local dest_dir="" zip_flag="" keep_days="$DEFAULT_BACKUP_KEEP_DAYS"
+    local dest_dir="" zip_flag="" keep_days="$DEFAULT_BACKUP_KEEP_DAYS" keep_months="$DEFAULT_BACKUP_KEEP_MONTHS"
     while (( $# > 0 )); do
         case "$1" in
             --keep-days)
                 (( $# >= 2 )) || { err "--keep-days requires a value"; return 1; }
                 keep_days="$2"; shift 2; continue ;;
-            --keep-days=*) keep_days="${1#--keep-days=}" ;;
+            --keep-days=*)   keep_days="${1#--keep-days=}" ;;
+            --keep-monthly)
+                (( $# >= 2 )) || { err "--keep-monthly requires a value"; return 1; }
+                keep_months="$2"; shift 2; continue ;;
+            --keep-monthly=*) keep_months="${1#--keep-monthly=}" ;;
             *)
                 if   [[ -z "$dest_dir" ]]; then dest_dir="$1"
                 elif [[ -z "$zip_flag" ]]; then zip_flag="$1"
@@ -375,6 +381,10 @@ op_backup() {
     done
     if ! [[ "$keep_days" =~ ^[0-9]+$ ]]; then
         err "--keep-days must be a non-negative integer (got: '$keep_days')"
+        return 1
+    fi
+    if ! [[ "$keep_months" =~ ^[0-9]+$ ]]; then
+        err "--keep-monthly must be a non-negative integer (got: '$keep_months')"
         return 1
     fi
 
@@ -434,23 +444,65 @@ op_backup() {
     if (( rc == 0 )); then
         __tmp_files_forget "$sql_file"
         [[ -n "$zip_file" ]] && __tmp_files_forget "$zip_file"
-        (( keep_days > 0 )) && __backup_prune "$dest_dir" "$keep_days"
+        (( keep_days > 0 || keep_months > 0 )) && __backup_prune "$dest_dir" "$keep_days" "$keep_months"
     fi
     return $rc
 }
 
-# Drop this DB's dumps older than $2 days from $1. Scoped to the current
-# ${DB_NAME}'s own .sql / .sql.zip files so sibling backups in a shared dir are
-# left untouched. Runs only after a successful dump, so a failed run never
-# erases the prior good copy.
+# Grandfather-father-son retention for this DB's dumps in $1, parsed from the
+# timestamp in each filename (<DB>.YYYY-MM-DD_HH-MM-SS.sql[.zip]):
+#   - keep every dump <= $2 (days) old                              — the "son" (daily) tier
+#   - older than that: keep the newest dump per calendar month for  — the "father/grandfather"
+#     up to $3 (months); delete the rest and anything beyond $3        (monthly) tier
+#   - $3 = 0 disables the monthly tier (plain "older than $2 days" delete)
+# Scoped to this DB's own .sql/.sql.zip so siblings in a shared dir are untouched;
+# files whose name doesn't parse to a date are left alone. Runs only after a
+# successful dump, so a failed run never erases the prior good copy.
 __backup_prune() {
-    local dir="$1" days="$2" removed=0 f
-    while IFS= read -r -d '' f; do
-        rm -f -- "$f" && removed=$(( removed + 1 ))
-    done < <(find "$dir" -maxdepth 1 -type f \
-                  \( -name "${DB_NAME}.*.sql" -o -name "${DB_NAME}.*.sql.zip" \) \
-                  -mtime +"$days" -print0 2>/dev/null)
-    echo "Retention: removed $removed dump(s) older than $days day(s) in $dir"
+    local dir="$1" days="$2" months="${3:-0}" removed=0 kept_month="" f
+    local today_days today_ym
+    today_days=$(( $(date +%s) / 86400 ))
+    today_ym=$(date +%Y%m)
+
+    # Newest first (filenames sort by timestamp), so the first dump seen in each
+    # month is that month's newest — the one the monthly tier keeps.
+    local -a files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(
+        find "$dir" -maxdepth 1 -type f \
+            \( -name "${DB_NAME}.*.sql" -o -name "${DB_NAME}.*.sql.zip" \) -print0 2>/dev/null \
+        | sort -zr)
+
+    for f in "${files[@]}"; do
+        local base date_part fdays age fym months_old
+        base="${f##*/}"
+        date_part="${base#"${DB_NAME}".}"
+        date_part="${date_part:0:10}"                              # YYYY-MM-DD
+        [[ "$date_part" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
+        fdays=$(( $(date -d "$date_part" +%s 2>/dev/null) / 86400 ))
+        age=$(( today_days - fdays ))
+        if (( age <= days )); then
+            continue                                               # daily tier — keep
+        fi
+        if (( months <= 0 )); then
+            rm -f -- "$f" && removed=$(( removed + 1 )); continue   # no monthly tier
+        fi
+        fym="${date_part:0:4}${date_part:5:2}"                     # YYYYMM
+        months_old=$(( (10#${today_ym:0:4} - 10#${fym:0:4}) * 12 + (10#${today_ym:4:2} - 10#${fym:4:2}) ))
+        if (( months_old > months )); then
+            rm -f -- "$f" && removed=$(( removed + 1 )); continue   # beyond the monthly window
+        fi
+        if [[ "$fym" == "$kept_month" ]]; then
+            rm -f -- "$f" && removed=$(( removed + 1 ))             # month's snapshot already kept
+        else
+            kept_month="$fym"                                      # keep this month's newest
+        fi
+    done
+
+    if (( months > 0 )); then
+        echo "Retention: removed $removed dump(s) — kept <=${days}d daily + monthly up to ${months}mo — in $dir"
+    else
+        echo "Retention: removed $removed dump(s) older than ${days} day(s) in $dir"
+    fi
 }
 
 __backup_run() {
