@@ -22,6 +22,7 @@
 #   rebuild  [--yes]                               # staging only (DROP+SCHEMA+PROC+DATA)
 #   prune    [tier1|tier2|tier3|tier4|type:<id>:<days>]
 #   backup   [dest-dir] [zip|nozip] [--keep-days N] [--keep-monthly N]
+#   restore  list | drop <db> | <snapshot> [--to <db>] [--pitr <datetime|now>] [--yes]
 #   optimize <table> [tmpdir]
 #   metrics  <subop> [args...]
 #     size    [table] [--top N]                    # per-table footprint (default top 20)
@@ -29,6 +30,8 @@
 #
 # Examples:
 #   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip --keep-days 14 --keep-monthly 12
+#   ./ops_database.sh staging restore list
+#   ./ops_database.sh staging restore PackratStaging.2026-11-19_02-00-01.sql.zip --pitr now
 #   ./ops_database.sh staging prune tier2
 #   ./ops_database.sh prod metrics size --top 10
 #   ./ops_database.sh prod metrics inspect Audit
@@ -575,6 +578,237 @@ __tmp_files_forget() {
 }
 
 # ---------------------------------------------------------------------------
+# Operation: restore  (restore a snapshot into a scratch DB, optional PITR, inspect)
+# ---------------------------------------------------------------------------
+#
+# A restore is privileged (CREATE DATABASE + cross-db load + binlog replay) that
+# the app's packrat grant can't do, so these use `sudo mysql` (local root via
+# unix_socket), not the packrat creds. The live DB is never the default target:
+# restoring over it is refused on prod and needs typed confirmation on staging.
+#
+#   restore list [dir]        list this DB's snapshots, newest first
+#   restore drop <db>         drop a scratch restore db
+#   restore <snapshot> [--to <db>] [--pitr <datetime|now>] [--yes]
+
+op_restore() {
+    OPS_CURRENT_OP="restore"
+    local first="${1:-}"
+    [[ -n "$first" ]] && shift
+
+    case "$first" in
+        ""|list) op_restore_list "$@"; return $? ;;
+        drop)    op_restore_drop "$@"; return $? ;;
+    esac
+
+    local snapshot="$first"
+    local target="${DB_NAME}_restore"
+    local pitr=""
+    local assume_yes=false
+    while (( $# > 0 )); do
+        case "$1" in
+            --to)     (( $# >= 2 )) || { err "--to requires a db name"; return 1; }; target="$2"; shift 2; continue ;;
+            --to=*)   target="${1#--to=}" ;;
+            --pitr)   (( $# >= 2 )) || { err "--pitr requires a datetime or 'now'"; return 1; }; pitr="$2"; shift 2; continue ;;
+            --pitr=*) pitr="${1#--pitr=}" ;;
+            --yes|-y) assume_yes=true ;;
+            *) err "restore: unknown arg '$1'"; return 1 ;;
+        esac
+        shift
+    done
+
+    if ! is_valid_identifier "$target"; then
+        err "invalid target db name: '$target'"
+        return 1
+    fi
+
+    local snap_path=""
+    if [[ -f "$snapshot" ]]; then
+        snap_path="$snapshot"
+    elif [[ -f "$DEFAULT_BACKUP_DIR/$snapshot" ]]; then
+        snap_path="$DEFAULT_BACKUP_DIR/$snapshot"
+    else
+        err "snapshot not found: '$snapshot'"
+        err "list choices with: ops_database.sh $ENVIRONMENT restore list"
+        return 1
+    fi
+
+    # Restoring OVER the live database is gated: never on prod, typed confirm on staging.
+    if [[ "$target" == "$DB_NAME" ]]; then
+        if [[ "$ENVIRONMENT" == "prod" ]]; then
+            err "refusing to restore over the live production database ($DB_NAME)"
+            err "restore into a scratch db (default: ${DB_NAME}_restore), verify, then promote by hand"
+            return 1
+        fi
+        banner "RESTORE OVER LIVE DB ($ENV_LABEL / $DB_NAME)"
+        echo "Snapshot: $snap_path"
+        if ! $assume_yes && ! confirm_danger "Overwrite the LIVE $DB_NAME on $DB_HOST?"; then
+            echo "Cancelled."
+            return 1
+        fi
+    fi
+
+    require_cmd mysql || return 127
+    [[ "$snap_path" == *.zip ]] && { require_cmd unzip || return 127; }
+    [[ -n "$pitr" ]] && { require_cmd mysqlbinlog || return 127; }
+
+    with_lock "database-restore-${ENVIRONMENT}-${target}" -- \
+        __restore_run "$snap_path" "$target" "$pitr"
+}
+
+op_restore_list() {
+    local dir="${1:-$DEFAULT_BACKUP_DIR}"
+    banner "RESTORE SNAPSHOTS ($ENV_LABEL / $DB_NAME)"
+    echo "Dir: $dir"
+    echo ""
+    if [[ ! -d "$dir" ]]; then
+        err "backup dir not found: $dir"
+        return 1
+    fi
+    local any=0 f size
+    while IFS= read -r f; do
+        [[ -z "$f" ]] && continue
+        size=$(du -h "$f" 2>/dev/null | cut -f1)
+        printf '  %-8s %s\n' "${size:-?}" "$(basename "$f")"
+        any=1
+    done < <(find "$dir" -maxdepth 1 -type f \
+                  \( -name "${DB_NAME}.*.sql" -o -name "${DB_NAME}.*.sql.zip" \) \
+                  -printf '%T@\t%p\n' 2>/dev/null | sort -rn | cut -f2-)
+    (( any == 0 )) && note "no ${DB_NAME} snapshots in $dir"
+    echo ""
+    note "restore with: ops_database.sh $ENVIRONMENT restore <file> [--to <db>] [--pitr now]"
+}
+
+op_restore_drop() {
+    local db="${1:-}"
+    if [[ -z "$db" ]]; then
+        err "usage: ops_database.sh $ENVIRONMENT restore drop <db>"
+        return 1
+    fi
+    if ! is_valid_identifier "$db"; then
+        err "invalid db name: '$db'"
+        return 1
+    fi
+    if [[ "$db" == "$DB_NAME" || "$db" == "PackratProduction" || "$db" == "PackratStaging" || "$db" == "Packrat" ]]; then
+        err "refusing to drop a live Packrat database: $db"
+        return 1
+    fi
+    banner "DROP RESTORE DB ($db)"
+    if ! confirm_danger "Drop database $db on $DB_HOST?"; then
+        echo "Cancelled."
+        return 1
+    fi
+    sudo mysql -e "DROP DATABASE IF EXISTS \`$db\`;" && echo "dropped $db"
+}
+
+__restore_run() {
+    local snap="$1" target="$2" pitr="$3"
+
+    banner "RESTORE DATABASE ($ENV_LABEL)"
+    echo "Snapshot : $snap"
+    echo "Target   : $target"
+    echo "PITR     : ${pitr:-none}"
+    echo ""
+
+    echo "Preparing target database '$target'..."
+    sudo mysql -e "DROP DATABASE IF EXISTS \`$target\`; CREATE DATABASE \`$target\`;" \
+        || { err "cannot (re)create $target"; return 1; }
+
+    echo "Restoring dump..."
+    local rc=0
+    if [[ "$snap" == *.zip ]]; then
+        unzip -p "$snap" | sudo mysql "$target" || rc=$?
+    else
+        sudo mysql "$target" < "$snap" || rc=$?
+    fi
+    if (( rc != 0 )); then
+        err "restore failed (rc=$rc)"
+        return $rc
+    fi
+    echo "Dump restored into $target."
+
+    if [[ -n "$pitr" ]]; then
+        __restore_pitr "$snap" "$target" "$pitr" || return 1
+    fi
+
+    __restore_inspect "$target" "$pitr"
+}
+
+__restore_pitr() {
+    local snap="$1" target="$2" when="$3"
+
+    # The dump records the binlog coordinate it was taken at (backup adds
+    # --master-data=2 when binlog is on). Read it to know where to replay from.
+    local coord
+    if [[ "$snap" == *.zip ]]; then
+        coord=$(unzip -p "$snap" | grep -m1 'CHANGE MASTER TO')
+    else
+        coord=$(grep -m1 'CHANGE MASTER TO' "$snap")
+    fi
+    if [[ -z "$coord" ]]; then
+        err "no binlog coordinate in the dump — taken on a binlog-off box; PITR not possible"
+        return 1
+    fi
+    local file pos
+    file=$(sed -nE "s/.*MASTER_LOG_FILE='([^']+)'.*/\1/p" <<< "$coord")
+    pos=$(sed -nE "s/.*MASTER_LOG_POS=([0-9]+).*/\1/p" <<< "$coord")
+    if [[ -z "$file" || -z "$pos" ]]; then
+        err "could not parse binlog coordinate from: $coord"
+        return 1
+    fi
+
+    local basename_path dir
+    basename_path=$(sudo mysql -N -e "SELECT @@log_bin_basename;" 2>/dev/null | tail -n1)
+    if [[ -z "$basename_path" || "$basename_path" == "NULL" ]]; then
+        err "binary logging is off on this server — cannot PITR"
+        return 1
+    fi
+    dir=$(dirname "$basename_path")
+
+    # Binlog files from the coordinate's file onward (fixed-width names sort lexically).
+    local -a files=()
+    local bl
+    while IFS= read -r bl; do
+        [[ -z "$bl" ]] && continue
+        [[ "$bl" < "$file" ]] && continue
+        files+=("$dir/$bl")
+    done < <(sudo mysql -N -e "SHOW BINARY LOGS;" 2>/dev/null | awk '{print $1}')
+    if (( ${#files[@]} == 0 )); then
+        err "no binlog files from $file onward in $dir"
+        return 1
+    fi
+
+    local -a stop=()
+    [[ "$when" != "now" ]] && stop=(--stop-datetime="$when")
+
+    echo "Replaying $file:$pos -> ${when} across ${#files[@]} binlog file(s)..."
+    sudo mysqlbinlog --database="$DB_NAME" --rewrite-db="$DB_NAME->$target" \
+        --start-position="$pos" "${stop[@]}" "${files[@]}" \
+        | sudo mysql "$target" || { err "binlog replay failed"; return 1; }
+    echo "PITR replay complete."
+}
+
+__restore_inspect() {
+    local target="$1" pitr="${2:-}"
+    echo ""
+    hr
+    echo "inspect: row counts (live $DB_NAME vs restored $target)"
+    hr
+    local t live rest flag
+    for t in SystemObject Asset AssetVersion Model Scene Subject Item Audit; do
+        live=$(sudo mysql -N -e "SELECT COUNT(*) FROM \`$DB_NAME\`.\`$t\`;" 2>/dev/null)
+        rest=$(sudo mysql -N -e "SELECT COUNT(*) FROM \`$target\`.\`$t\`;" 2>/dev/null)
+        [[ -z "$live" && -z "$rest" ]] && continue
+        flag=$( [[ "$live" == "$rest" ]] && echo OK || echo DIFF )
+        printf '  %-16s live=%-10s restored=%-10s %s\n' "$t" "${live:-?}" "${rest:-?}" "$flag"
+    done
+    echo ""
+    if [[ -n "$pitr" && "$pitr" != "now" ]]; then
+        note "DIFF vs live is expected — you restored to a past point ($pitr)."
+    fi
+    note "scratch db '$target' kept for inspection; drop it with: ops_database.sh $ENVIRONMENT restore drop $target"
+}
+
+# ---------------------------------------------------------------------------
 # Operation: optimize
 # ---------------------------------------------------------------------------
 
@@ -881,6 +1115,7 @@ main_menu() {
     echo "[2] Backup database  - mysqldump to disk, optional zip"
     echo "[3] Prune audit      - delete old Audit rows by tier or AuditType"
     echo "[4] Optimize table   - rebuild a table (locks it; off-hours only)"
+    echo "[7] Restore          - restore a snapshot to a scratch db (+ optional PITR)"
     echo ""
     echo "--- staging-only ---"
     if [[ "$ENVIRONMENT" == "staging" ]]; then
@@ -906,6 +1141,7 @@ main_menu() {
         2) run_op op_backup   || return $MENU_RC_QUIT ;;
         3) run_op op_prune    || return $MENU_RC_QUIT ;;
         4) run_op op_optimize || return $MENU_RC_QUIT ;;
+        7) run_op op_restore  || return $MENU_RC_QUIT ;;
         5)
             if [[ "$ENVIRONMENT" != "staging" ]]; then
                 err "drop is not allowed on production from this script"
@@ -992,6 +1228,7 @@ else
             prune)    op_prune    "$@" || rc=$? ;;
             backup)   op_backup   "$@" || rc=$? ;;
             optimize) op_optimize "$@" || rc=$? ;;
+            restore)  op_restore  "$@" || rc=$? ;;
             metrics)  op_metrics  "$@" || rc=$? ;;
             *)        err "unknown op: $OP"; rc=1 ;;
         esac
