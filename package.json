@@ -44,7 +44,6 @@
     "dev:db": "docker compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d db",
     "dev:server": "docker compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-server",
     "dev:client": "docker compose --env-file .env.dev -p dpo-packrat -f ./conf/docker/docker-compose.dev.yml up -d packrat-client",
-    "prod": "docker compose --env-file .env.prod -p dpo-packrat -f ./conf/docker/docker-compose.prod.yml up -d",
     "deploy:dev": "sh ./conf/scripts/deploy.sh dev",
     "deploy:prod": "sh ./conf/scripts/deploy.sh prod",
     "build:dev": "lerna run build:dev",

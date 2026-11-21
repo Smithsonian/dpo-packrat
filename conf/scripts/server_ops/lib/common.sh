@@ -401,8 +401,10 @@ print_summary() {
     echo ""
     hr
     echo "STATUS   : $status"
-    echo "ENV      : ${ENV_LABEL:-n/a}"
-    echo "DATABASE : ${DB_NAME:-n/a}"
+    # ENV / DATABASE only apply to env- and DB-scoped ops; omit them for
+    # host-level scripts (health/hardware/network/cert) rather than print n/a.
+    if [[ -n "${ENV_LABEL:-}" ]]; then echo "ENV      : $ENV_LABEL"; fi
+    if [[ -n "${DB_NAME:-}" ]];   then echo "DATABASE : $DB_NAME"; fi
     echo "ELAPSED  : ${mins}m ${secs}s"
     hr
     audit_log "$status"

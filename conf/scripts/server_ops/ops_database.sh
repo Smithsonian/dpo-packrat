@@ -21,14 +21,17 @@
 #   drop     [--yes]                               # staging only
 #   rebuild  [--yes]                               # staging only (DROP+SCHEMA+PROC+DATA)
 #   prune    [tier1|tier2|tier3|tier4|type:<id>:<days>]
-#   backup   [dest-dir] [zip|nozip]
+#   backup   [dest-dir] [zip|nozip] [--keep-days N] [--keep-monthly N]
+#   restore  list | drop <db> | <snapshot> [--to <db>] [--pitr <datetime|now>] [--yes]
 #   optimize <table> [tmpdir]
 #   metrics  <subop> [args...]
 #     size    [table] [--top N]                    # per-table footprint (default top 20)
 #     inspect <table>                              # combined size/bloat/payload/disk
 #
 # Examples:
-#   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip
+#   ./ops_database.sh prod backup /3ddigip01/Packrat/Backups/Database zip --keep-days 14 --keep-monthly 12
+#   ./ops_database.sh staging restore list
+#   ./ops_database.sh staging restore PackratStaging.2026-11-19_02-00-01.sql.zip --pitr now
 #   ./ops_database.sh staging prune tier2
 #   ./ops_database.sh prod metrics size --top 10
 #   ./ops_database.sh prod metrics inspect Audit
@@ -60,6 +63,13 @@ init_traps
 # ---------------------------------------------------------------------------
 
 DEFAULT_BACKUP_DIR="${DEFAULT_BACKUP_DIR:-/3ddigip01/Packrat/Backups/Database}"
+
+# Retention after a successful run (grandfather-father-son). --keep-days keeps every
+# dump that recent; --keep-monthly additionally keeps one dump per calendar month
+# (the newest in each) for that many months. Both default 0 = keep everything, so
+# manual/interactive backups never auto-delete; the daily cron opts in with both.
+DEFAULT_BACKUP_KEEP_DAYS="${DEFAULT_BACKUP_KEEP_DAYS:-0}"
+DEFAULT_BACKUP_KEEP_MONTHS="${DEFAULT_BACKUP_KEEP_MONTHS:-0}"
 
 # DELETE chunk size for op_prune. Big enough to make progress on a multi-
 # million-row Audit, small enough to avoid InnoDB lock-table blowups.
@@ -352,8 +362,34 @@ __prune_run() {
 
 op_backup() {
     OPS_CURRENT_OP="backup"
-    local dest_dir="${1:-}"
-    local zip_flag="${2:-}"
+    local dest_dir="" zip_flag="" keep_days="$DEFAULT_BACKUP_KEEP_DAYS" keep_months="$DEFAULT_BACKUP_KEEP_MONTHS"
+    while (( $# > 0 )); do
+        case "$1" in
+            --keep-days)
+                (( $# >= 2 )) || { err "--keep-days requires a value"; return 1; }
+                keep_days="$2"; shift 2; continue ;;
+            --keep-days=*)   keep_days="${1#--keep-days=}" ;;
+            --keep-monthly)
+                (( $# >= 2 )) || { err "--keep-monthly requires a value"; return 1; }
+                keep_months="$2"; shift 2; continue ;;
+            --keep-monthly=*) keep_months="${1#--keep-monthly=}" ;;
+            *)
+                if   [[ -z "$dest_dir" ]]; then dest_dir="$1"
+                elif [[ -z "$zip_flag" ]]; then zip_flag="$1"
+                else err "backup: unexpected arg '$1'"; return 1
+                fi
+                ;;
+        esac
+        shift
+    done
+    if ! [[ "$keep_days" =~ ^[0-9]+$ ]]; then
+        err "--keep-days must be a non-negative integer (got: '$keep_days')"
+        return 1
+    fi
+    if ! [[ "$keep_months" =~ ^[0-9]+$ ]]; then
+        err "--keep-monthly must be a non-negative integer (got: '$keep_months')"
+        return 1
+    fi
 
     banner "BACKUP DATABASE ($ENV_LABEL / $DB_NAME)"
 
@@ -411,8 +447,65 @@ op_backup() {
     if (( rc == 0 )); then
         __tmp_files_forget "$sql_file"
         [[ -n "$zip_file" ]] && __tmp_files_forget "$zip_file"
+        (( keep_days > 0 || keep_months > 0 )) && __backup_prune "$dest_dir" "$keep_days" "$keep_months"
     fi
     return $rc
+}
+
+# Grandfather-father-son retention for this DB's dumps in $1, parsed from the
+# timestamp in each filename (<DB>.YYYY-MM-DD_HH-MM-SS.sql[.zip]):
+#   - keep every dump <= $2 (days) old                              — the "son" (daily) tier
+#   - older than that: keep the newest dump per calendar month for  — the "father/grandfather"
+#     up to $3 (months); delete the rest and anything beyond $3        (monthly) tier
+#   - $3 = 0 disables the monthly tier (plain "older than $2 days" delete)
+# Scoped to this DB's own .sql/.sql.zip so siblings in a shared dir are untouched;
+# files whose name doesn't parse to a date are left alone. Runs only after a
+# successful dump, so a failed run never erases the prior good copy.
+__backup_prune() {
+    local dir="$1" days="$2" months="${3:-0}" removed=0 kept_month="" f
+    local today_days today_ym
+    today_days=$(( $(date +%s) / 86400 ))
+    today_ym=$(date +%Y%m)
+
+    # Newest first (filenames sort by timestamp), so the first dump seen in each
+    # month is that month's newest — the one the monthly tier keeps.
+    local -a files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(
+        find "$dir" -maxdepth 1 -type f \
+            \( -name "${DB_NAME}.*.sql" -o -name "${DB_NAME}.*.sql.zip" \) -print0 2>/dev/null \
+        | sort -zr)
+
+    for f in "${files[@]}"; do
+        local base date_part fdays age fym months_old
+        base="${f##*/}"
+        date_part="${base#"${DB_NAME}".}"
+        date_part="${date_part:0:10}"                              # YYYY-MM-DD
+        [[ "$date_part" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
+        fdays=$(( $(date -d "$date_part" +%s 2>/dev/null) / 86400 ))
+        age=$(( today_days - fdays ))
+        if (( age <= days )); then
+            continue                                               # daily tier — keep
+        fi
+        if (( months <= 0 )); then
+            rm -f -- "$f" && removed=$(( removed + 1 )); continue   # no monthly tier
+        fi
+        fym="${date_part:0:4}${date_part:5:2}"                     # YYYYMM
+        months_old=$(( (10#${today_ym:0:4} - 10#${fym:0:4}) * 12 + (10#${today_ym:4:2} - 10#${fym:4:2}) ))
+        if (( months_old > months )); then
+            rm -f -- "$f" && removed=$(( removed + 1 )); continue   # beyond the monthly window
+        fi
+        if [[ "$fym" == "$kept_month" ]]; then
+            rm -f -- "$f" && removed=$(( removed + 1 ))             # month's snapshot already kept
+        else
+            kept_month="$fym"                                      # keep this month's newest
+        fi
+    done
+
+    if (( months > 0 )); then
+        echo "Retention: removed $removed dump(s) — kept <=${days}d daily + monthly up to ${months}mo — in $dir"
+    else
+        echo "Retention: removed $removed dump(s) older than ${days} day(s) in $dir"
+    fi
 }
 
 __backup_run() {
@@ -420,6 +513,23 @@ __backup_run() {
     local zip_file="$2"
     local zip_flag="$3"
 
+    # When binary logging is active, stamp the dump with the binlog coordinate
+    # it was taken at (as a CHANGE MASTER comment) so it is a clean anchor for
+    # point-in-time recovery: restore this dump, then replay binlogs from that
+    # coordinate. --single-transaction keeps the coordinate consistent without
+    # a long global lock. Omitted where log_bin is off (e.g. staging).
+    local -a pitr=()
+    local log_bin
+    log_bin=$(mysql_exec "SELECT @@log_bin;" 2>/dev/null | tail -n 1)
+    if [[ "$log_bin" == "1" || "$log_bin" == "ON" ]]; then
+        pitr+=(--master-data=2)
+    fi
+
+    # Note: no --events. Packrat schedules jobs via node-schedule, not the MySQL
+    # Event Scheduler, so there are no events to dump — and --events queries
+    # mysql.event, which fails (rc=2) for a DB-scoped grant without the global
+    # EVENT privilege (e.g. packrat@localhost on prod). --routines + --triggers
+    # only touch the target schema, which the app's own grant already covers.
     echo "Writing dump to: $sql_file"
     local rc=0
     mysqldump \
@@ -428,8 +538,10 @@ __backup_run() {
         --user="$DB_USER" \
         --password="$DB_PASS" \
         --routines \
+        --triggers \
         --skip-lock-tables \
         --single-transaction \
+        "${pitr[@]}" \
         --result-file="$sql_file" \
         "$DB_NAME" || rc=$?
     if (( rc != 0 )); then
@@ -463,6 +575,237 @@ __tmp_files_forget() {
         [[ "$f" != "$target" ]] && kept+=("$f")
     done
     TMP_FILES=("${kept[@]}")
+}
+
+# ---------------------------------------------------------------------------
+# Operation: restore  (restore a snapshot into a scratch DB, optional PITR, inspect)
+# ---------------------------------------------------------------------------
+#
+# A restore is privileged (CREATE DATABASE + cross-db load + binlog replay) that
+# the app's packrat grant can't do, so these use `sudo mysql` (local root via
+# unix_socket), not the packrat creds. The live DB is never the default target:
+# restoring over it is refused on prod and needs typed confirmation on staging.
+#
+#   restore list [dir]        list this DB's snapshots, newest first
+#   restore drop <db>         drop a scratch restore db
+#   restore <snapshot> [--to <db>] [--pitr <datetime|now>] [--yes]
+
+op_restore() {
+    OPS_CURRENT_OP="restore"
+    local first="${1:-}"
+    [[ -n "$first" ]] && shift
+
+    case "$first" in
+        ""|list) op_restore_list "$@"; return $? ;;
+        drop)    op_restore_drop "$@"; return $? ;;
+    esac
+
+    local snapshot="$first"
+    local target="${DB_NAME}_restore"
+    local pitr=""
+    local assume_yes=false
+    while (( $# > 0 )); do
+        case "$1" in
+            --to)     (( $# >= 2 )) || { err "--to requires a db name"; return 1; }; target="$2"; shift 2; continue ;;
+            --to=*)   target="${1#--to=}" ;;
+            --pitr)   (( $# >= 2 )) || { err "--pitr requires a datetime or 'now'"; return 1; }; pitr="$2"; shift 2; continue ;;
+            --pitr=*) pitr="${1#--pitr=}" ;;
+            --yes|-y) assume_yes=true ;;
+            *) err "restore: unknown arg '$1'"; return 1 ;;
+        esac
+        shift
+    done
+
+    if ! is_valid_identifier "$target"; then
+        err "invalid target db name: '$target'"
+        return 1
+    fi
+
+    local snap_path=""
+    if [[ -f "$snapshot" ]]; then
+        snap_path="$snapshot"
+    elif [[ -f "$DEFAULT_BACKUP_DIR/$snapshot" ]]; then
+        snap_path="$DEFAULT_BACKUP_DIR/$snapshot"
+    else
+        err "snapshot not found: '$snapshot'"
+        err "list choices with: ops_database.sh $ENVIRONMENT restore list"
+        return 1
+    fi
+
+    # Restoring OVER the live database is gated: never on prod, typed confirm on staging.
+    if [[ "$target" == "$DB_NAME" ]]; then
+        if [[ "$ENVIRONMENT" == "prod" ]]; then
+            err "refusing to restore over the live production database ($DB_NAME)"
+            err "restore into a scratch db (default: ${DB_NAME}_restore), verify, then promote by hand"
+            return 1
+        fi
+        banner "RESTORE OVER LIVE DB ($ENV_LABEL / $DB_NAME)"
+        echo "Snapshot: $snap_path"
+        if ! $assume_yes && ! confirm_danger "Overwrite the LIVE $DB_NAME on $DB_HOST?"; then
+            echo "Cancelled."
+            return 1
+        fi
+    fi
+
+    require_cmd mysql || return 127
+    [[ "$snap_path" == *.zip ]] && { require_cmd unzip || return 127; }
+    [[ -n "$pitr" ]] && { require_cmd mysqlbinlog || return 127; }
+
+    with_lock "database-restore-${ENVIRONMENT}-${target}" -- \
+        __restore_run "$snap_path" "$target" "$pitr"
+}
+
+op_restore_list() {
+    local dir="${1:-$DEFAULT_BACKUP_DIR}"
+    banner "RESTORE SNAPSHOTS ($ENV_LABEL / $DB_NAME)"
+    echo "Dir: $dir"
+    echo ""
+    if [[ ! -d "$dir" ]]; then
+        err "backup dir not found: $dir"
+        return 1
+    fi
+    local any=0 f size
+    while IFS= read -r f; do
+        [[ -z "$f" ]] && continue
+        size=$(du -h "$f" 2>/dev/null | cut -f1)
+        printf '  %-8s %s\n' "${size:-?}" "$(basename "$f")"
+        any=1
+    done < <(find "$dir" -maxdepth 1 -type f \
+                  \( -name "${DB_NAME}.*.sql" -o -name "${DB_NAME}.*.sql.zip" \) \
+                  -printf '%T@\t%p\n' 2>/dev/null | sort -rn | cut -f2-)
+    (( any == 0 )) && note "no ${DB_NAME} snapshots in $dir"
+    echo ""
+    note "restore with: ops_database.sh $ENVIRONMENT restore <file> [--to <db>] [--pitr now]"
+}
+
+op_restore_drop() {
+    local db="${1:-}"
+    if [[ -z "$db" ]]; then
+        err "usage: ops_database.sh $ENVIRONMENT restore drop <db>"
+        return 1
+    fi
+    if ! is_valid_identifier "$db"; then
+        err "invalid db name: '$db'"
+        return 1
+    fi
+    if [[ "$db" == "$DB_NAME" || "$db" == "PackratProduction" || "$db" == "PackratStaging" || "$db" == "Packrat" ]]; then
+        err "refusing to drop a live Packrat database: $db"
+        return 1
+    fi
+    banner "DROP RESTORE DB ($db)"
+    if ! confirm_danger "Drop database $db on $DB_HOST?"; then
+        echo "Cancelled."
+        return 1
+    fi
+    sudo mysql -e "DROP DATABASE IF EXISTS \`$db\`;" && echo "dropped $db"
+}
+
+__restore_run() {
+    local snap="$1" target="$2" pitr="$3"
+
+    banner "RESTORE DATABASE ($ENV_LABEL)"
+    echo "Snapshot : $snap"
+    echo "Target   : $target"
+    echo "PITR     : ${pitr:-none}"
+    echo ""
+
+    echo "Preparing target database '$target'..."
+    sudo mysql -e "DROP DATABASE IF EXISTS \`$target\`; CREATE DATABASE \`$target\`;" \
+        || { err "cannot (re)create $target"; return 1; }
+
+    echo "Restoring dump..."
+    local rc=0
+    if [[ "$snap" == *.zip ]]; then
+        unzip -p "$snap" | sudo mysql "$target" || rc=$?
+    else
+        sudo mysql "$target" < "$snap" || rc=$?
+    fi
+    if (( rc != 0 )); then
+        err "restore failed (rc=$rc)"
+        return $rc
+    fi
+    echo "Dump restored into $target."
+
+    if [[ -n "$pitr" ]]; then
+        __restore_pitr "$snap" "$target" "$pitr" || return 1
+    fi
+
+    __restore_inspect "$target" "$pitr"
+}
+
+__restore_pitr() {
+    local snap="$1" target="$2" when="$3"
+
+    # The dump records the binlog coordinate it was taken at (backup adds
+    # --master-data=2 when binlog is on). Read it to know where to replay from.
+    local coord
+    if [[ "$snap" == *.zip ]]; then
+        coord=$(unzip -p "$snap" | grep -m1 'CHANGE MASTER TO')
+    else
+        coord=$(grep -m1 'CHANGE MASTER TO' "$snap")
+    fi
+    if [[ -z "$coord" ]]; then
+        err "no binlog coordinate in the dump — taken on a binlog-off box; PITR not possible"
+        return 1
+    fi
+    local file pos
+    file=$(sed -nE "s/.*MASTER_LOG_FILE='([^']+)'.*/\1/p" <<< "$coord")
+    pos=$(sed -nE "s/.*MASTER_LOG_POS=([0-9]+).*/\1/p" <<< "$coord")
+    if [[ -z "$file" || -z "$pos" ]]; then
+        err "could not parse binlog coordinate from: $coord"
+        return 1
+    fi
+
+    local basename_path dir
+    basename_path=$(sudo mysql -N -e "SELECT @@log_bin_basename;" 2>/dev/null | tail -n1)
+    if [[ -z "$basename_path" || "$basename_path" == "NULL" ]]; then
+        err "binary logging is off on this server — cannot PITR"
+        return 1
+    fi
+    dir=$(dirname "$basename_path")
+
+    # Binlog files from the coordinate's file onward (fixed-width names sort lexically).
+    local -a files=()
+    local bl
+    while IFS= read -r bl; do
+        [[ -z "$bl" ]] && continue
+        [[ "$bl" < "$file" ]] && continue
+        files+=("$dir/$bl")
+    done < <(sudo mysql -N -e "SHOW BINARY LOGS;" 2>/dev/null | awk '{print $1}')
+    if (( ${#files[@]} == 0 )); then
+        err "no binlog files from $file onward in $dir"
+        return 1
+    fi
+
+    local -a stop=()
+    [[ "$when" != "now" ]] && stop=(--stop-datetime="$when")
+
+    echo "Replaying $file:$pos -> ${when} across ${#files[@]} binlog file(s)..."
+    sudo mysqlbinlog --database="$DB_NAME" --rewrite-db="$DB_NAME->$target" \
+        --start-position="$pos" "${stop[@]}" "${files[@]}" \
+        | sudo mysql "$target" || { err "binlog replay failed"; return 1; }
+    echo "PITR replay complete."
+}
+
+__restore_inspect() {
+    local target="$1" pitr="${2:-}"
+    echo ""
+    hr
+    echo "inspect: row counts (live $DB_NAME vs restored $target)"
+    hr
+    local t live rest flag
+    for t in SystemObject Asset AssetVersion Model Scene Subject Item Audit; do
+        live=$(sudo mysql -N -e "SELECT COUNT(*) FROM \`$DB_NAME\`.\`$t\`;" 2>/dev/null)
+        rest=$(sudo mysql -N -e "SELECT COUNT(*) FROM \`$target\`.\`$t\`;" 2>/dev/null)
+        [[ -z "$live" && -z "$rest" ]] && continue
+        flag=$( [[ "$live" == "$rest" ]] && echo OK || echo DIFF )
+        printf '  %-16s live=%-10s restored=%-10s %s\n' "$t" "${live:-?}" "${rest:-?}" "$flag"
+    done
+    echo ""
+    if [[ -n "$pitr" && "$pitr" != "now" ]]; then
+        note "DIFF vs live is expected — you restored to a past point ($pitr)."
+    fi
+    note "scratch db '$target' kept for inspection; drop it with: ops_database.sh $ENVIRONMENT restore drop $target"
 }
 
 # ---------------------------------------------------------------------------
@@ -772,6 +1115,7 @@ main_menu() {
     echo "[2] Backup database  - mysqldump to disk, optional zip"
     echo "[3] Prune audit      - delete old Audit rows by tier or AuditType"
     echo "[4] Optimize table   - rebuild a table (locks it; off-hours only)"
+    echo "[7] Restore          - restore a snapshot to a scratch db (+ optional PITR)"
     echo ""
     echo "--- staging-only ---"
     if [[ "$ENVIRONMENT" == "staging" ]]; then
@@ -797,6 +1141,7 @@ main_menu() {
         2) run_op op_backup   || return $MENU_RC_QUIT ;;
         3) run_op op_prune    || return $MENU_RC_QUIT ;;
         4) run_op op_optimize || return $MENU_RC_QUIT ;;
+        7) run_op op_restore  || return $MENU_RC_QUIT ;;
         5)
             if [[ "$ENVIRONMENT" != "staging" ]]; then
                 err "drop is not allowed on production from this script"
@@ -883,6 +1228,7 @@ else
             prune)    op_prune    "$@" || rc=$? ;;
             backup)   op_backup   "$@" || rc=$? ;;
             optimize) op_optimize "$@" || rc=$? ;;
+            restore)  op_restore  "$@" || rc=$? ;;
             metrics)  op_metrics  "$@" || rc=$? ;;
             *)        err "unknown op: $OP"; rc=1 ;;
         esac

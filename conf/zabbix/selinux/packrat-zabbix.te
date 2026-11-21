@@ -1,0 +1,36 @@
+module packrat-zabbix 1.0;
+
+require {
+  class fifo_file getattr;
+  class file { execute execute_no_trans getattr lock map open read };
+  class sock_file { create getattr unlink write };
+  class unix_stream_socket connectto;
+  type devlog_t;
+  type initctl_t;
+  type kernel_t;
+  type proc_kcore_t;
+  type rpm_exec_t;
+  type rpm_var_lib_t;
+  type zabbix_agent_t;
+  type zabbix_var_run_t;
+}
+
+#============= zabbix_agent_t ==============
+allow zabbix_agent_t self:unix_stream_socket connectto;
+allow zabbix_agent_t kernel_t:unix_stream_socket connectto;
+allow zabbix_agent_t zabbix_var_run_t:sock_file { create unlink write };
+
+# The "Linux: Software installed" item (`system.sw.packages`) in the "Linux by
+# Zabbix agent" template uses rpm to get a list of all installed packages.
+allow zabbix_agent_t rpm_exec_t:file { execute execute_no_trans map };
+allow zabbix_agent_t rpm_var_lib_t:file { lock open read };
+
+# The "Block devices discovery" discovery item (`vfs.dev.discovery`) in the
+# "Linux by Zabbix agent" template interfaces with the following:
+# * /proc/kcore
+# * /run/initctl
+# * /run/systemd/journal/dev-log
+# A Fedora bug is tracked at <https://bugzilla.redhat.com/show_bug.cgi?id=2170630>.
+allow zabbix_agent_t devlog_t:sock_file getattr;
+allow zabbix_agent_t initctl_t:fifo_file getattr;
+allow zabbix_agent_t proc_kcore_t:file getattr;

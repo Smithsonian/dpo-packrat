@@ -8,10 +8,11 @@ location /preview {
 location /server {
     rewrite /server/(.*) /$1 break;
     proxy_pass http://server-dev;
+    # Host carries the `//server` routing prefix: the WebDAV library builds its
+    # PROPFIND `href`s from the request Host, and Voyager Story article links must
+    # resolve back through this /server location. Do NOT reduce to `$host`.
     proxy_set_header Host $host//server;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-        
+
     # Increase timeouts for large file uploads
     proxy_read_timeout 86400;      # 24 hours
     proxy_send_timeout 86400;      # 24 hours

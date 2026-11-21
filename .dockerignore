@@ -8,3 +8,6 @@ build
 
 # Runtime data (OCFL storage, logs, test sandboxes) — never needed in any image
 **/var
+
+# Solr core index/tlog — rebuildable Lucene data; keeps Solr images config-only
+server/config/solr/data/*/data/

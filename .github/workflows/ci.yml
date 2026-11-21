@@ -163,7 +163,7 @@ jobs:
 
       - name: Build Prod images
         if: contains(github.ref, 'master')
-        run: docker compose --env-file .env.prod -f ./conf/docker/docker-compose.prod.yml build
+        run: IMAGE_TAG=${GITHUB_SHA:0:7} docker compose --env-file .env.prod -f ./conf/docker/docker-compose.deploy.yml build packrat-server-prod packrat-client-prod packrat-solr-prod
 
       # Prepares tag for docker images
       - name: Prepare image tag

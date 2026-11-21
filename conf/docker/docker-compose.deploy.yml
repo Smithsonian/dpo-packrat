@@ -57,6 +57,8 @@ services:
         # the started service always loads its own file (.env.dev for staging, .env.prod for production).
         # Using ${ENV} rather than a fixed name keeps the non-started services pointing at that same
         # existing file, so an absent .env.prod on a staging host can't fail the compose parse.
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         env_file:
             - ../../.env.${ENV}
 
@@ -85,6 +87,8 @@ services:
         # the started service always loads its own file (.env.dev for staging, .env.prod for production).
         # Using ${ENV} rather than a fixed name keeps the non-started services pointing at that same
         # existing file, so an absent .env.prod on a staging host can't fail the compose parse.
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         env_file:
             - ../../.env.${ENV}
 
@@ -112,6 +116,8 @@ services:
         # container — no per-variable allow-list to keep in sync. ${ENV} resolves at deploy time to what
         # deploy.sh selected; deploy.sh only starts packrat-server-$ENV, so the started service always
         # loads its own file. NODE_OPTIONS stays inline (debug-only, not in the env file).
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         env_file:
             - ../../.env.${ENV}
         environment:
@@ -157,9 +163,11 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-dev
+        volumes:
+            - packrat-solr-dev-index:/var/solr/index
             
     packrat-solr-prod:
         container_name: packrat-solr-prod
@@ -170,9 +178,11 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-prod
+        volumes:
+            - packrat-solr-prod-index:/var/solr/index
 
     packrat-solr-inspect:
         container_name: packrat-solr-inspect
@@ -183,10 +193,17 @@ services:
             dockerfile: ./conf/docker/solr.Dockerfile
             target: solr
         ports:
-            - $PACKRAT_SOLR_PORT:8983
+            - 127.0.0.1:$PACKRAT_SOLR_PORT:8983
         environment:
             - PACKRAT_SOLR_HOST=packrat-solr-inspect
+        volumes:
+            - packrat-solr-inspect-index:/var/solr/index
             
+volumes:
+    packrat-solr-dev-index:
+    packrat-solr-prod-index:
+    packrat-solr-inspect-index:
+
 networks:
     default:
         driver: bridge

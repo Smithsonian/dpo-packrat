@@ -1,0 +1,17 @@
+# Override for running Solr in isolation ALONGSIDE an already-running dev stack (e.g. to
+# validate index persistence without disturbing the live containers). The base compose files
+# pin the network to 192.168.4.0/24 and the container name to packrat-solr, so a second stack
+# would collide on both the subnet and the container name. This relocates the subnet to a
+# different /24 and renames the container; pick a distinct host port via PACKRAT_SOLR_PORT.
+#
+# Never auto-loaded — pass it explicitly AFTER the base file, with a distinct project name:
+#   PACKRAT_SOLR_PORT=8984 docker compose -p solrtest \
+#     -f docker-compose.dev.yml -f docker-compose.isolated.yml up -d packrat-solr
+networks:
+    default:
+        ipam:
+            config:
+                - subnet: 192.168.44.0/24
+services:
+    packrat-solr:
+        container_name: packrat-solr-isolated

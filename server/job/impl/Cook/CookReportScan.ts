@@ -31,6 +31,15 @@ interface CookReportLike {
 // full textured package. The .mtl IS sent to the inspector, so its read-failure rule still applies.
 const INSPECT_RECIPE_NAME: string = 'si-packrat-inspect';
 
+// The scene and downloads recipes run the OBJ through Blender's importer, which logs "cannot read from
+// MTL file" even when the .mtl is present and valid — those recipes do not consume the source .mtl
+// material block (the texture is applied via the generated glTF/scene). The mtl-read rule is skipped on
+// them; a genuinely missing .mtl is still surfaced structurally: the inspection result's material-error
+// check on the source package (collectInspectionWarnings), and the downloads package .mtl check that
+// fabricates and warns on a missing library (JobCookSIGenerateDownloads.ensureObjPackageHasMtl).
+const SCENE_RECIPE_NAME: string = 'si-voyager-scene';
+const DOWNLOADS_RECIPE_NAME: string = 'si-generate-downloads';
+
 // Collect every log message across all steps, plus per-step and top-level error strings, into one
 // flat list the rules can scan for corroborating markers.
 function collectMessages(report: CookReportLike): string[] {
@@ -121,7 +130,8 @@ const COOK_LOG_WARNING_RULES: CookLogWarningRule[] = [
         message: 'A referenced texture image could not be loaded (the file is missing or unreadable). The model ingests without that texture.',
         skipRecipes: [INSPECT_RECIPE_NAME] },
     { test: /cannot read from mtl file|cannot read .*\.mtl|could not read .*material library/i,
-        message: 'A referenced material library (.mtl) could not be read (the file is missing or unreadable). The model ingests without its materials.' },
+        message: 'A referenced material library (.mtl) could not be read (the file is missing or unreadable). The model ingests without its materials.',
+        skipRecipes: [SCENE_RECIPE_NAME, DOWNLOADS_RECIPE_NAME] },
     { test: /missing texture|texture file .*not found|referenced texture .*missing/i,
         message: 'A referenced texture file is missing. The model ingests without that texture.',
         skipRecipes: [INSPECT_RECIPE_NAME] },
