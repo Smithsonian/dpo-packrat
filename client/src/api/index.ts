@@ -294,6 +294,12 @@ export default class API {
         return this.request(`api/system/edan-cleanup?days=${days}`, { method: 'POST' });
     }
 
+    // read-only EDAN query probe: op=search (queryCollection) or op=content (fetchContent by id/url)
+    static async edanQuery(params: Record<string, string>): Promise<RequestResponse> {
+        const qs: string = new URLSearchParams(params).toString();
+        return this.request(`api/system/edan-query?${qs}`, { method: 'GET' });
+    }
+
     // general routines
     static async request(route: string, options: RequestInit = {}): Promise<any> {
         const serverEndpoint = API.serverEndpoint();

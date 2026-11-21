@@ -1,0 +1,1 @@
+/usr/sbin/zabbix_agent2 -- system_u:object_r:zabbix_agent_exec_t:s0

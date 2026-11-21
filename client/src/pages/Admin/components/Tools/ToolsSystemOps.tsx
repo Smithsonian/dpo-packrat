@@ -38,6 +38,16 @@ interface CleanupPreview {
     totalCandidateBytes: number;
 }
 
+// raw EDAN query-probe response (data block from /api/system/edan-query)
+interface EdanQueryResult {
+    op: string;
+    _debug?: { server?: string; path?: string; params?: string; paramUsed?: string; q?: string };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    record?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    results?: any;
+}
+
 const DEFAULT_RETENTION_DAYS: number = 30;
 
 function fmtBytes(bytes: number): string {
@@ -67,6 +77,14 @@ const ToolsSystemOps = (): React.ReactElement => {
     const [cleanupLoading, setCleanupLoading] = useState<boolean>(false);
     const [cleanupRunning, setCleanupRunning] = useState<boolean>(false);
     const [showCleanupConfirm, setShowCleanupConfirm] = useState<boolean>(false);
+
+    // ---- EDAN query probe (read-only diagnostic) ----
+    const [queryOp, setQueryOp] = useState<'search' | 'content'>('content');
+    const [contentParam, setContentParam] = useState<'url' | 'id'>('url');
+    const [queryText, setQueryText] = useState<string>('');
+    const [querySearchMetadata, setQuerySearchMetadata] = useState<boolean>(false);
+    const [queryRunning, setQueryRunning] = useState<boolean>(false);
+    const [queryResult, setQueryResult] = useState<EdanQueryResult | null>(null);
 
     const stopPolling = useCallback(() => {
         if (pollRef.current !== null) {
@@ -205,6 +223,50 @@ const ToolsSystemOps = (): React.ReactElement => {
         }
     };
 
+    const onRunQuery = async () => {
+        const text: string = queryText.trim();
+        if (!text) {
+            toast.info(queryOp === 'content' ? 'Enter an EDAN locator or id.' : 'Enter a search query.');
+            return;
+        }
+        setQueryRunning(true);
+        setQueryResult(null);
+        try {
+            const params: Record<string, string> = { op: queryOp };
+            if (queryOp === 'content') {
+                params[contentParam] = text;
+            } else {
+                params.q = text;
+                params.gatherRaw = '1';
+                if (querySearchMetadata)
+                    params.searchMetadata = '1';
+            }
+            const response: RequestResponse = await API.edanQuery(params);
+            if (response.data)
+                setQueryResult(response.data as EdanQueryResult);
+            // a content miss returns success:true with a message and a null record — surface it without erroring
+            if (!response.success)
+                toastError(response, 'EDAN query failed');
+            else if (response.message)
+                toast.info(response.message);
+        } catch (error) {
+            console.error(`[Packrat:ERROR] Unexpected error during EDAN query: ${error}`);
+            toast.error('EDAN query failed due to an unexpected error.');
+        } finally {
+            setQueryRunning(false);
+        }
+    };
+
+    const onCopyQueryResult = async () => {
+        if (!queryResult) return;
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(queryResult, null, 2));
+            toast.success('Copied raw response to clipboard.');
+        } catch {
+            toast.error('Could not copy to clipboard.');
+        }
+    };
+
     const renderProgress = () => {
         if (!isIndexing || !progress)
             return null;
@@ -337,6 +399,91 @@ const ToolsSystemOps = (): React.ReactElement => {
                     >
                         {cleanupRunning ? 'Deleting…' : 'Delete Eligible Items'}
                     </Button>
+                </Box>
+            )}
+
+            <Divider style={{ margin: '1.5rem 0' }} />
+
+            {/* ---------------- EDAN Query (Diagnostic) ---------------- */}
+            {sectionHeader('EDAN Query (Diagnostic)')}
+            <Typography variant='body2' gutterBottom>
+                Read-only probe of the live EDAN service. <b>Content</b> fetches a single record by locator —
+                a scheme-prefixed <code>edanmdm:</code>/<code>edanlists:</code> value uses <code>url</code>,
+                an opaque internal id/UUID uses <code>id</code>. <b>Search</b> queries the collection by text.
+                Nothing is written; results show the raw EDAN response.
+            </Typography>
+
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                <select
+                    value={queryOp}
+                    disabled={queryRunning}
+                    onChange={(e) => { setQueryOp(e.target.value as 'search' | 'content'); setQueryResult(null); }}
+                    style={{ padding: '4px 6px' }}
+                >
+                    <option value='content'>Content (by locator/id)</option>
+                    <option value='search'>Search (by text)</option>
+                </select>
+
+                {queryOp === 'content' && (
+                    <select
+                        value={contentParam}
+                        disabled={queryRunning}
+                        onChange={(e) => setContentParam(e.target.value as 'url' | 'id')}
+                        style={{ padding: '4px 6px' }}
+                    >
+                        <option value='url'>url (edanmdm:/edanlists:)</option>
+                        <option value='id'>id (internal/UUID)</option>
+                    </select>
+                )}
+
+                {queryOp === 'search' && (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <input
+                            type='checkbox'
+                            checked={querySearchMetadata}
+                            disabled={queryRunning}
+                            onChange={(e) => setQuerySearchMetadata(e.target.checked)}
+                        />
+                        <Typography variant='body2'>search all record types</Typography>
+                    </label>
+                )}
+            </Box>
+
+            <Box style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.75rem', maxWidth: 760 }}>
+                <input
+                    type='text'
+                    value={queryText}
+                    disabled={queryRunning}
+                    placeholder={queryOp === 'content' ? 'edanlists:… or edanmdm:… or internal id' : 'search text'}
+                    onChange={(e) => setQueryText(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') onRunQuery(); }}
+                    style={{ flex: 1, padding: '6px 8px' }}
+                />
+                <Button
+                    className={queryRunning ? classes.btnDisabled : classes.btn}
+                    onClick={onRunQuery}
+                    disableElevation
+                    disabled={queryRunning}
+                    style={{ width: 120, textTransform: 'none' }}
+                >
+                    {queryRunning ? 'Querying…' : 'Run Query'}
+                </Button>
+            </Box>
+
+            {queryResult && (
+                <Box style={{ marginTop: '0.75rem', maxWidth: 760 }}>
+                    <Box style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                        <Typography variant='caption' style={{ fontFamily: 'monospace', color: '#5a6472', wordBreak: 'break-all' }}>
+                            {queryResult._debug
+                                ? `GET ${queryResult._debug.path ?? ''}?${queryResult._debug.params ?? (queryResult._debug.q ? `q=${queryResult._debug.q}` : '')}` +
+                                  (queryResult._debug.paramUsed ? ` · paramUsed: ${queryResult._debug.paramUsed}` : '')
+                                : ''}
+                        </Typography>
+                        <Button onClick={onCopyQueryResult} disableElevation style={{ textTransform: 'none', minWidth: 72 }}>Copy</Button>
+                    </Box>
+                    <pre style={{ marginTop: 4, padding: '10px', maxHeight: 420, overflow: 'auto', border: '1px solid #d7dbe0', borderRadius: 6, backgroundColor: '#f6f8fa', fontSize: 12 }}>
+                        {JSON.stringify(queryResult.record ?? queryResult.results ?? queryResult, null, 2)}
+                    </pre>
                 </Box>
             )}
 

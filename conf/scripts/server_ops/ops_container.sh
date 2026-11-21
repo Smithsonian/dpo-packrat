@@ -17,8 +17,12 @@
 #   stop      <env> [container-id]
 #   restart   <env> [container-id]
 #   service   <status|restart>                      # systemd docker service
-#   reclaim   [--cache]                             # container/image/volume/network prune
+#   reclaim   [--cache] [--volumes]                 # container/image/network prune
 #                                                   # --cache also prunes builder cache
+#                                                   # --volumes also prunes unused volumes
+#                                                   # (OFF by default — protects data volumes)
+#   build-cache [--dangling]                        # prune BuildKit cache ONLY (safe fix for a
+#                                                   # build failing on a corrupt cached layer)
 #   pre-deploy <env> [--user <u>] [--clean-cache] [--remount-tmp]
 #                                                   # stop/remove containers + volumes +
 #                                                   # images scoped to env suffix;
@@ -38,6 +42,7 @@
 #   ./ops_container.sh prod stop packrat-server-prod
 #   ./ops_container.sh reclaim
 #   ./ops_container.sh reclaim --cache
+#   ./ops_container.sh build-cache
 #   ./ops_container.sh pre-deploy dev --user jenkins --clean-cache
 #
 
@@ -287,11 +292,13 @@ op_service() {
 op_reclaim() {
     OPS_CURRENT_OP="reclaim"
     local clean_cache=false
+    local prune_volumes=false
     while (( $# > 0 )); do
         case "$1" in
             --cache|-c) clean_cache=true ;;
+            --volumes)  prune_volumes=true ;;
             -h|--help)
-                echo "usage: ops_container.sh reclaim [--cache]"
+                echo "usage: ops_container.sh reclaim [--cache] [--volumes]"
                 return 0
                 ;;
             *) err "reclaim: unknown arg '$1'"; return 1 ;;
@@ -301,14 +308,16 @@ op_reclaim() {
 
     require_cmd docker || return 127
 
-    with_lock "container-reclaim" -- __reclaim_run "$clean_cache"
+    with_lock "container-reclaim" -- __reclaim_run "$clean_cache" "$prune_volumes"
 }
 
 __reclaim_run() {
     local clean_cache="$1"
+    local prune_volumes="$2"
 
     banner "DOCKER RECLAIM SPACE"
-    echo "Builder cache : $( $clean_cache && echo 'WILL be pruned (--cache)' || echo 'will be preserved (pass --cache to prune)' )"
+    echo "Builder cache : $( $clean_cache   && echo 'WILL be pruned (--cache)'   || echo 'will be preserved (pass --cache to prune)' )"
+    echo "Volumes       : $( $prune_volumes && echo 'WILL be pruned (--volumes)' || echo 'will be preserved (pass --volumes to prune)' )"
     echo ""
 
     hr
@@ -325,8 +334,12 @@ __reclaim_run() {
     # Dangling (untagged) images only - do NOT pass -a so tagged unused
     # images survive. Matches the 'conservative' default in the plan.
     docker image prune -f || true
-    # Volumes with no linked containers
-    docker volume prune -f || true
+    # Volumes: only with --volumes. `docker volume prune` deletes any volume no
+    # container references; on a data host that can be a DB/Solr volume whose
+    # container was removed. Off by default so a routine reclaim never risks data.
+    if [[ "$prune_volumes" == "true" ]]; then
+        docker volume prune -f || true
+    fi
     # Networks with no linked containers
     docker network prune -f || true
 
@@ -334,6 +347,65 @@ __reclaim_run() {
         echo ""
         echo "pruning builder cache (--cache)..."
         docker builder prune -a -f || true
+    fi
+
+    echo ""
+    hr
+    echo "space use: post-cleanup"
+    hr
+    docker system df || true
+}
+
+# ---------------------------------------------------------------------------
+# Operation: build-cache
+# ---------------------------------------------------------------------------
+#
+# Prune the BuildKit builder cache ONLY — leaves images, containers, volumes,
+# and networks untouched. This is the safe, targeted fix when an image build
+# fails on a corrupt cached layer/blob (e.g. "Extracting tar content ... the
+# file appears to be corrupt" / ENOENT during `yarn install`): retrying can't
+# clear it because each build reuses the same cache. Default prunes ALL cache
+# (-a), which is required to evict an in-use corrupt blob; --dangling keeps
+# still-referenced cache and only reclaims the obviously-unused entries.
+
+op_build_cache() {
+    OPS_CURRENT_OP="build-cache"
+    local all=true
+    while (( $# > 0 )); do
+        case "$1" in
+            --dangling) all=false ;;
+            -h|--help)
+                echo "usage: ops_container.sh build-cache [--dangling]"
+                echo "  default prunes ALL build cache (-a); --dangling keeps in-use cache"
+                return 0
+                ;;
+            *) err "build-cache: unknown arg '$1'"; return 1 ;;
+        esac
+        shift
+    done
+
+    require_cmd docker || return 127
+
+    with_lock "container-build-cache" -- __build_cache_run "$all"
+}
+
+__build_cache_run() {
+    local all="$1"
+
+    banner "DOCKER BUILD CACHE PRUNE"
+    hr
+    echo "space use: pre-cleanup"
+    hr
+    docker system df || true
+    echo ""
+
+    hr
+    echo "pruning builder cache$( [[ "$all" == "true" ]] && echo ' (-a, all)' || echo ' (dangling only)' )..."
+    hr
+    if [[ "$all" == "true" ]]; then
+        docker builder prune -a -f || true
+    else
+        docker builder prune -f || true
     fi
 
     echo ""
@@ -556,8 +628,9 @@ main_menu() {
     echo "[4] Restart         - !! same downtime as stop"
     echo "[5] Service status  - read-only systemctl status docker"
     echo "[6] Service restart - !! bounces docker daemon (ALL containers)"
-    echo "[7] Reclaim space   - prune images/containers/volumes/networks"
+    echo "[7] Reclaim space   - prune images/containers/networks (volumes opt-in)"
     echo "[8] Pre-deploy      - !! stop+remove env's containers/volumes/images"
+    echo "[9] Build cache     - prune BuildKit cache only (fix a corrupt-cache build)"
     echo ""
     echo "[B] Back to top menu     [Q] Quit"
     echo ""
@@ -572,6 +645,7 @@ main_menu() {
         6)    run_op op_service restart|| return $MENU_RC_QUIT ;;
         7)    run_op op_reclaim        || return $MENU_RC_QUIT ;;
         8)    run_op op_predeploy      || return $MENU_RC_QUIT ;;
+        9)    run_op op_build_cache    || return $MENU_RC_QUIT ;;
         [Bb]) return $MENU_RC_BACK ;;
         [Qq]) return $MENU_RC_QUIT ;;
         *) err "invalid choice" ;;
@@ -584,7 +658,7 @@ main_menu() {
 # ---------------------------------------------------------------------------
 
 print_help() {
-    sed -n '2,45p' "$0"
+    sed -n '2,47p' "$0"
 }
 
 case "${1:-}" in
@@ -656,6 +730,8 @@ else
         service-status)  op_service status  "$@" || rc=$? ;;
         service-restart) op_service restart "$@" || rc=$? ;;
         reclaim)    op_reclaim    "$@" || rc=$? ;;
+        build-cache|buildcache|build-cache-prune)
+            op_build_cache "$@" || rc=$? ;;
         pre-deploy|predeploy|deploy)
             op_predeploy "$@" || rc=$? ;;
         *)          err "unknown op: $OP"; rc=1 ;;

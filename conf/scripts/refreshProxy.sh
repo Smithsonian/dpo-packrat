@@ -17,7 +17,7 @@
 #   secret bypass/canary tokens             set on the box; carried across the copy below
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 NGINX_SRC="$REPO_ROOT/conf/nginx"
 OPS_SRC="$REPO_ROOT/conf/scripts/server_ops"
 MAINT_DIR="/usr/share/nginx/maintenance"
@@ -79,6 +79,28 @@ copy_preserving_token() {
     fi
 }
 
+# Some nginx setups do not re-arm http-level add_header directives in the running
+# workers on a reload — only a full restart does. Probe a sentinel security header on
+# the local listener; if it is missing, restart nginx and re-check. The probe works
+# even when the upstream is down, since `add_header ... always` fires on nginx's own
+# 502. No-op where curl is unavailable.
+verify_headers() {
+    command -v curl >/dev/null 2>&1 || { echo "  (curl absent — skipping header verify)"; return 0; }
+    local url="https://localhost/" sentinel="strict-transport-security"
+    if curl -skI --max-time 5 "$url" | grep -qi "$sentinel"; then
+        echo "  security headers live"
+        return 0
+    fi
+    echo "  security headers missing after reload — restarting nginx"
+    sudo systemctl restart nginx 2>/dev/null || sudo service nginx restart
+    sleep 1
+    if curl -skI --max-time 5 "$url" | grep -qi "$sentinel"; then
+        echo "  security headers live after restart"
+    else
+        echo "  WARNING: security headers still missing after restart — investigate" >&2
+    fi
+}
+
 echo "== backup current config (rollback point) =="
 backup_existing
 
@@ -101,7 +123,16 @@ sudo cp -v "$NGINX_SRC"/maintenance/*.html "$MAINT_DIR"/
 sudo chmod 755 "$MAINT_DIR"
 sudo chmod 644 "$MAINT_DIR"/*.html
 
-# SELinux relabel so nginx can read config + serve the pages; no-op on non-SELinux hosts.
+# SELinux: the maintenance pages need httpd_sys_content_t to be served — their path
+# defaults to usr_t, which nginx can't read (silent 403 during an outage). Ensure the
+# fcontext rule (idempotent: add, else modify), then relabel config + pages. All of
+# this is a no-op on non-SELinux hosts.
+if command -v semanage >/dev/null 2>&1; then
+    echo "== SELinux fcontext (maintenance pages) =="
+    sudo semanage fcontext -a -t httpd_sys_content_t "${MAINT_DIR}(/.*)?" 2>/dev/null \
+        || sudo semanage fcontext -m -t httpd_sys_content_t "${MAINT_DIR}(/.*)?" 2>/dev/null \
+        || true
+fi
 if command -v restorecon >/dev/null 2>&1; then
     echo "== SELinux relabel =="
     sudo restorecon -Rv /etc/nginx "$MAINT_DIR" || true
@@ -115,6 +146,9 @@ sudo nginx -t
 
 echo "== reload =="
 sudo systemctl reload nginx 2>/dev/null || sudo service nginx reload
+
+echo "== verify security headers (restart if reload didn't arm them) =="
+verify_headers
 
 echo "== status =="
 sudo systemctl status nginx --no-pager 2>/dev/null || sudo service nginx status --no-pager
